@@ -1,0 +1,22 @@
+[package]
+name = "viewer-web"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+bev-renderer = { path = "../../crates/bev-renderer" }
+viewer-core = { path = "../../crates/viewer-core" }
+viewer-renderer = { path = "../../crates/viewer-renderer" }
+viewer-ui = { path = "../../crates/viewer-ui" }
+wasm-bindgen.workspace = true
+wasm-bindgen-futures.workspace = true
+js-sys = "0.3"
+web-sys = { workspace = true, features = [
+    "Blob", "CanvasRenderingContext2d", "Document", "Event", "File", "FileList",
+    "HtmlButtonElement", "HtmlCanvasElement", "HtmlElement", "HtmlInputElement",
+    "HtmlSelectElement", "ImageData", "Window",
+] }
