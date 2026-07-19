@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MCAP Camera + BEV</title>
+  <link data-trunk rel="rust" data-cargo-no-default-features data-wasm-opt="0">
+  <link data-trunk rel="css" href="style.css">
+</head>
+<body>
+  <header>
+    <label class="file">Open MCAP <input id="mcap-file" type="file" accept=".mcap"></label>
+    <button id="play">Play</button>
+    <select id="speed" aria-label="Playback speed">
+      <option value="0.25">0.25x</option><option value="0.5">0.5x</option>
+      <option value="1" selected>1x</option><option value="2">2x</option>
+    </select>
+    <input id="timeline" type="range" min="0" max="1" step="0.0001" value="0" aria-label="Timeline">
+    <span id="status">Choose the bundled camera fixture</span>
+    <span id="telemetry">Odometry: waiting</span>
+  </header>
+  <main>
+    <section><h2>BEV</h2><canvas id="bev" width="512" height="512"></canvas></section>
+    <section><h2>JPEG Camera</h2><div class="camera-frame"><canvas id="camera" width="320" height="240"></canvas></div></section>
+  </main>
+</body>
+</html>

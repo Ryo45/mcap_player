@@ -1,0 +1,13 @@
+{
+  "file": "camera_front_3s.mcap",
+  "topic": "/camera/front/image/compressed",
+  "schema": "sensor_msgs/msg/CompressedImage",
+  "encoding": "cdr",
+  "format": "jpeg compressed rgb8",
+  "frame_count": 30,
+  "resolution": [320, 240],
+  "duration_seconds": 2.9,
+  "arrival_time_base_ns": 1735689600000000000,
+  "measurement_offset_ns": "-37000000 - (sequence % 3) * 1000000",
+  "provenance": "Deterministic synthetic derivative fixture. Use camera_fixture.py convert for the designated raw-image bag."
+}

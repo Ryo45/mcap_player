@@ -1,0 +1,12 @@
+[package]
+name = "ros-fixture"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+image.workspace = true
+mcap = { workspace = true, features = ["lz4", "zstd"] }
+memmap2.workspace = true
+viewer-core = { path = "../../crates/viewer-core" }
