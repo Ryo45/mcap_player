@@ -18,7 +18,6 @@ pub enum CameraStatus {
 
 #[derive(Clone, Debug)]
 pub struct CameraState {
-    generation: u64,
     latest: Option<CameraFrame>,
     status: CameraStatus,
 }
@@ -26,7 +25,6 @@ pub struct CameraState {
 impl Default for CameraState {
     fn default() -> Self {
         Self {
-            generation: 0,
             latest: None,
             status: CameraStatus::WaitingForCameraFrame,
         }
@@ -34,10 +32,7 @@ impl Default for CameraState {
 }
 
 impl CameraState {
-    pub fn apply(&mut self, generation: u64, frame: CameraFrame) -> bool {
-        if generation != self.generation {
-            return false;
-        }
+    pub fn apply(&mut self, frame: CameraFrame) -> bool {
         if self
             .latest
             .as_ref()
@@ -50,15 +45,9 @@ impl CameraState {
         true
     }
 
-    pub fn cold_seek(&mut self) -> u64 {
-        self.generation = self.generation.wrapping_add(1);
+    pub fn cold_seek(&mut self) {
         self.latest = None;
         self.status = CameraStatus::WaitingForCameraFrame;
-        self.generation
-    }
-
-    pub fn generation(&self) -> u64 {
-        self.generation
     }
     pub fn latest(&self) -> Option<&CameraFrame> {
         self.latest.as_ref()
@@ -86,12 +75,12 @@ mod tests {
     }
 
     #[test]
-    fn rejects_old_arrival_and_seek_generation() {
+    fn rejects_old_arrival_and_clears_on_seek() {
         let mut state = CameraState::default();
-        assert!(state.apply(0, frame(2)));
-        assert!(!state.apply(0, frame(1)));
-        let generation = state.cold_seek();
-        assert!(!state.apply(generation - 1, frame(3)));
-        assert!(state.apply(generation, frame(3)));
+        assert!(state.apply(frame(2)));
+        assert!(!state.apply(frame(1)));
+        state.cold_seek();
+        assert!(state.latest().is_none());
+        assert!(state.apply(frame(3)));
     }
 }

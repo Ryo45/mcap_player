@@ -2,10 +2,7 @@
 mod browser {
     use js_sys::{Date, Uint8Array};
     use std::{cell::RefCell, time::Duration};
-    use viewer_core::{
-        BevState, CameraId, CameraState, DomainUpdate, McapSource, PipelineSet, PlaybackClock,
-        PlaybackSpeed, PointCloudState, StreamBinding, TelemetryState, TransformState,
-    };
+    use viewer_core::{ArrivalTime, McapPlayback, PlaybackSpeed};
     use viewer_renderer::decode_jpeg;
     use wasm_bindgen::{Clamped, JsCast, closure::Closure, prelude::*};
     use wasm_bindgen_futures::{JsFuture, spawn_local};
@@ -15,131 +12,24 @@ mod browser {
     };
 
     const TOPIC: &str = "/camera/front/image/compressed";
-    const PATH_TOPIC: &str = "/planning/path";
-    const ODOM_TOPIC: &str = "/odom";
-    const SCAN_TOPIC: &str = "/scan";
-    const TF_TOPIC: &str = "/tf";
-    const TF_STATIC_TOPIC: &str = "/tf_static";
-
-    struct Session {
-        source: McapSource<Vec<u8>>,
-        pipelines: PipelineSet,
-        clock: PlaybackClock,
-        camera: CameraState,
-        bev: BevState,
-        telemetry: TelemetryState,
-        point_cloud: PointCloudState,
-        transforms: TransformState,
+    #[derive(Default)]
+    struct WebViewState {
         last_drawn: Option<i64>,
         last_bev_revision: Option<u64>,
         last_bev_size: (u32, u32),
     }
 
-    impl Session {
-        fn open(bytes: Vec<u8>) -> Result<Self, String> {
-            let source = McapSource::new(bytes).map_err(|error| error.to_string())?;
-            let descriptor = source
-                .catalog()
-                .by_topic(TOPIC)
-                .ok_or_else(|| format!("topic {TOPIC} is not present"))?;
-            let mut bindings = vec![(descriptor.id, StreamBinding::Camera(CameraId(0)))];
-            if let Some(path) = source.catalog().by_topic(PATH_TOPIC) {
-                bindings.push((path.id, StreamBinding::Path));
-            }
-            if let Some(odometry) = source.catalog().by_topic(ODOM_TOPIC) {
-                bindings.push((odometry.id, StreamBinding::Odometry));
-            }
-            if let Some(scan) = source.catalog().by_topic(SCAN_TOPIC) {
-                bindings.push((scan.id, StreamBinding::LaserScan));
-            }
-            if let Some(transforms) = source.catalog().by_topic(TF_TOPIC) {
-                bindings.push((
-                    transforms.id,
-                    StreamBinding::Transforms { is_static: false },
-                ));
-            }
-            if let Some(transforms) = source.catalog().by_topic(TF_STATIC_TOPIC) {
-                bindings.push((transforms.id, StreamBinding::Transforms { is_static: true }));
-            }
-            let pipelines = PipelineSet::new(&source.catalog().streams, &bindings);
-            let (start, end) = source.time_range();
-            Ok(Self {
-                source,
-                pipelines,
-                clock: PlaybackClock::new(start, end),
-                camera: CameraState::default(),
-                bev: BevState::default(),
-                telemetry: TelemetryState::default(),
-                point_cloud: PointCloudState::default(),
-                transforms: TransformState::default(),
-                last_drawn: None,
-                last_bev_revision: None,
-                last_bev_size: (0, 0),
-            })
-        }
-
-        fn tick(&mut self, elapsed: Duration) -> Result<(), String> {
-            let cursor = self.clock.advance(elapsed);
-            let generation = self.camera.generation();
-            let bev_generation = self.bev.generation();
-            let telemetry_generation = self.telemetry.generation();
-            let point_cloud_generation = self.point_cloud.generation();
-            let mut updates = vec![];
-            for message in self
-                .source
-                .read_until(cursor)
-                .map_err(|error| error.to_string())?
-            {
-                self.pipelines.decode(message.raw, &mut updates);
-            }
-            for update in updates {
-                match update {
-                    DomainUpdate::Camera(frame) => {
-                        self.camera.apply(generation, frame);
-                    }
-                    DomainUpdate::Path(frame) => {
-                        self.bev.apply(bev_generation, frame);
-                    }
-                    DomainUpdate::Telemetry(frame) => {
-                        self.telemetry.apply(telemetry_generation, frame);
-                    }
-                    DomainUpdate::PointCloud(frame) => {
-                        self.point_cloud.apply(point_cloud_generation, frame);
-                    }
-                    DomainUpdate::Transforms(batch) => {
-                        self.transforms.apply(batch);
-                    }
-                }
-            }
-            Ok(())
-        }
-
-        fn seek_fraction(&mut self, fraction: f64) -> Result<(), String> {
-            let start = self.clock.start().0;
-            let duration = self.clock.end().0 - start;
-            self.clock.seek(viewer_core::ArrivalTime(
-                start + (duration as f64 * fraction.clamp(0.0, 1.0)) as i64,
-            ));
-            self.source
-                .seek(self.clock.cursor())
-                .map_err(|error| error.to_string())?;
-            self.camera.cold_seek();
-            self.bev.cold_seek();
-            self.telemetry.cold_seek();
-            self.point_cloud.cold_seek();
-            self.transforms.clear_dynamic();
-            self.last_drawn = None;
-            self.last_bev_revision = None;
-            Ok(())
-        }
-    }
-
     struct WebApp {
-        session: Option<Session>,
+        playback: Option<McapPlayback<Vec<u8>>>,
+        view: WebViewState,
         previous_ms: f64,
     }
 
-    thread_local! { static APP: RefCell<WebApp> = RefCell::new(WebApp { session: None, previous_ms: Date::now() }); }
+    thread_local! { static APP: RefCell<WebApp> = RefCell::new(WebApp {
+        playback: None,
+        view: WebViewState::default(),
+        previous_ms: Date::now(),
+    }); }
 
     fn document() -> web_sys::Document {
         web_sys::window()
@@ -179,12 +69,16 @@ mod browser {
                         .await
                         .map_err(|_| "File read failed".to_owned())?;
                     let bytes = Uint8Array::new(&buffer).to_vec();
-                    Session::open(bytes)
+                    McapPlayback::new(bytes, TOPIC).map_err(|error| error.to_string())
                 }
                 .await;
                 match result {
-                    Ok(session) => {
-                        APP.with(|app| app.borrow_mut().session = Some(session));
+                    Ok(playback) => {
+                        APP.with(|cell| {
+                            let mut app = cell.borrow_mut();
+                            app.playback = Some(playback);
+                            app.view = WebViewState::default();
+                        });
                         set_status(&format!("{file_name} ready"), false);
                     }
                     Err(error) => set_status(&error, true),
@@ -201,10 +95,10 @@ mod browser {
         let play: HtmlButtonElement = element("play");
         let play_callback = Closure::<dyn FnMut()>::new(move || {
             APP.with(|app| {
-                if let Some(session) = &mut app.borrow_mut().session {
-                    session.clock.toggle();
+                if let Some(playback) = &mut app.borrow_mut().playback {
+                    playback.clock_mut().toggle();
                     let button: HtmlButtonElement = element("play");
-                    button.set_inner_text(if session.clock.is_playing() {
+                    button.set_inner_text(if playback.clock().is_playing() {
                         "Pause"
                     } else {
                         "Play"
@@ -223,10 +117,20 @@ mod browser {
                 .map(|input| input.value_as_number())
                 .unwrap_or(0.0);
             APP.with(|app| {
-                if let Some(session) = &mut app.borrow_mut().session
-                    && let Err(error) = session.seek_fraction(value)
-                {
+                let mut app = app.borrow_mut();
+                let result = if let Some(playback) = &mut app.playback {
+                    let start = playback.clock().start().0;
+                    let duration = playback.clock().end().0 - start;
+                    let cursor =
+                        ArrivalTime(start + (duration as f64 * value.clamp(0.0, 1.0)) as i64);
+                    playback.seek(cursor).map_err(|error| error.to_string())
+                } else {
+                    Ok(())
+                };
+                if let Err(error) = result {
                     set_status(&error, true);
+                } else {
+                    app.view = WebViewState::default();
                 }
             });
         });
@@ -249,8 +153,8 @@ mod browser {
                 _ => PlaybackSpeed::Normal,
             };
             APP.with(|app| {
-                if let Some(session) = &mut app.borrow_mut().session {
-                    session.clock.set_speed(speed);
+                if let Some(playback) = &mut app.borrow_mut().playback {
+                    playback.clock_mut().set_speed(speed);
                 }
             });
         });
@@ -267,21 +171,28 @@ mod browser {
             let elapsed =
                 Duration::from_secs_f64(((now - app.previous_ms) / 1000.0).clamp(0.0, 0.25));
             app.previous_ms = now;
-            let Some(session) = &mut app.session else {
+            let WebApp {
+                playback,
+                view,
+                previous_ms: _,
+            } = &mut *app;
+            let Some(session) = playback else {
                 return;
             };
             if let Err(error) = session.tick(elapsed) {
-                set_status(&error, true);
+                set_status(&error.to_string(), true);
                 return;
             }
-            let start = session.clock.start().0;
-            let duration = (session.clock.end().0 - start).max(1);
+            let start = session.clock().start().0;
+            let duration = (session.clock().end().0 - start).max(1);
             let timeline: HtmlInputElement = element("timeline");
             timeline
-                .set_value_as_number((session.clock.cursor().0 - start) as f64 / duration as f64);
-            let counters = session.pipelines.counters();
-            let path_points = session.bev.latest().map_or(0, |frame| frame.points.len());
+                .set_value_as_number((session.clock().cursor().0 - start) as f64 / duration as f64);
+            let counters = session.counters();
+            let state = session.state();
+            let path_points = state.bev.latest().map_or(0, |frame| frame.points.len());
             let scan_points = session
+                .state()
                 .point_cloud
                 .latest()
                 .map_or(0, |frame| frame.points.len());
@@ -292,12 +203,12 @@ mod browser {
                     counters.errors,
                     path_points,
                     scan_points,
-                    (session.clock.cursor().0 - start) as f64 / 1e9
+                    (session.clock().cursor().0 - start) as f64 / 1e9
                 ),
                 counters.errors > 0,
             );
             let telemetry: HtmlElement = element("telemetry");
-            telemetry.set_inner_text(&session.telemetry.latest().map_or_else(
+            telemetry.set_inner_text(&session.state().telemetry.latest().map_or_else(
                 || "Odometry: waiting".to_owned(),
                 |frame| {
                     format!(
@@ -312,21 +223,21 @@ mod browser {
             ));
 
             let bev_size = bev_canvas_size();
-            let bev_revision = session.bev.revision();
-            if session.last_bev_revision != Some(bev_revision) || session.last_bev_size != bev_size
-            {
+            let bev_revision = session.state().bev.revision();
+            if view.last_bev_revision != Some(bev_revision) || view.last_bev_size != bev_size {
                 let path = session
+                    .state()
                     .bev
                     .latest()
                     .map_or(&[][..], |frame| frame.points.as_slice());
                 draw_bev(path, bev_size);
-                session.last_bev_revision = Some(bev_revision);
-                session.last_bev_size = bev_size;
+                view.last_bev_revision = Some(bev_revision);
+                view.last_bev_size = bev_size;
             }
-            let Some(frame) = session.camera.latest() else {
+            let Some(frame) = session.state().camera.latest() else {
                 return;
             };
-            if session.last_drawn == Some(frame.arrival_time.0) {
+            if view.last_drawn == Some(frame.arrival_time.0) {
                 return;
             }
             match decode_jpeg(&frame.jpeg) {
@@ -349,7 +260,7 @@ mod browser {
                     context
                         .put_image_data(&data, 0.0, 0.0)
                         .expect("draw camera");
-                    session.last_drawn = Some(frame.arrival_time.0);
+                    view.last_drawn = Some(frame.arrival_time.0);
                 }
                 Err(error) => set_status(&error.to_string(), true),
             }

@@ -11,10 +11,9 @@ use std::{
     sync::Arc,
     time::Instant,
 };
-use viewer_core::{
-    ArrivalTime, BevState, CameraId, CameraState, DomainUpdate, McapSource, PipelineSet,
-    PlaybackClock, PointCloudState, StreamBinding, TelemetryState, TransformState,
-};
+#[cfg(feature = "ros2-live")]
+use viewer_core::{CameraId, PipelineSet, StreamBinding};
+use viewer_core::{CameraState, DomainState, McapPlayback, PipelineCounters, PlaybackClock};
 use viewer_renderer::{CameraTextureSlot, decode_jpeg};
 use viewer_ui::{TelemetryPresentation, ViewerPresentation, playback_controls, source_status};
 use winit::{
@@ -26,12 +25,6 @@ use winit::{
 
 const DEFAULT_FIXTURE: &str = "tests/fixtures/camera-jpeg/camera_front_3s.mcap";
 const DEFAULT_TOPIC: &str = "/camera/front/image/compressed";
-const PATH_TOPIC: &str = "/planning/path";
-const ODOM_TOPIC: &str = "/odom";
-const SCAN_TOPIC: &str = "/scan";
-const TF_TOPIC: &str = "/tf";
-const TF_STATIC_TOPIC: &str = "/tf_static";
-const TF_SEEK_PREROLL_NS: i64 = 1_000_000_000;
 
 #[derive(Debug)]
 enum SourceMode {
@@ -93,23 +86,18 @@ impl Args {
 
 struct PlaybackSession {
     source: SessionSource,
-    pipelines: PipelineSet,
-    clock: Option<PlaybackClock>,
-    camera: CameraState,
-    bev: BevState,
-    telemetry: TelemetryState,
-    point_cloud: PointCloudState,
-    transforms: TransformState,
-    tf_misses: u64,
-    last_tf_route: Option<String>,
     topic: String,
     source_name: String,
 }
 
 enum SessionSource {
-    Mcap(Box<McapSource<Mmap>>),
+    Mcap(Box<McapPlayback<Mmap>>),
     #[cfg(feature = "ros2-live")]
-    Ros(live::RosLiveHandle),
+    Ros {
+        handle: live::RosLiveHandle,
+        pipelines: PipelineSet,
+        state: DomainState,
+    },
 }
 
 impl PlaybackSession {
@@ -118,45 +106,10 @@ impl PlaybackSession {
         // SAFETY: the mapping is read-only and owns an independent reference to the file pages.
         let mapping =
             unsafe { Mmap::map(&file) }.with_context(|| format!("map {}", path.display()))?;
-        let source = McapSource::new(mapping)?;
-        let descriptor = source
-            .catalog()
-            .by_topic(&topic)
-            .with_context(|| format!("topic {topic} is not present"))?;
-        let mut bindings = vec![(descriptor.id, StreamBinding::Camera(CameraId(0)))];
-        if let Some(path) = source.catalog().by_topic(PATH_TOPIC) {
-            bindings.push((path.id, StreamBinding::Path));
-        }
-        if let Some(odometry) = source.catalog().by_topic(ODOM_TOPIC) {
-            bindings.push((odometry.id, StreamBinding::Odometry));
-        }
-        if let Some(scan) = source.catalog().by_topic(SCAN_TOPIC) {
-            bindings.push((scan.id, StreamBinding::LaserScan));
-        }
-        if let Some(transforms) = source.catalog().by_topic(TF_TOPIC) {
-            bindings.push((
-                transforms.id,
-                StreamBinding::Transforms { is_static: false },
-            ));
-        }
-        if let Some(transforms) = source.catalog().by_topic(TF_STATIC_TOPIC) {
-            bindings.push((transforms.id, StreamBinding::Transforms { is_static: true }));
-        }
-        let pipelines = PipelineSet::new(&source.catalog().streams, &bindings);
-        let (start, end) = source.time_range();
-        let mut clock = PlaybackClock::new(start, end);
-        clock.play();
+        let mut playback = McapPlayback::new(mapping, &topic)?;
+        playback.clock_mut().play();
         Ok(Self {
-            source: SessionSource::Mcap(Box::new(source)),
-            pipelines,
-            clock: Some(clock),
-            camera: CameraState::default(),
-            bev: BevState::default(),
-            telemetry: TelemetryState::default(),
-            point_cloud: PointCloudState::default(),
-            transforms: TransformState::default(),
-            tf_misses: 0,
-            last_tf_route: None,
+            source: SessionSource::Mcap(Box::new(playback)),
             topic,
             source_name: path.display().to_string(),
         })
@@ -175,16 +128,11 @@ impl PlaybackSession {
             &[(descriptor.id, StreamBinding::Camera(CameraId(0)))],
         );
         Self {
-            source: SessionSource::Ros(live::RosLiveHandle::start(topic.clone(), reliable)),
-            pipelines,
-            clock: None,
-            camera: CameraState::default(),
-            bev: BevState::default(),
-            telemetry: TelemetryState::default(),
-            point_cloud: PointCloudState::default(),
-            transforms: TransformState::default(),
-            tf_misses: 0,
-            last_tf_route: None,
+            source: SessionSource::Ros {
+                handle: live::RosLiveHandle::start(topic.clone(), reliable),
+                pipelines,
+                state: DomainState::default(),
+            },
             topic,
             source_name: format!(
                 "ROS 2 live ({})",
@@ -194,66 +142,21 @@ impl PlaybackSession {
     }
 
     fn tick(&mut self, elapsed: std::time::Duration) -> Result<()> {
-        let generation = self.camera.generation();
-        let bev_generation = self.bev.generation();
-        let telemetry_generation = self.telemetry.generation();
-        let point_cloud_generation = self.point_cloud.generation();
-        let mut updates = vec![];
         match &mut self.source {
-            SessionSource::Mcap(source) => {
-                let cursor = self
-                    .clock
-                    .as_mut()
-                    .expect("MCAP has a clock")
-                    .advance(elapsed);
-                for message in source.read_until(cursor)? {
-                    self.pipelines.decode(message.raw, &mut updates);
-                }
-            }
+            SessionSource::Mcap(playback) => playback.tick(elapsed)?,
             #[cfg(feature = "ros2-live")]
-            SessionSource::Ros(source) => {
-                if let Some(error) = source.error() {
+            SessionSource::Ros {
+                handle,
+                pipelines,
+                state,
+            } => {
+                if let Some(error) = handle.error() {
                     bail!("ROS executor: {error}");
                 }
-                if let Some(message) = source.take() {
-                    self.pipelines.decode(message, &mut updates);
-                }
-            }
-        }
-        for update in updates {
-            match update {
-                DomainUpdate::Camera(frame) => {
-                    self.camera.apply(generation, frame);
-                }
-                DomainUpdate::Path(frame) => {
-                    self.bev.apply(bev_generation, frame);
-                }
-                DomainUpdate::Telemetry(frame) => {
-                    self.telemetry.apply(telemetry_generation, frame);
-                }
-                DomainUpdate::PointCloud(frame) => {
-                    let target_frame = self
-                        .telemetry
-                        .latest()
-                        .map_or("odom", |telemetry| telemetry.frame_id.as_str());
-                    let source_frame = frame.frame_id.clone();
-                    let Some(points) = self.transforms.transform_points_at(
-                        &source_frame,
-                        target_frame,
-                        frame.measurement_time,
-                        &frame.points,
-                    ) else {
-                        self.tf_misses = self.tf_misses.saturating_add(1);
-                        continue;
-                    };
-                    let mut frame = frame;
-                    frame.points = points;
-                    frame.frame_id = target_frame.to_owned();
-                    self.last_tf_route = Some(format!("{source_frame} → {target_frame}"));
-                    self.point_cloud.apply(point_cloud_generation, frame);
-                }
-                DomainUpdate::Transforms(batch) => {
-                    self.transforms.apply(batch);
+                if let Some(message) = handle.take() {
+                    let mut updates = Vec::new();
+                    pipelines.decode(message, &mut updates);
+                    state.apply_all(updates);
                 }
             }
         }
@@ -261,40 +164,54 @@ impl PlaybackSession {
     }
 
     fn seek(&mut self) -> Result<()> {
-        if let (SessionSource::Mcap(source), Some(clock)) = (&mut self.source, &self.clock) {
-            let cursor = clock.cursor();
-            self.camera.cold_seek();
-            self.bev.cold_seek();
-            self.telemetry.cold_seek();
-            self.point_cloud.cold_seek();
-            self.transforms.clear_dynamic();
-
-            let start = source.time_range().0;
-            let pre_roll = ArrivalTime(cursor.0.saturating_sub(TF_SEEK_PREROLL_NS).max(start.0));
-            source.seek(pre_roll)?;
-            let mut transform_updates = Vec::new();
-            for message in source.read_until(cursor)? {
-                if message.topic == TF_TOPIC || message.topic == TF_STATIC_TOPIC {
-                    self.pipelines.decode(message.raw, &mut transform_updates);
-                }
+        match &mut self.source {
+            SessionSource::Mcap(playback) => {
+                let cursor = playback.clock().cursor();
+                playback.seek(cursor)?;
             }
-            for update in transform_updates {
-                if let DomainUpdate::Transforms(batch) = update {
-                    self.transforms.apply(batch);
-                }
-            }
-            // Rewind to the requested cursor after the internal TF pre-roll so
-            // ordinary domain messages at the cursor remain visible to playback.
-            source.seek(cursor)?;
+            #[cfg(feature = "ros2-live")]
+            SessionSource::Ros { .. } => {}
         }
         Ok(())
+    }
+
+    fn state(&self) -> &DomainState {
+        match &self.source {
+            SessionSource::Mcap(playback) => playback.state(),
+            #[cfg(feature = "ros2-live")]
+            SessionSource::Ros { state, .. } => state,
+        }
+    }
+
+    fn state_mut(&mut self) -> &mut DomainState {
+        match &mut self.source {
+            SessionSource::Mcap(playback) => playback.state_mut(),
+            #[cfg(feature = "ros2-live")]
+            SessionSource::Ros { state, .. } => state,
+        }
+    }
+
+    fn clock_mut(&mut self) -> Option<&mut PlaybackClock> {
+        match &mut self.source {
+            SessionSource::Mcap(playback) => Some(playback.clock_mut()),
+            #[cfg(feature = "ros2-live")]
+            SessionSource::Ros { .. } => None,
+        }
+    }
+
+    fn counters(&self) -> PipelineCounters {
+        match &self.source {
+            SessionSource::Mcap(playback) => playback.counters(),
+            #[cfg(feature = "ros2-live")]
+            SessionSource::Ros { pipelines, .. } => pipelines.counters(),
+        }
     }
 
     fn presentation(&self, error: Option<String>) -> ViewerPresentation {
         #[cfg(feature = "ros2-live")]
         let source_name = match &self.source {
-            SessionSource::Ros(source) => {
-                let age = self.camera.latest().and_then(|frame| {
+            SessionSource::Ros { handle, state, .. } => {
+                let age = state.camera.latest().and_then(|frame| {
                     let now = std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
                         .ok()?;
@@ -314,9 +231,9 @@ impl PlaybackSession {
                     "{} · {} · received {} · coalesced {} · CDR copy {} KiB",
                     self.source_name,
                     freshness,
-                    source.received(),
-                    source.coalesced(),
-                    source.copied_bytes() / 1024
+                    handle.received(),
+                    handle.coalesced(),
+                    handle.copied_bytes() / 1024
                 )
             }
             SessionSource::Mcap(_) => self.source_name.clone(),
@@ -326,18 +243,22 @@ impl PlaybackSession {
         ViewerPresentation {
             source: source_name,
             topic: self.topic.clone(),
-            camera_status: self.camera.status(),
-            counters: self.pipelines.counters(),
-            telemetry: self.telemetry.latest().map(|frame| TelemetryPresentation {
-                frame_id: frame.frame_id.clone(),
-                child_frame_id: frame.child_frame_id.clone(),
-                position_x: frame.position_x,
-                position_y: frame.position_y,
-                yaw_radians: frame.yaw_radians,
-                forward_velocity: frame.forward_velocity,
-                speed: frame.speed,
-                yaw_rate: frame.yaw_rate,
-            }),
+            camera_status: self.state().camera.status(),
+            counters: self.counters(),
+            telemetry: self
+                .state()
+                .telemetry
+                .latest()
+                .map(|frame| TelemetryPresentation {
+                    frame_id: frame.frame_id.clone(),
+                    child_frame_id: frame.child_frame_id.clone(),
+                    position_x: frame.position_x,
+                    position_y: frame.position_y,
+                    yaw_radians: frame.yaw_radians,
+                    forward_velocity: frame.forward_velocity,
+                    speed: frame.speed,
+                    yaw_rate: frame.yaw_rate,
+                }),
             error,
         }
     }
@@ -359,6 +280,17 @@ struct Graphics {
     scene_renderer: SceneRenderer,
     scene_texture_id: egui::TextureId,
     accumulate_points: bool,
+}
+
+struct UiOutput {
+    egui: egui::FullOutput,
+    seeked: bool,
+    bev_size: egui::Vec2,
+    scene_size: egui::Vec2,
+    accumulate_points: bool,
+    scene_wheel_delta: f32,
+    scene_orbit_delta: egui::Vec2,
+    reset_scene_camera: bool,
 }
 
 impl Graphics {
@@ -486,8 +418,7 @@ impl Graphics {
         Ok(())
     }
 
-    fn clear_camera(&mut self) {
-        self.camera_slot.clear();
+    fn hide_camera(&mut self) {
         self.uploaded_arrival = None;
     }
 
@@ -497,28 +428,55 @@ impl Graphics {
         session: &mut PlaybackSession,
         error: Option<String>,
     ) -> Result<bool, wgpu::SurfaceError> {
+        let ui = self.build_ui(window, session, error);
+        self.accumulate_points = ui.accumulate_points;
+        if ui.scene_wheel_delta != 0.0 {
+            self.scene_renderer.zoom(ui.scene_wheel_delta);
+        }
+        if ui.scene_orbit_delta != egui::Vec2::ZERO {
+            self.scene_renderer
+                .orbit(ui.scene_orbit_delta.x, ui.scene_orbit_delta.y);
+        }
+        if ui.reset_scene_camera {
+            self.scene_renderer.reset_camera();
+        }
+        let pixels_per_point = ui.egui.pixels_per_point;
+        self.sync_bev(ui.bev_size, session, pixels_per_point);
+        self.sync_scene(ui.scene_size, session, pixels_per_point);
+        self.paint_egui(window, ui.egui)?;
+        Ok(ui.seeked)
+    }
+
+    fn build_ui(
+        &mut self,
+        window: &Window,
+        session: &mut PlaybackSession,
+        error: Option<String>,
+    ) -> UiOutput {
         let input = self.egui_state.take_egui_input(window);
         let model = session.presentation(error);
         let texture_id = self.camera_texture_id;
         let texture_size = self.camera_slot.size();
+        let camera_available = session.state().camera.latest().is_some();
         let bev_texture_id = self.bev_texture_id;
         let scene_texture_id = self.scene_texture_id;
         let bev_path_points = self.bev_path_points(session).map_or(0, <[_]>::len);
         let current_scan_points = session
+            .state()
             .point_cloud
             .latest()
             .map_or(0, |frame| frame.points.len());
         let visible_scan_points = self.scene_renderer.visible_points();
         let scene_camera_distance = self.scene_renderer.camera().distance;
         let mut accumulate_points = self.accumulate_points;
-        let tf_status = session.last_tf_route.as_ref().map_or_else(
-            || format!("TF waiting · misses {}", session.tf_misses),
+        let tf_status = session.state().last_tf_route.as_ref().map_or_else(
+            || format!("TF waiting · misses {}", session.state().tf_misses),
             |route| {
                 format!(
                     "TF {route} · static {} dynamic {} · misses {}",
-                    session.transforms.static_len(),
-                    session.transforms.dynamic_len(),
-                    session.tf_misses
+                    session.state().transforms.static_len(),
+                    session.state().transforms.dynamic_len(),
+                    session.state().tf_misses
                 )
             },
         );
@@ -528,8 +486,8 @@ impl Graphics {
         let mut scene_orbit_delta = egui::Vec2::ZERO;
         let mut reset_scene_camera = false;
         let mut seeked = false;
-        let output = self.egui_context.run(input, |context| {
-            if let Some(clock) = &mut session.clock {
+        let egui = self.egui_context.run(input, |context| {
+            if let Some(clock) = session.clock_mut() {
                 egui::TopBottomPanel::bottom("playback-controls").show(context, |ui| {
                     seeked = playback_controls(ui, clock).seeked;
                 });
@@ -548,7 +506,9 @@ impl Graphics {
                     ui.columns(2, |columns| {
                         columns[0].heading("JPEG CAMERA");
                         columns[0].separator();
-                        if let (Some(id), Some((width, height))) = (texture_id, texture_size) {
+                        if let (true, Some(id), Some((width, height))) =
+                            (camera_available, texture_id, texture_size)
+                        {
                             let available = columns[0].available_size();
                             let scale = (available.x / width as f32)
                                 .min(available.y / height as f32)
@@ -599,27 +559,25 @@ impl Graphics {
                 reset_scene_camera = response.double_clicked();
             });
         });
-        self.accumulate_points = accumulate_points;
-        if scene_wheel_delta != 0.0 {
-            self.scene_renderer.zoom(scene_wheel_delta);
+        UiOutput {
+            egui,
+            seeked,
+            bev_size: bev_logical_size,
+            scene_size: scene_logical_size,
+            accumulate_points,
+            scene_wheel_delta,
+            scene_orbit_delta,
+            reset_scene_camera,
         }
-        if scene_orbit_delta != egui::Vec2::ZERO {
-            self.scene_renderer
-                .orbit(scene_orbit_delta.x, scene_orbit_delta.y);
-        }
-        if reset_scene_camera {
-            self.scene_renderer.reset_camera();
-        }
-        self.egui_state
-            .handle_platform_output(window, output.platform_output);
+    }
 
-        let pixels_per_point = output.pixels_per_point;
-        let bev_width = (bev_logical_size.x * pixels_per_point)
-            .round()
-            .clamp(1.0, 4096.0) as u32;
-        let bev_height = (bev_logical_size.y * pixels_per_point)
-            .round()
-            .clamp(1.0, 4096.0) as u32;
+    fn sync_bev(
+        &mut self,
+        logical_size: egui::Vec2,
+        session: &PlaybackSession,
+        pixels_per_point: f32,
+    ) {
+        let (bev_width, bev_height) = texture_size(logical_size, pixels_per_point);
         let bev_resized = self
             .bev_renderer
             .resize(&self.device, bev_width, bev_height);
@@ -632,19 +590,22 @@ impl Graphics {
             );
         }
         let bev_frame = BevFrame {
-            revision: session.bev.revision(),
+            revision: session.state().bev.revision(),
             path: self.bev_path_points(session).unwrap_or(&[]),
         };
         if bev_resized || self.bev_renderer.needs_render(bev_frame) {
             self.bev_renderer
                 .render(&self.device, &self.queue, bev_frame);
         }
-        let scene_width = (scene_logical_size.x * pixels_per_point)
-            .round()
-            .clamp(1.0, 4096.0) as u32;
-        let scene_height = (scene_logical_size.y * pixels_per_point)
-            .round()
-            .clamp(1.0, 4096.0) as u32;
+    }
+
+    fn sync_scene(
+        &mut self,
+        logical_size: egui::Vec2,
+        session: &PlaybackSession,
+        pixels_per_point: f32,
+    ) {
+        let (scene_width, scene_height) = texture_size(logical_size, pixels_per_point);
         let scene_resized = self
             .scene_renderer
             .resize(&self.device, scene_width, scene_height);
@@ -656,17 +617,18 @@ impl Graphics {
                 self.scene_texture_id,
             );
         }
-        let telemetry = session.telemetry.latest();
+        let telemetry = session.state().telemetry.latest();
         let telemetry_revision = telemetry.map_or(0, |frame| frame.arrival_time.0 as u64);
         let scene_frame = SceneFrame {
-            revision: session.bev.revision().rotate_left(17) ^ telemetry_revision,
-            cloud_revision: session.point_cloud.revision(),
+            revision: session.state().bev.revision().rotate_left(17) ^ telemetry_revision,
+            cloud_revision: session.state().point_cloud.revision(),
             ego_position: telemetry.map_or([0.0, 0.0], |frame| {
                 [frame.position_x as f32, frame.position_y as f32]
             }),
             ego_yaw: telemetry.map_or(0.0, |frame| frame.yaw_radians as f32),
             path: self.bev_path_points(session).unwrap_or(&[]),
             cloud: session
+                .state()
                 .point_cloud
                 .latest()
                 .map_or(&[], |frame| frame.points.as_slice()),
@@ -676,13 +638,27 @@ impl Graphics {
             self.scene_renderer
                 .render(&self.device, &self.queue, scene_frame);
         }
-        for (id, delta) in &output.textures_delta.set {
+    }
+
+    fn paint_egui(
+        &mut self,
+        window: &Window,
+        output: egui::FullOutput,
+    ) -> Result<(), wgpu::SurfaceError> {
+        let egui::FullOutput {
+            platform_output,
+            textures_delta,
+            shapes,
+            pixels_per_point,
+            ..
+        } = output;
+        self.egui_state
+            .handle_platform_output(window, platform_output);
+        for (id, delta) in &textures_delta.set {
             self.egui_renderer
                 .update_texture(&self.device, &self.queue, *id, delta);
         }
-        let paint_jobs = self
-            .egui_context
-            .tessellate(output.shapes, output.pixels_per_point);
+        let paint_jobs = self.egui_context.tessellate(shapes, pixels_per_point);
         let screen = ScreenDescriptor {
             size_in_pixels: [self.config.width, self.config.height],
             pixels_per_point: window.scale_factor() as f32,
@@ -731,15 +707,30 @@ impl Graphics {
         self.queue
             .submit(callbacks.into_iter().chain([encoder.finish()]));
         frame.present();
-        for id in &output.textures_delta.free {
+        for id in &textures_delta.free {
             self.egui_renderer.free_texture(id);
         }
-        Ok(seeked)
+        Ok(())
     }
 
     fn bev_path_points<'a>(&self, session: &'a PlaybackSession) -> Option<&'a [[f32; 2]]> {
-        session.bev.latest().map(|frame| frame.points.as_slice())
+        session
+            .state()
+            .bev
+            .latest()
+            .map(|frame| frame.points.as_slice())
     }
+}
+
+fn texture_size(logical_size: egui::Vec2, pixels_per_point: f32) -> (u32, u32) {
+    (
+        (logical_size.x * pixels_per_point)
+            .round()
+            .clamp(1.0, 4096.0) as u32,
+        (logical_size.y * pixels_per_point)
+            .round()
+            .clamp(1.0, 4096.0) as u32,
+    )
 }
 
 struct App {
@@ -759,7 +750,7 @@ impl App {
                 self.session = Some(session);
                 self.error = None;
                 if let Some(graphics) = &mut self.graphics {
-                    graphics.clear_camera();
+                    graphics.hide_camera();
                 }
             }
             Err(error) => self.error = Some(error.to_string()),
@@ -835,9 +826,9 @@ impl ApplicationHandler for App {
                         self.error = Some(error.to_string());
                     }
                     if let Some(graphics) = &mut self.graphics {
-                        if let Err(error) = graphics.upload_latest(&session.camera) {
+                        if let Err(error) = graphics.upload_latest(&session.state().camera) {
                             self.error = Some(error.to_string());
-                            session.camera.set_error();
+                            session.state_mut().camera.set_error();
                         }
                         match graphics.render(&window, session, self.error.clone()) {
                             Ok(seeked) => {
@@ -845,7 +836,7 @@ impl ApplicationHandler for App {
                                     if let Err(error) = session.seek() {
                                         self.error = Some(error.to_string());
                                     }
-                                    graphics.clear_camera();
+                                    graphics.hide_camera();
                                 }
                             }
                             Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
