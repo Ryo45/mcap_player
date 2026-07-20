@@ -30,7 +30,7 @@ fn every_scan_resolves_to_world_at_its_measurement_time() {
 
     for message in source.read_until(end).unwrap() {
         let mut updates = Vec::new();
-        pipelines.decode(message.raw, &mut updates);
+        pipelines.decode(message, &mut updates);
         for update in updates {
             match update {
                 DomainUpdate::Transforms(batch) => transforms.apply(batch),

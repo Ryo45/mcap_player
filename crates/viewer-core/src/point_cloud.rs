@@ -11,16 +11,12 @@ pub struct PointCloudFrame {
 
 #[derive(Clone, Debug, Default)]
 pub struct PointCloudState {
-    generation: u64,
     revision: u64,
     latest: Option<PointCloudFrame>,
 }
 
 impl PointCloudState {
-    pub fn apply(&mut self, generation: u64, frame: PointCloudFrame) -> bool {
-        if generation != self.generation {
-            return false;
-        }
+    pub fn apply(&mut self, frame: PointCloudFrame) -> bool {
         if self
             .latest
             .as_ref()
@@ -33,15 +29,9 @@ impl PointCloudState {
         true
     }
 
-    pub fn cold_seek(&mut self) -> u64 {
-        self.generation = self.generation.wrapping_add(1);
+    pub fn cold_seek(&mut self) {
         self.revision = self.revision.wrapping_add(1);
         self.latest = None;
-        self.generation
-    }
-
-    pub fn generation(&self) -> u64 {
-        self.generation
     }
 
     pub fn revision(&self) -> u64 {
@@ -69,12 +59,12 @@ mod tests {
     #[test]
     fn keeps_latest_scan_and_clears_on_seek() {
         let mut state = PointCloudState::default();
-        assert!(state.apply(0, frame(2)));
-        assert!(!state.apply(0, frame(1)));
+        assert!(state.apply(frame(2)));
+        assert!(!state.apply(frame(1)));
         let revision = state.revision();
-        let generation = state.cold_seek();
+        state.cold_seek();
         assert!(state.latest().is_none());
         assert_ne!(state.revision(), revision);
-        assert!(!state.apply(generation - 1, frame(3)));
+        assert!(state.apply(frame(3)));
     }
 }

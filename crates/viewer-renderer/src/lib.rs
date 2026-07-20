@@ -41,29 +41,27 @@ pub struct CameraTextureSlot {
     texture: Option<wgpu::Texture>,
     view: Option<wgpu::TextureView>,
     size: Option<(u32, u32)>,
-    format: wgpu::TextureFormat,
     metrics: TextureMetrics,
 }
 
 impl Default for CameraTextureSlot {
     fn default() -> Self {
-        Self::new(wgpu::TextureFormat::Rgba8Unorm)
+        Self::new()
     }
 }
 
 impl CameraTextureSlot {
-    pub fn new(format: wgpu::TextureFormat) -> Self {
+    pub fn new() -> Self {
         Self {
             texture: None,
             view: None,
             size: None,
-            format,
             metrics: TextureMetrics::default(),
         }
     }
 
-    pub fn needs_recreate(&self, width: u32, height: u32, format: wgpu::TextureFormat) -> bool {
-        self.texture.is_none() || self.size != Some((width, height)) || self.format != format
+    pub fn needs_recreate(&self, width: u32, height: u32) -> bool {
+        self.texture.is_none() || self.size != Some((width, height))
     }
 
     pub fn update(
@@ -78,10 +76,8 @@ impl CameraTextureSlot {
         {
             return false;
         }
-        let recreated =
-            self.needs_recreate(image.width, image.height, wgpu::TextureFormat::Rgba8Unorm);
+        let recreated = self.needs_recreate(image.width, image.height);
         if recreated {
-            self.format = wgpu::TextureFormat::Rgba8Unorm;
             let texture = device.create_texture(&wgpu::TextureDescriptor {
                 label: Some("camera texture slot"),
                 size: wgpu::Extent3d {
@@ -92,7 +88,7 @@ impl CameraTextureSlot {
                 mip_level_count: 1,
                 sample_count: 1,
                 dimension: wgpu::TextureDimension::D2,
-                format: self.format,
+                format: wgpu::TextureFormat::Rgba8Unorm,
                 usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
                 view_formats: &[],
             });
@@ -133,11 +129,6 @@ impl CameraTextureSlot {
     pub fn metrics(&self) -> TextureMetrics {
         self.metrics
     }
-    pub fn clear(&mut self) {
-        self.texture = None;
-        self.view = None;
-        self.size = None;
-    }
 }
 
 #[cfg(test)]
@@ -147,7 +138,6 @@ mod tests {
     #[test]
     fn recreation_decision_only_depends_on_image_storage() {
         let slot = CameraTextureSlot::default();
-        assert!(slot.needs_recreate(320, 240, wgpu::TextureFormat::Rgba8UnormSrgb));
-        assert!(slot.needs_recreate(320, 240, wgpu::TextureFormat::Rgba8Unorm));
+        assert!(slot.needs_recreate(320, 240));
     }
 }

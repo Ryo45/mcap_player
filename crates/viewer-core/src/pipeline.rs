@@ -5,6 +5,23 @@ use crate::{
 };
 use std::collections::HashMap;
 
+pub const PATH_TOPIC: &str = "/planning/path";
+pub const ODOM_TOPIC: &str = "/odom";
+pub const SCAN_TOPIC: &str = "/scan";
+pub const TF_TOPIC: &str = "/tf";
+pub const TF_STATIC_TOPIC: &str = "/tf_static";
+
+const OPTIONAL_BINDINGS: &[(&str, StreamBinding)] = &[
+    (PATH_TOPIC, StreamBinding::Path),
+    (ODOM_TOPIC, StreamBinding::Odometry),
+    (SCAN_TOPIC, StreamBinding::LaserScan),
+    (TF_TOPIC, StreamBinding::Transforms { is_static: false }),
+    (
+        TF_STATIC_TOPIC,
+        StreamBinding::Transforms { is_static: true },
+    ),
+];
+
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct StreamId(pub u32);
 
@@ -30,6 +47,22 @@ pub enum StreamBinding {
     Odometry,
     LaserScan,
     Transforms { is_static: bool },
+}
+
+pub fn standard_bindings(
+    catalog: &crate::StreamCatalog,
+    camera_topic: &str,
+) -> Result<Vec<(StreamId, StreamBinding)>, String> {
+    let camera = catalog
+        .by_topic(camera_topic)
+        .ok_or_else(|| format!("topic {camera_topic} is not present"))?;
+    let mut bindings = vec![(camera.id, StreamBinding::Camera(CameraId(0)))];
+    bindings.extend(OPTIONAL_BINDINGS.iter().filter_map(|(topic, binding)| {
+        catalog
+            .by_topic(topic)
+            .map(|descriptor| (descriptor.id, *binding))
+    }));
+    Ok(bindings)
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -189,41 +222,8 @@ impl PipelineSet {
             let Some(descriptor) = descriptors.iter().find(|item| item.id == *id) else {
                 continue;
             };
-            match binding {
-                StreamBinding::Camera(camera_id)
-                    if descriptor.schema == "sensor_msgs/msg/CompressedImage" =>
-                {
-                    pipelines.insert(
-                        *id,
-                        Box::new(CompressedImagePipeline {
-                            camera_id: *camera_id,
-                        }),
-                    );
-                }
-                StreamBinding::Camera(_) => {}
-                StreamBinding::Path if descriptor.schema == "nav_msgs/msg/Path" => {
-                    pipelines.insert(*id, Box::new(PathPipeline));
-                }
-                StreamBinding::Path => {}
-                StreamBinding::Odometry if descriptor.schema == "nav_msgs/msg/Odometry" => {
-                    pipelines.insert(*id, Box::new(OdometryPipeline));
-                }
-                StreamBinding::Odometry => {}
-                StreamBinding::LaserScan if descriptor.schema == "sensor_msgs/msg/LaserScan" => {
-                    pipelines.insert(*id, Box::new(LaserScanPipeline));
-                }
-                StreamBinding::LaserScan => {}
-                StreamBinding::Transforms { is_static }
-                    if descriptor.schema == "tf2_msgs/msg/TFMessage" =>
-                {
-                    pipelines.insert(
-                        *id,
-                        Box::new(TransformPipeline {
-                            is_static: *is_static,
-                        }),
-                    );
-                }
-                StreamBinding::Transforms { .. } => {}
+            if let Some(pipeline) = build_pipeline(descriptor, *binding) {
+                pipelines.insert(*id, pipeline);
             }
         }
         Self {
@@ -246,4 +246,31 @@ impl PipelineSet {
     pub fn counters(&self) -> PipelineCounters {
         self.counters
     }
+}
+
+fn build_pipeline(
+    descriptor: &StreamDescriptor,
+    binding: StreamBinding,
+) -> Option<Box<dyn StreamPipeline>> {
+    let pipeline: Box<dyn StreamPipeline> = match binding {
+        StreamBinding::Camera(camera_id)
+            if descriptor.schema == "sensor_msgs/msg/CompressedImage" =>
+        {
+            Box::new(CompressedImagePipeline { camera_id })
+        }
+        StreamBinding::Path if descriptor.schema == "nav_msgs/msg/Path" => Box::new(PathPipeline),
+        StreamBinding::Odometry if descriptor.schema == "nav_msgs/msg/Odometry" => {
+            Box::new(OdometryPipeline)
+        }
+        StreamBinding::LaserScan if descriptor.schema == "sensor_msgs/msg/LaserScan" => {
+            Box::new(LaserScanPipeline)
+        }
+        StreamBinding::Transforms { is_static }
+            if descriptor.schema == "tf2_msgs/msg/TFMessage" =>
+        {
+            Box::new(TransformPipeline { is_static })
+        }
+        _ => return None,
+    };
+    Some(pipeline)
 }

@@ -15,12 +15,6 @@ impl StreamCatalog {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct SourceMessage {
-    pub raw: RawMessage,
-    pub topic: String,
-}
-
 #[derive(Debug)]
 pub enum McapOpenError {
     Mcap(mcap::McapError),
@@ -52,7 +46,6 @@ impl From<mcap::McapError> for McapOpenError {
 struct CachedMessage {
     arrival: ArrivalTime,
     stream_id: StreamId,
-    topic: String,
     payload: Vec<u8>,
 }
 
@@ -115,7 +108,7 @@ impl<B: AsRef<[u8]>> McapSource<B> {
             chunk: None,
             position: 0,
         };
-        if source.summary.is_none() {
+        if !source.has_chunks() {
             source.load_linear()?;
             if let (Some(first), Some(last)) = (source.cache.first(), source.cache.last()) {
                 source.range = (first.arrival, last.arrival);
@@ -134,11 +127,8 @@ impl<B: AsRef<[u8]>> McapSource<B> {
     pub fn seek(&mut self, cursor: ArrivalTime) -> Result<(), McapOpenError> {
         self.cache.clear();
         self.position = 0;
-        if let Some(summary) = &self.summary {
-            if summary.chunk_indexes.is_empty() {
-                self.chunk = None;
-                return Ok(());
-            }
+        if self.has_chunks() {
+            let summary = self.summary.as_ref().expect("chunk summary checked");
             let partition = summary
                 .chunk_indexes
                 .partition_point(|index| to_arrival_lossy(index.message_end_time) < cursor);
@@ -156,8 +146,8 @@ impl<B: AsRef<[u8]>> McapSource<B> {
         Ok(())
     }
 
-    pub fn read_until(&mut self, cursor: ArrivalTime) -> Result<Vec<SourceMessage>, McapOpenError> {
-        if self.summary.is_some() && self.chunk.is_none() {
+    pub fn read_until(&mut self, cursor: ArrivalTime) -> Result<Vec<RawMessage>, McapOpenError> {
+        if self.has_chunks() && self.chunk.is_none() {
             self.load_chunk(0)?;
         }
         let mut output = vec![];
@@ -166,13 +156,10 @@ impl<B: AsRef<[u8]>> McapSource<B> {
                 if message.arrival > cursor {
                     return Ok(output);
                 }
-                output.push(SourceMessage {
-                    raw: RawMessage {
-                        stream_id: message.stream_id,
-                        arrival_time: message.arrival,
-                        payload: message.payload.clone(),
-                    },
-                    topic: message.topic.clone(),
+                output.push(RawMessage {
+                    stream_id: message.stream_id,
+                    arrival_time: message.arrival,
+                    payload: message.payload.clone(),
                 });
                 self.position += 1;
             }
@@ -205,7 +192,6 @@ impl<B: AsRef<[u8]>> McapSource<B> {
             cache.push(CachedMessage {
                 arrival: to_arrival(message.log_time)?,
                 stream_id: StreamId(u32::from(message.channel.id)),
-                topic: message.channel.topic.clone(),
                 payload: message.data.into_owned(),
             });
         }
@@ -244,13 +230,18 @@ impl<B: AsRef<[u8]>> McapSource<B> {
             cache.push(CachedMessage {
                 arrival: to_arrival(message.log_time)?,
                 stream_id: StreamId(u32::from(message.channel.id)),
-                topic: message.channel.topic.clone(),
                 payload: message.data.into_owned(),
             });
         }
         cache.sort_by_key(|message| message.arrival);
         self.cache = cache;
         Ok(())
+    }
+
+    fn has_chunks(&self) -> bool {
+        self.summary
+            .as_ref()
+            .is_some_and(|summary| !summary.chunk_indexes.is_empty())
     }
 }
 
@@ -261,4 +252,44 @@ fn to_arrival(value: u64) -> Result<ArrivalTime, McapOpenError> {
 }
 fn to_arrival_lossy(value: u64) -> ArrivalTime {
     ArrivalTime(i64::try_from(value).unwrap_or(i64::MAX))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mcap::{WriteOptions, Writer, records::MessageHeader};
+    use std::{collections::BTreeMap, io::Cursor};
+
+    #[test]
+    fn reads_summary_bearing_mcap_without_chunks_linearly() {
+        let mut bytes = Cursor::new(Vec::new());
+        {
+            let options = WriteOptions::new().use_chunks(false);
+            let mut writer = Writer::with_options(&mut bytes, options).unwrap();
+            let schema = writer
+                .add_schema("example/msg/Value", "ros2msg", b"uint8 value\n")
+                .unwrap();
+            let channel = writer
+                .add_channel(schema, "/value", "cdr", &BTreeMap::new())
+                .unwrap();
+            writer
+                .write_to_known_channel(
+                    &MessageHeader {
+                        channel_id: channel,
+                        sequence: 0,
+                        log_time: 20,
+                        publish_time: 10,
+                    },
+                    &[1, 2, 3],
+                )
+                .unwrap();
+            writer.finish().unwrap();
+        }
+
+        let mut source = McapSource::new(bytes.into_inner()).unwrap();
+        assert_eq!(source.time_range(), (ArrivalTime(20), ArrivalTime(20)));
+        let messages = source.read_until(ArrivalTime(20)).unwrap();
+        assert_eq!(messages.len(), 1);
+        assert_eq!(messages[0].payload, vec![1, 2, 3]);
+    }
 }

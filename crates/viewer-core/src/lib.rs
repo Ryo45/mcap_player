@@ -4,8 +4,10 @@ mod bev;
 mod camera;
 mod cdr;
 mod clock;
+mod domain;
 mod mcap_source;
 mod pipeline;
+mod playback;
 mod point_cloud;
 mod telemetry;
 mod time;
@@ -19,11 +21,14 @@ pub use cdr::{
     encode_compressed_image_cdr,
 };
 pub use clock::{PlaybackClock, PlaybackSpeed};
-pub use mcap_source::{McapOpenError, McapSource, SourceMessage, StreamCatalog};
+pub use domain::DomainState;
+pub use mcap_source::{McapOpenError, McapSource, StreamCatalog};
 pub use pipeline::{
-    DomainUpdate, PipelineCounters, PipelineSet, RawMessage, StreamBinding, StreamDescriptor,
-    StreamId, StreamPipeline,
+    DomainUpdate, ODOM_TOPIC, PATH_TOPIC, PipelineCounters, PipelineSet, RawMessage, SCAN_TOPIC,
+    StreamBinding, StreamDescriptor, StreamId, StreamPipeline, TF_STATIC_TOPIC, TF_TOPIC,
+    standard_bindings,
 };
+pub use playback::{McapPlayback, McapPlaybackError};
 pub use point_cloud::{PointCloudFrame, PointCloudState};
 pub use telemetry::{TelemetryFrame, TelemetryState};
 pub use time::{ArrivalTime, CameraId, MeasurementTime};

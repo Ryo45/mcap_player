@@ -24,7 +24,7 @@ fn fixture_has_30_decodable_frames_and_distinct_time_domains() {
     let (_, end) = source.time_range();
     let mut updates = vec![];
     for message in source.read_until(end).unwrap() {
-        pipelines.decode(message.raw, &mut updates);
+        pipelines.decode(message, &mut updates);
     }
     assert_eq!(updates.len(), 30);
     let mut state = CameraState::default();
@@ -36,7 +36,7 @@ fn fixture_has_30_decodable_frames_and_distinct_time_domains() {
         let decoded = decode_jpeg(&frame.jpeg).unwrap();
         assert_eq!((decoded.width, decoded.height), (320, 240));
         assert!(
-            state.apply(0, frame),
+            state.apply(frame),
             "frame {index} must advance arrival state"
         );
     }
@@ -57,12 +57,12 @@ fn cold_seek_returns_only_cursor_or_newer_frames() {
     assert!(
         messages
             .iter()
-            .all(|message| message.raw.arrival_time >= cursor)
+            .all(|message| message.arrival_time >= cursor)
     );
     assert!(
         messages
             .iter()
-            .all(|message| message.raw.arrival_time <= ArrivalTime(cursor.0 + 200_000_000))
+            .all(|message| message.arrival_time <= ArrivalTime(cursor.0 + 200_000_000))
     );
 }
 
@@ -79,11 +79,11 @@ fn malformed_message_does_not_stop_the_next_frame() {
     );
     let (_, end) = source.time_range();
     let messages = source.read_until(end).unwrap();
-    let mut bad = messages[0].raw.clone();
+    let mut bad = messages[0].clone();
     bad.payload.truncate(7);
     let mut output = vec![];
     pipelines.decode(bad, &mut output);
-    pipelines.decode(messages[1].raw.clone(), &mut output);
+    pipelines.decode(messages[1].clone(), &mut output);
     assert_eq!(pipelines.counters().errors, 1);
     assert_eq!(pipelines.counters().decoded, 1);
     assert_eq!(output.len(), 1);

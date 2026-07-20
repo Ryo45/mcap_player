@@ -16,15 +16,11 @@ pub struct TelemetryFrame {
 
 #[derive(Clone, Debug, Default)]
 pub struct TelemetryState {
-    generation: u64,
     latest: Option<TelemetryFrame>,
 }
 
 impl TelemetryState {
-    pub fn apply(&mut self, generation: u64, frame: TelemetryFrame) -> bool {
-        if generation != self.generation {
-            return false;
-        }
+    pub fn apply(&mut self, frame: TelemetryFrame) -> bool {
         if self
             .latest
             .as_ref()
@@ -36,14 +32,8 @@ impl TelemetryState {
         true
     }
 
-    pub fn cold_seek(&mut self) -> u64 {
-        self.generation = self.generation.wrapping_add(1);
+    pub fn cold_seek(&mut self) {
         self.latest = None;
-        self.generation
-    }
-
-    pub fn generation(&self) -> u64 {
-        self.generation
     }
 
     pub fn latest(&self) -> Option<&TelemetryFrame> {
@@ -71,13 +61,12 @@ mod tests {
     }
 
     #[test]
-    fn rejects_old_and_stale_generation() {
+    fn rejects_old_and_clears_on_seek() {
         let mut state = TelemetryState::default();
-        assert!(state.apply(0, frame(2)));
-        assert!(!state.apply(0, frame(1)));
-        let generation = state.cold_seek();
+        assert!(state.apply(frame(2)));
+        assert!(!state.apply(frame(1)));
+        state.cold_seek();
         assert!(state.latest().is_none());
-        assert!(!state.apply(generation - 1, frame(3)));
-        assert!(state.apply(generation, frame(3)));
+        assert!(state.apply(frame(3)));
     }
 }
