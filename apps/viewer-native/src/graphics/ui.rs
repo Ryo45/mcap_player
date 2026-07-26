@@ -1,6 +1,6 @@
-use super::Graphics;
+use super::{Graphics, RenderInput};
 use scene_renderer::SceneCameraMode;
-use viewer_core::{CameraId, DomainState, PlaybackCommand, PlaybackView, ViewerPresentation};
+use viewer_core::{CameraId, PlaybackCommand};
 use viewer_ui::{playback_controls, source_status};
 use winit::window::Window;
 
@@ -18,20 +18,18 @@ pub(super) struct UiOutput {
 }
 
 impl Graphics {
-    pub(super) fn build_ui(
-        &mut self,
-        window: &Window,
-        state: &DomainState,
-        presentation: &ViewerPresentation,
-        playback: Option<PlaybackView>,
-    ) -> UiOutput {
+    pub(super) fn build_ui(&mut self, window: &Window, render_input: &RenderInput<'_>) -> UiOutput {
+        let presentation = render_input.presentation;
+        let playback = render_input.playback;
+        let scene = render_input.scene;
+        let static_transform_count = render_input.static_transform_count;
+        let dynamic_transform_count = render_input.dynamic_transform_count;
         let input = self.egui_state.take_egui_input(window);
         let mut camera_ids = presentation
             .cameras
             .iter()
             .map(|camera| camera.id)
             .collect::<Vec<_>>();
-        camera_ids.extend(state.camera.ids());
         camera_ids.sort_unstable();
         camera_ids.dedup();
         let mut focused_camera = presentation
@@ -61,8 +59,8 @@ impl Graphics {
         let visible_scan_points = self.scene_renderer.visible_points();
         let scene_camera_distance = self.scene_renderer.camera().distance;
         let mut scene_camera_mode = self.scene_renderer.camera_mode();
-        let mut accumulate_points = self.accumulate_points;
-        let scene_diagnostics = self.scene_builder.diagnostics();
+        let mut accumulate_points = render_input.settings.accumulate_points;
+        let scene_diagnostics = &scene.diagnostics;
         let tf_status = if let Some(error) = &scene_diagnostics.current_tf_error {
             format!(
                 "TF missing {} → {} · misses {}",
@@ -74,8 +72,8 @@ impl Graphics {
                 |route| {
                     format!(
                         "TF {route} · static {} dynamic {} · misses {}",
-                        state.transforms.static_len(),
-                        state.transforms.dynamic_len(),
+                        static_transform_count,
+                        dynamic_transform_count,
                         scene_diagnostics.tf_misses
                     )
                 },
