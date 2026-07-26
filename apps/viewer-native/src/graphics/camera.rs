@@ -1,7 +1,7 @@
 use super::Graphics;
 use crate::session::PlaybackSession;
 use std::{fmt, sync::Arc, time::Instant};
-use viewer_core::{CameraId, DomainState};
+use viewer_core::{CameraId, DomainState, OverlayStatus};
 use viewer_renderer::{ImageDecodeError, decode_jpeg, draw_plan_overlay};
 
 #[derive(Debug)]
@@ -50,16 +50,19 @@ impl Graphics {
                         draw_plan_overlay(&mut image, &projected.points);
                         self.overlay_status.insert(
                             *camera_id,
-                            format!("plan {} visible pts", projected.visible_points),
+                            OverlayStatus::Ready {
+                                visible_points: projected.visible_points,
+                            },
                         );
                     }
                     Err(error) => {
-                        self.overlay_status.insert(*camera_id, error.to_string());
+                        self.overlay_status
+                            .insert(*camera_id, OverlayStatus::Error(error.to_string()));
                     }
                 }
             } else {
                 self.overlay_status
-                    .insert(*camera_id, "plan waiting".to_owned());
+                    .insert(*camera_id, OverlayStatus::Waiting);
             }
             let slot = self.camera_slots.entry(*camera_id).or_default();
             let recreated = slot.update(&self.device, &self.queue, &image);

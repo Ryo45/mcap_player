@@ -8,7 +8,7 @@ use bev_renderer::BevRenderer;
 use egui_wgpu::Renderer as EguiRenderer;
 use scene_renderer::{SceneFrame, SceneRenderer};
 use std::{collections::BTreeMap, sync::Arc};
-use viewer_core::{CameraCalibrationSet, CameraId, PresentationMetrics};
+use viewer_core::{CameraCalibrationSet, CameraId, OverlayStatus, PresentationMetrics};
 use viewer_renderer::CameraTextureSlot;
 use winit::window::Window;
 
@@ -26,7 +26,7 @@ pub(crate) struct Graphics {
     camera_topics: Arc<Vec<(CameraId, String)>>,
     pub(crate) focused_camera: Option<CameraId>,
     calibrations: CameraCalibrationSet,
-    overlay_status: BTreeMap<CameraId, String>,
+    overlay_status: BTreeMap<CameraId, OverlayStatus>,
     pub(crate) presentation_metrics: PresentationMetrics,
     bev_renderer: BevRenderer,
     bev_texture_id: egui::TextureId,

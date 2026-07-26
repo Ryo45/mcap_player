@@ -11,7 +11,6 @@ crate-type = ["cdylib", "rlib"]
 bev-renderer = { path = "../../crates/bev-renderer" }
 viewer-core = { path = "../../crates/viewer-core" }
 viewer-renderer = { path = "../../crates/viewer-renderer" }
-viewer-ui = { path = "../../crates/viewer-ui" }
 wasm-bindgen.workspace = true
 wasm-bindgen-futures.workspace = true
 js-sys = "0.3"

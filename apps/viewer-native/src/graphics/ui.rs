@@ -26,11 +26,6 @@ impl Graphics {
     ) -> UiOutput {
         let input = self.egui_state.take_egui_input(window);
         self.sync_camera_catalog(session);
-        let model = session.presentation(
-            error,
-            self.focused_camera,
-            self.presentation_metrics.snapshot().clone(),
-        );
         let camera_topics = Arc::clone(&self.camera_topics);
         let mut camera_ids = camera_topics.iter().map(|(id, _)| *id).collect::<Vec<_>>();
         camera_ids.extend(session.state().camera.ids());
@@ -40,6 +35,12 @@ impl Graphics {
             .focused_camera
             .filter(|camera_id| camera_ids.contains(camera_id))
             .or_else(|| camera_ids.first().copied());
+        let model = session.presentation(
+            error,
+            focused_camera,
+            self.presentation_metrics.snapshot().clone(),
+            &self.overlay_status,
+        );
         let focused_texture = focused_camera.and_then(|camera_id| self.camera_texture(camera_id));
         let camera_cards = camera_ids
             .iter()
@@ -48,17 +49,13 @@ impl Graphics {
                     .map(|texture| (*camera_id, texture))
             })
             .collect::<Vec<_>>();
-        let focused_label = focused_camera
-            .and_then(|camera_id| {
-                camera_topics
-                    .iter()
-                    .find(|(id, _)| *id == camera_id)
-                    .map(|(_, topic)| topic.as_str())
-            })
-            .unwrap_or("waiting");
-        let focused_overlay = focused_camera
-            .and_then(|camera_id| self.overlay_status.get(&camera_id))
-            .map_or("overlay waiting", String::as_str);
+        let focused_label = model
+            .focused_camera()
+            .map_or("waiting", |camera| camera.topic.as_str());
+        let focused_overlay = model.focused_camera().map_or_else(
+            || "overlay waiting".to_owned(),
+            |camera| camera.overlay.to_string(),
+        );
         let bev_texture_id = self.bev_texture_id;
         let scene_texture_id = self.scene_texture_id;
         let bev_path_points = self.bev_path_points(session).map_or(0, <[_]>::len);

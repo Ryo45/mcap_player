@@ -1,50 +1,7 @@
 //! Shared egui presentation model and playback controls.
 
-use viewer_core::{
-    ArrivalTime, CameraId, CameraStatus, PipelineCounters, PlaybackClock, PlaybackPerformance,
-    PlaybackSpeed, PresentationSnapshot,
-};
-
-#[derive(Clone, Debug)]
-pub struct ViewerPresentation {
-    pub source: String,
-    pub topic: String,
-    pub camera_status: CameraStatus,
-    pub counters: PipelineCounters,
-    pub playback_performance: Option<PlaybackPerformance>,
-    pub presentation_performance: PresentationSnapshot,
-    pub focused_camera: Option<CameraId>,
-    pub telemetry: Option<TelemetryPresentation>,
-    pub error: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct TelemetryPresentation {
-    pub frame_id: String,
-    pub child_frame_id: String,
-    pub position_x: f64,
-    pub position_y: f64,
-    pub yaw_radians: f64,
-    pub forward_velocity: f64,
-    pub speed: f64,
-    pub yaw_rate: f64,
-}
-
-impl Default for ViewerPresentation {
-    fn default() -> Self {
-        Self {
-            source: "No source".into(),
-            topic: String::new(),
-            camera_status: CameraStatus::WaitingForCameraFrame,
-            counters: PipelineCounters::default(),
-            playback_performance: None,
-            presentation_performance: PresentationSnapshot::default(),
-            focused_camera: None,
-            telemetry: None,
-            error: None,
-        }
-    }
-}
+pub use viewer_core::ViewerPresentation;
+use viewer_core::{ArrivalTime, CameraStatus, PlaybackClock, PlaybackSpeed};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct PlaybackUiResponse {
@@ -93,10 +50,14 @@ pub fn playback_controls(ui: &mut egui::Ui, clock: &mut PlaybackClock) -> Playba
 }
 
 pub fn source_status(ui: &mut egui::Ui, model: &ViewerPresentation) {
+    let diagnostics = &model.diagnostics;
     ui.heading("JPEG Camera");
-    ui.label(format!("Source: {}", model.source));
-    ui.label(format!("Topic: {}", model.topic));
-    let status = match model.camera_status {
+    ui.label(format!("Source: {}", diagnostics.source));
+    ui.label(format!("Topic: {}", diagnostics.primary_topic));
+    let status = match model
+        .focused_camera()
+        .map_or(CameraStatus::WaitingForCameraFrame, |camera| camera.status)
+    {
         CameraStatus::WaitingForCameraFrame => "Waiting for camera frame",
         CameraStatus::Ready => "Ready",
         CameraStatus::Error => "Error",
@@ -104,23 +65,19 @@ pub fn source_status(ui: &mut egui::Ui, model: &ViewerPresentation) {
     ui.label(status);
     ui.label(format!(
         "Decoded: {}  Errors: {}  Unknown: {}  Dropped: {}",
-        model.counters.decoded,
-        model.counters.errors,
-        model.counters.unknown_streams,
-        model.counters.dropped
+        diagnostics.counters.decoded,
+        diagnostics.counters.errors,
+        diagnostics.counters.unknown_streams,
+        diagnostics.counters.dropped
     ));
     ui.separator();
     ui.heading("Performance · 1 s window");
-    let focused_fps = model
-        .focused_camera
-        .and_then(|camera_id| model.presentation_performance.camera_fps.get(&camera_id))
-        .copied()
-        .unwrap_or_default();
+    let focused_fps = model.focused_camera().map_or(0.0, |camera| camera.fps);
     ui.monospace(format!(
         "Camera total {:>5.1} Hz",
-        model.presentation_performance.total_camera_fps
+        diagnostics.performance.total_camera_fps
     ));
-    if let Some(performance) = &model.playback_performance {
+    if let Some(performance) = &diagnostics.playback_performance {
         ui.monospace(format!(
             "Focus {:>5.1}/{:.0} Hz · others ≤{:.0} Hz",
             focused_fps,
@@ -132,13 +89,13 @@ pub fn source_status(ui: &mut egui::Ui, model: &ViewerPresentation) {
     }
     ui.monospace(format!(
         "JPEG {:>5.2} ms · upload {:>5.2} ms",
-        model.presentation_performance.jpeg_decode_ms, model.presentation_performance.upload_ms
+        diagnostics.performance.jpeg_decode_ms, diagnostics.performance.upload_ms
     ));
     ui.monospace(format!(
         "UI/render {:>5.2} ms",
-        model.presentation_performance.render_ms
+        diagnostics.performance.render_ms
     ));
-    if let Some(performance) = &model.playback_performance {
+    if let Some(performance) = &diagnostics.playback_performance {
         ui.monospace(format!(
             "MCAP {:>5.2} · CDR {:>5.2} · state {:>5.2} ms",
             performance.source_read.average_ms,
@@ -187,7 +144,7 @@ pub fn source_status(ui: &mut egui::Ui, model: &ViewerPresentation) {
     } else {
         ui.label("Waiting for odometry");
     }
-    if let Some(error) = &model.error {
+    if let Some(error) = &diagnostics.error {
         ui.colored_label(egui::Color32::RED, error);
     }
 }

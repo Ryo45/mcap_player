@@ -3,8 +3,8 @@ mod browser {
     use js_sys::{Date, Uint8Array};
     use std::{cell::RefCell, collections::BTreeMap, time::Duration};
     use viewer_core::{
-        ArrivalTime, CameraCalibrationSet, CameraId, McapPlayback, PlaybackSpeed,
-        PresentationMetrics,
+        ArrivalTime, CameraCalibrationSet, CameraId, DiagnosticsPresentation, McapPlayback,
+        OverlayStatus, PlaybackSpeed, PresentationMetrics, ViewerPresentation,
     };
     use viewer_renderer::{DecodedImage, decode_jpeg, draw_plan_overlay};
     use wasm_bindgen::{Clamped, JsCast, closure::Closure, prelude::*};
@@ -23,7 +23,7 @@ mod browser {
         last_bev_revision: Option<u64>,
         last_bev_size: (u32, u32),
         camera_topics: Vec<(CameraId, String)>,
-        overlay_status: BTreeMap<CameraId, String>,
+        overlay_status: BTreeMap<CameraId, OverlayStatus>,
         presentation_metrics: PresentationMetrics,
     }
 
@@ -335,84 +335,72 @@ mod browser {
                 view.last_drawn = None;
                 view.last_drawn_camera = selected_camera;
             }
-            let focus_label: HtmlElement = element("camera-focus-label");
-            focus_label.set_inner_text(
-                selected_camera
-                    .and_then(|camera_id| {
-                        camera_topics
-                            .iter()
-                            .find(|(id, _)| *id == camera_id)
-                            .map(|(_, topic)| topic.as_str())
-                    })
-                    .map(|topic| {
-                        let overlay = selected_camera
-                            .and_then(|camera_id| view.overlay_status.get(&camera_id))
-                            .map_or("overlay waiting", String::as_str);
-                        format!("{topic} · {overlay}")
-                    })
-                    .as_deref()
-                    .unwrap_or("waiting"),
+            let state = session.state();
+            let presentation = ViewerPresentation::from_domain(
+                state,
+                camera_topics,
+                selected_camera,
+                &view.overlay_status,
+                DiagnosticsPresentation {
+                    source: "Browser file".to_owned(),
+                    primary_topic: TOPIC.to_owned(),
+                    counters,
+                    playback_performance: Some(session.performance().clone()),
+                    performance: view.presentation_metrics.snapshot().clone(),
+                    cursor_seconds: Some((session.clock().cursor().0 - start) as f64 / 1e9),
+                    ..DiagnosticsPresentation::default()
+                },
             );
-            for (camera_id, _) in camera_topics {
+            let focus_label: HtmlElement = element("camera-focus-label");
+            focus_label.set_inner_text(&presentation.focused_camera().map_or_else(
+                || "waiting".to_owned(),
+                |camera| format!("{} · {}", camera.topic, camera.overlay),
+            ));
+            for camera in &presentation.cameras {
+                let camera_id = camera.id;
                 let card: HtmlButtonElement = element(&format!("camera-card-{}", camera_id.0));
-                card.set_class_name(if Some(*camera_id) == selected_camera {
+                card.set_class_name(if camera.focused {
                     "camera-card selected"
                 } else {
                     "camera-card"
                 });
                 let label: HtmlElement = element(&format!("camera-label-{}", camera_id.0));
-                let topic = camera_topics
-                    .iter()
-                    .find(|(id, _)| id == camera_id)
-                    .map_or("", |(_, topic)| topic.as_str());
-                let fps = view
-                    .presentation_metrics
-                    .snapshot()
-                    .camera_fps
-                    .get(camera_id)
-                    .copied()
-                    .unwrap_or_default();
-                label.set_inner_text(&format!("{topic} · {fps:.1} Hz"));
+                label.set_inner_text(&format!("{} · {:.1} Hz", camera.topic, camera.fps));
             }
-            let state = session.state();
-            let path_points = state.bev.latest().map_or(0, |frame| frame.points.len());
-            let scan_points = session
-                .state()
-                .point_cloud
-                .latest()
-                .map_or(0, |frame| frame.points.len());
+            let diagnostics = &presentation.diagnostics;
             set_status(
                 &format!(
                     "{} decoded · {} errors · {} dropped · path {} pts · scan {} pts · {:.2}s",
-                    counters.decoded,
-                    counters.errors,
-                    counters.dropped,
-                    path_points,
-                    scan_points,
-                    (session.clock().cursor().0 - start) as f64 / 1e9
+                    diagnostics.counters.decoded,
+                    diagnostics.counters.errors,
+                    diagnostics.counters.dropped,
+                    diagnostics.path_points,
+                    diagnostics.scan_points,
+                    diagnostics.cursor_seconds.unwrap_or_default()
                 ),
-                counters.errors > 0,
+                diagnostics.counters.errors > 0,
             );
-            let playback_performance = session.performance();
-            let presentation = view.presentation_metrics.snapshot();
-            let focused_fps = selected_camera
-                .and_then(|camera_id| presentation.camera_fps.get(&camera_id))
-                .copied()
-                .unwrap_or_default();
+            let playback_performance = diagnostics
+                .playback_performance
+                .as_ref()
+                .expect("MCAP playback has performance diagnostics");
+            let focused_fps = presentation
+                .focused_camera()
+                .map_or(0.0, |camera| camera.fps);
             let performance: HtmlElement = element("performance");
             performance.set_inner_text(&format!(
                 "Focus {focused_fps:.1}/{:.0} Hz · others ≤{:.0} Hz · JPEG {:.2} ms · canvas {:.2} ms · tick {:.2} ms · MCAP/CDR/state {:.2}/{:.2}/{:.2} ms",
                 playback_performance.focused_camera_hz(),
                 playback_performance.background_camera_hz(),
-                presentation.jpeg_decode_ms,
-                presentation.upload_ms,
-                presentation.render_ms,
+                diagnostics.performance.jpeg_decode_ms,
+                diagnostics.performance.upload_ms,
+                diagnostics.performance.render_ms,
                 playback_performance.source_read.average_ms,
                 playback_performance.pipeline_decode.average_ms,
                 playback_performance.state_apply.average_ms,
             ));
             let telemetry: HtmlElement = element("telemetry");
-            telemetry.set_inner_text(&session.state().telemetry.latest().map_or_else(
+            telemetry.set_inner_text(&presentation.telemetry.as_ref().map_or_else(
                 || "Odometry: waiting".to_owned(),
                 |frame| {
                     format!(
@@ -480,16 +468,19 @@ mod browser {
                                     draw_plan_overlay(&mut image, &projected.points);
                                     view.overlay_status.insert(
                                         *camera_id,
-                                        format!("plan {} visible pts", projected.visible_points),
+                                        OverlayStatus::Ready {
+                                            visible_points: projected.visible_points,
+                                        },
                                     );
                                 }
                                 Err(error) => {
-                                    view.overlay_status.insert(*camera_id, error.to_string());
+                                    view.overlay_status
+                                        .insert(*camera_id, OverlayStatus::Error(error.to_string()));
                                 }
                             }
                         } else {
                             view.overlay_status
-                                .insert(*camera_id, "plan waiting".to_owned());
+                                .insert(*camera_id, OverlayStatus::Waiting);
                         }
                         if thumbnail_changed {
                             draw_image(&thumbnail_id, &image);
