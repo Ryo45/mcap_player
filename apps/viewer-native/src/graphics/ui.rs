@@ -1,13 +1,13 @@
 use super::Graphics;
-use crate::session::PlaybackSession;
 use scene_renderer::SceneCameraMode;
-use std::sync::Arc;
+use viewer_core::{CameraId, DomainState, PlaybackCommand, PlaybackView, ViewerPresentation};
 use viewer_ui::{playback_controls, source_status};
 use winit::window::Window;
 
 pub(super) struct UiOutput {
     pub(super) egui: egui::FullOutput,
-    pub(super) seeked: bool,
+    pub(super) playback_commands: Vec<PlaybackCommand>,
+    pub(super) focused_camera: Option<CameraId>,
     pub(super) bev_size: egui::Vec2,
     pub(super) scene_size: egui::Vec2,
     pub(super) accumulate_points: bool,
@@ -21,26 +21,24 @@ impl Graphics {
     pub(super) fn build_ui(
         &mut self,
         window: &Window,
-        session: &mut PlaybackSession,
-        error: Option<String>,
+        state: &DomainState,
+        presentation: &ViewerPresentation,
+        playback: Option<PlaybackView>,
     ) -> UiOutput {
         let input = self.egui_state.take_egui_input(window);
-        self.sync_camera_catalog(session);
-        let camera_topics = Arc::clone(&self.camera_topics);
-        let mut camera_ids = camera_topics.iter().map(|(id, _)| *id).collect::<Vec<_>>();
-        camera_ids.extend(session.state().camera.ids());
+        let mut camera_ids = presentation
+            .cameras
+            .iter()
+            .map(|camera| camera.id)
+            .collect::<Vec<_>>();
+        camera_ids.extend(state.camera.ids());
         camera_ids.sort_unstable();
         camera_ids.dedup();
-        let mut focused_camera = self
-            .focused_camera
+        let mut focused_camera = presentation
+            .focused_camera()
+            .map(|camera| camera.id)
             .filter(|camera_id| camera_ids.contains(camera_id))
             .or_else(|| camera_ids.first().copied());
-        let model = session.presentation(
-            error,
-            focused_camera,
-            self.presentation_metrics.snapshot().clone(),
-            &self.overlay_status,
-        );
         let focused_texture = focused_camera.and_then(|camera_id| self.camera_texture(camera_id));
         let camera_cards = camera_ids
             .iter()
@@ -49,17 +47,17 @@ impl Graphics {
                     .map(|texture| (*camera_id, texture))
             })
             .collect::<Vec<_>>();
-        let focused_label = model
+        let focused_label = presentation
             .focused_camera()
             .map_or("waiting", |camera| camera.topic.as_str());
-        let focused_overlay = model.focused_camera().map_or_else(
+        let focused_overlay = presentation.focused_camera().map_or_else(
             || "overlay waiting".to_owned(),
             |camera| camera.overlay.to_string(),
         );
         let bev_texture_id = self.bev_texture_id;
         let scene_texture_id = self.scene_texture_id;
-        let bev_path_points = model.diagnostics.path_points;
-        let current_scan_points = model.diagnostics.scan_points;
+        let bev_path_points = presentation.diagnostics.path_points;
+        let current_scan_points = presentation.diagnostics.scan_points;
         let visible_scan_points = self.scene_renderer.visible_points();
         let scene_camera_distance = self.scene_renderer.camera().distance;
         let mut scene_camera_mode = self.scene_renderer.camera_mode();
@@ -76,8 +74,8 @@ impl Graphics {
                 |route| {
                     format!(
                         "TF {route} · static {} dynamic {} · misses {}",
-                        session.state().transforms.static_len(),
-                        session.state().transforms.dynamic_len(),
+                        state.transforms.static_len(),
+                        state.transforms.dynamic_len(),
                         scene_diagnostics.tf_misses
                     )
                 },
@@ -88,11 +86,11 @@ impl Graphics {
         let mut scene_wheel_delta = 0.0_f32;
         let mut scene_orbit_delta = egui::Vec2::ZERO;
         let mut reset_scene_camera = false;
-        let mut seeked = false;
+        let mut playback_commands = Vec::new();
         let egui = self.egui_context.run(input, |context| {
-            if let Some(clock) = session.clock_mut() {
+            if let Some(playback) = playback {
                 egui::TopBottomPanel::bottom("playback-controls").show(context, |ui| {
-                    seeked = playback_controls(ui, clock).seeked;
+                    playback_commands = playback_controls(ui, playback).commands;
                 });
             } else {
                 egui::TopBottomPanel::bottom("live-status").show(context, |ui| {
@@ -102,7 +100,7 @@ impl Graphics {
             egui::SidePanel::left("source-status")
                 .resizable(true)
                 .default_width(260.0)
-                .show(context, |ui| source_status(ui, &model));
+                .show(context, |ui| source_status(ui, presentation));
             egui::CentralPanel::default().show(context, |ui| {
                 let top_size = egui::vec2(ui.available_width(), ui.available_height() * 0.52);
                 ui.allocate_ui(top_size, |ui| {
@@ -216,11 +214,10 @@ impl Graphics {
                 reset_scene_camera = response.double_clicked();
             });
         });
-        self.focused_camera = focused_camera;
-        session.set_focused_camera(focused_camera);
         UiOutput {
             egui,
-            seeked,
+            playback_commands,
+            focused_camera,
             bev_size: bev_logical_size,
             scene_size: scene_logical_size,
             accumulate_points,

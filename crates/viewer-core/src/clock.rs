@@ -31,6 +31,22 @@ impl PlaybackSpeed {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PlaybackView {
+    pub start: ArrivalTime,
+    pub end: ArrivalTime,
+    pub cursor: ArrivalTime,
+    pub playing: bool,
+    pub speed: PlaybackSpeed,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum PlaybackCommand {
+    Toggle,
+    SetSpeed(PlaybackSpeed),
+    Seek(ArrivalTime),
+}
+
 #[derive(Clone, Debug)]
 pub struct PlaybackClock {
     start: ArrivalTime,
@@ -66,6 +82,15 @@ impl PlaybackClock {
     }
     pub fn speed(&self) -> PlaybackSpeed {
         self.speed
+    }
+    pub fn view(&self) -> PlaybackView {
+        PlaybackView {
+            start: self.start,
+            end: self.end,
+            cursor: self.cursor,
+            playing: self.playing,
+            speed: self.speed,
+        }
     }
     pub fn set_speed(&mut self, speed: PlaybackSpeed) {
         self.speed = speed;
@@ -118,5 +143,15 @@ mod tests {
         assert!(!clock.is_playing());
         clock.seek(ArrivalTime(-1));
         assert_eq!(clock.cursor(), ArrivalTime(100));
+        assert_eq!(
+            clock.view(),
+            PlaybackView {
+                start: ArrivalTime(100),
+                end: ArrivalTime(1_000_000_100),
+                cursor: ArrivalTime(100),
+                playing: false,
+                speed: PlaybackSpeed::Half,
+            }
+        );
     }
 }

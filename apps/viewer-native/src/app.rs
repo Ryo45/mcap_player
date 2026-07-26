@@ -1,6 +1,6 @@
 use crate::{
     args::{Args, SourceMode},
-    graphics::Graphics,
+    graphics::{Graphics, RenderInput},
     session::PlaybackSession,
 };
 use std::{fs, path::Path, sync::Arc, time::Instant};
@@ -29,7 +29,7 @@ impl App {
                 self.session = Some(session);
                 self.error = None;
                 if let Some(graphics) = &mut self.graphics {
-                    graphics.reset_camera_catalog();
+                    graphics.reset_camera_presentation();
                     graphics.clear_scene_history();
                 }
             }
@@ -121,9 +121,6 @@ impl ApplicationHandler for App {
                 let elapsed = now.saturating_duration_since(self.last_frame);
                 self.last_frame = now;
                 if let Some(session) = &mut self.session {
-                    if let Some(graphics) = &self.graphics {
-                        session.set_focused_camera(graphics.focused_camera);
-                    }
                     if let Err(error) = session.tick(elapsed) {
                         self.error = Some(error.to_string());
                     }
@@ -133,18 +130,34 @@ impl ApplicationHandler for App {
                             self.error = Some(error.to_string());
                             session.state_mut().camera.set_error_for(camera_id);
                         }
+                        let presentation = session.presentation(
+                            self.error.clone(),
+                            graphics.presentation_snapshot(),
+                            graphics.overlay_status(),
+                        );
+                        let playback = session.playback_view();
                         let render_started = Instant::now();
-                        let render_result = graphics.render(&window, session, self.error.clone());
-                        graphics
-                            .presentation_metrics
-                            .record_render(render_started.elapsed());
-                        graphics.presentation_metrics.advance(elapsed);
+                        let render_result = graphics.render(
+                            &window,
+                            RenderInput {
+                                state: session.state(),
+                                presentation: &presentation,
+                                playback,
+                            },
+                        );
+                        graphics.record_render(render_started.elapsed());
+                        graphics.advance_presentation_metrics(elapsed);
                         match render_result {
-                            Ok(seeked) => {
-                                if seeked {
-                                    if let Err(error) = session.seek() {
-                                        self.error = Some(error.to_string());
+                            Ok(output) => {
+                                session.set_focused_camera(output.focused_camera);
+                                let mut seeked = false;
+                                for command in output.playback_commands {
+                                    match session.apply_playback_command(command) {
+                                        Ok(command_seeked) => seeked |= command_seeked,
+                                        Err(error) => self.error = Some(error.to_string()),
                                     }
+                                }
+                                if seeked {
                                     graphics.hide_camera();
                                     graphics.clear_scene_history();
                                 }

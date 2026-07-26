@@ -88,8 +88,6 @@ impl Graphics {
             camera_slots: BTreeMap::new(),
             camera_texture_ids: BTreeMap::new(),
             uploaded_arrivals: BTreeMap::new(),
-            camera_topics: Arc::new(Vec::new()),
-            focused_camera: None,
             calibrations,
             overlay_status: BTreeMap::new(),
             presentation_metrics: PresentationMetrics::default(),

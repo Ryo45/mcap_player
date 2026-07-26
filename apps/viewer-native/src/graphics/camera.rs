@@ -1,6 +1,5 @@
 use super::Graphics;
-use crate::session::PlaybackSession;
-use std::{fmt, sync::Arc, time::Instant};
+use std::{fmt, time::Instant};
 use viewer_core::{CameraId, DomainState};
 use viewer_renderer::{ImageDecodeError, decode_camera_frame, prepare_camera_frame};
 
@@ -84,18 +83,10 @@ impl Graphics {
         self.uploaded_arrivals.clear();
     }
 
-    pub(crate) fn reset_camera_catalog(&mut self) {
+    pub(crate) fn reset_camera_presentation(&mut self) {
         self.hide_camera();
-        self.camera_topics = Arc::new(Vec::new());
-        self.focused_camera = None;
         self.overlay_status.clear();
         self.presentation_metrics.reset();
-    }
-
-    pub(super) fn sync_camera_catalog(&mut self, session: &PlaybackSession) {
-        if self.camera_topics.as_slice() != session.camera_topics() {
-            self.camera_topics = Arc::new(session.camera_topics().to_vec());
-        }
     }
 
     pub(super) fn camera_texture(
