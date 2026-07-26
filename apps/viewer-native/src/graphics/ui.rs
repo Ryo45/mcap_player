@@ -64,17 +64,25 @@ impl Graphics {
         let scene_camera_distance = self.scene_renderer.camera().distance;
         let mut scene_camera_mode = self.scene_renderer.camera_mode();
         let mut accumulate_points = self.accumulate_points;
-        let tf_status = session.state().last_tf_route.as_ref().map_or_else(
-            || format!("TF waiting · misses {}", session.state().tf_misses),
-            |route| {
-                format!(
-                    "TF {route} · static {} dynamic {} · misses {}",
-                    session.state().transforms.static_len(),
-                    session.state().transforms.dynamic_len(),
-                    session.state().tf_misses
-                )
-            },
-        );
+        let scene_diagnostics = self.scene_builder.diagnostics();
+        let tf_status = if let Some(error) = &scene_diagnostics.current_tf_error {
+            format!(
+                "TF missing {} → {} · misses {}",
+                error.source_frame, error.target_frame, scene_diagnostics.tf_misses
+            )
+        } else {
+            scene_diagnostics.last_tf_route.as_ref().map_or_else(
+                || format!("TF waiting · misses {}", scene_diagnostics.tf_misses),
+                |route| {
+                    format!(
+                        "TF {route} · static {} dynamic {} · misses {}",
+                        session.state().transforms.static_len(),
+                        session.state().transforms.dynamic_len(),
+                        scene_diagnostics.tf_misses
+                    )
+                },
+            )
+        };
         let mut bev_logical_size = egui::Vec2::ZERO;
         let mut scene_logical_size = egui::Vec2::ZERO;
         let mut scene_wheel_delta = 0.0_f32;

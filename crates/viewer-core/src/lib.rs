@@ -29,7 +29,9 @@ pub use cdr::{
 };
 pub use clock::{PlaybackClock, PlaybackSpeed};
 pub use domain::DomainState;
-pub use frame_builder::{BevFrameBuilder, BevSnapshot, SceneFrameBuilder, SceneSnapshot};
+pub use frame_builder::{
+    BevFrameBuilder, BevSnapshot, SceneDiagnostics, SceneFrameBuilder, SceneSnapshot, SceneTfError,
+};
 pub use mcap_source::{McapOpenError, McapSource, StreamCatalog};
 pub use performance::{PresentationMetrics, PresentationSnapshot};
 pub use pipeline::{

@@ -32,6 +32,7 @@ pub(crate) struct Graphics {
     pub(crate) presentation_metrics: PresentationMetrics,
     bev_renderer: BevRenderer,
     bev_texture_id: egui::TextureId,
+    scene_builder: SceneFrameBuilder,
     scene_renderer: SceneRenderer,
     scene_texture_id: egui::TextureId,
     accumulate_points: bool,
@@ -110,9 +111,9 @@ impl Graphics {
                 self.scene_texture_id,
             );
         }
-        let snapshot = SceneFrameBuilder::new(session.state())
-            .accumulate(self.accumulate_points)
-            .build();
+        let snapshot = self
+            .scene_builder
+            .build(session.state(), self.accumulate_points);
         let frame = SceneFrame {
             revision: snapshot.revision,
             cloud_revision: snapshot.cloud_revision,
@@ -125,6 +126,11 @@ impl Graphics {
         if scene_resized || self.scene_renderer.needs_render(frame) {
             self.scene_renderer.render(&self.device, &self.queue, frame);
         }
+    }
+
+    pub(crate) fn clear_scene_history(&mut self) {
+        self.scene_builder.reset();
+        self.scene_renderer.clear_cloud_history();
     }
 }
 

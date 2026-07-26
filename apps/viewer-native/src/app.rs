@@ -30,6 +30,7 @@ impl App {
                 self.error = None;
                 if let Some(graphics) = &mut self.graphics {
                     graphics.reset_camera_catalog();
+                    graphics.clear_scene_history();
                 }
             }
             Err(error) => self.error = Some(error.to_string()),
@@ -145,6 +146,7 @@ impl ApplicationHandler for App {
                                         self.error = Some(error.to_string());
                                     }
                                     graphics.hide_camera();
+                                    graphics.clear_scene_history();
                                 }
                             }
                             Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {

@@ -86,10 +86,12 @@ struct Edge {
 pub struct TransformState {
     static_edges: HashMap<String, Edge>,
     dynamic_edges: HashMap<String, BTreeMap<MeasurementTime, Edge>>,
+    revision: u64,
 }
 
 impl TransformState {
     pub fn apply(&mut self, batch: TransformBatch) {
+        self.revision = self.revision.wrapping_add(1);
         for transform in batch.transforms {
             let child = normalize_frame(&transform.child_frame_id);
             let parent = normalize_frame(&transform.frame_id);
@@ -135,6 +137,11 @@ impl TransformState {
 
     pub fn clear_dynamic(&mut self) {
         self.dynamic_edges.clear();
+        self.revision = self.revision.wrapping_add(1);
+    }
+
+    pub fn revision(&self) -> u64 {
+        self.revision
     }
 
     pub fn static_len(&self) -> usize {
