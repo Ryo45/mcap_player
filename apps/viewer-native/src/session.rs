@@ -7,7 +7,7 @@ use memmap2::Mmap;
 use std::{collections::BTreeMap, fs::File, path::Path, time::Duration};
 use viewer_core::{
     CameraId, DiagnosticsPresentation, DomainState, McapPlayback, OverlayStatus, PipelineCounters,
-    PlaybackClock, PlaybackPerformance, PresentationSnapshot, ViewerPresentation,
+    PlaybackCommand, PlaybackPerformance, PlaybackView, PresentationSnapshot, ViewerPresentation,
 };
 #[cfg(feature = "ros2-live")]
 use viewer_core::{PipelineSet, StreamBinding};
@@ -16,6 +16,7 @@ pub(crate) struct PlaybackSession {
     source: SessionSource,
     topic: String,
     camera_topics: Vec<(CameraId, String)>,
+    focused_camera: Option<CameraId>,
     source_name: String,
 }
 
@@ -38,10 +39,12 @@ impl PlaybackSession {
         let mut playback = McapPlayback::new(mapping, &topic)?;
         playback.clock_mut().play();
         let camera_topics = playback.camera_topics().to_vec();
+        let focused_camera = playback.focused_camera();
         Ok(Self {
             source: SessionSource::Mcap(Box::new(playback)),
             topic,
             camera_topics,
+            focused_camera,
             source_name: path.display().to_string(),
         })
     }
@@ -59,6 +62,7 @@ impl PlaybackSession {
             &[(descriptor.id, StreamBinding::Camera(CameraId(0)))],
         );
         let camera_topics = vec![(CameraId(0), topic.clone())];
+        let focused_camera = camera_topics.first().map(|(camera_id, _)| *camera_id);
         Self {
             source: SessionSource::Ros {
                 handle: live::RosLiveHandle::start(topic.clone(), reliable),
@@ -67,6 +71,7 @@ impl PlaybackSession {
             },
             topic,
             camera_topics,
+            focused_camera,
             source_name: format!(
                 "ROS 2 live ({})",
                 if reliable { "reliable" } else { "best effort" }
@@ -96,18 +101,6 @@ impl PlaybackSession {
         Ok(())
     }
 
-    pub(crate) fn seek(&mut self) -> Result<()> {
-        match &mut self.source {
-            SessionSource::Mcap(playback) => {
-                let cursor = playback.clock().cursor();
-                playback.seek(cursor)?;
-            }
-            #[cfg(feature = "ros2-live")]
-            SessionSource::Ros { .. } => {}
-        }
-        Ok(())
-    }
-
     pub(crate) fn state(&self) -> &DomainState {
         match &self.source {
             SessionSource::Mcap(playback) => playback.state(),
@@ -121,14 +114,6 @@ impl PlaybackSession {
             SessionSource::Mcap(playback) => playback.state_mut(),
             #[cfg(feature = "ros2-live")]
             SessionSource::Ros { state, .. } => state,
-        }
-    }
-
-    pub(crate) fn clock_mut(&mut self) -> Option<&mut PlaybackClock> {
-        match &mut self.source {
-            SessionSource::Mcap(playback) => Some(playback.clock_mut()),
-            #[cfg(feature = "ros2-live")]
-            SessionSource::Ros { .. } => None,
         }
     }
 
@@ -146,15 +131,45 @@ impl PlaybackSession {
         }
     }
 
-    pub(crate) fn camera_topics(&self) -> &[(CameraId, String)] {
-        &self.camera_topics
-    }
-
     pub(crate) fn set_focused_camera(&mut self, focused_camera: Option<CameraId>) {
+        let focused_camera = focused_camera
+            .filter(|camera_id| self.camera_topics.iter().any(|(id, _)| id == camera_id))
+            .or_else(|| self.camera_topics.first().map(|(camera_id, _)| *camera_id));
+        self.focused_camera = focused_camera;
         match &mut self.source {
             SessionSource::Mcap(playback) => playback.set_focused_camera(focused_camera),
             #[cfg(feature = "ros2-live")]
             SessionSource::Ros { .. } => {}
+        }
+    }
+
+    pub(crate) fn playback_view(&self) -> Option<PlaybackView> {
+        match &self.source {
+            SessionSource::Mcap(playback) => Some(playback.clock().view()),
+            #[cfg(feature = "ros2-live")]
+            SessionSource::Ros { .. } => None,
+        }
+    }
+
+    /// Applies one UI request and reports whether it performed a cold seek.
+    pub(crate) fn apply_playback_command(&mut self, command: PlaybackCommand) -> Result<bool> {
+        match &mut self.source {
+            SessionSource::Mcap(playback) => match command {
+                PlaybackCommand::Toggle => {
+                    playback.clock_mut().toggle();
+                    Ok(false)
+                }
+                PlaybackCommand::SetSpeed(speed) => {
+                    playback.clock_mut().set_speed(speed);
+                    Ok(false)
+                }
+                PlaybackCommand::Seek(cursor) => {
+                    playback.seek(cursor)?;
+                    Ok(true)
+                }
+            },
+            #[cfg(feature = "ros2-live")]
+            SessionSource::Ros { .. } => Ok(false),
         }
     }
 
@@ -169,7 +184,6 @@ impl PlaybackSession {
     pub(crate) fn presentation(
         &self,
         error: Option<String>,
-        focused_camera: Option<CameraId>,
         presentation_performance: PresentationSnapshot,
         overlays: &BTreeMap<CameraId, OverlayStatus>,
     ) -> ViewerPresentation {
@@ -208,7 +222,7 @@ impl PlaybackSession {
         ViewerPresentation::from_domain(
             self.state(),
             &self.camera_topics,
-            focused_camera,
+            self.focused_camera,
             overlays,
             DiagnosticsPresentation {
                 source: source_name,

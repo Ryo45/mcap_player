@@ -1,21 +1,21 @@
 //! Shared egui presentation model and playback controls.
 
 pub use viewer_core::ViewerPresentation;
-use viewer_core::{ArrivalTime, CameraStatus, PlaybackClock, PlaybackSpeed};
+use viewer_core::{ArrivalTime, CameraStatus, PlaybackCommand, PlaybackSpeed, PlaybackView};
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct PlaybackUiResponse {
-    pub seeked: bool,
+    pub commands: Vec<PlaybackCommand>,
 }
 
-pub fn playback_controls(ui: &mut egui::Ui, clock: &mut PlaybackClock) -> PlaybackUiResponse {
+pub fn playback_controls(ui: &mut egui::Ui, view: PlaybackView) -> PlaybackUiResponse {
     let mut response = PlaybackUiResponse::default();
     ui.horizontal(|ui| {
-        let label = if clock.is_playing() { "Pause" } else { "Play" };
+        let label = if view.playing { "Pause" } else { "Play" };
         if ui.button(label).clicked() {
-            clock.toggle();
+            response.commands.push(PlaybackCommand::Toggle);
         }
-        let mut selected = clock.speed();
+        let mut selected = view.speed;
         egui::ComboBox::from_id_salt("playback-speed")
             .selected_text(selected.label())
             .show_ui(ui, |ui| {
@@ -23,13 +23,13 @@ pub fn playback_controls(ui: &mut egui::Ui, clock: &mut PlaybackClock) -> Playba
                     ui.selectable_value(&mut selected, speed, speed.label());
                 }
             });
-        if selected != clock.speed() {
-            clock.set_speed(selected);
+        if selected != view.speed {
+            response.commands.push(PlaybackCommand::SetSpeed(selected));
         }
     });
-    let start = clock.start().0;
-    let end = clock.end().0.max(start + 1);
-    let mut cursor = clock.cursor().0;
+    let start = view.start.0;
+    let end = view.end.0.max(start + 1);
+    let mut cursor = view.cursor.0;
     if ui
         .add(
             egui::Slider::new(&mut cursor, start..=end)
@@ -38,12 +38,13 @@ pub fn playback_controls(ui: &mut egui::Ui, clock: &mut PlaybackClock) -> Playba
         )
         .changed()
     {
-        clock.seek(ArrivalTime(cursor));
-        response.seeked = true;
+        response
+            .commands
+            .push(PlaybackCommand::Seek(ArrivalTime(cursor)));
     }
     ui.label(format!(
         "{:.3}s / {:.3}s",
-        (clock.cursor().0 - start) as f64 / 1e9,
+        (view.cursor.0 - start) as f64 / 1e9,
         (end - start) as f64 / 1e9
     ));
     response
