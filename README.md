@@ -17,8 +17,11 @@ Native also includes a perspective 3D view below the Camera/BEV row. It renders
 a world grid, an odometry-driven ego wireframe and the planned path using a
 depth-tested offscreen target. Real `/scan` points are shown only in this 3D
 view. At acquisition time, the viewer resolves `base_scan -> odom` through
-measurement-time-indexed `/tf_static` and `/tf`, then stores the resulting
-world coordinates. Later ego-pose updates never transform historical points.
+measurement-time-indexed `/tf_static` and `/tf`. `DomainState` retains the raw
+scan, while the stateful scene snapshot builder transforms each new scan once
+and caches the resulting world coordinates. A scan with missing TF remains
+available for a retry when TF arrives. Later ego-pose updates never transform
+historical points.
 `Accumulate scans` switches between the latest scan and bounded,
 odometry-anchored scan history; seek and file reload clear that history.
 The 3D camera defaults to a vehicle-following rear/right chase view. The view

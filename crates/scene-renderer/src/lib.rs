@@ -407,6 +407,13 @@ impl SceneRenderer {
         self.accumulated_points.len()
     }
 
+    pub fn clear_cloud_history(&mut self) {
+        self.accumulated_points.clear();
+        self.point_count = 0;
+        self.last_cloud_revision = None;
+        self.camera_dirty = true;
+    }
+
     pub fn camera(&self) -> SceneCamera {
         self.camera
     }
@@ -511,7 +518,9 @@ fn update_accumulated_cloud(
     mode_changed: bool,
 ) {
     if frame.cloud.is_empty() {
-        accumulated.clear();
+        if !frame.accumulate {
+            accumulated.clear();
+        }
         return;
     }
     if cloud_changed {
@@ -835,6 +844,36 @@ mod tests {
         };
         update_accumulated_cloud(&mut accumulated, latest_only, false, true);
         assert_eq!(accumulated.len(), 1);
+    }
+
+    #[test]
+    fn empty_scan_preserves_history_only_in_accumulation_mode() {
+        let mut accumulated = vec![[1.0, 2.0, 3.0]];
+        update_accumulated_cloud(
+            &mut accumulated,
+            SceneFrame {
+                cloud_revision: 2,
+                cloud: &[],
+                accumulate: true,
+                ..SceneFrame::default()
+            },
+            true,
+            false,
+        );
+        assert_eq!(accumulated, [[1.0, 2.0, 3.0]]);
+
+        update_accumulated_cloud(
+            &mut accumulated,
+            SceneFrame {
+                cloud_revision: 3,
+                cloud: &[],
+                accumulate: false,
+                ..SceneFrame::default()
+            },
+            true,
+            true,
+        );
+        assert!(accumulated.is_empty());
     }
 
     #[test]

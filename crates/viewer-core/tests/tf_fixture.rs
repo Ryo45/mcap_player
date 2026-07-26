@@ -1,6 +1,7 @@
 use std::{fs, path::PathBuf};
 use viewer_core::{
-    CameraCalibrationSet, DomainUpdate, McapSource, PipelineSet, StreamBinding, TransformState,
+    CameraCalibrationSet, DomainUpdate, McapSource, PipelineSet, SceneFrameBuilder, StreamBinding,
+    TransformState,
 };
 
 fn fixture() -> Vec<u8> {
@@ -144,4 +145,14 @@ fn seven_camera_fixture_discovers_and_decodes_all_topics() {
         total_visible += projected.visible_points;
     }
     assert!(total_visible > 0, "plan is not visible in any camera");
+
+    let raw_scan = playback.state().point_cloud.latest().expect("fixture scan");
+    assert_eq!(raw_scan.frame_id, "base_scan");
+    let mut scene_builder = SceneFrameBuilder::new();
+    let scene = scene_builder.build(playback.state(), true);
+    assert!(!scene.cloud.is_empty());
+    assert_eq!(
+        scene.diagnostics.last_tf_route.as_deref(),
+        Some("base_scan → odom")
+    );
 }
