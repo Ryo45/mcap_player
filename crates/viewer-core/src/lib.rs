@@ -11,6 +11,7 @@ mod performance;
 mod pipeline;
 mod playback;
 mod point_cloud;
+mod presentation;
 mod telemetry;
 mod time;
 mod transform;
@@ -36,6 +37,10 @@ pub use pipeline::{
 };
 pub use playback::{McapPlayback, McapPlaybackError, PlaybackPerformance, StageTiming};
 pub use point_cloud::{PointCloudFrame, PointCloudState};
+pub use presentation::{
+    CameraPresentation, DiagnosticsPresentation, OverlayStatus, TelemetryPresentation,
+    ViewerPresentation,
+};
 pub use telemetry::{TelemetryFrame, TelemetryState};
 pub use time::{ArrivalTime, CameraId, MeasurementTime};
 pub use transform::{TransformBatch, TransformState};

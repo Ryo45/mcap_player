@@ -4,14 +4,13 @@ use crate::live;
 use anyhow::bail;
 use anyhow::{Context, Result};
 use memmap2::Mmap;
-use std::{fs::File, path::Path, time::Duration};
+use std::{collections::BTreeMap, fs::File, path::Path, time::Duration};
 use viewer_core::{
-    CameraId, CameraStatus, DomainState, McapPlayback, PipelineCounters, PlaybackClock,
-    PlaybackPerformance, PresentationSnapshot,
+    CameraId, DiagnosticsPresentation, DomainState, McapPlayback, OverlayStatus, PipelineCounters,
+    PlaybackClock, PlaybackPerformance, PresentationSnapshot, ViewerPresentation,
 };
 #[cfg(feature = "ros2-live")]
 use viewer_core::{PipelineSet, StreamBinding};
-use viewer_ui::{TelemetryPresentation, ViewerPresentation};
 
 pub(crate) struct PlaybackSession {
     source: SessionSource,
@@ -172,6 +171,7 @@ impl PlaybackSession {
         error: Option<String>,
         focused_camera: Option<CameraId>,
         presentation_performance: PresentationSnapshot,
+        overlays: &BTreeMap<CameraId, OverlayStatus>,
     ) -> ViewerPresentation {
         #[cfg(feature = "ros2-live")]
         let source_name = match &self.source {
@@ -205,32 +205,20 @@ impl PlaybackSession {
         };
         #[cfg(not(feature = "ros2-live"))]
         let source_name = self.source_name.clone();
-        ViewerPresentation {
-            source: source_name,
-            topic: self.topic.clone(),
-            camera_status: focused_camera
-                .map_or(CameraStatus::WaitingForCameraFrame, |camera_id| {
-                    self.state().camera.status_for(camera_id)
-                }),
-            counters: self.counters(),
-            playback_performance: self.playback_performance().cloned(),
-            presentation_performance,
+        ViewerPresentation::from_domain(
+            self.state(),
+            &self.camera_topics,
             focused_camera,
-            telemetry: self
-                .state()
-                .telemetry
-                .latest()
-                .map(|frame| TelemetryPresentation {
-                    frame_id: frame.frame_id.clone(),
-                    child_frame_id: frame.child_frame_id.clone(),
-                    position_x: frame.position_x,
-                    position_y: frame.position_y,
-                    yaw_radians: frame.yaw_radians,
-                    forward_velocity: frame.forward_velocity,
-                    speed: frame.speed,
-                    yaw_rate: frame.yaw_rate,
-                }),
-            error,
-        }
+            overlays,
+            DiagnosticsPresentation {
+                source: source_name,
+                primary_topic: self.topic.clone(),
+                counters: self.counters(),
+                playback_performance: self.playback_performance().cloned(),
+                performance: presentation_performance,
+                error,
+                ..DiagnosticsPresentation::default()
+            },
+        )
     }
 }
