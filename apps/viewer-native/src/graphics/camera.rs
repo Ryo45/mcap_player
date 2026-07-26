@@ -1,6 +1,7 @@
 use super::Graphics;
+use crate::presentation::CameraPresentationUpdate;
 use std::{fmt, time::Instant};
-use viewer_core::{CameraId, DomainState};
+use viewer_core::{BevPathFrame, CameraId, CameraState, TransformState};
 use viewer_renderer::{ImageDecodeError, decode_camera_frame, prepare_camera_frame};
 
 #[derive(Debug)]
@@ -26,8 +27,14 @@ impl std::error::Error for CameraUploadError {
 }
 
 impl Graphics {
-    pub(crate) fn upload_latest(&mut self, state: &DomainState) -> Result<(), CameraUploadError> {
-        for (camera_id, frame) in state.camera.frames() {
+    pub(crate) fn upload_latest(
+        &mut self,
+        camera: &CameraState,
+        camera_path: Option<&BevPathFrame>,
+        transforms: &TransformState,
+        updates: &mut Vec<CameraPresentationUpdate>,
+    ) -> Result<(), CameraUploadError> {
+        for (camera_id, frame) in camera.frames() {
             if self.uploaded_arrivals.get(camera_id) == Some(&frame.arrival_time.0) {
                 continue;
             }
@@ -38,15 +45,8 @@ impl Graphics {
             })?;
             let decode_elapsed = decode_started.elapsed();
             let upload_started = Instant::now();
-            let prepared = prepare_camera_frame(
-                frame,
-                image,
-                state.bev.latest(),
-                &state.transforms,
-                &self.calibrations,
-            );
-            self.overlay_status
-                .insert(*camera_id, prepared.overlay_status);
+            let prepared =
+                prepare_camera_frame(frame, image, camera_path, transforms, &self.calibrations);
             let slot = self.camera_slots.entry(*camera_id).or_default();
             let recreated = slot.update(&self.device, &self.queue, &prepared.image);
             if recreated {
@@ -70,23 +70,18 @@ impl Graphics {
             }
             self.uploaded_arrivals
                 .insert(*camera_id, prepared.arrival_time.0);
-            self.presentation_metrics.record_camera(
-                *camera_id,
-                decode_elapsed,
-                upload_started.elapsed(),
-            );
+            updates.push(CameraPresentationUpdate {
+                camera_id: *camera_id,
+                overlay_status: prepared.overlay_status,
+                jpeg_decode_time: decode_elapsed,
+                upload_time: upload_started.elapsed(),
+            });
         }
         Ok(())
     }
 
     pub(crate) fn hide_camera(&mut self) {
         self.uploaded_arrivals.clear();
-    }
-
-    pub(crate) fn reset_camera_presentation(&mut self) {
-        self.hide_camera();
-        self.overlay_status.clear();
-        self.presentation_metrics.reset();
     }
 
     pub(super) fn camera_texture(

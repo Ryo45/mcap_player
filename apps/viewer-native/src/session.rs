@@ -4,10 +4,10 @@ use crate::live;
 use anyhow::bail;
 use anyhow::{Context, Result};
 use memmap2::Mmap;
-use std::{collections::BTreeMap, fs::File, path::Path, time::Duration};
+use std::{fs::File, path::Path, time::Duration};
 use viewer_core::{
-    CameraId, DiagnosticsPresentation, DomainState, McapPlayback, OverlayStatus, PipelineCounters,
-    PlaybackCommand, PlaybackPerformance, PlaybackView, PresentationSnapshot, ViewerPresentation,
+    CameraId, DomainState, McapPlayback, PipelineCounters, PlaybackCommand, PlaybackPerformance,
+    PlaybackView,
 };
 #[cfg(feature = "ros2-live")]
 use viewer_core::{PipelineSet, StreamBinding};
@@ -16,7 +16,6 @@ pub(crate) struct PlaybackSession {
     source: SessionSource,
     topic: String,
     camera_topics: Vec<(CameraId, String)>,
-    focused_camera: Option<CameraId>,
     source_name: String,
 }
 
@@ -30,6 +29,14 @@ enum SessionSource {
     },
 }
 
+pub(crate) struct SessionDiagnostics {
+    pub(crate) source_name: String,
+    pub(crate) primary_topic: String,
+    pub(crate) camera_topics: Vec<(CameraId, String)>,
+    pub(crate) counters: PipelineCounters,
+    pub(crate) playback_performance: Option<PlaybackPerformance>,
+}
+
 impl PlaybackSession {
     pub(crate) fn open(path: &Path, topic: String) -> Result<Self> {
         let file = File::open(path).with_context(|| format!("open {}", path.display()))?;
@@ -39,12 +46,10 @@ impl PlaybackSession {
         let mut playback = McapPlayback::new(mapping, &topic)?;
         playback.clock_mut().play();
         let camera_topics = playback.camera_topics().to_vec();
-        let focused_camera = playback.focused_camera();
         Ok(Self {
             source: SessionSource::Mcap(Box::new(playback)),
             topic,
             camera_topics,
-            focused_camera,
             source_name: path.display().to_string(),
         })
     }
@@ -62,7 +67,6 @@ impl PlaybackSession {
             &[(descriptor.id, StreamBinding::Camera(CameraId(0)))],
         );
         let camera_topics = vec![(CameraId(0), topic.clone())];
-        let focused_camera = camera_topics.first().map(|(camera_id, _)| *camera_id);
         Self {
             source: SessionSource::Ros {
                 handle: live::RosLiveHandle::start(topic.clone(), reliable),
@@ -71,7 +75,6 @@ impl PlaybackSession {
             },
             topic,
             camera_topics,
-            focused_camera,
             source_name: format!(
                 "ROS 2 live ({})",
                 if reliable { "reliable" } else { "best effort" }
@@ -131,11 +134,14 @@ impl PlaybackSession {
         }
     }
 
+    pub(crate) fn default_focused_camera(&self) -> Option<CameraId> {
+        self.camera_topics.first().map(|(camera_id, _)| *camera_id)
+    }
+
     pub(crate) fn set_focused_camera(&mut self, focused_camera: Option<CameraId>) {
         let focused_camera = focused_camera
             .filter(|camera_id| self.camera_topics.iter().any(|(id, _)| id == camera_id))
             .or_else(|| self.camera_topics.first().map(|(camera_id, _)| *camera_id));
-        self.focused_camera = focused_camera;
         match &mut self.source {
             SessionSource::Mcap(playback) => playback.set_focused_camera(focused_camera),
             #[cfg(feature = "ros2-live")]
@@ -181,12 +187,7 @@ impl PlaybackSession {
         }
     }
 
-    pub(crate) fn presentation(
-        &self,
-        error: Option<String>,
-        presentation_performance: PresentationSnapshot,
-        overlays: &BTreeMap<CameraId, OverlayStatus>,
-    ) -> ViewerPresentation {
+    pub(crate) fn diagnostics(&self) -> SessionDiagnostics {
         #[cfg(feature = "ros2-live")]
         let source_name = match &self.source {
             SessionSource::Ros { handle, state, .. } => {
@@ -219,20 +220,12 @@ impl PlaybackSession {
         };
         #[cfg(not(feature = "ros2-live"))]
         let source_name = self.source_name.clone();
-        ViewerPresentation::from_domain(
-            self.state(),
-            &self.camera_topics,
-            self.focused_camera,
-            overlays,
-            DiagnosticsPresentation {
-                source: source_name,
-                primary_topic: self.topic.clone(),
-                counters: self.counters(),
-                playback_performance: self.playback_performance().cloned(),
-                performance: presentation_performance,
-                error,
-                ..DiagnosticsPresentation::default()
-            },
-        )
+        SessionDiagnostics {
+            source_name,
+            primary_topic: self.topic.clone(),
+            camera_topics: self.camera_topics.clone(),
+            counters: self.counters(),
+            playback_performance: self.playback_performance().cloned(),
+        }
     }
 }

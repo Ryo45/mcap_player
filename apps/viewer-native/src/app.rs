@@ -1,9 +1,16 @@
 use crate::{
     args::{Args, SourceMode},
     graphics::{Graphics, RenderInput},
+    presentation::PresentationState,
     session::PlaybackSession,
+    settings::ViewerSettings,
 };
-use std::{fs, path::Path, sync::Arc, time::Instant};
+use std::{
+    fs,
+    path::Path,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 use viewer_core::CameraCalibrationSet;
 use winit::{
     application::ApplicationHandler,
@@ -15,8 +22,10 @@ use winit::{
 pub(crate) struct App {
     pub(crate) args: Args,
     pub(crate) window: Option<Arc<Window>>,
-    pub(crate) graphics: Option<Graphics>,
     pub(crate) session: Option<PlaybackSession>,
+    pub(crate) viewer_settings: ViewerSettings,
+    pub(crate) presentation_state: PresentationState,
+    pub(crate) graphics: Option<Graphics>,
     pub(crate) last_frame: Instant,
     pub(crate) error: Option<String>,
 }
@@ -24,17 +33,96 @@ pub(crate) struct App {
 impl App {
     fn load(&mut self, path: &Path) {
         match PlaybackSession::open(path, self.args.topic.clone()) {
-            Ok(session) => {
+            Ok(mut session) => {
+                self.viewer_settings.focused_camera = session.default_focused_camera();
+                session.set_focused_camera(self.viewer_settings.focused_camera);
                 self.args.mcap = path.to_owned();
                 self.session = Some(session);
                 self.error = None;
+                self.presentation_state.reset();
                 if let Some(graphics) = &mut self.graphics {
-                    graphics.reset_camera_presentation();
+                    graphics.hide_camera();
                     graphics.clear_scene_history();
                 }
             }
             Err(error) => self.error = Some(error.to_string()),
         }
+    }
+
+    fn redraw(&mut self, window: &Window, elapsed: Duration) -> Result<(), wgpu::SurfaceError> {
+        let Some(session) = &mut self.session else {
+            return Ok(());
+        };
+        if let Err(error) = session.tick(elapsed) {
+            self.error = Some(error.to_string());
+        }
+
+        let Some(graphics) = &mut self.graphics else {
+            return Ok(());
+        };
+        let mut camera_updates = Vec::new();
+        let upload_result = {
+            let state = session.state();
+            graphics.upload_latest(
+                &state.camera,
+                state.bev.latest(),
+                &state.transforms,
+                &mut camera_updates,
+            )
+        };
+        if let Err(error) = upload_result {
+            let camera_id = error.camera_id;
+            self.error = Some(error.to_string());
+            session.state_mut().camera.set_error_for(camera_id);
+        }
+        self.presentation_state
+            .record_camera_updates(camera_updates);
+
+        let diagnostics = session.diagnostics();
+        let playback = session.playback_view();
+        let (render_result, render_elapsed) = {
+            let presentation = self.presentation_state.build(
+                session.state(),
+                diagnostics,
+                &self.viewer_settings,
+                self.error.clone(),
+            );
+            let render_started = Instant::now();
+            let result = graphics.render(
+                window,
+                RenderInput {
+                    presentation: &presentation.viewer,
+                    playback,
+                    settings: &self.viewer_settings,
+                    bev: presentation.bev,
+                    scene: &presentation.scene,
+                    static_transform_count: presentation.static_transform_count,
+                    dynamic_transform_count: presentation.dynamic_transform_count,
+                },
+            );
+            (result, render_started.elapsed())
+        };
+        self.presentation_state.record_render(render_elapsed);
+        self.presentation_state.advance_metrics(elapsed);
+
+        let output = render_result?;
+        self.viewer_settings.focused_camera = output.focused_camera;
+        self.viewer_settings.accumulate_points = output.accumulate_points;
+        session.set_focused_camera(self.viewer_settings.focused_camera);
+
+        let mut seeked = false;
+        for command in output.playback_commands {
+            match session.apply_playback_command(command) {
+                Ok(command_seeked) => seeked |= command_seeked,
+                Err(error) => self.error = Some(error.to_string()),
+            }
+        }
+        if seeked {
+            self.presentation_state.reset();
+            graphics.hide_camera();
+            graphics.clear_scene_history();
+        }
+        Ok(())
     }
 }
 
@@ -89,10 +177,10 @@ impl ApplicationHandler for App {
             }
             #[cfg(feature = "ros2-live")]
             SourceMode::Ros { reliable } => {
-                self.session = Some(PlaybackSession::open_live(
-                    self.args.topic.clone(),
-                    reliable,
-                ));
+                let mut session = PlaybackSession::open_live(self.args.topic.clone(), reliable);
+                self.viewer_settings.focused_camera = session.default_focused_camera();
+                session.set_focused_camera(self.viewer_settings.focused_camera);
+                self.session = Some(session);
             }
         }
         self.last_frame = Instant::now();
@@ -120,55 +208,15 @@ impl ApplicationHandler for App {
                 let now = Instant::now();
                 let elapsed = now.saturating_duration_since(self.last_frame);
                 self.last_frame = now;
-                if let Some(session) = &mut self.session {
-                    if let Err(error) = session.tick(elapsed) {
-                        self.error = Some(error.to_string());
-                    }
-                    if let Some(graphics) = &mut self.graphics {
-                        if let Err(error) = graphics.upload_latest(session.state()) {
-                            let camera_id = error.camera_id;
-                            self.error = Some(error.to_string());
-                            session.state_mut().camera.set_error_for(camera_id);
-                        }
-                        let presentation = session.presentation(
-                            self.error.clone(),
-                            graphics.presentation_snapshot(),
-                            graphics.overlay_status(),
-                        );
-                        let playback = session.playback_view();
-                        let render_started = Instant::now();
-                        let render_result = graphics.render(
-                            &window,
-                            RenderInput {
-                                state: session.state(),
-                                presentation: &presentation,
-                                playback,
-                            },
-                        );
-                        graphics.record_render(render_started.elapsed());
-                        graphics.advance_presentation_metrics(elapsed);
-                        match render_result {
-                            Ok(output) => {
-                                session.set_focused_camera(output.focused_camera);
-                                let mut seeked = false;
-                                for command in output.playback_commands {
-                                    match session.apply_playback_command(command) {
-                                        Ok(command_seeked) => seeked |= command_seeked,
-                                        Err(error) => self.error = Some(error.to_string()),
-                                    }
-                                }
-                                if seeked {
-                                    graphics.hide_camera();
-                                    graphics.clear_scene_history();
-                                }
-                            }
-                            Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
-                                graphics.resize(graphics.config.width, graphics.config.height)
-                            }
-                            Err(wgpu::SurfaceError::OutOfMemory) => event_loop.exit(),
-                            Err(error) => self.error = Some(error.to_string()),
+                match self.redraw(&window, elapsed) {
+                    Ok(()) => {}
+                    Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
+                        if let Some(graphics) = &mut self.graphics {
+                            graphics.resize(graphics.config.width, graphics.config.height);
                         }
                     }
+                    Err(wgpu::SurfaceError::OutOfMemory) => event_loop.exit(),
+                    Err(error) => self.error = Some(error.to_string()),
                 }
                 window.request_redraw();
             }

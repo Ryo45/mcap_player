@@ -4,7 +4,7 @@ use bev_renderer::{BevFrame, BevRenderer};
 use egui_wgpu::{Renderer as EguiRenderer, RendererOptions, ScreenDescriptor};
 use scene_renderer::{SceneFrame, SceneRenderer};
 use std::{collections::BTreeMap, sync::Arc};
-use viewer_core::{CameraCalibrationSet, PresentationMetrics, SceneFrameBuilder};
+use viewer_core::CameraCalibrationSet;
 use winit::window::Window;
 
 impl Graphics {
@@ -89,14 +89,10 @@ impl Graphics {
             camera_texture_ids: BTreeMap::new(),
             uploaded_arrivals: BTreeMap::new(),
             calibrations,
-            overlay_status: BTreeMap::new(),
-            presentation_metrics: PresentationMetrics::default(),
             bev_renderer,
             bev_texture_id,
-            scene_builder: SceneFrameBuilder::new(),
             scene_renderer,
             scene_texture_id,
-            accumulate_points: false,
         })
     }
 

@@ -2,11 +2,15 @@ mod app;
 mod args;
 mod graphics;
 mod live;
+mod presentation;
 mod session;
+mod settings;
 
 use anyhow::Result;
 use app::App;
 use args::Args;
+use presentation::PresentationState;
+use settings::ViewerSettings;
 use std::time::Instant;
 use winit::event_loop::{ControlFlow, EventLoop};
 
@@ -18,8 +22,10 @@ fn main() -> Result<()> {
     let mut app = App {
         args,
         window: None,
-        graphics: None,
         session: None,
+        viewer_settings: ViewerSettings::default(),
+        presentation_state: PresentationState::default(),
+        graphics: None,
         last_frame: Instant::now(),
         error: None,
     };

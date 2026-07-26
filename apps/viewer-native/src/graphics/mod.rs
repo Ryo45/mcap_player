@@ -2,26 +2,32 @@ mod camera;
 mod surface;
 mod ui;
 
+use crate::settings::ViewerSettings;
 use bev_renderer::{BevFrame, BevRenderer};
 use egui_wgpu::Renderer as EguiRenderer;
 use scene_renderer::{SceneFrame, SceneRenderer};
-use std::{collections::BTreeMap, time::Duration};
+use std::collections::BTreeMap;
 use viewer_core::{
-    BevFrameBuilder, CameraCalibrationSet, CameraId, DomainState, OverlayStatus, PlaybackCommand,
-    PlaybackView, PresentationMetrics, PresentationSnapshot, SceneFrameBuilder, ViewerPresentation,
+    BevSnapshot, CameraCalibrationSet, CameraId, PlaybackCommand, PlaybackView, SceneSnapshot,
+    ViewerPresentation,
 };
 use viewer_renderer::CameraTextureSlot;
 use winit::window::Window;
 
 pub(crate) struct RenderInput<'a> {
-    pub(crate) state: &'a DomainState,
     pub(crate) presentation: &'a ViewerPresentation,
     pub(crate) playback: Option<PlaybackView>,
+    pub(crate) settings: &'a ViewerSettings,
+    pub(crate) bev: BevSnapshot<'a>,
+    pub(crate) scene: &'a SceneSnapshot<'a>,
+    pub(crate) static_transform_count: usize,
+    pub(crate) dynamic_transform_count: usize,
 }
 
 pub(crate) struct RenderOutput {
     pub(crate) playback_commands: Vec<PlaybackCommand>,
     pub(crate) focused_camera: Option<CameraId>,
+    pub(crate) accumulate_points: bool,
 }
 
 pub(crate) struct Graphics {
@@ -36,14 +42,10 @@ pub(crate) struct Graphics {
     camera_texture_ids: BTreeMap<CameraId, egui::TextureId>,
     uploaded_arrivals: BTreeMap<CameraId, i64>,
     calibrations: CameraCalibrationSet,
-    overlay_status: BTreeMap<CameraId, OverlayStatus>,
-    presentation_metrics: PresentationMetrics,
     bev_renderer: BevRenderer,
     bev_texture_id: egui::TextureId,
-    scene_builder: SceneFrameBuilder,
     scene_renderer: SceneRenderer,
     scene_texture_id: egui::TextureId,
-    accumulate_points: bool,
 }
 
 impl Graphics {
@@ -52,8 +54,7 @@ impl Graphics {
         window: &Window,
         input: RenderInput<'_>,
     ) -> Result<RenderOutput, wgpu::SurfaceError> {
-        let ui = self.build_ui(window, input.state, input.presentation, input.playback);
-        self.accumulate_points = ui.accumulate_points;
+        let ui = self.build_ui(window, &input);
         self.scene_renderer.set_camera_mode(ui.scene_camera_mode);
         if ui.scene_wheel_delta != 0.0 {
             self.scene_renderer.zoom(ui.scene_wheel_delta);
@@ -66,16 +67,22 @@ impl Graphics {
             self.scene_renderer.reset_camera();
         }
         let pixels_per_point = ui.egui.pixels_per_point;
-        self.sync_bev(ui.bev_size, input.state, pixels_per_point);
-        self.sync_scene(ui.scene_size, input.state, pixels_per_point);
+        self.sync_bev(ui.bev_size, input.bev, pixels_per_point);
+        self.sync_scene(ui.scene_size, input.scene, pixels_per_point);
         self.paint_egui(window, ui.egui)?;
         Ok(RenderOutput {
             playback_commands: ui.playback_commands,
             focused_camera: ui.focused_camera,
+            accumulate_points: ui.accumulate_points,
         })
     }
 
-    fn sync_bev(&mut self, logical_size: egui::Vec2, state: &DomainState, pixels_per_point: f32) {
+    fn sync_bev(
+        &mut self,
+        logical_size: egui::Vec2,
+        snapshot: BevSnapshot<'_>,
+        pixels_per_point: f32,
+    ) {
         let (bev_width, bev_height) = texture_size(logical_size, pixels_per_point);
         let bev_resized = self
             .bev_renderer
@@ -88,7 +95,6 @@ impl Graphics {
                 self.bev_texture_id,
             );
         }
-        let snapshot = BevFrameBuilder::new(state).build();
         let frame = BevFrame {
             revision: snapshot.revision,
             path: snapshot.path,
@@ -98,7 +104,12 @@ impl Graphics {
         }
     }
 
-    fn sync_scene(&mut self, logical_size: egui::Vec2, state: &DomainState, pixels_per_point: f32) {
+    fn sync_scene(
+        &mut self,
+        logical_size: egui::Vec2,
+        snapshot: &SceneSnapshot<'_>,
+        pixels_per_point: f32,
+    ) {
         let (scene_width, scene_height) = texture_size(logical_size, pixels_per_point);
         let scene_resized = self
             .scene_renderer
@@ -111,7 +122,6 @@ impl Graphics {
                 self.scene_texture_id,
             );
         }
-        let snapshot = self.scene_builder.build(state, self.accumulate_points);
         let frame = SceneFrame {
             revision: snapshot.revision,
             cloud_revision: snapshot.cloud_revision,
@@ -127,24 +137,7 @@ impl Graphics {
     }
 
     pub(crate) fn clear_scene_history(&mut self) {
-        self.scene_builder.reset();
         self.scene_renderer.clear_cloud_history();
-    }
-
-    pub(crate) fn overlay_status(&self) -> &BTreeMap<CameraId, OverlayStatus> {
-        &self.overlay_status
-    }
-
-    pub(crate) fn presentation_snapshot(&self) -> PresentationSnapshot {
-        self.presentation_metrics.snapshot().clone()
-    }
-
-    pub(crate) fn record_render(&mut self, elapsed: Duration) {
-        self.presentation_metrics.record_render(elapsed);
-    }
-
-    pub(crate) fn advance_presentation_metrics(&mut self, elapsed: Duration) {
-        self.presentation_metrics.advance(elapsed);
     }
 }
 
