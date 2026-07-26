@@ -3,7 +3,7 @@ use viewer_core::{
     ArrivalTime, CameraId, CameraState, DomainUpdate, McapPlayback, McapSource, PipelineSet,
     StreamBinding,
 };
-use viewer_renderer::decode_jpeg;
+use viewer_renderer::decode_camera_frame;
 
 fn fixture() -> Vec<u8> {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -40,7 +40,7 @@ fn fixture_has_30_decodable_frames_and_distinct_time_domains() {
             panic!("camera-only fixture produced a non-camera update");
         };
         assert_ne!(frame.measurement_time.0, frame.arrival_time.0);
-        let decoded = decode_jpeg(&frame.jpeg).unwrap();
+        let decoded = decode_camera_frame(&frame).unwrap();
         assert_eq!((decoded.width, decoded.height), (320, 240));
         assert!(
             state.apply(frame),
@@ -113,7 +113,7 @@ fn seven_camera_display_policy_stays_within_the_decode_budget() {
                 continue;
             }
             let started = Instant::now();
-            let image = decode_jpeg(&frame.jpeg).unwrap();
+            let image = decode_camera_frame(frame).unwrap();
             decode_time = decode_time.saturating_add(started.elapsed());
             assert_eq!((image.width, image.height), (320, 240));
             arrivals.insert(*camera_id, frame.arrival_time);

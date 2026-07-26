@@ -1,8 +1,8 @@
 use super::Graphics;
 use crate::session::PlaybackSession;
 use std::{fmt, sync::Arc, time::Instant};
-use viewer_core::{CameraId, DomainState, OverlayStatus};
-use viewer_renderer::{ImageDecodeError, decode_jpeg, draw_plan_overlay};
+use viewer_core::{CameraId, DomainState};
+use viewer_renderer::{ImageDecodeError, decode_camera_frame, prepare_camera_frame};
 
 #[derive(Debug)]
 pub(crate) struct CameraUploadError {
@@ -33,39 +33,23 @@ impl Graphics {
                 continue;
             }
             let decode_started = Instant::now();
-            let mut image = decode_jpeg(&frame.jpeg).map_err(|source| CameraUploadError {
+            let image = decode_camera_frame(frame).map_err(|source| CameraUploadError {
                 camera_id: *camera_id,
                 source,
             })?;
             let decode_elapsed = decode_started.elapsed();
             let upload_started = Instant::now();
-            if let Some(path) = state.bev.latest() {
-                match self.calibrations.project_plan(
-                    frame,
-                    path,
-                    &state.transforms,
-                    (image.width, image.height),
-                ) {
-                    Ok(projected) => {
-                        draw_plan_overlay(&mut image, &projected.points);
-                        self.overlay_status.insert(
-                            *camera_id,
-                            OverlayStatus::Ready {
-                                visible_points: projected.visible_points,
-                            },
-                        );
-                    }
-                    Err(error) => {
-                        self.overlay_status
-                            .insert(*camera_id, OverlayStatus::Error(error.to_string()));
-                    }
-                }
-            } else {
-                self.overlay_status
-                    .insert(*camera_id, OverlayStatus::Waiting);
-            }
+            let prepared = prepare_camera_frame(
+                frame,
+                image,
+                state.bev.latest(),
+                &state.transforms,
+                &self.calibrations,
+            );
+            self.overlay_status
+                .insert(*camera_id, prepared.overlay_status);
             let slot = self.camera_slots.entry(*camera_id).or_default();
-            let recreated = slot.update(&self.device, &self.queue, &image);
+            let recreated = slot.update(&self.device, &self.queue, &prepared.image);
             if recreated {
                 let view = slot.view().expect("updated slot has a view");
                 let texture_id = self
@@ -86,7 +70,7 @@ impl Graphics {
                 );
             }
             self.uploaded_arrivals
-                .insert(*camera_id, frame.arrival_time.0);
+                .insert(*camera_id, prepared.arrival_time.0);
             self.presentation_metrics.record_camera(
                 *camera_id,
                 decode_elapsed,
