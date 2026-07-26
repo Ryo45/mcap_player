@@ -58,12 +58,8 @@ impl Graphics {
         );
         let bev_texture_id = self.bev_texture_id;
         let scene_texture_id = self.scene_texture_id;
-        let bev_path_points = self.bev_path_points(session).map_or(0, <[_]>::len);
-        let current_scan_points = session
-            .state()
-            .point_cloud
-            .latest()
-            .map_or(0, |frame| frame.points.len());
+        let bev_path_points = model.diagnostics.path_points;
+        let current_scan_points = model.diagnostics.scan_points;
         let visible_scan_points = self.scene_renderer.visible_points();
         let scene_camera_distance = self.scene_renderer.camera().distance;
         let mut scene_camera_mode = self.scene_renderer.camera_mode();

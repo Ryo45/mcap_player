@@ -3,12 +3,14 @@ mod surface;
 mod ui;
 
 use crate::session::PlaybackSession;
-use bev_renderer::BevFrame;
-use bev_renderer::BevRenderer;
+use bev_renderer::{BevFrame, BevRenderer};
 use egui_wgpu::Renderer as EguiRenderer;
 use scene_renderer::{SceneFrame, SceneRenderer};
 use std::{collections::BTreeMap, sync::Arc};
-use viewer_core::{CameraCalibrationSet, CameraId, OverlayStatus, PresentationMetrics};
+use viewer_core::{
+    BevFrameBuilder, CameraCalibrationSet, CameraId, OverlayStatus, PresentationMetrics,
+    SceneFrameBuilder,
+};
 use viewer_renderer::CameraTextureSlot;
 use winit::window::Window;
 
@@ -80,13 +82,13 @@ impl Graphics {
                 self.bev_texture_id,
             );
         }
-        let bev_frame = BevFrame {
-            revision: session.state().bev.revision(),
-            path: self.bev_path_points(session).unwrap_or(&[]),
+        let snapshot = BevFrameBuilder::new(session.state()).build();
+        let frame = BevFrame {
+            revision: snapshot.revision,
+            path: snapshot.path,
         };
-        if bev_resized || self.bev_renderer.needs_render(bev_frame) {
-            self.bev_renderer
-                .render(&self.device, &self.queue, bev_frame);
+        if bev_resized || self.bev_renderer.needs_render(frame) {
+            self.bev_renderer.render(&self.device, &self.queue, frame);
         }
     }
 
@@ -108,35 +110,21 @@ impl Graphics {
                 self.scene_texture_id,
             );
         }
-        let telemetry = session.state().telemetry.latest();
-        let telemetry_revision = telemetry.map_or(0, |frame| frame.arrival_time.0 as u64);
-        let scene_frame = SceneFrame {
-            revision: session.state().bev.revision().rotate_left(17) ^ telemetry_revision,
-            cloud_revision: session.state().point_cloud.revision(),
-            ego_position: telemetry.map_or([0.0, 0.0], |frame| {
-                [frame.position_x as f32, frame.position_y as f32]
-            }),
-            ego_yaw: telemetry.map_or(0.0, |frame| frame.yaw_radians as f32),
-            path: self.bev_path_points(session).unwrap_or(&[]),
-            cloud: session
-                .state()
-                .point_cloud
-                .latest()
-                .map_or(&[], |frame| frame.points.as_slice()),
-            accumulate: self.accumulate_points,
+        let snapshot = SceneFrameBuilder::new(session.state())
+            .accumulate(self.accumulate_points)
+            .build();
+        let frame = SceneFrame {
+            revision: snapshot.revision,
+            cloud_revision: snapshot.cloud_revision,
+            ego_position: snapshot.ego_position,
+            ego_yaw: snapshot.ego_yaw,
+            path: snapshot.path,
+            cloud: snapshot.cloud,
+            accumulate: snapshot.accumulate,
         };
-        if scene_resized || self.scene_renderer.needs_render(scene_frame) {
-            self.scene_renderer
-                .render(&self.device, &self.queue, scene_frame);
+        if scene_resized || self.scene_renderer.needs_render(frame) {
+            self.scene_renderer.render(&self.device, &self.queue, frame);
         }
-    }
-
-    fn bev_path_points<'a>(&self, session: &'a PlaybackSession) -> Option<&'a [[f32; 2]]> {
-        session
-            .state()
-            .bev
-            .latest()
-            .map(|frame| frame.points.as_slice())
     }
 }
 
