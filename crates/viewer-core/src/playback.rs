@@ -346,9 +346,18 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
 mod tests {
     use super::*;
 
+    fn fixture(name: &str) -> Vec<u8> {
+        std::fs::read(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../tests/fixtures/camera-jpeg")
+                .join(name),
+        )
+        .unwrap()
+    }
+
     #[test]
     fn owns_common_tick_and_seek_state_transitions() {
-        let bytes = include_bytes!("../../../tests/fixtures/camera-jpeg/camera_front_3s.mcap");
+        let bytes = fixture("camera_front_3s.mcap");
         let mut playback =
             McapPlayback::new(bytes.as_slice(), "/camera/front/image/compressed").unwrap();
         playback.clock_mut().play();
@@ -384,7 +393,7 @@ mod tests {
 
     #[test]
     fn limits_seven_cameras_to_ten_and_five_hz() {
-        let bytes = include_bytes!("../../../tests/fixtures/camera-jpeg/camera_7_5s.mcap");
+        let bytes = fixture("camera_7_5s.mcap");
         let mut playback =
             McapPlayback::new(bytes.as_slice(), "/camera/front/image/compressed").unwrap();
         playback.clock_mut().play();
@@ -428,7 +437,7 @@ mod tests {
 
     #[test]
     fn raises_the_new_focus_to_ten_hz() {
-        let bytes = include_bytes!("../../../tests/fixtures/camera-jpeg/camera_7_5s.mcap");
+        let bytes = fixture("camera_7_5s.mcap");
         let mut playback =
             McapPlayback::new(bytes.as_slice(), "/camera/front/image/compressed").unwrap();
         playback.clock_mut().play();
