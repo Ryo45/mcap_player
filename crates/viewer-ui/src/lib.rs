@@ -1,6 +1,9 @@
 //! Shared egui presentation model and playback controls.
 
-use viewer_core::{ArrivalTime, CameraStatus, PipelineCounters, PlaybackClock, PlaybackSpeed};
+use viewer_core::{
+    ArrivalTime, CameraId, CameraStatus, PipelineCounters, PlaybackClock, PlaybackPerformance,
+    PlaybackSpeed, PresentationSnapshot,
+};
 
 #[derive(Clone, Debug)]
 pub struct ViewerPresentation {
@@ -8,6 +11,9 @@ pub struct ViewerPresentation {
     pub topic: String,
     pub camera_status: CameraStatus,
     pub counters: PipelineCounters,
+    pub playback_performance: Option<PlaybackPerformance>,
+    pub presentation_performance: PresentationSnapshot,
+    pub focused_camera: Option<CameraId>,
     pub telemetry: Option<TelemetryPresentation>,
     pub error: Option<String>,
 }
@@ -31,6 +37,9 @@ impl Default for ViewerPresentation {
             topic: String::new(),
             camera_status: CameraStatus::WaitingForCameraFrame,
             counters: PipelineCounters::default(),
+            playback_performance: None,
+            presentation_performance: PresentationSnapshot::default(),
+            focused_camera: None,
             telemetry: None,
             error: None,
         }
@@ -94,9 +103,53 @@ pub fn source_status(ui: &mut egui::Ui, model: &ViewerPresentation) {
     };
     ui.label(status);
     ui.label(format!(
-        "Decoded: {}  Errors: {}  Unknown: {}",
-        model.counters.decoded, model.counters.errors, model.counters.unknown_streams
+        "Decoded: {}  Errors: {}  Unknown: {}  Dropped: {}",
+        model.counters.decoded,
+        model.counters.errors,
+        model.counters.unknown_streams,
+        model.counters.dropped
     ));
+    ui.separator();
+    ui.heading("Performance · 1 s window");
+    let focused_fps = model
+        .focused_camera
+        .and_then(|camera_id| model.presentation_performance.camera_fps.get(&camera_id))
+        .copied()
+        .unwrap_or_default();
+    ui.monospace(format!(
+        "Camera total {:>5.1} Hz",
+        model.presentation_performance.total_camera_fps
+    ));
+    if let Some(performance) = &model.playback_performance {
+        ui.monospace(format!(
+            "Focus {:>5.1}/{:.0} Hz · others ≤{:.0} Hz",
+            focused_fps,
+            performance.focused_camera_hz(),
+            performance.background_camera_hz()
+        ));
+    } else {
+        ui.monospace(format!("Focus {focused_fps:>5.1} Hz"));
+    }
+    ui.monospace(format!(
+        "JPEG {:>5.2} ms · upload {:>5.2} ms",
+        model.presentation_performance.jpeg_decode_ms, model.presentation_performance.upload_ms
+    ));
+    ui.monospace(format!(
+        "UI/render {:>5.2} ms",
+        model.presentation_performance.render_ms
+    ));
+    if let Some(performance) = &model.playback_performance {
+        ui.monospace(format!(
+            "MCAP {:>5.2} · CDR {:>5.2} · state {:>5.2} ms",
+            performance.source_read.average_ms,
+            performance.pipeline_decode.average_ms,
+            performance.state_apply.average_ms
+        ));
+        ui.monospace(format!(
+            "Camera input {} · presented {}",
+            performance.camera_input_frames, performance.camera_presented_frames
+        ));
+    }
     ui.separator();
     ui.heading("Telemetry · /odom");
     if let Some(telemetry) = &model.telemetry {

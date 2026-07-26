@@ -178,6 +178,15 @@ impl<'a> Reader<'a> {
         Ok(length)
     }
 
+    fn sequence_length(&mut self, minimum_element_bytes: usize) -> Result<usize, DecodeError> {
+        let length = self.length()?;
+        let remaining = self.bytes.len().saturating_sub(self.position);
+        if length > remaining / minimum_element_bytes {
+            return Err(DecodeError::InvalidLength);
+        }
+        Ok(length)
+    }
+
     fn string(&mut self) -> Result<String, DecodeError> {
         let length = self.length()?;
         if length == 0 {
@@ -195,8 +204,10 @@ impl<'a> Reader<'a> {
 
 fn normalize_format(value: &str) -> Result<String, DecodeError> {
     let normalized = value.trim().to_ascii_lowercase();
-    let first = normalized.split_whitespace().next().unwrap_or_default();
-    if matches!(first, "jpeg" | "jpg") {
+    if normalized
+        .split(|character: char| character == ';' || character.is_whitespace())
+        .any(|token| matches!(token, "jpeg" | "jpg"))
+    {
         Ok("jpeg".to_owned())
     } else {
         Err(DecodeError::UnsupportedFormat(value.to_owned()))
@@ -240,7 +251,7 @@ pub fn decode_path(bytes: &[u8]) -> Result<PathMessage, DecodeError> {
             .ok_or(DecodeError::InvalidTimestamp)?,
     );
     let frame_id = reader.string()?;
-    let pose_count = reader.length()?;
+    let pose_count = reader.sequence_length(64)?;
     let mut points = Vec::with_capacity(pose_count);
     for _ in 0..pose_count {
         let _pose_seconds = reader.i32()?;
@@ -334,12 +345,12 @@ pub fn decode_laser_scan(bytes: &[u8]) -> Result<LaserScan, DecodeError> {
     let _scan_time = reader.f32()?;
     let range_min = reader.f32()?;
     let range_max = reader.f32()?;
-    let range_count = reader.length()?;
+    let range_count = reader.sequence_length(std::mem::size_of::<f32>())?;
     let mut ranges = Vec::with_capacity(range_count);
     for _ in 0..range_count {
         ranges.push(reader.f32()?);
     }
-    let intensity_count = reader.length()?;
+    let intensity_count = reader.sequence_length(std::mem::size_of::<f32>())?;
     for _ in 0..intensity_count {
         let _ = reader.f32()?;
     }
@@ -366,7 +377,7 @@ pub fn decode_laser_scan(bytes: &[u8]) -> Result<LaserScan, DecodeError> {
 
 pub fn decode_tf_message(bytes: &[u8]) -> Result<Vec<TransformStamped>, DecodeError> {
     let mut reader = Reader::new(bytes)?;
-    let count = reader.length()?;
+    let count = reader.sequence_length(64)?;
     if count > 1_000_000 {
         return Err(DecodeError::InvalidLength);
     }
@@ -432,6 +443,11 @@ fn push_string(output: &mut Vec<u8>, value: &str) -> Result<(), DecodeError> {
     Ok(())
 }
 
+fn push_f64(output: &mut Vec<u8>, value: f64) {
+    align_output(output, 8);
+    output.extend_from_slice(&value.to_le_bytes());
+}
+
 pub fn encode_compressed_image_cdr(image: &CompressedImage) -> Result<Vec<u8>, DecodeError> {
     let seconds = image.measurement_time.0.div_euclid(1_000_000_000);
     let nanos = image.measurement_time.0.rem_euclid(1_000_000_000);
@@ -446,6 +462,36 @@ pub fn encode_compressed_image_cdr(image: &CompressedImage) -> Result<Vec<u8>, D
         u32::try_from(image.jpeg.len()).map_err(|_| DecodeError::InvalidLength)?,
     );
     output.extend_from_slice(&image.jpeg);
+    Ok(output)
+}
+
+pub fn encode_tf_message_cdr(transforms: &[TransformStamped]) -> Result<Vec<u8>, DecodeError> {
+    let mut output = vec![0, 1, 0, 0];
+    push_u32(
+        &mut output,
+        u32::try_from(transforms.len()).map_err(|_| DecodeError::InvalidLength)?,
+    );
+    for transform in transforms {
+        let seconds = transform.measurement_time.0.div_euclid(1_000_000_000);
+        let nanos = transform.measurement_time.0.rem_euclid(1_000_000_000);
+        let seconds = i32::try_from(seconds).map_err(|_| DecodeError::InvalidTimestamp)?;
+        push_u32(&mut output, seconds as u32);
+        push_u32(&mut output, nanos as u32);
+        push_string(&mut output, &transform.frame_id)?;
+        push_string(&mut output, &transform.child_frame_id)?;
+        for value in transform.translation {
+            if !value.is_finite() {
+                return Err(DecodeError::InvalidLength);
+            }
+            push_f64(&mut output, value);
+        }
+        for value in transform.rotation {
+            if !value.is_finite() {
+                return Err(DecodeError::InvalidLength);
+            }
+            push_f64(&mut output, value);
+        }
+    }
     Ok(output)
 }
 
@@ -466,6 +512,28 @@ mod tests {
         assert_eq!(decoded.measurement_time, original.measurement_time);
         assert_eq!(decoded.format, "jpeg");
         assert_eq!(decoded.jpeg, original.jpeg);
+
+        let mut cdr = original;
+        cdr.format = "rgb8; jpeg compressed bgr8".into();
+        assert_eq!(
+            decode_compressed_image(&encode_compressed_image_cdr(&cdr).unwrap())
+                .unwrap()
+                .format,
+            "jpeg"
+        );
+    }
+
+    #[test]
+    fn tf_message_round_trip() {
+        let transforms = vec![TransformStamped {
+            measurement_time: MeasurementTime(12_345_000_006),
+            frame_id: "base_link".into(),
+            child_frame_id: "camera_front_optical_frame".into(),
+            translation: [0.2, 0.0, 0.4],
+            rotation: [-0.5, 0.5, -0.5, 0.5],
+        }];
+        let payload = encode_tf_message_cdr(&transforms).unwrap();
+        assert_eq!(decode_tf_message(&payload).unwrap(), transforms);
     }
 
     #[test]
@@ -494,6 +562,16 @@ mod tests {
         assert!(matches!(
             decode_compressed_image(&unsupported),
             Err(DecodeError::UnsupportedFormat(_))
+        ));
+
+        let mut path = vec![0, 1, 0, 0];
+        push_u32(&mut path, 0);
+        push_u32(&mut path, 0);
+        push_string(&mut path, "map").unwrap();
+        push_u32(&mut path, u32::MAX);
+        assert!(matches!(
+            decode_path(&path),
+            Err(DecodeError::InvalidLength)
         ));
     }
 

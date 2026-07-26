@@ -1,9 +1,12 @@
 #[cfg(target_arch = "wasm32")]
 mod browser {
     use js_sys::{Date, Uint8Array};
-    use std::{cell::RefCell, time::Duration};
-    use viewer_core::{ArrivalTime, McapPlayback, PlaybackSpeed};
-    use viewer_renderer::decode_jpeg;
+    use std::{cell::RefCell, collections::BTreeMap, time::Duration};
+    use viewer_core::{
+        ArrivalTime, CameraCalibrationSet, CameraId, McapPlayback, PlaybackSpeed,
+        PresentationMetrics,
+    };
+    use viewer_renderer::{DecodedImage, decode_jpeg, draw_plan_overlay};
     use wasm_bindgen::{Clamped, JsCast, closure::Closure, prelude::*};
     use wasm_bindgen_futures::{JsFuture, spawn_local};
     use web_sys::{
@@ -15,19 +18,30 @@ mod browser {
     #[derive(Default)]
     struct WebViewState {
         last_drawn: Option<i64>,
+        last_drawn_camera: Option<CameraId>,
+        camera_arrivals: BTreeMap<CameraId, i64>,
         last_bev_revision: Option<u64>,
         last_bev_size: (u32, u32),
+        camera_topics: Vec<(CameraId, String)>,
+        overlay_status: BTreeMap<CameraId, String>,
+        presentation_metrics: PresentationMetrics,
     }
 
     struct WebApp {
         playback: Option<McapPlayback<Vec<u8>>>,
         view: WebViewState,
+        focused_camera: Option<CameraId>,
+        calibrations: CameraCalibrationSet,
         previous_ms: f64,
     }
 
     thread_local! { static APP: RefCell<WebApp> = RefCell::new(WebApp {
         playback: None,
         view: WebViewState::default(),
+        focused_camera: None,
+        calibrations: CameraCalibrationSet::from_json(include_str!(
+            "../../../config/camera_calibration.json"
+        )).expect("bundled camera calibration"),
         previous_ms: Date::now(),
     }); }
 
@@ -49,6 +63,119 @@ mod browser {
         let status: HtmlElement = element("status");
         status.set_inner_text(message);
         status.set_class_name(if error { "error" } else { "" });
+    }
+
+    fn draw_image(canvas_id: &str, image: &DecodedImage) {
+        let canvas: HtmlCanvasElement = element(canvas_id);
+        if canvas.width() != image.width {
+            canvas.set_width(image.width);
+        }
+        if canvas.height() != image.height {
+            canvas.set_height(image.height);
+        }
+        let context: CanvasRenderingContext2d = canvas
+            .get_context("2d")
+            .expect("2d query")
+            .expect("2d context")
+            .dyn_into()
+            .expect("canvas 2d");
+        let data = ImageData::new_with_u8_clamped_array_and_sh(
+            Clamped(&image.rgba),
+            image.width,
+            image.height,
+        )
+        .expect("image data");
+        context
+            .put_image_data(&data, 0.0, 0.0)
+            .expect("draw camera");
+    }
+
+    fn copy_canvas(source_id: &str, destination_id: &str) {
+        let source: HtmlCanvasElement = element(source_id);
+        let destination: HtmlCanvasElement = element(destination_id);
+        if destination.width() != source.width() {
+            destination.set_width(source.width());
+        }
+        if destination.height() != source.height() {
+            destination.set_height(source.height());
+        }
+        let context: CanvasRenderingContext2d = destination
+            .get_context("2d")
+            .expect("2d query")
+            .expect("2d context")
+            .dyn_into()
+            .expect("canvas 2d");
+        context
+            .draw_image_with_html_canvas_element(&source, 0.0, 0.0)
+            .expect("copy camera canvas");
+    }
+
+    fn clear_canvas(canvas_id: &str) {
+        let canvas: HtmlCanvasElement = element(canvas_id);
+        let context: CanvasRenderingContext2d = canvas
+            .get_context("2d")
+            .expect("2d query")
+            .expect("2d context")
+            .dyn_into()
+            .expect("canvas 2d");
+        context.clear_rect(
+            0.0,
+            0.0,
+            f64::from(canvas.width()),
+            f64::from(canvas.height()),
+        );
+    }
+
+    fn rebuild_camera_cards(camera_topics: &[(CameraId, String)]) {
+        let container: HtmlElement = element("camera-thumbnails");
+        container.set_inner_html("");
+        for (camera_id, topic) in camera_topics {
+            let button: HtmlButtonElement = document()
+                .create_element("button")
+                .expect("camera card")
+                .dyn_into()
+                .expect("camera card button");
+            let button_id = format!("camera-card-{}", camera_id.0);
+            button.set_id(&button_id);
+            button.set_class_name("camera-card");
+            button.set_type("button");
+            button
+                .set_attribute("aria-label", &format!("Focus camera {topic}"))
+                .expect("camera card aria label");
+
+            let canvas: HtmlCanvasElement = document()
+                .create_element("canvas")
+                .expect("camera thumbnail")
+                .dyn_into()
+                .expect("camera thumbnail canvas");
+            canvas.set_id(&format!("camera-thumb-{}", camera_id.0));
+            canvas.set_width(160);
+            canvas.set_height(120);
+            button
+                .append_child(&canvas)
+                .expect("camera thumbnail append");
+
+            let label: HtmlElement = document()
+                .create_element("span")
+                .expect("camera card label")
+                .dyn_into()
+                .expect("camera card label element");
+            label.set_id(&format!("camera-label-{}", camera_id.0));
+            label.set_inner_text(topic);
+            button.append_child(&label).expect("camera label append");
+
+            let selected = *camera_id;
+            let callback = Closure::<dyn FnMut(Event)>::new(move |_| {
+                APP.with(|app| app.borrow_mut().focused_camera = Some(selected));
+            });
+            button
+                .add_event_listener_with_callback("click", callback.as_ref().unchecked_ref())
+                .expect("camera card listener");
+            callback.forget();
+            container
+                .append_child(&button)
+                .expect("camera card container append");
+        }
     }
 
     fn install_file_input() {
@@ -78,6 +205,7 @@ mod browser {
                             let mut app = cell.borrow_mut();
                             app.playback = Some(playback);
                             app.view = WebViewState::default();
+                            app.focused_camera = None;
                         });
                         set_status(&format!("{file_name} ready"), false);
                     }
@@ -166,6 +294,7 @@ mod browser {
 
     fn tick() {
         APP.with(|cell| {
+            let tick_started = Date::now();
             let mut app = cell.borrow_mut();
             let now = Date::now();
             let elapsed =
@@ -174,11 +303,19 @@ mod browser {
             let WebApp {
                 playback,
                 view,
+                focused_camera,
+                calibrations,
                 previous_ms: _,
             } = &mut *app;
             let Some(session) = playback else {
                 return;
             };
+            let camera_topics = session.camera_topics();
+            let selected_camera = (*focused_camera)
+                .filter(|camera_id| camera_topics.iter().any(|(id, _)| id == camera_id))
+                .or_else(|| camera_topics.first().map(|(id, _)| *id));
+            *focused_camera = selected_camera;
+            session.set_focused_camera(selected_camera);
             if let Err(error) = session.tick(elapsed) {
                 set_status(&error.to_string(), true);
                 return;
@@ -189,6 +326,54 @@ mod browser {
             timeline
                 .set_value_as_number((session.clock().cursor().0 - start) as f64 / duration as f64);
             let counters = session.counters();
+            let camera_topics = session.camera_topics();
+            if view.camera_topics.as_slice() != camera_topics {
+                rebuild_camera_cards(camera_topics);
+                view.camera_topics = camera_topics.to_vec();
+            }
+            if view.last_drawn_camera != selected_camera {
+                view.last_drawn = None;
+                view.last_drawn_camera = selected_camera;
+            }
+            let focus_label: HtmlElement = element("camera-focus-label");
+            focus_label.set_inner_text(
+                selected_camera
+                    .and_then(|camera_id| {
+                        camera_topics
+                            .iter()
+                            .find(|(id, _)| *id == camera_id)
+                            .map(|(_, topic)| topic.as_str())
+                    })
+                    .map(|topic| {
+                        let overlay = selected_camera
+                            .and_then(|camera_id| view.overlay_status.get(&camera_id))
+                            .map_or("overlay waiting", String::as_str);
+                        format!("{topic} · {overlay}")
+                    })
+                    .as_deref()
+                    .unwrap_or("waiting"),
+            );
+            for (camera_id, _) in camera_topics {
+                let card: HtmlButtonElement = element(&format!("camera-card-{}", camera_id.0));
+                card.set_class_name(if Some(*camera_id) == selected_camera {
+                    "camera-card selected"
+                } else {
+                    "camera-card"
+                });
+                let label: HtmlElement = element(&format!("camera-label-{}", camera_id.0));
+                let topic = camera_topics
+                    .iter()
+                    .find(|(id, _)| id == camera_id)
+                    .map_or("", |(_, topic)| topic.as_str());
+                let fps = view
+                    .presentation_metrics
+                    .snapshot()
+                    .camera_fps
+                    .get(camera_id)
+                    .copied()
+                    .unwrap_or_default();
+                label.set_inner_text(&format!("{topic} · {fps:.1} Hz"));
+            }
             let state = session.state();
             let path_points = state.bev.latest().map_or(0, |frame| frame.points.len());
             let scan_points = session
@@ -198,15 +383,34 @@ mod browser {
                 .map_or(0, |frame| frame.points.len());
             set_status(
                 &format!(
-                    "{} decoded · {} errors · path {} pts · scan {} pts · {:.2}s",
+                    "{} decoded · {} errors · {} dropped · path {} pts · scan {} pts · {:.2}s",
                     counters.decoded,
                     counters.errors,
+                    counters.dropped,
                     path_points,
                     scan_points,
                     (session.clock().cursor().0 - start) as f64 / 1e9
                 ),
                 counters.errors > 0,
             );
+            let playback_performance = session.performance();
+            let presentation = view.presentation_metrics.snapshot();
+            let focused_fps = selected_camera
+                .and_then(|camera_id| presentation.camera_fps.get(&camera_id))
+                .copied()
+                .unwrap_or_default();
+            let performance: HtmlElement = element("performance");
+            performance.set_inner_text(&format!(
+                "Focus {focused_fps:.1}/{:.0} Hz · others ≤{:.0} Hz · JPEG {:.2} ms · canvas {:.2} ms · tick {:.2} ms · MCAP/CDR/state {:.2}/{:.2}/{:.2} ms",
+                playback_performance.focused_camera_hz(),
+                playback_performance.background_camera_hz(),
+                presentation.jpeg_decode_ms,
+                presentation.upload_ms,
+                presentation.render_ms,
+                playback_performance.source_read.average_ms,
+                playback_performance.pipeline_decode.average_ms,
+                playback_performance.state_apply.average_ms,
+            ));
             let telemetry: HtmlElement = element("telemetry");
             telemetry.set_inner_text(&session.state().telemetry.latest().map_or_else(
                 || "Odometry: waiting".to_owned(),
@@ -234,37 +438,89 @@ mod browser {
                 view.last_bev_revision = Some(bev_revision);
                 view.last_bev_size = bev_size;
             }
-            let Some(frame) = session.state().camera.latest() else {
-                return;
-            };
-            if view.last_drawn == Some(frame.arrival_time.0) {
-                return;
+            let has_frames = state.camera.frames().next().is_some();
+            let selected_has_frame = selected_camera
+                .and_then(|camera_id| state.camera.latest_for(camera_id))
+                .is_some();
+                if !selected_has_frame && view.last_drawn.is_some() {
+                clear_canvas("camera");
+                view.last_drawn = None;
             }
-            match decode_jpeg(&frame.jpeg) {
-                Ok(image) => {
-                    let canvas: HtmlCanvasElement = element("camera");
-                    canvas.set_width(image.width);
-                    canvas.set_height(image.height);
-                    let context: CanvasRenderingContext2d = canvas
-                        .get_context("2d")
-                        .expect("2d query")
-                        .expect("2d context")
-                        .dyn_into()
-                        .expect("canvas 2d");
-                    let data = ImageData::new_with_u8_clamped_array_and_sh(
-                        Clamped(&image.rgba),
-                        image.width,
-                        image.height,
-                    )
-                    .expect("image data");
-                    context
-                        .put_image_data(&data, 0.0, 0.0)
-                        .expect("draw camera");
-                    view.last_drawn = Some(frame.arrival_time.0);
+            if !has_frames {
+                for (camera_id, _) in camera_topics {
+                    clear_canvas(&format!("camera-thumb-{}", camera_id.0));
                 }
-                Err(error) => set_status(&error.to_string(), true),
+                view.presentation_metrics
+                    .record_render(duration_since(tick_started));
+                view.presentation_metrics.advance(elapsed);
+                return;
             }
+            for (camera_id, frame) in state.camera.frames() {
+                let thumbnail_id = format!("camera-thumb-{}", camera_id.0);
+                let thumbnail_changed =
+                    view.camera_arrivals.get(camera_id) != Some(&frame.arrival_time.0);
+                let focus_changed = Some(*camera_id) == selected_camera
+                    && view.last_drawn != Some(frame.arrival_time.0);
+                if !thumbnail_changed && !focus_changed {
+                    continue;
+                }
+                let decode_started = Date::now();
+                match decode_jpeg(&frame.jpeg) {
+                    Ok(mut image) => {
+                        let decode_elapsed = duration_since(decode_started);
+                        let upload_started = Date::now();
+                        if let Some(path) = state.bev.latest() {
+                            match calibrations.project_plan(
+                                frame,
+                                path,
+                                &state.transforms,
+                                (image.width, image.height),
+                            ) {
+                                Ok(projected) => {
+                                    draw_plan_overlay(&mut image, &projected.points);
+                                    view.overlay_status.insert(
+                                        *camera_id,
+                                        format!("plan {} visible pts", projected.visible_points),
+                                    );
+                                }
+                                Err(error) => {
+                                    view.overlay_status.insert(*camera_id, error.to_string());
+                                }
+                            }
+                        } else {
+                            view.overlay_status
+                                .insert(*camera_id, "plan waiting".to_owned());
+                        }
+                        if thumbnail_changed {
+                            draw_image(&thumbnail_id, &image);
+                            view.camera_arrivals
+                                .insert(*camera_id, frame.arrival_time.0);
+                        }
+                        if focus_changed {
+                            if thumbnail_changed {
+                                copy_canvas(&thumbnail_id, "camera");
+                            } else {
+                                draw_image("camera", &image);
+                            }
+                            view.last_drawn = Some(frame.arrival_time.0);
+                        }
+                        view.presentation_metrics.record_camera(
+                            *camera_id,
+                            decode_elapsed,
+                            duration_since(upload_started),
+                        );
+                    }
+                    Err(error) => set_status(&error.to_string(), true),
+                }
+            }
+            view.presentation_metrics
+                .record_render(duration_since(tick_started));
+            view.presentation_metrics.advance(elapsed);
         });
+    }
+
+    fn duration_since(started_ms: f64) -> Duration {
+        Duration::from_secs_f64(((Date::now() - started_ms).max(0.0)) / 1_000.0)
     }
 
     fn bev_canvas_size() -> (u32, u32) {

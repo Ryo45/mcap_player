@@ -1,0 +1,31 @@
+{
+  "file": "camera_7_5s.mcap",
+  "topics": [
+    "/camera/front/image/compressed",
+    "/camera/rear/image/compressed",
+    "/camera/left/image/compressed",
+    "/camera/right/image/compressed",
+    "/camera/front_left/image/compressed",
+    "/camera/front_right/image/compressed",
+    "/camera/rear_left/image/compressed"
+  ],
+  "schema": "sensor_msgs/msg/CompressedImage",
+  "encoding": "cdr",
+  "frames_per_camera": 133,
+  "resolution": [320, 240],
+  "duration_seconds": 4.987,
+  "measurement_source": "/camera/image_raw header.stamp",
+  "arrival_source": "MCAP log_time",
+  "variants": "same source viewpoint with deterministic per-camera color variants",
+  "path_frame": "base_link",
+  "camera_frames": [
+    "camera_front_optical_frame",
+    "camera_rear_optical_frame",
+    "camera_left_optical_frame",
+    "camera_right_optical_frame",
+    "camera_front_left_optical_frame",
+    "camera_front_right_optical_frame",
+    "camera_rear_left_optical_frame"
+  ],
+  "camera_extrinsics": "camera_rgb_frame optical children in /tf_static; source base_link pose is preserved"
+}

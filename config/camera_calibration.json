@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "cameras": [
+    {
+      "frame_id": "camera_front_optical_frame",
+      "projection_model": "pinhole",
+      "width": 320,
+      "height": 240,
+      "fx": 190.0,
+      "fy": 190.0,
+      "cx": 159.5,
+      "cy": 119.5,
+      "distortion_model": "plumb_bob",
+      "distortion_coefficients": [0.0, 0.0, 0.0, 0.0, 0.0]
+    },
+    {
+      "frame_id": "camera_rear_optical_frame",
+      "projection_model": "pinhole",
+      "width": 320,
+      "height": 240,
+      "fx": 190.0,
+      "fy": 190.0,
+      "cx": 159.5,
+      "cy": 119.5,
+      "distortion_model": "plumb_bob",
+      "distortion_coefficients": [0.0, 0.0, 0.0, 0.0, 0.0]
+    },
+    {
+      "frame_id": "camera_left_optical_frame",
+      "projection_model": "pinhole",
+      "width": 320,
+      "height": 240,
+      "fx": 190.0,
+      "fy": 190.0,
+      "cx": 159.5,
+      "cy": 119.5,
+      "distortion_model": "plumb_bob",
+      "distortion_coefficients": [0.0, 0.0, 0.0, 0.0, 0.0]
+    },
+    {
+      "frame_id": "camera_right_optical_frame",
+      "projection_model": "pinhole",
+      "width": 320,
+      "height": 240,
+      "fx": 190.0,
+      "fy": 190.0,
+      "cx": 159.5,
+      "cy": 119.5,
+      "distortion_model": "plumb_bob",
+      "distortion_coefficients": [0.0, 0.0, 0.0, 0.0, 0.0]
+    },
+    {
+      "frame_id": "camera_front_left_optical_frame",
+      "projection_model": "pinhole",
+      "width": 320,
+      "height": 240,
+      "fx": 190.0,
+      "fy": 190.0,
+      "cx": 159.5,
+      "cy": 119.5,
+      "distortion_model": "plumb_bob",
+      "distortion_coefficients": [0.0, 0.0, 0.0, 0.0, 0.0]
+    },
+    {
+      "frame_id": "camera_front_right_optical_frame",
+      "projection_model": "pinhole",
+      "width": 320,
+      "height": 240,
+      "fx": 190.0,
+      "fy": 190.0,
+      "cx": 159.5,
+      "cy": 119.5,
+      "distortion_model": "plumb_bob",
+      "distortion_coefficients": [0.0, 0.0, 0.0, 0.0, 0.0]
+    },
+    {
+      "frame_id": "camera_rear_left_optical_frame",
+      "projection_model": "pinhole",
+      "width": 320,
+      "height": 240,
+      "fx": 190.0,
+      "fy": 190.0,
+      "cx": 159.5,
+      "cy": 119.5,
+      "distortion_model": "plumb_bob",
+      "distortion_coefficients": [0.0, 0.0, 0.0, 0.0, 0.0]
+    }
+  ]
+}

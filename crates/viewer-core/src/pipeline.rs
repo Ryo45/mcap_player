@@ -53,16 +53,35 @@ pub fn standard_bindings(
     catalog: &crate::StreamCatalog,
     camera_topic: &str,
 ) -> Result<Vec<(StreamId, StreamBinding)>, String> {
-    let camera = catalog
-        .by_topic(camera_topic)
-        .ok_or_else(|| format!("topic {camera_topic} is not present"))?;
-    let mut bindings = vec![(camera.id, StreamBinding::Camera(CameraId(0)))];
+    let cameras = camera_topics(catalog, camera_topic)?;
+    let mut bindings = cameras
+        .iter()
+        .enumerate()
+        .map(|(index, (id, _))| (*id, StreamBinding::Camera(CameraId(index as u16))))
+        .collect::<Vec<_>>();
     bindings.extend(OPTIONAL_BINDINGS.iter().filter_map(|(topic, binding)| {
         catalog
             .by_topic(topic)
             .map(|descriptor| (descriptor.id, *binding))
     }));
     Ok(bindings)
+}
+
+pub fn camera_topics(
+    catalog: &crate::StreamCatalog,
+    primary_topic: &str,
+) -> Result<Vec<(StreamId, String)>, String> {
+    let mut cameras = catalog
+        .streams
+        .iter()
+        .filter(|stream| stream.schema == "sensor_msgs/msg/CompressedImage")
+        .map(|stream| (stream.id, stream.topic.clone()))
+        .collect::<Vec<_>>();
+    let Some(primary_index) = cameras.iter().position(|(_, topic)| topic == primary_topic) else {
+        return Err(format!("topic {primary_topic} is not present"));
+    };
+    cameras.swap(0, primary_index);
+    Ok(cameras)
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -208,6 +227,8 @@ pub struct PipelineCounters {
     pub decoded: u64,
     pub errors: u64,
     pub unknown_streams: u64,
+    /// Camera updates coalesced before presentation.
+    pub dropped: u64,
 }
 
 pub struct PipelineSet {

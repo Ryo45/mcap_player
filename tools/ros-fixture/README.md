@@ -1,8 +1,9 @@
 # Camera fixture and ROS smoke tools
 
-The checked-in canonical fixture is deterministic, contains 30 320x240 JPEG
-frames over 2.9 seconds, and intentionally gives every frame a different
-measurement and arrival timestamp.
+The checked-in canonical single-camera fixture is deterministic, contains 30
+320x240 JPEG frames over 2.9 seconds, and intentionally gives every frame a
+different measurement and arrival timestamp. The `camera_7_5s.mcap` fixture
+contains seven camera topics from the five-second conversion.
 
 Regenerate it without ROS:
 
@@ -22,13 +23,31 @@ cargo run -p ros-fixture --release -- verify \
   mcap/rosbag2_2026_01_18-17_28_44/camera_bev_telemetry_scan_tf_5s.mcap
 ```
 
-The converter adds `/planning/path` as a deterministic `nav_msgs/msg/Path`
-sample alongside the JPEG camera. It is intentionally only a planned line;
+The converter adds seven deterministic JPEG camera topics plus
+`/planning/path` as a deterministic `nav_msgs/msg/Path` sample. It is
+intentionally only a planned line;
 LaserScan is not added to the 2D BEV. Real `/odom` and `/scan` messages from
 the same arrival-time window are preserved for telemetry and the 3D view.
 The latest `/tf_static` before the camera window plus `/tf` and `/tf_static`
-inside the window are also preserved. Verification decodes the transform tree
-and reports whether `base_scan -> base_footprint` resolves.
+inside the window are also preserved. A second `/tf_static` message registers
+seven named optical-frame children below the source image frame. This
+preserves the source camera's real `base_link` position while making the
+optical axis convention explicit. Verification decodes the transform tree and
+reports whether both `base_scan -> base_footprint` and every camera transform
+resolve.
+
+Inspect the source image frame and its original pose with:
+
+```bash
+cargo run -p ros-fixture -- inspect-camera \
+  mcap/rosbag2_2026_01_18-17_28_44/rosbag2_2026_01_18-17_28_44_0.mcap
+```
+
+Verify the bundled seven-camera fixture directly with:
+
+```bash
+cargo run -p ros-fixture -- verify tests/fixtures/camera-jpeg/camera_7_5s.mcap
+```
 
 The Python converter remains useful when working directly with a rosbag2
 directory in a sourced ROS Jazzy shell:
