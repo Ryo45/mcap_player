@@ -3,8 +3,8 @@ mod browser {
     use js_sys::{Date, Uint8Array};
     use std::{cell::RefCell, collections::BTreeMap, time::Duration};
     use viewer_core::{
-        ArrivalTime, CameraCalibrationSet, CameraId, DiagnosticsPresentation, McapPlayback,
-        OverlayStatus, PlaybackSpeed, PresentationMetrics, ViewerPresentation,
+        ArrivalTime, BevFrameBuilder, CameraCalibrationSet, CameraId, DiagnosticsPresentation,
+        McapPlayback, OverlayStatus, PlaybackSpeed, PresentationMetrics, ViewerPresentation,
     };
     use viewer_renderer::{DecodedImage, decode_camera_frame, prepare_camera_frame};
     use wasm_bindgen::{Clamped, JsCast, closure::Closure, prelude::*};
@@ -415,15 +415,10 @@ mod browser {
             ));
 
             let bev_size = bev_canvas_size();
-            let bev_revision = session.state().bev.revision();
-            if view.last_bev_revision != Some(bev_revision) || view.last_bev_size != bev_size {
-                let path = session
-                    .state()
-                    .bev
-                    .latest()
-                    .map_or(&[][..], |frame| frame.points.as_slice());
-                draw_bev(path, bev_size);
-                view.last_bev_revision = Some(bev_revision);
+            let bev = BevFrameBuilder::new(session.state()).build();
+            if view.last_bev_revision != Some(bev.revision) || view.last_bev_size != bev_size {
+                draw_bev(bev.path, bev_size);
+                view.last_bev_revision = Some(bev.revision);
                 view.last_bev_size = bev_size;
             }
             let has_frames = state.camera.frames().next().is_some();

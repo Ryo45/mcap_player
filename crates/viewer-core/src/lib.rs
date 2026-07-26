@@ -6,6 +6,7 @@ mod camera_projection;
 mod cdr;
 mod clock;
 mod domain;
+mod frame_builder;
 mod mcap_source;
 mod performance;
 mod pipeline;
@@ -28,6 +29,7 @@ pub use cdr::{
 };
 pub use clock::{PlaybackClock, PlaybackSpeed};
 pub use domain::DomainState;
+pub use frame_builder::{BevFrameBuilder, BevSnapshot, SceneFrameBuilder, SceneSnapshot};
 pub use mcap_source::{McapOpenError, McapSource, StreamCatalog};
 pub use performance::{PresentationMetrics, PresentationSnapshot};
 pub use pipeline::{
