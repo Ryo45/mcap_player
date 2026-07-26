@@ -6,7 +6,5 @@ license.workspace = true
 
 [dependencies]
 image.workspace = true
-wgpu.workspace = true
-
-[dev-dependencies]
 viewer-core = { path = "../viewer-core" }
+wgpu.workspace = true

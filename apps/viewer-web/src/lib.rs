@@ -6,7 +6,7 @@ mod browser {
         ArrivalTime, CameraCalibrationSet, CameraId, DiagnosticsPresentation, McapPlayback,
         OverlayStatus, PlaybackSpeed, PresentationMetrics, ViewerPresentation,
     };
-    use viewer_renderer::{DecodedImage, decode_jpeg, draw_plan_overlay};
+    use viewer_renderer::{DecodedImage, decode_camera_frame, prepare_camera_frame};
     use wasm_bindgen::{Clamped, JsCast, closure::Closure, prelude::*};
     use wasm_bindgen_futures::{JsFuture, spawn_local};
     use web_sys::{
@@ -453,47 +453,31 @@ mod browser {
                     continue;
                 }
                 let decode_started = Date::now();
-                match decode_jpeg(&frame.jpeg) {
-                    Ok(mut image) => {
+                match decode_camera_frame(frame) {
+                    Ok(image) => {
                         let decode_elapsed = duration_since(decode_started);
                         let upload_started = Date::now();
-                        if let Some(path) = state.bev.latest() {
-                            match calibrations.project_plan(
-                                frame,
-                                path,
-                                &state.transforms,
-                                (image.width, image.height),
-                            ) {
-                                Ok(projected) => {
-                                    draw_plan_overlay(&mut image, &projected.points);
-                                    view.overlay_status.insert(
-                                        *camera_id,
-                                        OverlayStatus::Ready {
-                                            visible_points: projected.visible_points,
-                                        },
-                                    );
-                                }
-                                Err(error) => {
-                                    view.overlay_status
-                                        .insert(*camera_id, OverlayStatus::Error(error.to_string()));
-                                }
-                            }
-                        } else {
-                            view.overlay_status
-                                .insert(*camera_id, OverlayStatus::Waiting);
-                        }
+                        let prepared = prepare_camera_frame(
+                            frame,
+                            image,
+                            state.bev.latest(),
+                            &state.transforms,
+                            calibrations,
+                        );
+                        view.overlay_status
+                            .insert(*camera_id, prepared.overlay_status);
                         if thumbnail_changed {
-                            draw_image(&thumbnail_id, &image);
+                            draw_image(&thumbnail_id, &prepared.image);
                             view.camera_arrivals
-                                .insert(*camera_id, frame.arrival_time.0);
+                                .insert(*camera_id, prepared.arrival_time.0);
                         }
                         if focus_changed {
                             if thumbnail_changed {
                                 copy_canvas(&thumbnail_id, "camera");
                             } else {
-                                draw_image("camera", &image);
+                                draw_image("camera", &prepared.image);
                             }
-                            view.last_drawn = Some(frame.arrival_time.0);
+                            view.last_drawn = Some(prepared.arrival_time.0);
                         }
                         view.presentation_metrics.record_camera(
                             *camera_id,
