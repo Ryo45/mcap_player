@@ -32,6 +32,27 @@ pub struct SceneCamera {
     pub elevation: f32,
 }
 
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum SceneCameraMode {
+    /// Follow the ego pose from above and behind, with a slight right offset.
+    #[default]
+    Chase,
+    /// Orbit the ego in world coordinates using mouse input.
+    Free,
+    /// Look forward from the vehicle.
+    VehicleEye,
+}
+
+impl SceneCameraMode {
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::Chase => "Chase",
+            Self::Free => "Free",
+            Self::VehicleEye => "Vehicle eye",
+        }
+    }
+}
+
 impl Default for SceneCamera {
     fn default() -> Self {
         Self {
@@ -80,6 +101,7 @@ pub struct SceneRenderer {
     last_cloud_revision: Option<u64>,
     last_accumulate: bool,
     camera: SceneCamera,
+    camera_mode: SceneCameraMode,
     camera_dirty: bool,
     metrics: SceneMetrics,
 }
@@ -240,6 +262,7 @@ impl SceneRenderer {
             last_cloud_revision: None,
             last_accumulate: false,
             camera: SceneCamera::default(),
+            camera_mode: SceneCameraMode::default(),
             camera_dirty: true,
             metrics: SceneMetrics {
                 target_creations: 1,
@@ -300,14 +323,7 @@ impl SceneRenderer {
             self.metrics.point_uploads += 1;
         }
 
-        let ego = odom_to_world(frame.ego_position);
-        let horizontal_distance = self.camera.distance * self.camera.elevation.cos();
-        let eye = [
-            ego[0] + horizontal_distance * self.camera.azimuth.sin(),
-            self.camera.distance * self.camera.elevation.sin(),
-            ego[1] + horizontal_distance * self.camera.azimuth.cos(),
-        ];
-        let target = [ego[0], 0.6, ego[1]];
+        let (eye, target) = camera_pose(self.camera_mode, self.camera, frame);
         let view = look_at_rh(eye, target, [0.0, 1.0, 0.0]);
         let aspect = self.size.0 as f32 / self.size.1 as f32;
         let projection = perspective_rh(48.0_f32.to_radians(), aspect, 0.1, 160.0);
@@ -395,8 +411,22 @@ impl SceneRenderer {
         self.camera
     }
 
+    pub fn camera_mode(&self) -> SceneCameraMode {
+        self.camera_mode
+    }
+
+    pub fn set_camera_mode(&mut self, mode: SceneCameraMode) {
+        if self.camera_mode != mode {
+            self.camera_mode = mode;
+            self.camera_dirty = true;
+        }
+    }
+
     /// Positive wheel delta zooms in, negative delta zooms out.
     pub fn zoom(&mut self, wheel_delta: f32) {
+        if self.camera_mode == SceneCameraMode::VehicleEye {
+            return;
+        }
         let distance = (self.camera.distance * (-wheel_delta * 0.002).exp()).clamp(4.0, 80.0);
         if (distance - self.camera.distance).abs() > f32::EPSILON {
             self.camera.distance = distance;
@@ -405,7 +435,7 @@ impl SceneRenderer {
     }
 
     pub fn orbit(&mut self, delta_x: f32, delta_y: f32) {
-        if delta_x == 0.0 && delta_y == 0.0 {
+        if self.camera_mode != SceneCameraMode::Free || (delta_x == 0.0 && delta_y == 0.0) {
             return;
         }
         self.camera.azimuth += delta_x * 0.008;
@@ -416,6 +446,59 @@ impl SceneRenderer {
     pub fn reset_camera(&mut self) {
         self.camera = SceneCamera::default();
         self.camera_dirty = true;
+    }
+}
+
+fn camera_pose(
+    mode: SceneCameraMode,
+    camera: SceneCamera,
+    frame: SceneFrame<'_>,
+) -> ([f32; 3], [f32; 3]) {
+    let ego = odom_to_world(frame.ego_position);
+    let (sin_yaw, cos_yaw) = frame.ego_yaw.sin_cos();
+    let right = [cos_yaw, 0.0, -sin_yaw];
+    let forward = [-sin_yaw, 0.0, -cos_yaw];
+    match mode {
+        SceneCameraMode::Chase => {
+            let horizontal_distance = camera.distance * camera.elevation.cos();
+            let right_offset = horizontal_distance * camera.azimuth.sin();
+            let rear_offset = horizontal_distance * camera.azimuth.cos();
+            (
+                [
+                    ego[0] + right[0] * right_offset - forward[0] * rear_offset,
+                    camera.distance * camera.elevation.sin(),
+                    ego[1] + right[2] * right_offset - forward[2] * rear_offset,
+                ],
+                [ego[0], 0.6, ego[1]],
+            )
+        }
+        SceneCameraMode::Free => {
+            let horizontal_distance = camera.distance * camera.elevation.cos();
+            (
+                [
+                    ego[0] + horizontal_distance * camera.azimuth.sin(),
+                    camera.distance * camera.elevation.sin(),
+                    ego[1] + horizontal_distance * camera.azimuth.cos(),
+                ],
+                [ego[0], 0.6, ego[1]],
+            )
+        }
+        SceneCameraMode::VehicleEye => {
+            let eye_forward = 0.8;
+            let target_forward = 15.0;
+            (
+                [
+                    ego[0] + forward[0] * eye_forward,
+                    1.15,
+                    ego[1] + forward[2] * eye_forward,
+                ],
+                [
+                    ego[0] + forward[0] * target_forward,
+                    1.05,
+                    ego[1] + forward[2] * target_forward,
+                ],
+            )
+        }
     }
 }
 
@@ -774,5 +857,24 @@ mod tests {
         camera.elevation = (camera.elevation + 10_000.0 * 0.008).clamp(0.12, 1.35);
         assert_eq!(camera.elevation, 1.35);
         assert_eq!(SceneCamera::default().distance, 18.4);
+    }
+
+    #[test]
+    fn chase_and_vehicle_eye_follow_ego_heading() {
+        let frame = SceneFrame {
+            ego_position: [2.0, 3.0],
+            ego_yaw: std::f32::consts::FRAC_PI_2,
+            ..SceneFrame::default()
+        };
+        let (chase_eye, chase_target) =
+            camera_pose(SceneCameraMode::Chase, SceneCamera::default(), frame);
+        assert!(chase_eye.iter().all(|value| value.is_finite()));
+        assert_eq!(chase_target, [-3.0, 0.6, -2.0]);
+
+        let (vehicle_eye, vehicle_target) =
+            camera_pose(SceneCameraMode::VehicleEye, SceneCamera::default(), frame);
+        let view_direction = subtract(vehicle_target, vehicle_eye);
+        assert!(view_direction[0] < 0.0);
+        assert!(view_direction[0].abs() > view_direction[2].abs());
     }
 }

@@ -1,9 +1,11 @@
 use std::{fs, path::PathBuf};
-use viewer_core::{DomainUpdate, McapSource, PipelineSet, StreamBinding, TransformState};
+use viewer_core::{
+    CameraCalibrationSet, DomainUpdate, McapSource, PipelineSet, StreamBinding, TransformState,
+};
 
 fn fixture() -> Vec<u8> {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../mcap/rosbag2_2026_01_18-17_28_44/camera_bev_telemetry_scan_tf_5s.mcap");
+        .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap");
     fs::read(path).expect("camera/scan/TF fixture")
 }
 
@@ -53,6 +55,93 @@ fn every_scan_resolves_to_world_at_its_measurement_time() {
     }
 
     assert_eq!(scan_count, 44);
-    assert_eq!(transforms.static_len(), 8);
+    assert_eq!(transforms.static_len(), 15);
     assert_eq!(transforms.dynamic_len(), 3);
+    for frame in [
+        "camera_front_optical_frame",
+        "camera_rear_optical_frame",
+        "camera_left_optical_frame",
+        "camera_right_optical_frame",
+        "camera_front_left_optical_frame",
+        "camera_front_right_optical_frame",
+        "camera_rear_left_optical_frame",
+    ] {
+        assert!(
+            transforms
+                .transform_points("base_link", frame, &[[1.0, 0.0, 0.0]])
+                .is_some(),
+            "base_link -> {frame} is missing"
+        );
+    }
+}
+
+#[test]
+fn seven_camera_fixture_discovers_and_decodes_all_topics() {
+    let bytes = fixture();
+    let mut playback =
+        viewer_core::McapPlayback::new(bytes, "/camera/front/image/compressed").unwrap();
+    playback.clock_mut().play();
+    playback.tick(std::time::Duration::from_secs(10)).unwrap();
+    assert_eq!(
+        playback.camera_topics(),
+        &[
+            (
+                viewer_core::CameraId(0),
+                "/camera/front/image/compressed".into(),
+            ),
+            (
+                viewer_core::CameraId(1),
+                "/camera/rear/image/compressed".into(),
+            ),
+            (
+                viewer_core::CameraId(2),
+                "/camera/left/image/compressed".into(),
+            ),
+            (
+                viewer_core::CameraId(3),
+                "/camera/right/image/compressed".into(),
+            ),
+            (
+                viewer_core::CameraId(4),
+                "/camera/front_left/image/compressed".into(),
+            ),
+            (
+                viewer_core::CameraId(5),
+                "/camera/front_right/image/compressed".into(),
+            ),
+            (
+                viewer_core::CameraId(6),
+                "/camera/rear_left/image/compressed".into(),
+            ),
+        ]
+    );
+    for camera_id in 0..7 {
+        assert!(
+            playback
+                .state()
+                .camera
+                .latest_for(viewer_core::CameraId(camera_id))
+                .is_some(),
+            "camera {camera_id} did not decode"
+        );
+    }
+    let calibrations =
+        CameraCalibrationSet::from_json(include_str!("../../../config/camera_calibration.json"))
+            .unwrap();
+    let path = playback.state().bev.latest().expect("fixture path");
+    let mut total_visible = 0;
+    for (camera_id, camera) in playback.state().camera.frames() {
+        let projected = calibrations
+            .project_plan(camera, path, &playback.state().transforms, (320, 240))
+            .expect("camera projection");
+        if *camera_id == viewer_core::CameraId(0) {
+            assert!(
+                projected.visible_points >= 20,
+                "front camera only sees {} path points",
+                projected.visible_points
+            );
+        }
+        total_visible += projected.visible_points;
+    }
+    assert!(total_visible > 0, "plan is not visible in any camera");
 }

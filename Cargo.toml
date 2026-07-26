@@ -1,0 +1,59 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/viewer-core",
+    "crates/viewer-renderer",
+    "crates/bev-renderer",
+    "crates/scene-renderer",
+    "crates/viewer-ui",
+    "apps/viewer-native",
+    "apps/viewer-web",
+    "tools/ros-fixture",
+]
+default-members = [
+    "crates/viewer-core",
+    "crates/viewer-renderer",
+    "crates/bev-renderer",
+    "crates/scene-renderer",
+    "crates/viewer-ui",
+    "apps/viewer-native",
+    "apps/viewer-web",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+anyhow = "1.0"
+bytemuck = { version = "1.24", features = ["derive"] }
+egui = "0.33.2"
+egui-wgpu = "0.33.2"
+egui-winit = "0.33.2"
+env_logger = "0.10"
+image = { version = "=0.25.9", default-features = false, features = ["jpeg"] }
+log = "0.4"
+mcap = { version = "0.23.4", default-features = false }
+memmap2 = "0.9.9"
+pollster = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = "0.3"
+wgpu = "27.0.1"
+winit = "0.30.12"
+
+[profile.release]
+lto = "thin"
+
+# Keep normal `cargo run` debuggable while avoiding unoptimized JPEG hot loops.
+[profile.dev.package.image]
+opt-level = 3
+
+[profile.dev.package.zune-core]
+opt-level = 3
+
+[profile.dev.package.zune-jpeg]
+opt-level = 3

@@ -1,0 +1,15 @@
+{
+  "file": "camera_front_rear_5s.mcap",
+  "topics": [
+    "/camera/front/image/compressed",
+    "/camera/rear/image/compressed"
+  ],
+  "schema": "sensor_msgs/msg/CompressedImage",
+  "encoding": "cdr",
+  "frames_per_camera": 133,
+  "resolution": [320, 240],
+  "duration_seconds": 4.998,
+  "measurement_source": "/camera/image_raw header.stamp",
+  "arrival_source": "MCAP log_time",
+  "rear_image": "horizontal mirror generated from each front JPEG"
+}

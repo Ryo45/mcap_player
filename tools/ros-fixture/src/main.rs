@@ -13,15 +13,30 @@ use std::{
     path::{Path, PathBuf},
 };
 use viewer_core::{
-    ArrivalTime, CompressedImage, MeasurementTime, TransformBatch, TransformState,
-    decode_compressed_image, decode_laser_scan, decode_odometry, decode_path, decode_tf_message,
-    encode_compressed_image_cdr,
+    ArrivalTime, CompressedImage, MeasurementTime, TransformBatch, TransformStamped,
+    TransformState, decode_compressed_image, decode_laser_scan, decode_odometry, decode_path,
+    decode_tf_message, encode_compressed_image_cdr, encode_tf_message_cdr,
 };
 
 const DEFAULT_OUTPUT: &str = "tests/fixtures/camera-jpeg/camera_front_3s.mcap";
 const BASE_TIME: u64 = 1_735_689_600_000_000_000;
 const RAW_TOPIC: &str = "/camera/image_raw";
 const JPEG_TOPIC: &str = "/camera/front/image/compressed";
+const REAR_JPEG_TOPIC: &str = "/camera/rear/image/compressed";
+const LEFT_JPEG_TOPIC: &str = "/camera/left/image/compressed";
+const RIGHT_JPEG_TOPIC: &str = "/camera/right/image/compressed";
+const FRONT_LEFT_JPEG_TOPIC: &str = "/camera/front_left/image/compressed";
+const FRONT_RIGHT_JPEG_TOPIC: &str = "/camera/front_right/image/compressed";
+const REAR_LEFT_JPEG_TOPIC: &str = "/camera/rear_left/image/compressed";
+const CAMERA_SPECS: &[(&str, &str)] = &[
+    (JPEG_TOPIC, "camera_front_optical_frame"),
+    (REAR_JPEG_TOPIC, "camera_rear_optical_frame"),
+    (LEFT_JPEG_TOPIC, "camera_left_optical_frame"),
+    (RIGHT_JPEG_TOPIC, "camera_right_optical_frame"),
+    (FRONT_LEFT_JPEG_TOPIC, "camera_front_left_optical_frame"),
+    (FRONT_RIGHT_JPEG_TOPIC, "camera_front_right_optical_frame"),
+    (REAR_LEFT_JPEG_TOPIC, "camera_rear_left_optical_frame"),
+];
 const PATH_TOPIC: &str = "/planning/path";
 const ODOM_TOPIC: &str = "/odom";
 const SCAN_TOPIC: &str = "/scan";
@@ -61,8 +76,9 @@ fn main() -> Result<()> {
             );
             let stats = convert_raw_camera(&input, &output, duration)?;
             println!(
-                "converted {} camera + {} path + {} odometry + {} scan + {}/{} dynamic/static TF messages ({:.3} s), {} {} {}x{} -> {} {}x{}\noutput: {}",
-                stats.frames,
+                "converted {} camera topics ({}) + {} path + {} odometry + {} scan + {}/{} dynamic/static TF messages ({:.3} s), {} {} {}x{} -> {}x{}\noutput: {}",
+                CAMERA_SPECS.len(),
+                camera_count_summary(&stats.camera_frames),
                 stats.path_messages,
                 stats.odometry_messages,
                 stats.scan_messages,
@@ -73,7 +89,6 @@ fn main() -> Result<()> {
                 stats.input_encoding,
                 stats.input_width,
                 stats.input_height,
-                JPEG_TOPIC,
                 OUTPUT_WIDTH,
                 OUTPUT_HEIGHT,
                 output.display()
@@ -84,8 +99,9 @@ fn main() -> Result<()> {
             ensure_no_more_args(args)?;
             let stats = verify_jpeg_mcap(&input)?;
             println!(
-                "verified {} JPEG + {} path + {} odometry + {} scan + {}/{} dynamic/static TF messages ({:.3} s), {}x{}, measurement/arrival differ: {}, base_scan -> base_footprint: {}\ninput: {}",
-                stats.frames,
+                "verified {} camera topics ({}) + {} path + {} odometry + {} scan + {}/{} dynamic/static TF messages ({:.3} s), {}x{}, measurement/arrival differ: {}, base_scan -> base_footprint: {}, camera TF: {}\ninput: {}",
+                CAMERA_SPECS.len(),
+                camera_count_summary(&stats.camera_frames),
                 stats.path_messages,
                 stats.odometry_messages,
                 stats.scan_messages,
@@ -96,8 +112,14 @@ fn main() -> Result<()> {
                 stats.height,
                 stats.distinct_time_domains,
                 stats.scan_tf_resolves,
+                stats.camera_tf_resolves,
                 input.display()
             );
+        }
+        "inspect-camera" => {
+            let input = args.next().map(PathBuf::from).ok_or_else(usage)?;
+            ensure_no_more_args(args)?;
+            inspect_camera_transform(&input)?;
         }
         _ => bail!(usage()),
     }
@@ -106,8 +128,58 @@ fn main() -> Result<()> {
 
 fn usage() -> anyhow::Error {
     anyhow!(
-        "usage:\n  cargo run -p ros-fixture -- generate [output.mcap]\n  cargo run -p ros-fixture -- convert <input.mcap> <output.mcap> [duration-seconds]\n  cargo run -p ros-fixture -- verify <input.mcap>"
+        "usage:\n  cargo run -p ros-fixture -- generate [output.mcap]\n  cargo run -p ros-fixture -- convert <input.mcap> <output.mcap> [duration-seconds]\n  cargo run -p ros-fixture -- verify <input.mcap>\n  cargo run -p ros-fixture -- inspect-camera <input.mcap>"
     )
+}
+
+fn inspect_camera_transform(input: &Path) -> Result<()> {
+    let input_file = fs::File::open(input).with_context(|| format!("open {}", input.display()))?;
+    // SAFETY: inspection keeps the file open and does not mutate it while the map is live.
+    let mapped = unsafe { MmapOptions::new().map(&input_file) }
+        .with_context(|| format!("map {}", input.display()))?;
+    let mut transforms = TransformState::default();
+    for message in MessageStream::new(&mapped)? {
+        let message = message?;
+        if message.channel.topic == TF_STATIC_TOPIC {
+            transforms.apply(TransformBatch {
+                arrival_time: ArrivalTime(i64::try_from(message.log_time)?),
+                is_static: true,
+                transforms: decode_tf_message(&message.data)?,
+            });
+            continue;
+        }
+        if message.channel.topic != RAW_TOPIC {
+            continue;
+        }
+        let raw = decode_raw_image(&message.data)?;
+        let axes = transforms
+            .transform_points(
+                &raw.frame_id,
+                "base_link",
+                &[
+                    [0.0, 0.0, 0.0],
+                    [1.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0],
+                    [0.0, 0.0, 1.0],
+                ],
+            )
+            .with_context(|| format!("{} -> base_link is unavailable", raw.frame_id))?;
+        println!(
+            "raw frame: {}\nbase_link points for optical origin/x/y/z: {axes:?}",
+            raw.frame_id
+        );
+        return Ok(());
+    }
+    bail!("no {RAW_TOPIC} message found")
+}
+
+fn camera_count_summary(counts: &[impl std::fmt::Display]) -> String {
+    CAMERA_SPECS
+        .iter()
+        .zip(counts)
+        .map(|((topic, _), count)| format!("{topic}={count}"))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 fn ensure_no_more_args(mut args: impl Iterator<Item = String>) -> Result<()> {
@@ -179,7 +251,7 @@ fn make_jpeg(frame: u32) -> Result<Vec<u8>> {
 
 #[derive(Debug)]
 struct ConversionStats {
-    frames: u32,
+    camera_frames: [u32; CAMERA_SPECS.len()],
     path_messages: u32,
     odometry_messages: u32,
     scan_messages: u32,
@@ -255,7 +327,10 @@ fn convert_stream(
         "ros2msg",
         b"std_msgs/Header header\nstring format\nuint8[] data\n",
     )?;
-    let camera_channel = writer.add_channel(schema, JPEG_TOPIC, "cdr", &BTreeMap::new())?;
+    let camera_channels = CAMERA_SPECS
+        .iter()
+        .map(|(topic, _)| writer.add_channel(schema, topic, "cdr", &BTreeMap::new()))
+        .collect::<Result<Vec<_>, _>>()?;
     let path_schema = writer.add_schema(
         "nav_msgs/msg/Path",
         "ros2msg",
@@ -291,12 +366,13 @@ fn convert_stream(
 
     let mut first_arrival = None;
     let mut last_arrival = None;
-    let mut frames = 0_u32;
+    let mut camera_frames = [0_u32; CAMERA_SPECS.len()];
     let mut path_messages = 0_u32;
     let mut odometry_messages = 0_u32;
     let mut scan_messages = 0_u32;
     let mut tf_messages = 0_u32;
     let mut tf_static_messages = 0_u32;
+    let mut camera_static_written = false;
     let mut input_shape = None;
     for message in MessageStream::new(input).context("read MCAP records")? {
         let message = message.context("read MCAP message")?;
@@ -425,6 +501,25 @@ fn convert_stream(
         }
         let raw = decode_raw_image(&message.data)
             .with_context(|| format!("decode raw frame at log_time {}", message.log_time))?;
+        if !camera_static_written {
+            let camera_transforms =
+                camera_static_transforms(MeasurementTime(raw.measurement_time), &raw.frame_id);
+            let payload = encode_tf_message_cdr(&camera_transforms)?;
+            writer.write_to_known_channel(
+                &MessageHeader {
+                    channel_id: tf_static_channel,
+                    sequence: tf_static_messages,
+                    log_time: message.log_time,
+                    publish_time: u64::try_from(raw.measurement_time)
+                        .unwrap_or(message.publish_time),
+                },
+                &payload,
+            )?;
+            tf_static_messages = tf_static_messages
+                .checked_add(1)
+                .context("too many static TF messages")?;
+            camera_static_written = true;
+        }
         let shape = (raw.width, raw.height, raw.encoding.clone());
         if let Some(expected) = &input_shape {
             ensure!(
@@ -436,22 +531,29 @@ fn convert_stream(
         }
         let jpeg = encode_resized_jpeg(&raw)?;
         let measurement = MeasurementTime(raw.measurement_time);
-        let payload = encode_compressed_image_cdr(&CompressedImage {
-            measurement_time: measurement,
-            frame_id: raw.frame_id,
-            format: "jpeg compressed rgb8".to_owned(),
-            jpeg,
-        })?;
-        writer.write_to_known_channel(
-            &MessageHeader {
-                channel_id: camera_channel,
-                sequence: frames,
-                log_time: message.log_time,
-                publish_time: u64::try_from(measurement.0).unwrap_or(message.publish_time),
-            },
-            &payload,
-        )?;
-        if frames.is_multiple_of(3) {
+        for (index, ((_, frame_id), channel_id)) in
+            CAMERA_SPECS.iter().zip(camera_channels.iter()).enumerate()
+        {
+            let payload = encode_compressed_image_cdr(&CompressedImage {
+                measurement_time: measurement,
+                frame_id: (*frame_id).to_owned(),
+                format: "jpeg compressed rgb8".to_owned(),
+                jpeg: camera_variant_jpeg(&jpeg, index)?,
+            })?;
+            writer.write_to_known_channel(
+                &MessageHeader {
+                    channel_id: *channel_id,
+                    sequence: camera_frames[index],
+                    log_time: message.log_time,
+                    publish_time: u64::try_from(measurement.0).unwrap_or(message.publish_time),
+                },
+                &payload,
+            )?;
+            camera_frames[index] = camera_frames[index]
+                .checked_add(1)
+                .context("too many camera messages")?;
+        }
+        if (camera_frames[0] - 1).is_multiple_of(3) {
             let path_payload = encode_dummy_path(measurement.0, path_messages)?;
             writer.write_to_known_channel(
                 &MessageHeader {
@@ -466,15 +568,14 @@ fn convert_stream(
                 .checked_add(1)
                 .context("too many path messages")?;
         }
-        frames = frames.checked_add(1).context("too many output frames")?;
         last_arrival = Some(message.log_time);
     }
 
-    ensure!(frames > 0, "no messages found on {RAW_TOPIC}");
+    ensure!(camera_frames[0] > 0, "no messages found on {RAW_TOPIC}");
     writer.finish()?;
     let (input_width, input_height, input_encoding) = input_shape.expect("frame count checked");
     Ok(ConversionStats {
-        frames,
+        camera_frames,
         path_messages,
         odometry_messages,
         scan_messages,
@@ -486,6 +587,82 @@ fn convert_stream(
         input_height,
         input_encoding,
     })
+}
+
+fn camera_static_transforms(
+    measurement_time: MeasurementTime,
+    source_camera_frame: &str,
+) -> Vec<TransformStamped> {
+    CAMERA_SPECS
+        .iter()
+        .map(|(_, frame_id)| TransformStamped {
+            measurement_time,
+            frame_id: source_camera_frame.to_owned(),
+            child_frame_id: (*frame_id).to_owned(),
+            translation: [0.0; 3],
+            rotation: optical_rotation(0.0, 0.0),
+        })
+        .collect()
+}
+
+fn optical_rotation(yaw: f64, pitch_down: f64) -> [f64; 4] {
+    let (sin_yaw, cos_yaw) = yaw.sin_cos();
+    let (sin_pitch, cos_pitch) = pitch_down.sin_cos();
+    let right = [sin_yaw, -cos_yaw, 0.0];
+    let forward = [cos_yaw * cos_pitch, sin_yaw * cos_pitch, -sin_pitch];
+    let down = cross(forward, right);
+    rotation_matrix_to_quaternion([
+        [right[0], down[0], forward[0]],
+        [right[1], down[1], forward[1]],
+        [right[2], down[2], forward[2]],
+    ])
+}
+
+fn cross(left: [f64; 3], right: [f64; 3]) -> [f64; 3] {
+    [
+        left[1] * right[2] - left[2] * right[1],
+        left[2] * right[0] - left[0] * right[2],
+        left[0] * right[1] - left[1] * right[0],
+    ]
+}
+
+fn rotation_matrix_to_quaternion(matrix: [[f64; 3]; 3]) -> [f64; 4] {
+    let trace = matrix[0][0] + matrix[1][1] + matrix[2][2];
+    let [x, y, z, w] = if trace > 0.0 {
+        let scale = (trace + 1.0).sqrt() * 2.0;
+        [
+            (matrix[2][1] - matrix[1][2]) / scale,
+            (matrix[0][2] - matrix[2][0]) / scale,
+            (matrix[1][0] - matrix[0][1]) / scale,
+            0.25 * scale,
+        ]
+    } else if matrix[0][0] > matrix[1][1] && matrix[0][0] > matrix[2][2] {
+        let scale = (1.0 + matrix[0][0] - matrix[1][1] - matrix[2][2]).sqrt() * 2.0;
+        [
+            0.25 * scale,
+            (matrix[0][1] + matrix[1][0]) / scale,
+            (matrix[0][2] + matrix[2][0]) / scale,
+            (matrix[2][1] - matrix[1][2]) / scale,
+        ]
+    } else if matrix[1][1] > matrix[2][2] {
+        let scale = (1.0 + matrix[1][1] - matrix[0][0] - matrix[2][2]).sqrt() * 2.0;
+        [
+            (matrix[0][1] + matrix[1][0]) / scale,
+            0.25 * scale,
+            (matrix[1][2] + matrix[2][1]) / scale,
+            (matrix[0][2] - matrix[2][0]) / scale,
+        ]
+    } else {
+        let scale = (1.0 + matrix[2][2] - matrix[0][0] - matrix[1][1]).sqrt() * 2.0;
+        [
+            (matrix[0][2] + matrix[2][0]) / scale,
+            (matrix[1][2] + matrix[2][1]) / scale,
+            0.25 * scale,
+            (matrix[1][0] - matrix[0][1]) / scale,
+        ]
+    };
+    let norm = (x * x + y * y + z * z + w * w).sqrt();
+    [x / norm, y / norm, z / norm, w / norm]
 }
 
 #[derive(Clone, Copy)]
@@ -660,6 +837,27 @@ fn encode_resized_jpeg(raw: &RawImage<'_>) -> Result<Vec<u8>> {
     Ok(jpeg)
 }
 
+fn camera_variant_jpeg(bytes: &[u8], camera_index: usize) -> Result<Vec<u8>> {
+    if camera_index == 0 {
+        return Ok(bytes.to_vec());
+    }
+    let mut image = image::load_from_memory(bytes)?.to_rgb8();
+    for pixel in image.pixels_mut() {
+        let [red, green, blue] = pixel.0;
+        pixel.0 = match camera_index {
+            1 => [red.saturating_add(18), green.saturating_add(8), blue],
+            2 => [red.saturating_add(36), green, blue],
+            3 => [red, green.saturating_add(36), blue],
+            4 => [red, green, blue.saturating_add(36)],
+            5 => [green, red, blue],
+            _ => [blue, green, red],
+        };
+    }
+    let mut jpeg = Vec::new();
+    JpegEncoder::new_with_quality(&mut jpeg, 82).encode_image(&image)?;
+    Ok(jpeg)
+}
+
 enum ChannelOrder {
     Rgb,
     Bgr,
@@ -693,7 +891,7 @@ fn push_cdr_f64(output: &mut Vec<u8>, value: f64) {
     output.extend_from_slice(&value.to_le_bytes());
 }
 
-fn encode_dummy_path(measurement_time: i64, sequence: u32) -> Result<Vec<u8>> {
+fn encode_dummy_path(measurement_time: i64, _sequence: u32) -> Result<Vec<u8>> {
     let seconds = i32::try_from(measurement_time.div_euclid(1_000_000_000))?;
     let nanoseconds = u32::try_from(measurement_time.rem_euclid(1_000_000_000))?;
     let mut output = vec![0, 1, 0, 0];
@@ -702,13 +900,12 @@ fn encode_dummy_path(measurement_time: i64, sequence: u32) -> Result<Vec<u8>> {
     push_cdr_string(&mut output, "base_link")?;
     const POSE_COUNT: u32 = 31;
     push_cdr_u32(&mut output, POSE_COUNT);
-    let phase = f64::from(sequence) * 0.08;
     for index in 0..POSE_COUNT {
         push_cdr_u32(&mut output, seconds as u32);
         push_cdr_u32(&mut output, nanoseconds);
         push_cdr_string(&mut output, "base_link")?;
         let forward = f64::from(index) * 0.5;
-        let left = 0.9 * ((forward * 0.22 + phase).sin() - phase.sin());
+        let left = 0.35 * (forward * 0.25).sin();
         push_cdr_f64(&mut output, forward);
         push_cdr_f64(&mut output, left);
         push_cdr_f64(&mut output, 0.0);
@@ -722,7 +919,7 @@ fn encode_dummy_path(measurement_time: i64, sequence: u32) -> Result<Vec<u8>> {
 
 #[derive(Debug)]
 struct VerificationStats {
-    frames: u64,
+    camera_frames: [u64; CAMERA_SPECS.len()],
     path_messages: u64,
     odometry_messages: u64,
     scan_messages: u64,
@@ -733,6 +930,7 @@ struct VerificationStats {
     height: u32,
     distinct_time_domains: bool,
     scan_tf_resolves: bool,
+    camera_tf_resolves: bool,
 }
 
 fn verify_jpeg_mcap(input: &Path) -> Result<VerificationStats> {
@@ -743,27 +941,33 @@ fn verify_jpeg_mcap(input: &Path) -> Result<VerificationStats> {
     let summary = Summary::read(&mapped)
         .context("read MCAP summary")?
         .context("MCAP has no summary")?;
-    let expected_count = summary
-        .channels
+    let expected_counts = CAMERA_SPECS
         .iter()
-        .find(|(_, channel)| channel.topic == JPEG_TOPIC)
-        .and_then(|(channel_id, _)| {
+        .map(|(topic, _)| {
             summary
-                .stats
-                .as_ref()?
-                .channel_message_counts
-                .get(channel_id)
-                .copied()
+                .channels
+                .iter()
+                .find(|(_, channel)| channel.topic == *topic)
+                .and_then(|(channel_id, _)| {
+                    summary
+                        .stats
+                        .as_ref()?
+                        .channel_message_counts
+                        .get(channel_id)
+                        .copied()
+                })
+                .with_context(|| format!("summary has no camera message count for {topic}"))
         })
-        .context("summary has no camera message count")?;
+        .collect::<Result<Vec<_>>>()?;
 
-    let mut frames = 0_u64;
+    let mut camera_frames = [0_u64; CAMERA_SPECS.len()];
     let mut first_arrival = None;
     let mut last_arrival = None;
-    let mut previous_arrival = None;
-    let mut dimensions = None;
+    let mut previous_arrivals = [None; CAMERA_SPECS.len()];
+    let mut dimensions = [None; CAMERA_SPECS.len()];
     let mut distinct_time_domains = false;
     let mut path_messages = 0_u64;
+    let mut expected_path = None;
     let mut odometry_messages = 0_u64;
     let mut scan_messages = 0_u64;
     let mut tf_messages = 0_u64;
@@ -775,6 +979,14 @@ fn verify_jpeg_mcap(input: &Path) -> Result<VerificationStats> {
             let path = decode_path(&message.data)?;
             ensure!(path.points.len() == 31, "dummy path pose count changed");
             ensure!(path.points.first() == Some(&[0.0, 0.0]));
+            if let Some(expected) = &expected_path {
+                ensure!(
+                    expected == &path.points,
+                    "dummy base_link path changed while the fixture camera is stationary"
+                );
+            } else {
+                expected_path = Some(path.points);
+            }
             path_messages += 1;
             continue;
         }
@@ -808,10 +1020,13 @@ fn verify_jpeg_mcap(input: &Path) -> Result<VerificationStats> {
             }
             continue;
         }
-        if message.channel.topic != JPEG_TOPIC {
+        let Some(camera_index) = CAMERA_SPECS
+            .iter()
+            .position(|(topic, _)| message.channel.topic == *topic)
+        else {
             continue;
-        }
-        if let Some(previous) = previous_arrival {
+        };
+        if let Some(previous) = previous_arrivals[camera_index] {
             ensure!(
                 message.log_time >= previous,
                 "arrival times are not monotonic"
@@ -819,31 +1034,42 @@ fn verify_jpeg_mcap(input: &Path) -> Result<VerificationStats> {
         }
         let compressed = decode_compressed_image(&message.data)?;
         ensure!(
+            compressed.frame_id == CAMERA_SPECS[camera_index].1,
+            "camera frame_id mismatch on {}",
+            CAMERA_SPECS[camera_index].0
+        );
+        let frame_index = camera_frames[camera_index];
+        ensure!(
             compressed.jpeg.starts_with(&[0xff, 0xd8]) && compressed.jpeg.ends_with(&[0xff, 0xd9]),
-            "frame {frames} does not have JPEG markers"
+            "frame {frame_index} does not have JPEG markers"
         );
         let decoded = image::load_from_memory(&compressed.jpeg)
-            .with_context(|| format!("decode JPEG frame {frames}"))?;
+            .with_context(|| format!("decode JPEG frame {frame_index}"))?;
         let frame_dimensions = (decoded.width(), decoded.height());
-        if let Some(expected) = dimensions {
+        if let Some(expected) = dimensions[camera_index] {
             ensure!(expected == frame_dimensions, "JPEG dimensions changed");
         } else {
-            dimensions = Some(frame_dimensions);
+            dimensions[camera_index] = Some(frame_dimensions);
         }
         distinct_time_domains |= compressed.measurement_time.0
             != i64::try_from(message.log_time).context("arrival time exceeds i64")?;
-        first_arrival.get_or_insert(message.log_time);
-        last_arrival = Some(message.log_time);
-        previous_arrival = Some(message.log_time);
-        frames += 1;
+        if camera_index == 0 {
+            first_arrival.get_or_insert(message.log_time);
+            last_arrival = Some(message.log_time);
+        }
+        previous_arrivals[camera_index] = Some(message.log_time);
+        camera_frames[camera_index] += 1;
     }
-    ensure!(
-        frames == expected_count,
-        "summary reports {expected_count} frames but decoded {frames}"
-    );
-    let (width, height) = dimensions.context("no camera frames found")?;
+    for (index, (actual, expected)) in camera_frames.iter().zip(expected_counts).enumerate() {
+        ensure!(
+            *actual == expected,
+            "summary reports {expected} frames for {} but decoded {actual}",
+            CAMERA_SPECS[index].0
+        );
+    }
+    let (width, height) = dimensions[0].context("no camera frames found")?;
     Ok(VerificationStats {
-        frames,
+        camera_frames,
         path_messages,
         odometry_messages,
         scan_messages,
@@ -857,5 +1083,10 @@ fn verify_jpeg_mcap(input: &Path) -> Result<VerificationStats> {
         scan_tf_resolves: transforms
             .transform_points("base_scan", "base_footprint", &[[0.0, 0.0, 0.0]])
             .is_some(),
+        camera_tf_resolves: CAMERA_SPECS.iter().all(|(_, frame_id)| {
+            transforms
+                .transform_points("base_link", frame_id, &[[0.0, 0.0, 0.0]])
+                .is_some()
+        }),
     })
 }

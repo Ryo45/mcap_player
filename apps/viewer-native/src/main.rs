@@ -4,17 +4,21 @@ use anyhow::{Context, Result, bail};
 use bev_renderer::{BevFrame, BevRenderer};
 use egui_wgpu::{Renderer as EguiRenderer, RendererOptions, ScreenDescriptor};
 use memmap2::Mmap;
-use scene_renderer::{SceneFrame, SceneRenderer};
+use scene_renderer::{SceneCameraMode, SceneFrame, SceneRenderer};
 use std::{
-    fs::File,
+    collections::BTreeMap,
+    fs::{self, File},
     path::{Path, PathBuf},
     sync::Arc,
     time::Instant,
 };
+use viewer_core::{
+    CameraCalibrationSet, CameraId, CameraStatus, DomainState, McapPlayback, PipelineCounters,
+    PlaybackClock, PlaybackPerformance, PresentationMetrics, PresentationSnapshot,
+};
 #[cfg(feature = "ros2-live")]
-use viewer_core::{CameraId, PipelineSet, StreamBinding};
-use viewer_core::{CameraState, DomainState, McapPlayback, PipelineCounters, PlaybackClock};
-use viewer_renderer::{CameraTextureSlot, decode_jpeg};
+use viewer_core::{PipelineSet, StreamBinding};
+use viewer_renderer::{CameraTextureSlot, ImageDecodeError, decode_jpeg, draw_plan_overlay};
 use viewer_ui::{TelemetryPresentation, ViewerPresentation, playback_controls, source_status};
 use winit::{
     application::ApplicationHandler,
@@ -23,8 +27,9 @@ use winit::{
     window::{Window, WindowId},
 };
 
-const DEFAULT_FIXTURE: &str = "tests/fixtures/camera-jpeg/camera_front_3s.mcap";
+const DEFAULT_FIXTURE: &str = "tests/fixtures/camera-jpeg/camera_7_5s.mcap";
 const DEFAULT_TOPIC: &str = "/camera/front/image/compressed";
+const DEFAULT_CALIBRATION: &str = "config/camera_calibration.json";
 
 #[derive(Debug)]
 enum SourceMode {
@@ -38,6 +43,7 @@ enum SourceMode {
 struct Args {
     mcap: PathBuf,
     topic: String,
+    calibration: PathBuf,
     mode: SourceMode,
 }
 
@@ -45,6 +51,7 @@ impl Args {
     fn parse() -> Result<Self> {
         let mut mcap = PathBuf::from(DEFAULT_FIXTURE);
         let mut topic = DEFAULT_TOPIC.to_owned();
+        let mut calibration = PathBuf::from(DEFAULT_CALIBRATION);
         let mut live = false;
         let mut reliable = false;
         let mut values = std::env::args().skip(1);
@@ -54,9 +61,13 @@ impl Args {
                 "--camera-topic" => {
                     topic = values.next().context("--camera-topic needs a topic")?
                 }
+                "--camera-calibration" => {
+                    calibration =
+                        PathBuf::from(values.next().context("--camera-calibration needs a path")?)
+                }
                 "--help" | "-h" => {
                     println!(
-                        "viewer-native [--mcap PATH] [--camera-topic TOPIC] [--live [--reliable]]\n\nFiles can also be dropped onto the window."
+                        "viewer-native [--mcap PATH] [--camera-topic TOPIC] [--camera-calibration JSON] [--live [--reliable]]\n\nFiles can also be dropped onto the window."
                     );
                     std::process::exit(0);
                 }
@@ -80,13 +91,19 @@ impl Args {
             }
             SourceMode::Mcap
         };
-        Ok(Self { mcap, topic, mode })
+        Ok(Self {
+            mcap,
+            topic,
+            calibration,
+            mode,
+        })
     }
 }
 
 struct PlaybackSession {
     source: SessionSource,
     topic: String,
+    camera_topics: Vec<(CameraId, String)>,
     source_name: String,
 }
 
@@ -108,9 +125,11 @@ impl PlaybackSession {
             unsafe { Mmap::map(&file) }.with_context(|| format!("map {}", path.display()))?;
         let mut playback = McapPlayback::new(mapping, &topic)?;
         playback.clock_mut().play();
+        let camera_topics = playback.camera_topics().to_vec();
         Ok(Self {
             source: SessionSource::Mcap(Box::new(playback)),
             topic,
+            camera_topics,
             source_name: path.display().to_string(),
         })
     }
@@ -127,6 +146,7 @@ impl PlaybackSession {
             std::slice::from_ref(&descriptor),
             &[(descriptor.id, StreamBinding::Camera(CameraId(0)))],
         );
+        let camera_topics = vec![(CameraId(0), topic.clone())];
         Self {
             source: SessionSource::Ros {
                 handle: live::RosLiveHandle::start(topic.clone(), reliable),
@@ -134,6 +154,7 @@ impl PlaybackSession {
                 state: DomainState::default(),
             },
             topic,
+            camera_topics,
             source_name: format!(
                 "ROS 2 live ({})",
                 if reliable { "reliable" } else { "best effort" }
@@ -203,15 +224,46 @@ impl PlaybackSession {
         match &self.source {
             SessionSource::Mcap(playback) => playback.counters(),
             #[cfg(feature = "ros2-live")]
-            SessionSource::Ros { pipelines, .. } => pipelines.counters(),
+            SessionSource::Ros {
+                handle, pipelines, ..
+            } => {
+                let mut counters = pipelines.counters();
+                counters.dropped = handle.coalesced();
+                counters
+            }
         }
     }
 
-    fn presentation(&self, error: Option<String>) -> ViewerPresentation {
+    fn camera_topics(&self) -> &[(CameraId, String)] {
+        &self.camera_topics
+    }
+
+    fn set_focused_camera(&mut self, focused_camera: Option<CameraId>) {
+        match &mut self.source {
+            SessionSource::Mcap(playback) => playback.set_focused_camera(focused_camera),
+            #[cfg(feature = "ros2-live")]
+            SessionSource::Ros { .. } => {}
+        }
+    }
+
+    fn playback_performance(&self) -> Option<&PlaybackPerformance> {
+        match &self.source {
+            SessionSource::Mcap(playback) => Some(playback.performance()),
+            #[cfg(feature = "ros2-live")]
+            SessionSource::Ros { .. } => None,
+        }
+    }
+
+    fn presentation(
+        &self,
+        error: Option<String>,
+        focused_camera: Option<CameraId>,
+        presentation_performance: PresentationSnapshot,
+    ) -> ViewerPresentation {
         #[cfg(feature = "ros2-live")]
         let source_name = match &self.source {
             SessionSource::Ros { handle, state, .. } => {
-                let age = state.camera.latest().and_then(|frame| {
+                let age = state.camera.latest_by_arrival().and_then(|frame| {
                     let now = std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
                         .ok()?;
@@ -243,8 +295,14 @@ impl PlaybackSession {
         ViewerPresentation {
             source: source_name,
             topic: self.topic.clone(),
-            camera_status: self.state().camera.status(),
+            camera_status: focused_camera
+                .map_or(CameraStatus::WaitingForCameraFrame, |camera_id| {
+                    self.state().camera.status_for(camera_id)
+                }),
             counters: self.counters(),
+            playback_performance: self.playback_performance().cloned(),
+            presentation_performance,
+            focused_camera,
             telemetry: self
                 .state()
                 .telemetry
@@ -272,14 +330,41 @@ struct Graphics {
     egui_context: egui::Context,
     egui_state: egui_winit::State,
     egui_renderer: EguiRenderer,
-    camera_slot: CameraTextureSlot,
-    camera_texture_id: Option<egui::TextureId>,
-    uploaded_arrival: Option<i64>,
+    camera_slots: BTreeMap<CameraId, CameraTextureSlot>,
+    camera_texture_ids: BTreeMap<CameraId, egui::TextureId>,
+    uploaded_arrivals: BTreeMap<CameraId, i64>,
+    camera_topics: Arc<Vec<(CameraId, String)>>,
+    focused_camera: Option<CameraId>,
+    calibrations: CameraCalibrationSet,
+    overlay_status: BTreeMap<CameraId, String>,
+    presentation_metrics: PresentationMetrics,
     bev_renderer: BevRenderer,
     bev_texture_id: egui::TextureId,
     scene_renderer: SceneRenderer,
     scene_texture_id: egui::TextureId,
     accumulate_points: bool,
+}
+
+#[derive(Debug)]
+struct CameraUploadError {
+    camera_id: CameraId,
+    source: ImageDecodeError,
+}
+
+impl std::fmt::Display for CameraUploadError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            formatter,
+            "camera {} upload preparation failed: {}",
+            self.camera_id.0, self.source
+        )
+    }
+}
+
+impl std::error::Error for CameraUploadError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(&self.source)
+    }
 }
 
 struct UiOutput {
@@ -291,10 +376,11 @@ struct UiOutput {
     scene_wheel_delta: f32,
     scene_orbit_delta: egui::Vec2,
     reset_scene_camera: bool,
+    scene_camera_mode: SceneCameraMode,
 }
 
 impl Graphics {
-    async fn new(window: Arc<Window>) -> Result<Self> {
+    async fn new(window: Arc<Window>, calibrations: CameraCalibrationSet) -> Result<Self> {
         let size = window.inner_size();
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: wgpu::Backends::PRIMARY,
@@ -368,9 +454,14 @@ impl Graphics {
             egui_context,
             egui_state,
             egui_renderer,
-            camera_slot: CameraTextureSlot::default(),
-            camera_texture_id: None,
-            uploaded_arrival: None,
+            camera_slots: BTreeMap::new(),
+            camera_texture_ids: BTreeMap::new(),
+            uploaded_arrivals: BTreeMap::new(),
+            camera_topics: Arc::new(Vec::new()),
+            focused_camera: None,
+            calibrations,
+            overlay_status: BTreeMap::new(),
+            presentation_metrics: PresentationMetrics::default(),
             bev_renderer,
             bev_texture_id,
             scene_renderer,
@@ -388,38 +479,95 @@ impl Graphics {
         self.surface.configure(&self.device, &self.config);
     }
 
-    fn upload_latest(&mut self, session: &CameraState) -> Result<()> {
-        let Some(frame) = session.latest() else {
-            return Ok(());
-        };
-        if self.uploaded_arrival == Some(frame.arrival_time.0) {
-            return Ok(());
-        }
-        let image = decode_jpeg(&frame.jpeg)?;
-        let recreated = self.camera_slot.update(&self.device, &self.queue, &image);
-        if recreated {
-            let view = self.camera_slot.view().expect("updated slot has a view");
-            if let Some(id) = self.camera_texture_id {
+    fn upload_latest(&mut self, state: &DomainState) -> Result<(), CameraUploadError> {
+        for (camera_id, frame) in state.camera.frames() {
+            if self.uploaded_arrivals.get(camera_id) == Some(&frame.arrival_time.0) {
+                continue;
+            }
+            let decode_started = Instant::now();
+            let mut image = decode_jpeg(&frame.jpeg).map_err(|source| CameraUploadError {
+                camera_id: *camera_id,
+                source,
+            })?;
+            let decode_elapsed = decode_started.elapsed();
+            let upload_started = Instant::now();
+            if let Some(path) = state.bev.latest() {
+                match self.calibrations.project_plan(
+                    frame,
+                    path,
+                    &state.transforms,
+                    (image.width, image.height),
+                ) {
+                    Ok(projected) => {
+                        draw_plan_overlay(&mut image, &projected.points);
+                        self.overlay_status.insert(
+                            *camera_id,
+                            format!("plan {} visible pts", projected.visible_points),
+                        );
+                    }
+                    Err(error) => {
+                        self.overlay_status.insert(*camera_id, error.to_string());
+                    }
+                }
+            } else {
+                self.overlay_status
+                    .insert(*camera_id, "plan waiting".to_owned());
+            }
+            let slot = self.camera_slots.entry(*camera_id).or_default();
+            let recreated = slot.update(&self.device, &self.queue, &image);
+            if recreated {
+                let view = slot.view().expect("updated slot has a view");
+                let texture_id = self
+                    .camera_texture_ids
+                    .entry(*camera_id)
+                    .or_insert_with(|| {
+                        self.egui_renderer.register_native_texture(
+                            &self.device,
+                            view,
+                            wgpu::FilterMode::Linear,
+                        )
+                    });
                 self.egui_renderer.update_egui_texture_from_wgpu_texture(
                     &self.device,
                     view,
                     wgpu::FilterMode::Linear,
-                    id,
+                    *texture_id,
                 );
-            } else {
-                self.camera_texture_id = Some(self.egui_renderer.register_native_texture(
-                    &self.device,
-                    view,
-                    wgpu::FilterMode::Linear,
-                ));
             }
+            self.uploaded_arrivals
+                .insert(*camera_id, frame.arrival_time.0);
+            self.presentation_metrics.record_camera(
+                *camera_id,
+                decode_elapsed,
+                upload_started.elapsed(),
+            );
         }
-        self.uploaded_arrival = Some(frame.arrival_time.0);
         Ok(())
     }
 
     fn hide_camera(&mut self) {
-        self.uploaded_arrival = None;
+        self.uploaded_arrivals.clear();
+    }
+
+    fn reset_camera_catalog(&mut self) {
+        self.hide_camera();
+        self.camera_topics = Arc::new(Vec::new());
+        self.focused_camera = None;
+        self.overlay_status.clear();
+        self.presentation_metrics.reset();
+    }
+
+    fn sync_camera_catalog(&mut self, session: &PlaybackSession) {
+        if self.camera_topics.as_slice() != session.camera_topics() {
+            self.camera_topics = Arc::new(session.camera_topics().to_vec());
+        }
+    }
+
+    fn camera_texture(&self, camera_id: CameraId) -> Option<(egui::TextureId, (u32, u32))> {
+        Some((
+            *self.camera_texture_ids.get(&camera_id)?,
+            self.camera_slots.get(&camera_id)?.size()?,
+        ))
     }
 
     fn render(
@@ -430,6 +578,7 @@ impl Graphics {
     ) -> Result<bool, wgpu::SurfaceError> {
         let ui = self.build_ui(window, session, error);
         self.accumulate_points = ui.accumulate_points;
+        self.scene_renderer.set_camera_mode(ui.scene_camera_mode);
         if ui.scene_wheel_delta != 0.0 {
             self.scene_renderer.zoom(ui.scene_wheel_delta);
         }
@@ -454,10 +603,40 @@ impl Graphics {
         error: Option<String>,
     ) -> UiOutput {
         let input = self.egui_state.take_egui_input(window);
-        let model = session.presentation(error);
-        let texture_id = self.camera_texture_id;
-        let texture_size = self.camera_slot.size();
-        let camera_available = session.state().camera.latest().is_some();
+        self.sync_camera_catalog(session);
+        let model = session.presentation(
+            error,
+            self.focused_camera,
+            self.presentation_metrics.snapshot().clone(),
+        );
+        let camera_topics = Arc::clone(&self.camera_topics);
+        let mut camera_ids = camera_topics.iter().map(|(id, _)| *id).collect::<Vec<_>>();
+        camera_ids.extend(session.state().camera.ids());
+        camera_ids.sort_unstable();
+        camera_ids.dedup();
+        let mut focused_camera = self
+            .focused_camera
+            .filter(|camera_id| camera_ids.contains(camera_id))
+            .or_else(|| camera_ids.first().copied());
+        let focused_texture = focused_camera.and_then(|camera_id| self.camera_texture(camera_id));
+        let camera_cards = camera_ids
+            .iter()
+            .filter_map(|camera_id| {
+                self.camera_texture(*camera_id)
+                    .map(|texture| (*camera_id, texture))
+            })
+            .collect::<Vec<_>>();
+        let focused_label = focused_camera
+            .and_then(|camera_id| {
+                camera_topics
+                    .iter()
+                    .find(|(id, _)| *id == camera_id)
+                    .map(|(_, topic)| topic.as_str())
+            })
+            .unwrap_or("waiting");
+        let focused_overlay = focused_camera
+            .and_then(|camera_id| self.overlay_status.get(&camera_id))
+            .map_or("overlay waiting", String::as_str);
         let bev_texture_id = self.bev_texture_id;
         let scene_texture_id = self.scene_texture_id;
         let bev_path_points = self.bev_path_points(session).map_or(0, <[_]>::len);
@@ -468,6 +647,7 @@ impl Graphics {
             .map_or(0, |frame| frame.points.len());
         let visible_scan_points = self.scene_renderer.visible_points();
         let scene_camera_distance = self.scene_renderer.camera().distance;
+        let mut scene_camera_mode = self.scene_renderer.camera_mode();
         let mut accumulate_points = self.accumulate_points;
         let tf_status = session.state().last_tf_route.as_ref().map_or_else(
             || format!("TF waiting · misses {}", session.state().tf_misses),
@@ -504,18 +684,22 @@ impl Graphics {
                 let top_size = egui::vec2(ui.available_width(), ui.available_height() * 0.52);
                 ui.allocate_ui(top_size, |ui| {
                     ui.columns(2, |columns| {
-                        columns[0].heading("JPEG CAMERA");
+                        columns[0].heading(format!(
+                            "CAMERA FOCUS · {focused_label} · {focused_overlay}"
+                        ));
                         columns[0].separator();
-                        if let (true, Some(id), Some((width, height))) =
-                            (camera_available, texture_id, texture_size)
-                        {
+                        if let Some((id, (width, height))) = focused_texture {
                             let available = columns[0].available_size();
                             let scale = (available.x / width as f32)
-                                .min(available.y / height as f32)
+                                .min((available.y - 70.0).max(1.0) / height as f32)
                                 .max(0.0);
                             let size = egui::vec2(width as f32 * scale, height as f32 * scale);
-                            columns[0].centered_and_justified(|ui| {
-                                ui.add(egui::Image::new((id, size)));
+                            let focus_area = egui::vec2(available.x, (available.y - 70.0).max(1.0));
+                            columns[0].allocate_ui(focus_area, |ui| {
+                                ui.centered_and_justified(|ui| {
+                                    ui.add(egui::Image::new((id, size)))
+                                        .on_hover_text("Focused camera");
+                                });
                             });
                         } else {
                             columns[0].centered_and_justified(|ui| {
@@ -525,6 +709,27 @@ impl Graphics {
                                 });
                             });
                         }
+                        columns[0].horizontal_wrapped(|ui| {
+                            for (camera_id, (texture_id, (width, height))) in &camera_cards {
+                                let scale = (96.0 / *width as f32).min(72.0 / *height as f32);
+                                let size = egui::vec2(
+                                    *width as f32 * scale.max(0.01),
+                                    *height as f32 * scale.max(0.01),
+                                );
+                                let response = ui
+                                    .add(
+                                        egui::Image::new((*texture_id, size))
+                                            .sense(egui::Sense::click()),
+                                    )
+                                    .on_hover_text(format!("Focus camera {}", camera_id.0));
+                                if response.clicked() {
+                                    focused_camera = Some(*camera_id);
+                                }
+                            }
+                            if camera_cards.is_empty() && !camera_ids.is_empty() {
+                                ui.label("Waiting for camera frames…");
+                            }
+                        });
 
                         columns[1].heading(format!("BEV · PATH {bev_path_points} pts"));
                         columns[1].separator();
@@ -536,6 +741,25 @@ impl Graphics {
                 ui.horizontal(|ui| {
                     ui.heading(format!("3D VIEW · SCAN {current_scan_points} pts"));
                     ui.separator();
+                    egui::ComboBox::from_id_salt("scene-camera-mode")
+                        .selected_text(scene_camera_mode.label())
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(
+                                &mut scene_camera_mode,
+                                SceneCameraMode::Chase,
+                                SceneCameraMode::Chase.label(),
+                            );
+                            ui.selectable_value(
+                                &mut scene_camera_mode,
+                                SceneCameraMode::Free,
+                                SceneCameraMode::Free.label(),
+                            );
+                            ui.selectable_value(
+                                &mut scene_camera_mode,
+                                SceneCameraMode::VehicleEye,
+                                SceneCameraMode::VehicleEye.label(),
+                            );
+                        });
                     ui.checkbox(&mut accumulate_points, "Accumulate scans");
                     if accumulate_points {
                         ui.label(format!("visible {visible_scan_points}"));
@@ -549,16 +773,28 @@ impl Graphics {
                         egui::Image::new((scene_texture_id, scene_logical_size))
                             .sense(egui::Sense::drag()),
                     )
-                    .on_hover_text("Wheel: zoom · Drag: orbit · Double-click: reset");
-                if response.hovered() {
+                    .on_hover_text(match scene_camera_mode {
+                        SceneCameraMode::Chase => {
+                            "Vehicle-following chase view · Wheel: zoom · Double-click: reset"
+                        }
+                        SceneCameraMode::Free => {
+                            "Free view · Wheel: zoom · Drag: orbit · Double-click: reset"
+                        }
+                        SceneCameraMode::VehicleEye => "Forward view from the vehicle",
+                    });
+                if response.hovered() && scene_camera_mode != SceneCameraMode::VehicleEye {
                     scene_wheel_delta = ui.input(|input| input.smooth_scroll_delta.y);
                 }
-                if response.dragged_by(egui::PointerButton::Primary) {
+                if scene_camera_mode == SceneCameraMode::Free
+                    && response.dragged_by(egui::PointerButton::Primary)
+                {
                     scene_orbit_delta = ui.input(|input| input.pointer.delta());
                 }
                 reset_scene_camera = response.double_clicked();
             });
         });
+        self.focused_camera = focused_camera;
+        session.set_focused_camera(focused_camera);
         UiOutput {
             egui,
             seeked,
@@ -568,6 +804,7 @@ impl Graphics {
             scene_wheel_delta,
             scene_orbit_delta,
             reset_scene_camera,
+            scene_camera_mode,
         }
     }
 
@@ -750,7 +987,7 @@ impl App {
                 self.session = Some(session);
                 self.error = None;
                 if let Some(graphics) = &mut self.graphics {
-                    graphics.hide_camera();
+                    graphics.reset_camera_catalog();
                 }
             }
             Err(error) => self.error = Some(error.to_string()),
@@ -774,7 +1011,26 @@ impl ApplicationHandler for App {
                 return;
             }
         };
-        match pollster::block_on(Graphics::new(window.clone())) {
+        let calibration_json = match fs::read_to_string(&self.args.calibration) {
+            Ok(json) => json,
+            Err(error) => {
+                self.error = Some(format!(
+                    "read camera calibration {}: {error}",
+                    self.args.calibration.display()
+                ));
+                event_loop.exit();
+                return;
+            }
+        };
+        let calibrations = match CameraCalibrationSet::from_json(&calibration_json) {
+            Ok(calibrations) => calibrations,
+            Err(error) => {
+                self.error = Some(error.to_string());
+                event_loop.exit();
+                return;
+            }
+        };
+        match pollster::block_on(Graphics::new(window.clone(), calibrations)) {
             Ok(graphics) => self.graphics = Some(graphics),
             Err(error) => {
                 self.error = Some(error.to_string());
@@ -822,15 +1078,25 @@ impl ApplicationHandler for App {
                 let elapsed = now.saturating_duration_since(self.last_frame);
                 self.last_frame = now;
                 if let Some(session) = &mut self.session {
+                    if let Some(graphics) = &self.graphics {
+                        session.set_focused_camera(graphics.focused_camera);
+                    }
                     if let Err(error) = session.tick(elapsed) {
                         self.error = Some(error.to_string());
                     }
                     if let Some(graphics) = &mut self.graphics {
-                        if let Err(error) = graphics.upload_latest(&session.state().camera) {
+                        if let Err(error) = graphics.upload_latest(session.state()) {
+                            let camera_id = error.camera_id;
                             self.error = Some(error.to_string());
-                            session.state_mut().camera.set_error();
+                            session.state_mut().camera.set_error_for(camera_id);
                         }
-                        match graphics.render(&window, session, self.error.clone()) {
+                        let render_started = Instant::now();
+                        let render_result = graphics.render(&window, session, self.error.clone());
+                        graphics
+                            .presentation_metrics
+                            .record_render(render_started.elapsed());
+                        graphics.presentation_metrics.advance(elapsed);
+                        match render_result {
                             Ok(seeked) => {
                                 if seeked {
                                     if let Err(error) = session.seek() {
