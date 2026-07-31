@@ -29,6 +29,7 @@ license = "MIT OR Apache-2.0"
 anyhow = "1.0"
 bytemuck = { version = "1.24", features = ["derive"] }
 egui = "0.33.2"
+egui_plot = "0.34.1"
 egui-wgpu = "0.33.2"
 egui-winit = "0.33.2"
 env_logger = "0.10"
