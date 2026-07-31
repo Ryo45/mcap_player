@@ -1,9 +1,11 @@
 use crate::{
     args::{Args, SourceMode},
     graphics::{Graphics, RenderInput},
+    interaction::ViewerAction,
+    plot_loader::PlotLoader,
     presentation::PresentationState,
     session::PlaybackSession,
-    settings::ViewerSettings,
+    workspace::WorkspaceState,
 };
 use std::{
     fs,
@@ -23,7 +25,8 @@ pub(crate) struct App {
     pub(crate) args: Args,
     pub(crate) window: Option<Arc<Window>>,
     pub(crate) session: Option<PlaybackSession>,
-    pub(crate) viewer_settings: ViewerSettings,
+    pub(crate) workspace: WorkspaceState,
+    pub(crate) plot_loader: PlotLoader,
     pub(crate) presentation_state: PresentationState,
     pub(crate) graphics: Option<Graphics>,
     pub(crate) last_frame: Instant,
@@ -34,11 +37,25 @@ impl App {
     fn load(&mut self, path: &Path) {
         match PlaybackSession::open(path, self.args.topic.clone()) {
             Ok(mut session) => {
-                self.viewer_settings.focused_camera = session.default_focused_camera();
-                session.set_focused_camera(self.viewer_settings.focused_camera);
+                let plot_origin = session
+                    .playback_view()
+                    .expect("MCAP session has a playback view")
+                    .start;
+                self.workspace
+                    .reset_for_source(session.default_focused_camera());
+                session.set_focused_camera(self.workspace.camera.focused_camera);
+                self.plot_loader.clear();
+                if let Err(error) =
+                    self.plot_loader
+                        .start_speed_overview(path.to_owned(), plot_origin, 4_000)
+                {
+                    self.error = Some(error.to_string());
+                }
                 self.args.mcap = path.to_owned();
                 self.session = Some(session);
-                self.error = None;
+                if self.plot_loader.error().is_none() {
+                    self.error = None;
+                }
                 self.presentation_state.reset();
                 if let Some(graphics) = &mut self.graphics {
                     graphics.hide_camera();
@@ -56,6 +73,7 @@ impl App {
         if let Err(error) = session.tick(elapsed) {
             self.error = Some(error.to_string());
         }
+        self.plot_loader.poll();
 
         let Some(graphics) = &mut self.graphics else {
             return Ok(());
@@ -84,7 +102,8 @@ impl App {
             let presentation = self.presentation_state.build(
                 session.state(),
                 diagnostics,
-                &self.viewer_settings,
+                &self.workspace.camera,
+                &self.workspace.scene,
                 self.error.clone(),
             );
             let render_started = Instant::now();
@@ -93,12 +112,15 @@ impl App {
                 RenderInput {
                     presentation: &presentation.viewer,
                     playback,
-                    settings: &self.viewer_settings,
+                    speed_signal: self.plot_loader.signal(),
+                    plot_loading: self.plot_loader.is_loading(),
+                    plot_error: self.plot_loader.error(),
                     bev: presentation.bev,
                     scene: &presentation.scene,
                     static_transform_count: presentation.static_transform_count,
                     dynamic_transform_count: presentation.dynamic_transform_count,
                 },
+                &mut self.workspace,
             );
             (result, render_started.elapsed())
         };
@@ -106,23 +128,41 @@ impl App {
         self.presentation_state.advance_metrics(elapsed);
 
         let output = render_result?;
-        self.viewer_settings.focused_camera = output.focused_camera;
-        self.viewer_settings.accumulate_points = output.accumulate_points;
-        session.set_focused_camera(self.viewer_settings.focused_camera);
-
-        let mut seeked = false;
-        for command in output.playback_commands {
-            match session.apply_playback_command(command) {
-                Ok(command_seeked) => seeked |= command_seeked,
-                Err(error) => self.error = Some(error.to_string()),
-            }
-        }
+        let _view_requests = output.view_requests;
+        let seeked = Self::apply_actions(
+            session,
+            &mut self.workspace,
+            &mut self.error,
+            output.actions,
+        );
         if seeked {
             self.presentation_state.reset();
             graphics.hide_camera();
             graphics.clear_scene_history();
         }
         Ok(())
+    }
+
+    fn apply_actions(
+        session: &mut PlaybackSession,
+        workspace: &mut WorkspaceState,
+        error: &mut Option<String>,
+        actions: Vec<ViewerAction>,
+    ) -> bool {
+        let mut seeked = false;
+        for action in actions {
+            let focused_camera_changed = matches!(action, ViewerAction::SetFocusedCamera(_));
+            if let Some(command) = workspace.apply_action(action) {
+                match session.apply_playback_command(command) {
+                    Ok(command_seeked) => seeked |= command_seeked,
+                    Err(command_error) => *error = Some(command_error.to_string()),
+                }
+            }
+            if focused_camera_changed {
+                session.set_focused_camera(workspace.camera.focused_camera);
+            }
+        }
+        seeked
     }
 }
 
@@ -178,8 +218,10 @@ impl ApplicationHandler for App {
             #[cfg(feature = "ros2-live")]
             SourceMode::Ros { reliable } => {
                 let mut session = PlaybackSession::open_live(self.args.topic.clone(), reliable);
-                self.viewer_settings.focused_camera = session.default_focused_camera();
-                session.set_focused_camera(self.viewer_settings.focused_camera);
+                self.plot_loader.clear();
+                self.workspace
+                    .reset_for_source(session.default_focused_camera());
+                session.set_focused_camera(self.workspace.camera.focused_camera);
                 self.session = Some(session);
             }
         }
@@ -222,5 +264,53 @@ impl ApplicationHandler for App {
             }
             _ => {}
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use viewer_core::{ArrivalTime, PlaybackCommand};
+
+    fn session() -> PlaybackSession {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/fixtures/camera-jpeg/camera_front_3s.mcap");
+        PlaybackSession::open(&path, "/camera/front/image/compressed".to_owned()).unwrap()
+    }
+
+    #[test]
+    fn playback_action_is_applied_to_the_session() {
+        let mut session = session();
+        let mut workspace = WorkspaceState::default();
+        let mut error = None;
+        assert!(session.playback_view().unwrap().playing);
+        let seeked = App::apply_actions(
+            &mut session,
+            &mut workspace,
+            &mut error,
+            vec![ViewerAction::Playback(PlaybackCommand::Toggle)],
+        );
+        assert!(!seeked);
+        assert!(!session.playback_view().unwrap().playing);
+        assert!(error.is_none());
+    }
+
+    #[test]
+    fn preview_action_does_not_seek_playback() {
+        let mut session = session();
+        let cursor = session.playback_view().unwrap().cursor;
+        let preview = ArrivalTime(cursor.0 + 123);
+        let mut workspace = WorkspaceState::default();
+        let mut error = None;
+        let seeked = App::apply_actions(
+            &mut session,
+            &mut workspace,
+            &mut error,
+            vec![ViewerAction::SetPreviewTime(Some(preview))],
+        );
+        assert!(!seeked);
+        assert_eq!(workspace.interaction.preview_time, Some(preview));
+        assert_eq!(session.playback_view().unwrap().cursor, cursor);
+        assert!(error.is_none());
     }
 }

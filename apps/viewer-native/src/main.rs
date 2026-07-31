@@ -1,18 +1,21 @@
 mod app;
 mod args;
 mod graphics;
+mod interaction;
 mod live;
+mod plot_loader;
 mod presentation;
 mod session;
-mod settings;
+mod workspace;
 
 use anyhow::Result;
 use app::App;
 use args::Args;
+use plot_loader::PlotLoader;
 use presentation::PresentationState;
-use settings::ViewerSettings;
 use std::time::Instant;
 use winit::event_loop::{ControlFlow, EventLoop};
+use workspace::WorkspaceState;
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -23,7 +26,8 @@ fn main() -> Result<()> {
         args,
         window: None,
         session: None,
-        viewer_settings: ViewerSettings::default(),
+        workspace: WorkspaceState::default(),
+        plot_loader: PlotLoader::default(),
         presentation_state: PresentationState::default(),
         graphics: None,
         last_frame: Instant::now(),

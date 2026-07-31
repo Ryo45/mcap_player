@@ -1,4 +1,7 @@
-use crate::{session::SessionDiagnostics, settings::ViewerSettings};
+use crate::{
+    session::SessionDiagnostics,
+    workspace::{CameraViewState, SceneViewState},
+};
 use std::{collections::BTreeMap, time::Duration};
 use viewer_core::{
     BevFrameBuilder, BevSnapshot, CameraId, DiagnosticsPresentation, DomainState, OverlayStatus,
@@ -32,13 +35,14 @@ impl PresentationState {
         &'a mut self,
         state: &'a DomainState,
         diagnostics: SessionDiagnostics,
-        settings: &ViewerSettings,
+        camera: &CameraViewState,
+        scene_state: &SceneViewState,
         error: Option<String>,
     ) -> PresentationFrame<'a> {
         let viewer = ViewerPresentation::from_domain(
             state,
             &diagnostics.camera_topics,
-            settings.focused_camera,
+            camera.focused_camera,
             &self.overlay_status,
             DiagnosticsPresentation {
                 source: diagnostics.source_name,
@@ -51,7 +55,9 @@ impl PresentationState {
             },
         );
         let bev = BevFrameBuilder::new(state).build();
-        let scene = self.scene_builder.build(state, settings.accumulate_points);
+        let scene = self
+            .scene_builder
+            .build(state, scene_state.accumulate_points);
         PresentationFrame {
             viewer,
             bev,
@@ -115,8 +121,10 @@ mod tests {
             frame_id: "base_link".into(),
             points: vec![[1.0, 2.0]],
         });
-        let settings = ViewerSettings {
+        let camera_state = CameraViewState {
             focused_camera: Some(CameraId(0)),
+        };
+        let scene_state = SceneViewState {
             accumulate_points: true,
         };
         let mut presentation = PresentationState::default();
@@ -128,7 +136,7 @@ mod tests {
         }]);
         presentation.advance_metrics(Duration::from_secs(1));
 
-        let frame = presentation.build(&state, diagnostics(), &settings, None);
+        let frame = presentation.build(&state, diagnostics(), &camera_state, &scene_state, None);
         let camera = frame.viewer.focused_camera().unwrap();
         assert_eq!(camera.overlay, OverlayStatus::Ready { visible_points: 7 });
         assert_eq!(camera.fps, 1.0);
@@ -137,7 +145,7 @@ mod tests {
         drop(frame);
 
         presentation.reset();
-        let frame = presentation.build(&state, diagnostics(), &settings, None);
+        let frame = presentation.build(&state, diagnostics(), &camera_state, &scene_state, None);
         let camera = frame.viewer.focused_camera().unwrap();
         assert_eq!(camera.overlay, OverlayStatus::Waiting);
         assert_eq!(camera.fps, 0.0);

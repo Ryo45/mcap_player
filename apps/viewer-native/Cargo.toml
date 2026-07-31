@@ -12,6 +12,7 @@ ros2-live = ["dep:rclrs"]
 anyhow.workspace = true
 bev-renderer = { path = "../../crates/bev-renderer" }
 egui.workspace = true
+egui_plot.workspace = true
 egui-wgpu.workspace = true
 egui-winit.workspace = true
 env_logger.workspace = true

@@ -1,14 +1,15 @@
 mod camera;
 mod surface;
 mod ui;
+mod views;
 
-use crate::settings::ViewerSettings;
+use crate::{interaction::ViewerAction, workspace::WorkspaceState};
 use bev_renderer::{BevFrame, BevRenderer};
 use egui_wgpu::Renderer as EguiRenderer;
-use scene_renderer::{SceneFrame, SceneRenderer};
+use scene_renderer::{SceneCameraMode, SceneFrame, SceneRenderer};
 use std::collections::BTreeMap;
 use viewer_core::{
-    BevSnapshot, CameraCalibrationSet, CameraId, PlaybackCommand, PlaybackView, SceneSnapshot,
+    BevSnapshot, CameraCalibrationSet, CameraId, LoadedSignal, PlaybackView, SceneSnapshot,
     ViewerPresentation,
 };
 use viewer_renderer::CameraTextureSlot;
@@ -17,7 +18,9 @@ use winit::window::Window;
 pub(crate) struct RenderInput<'a> {
     pub(crate) presentation: &'a ViewerPresentation,
     pub(crate) playback: Option<PlaybackView>,
-    pub(crate) settings: &'a ViewerSettings,
+    pub(crate) speed_signal: Option<&'a LoadedSignal>,
+    pub(crate) plot_loading: bool,
+    pub(crate) plot_error: Option<&'a str>,
     pub(crate) bev: BevSnapshot<'a>,
     pub(crate) scene: &'a SceneSnapshot<'a>,
     pub(crate) static_transform_count: usize,
@@ -25,9 +28,24 @@ pub(crate) struct RenderInput<'a> {
 }
 
 pub(crate) struct RenderOutput {
-    pub(crate) playback_commands: Vec<PlaybackCommand>,
-    pub(crate) focused_camera: Option<CameraId>,
-    pub(crate) accumulate_points: bool,
+    pub(crate) actions: Vec<ViewerAction>,
+    /// Concrete requests applied during this frame; retained as the future panel render boundary.
+    pub(crate) view_requests: ViewRenderRequests,
+}
+
+#[derive(Clone, Copy)]
+pub(crate) struct ViewRenderRequests {
+    pub(crate) bev_size: egui::Vec2,
+    pub(crate) scene: SceneRenderRequest,
+}
+
+#[derive(Clone, Copy)]
+pub(crate) struct SceneRenderRequest {
+    pub(crate) logical_size: egui::Vec2,
+    pub(crate) wheel_delta: f32,
+    pub(crate) orbit_delta: egui::Vec2,
+    pub(crate) reset_camera: bool,
+    pub(crate) camera_mode: SceneCameraMode,
 }
 
 pub(crate) struct Graphics {
@@ -53,28 +71,46 @@ impl Graphics {
         &mut self,
         window: &Window,
         input: RenderInput<'_>,
+        workspace: &mut WorkspaceState,
     ) -> Result<RenderOutput, wgpu::SurfaceError> {
-        let ui = self.build_ui(window, &input);
-        self.scene_renderer.set_camera_mode(ui.scene_camera_mode);
-        if ui.scene_wheel_delta != 0.0 {
-            self.scene_renderer.zoom(ui.scene_wheel_delta);
-        }
-        if ui.scene_orbit_delta != egui::Vec2::ZERO {
-            self.scene_renderer
-                .orbit(ui.scene_orbit_delta.x, ui.scene_orbit_delta.y);
-        }
-        if ui.reset_scene_camera {
-            self.scene_renderer.reset_camera();
-        }
+        let ui = self.build_ui(window, &input, workspace);
+        let view_requests = ViewRenderRequests {
+            bev_size: ui.bev_size,
+            scene: SceneRenderRequest {
+                logical_size: ui.scene.logical_size,
+                wheel_delta: ui.scene.wheel_delta,
+                orbit_delta: ui.scene.orbit_delta,
+                reset_camera: ui.scene.reset_camera,
+                camera_mode: ui.scene.camera_mode,
+            },
+        };
+        self.apply_scene_request(view_requests.scene);
         let pixels_per_point = ui.egui.pixels_per_point;
-        self.sync_bev(ui.bev_size, input.bev, pixels_per_point);
-        self.sync_scene(ui.scene_size, input.scene, pixels_per_point);
+        self.sync_bev(view_requests.bev_size, input.bev, pixels_per_point);
+        self.sync_scene(
+            view_requests.scene.logical_size,
+            input.scene,
+            pixels_per_point,
+        );
         self.paint_egui(window, ui.egui)?;
         Ok(RenderOutput {
-            playback_commands: ui.playback_commands,
-            focused_camera: ui.focused_camera,
-            accumulate_points: ui.accumulate_points,
+            actions: ui.actions,
+            view_requests,
         })
+    }
+
+    fn apply_scene_request(&mut self, request: SceneRenderRequest) {
+        self.scene_renderer.set_camera_mode(request.camera_mode);
+        if request.wheel_delta != 0.0 {
+            self.scene_renderer.zoom(request.wheel_delta);
+        }
+        if request.orbit_delta != egui::Vec2::ZERO {
+            self.scene_renderer
+                .orbit(request.orbit_delta.x, request.orbit_delta.y);
+        }
+        if request.reset_camera {
+            self.scene_renderer.reset_camera();
+        }
     }
 
     fn sync_bev(

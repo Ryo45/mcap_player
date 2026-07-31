@@ -11,6 +11,7 @@ mod mcap_source;
 mod performance;
 mod pipeline;
 mod playback;
+mod plot;
 mod point_cloud;
 mod presentation;
 mod telemetry;
@@ -40,6 +41,11 @@ pub use pipeline::{
     camera_topics, standard_bindings,
 };
 pub use playback::{McapPlayback, McapPlaybackError, PlaybackPerformance, StageTiming};
+pub use plot::{
+    LoadedSignal, PlotMode, PlotPanelState, PlotSeries, PlotViewport, SignalId, SignalSample,
+    arrival_time_from_plot_x, cursor_seconds, downsample_min_max, followed_viewport,
+    load_speed_signal, sample_at_or_before, should_shift_viewport,
+};
 pub use point_cloud::{PointCloudFrame, PointCloudState};
 pub use presentation::{
     CameraPresentation, DiagnosticsPresentation, OverlayStatus, TelemetryPresentation,
