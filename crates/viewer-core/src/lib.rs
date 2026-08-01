@@ -1,6 +1,7 @@
 //! Platform-neutral playback, MCAP indexing and camera-domain contracts.
 
 mod bev;
+mod bookmark;
 mod camera;
 mod camera_projection;
 mod cdr;
@@ -14,11 +15,16 @@ mod playback;
 mod plot;
 mod point_cloud;
 mod presentation;
+mod preview;
 mod telemetry;
 mod time;
 mod transform;
 
 pub use bev::{BevPathFrame, BevState};
+pub use bookmark::{
+    Bookmark, BookmarkDocument, BookmarkId, BookmarkValidationError,
+    CURRENT_BOOKMARK_SCHEMA_VERSION, PreviewBuildInfo, SourceFingerprint,
+};
 pub use camera::{CameraFrame, CameraState, CameraStatus};
 pub use camera_projection::{
     CalibrationError, CameraCalibration, CameraCalibrationSet, ProjectedPlan, ProjectionError,
@@ -50,6 +56,11 @@ pub use point_cloud::{PointCloudFrame, PointCloudState};
 pub use presentation::{
     CameraPresentation, DiagnosticsPresentation, OverlayStatus, TelemetryPresentation,
     ViewerPresentation,
+};
+pub use preview::{
+    CURRENT_PREVIEW_SCHEMA_VERSION, CameraPreviewFrame, DataFidelity, PreviewBudget,
+    PreviewImageEncoding, PreviewRequest, PreviewSnapshot, PreviewValidationError, SignalBucket,
+    SignalFidelity, SignalOverview, TimeRange, TimedPosition2, merge_signal_buckets,
 };
 pub use telemetry::{TelemetryFrame, TelemetryState};
 pub use time::{ArrivalTime, CameraId, MeasurementTime};

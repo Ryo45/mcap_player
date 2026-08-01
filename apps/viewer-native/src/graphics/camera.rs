@@ -1,8 +1,8 @@
 use super::Graphics;
-use crate::presentation::CameraPresentationUpdate;
+use crate::presentation::CameraBasePresentationUpdate;
 use std::{fmt, time::Instant};
-use viewer_core::{BevPathFrame, CameraId, CameraState, TransformState};
-use viewer_renderer::{ImageDecodeError, decode_camera_frame, prepare_camera_frame};
+use viewer_core::{ArrivalTime, CameraId, CameraState};
+use viewer_renderer::{ImageDecodeError, decode_camera_frame};
 
 #[derive(Debug)]
 pub(crate) struct CameraUploadError {
@@ -14,7 +14,7 @@ impl fmt::Display for CameraUploadError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             formatter,
-            "camera {} upload preparation failed: {}",
+            "camera {} base image upload failed: {}",
             self.camera_id.0, self.source
         )
     }
@@ -30,12 +30,10 @@ impl Graphics {
     pub(crate) fn upload_latest(
         &mut self,
         camera: &CameraState,
-        camera_path: Option<&BevPathFrame>,
-        transforms: &TransformState,
-        updates: &mut Vec<CameraPresentationUpdate>,
+        updates: &mut Vec<CameraBasePresentationUpdate>,
     ) -> Result<(), CameraUploadError> {
         for (camera_id, frame) in camera.frames() {
-            if self.uploaded_arrivals.get(camera_id) == Some(&frame.arrival_time.0) {
+            if !self.camera_base_images.needs_update(frame) {
                 continue;
             }
             let decode_started = Instant::now();
@@ -45,10 +43,8 @@ impl Graphics {
             })?;
             let decode_elapsed = decode_started.elapsed();
             let upload_started = Instant::now();
-            let prepared =
-                prepare_camera_frame(frame, image, camera_path, transforms, &self.calibrations);
             let slot = self.camera_slots.entry(*camera_id).or_default();
-            let recreated = slot.update(&self.device, &self.queue, &prepared.image);
+            let recreated = slot.update(&self.device, &self.queue, &image);
             if recreated {
                 let view = slot.view().expect("updated slot has a view");
                 let texture_id = self
@@ -68,11 +64,9 @@ impl Graphics {
                     *texture_id,
                 );
             }
-            self.uploaded_arrivals
-                .insert(*camera_id, prepared.arrival_time.0);
-            updates.push(CameraPresentationUpdate {
+            self.camera_base_images.mark_updated(frame);
+            updates.push(CameraBasePresentationUpdate {
                 camera_id: *camera_id,
-                overlay_status: prepared.overlay_status,
                 jpeg_decode_time: decode_elapsed,
                 upload_time: upload_started.elapsed(),
             });
@@ -81,15 +75,28 @@ impl Graphics {
     }
 
     pub(crate) fn hide_camera(&mut self) {
-        self.uploaded_arrivals.clear();
+        self.camera_base_images.clear();
+    }
+
+    pub(crate) fn camera_base_images(
+        &self,
+    ) -> impl Iterator<Item = (CameraId, ArrivalTime, (u32, u32))> + '_ {
+        self.camera_slots.iter().filter_map(|(camera_id, slot)| {
+            Some((
+                *camera_id,
+                self.camera_base_images.arrival(*camera_id)?,
+                slot.size()?,
+            ))
+        })
     }
 
     pub(super) fn camera_texture(
         &self,
         camera_id: CameraId,
-    ) -> Option<(egui::TextureId, (u32, u32))> {
+    ) -> Option<(egui::TextureId, ArrivalTime, (u32, u32))> {
         Some((
             *self.camera_texture_ids.get(&camera_id)?,
+            self.camera_base_images.arrival(camera_id)?,
             self.camera_slots.get(&camera_id)?.size()?,
         ))
     }

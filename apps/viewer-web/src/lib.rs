@@ -1,12 +1,25 @@
+#[cfg(any(test, target_arch = "wasm32"))]
+mod range_spike;
+
+#[cfg(target_arch = "wasm32")]
+mod range_spike_browser;
+
 #[cfg(target_arch = "wasm32")]
 mod browser {
     use js_sys::{Date, Uint8Array};
-    use std::{cell::RefCell, collections::BTreeMap, time::Duration};
+    use std::{
+        cell::RefCell,
+        collections::{BTreeMap, BTreeSet},
+        time::Duration,
+    };
     use viewer_core::{
         ArrivalTime, BevFrameBuilder, CameraCalibrationSet, CameraId, DiagnosticsPresentation,
-        McapPlayback, OverlayStatus, PlaybackSpeed, PresentationMetrics, ViewerPresentation,
+        McapPlayback, PlaybackSpeed, PresentationMetrics, ViewerPresentation,
     };
-    use viewer_renderer::{DecodedImage, decode_camera_frame, prepare_camera_frame};
+    use viewer_renderer::{
+        CameraBaseImageTracker, CameraOverlaySnapshot, CameraOverlayState, DecodedImage,
+        decode_camera_frame,
+    };
     use wasm_bindgen::{Clamped, JsCast, closure::Closure, prelude::*};
     use wasm_bindgen_futures::{JsFuture, spawn_local};
     use web_sys::{
@@ -19,11 +32,12 @@ mod browser {
     struct WebViewState {
         last_drawn: Option<i64>,
         last_drawn_camera: Option<CameraId>,
-        camera_arrivals: BTreeMap<CameraId, i64>,
+        camera_base_images: CameraBaseImageTracker,
+        camera_base_canvases: BTreeMap<CameraId, HtmlCanvasElement>,
+        camera_overlays: CameraOverlayState,
         last_bev_revision: Option<u64>,
         last_bev_size: (u32, u32),
         camera_topics: Vec<(CameraId, String)>,
-        overlay_status: BTreeMap<CameraId, OverlayStatus>,
         presentation_metrics: PresentationMetrics,
     }
 
@@ -65,8 +79,7 @@ mod browser {
         status.set_class_name(if error { "error" } else { "" });
     }
 
-    fn draw_image(canvas_id: &str, image: &DecodedImage) {
-        let canvas: HtmlCanvasElement = element(canvas_id);
+    fn draw_base_image(canvas: &HtmlCanvasElement, image: &DecodedImage) {
         if canvas.width() != image.width {
             canvas.set_width(image.width);
         }
@@ -90,14 +103,17 @@ mod browser {
             .expect("draw camera");
     }
 
-    fn copy_canvas(source_id: &str, destination_id: &str) {
-        let source: HtmlCanvasElement = element(source_id);
+    fn compose_camera_canvas(
+        destination_id: &str,
+        base: &HtmlCanvasElement,
+        overlay: Option<&CameraOverlaySnapshot>,
+    ) {
         let destination: HtmlCanvasElement = element(destination_id);
-        if destination.width() != source.width() {
-            destination.set_width(source.width());
+        if destination.width() != base.width() {
+            destination.set_width(base.width());
         }
-        if destination.height() != source.height() {
-            destination.set_height(source.height());
+        if destination.height() != base.height() {
+            destination.set_height(base.height());
         }
         let context: CanvasRenderingContext2d = destination
             .get_context("2d")
@@ -106,8 +122,29 @@ mod browser {
             .dyn_into()
             .expect("canvas 2d");
         context
-            .draw_image_with_html_canvas_element(&source, 0.0, 0.0)
-            .expect("copy camera canvas");
+            .draw_image_with_html_canvas_element(base, 0.0, 0.0)
+            .expect("draw camera base image");
+        if let Some(overlay) = overlay
+            && overlay.image_size == (base.width(), base.height())
+        {
+            draw_camera_overlay(&context, overlay);
+        }
+    }
+
+    fn draw_camera_overlay(context: &CanvasRenderingContext2d, overlay: &CameraOverlaySnapshot) {
+        for (color, width) in [("rgba(0,0,0,0.7)", 5.0), ("#2deba5", 2.0)] {
+            context.set_stroke_style_str(color);
+            context.set_line_width(width);
+            for pair in overlay.projected_path.windows(2) {
+                let [Some(start), Some(end)] = pair else {
+                    continue;
+                };
+                context.begin_path();
+                context.move_to(f64::from(start[0]), f64::from(start[1]));
+                context.line_to(f64::from(end[0]), f64::from(end[1]));
+                context.stroke();
+            }
+        }
     }
 
     fn clear_canvas(canvas_id: &str) {
@@ -336,11 +373,102 @@ mod browser {
                 view.last_drawn_camera = selected_camera;
             }
             let state = session.state();
+            let mut camera_visual_changes = BTreeSet::new();
+            for (camera_id, frame) in state.camera.frames() {
+                if view.camera_base_images.needs_update(frame) {
+                    let decode_started = Date::now();
+                    match decode_camera_frame(frame) {
+                        Ok(image) => {
+                            let decode_elapsed = duration_since(decode_started);
+                            let upload_started = Date::now();
+                            let base_canvas = view
+                                .camera_base_canvases
+                                .entry(*camera_id)
+                                .or_insert_with(|| {
+                                    document()
+                                        .create_element("canvas")
+                                        .expect("camera base canvas")
+                                        .dyn_into()
+                                        .expect("camera base canvas element")
+                                })
+                                .clone();
+                            draw_base_image(&base_canvas, &image);
+                            view.camera_base_images.mark_updated(frame);
+                            view.presentation_metrics.record_camera(
+                                *camera_id,
+                                decode_elapsed,
+                                duration_since(upload_started),
+                            );
+                            camera_visual_changes.insert(*camera_id);
+                        }
+                        Err(error) => {
+                            set_status(&error.to_string(), true);
+                            continue;
+                        }
+                    }
+                }
+                if view.camera_base_images.arrival(*camera_id) == Some(frame.arrival_time) {
+                    let Some(base_canvas) = view.camera_base_canvases.get(camera_id) else {
+                        continue;
+                    };
+                    if view.camera_overlays.update(
+                        frame,
+                        (base_canvas.width(), base_canvas.height()),
+                        state.bev.latest(),
+                        state.bev.revision(),
+                        &state.transforms,
+                        state.transforms.revision(),
+                        calibrations,
+                    ) {
+                        camera_visual_changes.insert(*camera_id);
+                    }
+                }
+            }
+            for camera_id in &camera_visual_changes {
+                let Some(base_canvas) = view.camera_base_canvases.get(camera_id) else {
+                    continue;
+                };
+                compose_camera_canvas(
+                    &format!("camera-thumb-{}", camera_id.0),
+                    base_canvas,
+                    view.camera_overlays.snapshot(*camera_id),
+                );
+            }
+
+            let selected_has_base = selected_camera.is_some_and(|camera_id| {
+                state.camera.latest_for(camera_id).is_some_and(|frame| {
+                    view.camera_base_images.arrival(camera_id) == Some(frame.arrival_time)
+                })
+            });
+            if !selected_has_base && view.last_drawn.is_some() {
+                clear_canvas("camera");
+                view.last_drawn = None;
+            }
+            if let Some(camera_id) = selected_camera
+                && let Some(frame) = state.camera.latest_for(camera_id)
+                && selected_has_base
+                && (view.last_drawn != Some(frame.arrival_time.0)
+                    || camera_visual_changes.contains(&camera_id))
+                && let Some(base_canvas) = view.camera_base_canvases.get(&camera_id)
+            {
+                compose_camera_canvas(
+                    "camera",
+                    base_canvas,
+                    view.camera_overlays.snapshot(camera_id),
+                );
+                view.last_drawn = Some(frame.arrival_time.0);
+            }
+
+            let overlay_status = view
+                .camera_overlays
+                .snapshots()
+                .map(|snapshot| (snapshot.camera_id, snapshot.status.clone()))
+                .collect::<BTreeMap<_, _>>();
             let presentation = ViewerPresentation::from_domain(
                 state,
                 camera_topics,
                 selected_camera,
-                &view.overlay_status,
+                &overlay_status,
                 DiagnosticsPresentation {
                     source: "Browser file".to_owned(),
                     primary_topic: TOPIC.to_owned(),
@@ -422,13 +550,6 @@ mod browser {
                 view.last_bev_size = bev_size;
             }
             let has_frames = state.camera.frames().next().is_some();
-            let selected_has_frame = selected_camera
-                .and_then(|camera_id| state.camera.latest_for(camera_id))
-                .is_some();
-                if !selected_has_frame && view.last_drawn.is_some() {
-                clear_canvas("camera");
-                view.last_drawn = None;
-            }
             if !has_frames {
                 for (camera_id, _) in camera_topics {
                     clear_canvas(&format!("camera-thumb-{}", camera_id.0));
@@ -437,51 +558,6 @@ mod browser {
                     .record_render(duration_since(tick_started));
                 view.presentation_metrics.advance(elapsed);
                 return;
-            }
-            for (camera_id, frame) in state.camera.frames() {
-                let thumbnail_id = format!("camera-thumb-{}", camera_id.0);
-                let thumbnail_changed =
-                    view.camera_arrivals.get(camera_id) != Some(&frame.arrival_time.0);
-                let focus_changed = Some(*camera_id) == selected_camera
-                    && view.last_drawn != Some(frame.arrival_time.0);
-                if !thumbnail_changed && !focus_changed {
-                    continue;
-                }
-                let decode_started = Date::now();
-                match decode_camera_frame(frame) {
-                    Ok(image) => {
-                        let decode_elapsed = duration_since(decode_started);
-                        let upload_started = Date::now();
-                        let prepared = prepare_camera_frame(
-                            frame,
-                            image,
-                            state.bev.latest(),
-                            &state.transforms,
-                            calibrations,
-                        );
-                        view.overlay_status
-                            .insert(*camera_id, prepared.overlay_status);
-                        if thumbnail_changed {
-                            draw_image(&thumbnail_id, &prepared.image);
-                            view.camera_arrivals
-                                .insert(*camera_id, prepared.arrival_time.0);
-                        }
-                        if focus_changed {
-                            if thumbnail_changed {
-                                copy_canvas(&thumbnail_id, "camera");
-                            } else {
-                                draw_image("camera", &prepared.image);
-                            }
-                            view.last_drawn = Some(prepared.arrival_time.0);
-                        }
-                        view.presentation_metrics.record_camera(
-                            *camera_id,
-                            decode_elapsed,
-                            duration_since(upload_started),
-                        );
-                    }
-                    Err(error) => set_status(&error.to_string(), true),
-                }
             }
             view.presentation_metrics
                 .record_render(duration_since(tick_started));
@@ -603,6 +679,7 @@ mod browser {
     pub fn start() -> Result<(), JsValue> {
         install_file_input();
         install_controls();
+        crate::range_spike_browser::install();
         let size = bev_canvas_size();
         draw_bev(&[], size);
         let callback = Closure::<dyn FnMut()>::new(tick);

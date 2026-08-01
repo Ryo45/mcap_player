@@ -9,6 +9,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 bev-renderer = { path = "../../crates/bev-renderer" }
+mcap.workspace = true
 viewer-core = { path = "../../crates/viewer-core" }
 viewer-renderer = { path = "../../crates/viewer-renderer" }
 wasm-bindgen.workspace = true

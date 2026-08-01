@@ -1,8 +1,9 @@
 # Panel architecture prerequisites
 
-This document records the ownership boundaries that precede a future Native panel
-architecture. The current fixed layout remains intentional; there is no panel
-registry or serialized layout yet.
+This document records the ownership boundaries established before the Native panel
+architecture. The next implementation step has now replaced the fixed central
+composer with a bundled, serialized layout and concrete Native panel runtimes; see
+[`native_panel_layout.md`](native_panel_layout.md).
 
 ## Data flow
 
@@ -58,15 +59,12 @@ App
 ├─ PresentationState
 │  └─ CPU-side presentation builders, metrics, and overlay status
 └─ WorkspaceState
-   ├─ CameraViewState
-   │  └─ focused camera
-   ├─ PlotViewState
-   │  ├─ Overview / Follow viewport
-   │  └─ cached egui plot points
-   ├─ SceneViewState
-   │  └─ scan accumulation setting
-   └─ ViewerInteractionState
-      └─ optional preview time
+   ├─ LayoutDocument
+   ├─ PanelRuntimeStore
+   │  ├─ CameraPanel → focused camera
+   │  ├─ PlotPanel → Overview / Follow and plot cache
+   │  └─ ScenePanel → scan accumulation
+   └─ ViewerInteractionState → optional preview time
 ```
 
 `Graphics` owns backend and GPU resources only:
@@ -95,15 +93,14 @@ These inputs and outputs are the prototypes for future panel interfaces. They do
 not receive `PlaybackSession`, `DomainState`, MCAP readers, worker channels, or the
 whole `Graphics` object.
 
-## Assumptions for panel introduction
+## Assumptions retained by the first panel implementation
 
 - Camera panels may have multiple instances.
 - Camera GPU textures remain shared by `CameraId`.
 - The first panel implementation allows at most one BEV panel.
 - The first panel implementation allows at most one Scene panel.
-- Plot state can move from `WorkspaceState::plot` into a Plot panel runtime.
-- Other view states can likewise move into their corresponding panel runtimes.
+- Plot and other view states now live in their corresponding panel runtimes.
 - The fixed view input/output types should guide the initial panel interface.
 - Push-domain data and background query data must not be merged into one manager.
-- `LayoutDocument`, `PanelRegistry`, split/tabs, persistence, and generic query
-  management are deliberately deferred.
+- Split editing, tabs, user persistence, and generic query management remain
+  deliberately deferred.

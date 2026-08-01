@@ -21,9 +21,12 @@ memmap2.workspace = true
 mcap = { workspace = true, features = ["lz4", "zstd"] }
 pollster.workspace = true
 scene-renderer = { path = "../../crates/scene-renderer" }
+serde.workspace = true
+serde_json.workspace = true
 wgpu.workspace = true
 winit.workspace = true
 viewer-core = { path = "../../crates/viewer-core" }
+viewer-layout = { path = "../../crates/viewer-layout" }
 viewer-renderer = { path = "../../crates/viewer-renderer" }
 viewer-ui = { path = "../../crates/viewer-ui" }
 
