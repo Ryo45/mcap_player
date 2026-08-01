@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/viewer-layout",
     "crates/viewer-core",
     "crates/viewer-renderer",
     "crates/bev-renderer",
@@ -11,6 +12,7 @@ members = [
     "tools/ros-fixture",
 ]
 default-members = [
+    "crates/viewer-layout",
     "crates/viewer-core",
     "crates/viewer-renderer",
     "crates/bev-renderer",

@@ -1,4 +1,3 @@
-use crate::interaction::ViewerAction;
 use scene_renderer::SceneCameraMode;
 use viewer_core::SceneDiagnostics;
 
@@ -15,17 +14,17 @@ pub(crate) struct SceneViewInput<'a> {
 }
 
 pub(crate) struct SceneViewOutput {
-    pub(crate) actions: Vec<ViewerAction>,
     pub(crate) logical_size: egui::Vec2,
     pub(crate) wheel_delta: f32,
     pub(crate) orbit_delta: egui::Vec2,
     pub(crate) reset_camera: bool,
     pub(crate) camera_mode: SceneCameraMode,
+    pub(crate) selected_accumulation: Option<bool>,
 }
 
 pub(crate) fn show_scene_view(ui: &mut egui::Ui, input: SceneViewInput<'_>) -> SceneViewOutput {
-    let mut actions = Vec::new();
     let mut camera_mode = input.camera_mode;
+    let mut accumulation_change = None;
     let tf_status = if let Some(error) = &input.diagnostics.current_tf_error {
         format!(
             "TF missing {} → {} · misses {}",
@@ -72,7 +71,7 @@ pub(crate) fn show_scene_view(ui: &mut egui::Ui, input: SceneViewInput<'_>) -> S
             .checkbox(&mut selected_accumulation, "Accumulate scans")
             .changed()
         {
-            actions.push(ViewerAction::SetAccumulatePoints(selected_accumulation));
+            accumulation_change = Some(selected_accumulation);
         }
         if input.accumulate_points {
             ui.label(format!("visible {}", input.visible_scan_points));
@@ -105,11 +104,11 @@ pub(crate) fn show_scene_view(ui: &mut egui::Ui, input: SceneViewInput<'_>) -> S
     };
 
     SceneViewOutput {
-        actions,
         logical_size,
         wheel_delta,
         orbit_delta,
         reset_camera: response.double_clicked(),
         camera_mode,
+        selected_accumulation: accumulation_change,
     }
 }

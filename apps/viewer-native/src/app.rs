@@ -5,7 +5,7 @@ use crate::{
     plot_loader::PlotLoader,
     presentation::PresentationState,
     session::PlaybackSession,
-    workspace::WorkspaceState,
+    workspace::{NativeWorkspace, WorkspaceEffect},
 };
 use std::{
     fs,
@@ -25,7 +25,7 @@ pub(crate) struct App {
     pub(crate) args: Args,
     pub(crate) window: Option<Arc<Window>>,
     pub(crate) session: Option<PlaybackSession>,
-    pub(crate) workspace: WorkspaceState,
+    pub(crate) workspace: NativeWorkspace,
     pub(crate) plot_loader: PlotLoader,
     pub(crate) presentation_state: PresentationState,
     pub(crate) graphics: Option<Graphics>,
@@ -43,7 +43,7 @@ impl App {
                     .start;
                 self.workspace
                     .reset_for_source(session.default_focused_camera());
-                session.set_focused_camera(self.workspace.camera.focused_camera);
+                session.set_focused_camera(self.workspace.focused_camera());
                 self.plot_loader.clear();
                 if let Err(error) =
                     self.plot_loader
@@ -81,12 +81,7 @@ impl App {
         let mut camera_updates = Vec::new();
         let upload_result = {
             let state = session.state();
-            graphics.upload_latest(
-                &state.camera,
-                state.bev.latest(),
-                &state.transforms,
-                &mut camera_updates,
-            )
+            graphics.upload_latest(&state.camera, &mut camera_updates)
         };
         if let Err(error) = upload_result {
             let camera_id = error.camera_id;
@@ -95,6 +90,9 @@ impl App {
         }
         self.presentation_state
             .record_camera_updates(camera_updates);
+        let camera_base_images = graphics.camera_base_images().collect::<Vec<_>>();
+        self.presentation_state
+            .update_camera_overlays(session.state(), &camera_base_images);
 
         let diagnostics = session.diagnostics();
         let playback = session.playback_view();
@@ -102,15 +100,18 @@ impl App {
             let presentation = self.presentation_state.build(
                 session.state(),
                 diagnostics,
-                &self.workspace.camera,
-                &self.workspace.scene,
-                self.error.clone(),
+                self.workspace.focused_camera(),
+                self.workspace.accumulate_points(),
+                self.error
+                    .clone()
+                    .or_else(|| self.workspace.startup_warning()),
             );
             let render_started = Instant::now();
             let result = graphics.render(
                 window,
                 RenderInput {
                     presentation: &presentation.viewer,
+                    camera_overlays: presentation.camera_overlays,
                     playback,
                     speed_signal: self.plot_loader.signal(),
                     plot_loading: self.plot_loader.is_loading(),
@@ -145,21 +146,22 @@ impl App {
 
     fn apply_actions(
         session: &mut PlaybackSession,
-        workspace: &mut WorkspaceState,
+        workspace: &mut NativeWorkspace,
         error: &mut Option<String>,
         actions: Vec<ViewerAction>,
     ) -> bool {
         let mut seeked = false;
         for action in actions {
-            let focused_camera_changed = matches!(action, ViewerAction::SetFocusedCamera(_));
-            if let Some(command) = workspace.apply_action(action) {
-                match session.apply_playback_command(command) {
+            match workspace.apply_action(action) {
+                WorkspaceEffect::Playback(command) => match session.apply_playback_command(command)
+                {
                     Ok(command_seeked) => seeked |= command_seeked,
                     Err(command_error) => *error = Some(command_error.to_string()),
+                },
+                WorkspaceEffect::FocusedCameraChanged(camera_id) => {
+                    session.set_focused_camera(camera_id);
                 }
-            }
-            if focused_camera_changed {
-                session.set_focused_camera(workspace.camera.focused_camera);
+                WorkspaceEffect::None => {}
             }
         }
         seeked
@@ -201,7 +203,9 @@ impl ApplicationHandler for App {
                 return;
             }
         };
-        match pollster::block_on(Graphics::new(window.clone(), calibrations)) {
+        self.presentation_state
+            .set_camera_calibrations(calibrations);
+        match pollster::block_on(Graphics::new(window.clone())) {
             Ok(graphics) => self.graphics = Some(graphics),
             Err(error) => {
                 self.error = Some(error.to_string());
@@ -221,7 +225,7 @@ impl ApplicationHandler for App {
                 self.plot_loader.clear();
                 self.workspace
                     .reset_for_source(session.default_focused_camera());
-                session.set_focused_camera(self.workspace.camera.focused_camera);
+                session.set_focused_camera(self.workspace.focused_camera());
                 self.session = Some(session);
             }
         }
@@ -281,7 +285,7 @@ mod tests {
     #[test]
     fn playback_action_is_applied_to_the_session() {
         let mut session = session();
-        let mut workspace = WorkspaceState::default();
+        let mut workspace = NativeWorkspace::default();
         let mut error = None;
         assert!(session.playback_view().unwrap().playing);
         let seeked = App::apply_actions(
@@ -300,7 +304,7 @@ mod tests {
         let mut session = session();
         let cursor = session.playback_view().unwrap().cursor;
         let preview = ArrivalTime(cursor.0 + 123);
-        let mut workspace = WorkspaceState::default();
+        let mut workspace = NativeWorkspace::default();
         let mut error = None;
         let seeked = App::apply_actions(
             &mut session,
@@ -311,6 +315,24 @@ mod tests {
         assert!(!seeked);
         assert_eq!(workspace.interaction.preview_time, Some(preview));
         assert_eq!(session.playback_view().unwrap().cursor, cursor);
+        assert!(error.is_none());
+    }
+
+    #[test]
+    fn seek_action_still_reaches_the_playback_session() {
+        let mut session = session();
+        let playback = session.playback_view().unwrap();
+        let target = ArrivalTime((playback.start.0 + playback.end.0) / 2);
+        let mut workspace = NativeWorkspace::default();
+        let mut error = None;
+        let seeked = App::apply_actions(
+            &mut session,
+            &mut workspace,
+            &mut error,
+            vec![ViewerAction::Playback(PlaybackCommand::Seek(target))],
+        );
+        assert!(seeked);
+        assert_eq!(session.playback_view().unwrap().cursor, target);
         assert!(error.is_none());
     }
 }

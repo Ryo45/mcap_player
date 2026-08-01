@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "root": {
+    "kind": "split",
+    "direction": "column",
+    "children": [
+      {
+        "weight": 0.36,
+        "node": {
+          "kind": "split",
+          "direction": "row",
+          "children": [
+            {
+              "weight": 0.5,
+              "node": {
+                "kind": "panel",
+                "id": "camera-main",
+                "panelType": "camera",
+                "configVersion": 1,
+                "title": "Camera",
+                "config": {
+                  "fit": "contain",
+                  "showThumbnails": true
+                }
+              }
+            },
+            {
+              "weight": 0.5,
+              "node": {
+                "kind": "panel",
+                "id": "bev-main",
+                "panelType": "bev",
+                "configVersion": 1,
+                "title": "BEV",
+                "config": {}
+              }
+            }
+          ]
+        }
+      },
+      {
+        "weight": 0.22,
+        "node": {
+          "kind": "panel",
+          "id": "speed-main",
+          "panelType": "plot",
+          "configVersion": 1,
+          "title": "Speed",
+          "config": {
+            "signal": "vehicle-speed"
+          }
+        }
+      },
+      {
+        "weight": 0.42,
+        "node": {
+          "kind": "panel",
+          "id": "scene-main",
+          "panelType": "scene-3d",
+          "configVersion": 1,
+          "title": "3D View",
+          "config": {}
+        }
+      }
+    ]
+  }
+}

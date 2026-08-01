@@ -4,14 +4,10 @@ use bev_renderer::{BevFrame, BevRenderer};
 use egui_wgpu::{Renderer as EguiRenderer, RendererOptions, ScreenDescriptor};
 use scene_renderer::{SceneFrame, SceneRenderer};
 use std::{collections::BTreeMap, sync::Arc};
-use viewer_core::CameraCalibrationSet;
 use winit::window::Window;
 
 impl Graphics {
-    pub(crate) async fn new(
-        window: Arc<Window>,
-        calibrations: CameraCalibrationSet,
-    ) -> Result<Self> {
+    pub(crate) async fn new(window: Arc<Window>) -> Result<Self> {
         let size = window.inner_size();
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: wgpu::Backends::PRIMARY,
@@ -87,8 +83,7 @@ impl Graphics {
             egui_renderer,
             camera_slots: BTreeMap::new(),
             camera_texture_ids: BTreeMap::new(),
-            uploaded_arrivals: BTreeMap::new(),
-            calibrations,
+            camera_base_images: Default::default(),
             bev_renderer,
             bev_texture_id,
             scene_renderer,

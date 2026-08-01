@@ -3,6 +3,7 @@ mod args;
 mod graphics;
 mod interaction;
 mod live;
+mod panels;
 mod plot_loader;
 mod presentation;
 mod session;
@@ -15,7 +16,7 @@ use plot_loader::PlotLoader;
 use presentation::PresentationState;
 use std::time::Instant;
 use winit::event_loop::{ControlFlow, EventLoop};
-use workspace::WorkspaceState;
+use workspace::NativeWorkspace;
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -26,7 +27,7 @@ fn main() -> Result<()> {
         args,
         window: None,
         session: None,
-        workspace: WorkspaceState::default(),
+        workspace: NativeWorkspace::load_bundled_or_fallback(),
         plot_loader: PlotLoader::default(),
         presentation_state: PresentationState::default(),
         graphics: None,

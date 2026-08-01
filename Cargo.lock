@@ -3015,6 +3015,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "viewer-layout"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "viewer-native"
 version = "0.1.0"
 dependencies = [
@@ -3031,7 +3039,10 @@ dependencies = [
  "pollster",
  "rclrs",
  "scene-renderer",
+ "serde",
+ "serde_json",
  "viewer-core",
+ "viewer-layout",
  "viewer-renderer",
  "viewer-ui",
  "wgpu",
@@ -3061,6 +3072,7 @@ version = "0.1.0"
 dependencies = [
  "bev-renderer",
  "js-sys",
+ "mcap",
  "viewer-core",
  "viewer-renderer",
  "wasm-bindgen",

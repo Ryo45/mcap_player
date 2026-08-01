@@ -1,22 +1,23 @@
 mod camera;
+mod layout_host;
 mod surface;
 mod ui;
-mod views;
+pub(crate) mod views;
 
-use crate::{interaction::ViewerAction, workspace::WorkspaceState};
+use crate::{interaction::ViewerAction, workspace::NativeWorkspace};
 use bev_renderer::{BevFrame, BevRenderer};
 use egui_wgpu::Renderer as EguiRenderer;
 use scene_renderer::{SceneCameraMode, SceneFrame, SceneRenderer};
 use std::collections::BTreeMap;
 use viewer_core::{
-    BevSnapshot, CameraCalibrationSet, CameraId, LoadedSignal, PlaybackView, SceneSnapshot,
-    ViewerPresentation,
+    BevSnapshot, CameraId, LoadedSignal, PlaybackView, SceneSnapshot, ViewerPresentation,
 };
-use viewer_renderer::CameraTextureSlot;
+use viewer_renderer::{CameraBaseImageTracker, CameraTextureSlot};
 use winit::window::Window;
 
 pub(crate) struct RenderInput<'a> {
     pub(crate) presentation: &'a ViewerPresentation,
+    pub(crate) camera_overlays: &'a viewer_renderer::CameraOverlayState,
     pub(crate) playback: Option<PlaybackView>,
     pub(crate) speed_signal: Option<&'a LoadedSignal>,
     pub(crate) plot_loading: bool,
@@ -35,8 +36,8 @@ pub(crate) struct RenderOutput {
 
 #[derive(Clone, Copy)]
 pub(crate) struct ViewRenderRequests {
-    pub(crate) bev_size: egui::Vec2,
-    pub(crate) scene: SceneRenderRequest,
+    pub(crate) bev_size: Option<egui::Vec2>,
+    pub(crate) scene: Option<SceneRenderRequest>,
 }
 
 #[derive(Clone, Copy)]
@@ -58,8 +59,7 @@ pub(crate) struct Graphics {
     egui_renderer: EguiRenderer,
     camera_slots: BTreeMap<CameraId, CameraTextureSlot>,
     camera_texture_ids: BTreeMap<CameraId, egui::TextureId>,
-    uploaded_arrivals: BTreeMap<CameraId, i64>,
-    calibrations: CameraCalibrationSet,
+    camera_base_images: CameraBaseImageTracker,
     bev_renderer: BevRenderer,
     bev_texture_id: egui::TextureId,
     scene_renderer: SceneRenderer,
@@ -71,27 +71,29 @@ impl Graphics {
         &mut self,
         window: &Window,
         input: RenderInput<'_>,
-        workspace: &mut WorkspaceState,
+        workspace: &mut NativeWorkspace,
     ) -> Result<RenderOutput, wgpu::SurfaceError> {
         let ui = self.build_ui(window, &input, workspace);
         let view_requests = ViewRenderRequests {
-            bev_size: ui.bev_size,
-            scene: SceneRenderRequest {
-                logical_size: ui.scene.logical_size,
-                wheel_delta: ui.scene.wheel_delta,
-                orbit_delta: ui.scene.orbit_delta,
-                reset_camera: ui.scene.reset_camera,
-                camera_mode: ui.scene.camera_mode,
-            },
+            bev_size: ui.render_requests.bev_size,
+            scene: ui.render_requests.scene.map(|scene| SceneRenderRequest {
+                logical_size: scene.logical_size,
+                wheel_delta: scene.wheel_delta,
+                orbit_delta: scene.orbit_delta,
+                reset_camera: scene.reset_camera,
+                camera_mode: scene.camera_mode,
+            }),
         };
-        self.apply_scene_request(view_requests.scene);
+        if let Some(scene) = view_requests.scene {
+            self.apply_scene_request(scene);
+        }
         let pixels_per_point = ui.egui.pixels_per_point;
-        self.sync_bev(view_requests.bev_size, input.bev, pixels_per_point);
-        self.sync_scene(
-            view_requests.scene.logical_size,
-            input.scene,
-            pixels_per_point,
-        );
+        if let Some(bev_size) = view_requests.bev_size {
+            self.sync_bev(bev_size, input.bev, pixels_per_point);
+        }
+        if let Some(scene) = view_requests.scene {
+            self.sync_scene(scene.logical_size, input.scene, pixels_per_point);
+        }
         self.paint_egui(window, ui.egui)?;
         Ok(RenderOutput {
             actions: ui.actions,
