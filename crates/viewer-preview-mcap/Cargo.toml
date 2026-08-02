@@ -1,0 +1,11 @@
+[package]
+name = "viewer-preview-mcap"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mcap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+viewer-core = { path = "../viewer-core" }

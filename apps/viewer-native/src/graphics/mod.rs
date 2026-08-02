@@ -10,7 +10,8 @@ use egui_wgpu::Renderer as EguiRenderer;
 use scene_renderer::{SceneCameraMode, SceneFrame, SceneRenderer};
 use std::collections::BTreeMap;
 use viewer_core::{
-    BevSnapshot, CameraId, LoadedSignal, PlaybackView, SceneSnapshot, ViewerPresentation,
+    BevSnapshot, Bookmark, CameraId, LoadedSignal, PlaybackView, PreviewSnapshot, SceneSnapshot,
+    SignalOverview, ViewerPresentation,
 };
 use viewer_renderer::{CameraBaseImageTracker, CameraTextureSlot};
 use winit::window::Window;
@@ -22,6 +23,9 @@ pub(crate) struct RenderInput<'a> {
     pub(crate) speed_signal: Option<&'a LoadedSignal>,
     pub(crate) plot_loading: bool,
     pub(crate) plot_error: Option<&'a str>,
+    pub(crate) preview: Option<&'a PreviewSnapshot>,
+    pub(crate) preview_speed: Option<&'a SignalOverview>,
+    pub(crate) bookmarks: &'a [Bookmark],
     pub(crate) bev: BevSnapshot<'a>,
     pub(crate) scene: &'a SceneSnapshot<'a>,
     pub(crate) static_transform_count: usize,
@@ -60,6 +64,9 @@ pub(crate) struct Graphics {
     camera_slots: BTreeMap<CameraId, CameraTextureSlot>,
     camera_texture_ids: BTreeMap<CameraId, egui::TextureId>,
     camera_base_images: CameraBaseImageTracker,
+    preview_camera_slots: BTreeMap<CameraId, CameraTextureSlot>,
+    preview_camera_texture_ids: BTreeMap<CameraId, egui::TextureId>,
+    preview_camera_keys: BTreeMap<CameraId, (viewer_core::ArrivalTime, u32, u32)>,
     bev_renderer: BevRenderer,
     bev_texture_id: egui::TextureId,
     scene_renderer: SceneRenderer,

@@ -1,11 +1,13 @@
 mod app;
 mod args;
+mod bookmarks;
 mod graphics;
 mod interaction;
 mod live;
 mod panels;
 mod plot_loader;
 mod presentation;
+mod preview;
 mod session;
 mod workspace;
 
@@ -14,6 +16,7 @@ use app::App;
 use args::Args;
 use plot_loader::PlotLoader;
 use presentation::PresentationState;
+use preview::PreviewCoordinator;
 use std::time::Instant;
 use winit::event_loop::{ControlFlow, EventLoop};
 use workspace::NativeWorkspace;
@@ -29,6 +32,8 @@ fn main() -> Result<()> {
         session: None,
         workspace: NativeWorkspace::load_bundled_or_fallback(),
         plot_loader: PlotLoader::default(),
+        preview: PreviewCoordinator::default(),
+        bookmarks: bookmarks::BookmarkState::default(),
         presentation_state: PresentationState::default(),
         graphics: None,
         last_frame: Instant::now(),

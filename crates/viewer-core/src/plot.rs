@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 const NANOS_PER_SECOND: f64 = 1_000_000_000.0;
 
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum SignalId {
     Speed,

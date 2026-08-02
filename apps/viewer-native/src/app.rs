@@ -1,9 +1,11 @@
 use crate::{
     args::{Args, SourceMode},
+    bookmarks::BookmarkState,
     graphics::{Graphics, RenderInput},
     interaction::ViewerAction,
     plot_loader::PlotLoader,
     presentation::PresentationState,
+    preview::{PreviewCoordinator, fingerprint_source},
     session::PlaybackSession,
     workspace::{NativeWorkspace, WorkspaceEffect},
 };
@@ -27,6 +29,8 @@ pub(crate) struct App {
     pub(crate) session: Option<PlaybackSession>,
     pub(crate) workspace: NativeWorkspace,
     pub(crate) plot_loader: PlotLoader,
+    pub(crate) preview: PreviewCoordinator,
+    pub(crate) bookmarks: BookmarkState,
     pub(crate) presentation_state: PresentationState,
     pub(crate) graphics: Option<Graphics>,
     pub(crate) last_frame: Instant,
@@ -56,9 +60,21 @@ impl App {
                 if self.plot_loader.error().is_none() {
                     self.error = None;
                 }
+                match fingerprint_source(path) {
+                    Ok(fingerprint) => {
+                        self.preview.load_for_source(path, &fingerprint);
+                        self.bookmarks.load_for_source(path, &fingerprint);
+                    }
+                    Err(error) => {
+                        self.preview.clear();
+                        self.bookmarks = BookmarkState::default();
+                        self.error = Some(error);
+                    }
+                }
                 self.presentation_state.reset();
                 if let Some(graphics) = &mut self.graphics {
                     graphics.hide_camera();
+                    graphics.clear_preview();
                     graphics.clear_scene_history();
                 }
             }
@@ -78,6 +94,12 @@ impl App {
         let Some(graphics) = &mut self.graphics else {
             return Ok(());
         };
+        if self.workspace.interaction.preview_time.is_some()
+            && let Some(snapshot) = self.preview.snapshot()
+            && let Err(error) = graphics.upload_preview(snapshot.camera_frames())
+        {
+            self.error = Some(error.to_string());
+        }
         let mut camera_updates = Vec::new();
         let upload_result = {
             let state = session.state();
@@ -104,7 +126,9 @@ impl App {
                 self.workspace.accumulate_points(),
                 self.error
                     .clone()
-                    .or_else(|| self.workspace.startup_warning()),
+                    .or_else(|| self.workspace.startup_warning())
+                    .or_else(|| self.preview.warning().map(str::to_owned))
+                    .or_else(|| self.bookmarks.warning().map(str::to_owned)),
             );
             let render_started = Instant::now();
             let result = graphics.render(
@@ -116,6 +140,9 @@ impl App {
                     speed_signal: self.plot_loader.signal(),
                     plot_loading: self.plot_loader.is_loading(),
                     plot_error: self.plot_loader.error(),
+                    preview: self.preview.snapshot(),
+                    preview_speed: self.preview.speed_overview(),
+                    bookmarks: self.bookmarks.bookmarks(),
                     bev: presentation.bev,
                     scene: &presentation.scene,
                     static_transform_count: presentation.static_transform_count,
@@ -133,6 +160,7 @@ impl App {
         let seeked = Self::apply_actions(
             session,
             &mut self.workspace,
+            &mut self.preview,
             &mut self.error,
             output.actions,
         );
@@ -147,6 +175,7 @@ impl App {
     fn apply_actions(
         session: &mut PlaybackSession,
         workspace: &mut NativeWorkspace,
+        preview: &mut PreviewCoordinator,
         error: &mut Option<String>,
         actions: Vec<ViewerAction>,
     ) -> bool {
@@ -160,6 +189,32 @@ impl App {
                 },
                 WorkspaceEffect::FocusedCameraChanged(camera_id) => {
                     session.set_focused_camera(camera_id);
+                }
+                WorkspaceEffect::BeginPreview(time) => {
+                    let playing = session
+                        .playback_view()
+                        .is_some_and(|playback| playback.playing);
+                    if preview.drag.begin(playing)
+                        && let Err(command_error) =
+                            session.apply_playback_command(viewer_core::PlaybackCommand::Toggle)
+                    {
+                        *error = Some(command_error.to_string());
+                    }
+                    preview.update(Some(time));
+                }
+                WorkspaceEffect::UpdatePreview(time) => preview.update(time),
+                WorkspaceEffect::CommitPreview(time) => {
+                    match session.apply_playback_command(viewer_core::PlaybackCommand::Seek(time)) {
+                        Ok(command_seeked) => seeked |= command_seeked,
+                        Err(command_error) => *error = Some(command_error.to_string()),
+                    }
+                    if preview.drag.finish()
+                        && let Err(command_error) =
+                            session.apply_playback_command(viewer_core::PlaybackCommand::Toggle)
+                    {
+                        *error = Some(command_error.to_string());
+                    }
+                    preview.update(None);
                 }
                 WorkspaceEffect::None => {}
             }
@@ -223,6 +278,11 @@ impl ApplicationHandler for App {
             SourceMode::Ros { reliable } => {
                 let mut session = PlaybackSession::open_live(self.args.topic.clone(), reliable);
                 self.plot_loader.clear();
+                self.preview.clear();
+                self.bookmarks = BookmarkState::default();
+                if let Some(graphics) = &mut self.graphics {
+                    graphics.clear_preview();
+                }
                 self.workspace
                     .reset_for_source(session.default_focused_camera());
                 session.set_focused_camera(self.workspace.focused_camera());
@@ -286,11 +346,13 @@ mod tests {
     fn playback_action_is_applied_to_the_session() {
         let mut session = session();
         let mut workspace = NativeWorkspace::default();
+        let mut preview = PreviewCoordinator::default();
         let mut error = None;
         assert!(session.playback_view().unwrap().playing);
         let seeked = App::apply_actions(
             &mut session,
             &mut workspace,
+            &mut preview,
             &mut error,
             vec![ViewerAction::Playback(PlaybackCommand::Toggle)],
         );
@@ -305,10 +367,12 @@ mod tests {
         let cursor = session.playback_view().unwrap().cursor;
         let preview = ArrivalTime(cursor.0 + 123);
         let mut workspace = NativeWorkspace::default();
+        let mut coordinator = PreviewCoordinator::default();
         let mut error = None;
         let seeked = App::apply_actions(
             &mut session,
             &mut workspace,
+            &mut coordinator,
             &mut error,
             vec![ViewerAction::SetPreviewTime(Some(preview))],
         );
@@ -324,15 +388,57 @@ mod tests {
         let playback = session.playback_view().unwrap();
         let target = ArrivalTime((playback.start.0 + playback.end.0) / 2);
         let mut workspace = NativeWorkspace::default();
+        let mut preview = PreviewCoordinator::default();
         let mut error = None;
         let seeked = App::apply_actions(
             &mut session,
             &mut workspace,
+            &mut preview,
             &mut error,
             vec![ViewerAction::Playback(PlaybackCommand::Seek(target))],
         );
         assert!(seeked);
         assert_eq!(session.playback_view().unwrap().cursor, target);
+        assert!(error.is_none());
+    }
+
+    #[test]
+    fn preview_drag_pauses_without_seek_and_release_seeks_once_then_resumes() {
+        let mut session = session();
+        let playback = session.playback_view().unwrap();
+        let original = playback.cursor;
+        let first = ArrivalTime((playback.start.0 * 2 + playback.end.0) / 3);
+        let final_target = ArrivalTime((playback.start.0 + playback.end.0 * 2) / 3);
+        let mut workspace = NativeWorkspace::default();
+        let mut preview = PreviewCoordinator::default();
+        let mut error = None;
+
+        let seeked = App::apply_actions(
+            &mut session,
+            &mut workspace,
+            &mut preview,
+            &mut error,
+            vec![
+                ViewerAction::BeginPreview(first),
+                ViewerAction::SetPreviewTime(Some(final_target)),
+            ],
+        );
+        assert!(!seeked);
+        assert_eq!(session.playback_view().unwrap().cursor, original);
+        assert!(!session.playback_view().unwrap().playing);
+        assert_eq!(workspace.interaction.preview_time, Some(final_target));
+
+        let seeked = App::apply_actions(
+            &mut session,
+            &mut workspace,
+            &mut preview,
+            &mut error,
+            vec![ViewerAction::CommitPreview(final_target)],
+        );
+        assert!(seeked);
+        assert_eq!(session.playback_view().unwrap().cursor, final_target);
+        assert!(session.playback_view().unwrap().playing);
+        assert_eq!(workspace.interaction.preview_time, None);
         assert!(error.is_none());
     }
 }

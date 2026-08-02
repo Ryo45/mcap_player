@@ -2293,6 +2293,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8cf8e6a8aa66ce33f63993ffc4ea4271eb5b0530a9002db8455ea6050c77bfa"
 
 [[package]]
+name = "preview-builder"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "image",
+ "mcap",
+ "memmap2",
+ "viewer-core",
+ "viewer-preview-mcap",
+]
+
+[[package]]
 name = "proc-macro-crate"
 version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3043,10 +3055,21 @@ dependencies = [
  "serde_json",
  "viewer-core",
  "viewer-layout",
+ "viewer-preview-mcap",
  "viewer-renderer",
  "viewer-ui",
  "wgpu",
  "winit",
+]
+
+[[package]]
+name = "viewer-preview-mcap"
+version = "0.1.0"
+dependencies = [
+ "mcap",
+ "serde",
+ "serde_json",
+ "viewer-core",
 ]
 
 [[package]]
