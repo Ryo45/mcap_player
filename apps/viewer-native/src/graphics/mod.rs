@@ -34,8 +34,6 @@ pub(crate) struct RenderInput<'a> {
 
 pub(crate) struct RenderOutput {
     pub(crate) actions: Vec<ViewerAction>,
-    /// Concrete requests applied during this frame; retained as the future panel render boundary.
-    pub(crate) view_requests: ViewRenderRequests,
 }
 
 #[derive(Clone, Copy)]
@@ -104,7 +102,6 @@ impl Graphics {
         self.paint_egui(window, ui.egui)?;
         Ok(RenderOutput {
             actions: ui.actions,
-            view_requests,
         })
     }
 

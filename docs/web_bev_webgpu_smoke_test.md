@@ -29,6 +29,11 @@ Its asynchronous lifecycle is stored separately from the `WebApp` playback/view
 `RefCell`, so adapter/device completion cannot re-enter an active application
 state borrow.
 
+The browser frame coordinator keeps source advancement, Camera presentation,
+presentation-model construction, DOM diagnostics, and BEV presentation in separate
+functions. This leaves the current fixed-DOM walking skeleton intact while keeping
+future remote-source IO out of Camera and GPU presentation code.
+
 The shared playback performance timers use `web_time::Instant`; the standard
 library's `Instant::now()` panics at runtime on `wasm32-unknown-unknown` even
 though it compiles successfully.

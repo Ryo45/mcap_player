@@ -268,10 +268,6 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
         &self.state
     }
 
-    pub fn state_mut(&mut self) -> &mut DomainState {
-        &mut self.state
-    }
-
     pub fn counters(&self) -> PipelineCounters {
         let mut counters = self.pipelines.counters();
         counters.dropped = self.camera_dropped;
