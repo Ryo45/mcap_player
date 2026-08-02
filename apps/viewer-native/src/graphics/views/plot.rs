@@ -89,7 +89,7 @@ pub(crate) fn show_plot_view(
             PlotMode::Follow { .. } => "8 s history · 2 s lookahead",
         });
     });
-    show_scrub_timeline(ui, &input, origin, &mut output);
+    show_scrub_timeline(ui, &input, &mut output);
 
     let navigation_input = ui.input(|input| {
         input.smooth_scroll_delta.x != 0.0 || (input.zoom_delta_2d().x - 1.0).abs() > f32::EPSILON
@@ -232,12 +232,7 @@ pub(crate) fn show_plot_view(
     output
 }
 
-fn show_scrub_timeline(
-    ui: &mut egui::Ui,
-    input: &PlotViewInput<'_>,
-    origin: ArrivalTime,
-    output: &mut PlotViewOutput,
-) {
+fn show_scrub_timeline(ui: &mut egui::Ui, input: &PlotViewInput<'_>, output: &mut PlotViewOutput) {
     let desired = egui::vec2(ui.available_width(), 18.0);
     let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click_and_drag());
     let painter = ui.painter_at(rect);
@@ -312,5 +307,4 @@ fn show_scrub_timeline(
             .actions
             .push(ViewerAction::Playback(PlaybackCommand::Seek(target)));
     }
-    let _ = origin;
 }

@@ -112,14 +112,6 @@ impl PlaybackSession {
         }
     }
 
-    pub(crate) fn state_mut(&mut self) -> &mut DomainState {
-        match &mut self.source {
-            SessionSource::Mcap(playback) => playback.state_mut(),
-            #[cfg(feature = "ros2-live")]
-            SessionSource::Ros { state, .. } => state,
-        }
-    }
-
     fn counters(&self) -> PipelineCounters {
         match &self.source {
             SessionSource::Mcap(playback) => playback.counters(),

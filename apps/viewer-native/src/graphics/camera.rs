@@ -6,7 +6,7 @@ use viewer_renderer::{ImageDecodeError, decode_camera_frame, decode_jpeg};
 
 #[derive(Debug)]
 pub(crate) struct CameraUploadError {
-    pub(crate) camera_id: CameraId,
+    camera_id: CameraId,
     source: ImageDecodeError,
 }
 

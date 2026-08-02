@@ -1,6 +1,7 @@
 mod app;
 mod args;
 mod bookmarks;
+mod diagnostics;
 mod graphics;
 mod interaction;
 mod live;
@@ -14,6 +15,7 @@ mod workspace;
 use anyhow::Result;
 use app::App;
 use args::Args;
+use diagnostics::AppDiagnostics;
 use plot_loader::PlotLoader;
 use presentation::PresentationState;
 use preview::PreviewCoordinator;
@@ -37,7 +39,7 @@ fn main() -> Result<()> {
         presentation_state: PresentationState::default(),
         graphics: None,
         last_frame: Instant::now(),
-        error: None,
+        diagnostics: AppDiagnostics::default(),
     };
     event_loop.run_app(&mut app)?;
     Ok(())

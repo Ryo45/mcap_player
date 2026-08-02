@@ -1,6 +1,7 @@
 use crate::{
     args::{Args, SourceMode},
     bookmarks::BookmarkState,
+    diagnostics::AppDiagnostics,
     graphics::{Graphics, RenderInput},
     interaction::ViewerAction,
     plot_loader::PlotLoader,
@@ -34,13 +35,14 @@ pub(crate) struct App {
     pub(crate) presentation_state: PresentationState,
     pub(crate) graphics: Option<Graphics>,
     pub(crate) last_frame: Instant,
-    pub(crate) error: Option<String>,
+    pub(crate) diagnostics: AppDiagnostics,
 }
 
 impl App {
     fn load(&mut self, path: &Path) {
         match PlaybackSession::open(path, self.args.topic.clone()) {
             Ok(mut session) => {
+                self.diagnostics.reset_for_source();
                 let plot_origin = session
                     .playback_view()
                     .expect("MCAP session has a playback view")
@@ -53,13 +55,10 @@ impl App {
                     self.plot_loader
                         .start_speed_overview(path.to_owned(), plot_origin, 4_000)
                 {
-                    self.error = Some(error.to_string());
+                    log::warn!("Plot unavailable: {error}");
                 }
                 self.args.mcap = path.to_owned();
                 self.session = Some(session);
-                if self.plot_loader.error().is_none() {
-                    self.error = None;
-                }
                 match fingerprint_source(path) {
                     Ok(fingerprint) => {
                         self.preview.load_for_source(path, &fingerprint);
@@ -68,7 +67,9 @@ impl App {
                     Err(error) => {
                         self.preview.clear();
                         self.bookmarks = BookmarkState::default();
-                        self.error = Some(error);
+                        self.diagnostics.add_sidecar_warning(format!(
+                            "Preview and bookmarks unavailable: {error}"
+                        ));
                     }
                 }
                 self.presentation_state.reset();
@@ -78,7 +79,7 @@ impl App {
                     graphics.clear_scene_history();
                 }
             }
-            Err(error) => self.error = Some(error.to_string()),
+            Err(error) => self.diagnostics.set_playback_error(error.to_string()),
         }
     }
 
@@ -87,18 +88,19 @@ impl App {
             return Ok(());
         };
         if let Err(error) = session.tick(elapsed) {
-            self.error = Some(error.to_string());
+            self.diagnostics.set_playback_error(error.to_string());
         }
         self.plot_loader.poll();
 
         let Some(graphics) = &mut self.graphics else {
             return Ok(());
         };
+        let mut presentation_errors = Vec::new();
         if self.workspace.interaction.preview_time.is_some()
             && let Some(snapshot) = self.preview.snapshot()
             && let Err(error) = graphics.upload_preview(snapshot.camera_frames())
         {
-            self.error = Some(error.to_string());
+            presentation_errors.push(error.to_string());
         }
         let mut camera_updates = Vec::new();
         let upload_result = {
@@ -106,9 +108,11 @@ impl App {
             graphics.upload_latest(&state.camera, &mut camera_updates)
         };
         if let Err(error) = upload_result {
-            let camera_id = error.camera_id;
-            self.error = Some(error.to_string());
-            session.state_mut().camera.set_error_for(camera_id);
+            presentation_errors.push(error.to_string());
+        }
+        if !presentation_errors.is_empty() {
+            self.diagnostics
+                .set_presentation_error(presentation_errors.join("; "));
         }
         self.presentation_state
             .record_camera_updates(camera_updates);
@@ -118,17 +122,20 @@ impl App {
 
         let diagnostics = session.diagnostics();
         let playback = session.playback_view();
+        let workspace_warning = self.workspace.startup_warning();
+        let error = self.diagnostics.message(&[
+            workspace_warning.as_deref(),
+            self.plot_loader.error(),
+            self.preview.warning(),
+            self.bookmarks.warning(),
+        ]);
         let (render_result, render_elapsed) = {
             let presentation = self.presentation_state.build(
                 session.state(),
                 diagnostics,
                 self.workspace.focused_camera(),
                 self.workspace.accumulate_points(),
-                self.error
-                    .clone()
-                    .or_else(|| self.workspace.startup_warning())
-                    .or_else(|| self.preview.warning().map(str::to_owned))
-                    .or_else(|| self.bookmarks.warning().map(str::to_owned)),
+                error,
             );
             let render_started = Instant::now();
             let result = graphics.render(
@@ -156,12 +163,11 @@ impl App {
         self.presentation_state.advance_metrics(elapsed);
 
         let output = render_result?;
-        let _view_requests = output.view_requests;
         let seeked = Self::apply_actions(
             session,
             &mut self.workspace,
             &mut self.preview,
-            &mut self.error,
+            &mut self.diagnostics,
             output.actions,
         );
         if seeked {
@@ -176,7 +182,7 @@ impl App {
         session: &mut PlaybackSession,
         workspace: &mut NativeWorkspace,
         preview: &mut PreviewCoordinator,
-        error: &mut Option<String>,
+        diagnostics: &mut AppDiagnostics,
         actions: Vec<ViewerAction>,
     ) -> bool {
         let mut seeked = false;
@@ -185,7 +191,9 @@ impl App {
                 WorkspaceEffect::Playback(command) => match session.apply_playback_command(command)
                 {
                     Ok(command_seeked) => seeked |= command_seeked,
-                    Err(command_error) => *error = Some(command_error.to_string()),
+                    Err(command_error) => {
+                        diagnostics.set_playback_error(command_error.to_string());
+                    }
                 },
                 WorkspaceEffect::FocusedCameraChanged(camera_id) => {
                     session.set_focused_camera(camera_id);
@@ -198,7 +206,7 @@ impl App {
                         && let Err(command_error) =
                             session.apply_playback_command(viewer_core::PlaybackCommand::Toggle)
                     {
-                        *error = Some(command_error.to_string());
+                        diagnostics.set_playback_error(command_error.to_string());
                     }
                     preview.update(Some(time));
                 }
@@ -206,13 +214,15 @@ impl App {
                 WorkspaceEffect::CommitPreview(time) => {
                     match session.apply_playback_command(viewer_core::PlaybackCommand::Seek(time)) {
                         Ok(command_seeked) => seeked |= command_seeked,
-                        Err(command_error) => *error = Some(command_error.to_string()),
+                        Err(command_error) => {
+                            diagnostics.set_playback_error(command_error.to_string());
+                        }
                     }
                     if preview.drag.finish()
                         && let Err(command_error) =
                             session.apply_playback_command(viewer_core::PlaybackCommand::Toggle)
                     {
-                        *error = Some(command_error.to_string());
+                        diagnostics.set_playback_error(command_error.to_string());
                     }
                     preview.update(None);
                 }
@@ -234,7 +244,7 @@ impl ApplicationHandler for App {
         let window = match event_loop.create_window(attributes) {
             Ok(window) => Arc::new(window),
             Err(error) => {
-                self.error = Some(error.to_string());
+                self.diagnostics.set_presentation_error(error.to_string());
                 event_loop.exit();
                 return;
             }
@@ -242,7 +252,7 @@ impl ApplicationHandler for App {
         let calibration_json = match fs::read_to_string(&self.args.calibration) {
             Ok(json) => json,
             Err(error) => {
-                self.error = Some(format!(
+                self.diagnostics.set_presentation_error(format!(
                     "read camera calibration {}: {error}",
                     self.args.calibration.display()
                 ));
@@ -253,7 +263,7 @@ impl ApplicationHandler for App {
         let calibrations = match CameraCalibrationSet::from_json(&calibration_json) {
             Ok(calibrations) => calibrations,
             Err(error) => {
-                self.error = Some(error.to_string());
+                self.diagnostics.set_presentation_error(error.to_string());
                 event_loop.exit();
                 return;
             }
@@ -263,7 +273,7 @@ impl ApplicationHandler for App {
         match pollster::block_on(Graphics::new(window.clone())) {
             Ok(graphics) => self.graphics = Some(graphics),
             Err(error) => {
-                self.error = Some(error.to_string());
+                self.diagnostics.set_presentation_error(error.to_string());
                 event_loop.exit();
                 return;
             }
@@ -322,7 +332,7 @@ impl ApplicationHandler for App {
                         }
                     }
                     Err(wgpu::SurfaceError::OutOfMemory) => event_loop.exit(),
-                    Err(error) => self.error = Some(error.to_string()),
+                    Err(error) => self.diagnostics.set_presentation_error(error.to_string()),
                 }
                 window.request_redraw();
             }
@@ -347,18 +357,18 @@ mod tests {
         let mut session = session();
         let mut workspace = NativeWorkspace::default();
         let mut preview = PreviewCoordinator::default();
-        let mut error = None;
+        let mut diagnostics = AppDiagnostics::default();
         assert!(session.playback_view().unwrap().playing);
         let seeked = App::apply_actions(
             &mut session,
             &mut workspace,
             &mut preview,
-            &mut error,
+            &mut diagnostics,
             vec![ViewerAction::Playback(PlaybackCommand::Toggle)],
         );
         assert!(!seeked);
         assert!(!session.playback_view().unwrap().playing);
-        assert!(error.is_none());
+        assert!(diagnostics.message(&[]).is_none());
     }
 
     #[test]
@@ -368,18 +378,18 @@ mod tests {
         let preview = ArrivalTime(cursor.0 + 123);
         let mut workspace = NativeWorkspace::default();
         let mut coordinator = PreviewCoordinator::default();
-        let mut error = None;
+        let mut diagnostics = AppDiagnostics::default();
         let seeked = App::apply_actions(
             &mut session,
             &mut workspace,
             &mut coordinator,
-            &mut error,
+            &mut diagnostics,
             vec![ViewerAction::SetPreviewTime(Some(preview))],
         );
         assert!(!seeked);
         assert_eq!(workspace.interaction.preview_time, Some(preview));
         assert_eq!(session.playback_view().unwrap().cursor, cursor);
-        assert!(error.is_none());
+        assert!(diagnostics.message(&[]).is_none());
     }
 
     #[test]
@@ -389,17 +399,17 @@ mod tests {
         let target = ArrivalTime((playback.start.0 + playback.end.0) / 2);
         let mut workspace = NativeWorkspace::default();
         let mut preview = PreviewCoordinator::default();
-        let mut error = None;
+        let mut diagnostics = AppDiagnostics::default();
         let seeked = App::apply_actions(
             &mut session,
             &mut workspace,
             &mut preview,
-            &mut error,
+            &mut diagnostics,
             vec![ViewerAction::Playback(PlaybackCommand::Seek(target))],
         );
         assert!(seeked);
         assert_eq!(session.playback_view().unwrap().cursor, target);
-        assert!(error.is_none());
+        assert!(diagnostics.message(&[]).is_none());
     }
 
     #[test]
@@ -411,13 +421,13 @@ mod tests {
         let final_target = ArrivalTime((playback.start.0 + playback.end.0 * 2) / 3);
         let mut workspace = NativeWorkspace::default();
         let mut preview = PreviewCoordinator::default();
-        let mut error = None;
+        let mut diagnostics = AppDiagnostics::default();
 
         let seeked = App::apply_actions(
             &mut session,
             &mut workspace,
             &mut preview,
-            &mut error,
+            &mut diagnostics,
             vec![
                 ViewerAction::BeginPreview(first),
                 ViewerAction::SetPreviewTime(Some(final_target)),
@@ -432,13 +442,13 @@ mod tests {
             &mut session,
             &mut workspace,
             &mut preview,
-            &mut error,
+            &mut diagnostics,
             vec![ViewerAction::CommitPreview(final_target)],
         );
         assert!(seeked);
         assert_eq!(session.playback_view().unwrap().cursor, final_target);
         assert!(session.playback_view().unwrap().playing);
         assert_eq!(workspace.interaction.preview_time, None);
-        assert!(error.is_none());
+        assert!(diagnostics.message(&[]).is_none());
     }
 }

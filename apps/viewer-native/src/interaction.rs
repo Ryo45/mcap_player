@@ -12,8 +12,6 @@ pub(crate) enum ViewerAction {
         panel_id: PanelId,
         accumulate: bool,
     },
-    // Reserved for panel hover/preview wiring; no current fixed view emits it.
-    #[allow(dead_code)]
     SetPreviewTime(Option<ArrivalTime>),
     BeginPreview(ArrivalTime),
     CommitPreview(ArrivalTime),

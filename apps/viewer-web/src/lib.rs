@@ -377,6 +377,232 @@ mod browser {
         speed_callback.forget();
     }
 
+    fn advance_source_and_playback(
+        session: &mut McapPlayback<Vec<u8>>,
+        focused_camera: &mut Option<CameraId>,
+        elapsed: Duration,
+    ) -> Result<Option<CameraId>, String> {
+        let camera_topics = session.camera_topics();
+        let selected_camera = (*focused_camera)
+            .filter(|camera_id| camera_topics.iter().any(|(id, _)| id == camera_id))
+            .or_else(|| camera_topics.first().map(|(id, _)| *id));
+        *focused_camera = selected_camera;
+        session.set_focused_camera(selected_camera);
+        session.tick(elapsed).map_err(|error| error.to_string())?;
+        Ok(selected_camera)
+    }
+
+    fn update_camera_presentation(
+        session: &McapPlayback<Vec<u8>>,
+        view: &mut WebViewState,
+        calibrations: &CameraCalibrationSet,
+        selected_camera: Option<CameraId>,
+    ) {
+        let camera_topics = session.camera_topics();
+        if view.camera_topics.as_slice() != camera_topics {
+            rebuild_camera_cards(camera_topics);
+            view.camera_topics = camera_topics.to_vec();
+        }
+        if view.last_drawn_camera != selected_camera {
+            view.last_drawn = None;
+            view.last_drawn_camera = selected_camera;
+        }
+
+        let state = session.state();
+        let mut camera_visual_changes = BTreeSet::new();
+        for (camera_id, frame) in state.camera.frames() {
+            if view.camera_base_images.needs_update(frame) {
+                let decode_started = Date::now();
+                match decode_camera_frame(frame) {
+                    Ok(image) => {
+                        let decode_elapsed = duration_since(decode_started);
+                        let upload_started = Date::now();
+                        let base_canvas = view
+                            .camera_base_canvases
+                            .entry(*camera_id)
+                            .or_insert_with(|| {
+                                document()
+                                    .create_element("canvas")
+                                    .expect("camera base canvas")
+                                    .dyn_into()
+                                    .expect("camera base canvas element")
+                            })
+                            .clone();
+                        draw_base_image(&base_canvas, &image);
+                        view.camera_base_images.mark_updated(frame);
+                        view.presentation_metrics.record_camera(
+                            *camera_id,
+                            decode_elapsed,
+                            duration_since(upload_started),
+                        );
+                        camera_visual_changes.insert(*camera_id);
+                    }
+                    Err(error) => {
+                        set_status(&error.to_string(), true);
+                        continue;
+                    }
+                }
+            }
+            if view.camera_base_images.arrival(*camera_id) == Some(frame.arrival_time) {
+                let Some(base_canvas) = view.camera_base_canvases.get(camera_id) else {
+                    continue;
+                };
+                if view.camera_overlays.update(
+                    frame,
+                    (base_canvas.width(), base_canvas.height()),
+                    state.bev.latest(),
+                    state.bev.revision(),
+                    &state.transforms,
+                    state.transforms.revision(),
+                    calibrations,
+                ) {
+                    camera_visual_changes.insert(*camera_id);
+                }
+            }
+        }
+        for camera_id in &camera_visual_changes {
+            let Some(base_canvas) = view.camera_base_canvases.get(camera_id) else {
+                continue;
+            };
+            compose_camera_canvas(
+                &format!("camera-thumb-{}", camera_id.0),
+                base_canvas,
+                view.camera_overlays.snapshot(*camera_id),
+            );
+        }
+
+        let selected_has_base = selected_camera.is_some_and(|camera_id| {
+            state.camera.latest_for(camera_id).is_some_and(|frame| {
+                view.camera_base_images.arrival(camera_id) == Some(frame.arrival_time)
+            })
+        });
+        if !selected_has_base && view.last_drawn.is_some() {
+            clear_canvas("camera");
+            view.last_drawn = None;
+        }
+        if let Some(camera_id) = selected_camera
+            && let Some(frame) = state.camera.latest_for(camera_id)
+            && selected_has_base
+            && (view.last_drawn != Some(frame.arrival_time.0)
+                || camera_visual_changes.contains(&camera_id))
+            && let Some(base_canvas) = view.camera_base_canvases.get(&camera_id)
+        {
+            compose_camera_canvas(
+                "camera",
+                base_canvas,
+                view.camera_overlays.snapshot(camera_id),
+            );
+            view.last_drawn = Some(frame.arrival_time.0);
+        }
+        if state.camera.frames().next().is_none() {
+            for (camera_id, _) in camera_topics {
+                clear_canvas(&format!("camera-thumb-{}", camera_id.0));
+            }
+        }
+    }
+
+    fn build_viewer_presentation(
+        session: &McapPlayback<Vec<u8>>,
+        view: &WebViewState,
+        selected_camera: Option<CameraId>,
+    ) -> ViewerPresentation {
+        let state = session.state();
+        let start = session.clock().start().0;
+        let overlay_status = view
+            .camera_overlays
+            .snapshots()
+            .map(|snapshot| (snapshot.camera_id, snapshot.status.clone()))
+            .collect::<BTreeMap<_, _>>();
+        ViewerPresentation::from_domain(
+            state,
+            session.camera_topics(),
+            selected_camera,
+            &overlay_status,
+            DiagnosticsPresentation {
+                source: "Browser file".to_owned(),
+                primary_topic: TOPIC.to_owned(),
+                counters: session.counters(),
+                playback_performance: Some(session.performance().clone()),
+                performance: view.presentation_metrics.snapshot().clone(),
+                cursor_seconds: Some((session.clock().cursor().0 - start) as f64 / 1e9),
+                ..DiagnosticsPresentation::default()
+            },
+        )
+    }
+
+    fn update_dom_diagnostics(presentation: &ViewerPresentation) {
+        let focus_label: HtmlElement = element("camera-focus-label");
+        focus_label.set_inner_text(&presentation.focused_camera().map_or_else(
+            || "waiting".to_owned(),
+            |camera| format!("{} · {}", camera.topic, camera.overlay),
+        ));
+        for camera in &presentation.cameras {
+            let camera_id = camera.id;
+            let card: HtmlButtonElement = element(&format!("camera-card-{}", camera_id.0));
+            card.set_class_name(if camera.focused {
+                "camera-card selected"
+            } else {
+                "camera-card"
+            });
+            let label: HtmlElement = element(&format!("camera-label-{}", camera_id.0));
+            label.set_inner_text(&format!("{} · {:.1} Hz", camera.topic, camera.fps));
+        }
+        let diagnostics = &presentation.diagnostics;
+        set_status(
+            &format!(
+                "{} decoded · {} errors · {} dropped · path {} pts · scan {} pts · {:.2}s",
+                diagnostics.counters.decoded,
+                diagnostics.counters.errors,
+                diagnostics.counters.dropped,
+                diagnostics.path_points,
+                diagnostics.scan_points,
+                diagnostics.cursor_seconds.unwrap_or_default()
+            ),
+            diagnostics.counters.errors > 0,
+        );
+        let playback_performance = diagnostics
+            .playback_performance
+            .as_ref()
+            .expect("MCAP playback has performance diagnostics");
+        let focused_fps = presentation
+            .focused_camera()
+            .map_or(0.0, |camera| camera.fps);
+        let performance: HtmlElement = element("performance");
+        performance.set_inner_text(&format!(
+            "Focus {focused_fps:.1}/{:.0} Hz · others ≤{:.0} Hz · JPEG {:.2} ms · canvas {:.2} ms · tick {:.2} ms · MCAP/CDR/state {:.2}/{:.2}/{:.2} ms",
+            playback_performance.focused_camera_hz(),
+            playback_performance.background_camera_hz(),
+            diagnostics.performance.jpeg_decode_ms,
+            diagnostics.performance.upload_ms,
+            diagnostics.performance.render_ms,
+            playback_performance.source_read.average_ms,
+            playback_performance.pipeline_decode.average_ms,
+            playback_performance.state_apply.average_ms,
+        ));
+        let telemetry: HtmlElement = element("telemetry");
+        telemetry.set_inner_text(&presentation.telemetry.as_ref().map_or_else(
+            || "Odometry: waiting".to_owned(),
+            |frame| {
+                format!(
+                    "x {:+.2} m · y {:+.2} m · yaw {:+.1}° · {:.2} m/s · yaw rate {:+.1}°/s",
+                    frame.position_x,
+                    frame.position_y,
+                    frame.yaw_radians.to_degrees(),
+                    frame.speed,
+                    frame.yaw_rate.to_degrees()
+                )
+            },
+        ));
+    }
+
+    fn update_bev_presentation(session: &McapPlayback<Vec<u8>>) {
+        let bev = BevFrameBuilder::new(session.state()).build();
+        render_bev(BevFrame {
+            revision: bev.revision,
+            path: bev.path,
+        });
+    }
+
     fn tick() {
         APP.with(|cell| {
             let tick_started = Date::now();
@@ -399,216 +625,24 @@ mod browser {
                 });
                 return;
             };
-            let camera_topics = session.camera_topics();
-            let selected_camera = (*focused_camera)
-                .filter(|camera_id| camera_topics.iter().any(|(id, _)| id == camera_id))
-                .or_else(|| camera_topics.first().map(|(id, _)| *id));
-            *focused_camera = selected_camera;
-            session.set_focused_camera(selected_camera);
-            if let Err(error) = session.tick(elapsed) {
-                set_status(&error.to_string(), true);
-                return;
-            }
+            let selected_camera =
+                match advance_source_and_playback(session, focused_camera, elapsed) {
+                    Ok(selected_camera) => selected_camera,
+                    Err(error) => {
+                        set_status(&error, true);
+                        return;
+                    }
+                };
+
             let start = session.clock().start().0;
             let duration = (session.clock().end().0 - start).max(1);
             let timeline: HtmlInputElement = element("timeline");
             timeline
                 .set_value_as_number((session.clock().cursor().0 - start) as f64 / duration as f64);
-            let counters = session.counters();
-            let camera_topics = session.camera_topics();
-            if view.camera_topics.as_slice() != camera_topics {
-                rebuild_camera_cards(camera_topics);
-                view.camera_topics = camera_topics.to_vec();
-            }
-            if view.last_drawn_camera != selected_camera {
-                view.last_drawn = None;
-                view.last_drawn_camera = selected_camera;
-            }
-            let state = session.state();
-            let mut camera_visual_changes = BTreeSet::new();
-            for (camera_id, frame) in state.camera.frames() {
-                if view.camera_base_images.needs_update(frame) {
-                    let decode_started = Date::now();
-                    match decode_camera_frame(frame) {
-                        Ok(image) => {
-                            let decode_elapsed = duration_since(decode_started);
-                            let upload_started = Date::now();
-                            let base_canvas = view
-                                .camera_base_canvases
-                                .entry(*camera_id)
-                                .or_insert_with(|| {
-                                    document()
-                                        .create_element("canvas")
-                                        .expect("camera base canvas")
-                                        .dyn_into()
-                                        .expect("camera base canvas element")
-                                })
-                                .clone();
-                            draw_base_image(&base_canvas, &image);
-                            view.camera_base_images.mark_updated(frame);
-                            view.presentation_metrics.record_camera(
-                                *camera_id,
-                                decode_elapsed,
-                                duration_since(upload_started),
-                            );
-                            camera_visual_changes.insert(*camera_id);
-                        }
-                        Err(error) => {
-                            set_status(&error.to_string(), true);
-                            continue;
-                        }
-                    }
-                }
-                if view.camera_base_images.arrival(*camera_id) == Some(frame.arrival_time) {
-                    let Some(base_canvas) = view.camera_base_canvases.get(camera_id) else {
-                        continue;
-                    };
-                    if view.camera_overlays.update(
-                        frame,
-                        (base_canvas.width(), base_canvas.height()),
-                        state.bev.latest(),
-                        state.bev.revision(),
-                        &state.transforms,
-                        state.transforms.revision(),
-                        calibrations,
-                    ) {
-                        camera_visual_changes.insert(*camera_id);
-                    }
-                }
-            }
-            for camera_id in &camera_visual_changes {
-                let Some(base_canvas) = view.camera_base_canvases.get(camera_id) else {
-                    continue;
-                };
-                compose_camera_canvas(
-                    &format!("camera-thumb-{}", camera_id.0),
-                    base_canvas,
-                    view.camera_overlays.snapshot(*camera_id),
-                );
-            }
-
-            let selected_has_base = selected_camera.is_some_and(|camera_id| {
-                state.camera.latest_for(camera_id).is_some_and(|frame| {
-                    view.camera_base_images.arrival(camera_id) == Some(frame.arrival_time)
-                })
-            });
-            if !selected_has_base && view.last_drawn.is_some() {
-                clear_canvas("camera");
-                view.last_drawn = None;
-            }
-            if let Some(camera_id) = selected_camera
-                && let Some(frame) = state.camera.latest_for(camera_id)
-                && selected_has_base
-                && (view.last_drawn != Some(frame.arrival_time.0)
-                    || camera_visual_changes.contains(&camera_id))
-                && let Some(base_canvas) = view.camera_base_canvases.get(&camera_id)
-            {
-                compose_camera_canvas(
-                    "camera",
-                    base_canvas,
-                    view.camera_overlays.snapshot(camera_id),
-                );
-                view.last_drawn = Some(frame.arrival_time.0);
-            }
-
-            let overlay_status = view
-                .camera_overlays
-                .snapshots()
-                .map(|snapshot| (snapshot.camera_id, snapshot.status.clone()))
-                .collect::<BTreeMap<_, _>>();
-            let presentation = ViewerPresentation::from_domain(
-                state,
-                camera_topics,
-                selected_camera,
-                &overlay_status,
-                DiagnosticsPresentation {
-                    source: "Browser file".to_owned(),
-                    primary_topic: TOPIC.to_owned(),
-                    counters,
-                    playback_performance: Some(session.performance().clone()),
-                    performance: view.presentation_metrics.snapshot().clone(),
-                    cursor_seconds: Some((session.clock().cursor().0 - start) as f64 / 1e9),
-                    ..DiagnosticsPresentation::default()
-                },
-            );
-            let focus_label: HtmlElement = element("camera-focus-label");
-            focus_label.set_inner_text(&presentation.focused_camera().map_or_else(
-                || "waiting".to_owned(),
-                |camera| format!("{} · {}", camera.topic, camera.overlay),
-            ));
-            for camera in &presentation.cameras {
-                let camera_id = camera.id;
-                let card: HtmlButtonElement = element(&format!("camera-card-{}", camera_id.0));
-                card.set_class_name(if camera.focused {
-                    "camera-card selected"
-                } else {
-                    "camera-card"
-                });
-                let label: HtmlElement = element(&format!("camera-label-{}", camera_id.0));
-                label.set_inner_text(&format!("{} · {:.1} Hz", camera.topic, camera.fps));
-            }
-            let diagnostics = &presentation.diagnostics;
-            set_status(
-                &format!(
-                    "{} decoded · {} errors · {} dropped · path {} pts · scan {} pts · {:.2}s",
-                    diagnostics.counters.decoded,
-                    diagnostics.counters.errors,
-                    diagnostics.counters.dropped,
-                    diagnostics.path_points,
-                    diagnostics.scan_points,
-                    diagnostics.cursor_seconds.unwrap_or_default()
-                ),
-                diagnostics.counters.errors > 0,
-            );
-            let playback_performance = diagnostics
-                .playback_performance
-                .as_ref()
-                .expect("MCAP playback has performance diagnostics");
-            let focused_fps = presentation
-                .focused_camera()
-                .map_or(0.0, |camera| camera.fps);
-            let performance: HtmlElement = element("performance");
-            performance.set_inner_text(&format!(
-                "Focus {focused_fps:.1}/{:.0} Hz · others ≤{:.0} Hz · JPEG {:.2} ms · canvas {:.2} ms · tick {:.2} ms · MCAP/CDR/state {:.2}/{:.2}/{:.2} ms",
-                playback_performance.focused_camera_hz(),
-                playback_performance.background_camera_hz(),
-                diagnostics.performance.jpeg_decode_ms,
-                diagnostics.performance.upload_ms,
-                diagnostics.performance.render_ms,
-                playback_performance.source_read.average_ms,
-                playback_performance.pipeline_decode.average_ms,
-                playback_performance.state_apply.average_ms,
-            ));
-            let telemetry: HtmlElement = element("telemetry");
-            telemetry.set_inner_text(&presentation.telemetry.as_ref().map_or_else(
-                || "Odometry: waiting".to_owned(),
-                |frame| {
-                    format!(
-                        "x {:+.2} m · y {:+.2} m · yaw {:+.1}° · {:.2} m/s · yaw rate {:+.1}°/s",
-                        frame.position_x,
-                        frame.position_y,
-                        frame.yaw_radians.to_degrees(),
-                        frame.speed,
-                        frame.yaw_rate.to_degrees()
-                    )
-                },
-            ));
-
-            let bev = BevFrameBuilder::new(session.state()).build();
-            render_bev(BevFrame {
-                revision: bev.revision,
-                path: bev.path,
-            });
-            let has_frames = state.camera.frames().next().is_some();
-            if !has_frames {
-                for (camera_id, _) in camera_topics {
-                    clear_canvas(&format!("camera-thumb-{}", camera_id.0));
-                }
-                view.presentation_metrics
-                    .record_render(duration_since(tick_started));
-                view.presentation_metrics.advance(elapsed);
-                return;
-            }
+            update_camera_presentation(session, view, calibrations, selected_camera);
+            let presentation = build_viewer_presentation(session, view, selected_camera);
+            update_dom_diagnostics(&presentation);
+            update_bev_presentation(session);
             view.presentation_metrics
                 .record_render(duration_since(tick_started));
             view.presentation_metrics.advance(elapsed);

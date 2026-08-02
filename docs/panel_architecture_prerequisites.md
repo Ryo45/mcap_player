@@ -58,6 +58,10 @@ App
 │  └─ generation-scoped background speed query
 ├─ PresentationState
 │  └─ CPU-side presentation builders, metrics, and overlay status
+├─ AppDiagnostics
+│  ├─ playback errors
+│  ├─ presentation / GPU errors
+│  └─ sidecar warnings
 └─ WorkspaceState
    ├─ LayoutDocument
    ├─ PanelRuntimeStore
@@ -77,6 +81,10 @@ Graphics
 ├─ one BEV renderer
 └─ one Scene renderer
 ```
+
+GPU upload and JPEG presentation failures are reported through `AppDiagnostics`.
+They never mutate `DomainState`; only successfully decoded domain updates enter the
+authoritative exact state. `PlaybackSession` exposes that state read-only.
 
 ## Fixed view boundaries
 
