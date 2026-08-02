@@ -29,6 +29,10 @@ Its asynchronous lifecycle is stored separately from the `WebApp` playback/view
 `RefCell`, so adapter/device completion cannot re-enter an active application
 state borrow.
 
+The shared playback performance timers use `web_time::Instant`; the standard
+library's `Instant::now()` panics at runtime on `wasm32-unknown-unknown` even
+though it compiles successfully.
+
 ## Rendering and allocation
 
 `BevRenderer` remains unchanged. Its offscreen texture is sampled directly by a

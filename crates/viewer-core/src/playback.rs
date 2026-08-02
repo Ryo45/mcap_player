@@ -8,6 +8,7 @@ use std::{
     fmt,
     time::Duration,
 };
+use web_time::Instant;
 
 const TF_SEEK_PREROLL_NS: i64 = 1_000_000_000;
 
@@ -171,12 +172,12 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
     pub fn tick(&mut self, elapsed: Duration) -> Result<(), McapOpenError> {
         self.presentation_elapsed = self.presentation_elapsed.saturating_add(elapsed);
         let cursor = self.clock.advance(elapsed);
-        let read_started = std::time::Instant::now();
+        let read_started = Instant::now();
         let messages = self.source.read_until(cursor)?;
         self.performance.source_read.record(read_started.elapsed());
 
         let mut updates = Vec::new();
-        let decode_started = std::time::Instant::now();
+        let decode_started = Instant::now();
         for message in messages {
             if let Some(camera_id) = self.camera_streams.get(&message.stream_id).copied() {
                 self.performance.camera_input_frames =
@@ -222,7 +223,7 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
             .pipeline_decode
             .record(decode_started.elapsed());
 
-        let apply_started = std::time::Instant::now();
+        let apply_started = Instant::now();
         self.state.apply_all(updates);
         self.performance.state_apply.record(apply_started.elapsed());
         Ok(())
