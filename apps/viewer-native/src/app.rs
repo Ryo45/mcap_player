@@ -5,7 +5,7 @@ use crate::{
     graphics::{Graphics, RenderInput},
     interaction::ViewerAction,
     plot_loader::PlotLoader,
-    presentation::PresentationState,
+    presentation::{PresentationState, PresentationTransition},
     preview::{PreviewCoordinator, fingerprint_source},
     session::PlaybackSession,
     workspace::{NativeWorkspace, WorkspaceEffect},
@@ -17,6 +17,7 @@ use std::{
     time::{Duration, Instant},
 };
 use viewer_core::CameraCalibrationSet;
+use viewer_core::PlaybackEffect;
 use winit::{
     application::ApplicationHandler,
     event::WindowEvent,
@@ -50,7 +51,6 @@ impl App {
                 self.workspace
                     .reset_for_source(session.default_focused_camera());
                 session.set_focused_camera(self.workspace.focused_camera());
-                self.plot_loader.clear();
                 if let Err(error) =
                     self.plot_loader
                         .start_speed_overview(path.to_owned(), plot_origin, 4_000)
@@ -72,12 +72,11 @@ impl App {
                         ));
                     }
                 }
-                self.presentation_state.reset();
-                if let Some(graphics) = &mut self.graphics {
-                    graphics.hide_camera();
-                    graphics.clear_preview();
-                    graphics.clear_scene_history();
-                }
+                Self::apply_presentation_transition(
+                    &mut self.presentation_state,
+                    self.graphics.as_mut(),
+                    PresentationTransition::SourceChanged,
+                );
             }
             Err(error) => self.diagnostics.set_playback_error(error.to_string()),
         }
@@ -163,19 +162,32 @@ impl App {
         self.presentation_state.advance_metrics(elapsed);
 
         let output = render_result?;
-        let seeked = Self::apply_actions(
+        let playback_effect = Self::apply_actions(
             session,
             &mut self.workspace,
             &mut self.preview,
             &mut self.diagnostics,
             output.actions,
         );
-        if seeked {
-            self.presentation_state.reset();
-            graphics.hide_camera();
-            graphics.clear_scene_history();
+        if playback_effect == PlaybackEffect::Seeked {
+            Self::apply_presentation_transition(
+                &mut self.presentation_state,
+                Some(graphics),
+                PresentationTransition::Seeked,
+            );
         }
         Ok(())
+    }
+
+    fn apply_presentation_transition(
+        presentation_state: &mut PresentationState,
+        graphics: Option<&mut Graphics>,
+        transition: PresentationTransition,
+    ) {
+        presentation_state.apply_transition(transition);
+        if let Some(graphics) = graphics {
+            graphics.apply_transition(transition);
+        }
     }
 
     fn apply_actions(
@@ -184,13 +196,14 @@ impl App {
         preview: &mut PreviewCoordinator,
         diagnostics: &mut AppDiagnostics,
         actions: Vec<ViewerAction>,
-    ) -> bool {
-        let mut seeked = false;
+    ) -> PlaybackEffect {
+        let mut playback_effect = PlaybackEffect::None;
         for action in actions {
             match workspace.apply_action(action) {
                 WorkspaceEffect::Playback(command) => match session.apply_playback_command(command)
                 {
-                    Ok(command_seeked) => seeked |= command_seeked,
+                    Ok(PlaybackEffect::Seeked) => playback_effect = PlaybackEffect::Seeked,
+                    Ok(PlaybackEffect::None) => {}
                     Err(command_error) => {
                         diagnostics.set_playback_error(command_error.to_string());
                     }
@@ -213,7 +226,8 @@ impl App {
                 WorkspaceEffect::UpdatePreview(time) => preview.update(time),
                 WorkspaceEffect::CommitPreview(time) => {
                     match session.apply_playback_command(viewer_core::PlaybackCommand::Seek(time)) {
-                        Ok(command_seeked) => seeked |= command_seeked,
+                        Ok(PlaybackEffect::Seeked) => playback_effect = PlaybackEffect::Seeked,
+                        Ok(PlaybackEffect::None) => {}
                         Err(command_error) => {
                             diagnostics.set_playback_error(command_error.to_string());
                         }
@@ -229,7 +243,7 @@ impl App {
                 WorkspaceEffect::None => {}
             }
         }
-        seeked
+        playback_effect
     }
 }
 
@@ -290,9 +304,11 @@ impl ApplicationHandler for App {
                 self.plot_loader.clear();
                 self.preview.clear();
                 self.bookmarks = BookmarkState::default();
-                if let Some(graphics) = &mut self.graphics {
-                    graphics.clear_preview();
-                }
+                Self::apply_presentation_transition(
+                    &mut self.presentation_state,
+                    self.graphics.as_mut(),
+                    PresentationTransition::SourceChanged,
+                );
                 self.workspace
                     .reset_for_source(session.default_focused_camera());
                 session.set_focused_camera(self.workspace.focused_camera());
@@ -359,14 +375,14 @@ mod tests {
         let mut preview = PreviewCoordinator::default();
         let mut diagnostics = AppDiagnostics::default();
         assert!(session.playback_view().unwrap().playing);
-        let seeked = App::apply_actions(
+        let effect = App::apply_actions(
             &mut session,
             &mut workspace,
             &mut preview,
             &mut diagnostics,
             vec![ViewerAction::Playback(PlaybackCommand::Toggle)],
         );
-        assert!(!seeked);
+        assert_eq!(effect, PlaybackEffect::None);
         assert!(!session.playback_view().unwrap().playing);
         assert!(diagnostics.message(&[]).is_none());
     }
@@ -379,14 +395,14 @@ mod tests {
         let mut workspace = NativeWorkspace::default();
         let mut coordinator = PreviewCoordinator::default();
         let mut diagnostics = AppDiagnostics::default();
-        let seeked = App::apply_actions(
+        let effect = App::apply_actions(
             &mut session,
             &mut workspace,
             &mut coordinator,
             &mut diagnostics,
             vec![ViewerAction::SetPreviewTime(Some(preview))],
         );
-        assert!(!seeked);
+        assert_eq!(effect, PlaybackEffect::None);
         assert_eq!(workspace.interaction.preview_time, Some(preview));
         assert_eq!(session.playback_view().unwrap().cursor, cursor);
         assert!(diagnostics.message(&[]).is_none());
@@ -400,14 +416,14 @@ mod tests {
         let mut workspace = NativeWorkspace::default();
         let mut preview = PreviewCoordinator::default();
         let mut diagnostics = AppDiagnostics::default();
-        let seeked = App::apply_actions(
+        let effect = App::apply_actions(
             &mut session,
             &mut workspace,
             &mut preview,
             &mut diagnostics,
             vec![ViewerAction::Playback(PlaybackCommand::Seek(target))],
         );
-        assert!(seeked);
+        assert_eq!(effect, PlaybackEffect::Seeked);
         assert_eq!(session.playback_view().unwrap().cursor, target);
         assert!(diagnostics.message(&[]).is_none());
     }
@@ -423,7 +439,7 @@ mod tests {
         let mut preview = PreviewCoordinator::default();
         let mut diagnostics = AppDiagnostics::default();
 
-        let seeked = App::apply_actions(
+        let effect = App::apply_actions(
             &mut session,
             &mut workspace,
             &mut preview,
@@ -433,19 +449,19 @@ mod tests {
                 ViewerAction::SetPreviewTime(Some(final_target)),
             ],
         );
-        assert!(!seeked);
+        assert_eq!(effect, PlaybackEffect::None);
         assert_eq!(session.playback_view().unwrap().cursor, original);
         assert!(!session.playback_view().unwrap().playing);
         assert_eq!(workspace.interaction.preview_time, Some(final_target));
 
-        let seeked = App::apply_actions(
+        let effect = App::apply_actions(
             &mut session,
             &mut workspace,
             &mut preview,
             &mut diagnostics,
             vec![ViewerAction::CommitPreview(final_target)],
         );
-        assert!(seeked);
+        assert_eq!(effect, PlaybackEffect::Seeked);
         assert_eq!(session.playback_view().unwrap().cursor, final_target);
         assert!(session.playback_view().unwrap().playing);
         assert_eq!(workspace.interaction.preview_time, None);

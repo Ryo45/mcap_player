@@ -23,6 +23,12 @@ pub(crate) struct PresentationFrame<'a> {
     pub(crate) dynamic_transform_count: usize,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum PresentationTransition {
+    SourceChanged,
+    Seeked,
+}
+
 #[derive(Default)]
 pub(crate) struct PresentationState {
     scene_builder: SceneFrameBuilder,
@@ -122,7 +128,7 @@ impl PresentationState {
         self.metrics.advance(elapsed);
     }
 
-    pub(crate) fn reset(&mut self) {
+    pub(crate) fn apply_transition(&mut self, _transition: PresentationTransition) {
         self.scene_builder.reset();
         self.camera_overlays.reset_source();
         self.metrics.reset();
@@ -169,7 +175,7 @@ mod tests {
         assert!(frame.scene.accumulate);
         drop(frame);
 
-        presentation.reset();
+        presentation.apply_transition(PresentationTransition::Seeked);
         let frame = presentation.build(&state, diagnostics(), Some(CameraId(0)), true, None);
         let camera = frame.viewer.focused_camera().unwrap();
         assert_eq!(camera.overlay, OverlayStatus::Waiting);

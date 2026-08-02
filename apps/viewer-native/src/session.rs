@@ -6,8 +6,8 @@ use anyhow::{Context, Result};
 use memmap2::Mmap;
 use std::{fs::File, path::Path, time::Duration};
 use viewer_core::{
-    CameraId, DomainState, McapPlayback, PipelineCounters, PlaybackCommand, PlaybackPerformance,
-    PlaybackView,
+    CameraId, DomainState, McapPlayback, PipelineCounters, PlaybackCommand, PlaybackEffect,
+    PlaybackPerformance, PlaybackView,
 };
 #[cfg(feature = "ros2-live")]
 use viewer_core::{PipelineSet, StreamBinding};
@@ -44,7 +44,7 @@ impl PlaybackSession {
         let mapping =
             unsafe { Mmap::map(&file) }.with_context(|| format!("map {}", path.display()))?;
         let mut playback = McapPlayback::new(mapping, &topic)?;
-        playback.clock_mut().play();
+        playback.apply_command(PlaybackCommand::Toggle)?;
         let camera_topics = playback.camera_topics().to_vec();
         Ok(Self {
             source: SessionSource::Mcap(Box::new(playback)),
@@ -149,25 +149,14 @@ impl PlaybackSession {
         }
     }
 
-    /// Applies one UI request and reports whether it performed a cold seek.
-    pub(crate) fn apply_playback_command(&mut self, command: PlaybackCommand) -> Result<bool> {
+    pub(crate) fn apply_playback_command(
+        &mut self,
+        command: PlaybackCommand,
+    ) -> Result<PlaybackEffect> {
         match &mut self.source {
-            SessionSource::Mcap(playback) => match command {
-                PlaybackCommand::Toggle => {
-                    playback.clock_mut().toggle();
-                    Ok(false)
-                }
-                PlaybackCommand::SetSpeed(speed) => {
-                    playback.clock_mut().set_speed(speed);
-                    Ok(false)
-                }
-                PlaybackCommand::Seek(cursor) => {
-                    playback.seek(cursor)?;
-                    Ok(true)
-                }
-            },
+            SessionSource::Mcap(playback) => Ok(playback.apply_command(command)?),
             #[cfg(feature = "ros2-live")]
-            SessionSource::Ros { .. } => Ok(false),
+            SessionSource::Ros { .. } => Ok(PlaybackEffect::None),
         }
     }
 

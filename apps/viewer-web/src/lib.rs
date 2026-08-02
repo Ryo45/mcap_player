@@ -18,7 +18,7 @@ mod browser {
     };
     use viewer_core::{
         ArrivalTime, BevFrameBuilder, CameraCalibrationSet, CameraId, DiagnosticsPresentation,
-        McapPlayback, PlaybackSpeed, PresentationMetrics, ViewerPresentation,
+        McapPlayback, PlaybackCommand, PlaybackSpeed, PresentationMetrics, ViewerPresentation,
     };
     use viewer_renderer::{
         CameraBaseImageTracker, CameraOverlaySnapshot, CameraOverlayState, DecodedImage,
@@ -41,6 +41,18 @@ mod browser {
         camera_overlays: CameraOverlayState,
         camera_topics: Vec<(CameraId, String)>,
         presentation_metrics: PresentationMetrics,
+    }
+
+    impl WebViewState {
+        fn reset_for_source(&mut self) {
+            *self = Self::default();
+        }
+
+        fn apply_playback_effect(&mut self, effect: viewer_core::PlaybackEffect) {
+            if effect == viewer_core::PlaybackEffect::Seeked {
+                *self = Self::default();
+            }
+        }
     }
 
     struct WebApp {
@@ -289,7 +301,7 @@ mod browser {
                         APP.with(|cell| {
                             let mut app = cell.borrow_mut();
                             app.playback = Some(playback);
-                            app.view = WebViewState::default();
+                            app.view.reset_for_source();
                             app.focused_camera = None;
                         });
                         set_status(&format!("{file_name} ready"), false);
@@ -309,7 +321,10 @@ mod browser {
         let play_callback = Closure::<dyn FnMut()>::new(move || {
             APP.with(|app| {
                 if let Some(playback) = &mut app.borrow_mut().playback {
-                    playback.clock_mut().toggle();
+                    if let Err(error) = playback.apply_command(PlaybackCommand::Toggle) {
+                        set_status(&error.to_string(), true);
+                        return;
+                    }
                     let button: HtmlButtonElement = element("play");
                     button.set_inner_text(if playback.clock().is_playing() {
                         "Pause"
@@ -336,14 +351,15 @@ mod browser {
                     let duration = playback.clock().end().0 - start;
                     let cursor =
                         ArrivalTime(start + (duration as f64 * value.clamp(0.0, 1.0)) as i64);
-                    playback.seek(cursor).map_err(|error| error.to_string())
+                    playback
+                        .apply_command(PlaybackCommand::Seek(cursor))
+                        .map_err(|error| error.to_string())
                 } else {
-                    Ok(())
+                    Ok(viewer_core::PlaybackEffect::None)
                 };
-                if let Err(error) = result {
-                    set_status(&error, true);
-                } else {
-                    app.view = WebViewState::default();
+                match result {
+                    Ok(effect) => app.view.apply_playback_effect(effect),
+                    Err(error) => set_status(&error, true),
                 }
             });
         });
@@ -367,7 +383,9 @@ mod browser {
             };
             APP.with(|app| {
                 if let Some(playback) = &mut app.borrow_mut().playback {
-                    playback.clock_mut().set_speed(speed);
+                    if let Err(error) = playback.apply_command(PlaybackCommand::SetSpeed(speed)) {
+                        set_status(&error.to_string(), true);
+                    }
                 }
             });
         });
