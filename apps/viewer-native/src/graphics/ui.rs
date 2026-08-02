@@ -2,7 +2,8 @@ use super::{Graphics, RenderInput, layout_host::show_layout_host, views::CameraT
 use crate::{
     interaction::ViewerAction,
     panels::{
-        PanelFrameContext, PanelRenderRequests, PanelResourceView, PlotDataView, SceneDataView,
+        PanelFrameContext, PanelRenderRequests, PanelResourceView, PlotDataView, PreviewDataView,
+        SceneDataView,
     },
     workspace::NativeWorkspace,
 };
@@ -39,9 +40,26 @@ impl Graphics {
             })
             .collect::<Vec<_>>();
         camera_textures.sort_by_key(|texture| texture.camera_id);
+        let mut preview_camera_textures = render_input
+            .preview
+            .into_iter()
+            .flat_map(|snapshot| snapshot.camera_frames())
+            .filter_map(|frame| {
+                self.preview_camera_texture(frame.camera_id()).map(
+                    |(texture_id, arrival_time, size)| CameraTextureView {
+                        camera_id: frame.camera_id(),
+                        texture_id,
+                        arrival_time,
+                        size,
+                    },
+                )
+            })
+            .collect::<Vec<_>>();
+        preview_camera_textures.sort_by_key(|texture| texture.camera_id);
 
         let resources = PanelResourceView {
             camera_textures: &camera_textures,
+            preview_camera_textures: &preview_camera_textures,
             bev_texture: self.bev_texture_id,
             scene_texture: self.scene_texture_id,
         };
@@ -58,8 +76,13 @@ impl Graphics {
             loading: render_input.plot_loading,
             error: render_input.plot_error,
         };
-        let layout = &workspace.layout;
         let interaction = &workspace.interaction;
+        let preview = PreviewDataView {
+            active: interaction.preview_time.is_some(),
+            speed_overview: render_input.preview_speed,
+            bookmarks: render_input.bookmarks,
+        };
+        let layout = &workspace.layout;
         let panels = &mut workspace.panels;
         let mut actions = Vec::new();
         let mut render_requests = PanelRenderRequests::default();
@@ -94,6 +117,7 @@ impl Graphics {
                         camera_overlays: render_input.camera_overlays,
                         interaction,
                         plot,
+                        preview,
                         resources,
                         scene,
                     },

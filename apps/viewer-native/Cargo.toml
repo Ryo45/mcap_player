@@ -27,6 +27,7 @@ wgpu.workspace = true
 winit.workspace = true
 viewer-core = { path = "../../crates/viewer-core" }
 viewer-layout = { path = "../../crates/viewer-layout" }
+viewer-preview-mcap = { path = "../../crates/viewer-preview-mcap" }
 viewer-renderer = { path = "../../crates/viewer-renderer" }
 viewer-ui = { path = "../../crates/viewer-ui" }
 

@@ -175,7 +175,9 @@ fn show_node(
 mod tests {
     use super::*;
     use crate::{
-        panels::{PanelFrameContext, PanelResourceView, PlotDataView, SceneDataView},
+        panels::{
+            PanelFrameContext, PanelResourceView, PlotDataView, PreviewDataView, SceneDataView,
+        },
         workspace::NativeWorkspace,
     };
     use scene_renderer::SceneCameraMode;
@@ -275,8 +277,14 @@ mod tests {
                         loading: false,
                         error: None,
                     },
+                    preview: PreviewDataView {
+                        active: false,
+                        speed_overview: None,
+                        bookmarks: &[],
+                    },
                     resources: PanelResourceView {
                         camera_textures: &[],
+                        preview_camera_textures: &[],
                         bev_texture: egui::TextureId::Managed(1),
                         scene_texture: egui::TextureId::Managed(2),
                     },

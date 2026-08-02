@@ -18,7 +18,9 @@ use crate::{
     workspace::ViewerInteractionState,
 };
 use scene_renderer::SceneCameraMode;
-use viewer_core::{LoadedSignal, PlaybackView, SceneDiagnostics, ViewerPresentation};
+use viewer_core::{
+    Bookmark, LoadedSignal, PlaybackView, SceneDiagnostics, SignalOverview, ViewerPresentation,
+};
 
 pub(crate) const CAMERA_CONFIG_VERSION: u32 = 1;
 pub(crate) const BEV_CONFIG_VERSION: u32 = 1;
@@ -108,8 +110,16 @@ pub(crate) struct PlotDataView<'a> {
 #[derive(Clone, Copy)]
 pub(crate) struct PanelResourceView<'a> {
     pub(crate) camera_textures: &'a [CameraTextureView],
+    pub(crate) preview_camera_textures: &'a [CameraTextureView],
     pub(crate) bev_texture: egui::TextureId,
     pub(crate) scene_texture: egui::TextureId,
+}
+
+#[derive(Clone, Copy)]
+pub(crate) struct PreviewDataView<'a> {
+    pub(crate) active: bool,
+    pub(crate) speed_overview: Option<&'a SignalOverview>,
+    pub(crate) bookmarks: &'a [Bookmark],
 }
 
 #[derive(Clone, Copy)]
@@ -129,6 +139,7 @@ pub(crate) struct PanelFrameContext<'a> {
     pub(crate) camera_overlays: &'a viewer_renderer::CameraOverlayState,
     pub(crate) interaction: &'a ViewerInteractionState,
     pub(crate) plot: PlotDataView<'a>,
+    pub(crate) preview: PreviewDataView<'a>,
     pub(crate) resources: PanelResourceView<'a>,
     pub(crate) scene: SceneDataView<'a>,
 }

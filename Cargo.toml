@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/viewer-layout",
     "crates/viewer-core",
+    "crates/viewer-preview-mcap",
     "crates/viewer-renderer",
     "crates/bev-renderer",
     "crates/scene-renderer",
@@ -10,10 +11,12 @@ members = [
     "apps/viewer-native",
     "apps/viewer-web",
     "tools/ros-fixture",
+    "tools/preview-builder",
 ]
 default-members = [
     "crates/viewer-layout",
     "crates/viewer-core",
+    "crates/viewer-preview-mcap",
     "crates/viewer-renderer",
     "crates/bev-renderer",
     "crates/scene-renderer",

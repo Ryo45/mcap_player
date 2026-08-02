@@ -68,6 +68,8 @@ impl CameraPanel {
                     CameraViewInput {
                         cameras: &context.presentation.cameras,
                         textures: context.resources.camera_textures,
+                        preview_textures: context.resources.preview_camera_textures,
+                        preview_active: context.preview.active,
                         focused_camera: self.state.focused_camera,
                         show_thumbnails: self.config.show_thumbnails,
                         overlays: context.camera_overlays,

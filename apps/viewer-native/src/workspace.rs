@@ -26,11 +26,19 @@ pub(crate) struct CameraViewState {
 pub(crate) struct PlotViewState {
     pub(crate) panel: Option<PlotPanelState>,
     pub(crate) cache: Option<SpeedPlotCache>,
+    pub(crate) preview_cache: Option<PreviewPlotCache>,
 }
 
 pub(crate) struct SpeedPlotCache {
     pub(crate) origin: ArrivalTime,
     pub(crate) display_len: usize,
+    pub(crate) points: Vec<PlotPoint>,
+}
+
+pub(crate) struct PreviewPlotCache {
+    pub(crate) origin: ArrivalTime,
+    pub(crate) first_bucket: Option<ArrivalTime>,
+    pub(crate) bucket_len: usize,
     pub(crate) points: Vec<PlotPoint>,
 }
 
@@ -48,6 +56,9 @@ pub(crate) enum WorkspaceEffect {
     None,
     Playback(PlaybackCommand),
     FocusedCameraChanged(Option<CameraId>),
+    BeginPreview(ArrivalTime),
+    UpdatePreview(Option<ArrivalTime>),
+    CommitPreview(ArrivalTime),
 }
 
 impl ViewerInteractionState {
@@ -134,7 +145,15 @@ impl NativeWorkspace {
             }
             ViewerAction::SetPreviewTime(preview_time) => {
                 self.interaction.preview_time = preview_time;
-                WorkspaceEffect::None
+                WorkspaceEffect::UpdatePreview(preview_time)
+            }
+            ViewerAction::BeginPreview(time) => {
+                self.interaction.preview_time = Some(time);
+                WorkspaceEffect::BeginPreview(time)
+            }
+            ViewerAction::CommitPreview(time) => {
+                self.interaction.preview_time = None;
+                WorkspaceEffect::CommitPreview(time)
             }
         }
     }
@@ -231,7 +250,7 @@ mod tests {
 
         assert!(matches!(
             workspace.apply_action(ViewerAction::SetPreviewTime(Some(ArrivalTime(42)))),
-            WorkspaceEffect::None
+            WorkspaceEffect::UpdatePreview(Some(ArrivalTime(42)))
         ));
         assert_eq!(workspace.interaction.preview_time, Some(ArrivalTime(42)));
     }

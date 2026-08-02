@@ -73,6 +73,8 @@ impl PlotPanel {
                             error: context.plot.error,
                             playback,
                             display_time: context.interaction.display_time(playback),
+                            preview_signal: context.preview.speed_overview,
+                            bookmarks: context.preview.bookmarks,
                         },
                         &mut self.state,
                     );
