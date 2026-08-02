@@ -101,7 +101,9 @@ fn malformed_message_does_not_stop_the_next_frame() {
 fn seven_camera_display_policy_stays_within_the_decode_budget() {
     let mut playback =
         McapPlayback::new(seven_camera_fixture(), "/camera/front/image/compressed").unwrap();
-    playback.clock_mut().play();
+    playback
+        .apply_command(viewer_core::PlaybackCommand::Toggle)
+        .unwrap();
     let mut arrivals = BTreeMap::new();
     let mut decoded_by_camera = BTreeMap::<CameraId, u64>::new();
     let mut decode_time = Duration::ZERO;

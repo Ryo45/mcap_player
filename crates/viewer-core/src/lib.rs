@@ -47,7 +47,9 @@ pub use pipeline::{
     StreamBinding, StreamDescriptor, StreamId, StreamPipeline, TF_STATIC_TOPIC, TF_TOPIC,
     camera_topics, standard_bindings,
 };
-pub use playback::{McapPlayback, McapPlaybackError, PlaybackPerformance, StageTiming};
+pub use playback::{
+    McapPlayback, McapPlaybackError, PlaybackEffect, PlaybackPerformance, StageTiming,
+};
 pub use plot::{
     LoadedSignal, PlotMode, PlotPanelState, PlotSeries, PlotViewport, SignalId, SignalSample,
     arrival_time_from_plot_x, cursor_seconds, downsample_min_max, followed_viewport,

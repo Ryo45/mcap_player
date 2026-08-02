@@ -1,7 +1,7 @@
 use crate::{
     ArrivalTime, CameraId, DomainState, DomainUpdate, McapOpenError, McapSource, PipelineCounters,
-    PipelineSet, PlaybackClock, RawMessage, StreamBinding, StreamId, camera_topics,
-    standard_bindings,
+    PipelineSet, PlaybackClock, PlaybackCommand, RawMessage, StreamBinding, StreamId,
+    camera_topics, standard_bindings,
 };
 use std::{
     collections::{BTreeMap, HashMap},
@@ -71,6 +71,13 @@ pub struct PlaybackPerformance {
     pub camera_input_frames: u64,
     pub camera_presented_frames: u64,
     pub camera_presented_by_id: BTreeMap<CameraId, u64>,
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum PlaybackEffect {
+    #[default]
+    None,
+    Seeked,
 }
 
 impl PlaybackPerformance {
@@ -229,7 +236,7 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
         Ok(())
     }
 
-    pub fn seek(&mut self, cursor: ArrivalTime) -> Result<(), McapOpenError> {
+    fn seek(&mut self, cursor: ArrivalTime) -> Result<(), McapOpenError> {
         self.clock.seek(cursor);
         self.state.cold_seek();
         self.presentation_elapsed = Duration::ZERO;
@@ -256,12 +263,28 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
         Ok(())
     }
 
-    pub fn clock(&self) -> &PlaybackClock {
-        &self.clock
+    pub fn apply_command(
+        &mut self,
+        command: PlaybackCommand,
+    ) -> Result<PlaybackEffect, McapOpenError> {
+        match command {
+            PlaybackCommand::Toggle => {
+                self.clock.toggle();
+                Ok(PlaybackEffect::None)
+            }
+            PlaybackCommand::SetSpeed(speed) => {
+                self.clock.set_speed(speed);
+                Ok(PlaybackEffect::None)
+            }
+            PlaybackCommand::Seek(cursor) => {
+                self.seek(cursor)?;
+                Ok(PlaybackEffect::Seeked)
+            }
+        }
     }
 
-    pub fn clock_mut(&mut self) -> &mut PlaybackClock {
-        &mut self.clock
+    pub fn clock(&self) -> &PlaybackClock {
+        &self.clock
     }
 
     pub fn state(&self) -> &DomainState {
@@ -357,7 +380,7 @@ mod tests {
         let bytes = fixture("camera_front_3s.mcap");
         let mut playback =
             McapPlayback::new(bytes.as_slice(), "/camera/front/image/compressed").unwrap();
-        playback.clock_mut().play();
+        playback.apply_command(PlaybackCommand::Toggle).unwrap();
         playback.tick(Duration::from_secs(10)).unwrap();
         assert!(playback.state().camera.latest_by_arrival().is_some());
         assert_eq!(playback.counters().decoded, 1);
@@ -369,7 +392,12 @@ mod tests {
             playback.clock().start().0
                 + (playback.clock().end().0 - playback.clock().start().0) / 2,
         );
-        playback.seek(midpoint).unwrap();
+        assert_eq!(
+            playback
+                .apply_command(PlaybackCommand::Seek(midpoint))
+                .unwrap(),
+            PlaybackEffect::Seeked
+        );
         assert_eq!(playback.clock().cursor(), midpoint);
         assert!(playback.state().camera.latest_by_arrival().is_none());
     }
@@ -393,7 +421,7 @@ mod tests {
         let bytes = fixture("camera_7_5s.mcap");
         let mut playback =
             McapPlayback::new(bytes.as_slice(), "/camera/front/image/compressed").unwrap();
-        playback.clock_mut().play();
+        playback.apply_command(PlaybackCommand::Toggle).unwrap();
         let mut previous_presented = 0;
         for _ in 0..250 {
             playback.tick(Duration::from_millis(20)).unwrap();
@@ -437,7 +465,7 @@ mod tests {
         let bytes = fixture("camera_7_5s.mcap");
         let mut playback =
             McapPlayback::new(bytes.as_slice(), "/camera/front/image/compressed").unwrap();
-        playback.clock_mut().play();
+        playback.apply_command(PlaybackCommand::Toggle).unwrap();
         for _ in 0..50 {
             playback.tick(Duration::from_millis(20)).unwrap();
         }

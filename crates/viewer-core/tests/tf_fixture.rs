@@ -81,7 +81,9 @@ fn seven_camera_fixture_discovers_and_decodes_all_topics() {
     let bytes = fixture();
     let mut playback =
         viewer_core::McapPlayback::new(bytes, "/camera/front/image/compressed").unwrap();
-    playback.clock_mut().play();
+    playback
+        .apply_command(viewer_core::PlaybackCommand::Toggle)
+        .unwrap();
     playback.tick(std::time::Duration::from_secs(10)).unwrap();
     assert_eq!(
         playback.camera_topics(),

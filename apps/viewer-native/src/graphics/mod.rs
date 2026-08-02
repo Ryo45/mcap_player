@@ -4,7 +4,9 @@ mod surface;
 mod ui;
 pub(crate) mod views;
 
-use crate::{interaction::ViewerAction, workspace::NativeWorkspace};
+use crate::{
+    interaction::ViewerAction, presentation::PresentationTransition, workspace::NativeWorkspace,
+};
 use bev_renderer::{BevFrame, BevRenderer};
 use egui_wgpu::Renderer as EguiRenderer;
 use scene_renderer::{SceneCameraMode, SceneFrame, SceneRenderer};
@@ -72,6 +74,14 @@ pub(crate) struct Graphics {
 }
 
 impl Graphics {
+    pub(crate) fn apply_transition(&mut self, transition: PresentationTransition) {
+        self.hide_camera();
+        self.clear_scene_history();
+        if transition == PresentationTransition::SourceChanged {
+            self.clear_preview();
+        }
+    }
+
     pub(crate) fn render(
         &mut self,
         window: &Window,
