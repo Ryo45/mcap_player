@@ -98,6 +98,7 @@ pub struct PlaybackCore {
     transform_streams: Vec<StreamId>,
     camera_streams: HashMap<StreamId, CameraId>,
     camera_topics: Vec<(CameraId, String)>,
+    primary_camera_topic: String,
     focused_camera: Option<CameraId>,
     presentation_elapsed: Duration,
     next_camera_presentation: BTreeMap<CameraId, Duration>,
@@ -141,6 +142,7 @@ impl PlaybackCore {
             transform_streams,
             camera_streams,
             camera_topics,
+            primary_camera_topic: primary_camera_topic.to_owned(),
             focused_camera,
             presentation_elapsed: Duration::ZERO,
             next_camera_presentation: BTreeMap::new(),
@@ -275,6 +277,23 @@ impl PlaybackCore {
 
     pub(crate) fn performance_mut(&mut self) -> &mut PlaybackPerformance {
         &mut self.performance
+    }
+
+    pub(crate) fn staging_for_restore(&self, catalog: &StreamCatalog) -> Self {
+        let mut staged = Self::new(catalog, &self.primary_camera_topic)
+            .expect("an already validated catalog remains valid while seeking");
+        staged.state = self.state.clone();
+        staged.focused_camera = self.focused_camera;
+        staged.reset_for_restore();
+        staged
+    }
+
+    pub(crate) fn commit_restore(&mut self, staged: Self) {
+        self.pipelines.add_counters(staged.pipelines.counters());
+        self.state = staged.state;
+        self.presentation_elapsed = Duration::ZERO;
+        self.pending_camera_messages.clear();
+        self.reset_camera_schedule();
     }
 
     #[cfg(test)]

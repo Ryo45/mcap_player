@@ -124,6 +124,10 @@ impl<B: AsRef<[u8]>> McapSource<B> {
         self.range
     }
 
+    pub(crate) fn backing_bytes(&self) -> &[u8] {
+        self.backing.as_ref()
+    }
+
     pub fn seek(&mut self, cursor: ArrivalTime) -> Result<(), McapOpenError> {
         self.cache.clear();
         self.position = 0;

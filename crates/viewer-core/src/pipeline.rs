@@ -267,6 +267,15 @@ impl PipelineSet {
     pub fn counters(&self) -> PipelineCounters {
         self.counters
     }
+
+    pub(crate) fn add_counters(&mut self, counters: PipelineCounters) {
+        self.counters.decoded = self.counters.decoded.saturating_add(counters.decoded);
+        self.counters.errors = self.counters.errors.saturating_add(counters.errors);
+        self.counters.unknown_streams = self
+            .counters
+            .unknown_streams
+            .saturating_add(counters.unknown_streams);
+    }
 }
 
 fn build_pipeline(
