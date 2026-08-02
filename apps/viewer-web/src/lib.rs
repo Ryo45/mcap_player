@@ -3,9 +3,13 @@ mod range_spike;
 
 #[cfg(target_arch = "wasm32")]
 mod range_spike_browser;
+#[cfg(any(test, target_arch = "wasm32"))]
+mod webgpu;
 
 #[cfg(target_arch = "wasm32")]
 mod browser {
+    use crate::webgpu::WebGpuHost;
+    use bev_renderer::BevFrame;
     use js_sys::{Date, Uint8Array};
     use std::{
         cell::RefCell,
@@ -35,8 +39,6 @@ mod browser {
         camera_base_images: CameraBaseImageTracker,
         camera_base_canvases: BTreeMap<CameraId, HtmlCanvasElement>,
         camera_overlays: CameraOverlayState,
-        last_bev_revision: Option<u64>,
-        last_bev_size: (u32, u32),
         camera_topics: Vec<(CameraId, String)>,
         presentation_metrics: PresentationMetrics,
     }
@@ -47,6 +49,13 @@ mod browser {
         focused_camera: Option<CameraId>,
         calibrations: CameraCalibrationSet,
         previous_ms: f64,
+        webgpu: WebGpuState,
+    }
+
+    enum WebGpuState {
+        Initializing,
+        Ready(WebGpuHost),
+        Unavailable,
     }
 
     thread_local! { static APP: RefCell<WebApp> = RefCell::new(WebApp {
@@ -57,6 +66,7 @@ mod browser {
             "../../../config/camera_calibration.json"
         )).expect("bundled camera calibration"),
         previous_ms: Date::now(),
+        webgpu: WebGpuState::Initializing,
     }); }
 
     fn document() -> web_sys::Document {
@@ -77,6 +87,29 @@ mod browser {
         let status: HtmlElement = element("status");
         status.set_inner_text(message);
         status.set_class_name(if error { "error" } else { "" });
+    }
+
+    fn set_bev_status(message: &str, error: bool) {
+        let status: HtmlElement = element("bev-status");
+        status.set_inner_text(message);
+        status.set_class_name(if error { "error" } else { "" });
+    }
+
+    fn initialize_webgpu() {
+        let canvas: HtmlCanvasElement = element("bev");
+        set_bev_status("WebGPU: initializing", false);
+        spawn_local(async move {
+            match WebGpuHost::new(canvas).await {
+                Ok(host) => {
+                    APP.with(|app| app.borrow_mut().webgpu = WebGpuState::Ready(host));
+                    set_bev_status("WebGPU: shared BevRenderer ready", false);
+                }
+                Err(error) => {
+                    APP.with(|app| app.borrow_mut().webgpu = WebGpuState::Unavailable);
+                    set_bev_status(&format!("WebGPU unavailable: {error}"), true);
+                }
+            }
+        });
     }
 
     fn draw_base_image(canvas: &HtmlCanvasElement, image: &DecodedImage) {
@@ -343,8 +376,15 @@ mod browser {
                 focused_camera,
                 calibrations,
                 previous_ms: _,
+                webgpu,
             } = &mut *app;
             let Some(session) = playback else {
+                if let WebGpuState::Ready(host) = webgpu
+                    && let Err(error) = host.refresh_synthetic()
+                {
+                    set_bev_status(&format!("WebGPU BEV stopped: {error}"), true);
+                    *webgpu = WebGpuState::Unavailable;
+                }
                 return;
             };
             let camera_topics = session.camera_topics();
@@ -542,12 +582,19 @@ mod browser {
                 },
             ));
 
-            let bev_size = bev_canvas_size();
             let bev = BevFrameBuilder::new(session.state()).build();
-            if view.last_bev_revision != Some(bev.revision) || view.last_bev_size != bev_size {
-                draw_bev(bev.path, bev_size);
-                view.last_bev_revision = Some(bev.revision);
-                view.last_bev_size = bev_size;
+            let webgpu_error = match webgpu {
+                WebGpuState::Ready(host) => host
+                    .render(BevFrame {
+                        revision: bev.revision,
+                        path: bev.path,
+                    })
+                    .err(),
+                WebGpuState::Initializing | WebGpuState::Unavailable => None,
+            };
+            if let Some(error) = webgpu_error {
+                set_bev_status(&format!("WebGPU BEV stopped: {error}"), true);
+                *webgpu = WebGpuState::Unavailable;
             }
             let has_frames = state.camera.frames().next().is_some();
             if !has_frames {
@@ -569,119 +616,12 @@ mod browser {
         Duration::from_secs_f64(((Date::now() - started_ms).max(0.0)) / 1_000.0)
     }
 
-    fn bev_canvas_size() -> (u32, u32) {
-        let canvas: HtmlCanvasElement = element("bev");
-        let scale = web_sys::window()
-            .expect("window")
-            .device_pixel_ratio()
-            .clamp(1.0, 3.0);
-        let width = (f64::from(canvas.client_width().max(1)) * scale)
-            .round()
-            .clamp(1.0, 4096.0) as u32;
-        let height = (f64::from(canvas.client_height().max(1)) * scale)
-            .round()
-            .clamp(1.0, 4096.0) as u32;
-        (width, height)
-    }
-
-    fn draw_bev(path: &[[f32; 2]], size: (u32, u32)) {
-        let canvas: HtmlCanvasElement = element("bev");
-        if canvas.width() != size.0 {
-            canvas.set_width(size.0);
-        }
-        if canvas.height() != size.1 {
-            canvas.set_height(size.1);
-        }
-        let context: CanvasRenderingContext2d = canvas
-            .get_context("2d")
-            .expect("2d query")
-            .expect("2d context")
-            .dyn_into()
-            .expect("canvas 2d");
-        let width = f64::from(size.0);
-        let height = f64::from(size.1);
-        let pixels_per_meter = (width.min(height) / 36.0).max(4.0);
-        let origin = (width * 0.5, height * 0.70);
-        context.set_fill_style_str("#0b1117");
-        context.fill_rect(0.0, 0.0, width, height);
-
-        let x_min = (-origin.0 / pixels_per_meter).floor() as i32;
-        let x_max = ((width - origin.0) / pixels_per_meter).ceil() as i32;
-        for meter in x_min..=x_max {
-            context.set_stroke_style_str(if meter == 0 {
-                "#6c3933"
-            } else if meter % 5 == 0 {
-                "#28505a"
-            } else {
-                "#172c34"
-            });
-            context.set_line_width(if meter % 5 == 0 { 1.4 } else { 0.75 });
-            let x = origin.0 + f64::from(meter) * pixels_per_meter;
-            context.begin_path();
-            context.move_to(x, 0.0);
-            context.line_to(x, height);
-            context.stroke();
-        }
-        let y_min = (-(height - origin.1) / pixels_per_meter).floor() as i32;
-        let y_max = (origin.1 / pixels_per_meter).ceil() as i32;
-        for meter in y_min..=y_max {
-            context.set_stroke_style_str(if meter == 0 {
-                "#386c5e"
-            } else if meter % 5 == 0 {
-                "#28505a"
-            } else {
-                "#172c34"
-            });
-            context.set_line_width(if meter % 5 == 0 { 1.4 } else { 0.75 });
-            let y = origin.1 - f64::from(meter) * pixels_per_meter;
-            context.begin_path();
-            context.move_to(0.0, y);
-            context.line_to(width, y);
-            context.stroke();
-        }
-
-        if let Some(first) = path.first() {
-            context.set_stroke_style_str("#f5b829");
-            context.set_line_width(4.4);
-            context.set_line_join("round");
-            context.set_line_cap("round");
-            context.begin_path();
-            context.move_to(
-                origin.0 + f64::from(first[0]) * pixels_per_meter,
-                origin.1 - f64::from(first[1]) * pixels_per_meter,
-            );
-            for point in &path[1..] {
-                context.line_to(
-                    origin.0 + f64::from(point[0]) * pixels_per_meter,
-                    origin.1 - f64::from(point[1]) * pixels_per_meter,
-                );
-            }
-            context.stroke();
-        }
-
-        context.set_fill_style_str("#31c5d8");
-        context.fill_rect(
-            origin.0 - 0.92 * pixels_per_meter,
-            origin.1 - 2.1 * pixels_per_meter,
-            1.84 * pixels_per_meter,
-            4.2 * pixels_per_meter,
-        );
-        context.set_fill_style_str("#09232b");
-        context.fill_rect(
-            origin.0 - 0.62 * pixels_per_meter,
-            origin.1 - 1.28 * pixels_per_meter,
-            1.24 * pixels_per_meter,
-            0.93 * pixels_per_meter,
-        );
-    }
-
     #[wasm_bindgen(start)]
     pub fn start() -> Result<(), JsValue> {
         install_file_input();
         install_controls();
         crate::range_spike_browser::install();
-        let size = bev_canvas_size();
-        draw_bev(&[], size);
+        initialize_webgpu();
         let callback = Closure::<dyn FnMut()>::new(tick);
         web_sys::window()
             .expect("window")
