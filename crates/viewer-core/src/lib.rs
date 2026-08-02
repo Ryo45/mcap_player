@@ -16,6 +16,7 @@ mod plot;
 mod point_cloud;
 mod presentation;
 mod preview;
+mod source_identity;
 mod telemetry;
 mod time;
 mod transform;
@@ -61,6 +62,9 @@ pub use preview::{
     CURRENT_PREVIEW_SCHEMA_VERSION, CameraPreviewFrame, DataFidelity, PreviewBudget,
     PreviewImageEncoding, PreviewRequest, PreviewSnapshot, PreviewValidationError, SignalBucket,
     SignalFidelity, SignalOverview, TimeRange, TimedPosition2, merge_signal_buckets,
+};
+pub use source_identity::{
+    MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity, mcap_summary_fingerprint,
 };
 pub use telemetry::{TelemetryFrame, TelemetryState};
 pub use time::{ArrivalTime, CameraId, MeasurementTime};

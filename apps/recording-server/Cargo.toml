@@ -1,0 +1,26 @@
+[package]
+name = "recording-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+axum.workspace = true
+base64.workspace = true
+bytes.workspace = true
+crc32fast = "1.4"
+mcap = { workspace = true, features = ["zstd"] }
+serde.workspace = true
+serde_json.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "net", "signal", "sync"] }
+toml.workspace = true
+tower-http = { workspace = true, features = ["cors", "trace"] }
+tracing.workspace = true
+tracing-subscriber = { workspace = true, features = ["env-filter", "fmt"] }
+viewer-core = { path = "../../crates/viewer-core" }
+viewer-remote-protocol = { path = "../../crates/viewer-remote-protocol" }
+
+[dev-dependencies]
+tower = { workspace = true, features = ["util"] }
+viewer-preview-mcap = { path = "../../crates/viewer-preview-mcap" }

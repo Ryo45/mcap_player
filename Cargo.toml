@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/viewer-remote-protocol",
     "crates/viewer-layout",
     "crates/viewer-core",
     "crates/viewer-preview-mcap",
@@ -10,10 +11,12 @@ members = [
     "crates/viewer-ui",
     "apps/viewer-native",
     "apps/viewer-web",
+    "apps/recording-server",
     "tools/ros-fixture",
     "tools/preview-builder",
 ]
 default-members = [
+    "crates/viewer-remote-protocol",
     "crates/viewer-layout",
     "crates/viewer-core",
     "crates/viewer-preview-mcap",
@@ -23,6 +26,7 @@ default-members = [
     "crates/viewer-ui",
     "apps/viewer-native",
     "apps/viewer-web",
+    "apps/recording-server",
 ]
 
 [workspace.package]
@@ -32,6 +36,9 @@ license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 anyhow = "1.0"
+axum = "0.8"
+base64 = "0.22"
+bytes = "1.10"
 bytemuck = { version = "1.24", features = ["derive"] }
 egui = "0.33.2"
 egui_plot = "0.34.1"
@@ -45,6 +52,12 @@ memmap2 = "0.9.9"
 pollster = "0.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+tokio = "1.44"
+toml = "0.8"
+tower = "0.5"
+tower-http = "0.6"
+tracing = "0.1"
+tracing-subscriber = "0.3"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 web-sys = "0.3"
