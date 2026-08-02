@@ -1,6 +1,6 @@
 use axum::{Json, http::StatusCode, response::IntoResponse};
-use serde::Serialize;
 use std::{error::Error, fmt};
+use viewer_remote_protocol::RemoteErrorResponse;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum ErrorKind {
@@ -80,12 +80,6 @@ impl fmt::Display for ServerError {
 
 impl Error for ServerError {}
 
-#[derive(Serialize)]
-struct ErrorBody<'a> {
-    code: &'a str,
-    message: &'a str,
-}
-
 impl IntoResponse for ServerError {
     fn into_response(self) -> axum::response::Response {
         let status = self.status();
@@ -94,9 +88,9 @@ impl IntoResponse for ServerError {
         }
         (
             status,
-            Json(ErrorBody {
-                code: self.code,
-                message: &self.public_message,
+            Json(RemoteErrorResponse {
+                code: self.code.to_owned(),
+                message: self.public_message,
             }),
         )
             .into_response()

@@ -18,7 +18,10 @@ use axum::{
 use serde::Deserialize;
 use tokio::sync::Semaphore;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
-use viewer_remote_protocol::{BATCH_CONTENT_TYPE, RecordingsResponse};
+use viewer_remote_protocol::{
+    BATCH_COMPLETE_HEADER, BATCH_CONTENT_TYPE, MESSAGE_COUNT_HEADER, NEXT_CURSOR_HEADER,
+    RECORDING_REVISION_HEADER, RecordingsResponse,
+};
 
 use crate::{
     batch_service::{BatchRequest, read_batch},
@@ -26,11 +29,6 @@ use crate::{
     error::ServerError,
     recording::Recording,
 };
-
-const REVISION_HEADER: &str = "x-av-recording-revision";
-const COMPLETE_HEADER: &str = "x-av-batch-complete";
-const CURSOR_HEADER: &str = "x-av-next-cursor";
-const COUNT_HEADER: &str = "x-av-message-count";
 
 #[derive(Clone)]
 pub(crate) struct AppState {
@@ -69,10 +67,10 @@ pub(crate) fn router(config: &ServerConfig, state: AppState) -> Result<Router, S
         })
         .collect::<Result<Vec<_>, _>>()?;
     let exposed = [
-        HeaderName::from_static(REVISION_HEADER),
-        HeaderName::from_static(COMPLETE_HEADER),
-        HeaderName::from_static(CURSOR_HEADER),
-        HeaderName::from_static(COUNT_HEADER),
+        HeaderName::from_static(RECORDING_REVISION_HEADER),
+        HeaderName::from_static(BATCH_COMPLETE_HEADER),
+        HeaderName::from_static(NEXT_CURSOR_HEADER),
+        HeaderName::from_static(MESSAGE_COUNT_HEADER),
     ];
     let cors = CorsLayer::new()
         .allow_origin(origins)
@@ -179,15 +177,23 @@ async fn messages(
     response
         .headers_mut()
         .insert(CONTENT_TYPE, HeaderValue::from_static(BATCH_CONTENT_TYPE));
-    insert_header(&mut response, REVISION_HEADER, recording.revision.as_str())?;
     insert_header(
         &mut response,
-        COMPLETE_HEADER,
+        RECORDING_REVISION_HEADER,
+        recording.revision.as_str(),
+    )?;
+    insert_header(
+        &mut response,
+        BATCH_COMPLETE_HEADER,
         if page.complete { "true" } else { "false" },
     )?;
-    insert_header(&mut response, COUNT_HEADER, &page.message_count.to_string())?;
+    insert_header(
+        &mut response,
+        MESSAGE_COUNT_HEADER,
+        &page.message_count.to_string(),
+    )?;
     if let Some(cursor) = page.next_cursor {
-        insert_header(&mut response, CURSOR_HEADER, &cursor)?;
+        insert_header(&mut response, NEXT_CURSOR_HEADER, &cursor)?;
     }
     Ok(response)
 }
@@ -388,9 +394,9 @@ path = "{}"
             .unwrap();
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.headers()[CONTENT_TYPE], BATCH_CONTENT_TYPE);
-        assert_eq!(response.headers()[COMPLETE_HEADER], "false");
-        assert_eq!(response.headers()[COUNT_HEADER], "1");
-        assert!(response.headers().contains_key(CURSOR_HEADER));
+        assert_eq!(response.headers()[BATCH_COMPLETE_HEADER], "false");
+        assert_eq!(response.headers()[MESSAGE_COUNT_HEADER], "1");
+        assert!(response.headers().contains_key(NEXT_CURSOR_HEADER));
         assert!(
             response.headers()["access-control-expose-headers"]
                 .to_str()
