@@ -35,7 +35,10 @@ pub use cdr::{
     decode_compressed_image, decode_laser_scan, decode_odometry, decode_path, decode_tf_message,
     encode_compressed_image_cdr, encode_tf_message_cdr,
 };
-pub use clock::{PlaybackClock, PlaybackCommand, PlaybackSpeed, PlaybackView};
+pub use clock::{
+    PlaybackClock, PlaybackCommand, PlaybackLoadState, PlaybackSpeed, PlaybackView, SeekFidelity,
+    SeekRequest,
+};
 pub use domain::DomainState;
 pub use frame_builder::{
     BevFrameBuilder, BevSnapshot, SceneDiagnostics, SceneFrameBuilder, SceneSnapshot, SceneTfError,
