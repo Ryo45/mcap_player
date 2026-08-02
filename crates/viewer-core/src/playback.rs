@@ -70,17 +70,22 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
     }
 
     fn seek(&mut self, cursor: ArrivalTime) -> Result<(), McapOpenError> {
-        self.clock.seek(cursor);
-        self.core.reset_for_restore();
-
+        let target = ArrivalTime(cursor.0.clamp(self.clock.start().0, self.clock.end().0));
+        let mut staging_source = McapSource::new(self.source.backing_bytes())?;
+        let mut staging_core = self.core.staging_for_restore(staging_source.catalog());
         let start = self.source.time_range().0;
-        let pre_roll = ArrivalTime(cursor.0.saturating_sub(TF_SEEK_PREROLL_NS).max(start.0));
-        self.source.seek(pre_roll)?;
-        let messages = self.source.read_until(cursor)?;
-        self.core.apply_transform_restore(messages);
+        let pre_roll = ArrivalTime(target.0.saturating_sub(TF_SEEK_PREROLL_NS).max(start.0));
+        staging_source.seek(pre_roll)?;
+        let messages = staging_source.read_until(target)?;
+        staging_core.apply_transform_restore(messages);
         // Rewind after internal TF pre-roll so messages exactly at the cursor
         // remain part of normal playback.
-        self.source.seek(cursor)?;
+        staging_source.seek(target)?;
+        drop(staging_source);
+
+        self.source.seek(target)?;
+        self.core.commit_restore(staging_core);
+        self.clock.seek(target);
         Ok(())
     }
 
@@ -136,6 +141,7 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mcap::Summary;
 
     fn fixture(name: &str) -> Vec<u8> {
         std::fs::read(
@@ -144,6 +150,17 @@ mod tests {
                 .join(name),
         )
         .unwrap()
+    }
+
+    fn corrupt_last_chunk(mut bytes: Vec<u8>) -> (Vec<u8>, ArrivalTime) {
+        let summary = Summary::read(&bytes).unwrap().unwrap();
+        assert!(summary.chunk_indexes.len() > 1);
+        let last = summary.chunk_indexes.last().unwrap();
+        let offset = usize::try_from(last.compressed_data_offset().unwrap()).unwrap();
+        let length = usize::try_from(last.compressed_size).unwrap();
+        let target = ArrivalTime(i64::try_from(last.message_end_time).unwrap());
+        bytes[offset + length / 2] ^= 0x01;
+        (bytes, target)
     }
 
     #[test]
@@ -171,6 +188,55 @@ mod tests {
         );
         assert_eq!(playback.clock().cursor(), midpoint);
         assert!(playback.state().camera.latest_by_arrival().is_none());
+    }
+
+    #[test]
+    fn source_read_failure_does_not_commit_the_candidate_cursor() {
+        let (bytes, _) = corrupt_last_chunk(fixture("camera_7_5s.mcap"));
+        let mut playback =
+            McapPlayback::new(bytes.as_slice(), "/camera/front/image/compressed").unwrap();
+        playback.apply_command(PlaybackCommand::Toggle).unwrap();
+        let committed = playback.clock().cursor();
+
+        assert!(playback.tick(Duration::from_secs(10)).is_err());
+        assert_eq!(playback.clock().cursor(), committed);
+        assert!(playback.state().camera.latest_by_arrival().is_none());
+    }
+
+    #[test]
+    fn failed_staging_seek_preserves_committed_clock_and_domain_state() {
+        let (bytes, corrupt_target) = corrupt_last_chunk(fixture("camera_7_5s.mcap"));
+        let mut playback =
+            McapPlayback::new(bytes.as_slice(), "/camera/front/image/compressed").unwrap();
+        playback.apply_command(PlaybackCommand::Toggle).unwrap();
+        playback.tick(Duration::from_millis(20)).unwrap();
+        let committed_cursor = playback.clock().cursor();
+        let committed_camera = playback
+            .state()
+            .camera
+            .latest_by_arrival()
+            .map(|frame| frame.arrival_time);
+        let committed_static = playback.state().transforms.static_len();
+        let committed_dynamic = playback.state().transforms.dynamic_len();
+        let committed_counters = playback.counters();
+
+        assert!(
+            playback
+                .apply_command(PlaybackCommand::Seek(corrupt_target))
+                .is_err()
+        );
+        assert_eq!(playback.clock().cursor(), committed_cursor);
+        assert_eq!(
+            playback
+                .state()
+                .camera
+                .latest_by_arrival()
+                .map(|frame| frame.arrival_time),
+            committed_camera
+        );
+        assert_eq!(playback.state().transforms.static_len(), committed_static);
+        assert_eq!(playback.state().transforms.dynamic_len(), committed_dynamic);
+        assert_eq!(playback.counters(), committed_counters);
     }
 
     #[test]
