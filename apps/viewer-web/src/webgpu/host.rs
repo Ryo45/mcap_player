@@ -143,13 +143,6 @@ impl WebGpuHost {
         surface_texture.present();
         Ok(())
     }
-
-    pub(crate) fn refresh_synthetic(&mut self) -> Result<(), String> {
-        self.render(BevFrame {
-            revision: u64::MAX,
-            path: &[],
-        })
-    }
 }
 
 fn current_physical_size(canvas: &HtmlCanvasElement) -> Option<PhysicalSize> {
