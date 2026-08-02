@@ -25,6 +25,9 @@ DomainState
 `WebGpuHost` owns the `wgpu::Instance`, canvas `Surface`, adapter, `Device`,
 `Queue`, shared `BevRenderer`, and the Web-only presenter. It does not receive
 the playback source, raw MCAP messages, camera canvas, or range-read spike.
+Its asynchronous lifecycle is stored separately from the `WebApp` playback/view
+`RefCell`, so adapter/device completion cannot re-enter an active application
+state borrow.
 
 ## Rendering and allocation
 

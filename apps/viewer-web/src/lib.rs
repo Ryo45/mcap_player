@@ -49,7 +49,6 @@ mod browser {
         focused_camera: Option<CameraId>,
         calibrations: CameraCalibrationSet,
         previous_ms: f64,
-        webgpu: WebGpuState,
     }
 
     enum WebGpuState {
@@ -66,8 +65,10 @@ mod browser {
             "../../../config/camera_calibration.json"
         )).expect("bundled camera calibration"),
         previous_ms: Date::now(),
-        webgpu: WebGpuState::Initializing,
     }); }
+    thread_local! { static WEBGPU: RefCell<WebGpuState> = const {
+        RefCell::new(WebGpuState::Initializing)
+    }; }
 
     fn document() -> web_sys::Document {
         web_sys::window()
@@ -101,15 +102,29 @@ mod browser {
         spawn_local(async move {
             match WebGpuHost::new(canvas).await {
                 Ok(host) => {
-                    APP.with(|app| app.borrow_mut().webgpu = WebGpuState::Ready(host));
+                    WEBGPU.with(|state| *state.borrow_mut() = WebGpuState::Ready(host));
                     set_bev_status("WebGPU: shared BevRenderer ready", false);
                 }
                 Err(error) => {
-                    APP.with(|app| app.borrow_mut().webgpu = WebGpuState::Unavailable);
+                    WEBGPU.with(|state| *state.borrow_mut() = WebGpuState::Unavailable);
                     set_bev_status(&format!("WebGPU unavailable: {error}"), true);
                 }
             }
         });
+    }
+
+    fn render_bev(frame: BevFrame<'_>) {
+        let error = WEBGPU.with(|state| {
+            let mut state = state.borrow_mut();
+            match &mut *state {
+                WebGpuState::Ready(host) => host.render(frame).err(),
+                WebGpuState::Initializing | WebGpuState::Unavailable => None,
+            }
+        });
+        if let Some(error) = error {
+            set_bev_status(&format!("WebGPU BEV stopped: {error}"), true);
+            WEBGPU.with(|state| *state.borrow_mut() = WebGpuState::Unavailable);
+        }
     }
 
     fn draw_base_image(canvas: &HtmlCanvasElement, image: &DecodedImage) {
@@ -376,15 +391,12 @@ mod browser {
                 focused_camera,
                 calibrations,
                 previous_ms: _,
-                webgpu,
             } = &mut *app;
             let Some(session) = playback else {
-                if let WebGpuState::Ready(host) = webgpu
-                    && let Err(error) = host.refresh_synthetic()
-                {
-                    set_bev_status(&format!("WebGPU BEV stopped: {error}"), true);
-                    *webgpu = WebGpuState::Unavailable;
-                }
+                render_bev(BevFrame {
+                    revision: u64::MAX,
+                    path: &[],
+                });
                 return;
             };
             let camera_topics = session.camera_topics();
@@ -583,19 +595,10 @@ mod browser {
             ));
 
             let bev = BevFrameBuilder::new(session.state()).build();
-            let webgpu_error = match webgpu {
-                WebGpuState::Ready(host) => host
-                    .render(BevFrame {
-                        revision: bev.revision,
-                        path: bev.path,
-                    })
-                    .err(),
-                WebGpuState::Initializing | WebGpuState::Unavailable => None,
-            };
-            if let Some(error) = webgpu_error {
-                set_bev_status(&format!("WebGPU BEV stopped: {error}"), true);
-                *webgpu = WebGpuState::Unavailable;
-            }
+            render_bev(BevFrame {
+                revision: bev.revision,
+                path: bev.path,
+            });
             let has_frames = state.camera.frames().next().is_some();
             if !has_frames {
                 for (camera_id, _) in camera_topics {
