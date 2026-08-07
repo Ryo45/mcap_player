@@ -47,6 +47,7 @@ impl Default for PlotLoader {
 }
 
 impl PlotLoader {
+    #[cfg(any(test, feature = "ros2-live"))]
     pub(crate) fn clear(&mut self) {
         self.generation = self.generation.wrapping_add(1);
         self.state = PlotLoadState::Idle;
@@ -139,6 +140,7 @@ impl PlotLoader {
         }
     }
 
+    #[cfg(any(test, feature = "ros2-live"))]
     fn discard_pending_results(&mut self) {
         while self.result_receiver.try_recv().is_ok() {}
     }
