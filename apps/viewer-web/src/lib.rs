@@ -589,9 +589,8 @@ mod browser {
                 requested,
                 committed,
             } => format!(
-                "Buffering {:.3}s→{:.3}s",
-                committed.0 as f64 / 1e9,
-                requested.0 as f64 / 1e9
+                "Buffering · waiting for +{:.3}s",
+                requested.0.saturating_sub(committed.0) as f64 / 1e9
             ),
             PlaybackLoadState::Seeking { .. } => "Seeking".to_owned(),
             PlaybackLoadState::Failed { message } => format!("Failed: {message}"),
