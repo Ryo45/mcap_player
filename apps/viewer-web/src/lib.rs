@@ -1,5 +1,7 @@
 #[cfg(any(test, target_arch = "wasm32"))]
 mod range_spike;
+#[cfg(any(test, target_arch = "wasm32"))]
+mod remote;
 
 #[cfg(target_arch = "wasm32")]
 mod range_spike_browser;
@@ -675,6 +677,7 @@ mod browser {
     pub fn start() -> Result<(), JsValue> {
         install_file_input();
         install_controls();
+        crate::remote::install();
         crate::range_spike_browser::install();
         initialize_webgpu();
         let callback = Closure::<dyn FnMut()>::new(tick);
