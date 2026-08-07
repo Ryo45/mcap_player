@@ -146,7 +146,8 @@ fn camera_message(stream_id: StreamId, arrival_time: i64, marker: u8) -> RawMess
             format: "jpeg".into(),
             jpeg: vec![marker],
         })
-        .unwrap(),
+        .unwrap()
+        .into(),
     }
 }
 

@@ -1,3 +1,4 @@
+use bytes::Bytes;
 use std::{error::Error, fmt};
 use viewer_remote_protocol::{BATCH_CONTENT_TYPE, BatchDecoder, REMOTE_PROTOCOL_SCHEMA_VERSION};
 
@@ -56,7 +57,7 @@ impl RemoteBatchRequest {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct RemoteBatchPage {
-    pub body: Vec<u8>,
+    pub body: Bytes,
     pub complete: bool,
     pub next_cursor: Option<String>,
     pub message_count: usize,
@@ -170,7 +171,7 @@ impl RemoteApiClient {
         let buffer = JsFuture::from(response.array_buffer().map_err(js_error)?)
             .await
             .map_err(js_error)?;
-        let body = Uint8Array::new(&buffer).to_vec();
+        let body = Bytes::from(Uint8Array::new(&buffer).to_vec());
         validate_batch_response(metadata, body, &request.revision)
     }
 
@@ -203,7 +204,7 @@ struct BatchResponseMetadata {
 
 fn validate_batch_response(
     metadata: BatchResponseMetadata,
-    body: Vec<u8>,
+    body: Bytes,
     expected_revision: &str,
 ) -> Result<RemoteBatchPage, RemoteClientError> {
     let content_type = metadata
@@ -340,7 +341,7 @@ mod tests {
         }
     }
 
-    fn one_message_body() -> Vec<u8> {
+    fn one_message_body() -> Bytes {
         let mut encoder = BatchEncoder::new();
         encoder
             .push(RemoteMessageRef {
@@ -351,7 +352,7 @@ mod tests {
                 payload: b"cdr",
             })
             .unwrap();
-        encoder.finish().to_vec()
+        encoder.finish()
     }
 
     #[test]

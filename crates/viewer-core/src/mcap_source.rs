@@ -1,4 +1,5 @@
 use crate::{ArrivalTime, RawMessage, StreamDescriptor, StreamId};
+use bytes::Bytes;
 use mcap::{MessageStream, Summary};
 use std::fmt;
 
@@ -46,7 +47,7 @@ impl From<mcap::McapError> for McapOpenError {
 struct CachedMessage {
     arrival: ArrivalTime,
     stream_id: StreamId,
-    payload: Vec<u8>,
+    payload: Bytes,
 }
 
 pub struct McapSource<B: AsRef<[u8]>> {
@@ -196,7 +197,7 @@ impl<B: AsRef<[u8]>> McapSource<B> {
             cache.push(CachedMessage {
                 arrival: to_arrival(message.log_time)?,
                 stream_id: StreamId(u32::from(message.channel.id)),
-                payload: message.data.into_owned(),
+                payload: Bytes::from(message.data.into_owned()),
             });
         }
         cache.sort_by_key(|message| message.arrival);
@@ -234,7 +235,7 @@ impl<B: AsRef<[u8]>> McapSource<B> {
             cache.push(CachedMessage {
                 arrival: to_arrival(message.log_time)?,
                 stream_id: StreamId(u32::from(message.channel.id)),
-                payload: message.data.into_owned(),
+                payload: Bytes::from(message.data.into_owned()),
             });
         }
         cache.sort_by_key(|message| message.arrival);
