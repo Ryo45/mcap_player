@@ -10,6 +10,7 @@ mod webgpu;
 
 #[cfg(target_arch = "wasm32")]
 mod browser {
+    use crate::remote::{RemotePlayback, WebPlayback};
     use crate::webgpu::WebGpuHost;
     use bev_renderer::BevFrame;
     use js_sys::{Date, Uint8Array};
@@ -20,7 +21,8 @@ mod browser {
     };
     use viewer_core::{
         ArrivalTime, BevFrameBuilder, CameraCalibrationSet, CameraId, DiagnosticsPresentation,
-        McapPlayback, PlaybackCommand, PlaybackSpeed, PresentationMetrics, ViewerPresentation,
+        McapPlayback, PlaybackCommand, PlaybackLoadState, PlaybackSpeed, PresentationMetrics,
+        ViewerPresentation,
     };
     use viewer_renderer::{
         CameraBaseImageTracker, CameraOverlaySnapshot, CameraOverlayState, DecodedImage,
@@ -58,7 +60,7 @@ mod browser {
     }
 
     struct WebApp {
-        playback: Option<McapPlayback<Vec<u8>>>,
+        playback: Option<WebPlayback>,
         view: WebViewState,
         focused_camera: Option<CameraId>,
         calibrations: CameraCalibrationSet,
@@ -295,7 +297,9 @@ mod browser {
                         .await
                         .map_err(|_| "File read failed".to_owned())?;
                     let bytes = Uint8Array::new(&buffer).to_vec();
-                    McapPlayback::new(bytes, TOPIC).map_err(|error| error.to_string())
+                    McapPlayback::new(bytes, TOPIC)
+                        .map(WebPlayback::Local)
+                        .map_err(|error| error.to_string())
                 }
                 .await;
                 match result {
@@ -306,6 +310,10 @@ mod browser {
                             app.view.reset_for_source();
                             app.focused_camera = None;
                         });
+                        let timeline: HtmlInputElement = element("timeline");
+                        timeline.set_disabled(false);
+                        let speed: HtmlSelectElement = element("speed");
+                        speed.set_disabled(false);
                         set_status(&format!("{file_name} ready"), false);
                     }
                     Err(error) => set_status(&error, true),
@@ -398,7 +406,7 @@ mod browser {
     }
 
     fn advance_source_and_playback(
-        session: &mut McapPlayback<Vec<u8>>,
+        session: &mut WebPlayback,
         focused_camera: &mut Option<CameraId>,
         elapsed: Duration,
     ) -> Result<Option<CameraId>, String> {
@@ -413,7 +421,7 @@ mod browser {
     }
 
     fn update_camera_presentation(
-        session: &McapPlayback<Vec<u8>>,
+        session: &WebPlayback,
         view: &mut WebViewState,
         calibrations: &CameraCalibrationSet,
         selected_camera: Option<CameraId>,
@@ -522,7 +530,7 @@ mod browser {
     }
 
     fn build_viewer_presentation(
-        session: &McapPlayback<Vec<u8>>,
+        session: &WebPlayback,
         view: &WebViewState,
         selected_camera: Option<CameraId>,
     ) -> ViewerPresentation {
@@ -539,8 +547,15 @@ mod browser {
             selected_camera,
             &overlay_status,
             DiagnosticsPresentation {
-                source: "Browser file".to_owned(),
-                primary_topic: TOPIC.to_owned(),
+                source: if session.is_remote() {
+                    "Recording Server".to_owned()
+                } else {
+                    "Browser file".to_owned()
+                },
+                primary_topic: session
+                    .camera_topics()
+                    .first()
+                    .map_or_else(|| TOPIC.to_owned(), |(_, topic)| topic.clone()),
                 counters: session.counters(),
                 playback_performance: Some(session.performance().clone()),
                 performance: view.presentation_metrics.snapshot().clone(),
@@ -550,7 +565,7 @@ mod browser {
         )
     }
 
-    fn update_dom_diagnostics(presentation: &ViewerPresentation) {
+    fn update_dom_diagnostics(presentation: &ViewerPresentation, session: &WebPlayback) {
         let focus_label: HtmlElement = element("camera-focus-label");
         focus_label.set_inner_text(&presentation.focused_camera().map_or_else(
             || "waiting".to_owned(),
@@ -568,9 +583,22 @@ mod browser {
             label.set_inner_text(&format!("{} · {:.1} Hz", camera.topic, camera.fps));
         }
         let diagnostics = &presentation.diagnostics;
+        let load = match session.load_state() {
+            PlaybackLoadState::Ready => "Ready".to_owned(),
+            PlaybackLoadState::Buffering {
+                requested,
+                committed,
+            } => format!(
+                "Buffering {:.3}s→{:.3}s",
+                committed.0 as f64 / 1e9,
+                requested.0 as f64 / 1e9
+            ),
+            PlaybackLoadState::Seeking { .. } => "Seeking".to_owned(),
+            PlaybackLoadState::Failed { message } => format!("Failed: {message}"),
+        };
         set_status(
             &format!(
-                "{} decoded · {} errors · {} dropped · path {} pts · scan {} pts · {:.2}s",
+                "{load} · {} decoded · {} errors · {} dropped · path {} pts · scan {} pts · {:.2}s",
                 diagnostics.counters.decoded,
                 diagnostics.counters.errors,
                 diagnostics.counters.dropped,
@@ -588,8 +616,19 @@ mod browser {
             .focused_camera()
             .map_or(0.0, |camera| camera.fps);
         let performance: HtmlElement = element("performance");
+        let remote = session.remote_diagnostics().map_or_else(String::new, |(metrics, ahead)| {
+            format!(
+                " · Remote {} req/{} pages · {:.1} MB · ahead {:.2}s · last {:.1} ms · buffering {}",
+                metrics.requests,
+                metrics.pages,
+                metrics.bytes_received as f64 / (1024.0 * 1024.0),
+                ahead.as_secs_f64(),
+                metrics.last_window_latency_ms,
+                metrics.buffering_count,
+            )
+        });
         performance.set_inner_text(&format!(
-            "Focus {focused_fps:.1}/{:.0} Hz · others ≤{:.0} Hz · JPEG {:.2} ms · canvas {:.2} ms · tick {:.2} ms · MCAP/CDR/state {:.2}/{:.2}/{:.2} ms",
+            "Focus {focused_fps:.1}/{:.0} Hz · others ≤{:.0} Hz · JPEG {:.2} ms · canvas {:.2} ms · tick {:.2} ms · source/CDR/state {:.2}/{:.2}/{:.2} ms{remote}",
             playback_performance.focused_camera_hz(),
             playback_performance.background_camera_hz(),
             diagnostics.performance.jpeg_decode_ms,
@@ -615,7 +654,7 @@ mod browser {
         ));
     }
 
-    fn update_bev_presentation(session: &McapPlayback<Vec<u8>>) {
+    fn update_bev_presentation(session: &WebPlayback) {
         let bev = BevFrameBuilder::new(session.state()).build();
         render_bev(BevFrame {
             revision: bev.revision,
@@ -659,9 +698,12 @@ mod browser {
             let timeline: HtmlInputElement = element("timeline");
             timeline
                 .set_value_as_number((session.clock().cursor().0 - start) as f64 / duration as f64);
+            timeline.set_disabled(session.is_remote());
+            let speed: HtmlSelectElement = element("speed");
+            speed.set_disabled(session.is_remote());
             update_camera_presentation(session, view, calibrations, selected_camera);
             let presentation = build_viewer_presentation(session, view, selected_camera);
-            update_dom_diagnostics(&presentation);
+            update_dom_diagnostics(&presentation, session);
             update_bev_presentation(session);
             view.presentation_metrics
                 .record_render(duration_since(tick_started));
@@ -671,6 +713,24 @@ mod browser {
 
     fn duration_since(started_ms: f64) -> Duration {
         Duration::from_secs_f64(((Date::now() - started_ms).max(0.0)) / 1_000.0)
+    }
+
+    pub(crate) fn install_remote_playback(playback: RemotePlayback) {
+        APP.with(|cell| {
+            let mut app = cell.borrow_mut();
+            app.playback = Some(WebPlayback::Remote(playback));
+            app.view.reset_for_source();
+            app.focused_camera = None;
+            app.previous_ms = Date::now();
+        });
+        let timeline: HtmlInputElement = element("timeline");
+        timeline.set_disabled(true);
+        let speed: HtmlSelectElement = element("speed");
+        speed.set_value("1");
+        speed.set_disabled(true);
+        let play: HtmlButtonElement = element("play");
+        play.set_inner_text("Play");
+        set_status("Remote playback opened · buffering first window", false);
     }
 
     #[wasm_bindgen(start)]

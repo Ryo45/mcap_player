@@ -1,4 +1,6 @@
-use super::{RemoteApiClient, RemoteBatchRequest, RequestGeneration};
+use super::{
+    RemoteApiClient, RemoteBatchRequest, RemotePlayback, RequestGeneration, adapt_catalog,
+};
 use js_sys::Date;
 use std::cell::RefCell;
 use viewer_remote_protocol::{BatchDecoder, CatalogResponse};
@@ -245,6 +247,36 @@ fn install_batch() {
     callback.forget();
 }
 
+fn install_open_playback() {
+    let button: HtmlButtonElement = element("remote-open-playback");
+    let callback = Closure::<dyn FnMut()>::new(move || {
+        let Some((client, catalog)) = STATE.with(|state| {
+            let state = state.borrow();
+            Some((state.client.clone()?, state.catalog.clone()?))
+        }) else {
+            set_output("Connect and load a catalog first", true);
+            return;
+        };
+        let result = adapt_catalog(&catalog)
+            .map_err(|error| error.to_string())
+            .and_then(|catalog| {
+                RemotePlayback::new(client, catalog).map_err(|error| error.to_string())
+            });
+        match result {
+            Ok(playback) => {
+                crate::browser::install_remote_playback(playback);
+                set_output(
+                    "Remote playback opened. Exact seek remains disabled.",
+                    false,
+                );
+            }
+            Err(error) => set_output(&error, true),
+        }
+    });
+    button.set_onclick(Some(callback.as_ref().unchecked_ref()));
+    callback.forget();
+}
+
 fn format_catalog(catalog: &CatalogResponse) -> String {
     let streams = catalog
         .streams
@@ -267,6 +299,7 @@ pub(crate) fn install() {
     install_connect();
     install_catalog();
     install_batch();
+    install_open_playback();
     let select: HtmlSelectElement = element("remote-recording");
     let callback = Closure::<dyn FnMut(Event)>::new(move |_| {
         STATE.with(|state| state.borrow_mut().catalog = None);
