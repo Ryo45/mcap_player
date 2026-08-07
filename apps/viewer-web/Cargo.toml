@@ -9,6 +9,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 bev-renderer = { path = "../../crates/bev-renderer" }
+bytes.workspace = true
 mcap.workspace = true
 serde.workspace = true
 serde_json.workspace = true

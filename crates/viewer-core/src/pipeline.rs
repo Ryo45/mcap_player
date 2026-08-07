@@ -3,6 +3,7 @@ use crate::{
     TransformBatch, decode_compressed_image, decode_laser_scan, decode_odometry, decode_path,
     decode_tf_message,
 };
+use bytes::Bytes;
 use std::collections::HashMap;
 
 pub const PATH_TOPIC: &str = "/planning/path";
@@ -29,7 +30,7 @@ pub struct StreamId(pub u32);
 pub struct RawMessage {
     pub stream_id: StreamId,
     pub arrival_time: ArrivalTime,
-    pub payload: Vec<u8>,
+    pub payload: Bytes,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]

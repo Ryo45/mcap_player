@@ -1,5 +1,6 @@
 use crate::ProtocolError;
 use bytes::{BufMut, Bytes, BytesMut};
+use std::ops::Range;
 
 const MAGIC: &[u8; 4] = b"AVBT";
 const BATCH_HEADER_LEN: usize = 16;
@@ -14,6 +15,17 @@ pub struct RemoteMessageRef<'a> {
     pub log_time_ns: u64,
     pub publish_time_ns: u64,
     pub payload: &'a [u8],
+}
+
+impl RemoteMessageRef<'_> {
+    /// Locates this borrowed payload within the batch body that owns it.
+    pub fn payload_range_in(&self, body: &[u8]) -> Option<Range<usize>> {
+        let body_start = body.as_ptr() as usize;
+        let payload_start = self.payload.as_ptr() as usize;
+        let start = payload_start.checked_sub(body_start)?;
+        let end = start.checked_add(self.payload.len())?;
+        (end <= body.len()).then_some(start..end)
+    }
 }
 
 #[derive(Debug, Default)]
@@ -185,6 +197,7 @@ mod tests {
             messages[0].payload.as_ptr(),
             body[44..].as_ptr()
         ));
+        assert_eq!(messages[0].payload_range_in(&body), Some(44..47));
     }
 
     #[test]

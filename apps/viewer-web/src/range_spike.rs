@@ -288,7 +288,7 @@ pub(crate) fn feed_pipeline(
         RawMessage {
             stream_id,
             arrival_time: arrival,
-            payload: data.to_vec(),
+            payload: data.to_vec().into(),
         },
         &mut updates,
     );

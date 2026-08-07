@@ -153,7 +153,7 @@ mod ros {
             mailbox.push(RawMessage {
                 stream_id: StreamId(1),
                 arrival_time: ArrivalTime(arrival),
-                payload,
+                payload: payload.into(),
             });
         };
         let _subscription = node
