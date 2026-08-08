@@ -6,9 +6,9 @@ Browser `File.slice()`でMCAPのFooter、Summary、代表Chunkだけを取得で
 
 この実装は診断用スパイクであり、`RangeSource`、`AsyncReadAt`、`LogicalRecording`などのproduction APIではない。
 
-## 2. 現状の全ファイル読み込み経路
+## 2. 調査開始時の全ファイル読み込み経路
 
-通常のWeb walking skeletonは従来どおり次の経路を使う。
+このSpike開始時のWeb walking skeletonは次の経路を使っていた。
 
 ```text
 File.arrayBuffer()
@@ -20,6 +20,11 @@ File.arrayBuffer()
 ```
 
 `Summary::read()`は渡されたslice全体を一つのMCAP fileとして扱い、その長さをfile sizeとしてFooterへseekする。このため、Summary部分だけを切り出して渡すことはできない。また、`McapSource<B: AsRef<[u8]>>`も全体sliceの存在を前提とする。
+
+この経路は後続の`BrowserMcapWindowLoader`で撤去済みである。現在のproduction Local
+playbackは`File.slice()`、`SummaryReader`、`IndexedReader`から`SerializedWindow`を作り、
+Remoteと同じ`RecordingDataPlane`へ渡す。詳細は
+[`web_recording_data_plane.md`](web_recording_data_plane.md)を参照。
 
 ## 3. 実装したrange-read経路
 
@@ -137,13 +142,15 @@ Message Index record自体は`parse_record(op::MESSAGE_INDEX, body)`または`Li
 
 ## 7. 圧縮chunkの状況
 
-workspaceの共通依存は次の設定である。
+Spike実施時のworkspace共通依存は次の設定だった。
 
 ```toml
 mcap = { version = "0.23.4", default-features = false }
 ```
 
-Nativeだけが`lz4`と`zstd`を有効化している。Webはどちらも無効である。
+後続実装で`viewer-web`は`zstd`を有効化した。production Local loaderは
+`mcap::sans_io::IndexedReader`を圧縮・非圧縮の両方に使用する。独自compression abstractionは
+追加していない。
 
 指定ログの3,517 ChunkはすべてZstdだった。Spikeは最初のChunk record rangeを取得し、公開`parse_record()`でheaderを検証した。
 
@@ -155,7 +162,7 @@ Compressed payload          329,356 bytes
 Uncompressed size           820,971 bytes
 ```
 
-現行Web feature構成では展開を試みず、次を成功結果として表示する。
+Spike当時のWeb feature構成では展開を試みず、次を成功結果として表示した。
 
 ```text
 Footer and Summary range access succeeded

@@ -219,7 +219,8 @@ mod tests {
         StreamId, encode_compressed_image_cdr,
     };
     use viewer_remote_protocol::{
-        CatalogResponse, RemoteTimeRange, StreamDescriptor, StreamSemantic, TimestampNs,
+        BatchEncoder, CatalogResponse, RemoteMessageRef, RemoteTimeRange, StreamDescriptor,
+        StreamSemantic, TimestampNs,
     };
 
     fn remote_catalog() -> RemoteCatalog {
@@ -298,6 +299,7 @@ mod tests {
                     source_reads: 1,
                     source_bytes: 64,
                     latency_ms: 1.0,
+                    processing_ms: 0.0,
                 },
             })
             .unwrap();
@@ -329,5 +331,92 @@ mod tests {
                 .apply_command(PlaybackCommand::SetSpeed(PlaybackSpeed::Double))
                 .is_err()
         );
+    }
+
+    #[test]
+    fn local_indexed_and_remote_batch_windows_reduce_to_the_same_domain_state() {
+        let bytes = std::fs::read(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap"),
+        )
+        .unwrap();
+        let summary = mcap::Summary::read(&bytes).unwrap().unwrap();
+        let catalog =
+            crate::local::LocalCatalog::from_summary(&summary, "/camera/front/image/compressed")
+                .unwrap();
+        let window_end = viewer_core::ArrivalTime(
+            catalog
+                .start
+                .0
+                .saturating_add(1_000_000_000)
+                .min(catalog.end_exclusive.0),
+        );
+        let range = DataWindowTimeRange::new(catalog.start, window_end).unwrap();
+        let local = crate::local::collect_window_from_bytes_for_test(
+            &summary,
+            &catalog.selected_topics,
+            range,
+            &bytes,
+        )
+        .unwrap();
+
+        let mut encoder = BatchEncoder::new();
+        for (sequence, message) in local.window.messages.iter().enumerate() {
+            encoder
+                .push(RemoteMessageRef {
+                    stream_id: message.stream_id.0,
+                    sequence: sequence as u32,
+                    log_time_ns: message.arrival_time.0 as u64,
+                    publish_time_ns: message.arrival_time.0 as u64,
+                    payload: &message.payload,
+                })
+                .unwrap();
+        }
+        let remote = crate::remote::assemble_pages_for_test(
+            range,
+            [crate::remote::RemoteBatchPage {
+                body: encoder.finish(),
+                complete: true,
+                next_cursor: None,
+                message_count: local.window.messages.len(),
+                recording_revision: "test".into(),
+            }],
+        )
+        .unwrap();
+        assert_eq!(local.window.messages, remote.window.messages);
+
+        let mut local_core =
+            PlaybackCore::new(&catalog.core, &catalog.primary_camera_topic).unwrap();
+        let mut remote_core =
+            PlaybackCore::new(&catalog.core, &catalog.primary_camera_topic).unwrap();
+        local_core.process_forward(Duration::from_secs(1), local.window.messages);
+        remote_core.process_forward(Duration::from_secs(1), remote.window.messages);
+
+        let local_cameras = local_core
+            .state()
+            .camera
+            .frames()
+            .map(|(id, frame)| (*id, frame.clone()))
+            .collect::<Vec<_>>();
+        let remote_cameras = remote_core
+            .state()
+            .camera
+            .frames()
+            .map(|(id, frame)| (*id, frame.clone()))
+            .collect::<Vec<_>>();
+        assert_eq!(local_cameras, remote_cameras);
+        assert_eq!(
+            local_core.state().telemetry.latest(),
+            remote_core.state().telemetry.latest()
+        );
+        assert_eq!(
+            local_core.state().bev.latest(),
+            remote_core.state().bev.latest()
+        );
+        assert_eq!(
+            local_core.state().point_cloud.latest(),
+            remote_core.state().point_cloud.latest()
+        );
+        assert_eq!(local_core.counters(), remote_core.counters());
     }
 }

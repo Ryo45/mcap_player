@@ -633,7 +633,7 @@ mod browser {
         let performance: HtmlElement = element("performance");
         let metrics = session.data_plane_diagnostics();
         let data_plane = format!(
-            " · {} {} loads/{} reads · {:.1} MB loaded · {} windows/{:.1} MB RAM · ahead {:.2}s · {} evicted · last {:.1} ms · buffering {} · stale {}",
+            " · {} {} loads/{} reads · {:.1} MB loaded · {} windows/{:.1} MB RAM · ahead {:.2}s · {} evicted · last {:.1} ms (MCAP {:.1} ms) · buffering {} · stale {}",
             session.source_label(),
             metrics.load_requests,
             metrics.source_reads,
@@ -643,6 +643,7 @@ mod browser {
             metrics.buffer_ahead.as_secs_f64(),
             metrics.eviction_count,
             metrics.last_window_latency_ms,
+            metrics.last_processing_ms,
             metrics.buffering_count,
             metrics.stale_results_discarded,
         );
