@@ -490,4 +490,25 @@ mod tests {
         assert_eq!(source.complete_until(), ArrivalTime(10));
         assert_eq!(source.metrics().stale_results_discarded, 1);
     }
+
+    #[test]
+    fn empty_complete_window_advances_exclusive_completeness() {
+        let client = RemoteApiClient::new("http://localhost").unwrap();
+        let mut source = RemoteBatchSource::new(
+            client,
+            "demo".into(),
+            "revision".into(),
+            vec![1],
+            ArrivalTime(10),
+            ArrivalTime(30),
+        )
+        .unwrap();
+
+        source.inject_completed_window(ArrivalTime(20), vec![]);
+        assert!(source.poll_completed_fetch().unwrap());
+        assert_eq!(source.complete_until(), ArrivalTime(20));
+        assert!(source.is_complete_through(ArrivalTime(19)));
+        assert!(!source.is_complete_through(ArrivalTime(20)));
+        assert!(source.drain_through(ArrivalTime(19)).is_empty());
+    }
 }
