@@ -1,4 +1,5 @@
 use crate::{ArrivalTime, CameraId, MeasurementTime};
+use bytes::Bytes;
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -7,7 +8,7 @@ pub struct CameraFrame {
     pub measurement_time: MeasurementTime,
     pub arrival_time: ArrivalTime,
     pub frame_id: String,
-    pub jpeg: Vec<u8>,
+    pub jpeg: Bytes,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -84,7 +85,7 @@ mod tests {
             measurement_time: MeasurementTime(0),
             arrival_time: ArrivalTime(arrival),
             frame_id: String::new(),
-            jpeg: vec![],
+            jpeg: Bytes::new(),
         }
     }
 

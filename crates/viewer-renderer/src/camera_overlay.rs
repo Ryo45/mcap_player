@@ -118,7 +118,7 @@ mod tests {
             measurement_time: MeasurementTime(10),
             arrival_time: ArrivalTime(arrival),
             frame_id: "camera_front_optical_frame".to_owned(),
-            jpeg: Vec::new(),
+            jpeg: Vec::new().into(),
         }
     }
 

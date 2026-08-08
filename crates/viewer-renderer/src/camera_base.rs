@@ -35,7 +35,7 @@ mod tests {
             measurement_time: MeasurementTime(arrival),
             arrival_time: ArrivalTime(arrival),
             frame_id: "camera".to_owned(),
-            jpeg: Vec::new(),
+            jpeg: Vec::new().into(),
         }
     }
 
