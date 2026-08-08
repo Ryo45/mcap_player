@@ -1,0 +1,551 @@
+use crate::data_plane::{DataLoadError, LoadedWindow, WindowLoadDiagnostics};
+use bytes::Bytes;
+use mcap::sans_io::{IndexedReadEvent, IndexedReader, IndexedReaderOptions};
+use viewer_core::{ArrivalTime, DataWindowTimeRange, RawMessage, SerializedWindow, StreamId};
+
+#[cfg(target_arch = "wasm32")]
+use {
+    super::LocalCatalog,
+    crate::data_plane::{WindowLoader, WindowLoaderMetrics},
+    js_sys::{Date, Uint8Array},
+    mcap::sans_io::{SummaryReadEvent, SummaryReader, SummaryReaderOptions},
+    std::{cell::RefCell, collections::VecDeque, io::SeekFrom, rc::Rc},
+    wasm_bindgen_futures::{JsFuture, spawn_local},
+    web_sys::File,
+};
+
+#[cfg(target_arch = "wasm32")]
+const SUMMARY_READ_AHEAD: usize = 256 * 1024;
+const JS_MAX_SAFE_INTEGER: u64 = (1_u64 << 53) - 1;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct ByteRange {
+    offset: u64,
+    length: usize,
+}
+
+impl ByteRange {
+    fn end(self) -> u64 {
+        self.offset + self.length as u64
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct ChunkReadRequest {
+    offset: u64,
+    length: usize,
+}
+
+struct IndexedWindowCollector {
+    reader: IndexedReader,
+    range: DataWindowTimeRange,
+    messages: Vec<RawMessage>,
+    resident_bytes: usize,
+}
+
+impl IndexedWindowCollector {
+    fn new(
+        summary: &mcap::Summary,
+        topics: &[String],
+        range: DataWindowTimeRange,
+    ) -> Result<Self, DataLoadError> {
+        let start = u64::try_from(range.start.0)
+            .map_err(|_| DataLoadError::new("negative browser MCAP window start"))?;
+        let end = u64::try_from(range.end_exclusive.0)
+            .map_err(|_| DataLoadError::new("negative browser MCAP window end"))?;
+        let options = IndexedReaderOptions::new()
+            .include_topics(topics.iter().cloned())
+            .log_time_on_or_after(start)
+            .log_time_before(end);
+        let reader = IndexedReader::new_with_options(summary, options)
+            .map_err(|error| DataLoadError::new(error.to_string()))?;
+        Ok(Self {
+            reader,
+            range,
+            messages: Vec::new(),
+            resident_bytes: 0,
+        })
+    }
+
+    fn next_read(&mut self) -> Result<Option<ChunkReadRequest>, DataLoadError> {
+        loop {
+            let Some(event) = self.reader.next_event() else {
+                return Ok(None);
+            };
+            match event.map_err(|error| DataLoadError::new(error.to_string()))? {
+                IndexedReadEvent::ReadChunkRequest { offset, length } => {
+                    return Ok(Some(ChunkReadRequest { offset, length }));
+                }
+                IndexedReadEvent::Message { header, data } => {
+                    let arrival = i64::try_from(header.log_time).map_err(|_| {
+                        DataLoadError::new("browser MCAP timestamp exceeds signed nanoseconds")
+                    })?;
+                    self.resident_bytes = self
+                        .resident_bytes
+                        .checked_add(data.len())
+                        .ok_or_else(|| DataLoadError::new("local resident byte count overflow"))?;
+                    // IndexedReader owns and reuses its decompressed chunk slots. One copy is
+                    // required to retain a message beyond the next reader event; downstream Bytes
+                    // clones and Camera JPEG slices share this allocation.
+                    self.messages.push(RawMessage {
+                        stream_id: StreamId(u32::from(header.channel_id)),
+                        arrival_time: ArrivalTime(arrival),
+                        payload: Bytes::copy_from_slice(data),
+                    });
+                }
+            }
+        }
+    }
+
+    fn insert_chunk(
+        &mut self,
+        request: ChunkReadRequest,
+        bytes: &[u8],
+    ) -> Result<(), DataLoadError> {
+        self.reader
+            .insert_chunk_record_data(request.offset, bytes)
+            .map_err(|error| DataLoadError::new(error.to_string()))
+    }
+
+    fn finish(mut self, diagnostics: WindowLoadDiagnostics) -> Result<LoadedWindow, DataLoadError> {
+        self.messages
+            .sort_by_key(|message| (message.arrival_time, message.stream_id.0));
+        let window = SerializedWindow::new(self.range, self.messages, self.resident_bytes)
+            .map_err(|error| DataLoadError::new(error.to_string()))?;
+        Ok(LoadedWindow {
+            window,
+            diagnostics,
+        })
+    }
+}
+
+fn validate_range(file_size: u64, offset: u64, length: usize) -> Result<ByteRange, DataLoadError> {
+    if file_size == 0 {
+        return Err(DataLoadError::new("MCAP file is empty"));
+    }
+    if file_size > JS_MAX_SAFE_INTEGER {
+        return Err(DataLoadError::new(
+            "MCAP file size exceeds JavaScript's safe integer range",
+        ));
+    }
+    let end = offset
+        .checked_add(length as u64)
+        .ok_or_else(|| DataLoadError::new("MCAP range end overflow"))?;
+    if offset > JS_MAX_SAFE_INTEGER || end > JS_MAX_SAFE_INTEGER || end > file_size {
+        return Err(DataLoadError::new(format!(
+            "MCAP range {offset}..{end} exceeds file size {file_size}"
+        )));
+    }
+    Ok(ByteRange { offset, length })
+}
+
+#[cfg(target_arch = "wasm32")]
+#[derive(Debug)]
+enum LocalLoadState {
+    Idle,
+    Loading {
+        generation: u64,
+        range: DataWindowTimeRange,
+    },
+    Failed(DataLoadError),
+}
+
+#[cfg(target_arch = "wasm32")]
+#[derive(Debug)]
+struct LocalFetchResult {
+    generation: u64,
+    range: DataWindowTimeRange,
+    result: Result<LoadedWindow, DataLoadError>,
+}
+
+#[cfg(target_arch = "wasm32")]
+pub(crate) struct BrowserMcapWindowLoader {
+    file: File,
+    file_size: u64,
+    summary: Rc<mcap::Summary>,
+    selected_topics: Vec<String>,
+    generation: u64,
+    state: LocalLoadState,
+    inbox: Rc<RefCell<VecDeque<LocalFetchResult>>>,
+    metrics: WindowLoaderMetrics,
+}
+
+#[cfg(target_arch = "wasm32")]
+impl BrowserMcapWindowLoader {
+    fn new(
+        file: File,
+        file_size: u64,
+        summary: Rc<mcap::Summary>,
+        selected_topics: Vec<String>,
+        catalog_reads: u64,
+        catalog_bytes: u64,
+        catalog_latency_ms: f64,
+    ) -> Self {
+        Self {
+            file,
+            file_size,
+            summary,
+            selected_topics,
+            generation: 0,
+            state: LocalLoadState::Idle,
+            inbox: Rc::new(RefCell::new(VecDeque::new())),
+            metrics: WindowLoaderMetrics {
+                source_reads: catalog_reads,
+                source_bytes: catalog_bytes,
+                request_latency_ms: catalog_latency_ms,
+                ..WindowLoaderMetrics::default()
+            },
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+impl WindowLoader for BrowserMcapWindowLoader {
+    fn request(&mut self, range: DataWindowTimeRange) -> Result<(), DataLoadError> {
+        if !matches!(self.state, LocalLoadState::Idle) {
+            return Err(DataLoadError::new("browser MCAP window loader is not idle"));
+        }
+        self.generation = self.generation.wrapping_add(1);
+        let generation = self.generation;
+        self.state = LocalLoadState::Loading { generation, range };
+        self.metrics.load_requests = self.metrics.load_requests.saturating_add(1);
+        let file = self.file.clone();
+        let file_size = self.file_size;
+        let summary = Rc::clone(&self.summary);
+        let selected_topics = self.selected_topics.clone();
+        let inbox = Rc::clone(&self.inbox);
+        spawn_local(async move {
+            let result =
+                load_browser_window(&file, file_size, &summary, &selected_topics, range).await;
+            inbox.borrow_mut().push_back(LocalFetchResult {
+                generation,
+                range,
+                result,
+            });
+        });
+        Ok(())
+    }
+
+    fn poll(&mut self) -> Option<Result<LoadedWindow, DataLoadError>> {
+        if let LocalLoadState::Failed(error) = &self.state {
+            return Some(Err(error.clone()));
+        }
+        loop {
+            let result = self.inbox.borrow_mut().pop_front()?;
+            let current = matches!(
+                self.state,
+                LocalLoadState::Loading { generation, range }
+                    if generation == result.generation && range == result.range
+            );
+            if result.generation != self.generation || !current {
+                self.metrics.stale_results_discarded =
+                    self.metrics.stale_results_discarded.saturating_add(1);
+                continue;
+            }
+            match result.result {
+                Ok(loaded) => {
+                    self.metrics.source_reads = self
+                        .metrics
+                        .source_reads
+                        .saturating_add(loaded.diagnostics.source_reads);
+                    self.metrics.source_bytes = self
+                        .metrics
+                        .source_bytes
+                        .saturating_add(loaded.diagnostics.source_bytes as u64);
+                    self.metrics.messages_loaded = self
+                        .metrics
+                        .messages_loaded
+                        .saturating_add(loaded.window.messages.len() as u64);
+                    self.metrics.last_window_latency_ms = loaded.diagnostics.latency_ms;
+                    self.metrics.request_latency_ms = loaded.diagnostics.latency_ms;
+                    self.state = LocalLoadState::Idle;
+                    return Some(Ok(loaded));
+                }
+                Err(error) => {
+                    self.state = LocalLoadState::Failed(error.clone());
+                    return Some(Err(error));
+                }
+            }
+        }
+    }
+
+    fn cancel(&mut self) {
+        self.generation = self.generation.wrapping_add(1);
+        self.state = LocalLoadState::Idle;
+    }
+
+    fn is_idle(&self) -> bool {
+        matches!(self.state, LocalLoadState::Idle)
+    }
+
+    fn metrics(&self) -> &WindowLoaderMetrics {
+        &self.metrics
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+impl Drop for BrowserMcapWindowLoader {
+    fn drop(&mut self) {
+        WindowLoader::cancel(self);
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+pub(crate) struct BrowserMcapRecording {
+    pub catalog: LocalCatalog,
+    pub loader: BrowserMcapWindowLoader,
+}
+
+#[cfg(target_arch = "wasm32")]
+pub(crate) async fn open_browser_mcap(
+    file: File,
+    primary_camera_topic: &str,
+) -> Result<BrowserMcapRecording, DataLoadError> {
+    let file_size = browser_file_size(&file)?;
+    let started = Date::now();
+    let (summary, reads, bytes) = read_browser_summary(&file, file_size).await?;
+    let latency_ms = Date::now() - started;
+    let catalog = LocalCatalog::from_summary(&summary, primary_camera_topic)
+        .map_err(|error| DataLoadError::new(error.to_string()))?;
+    let selected_topics = catalog.selected_topics.clone();
+    let loader = BrowserMcapWindowLoader::new(
+        file,
+        file_size,
+        Rc::new(summary),
+        selected_topics,
+        reads,
+        bytes,
+        latency_ms,
+    );
+    Ok(BrowserMcapRecording { catalog, loader })
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn load_browser_window(
+    file: &File,
+    file_size: u64,
+    summary: &mcap::Summary,
+    topics: &[String],
+    range: DataWindowTimeRange,
+) -> Result<LoadedWindow, DataLoadError> {
+    let started = Date::now();
+    let mut collector = IndexedWindowCollector::new(summary, topics, range)?;
+    let mut source_reads = 0_u64;
+    let mut source_bytes = 0_usize;
+    while let Some(request) = collector.next_read()? {
+        let range = validate_range(file_size, request.offset, request.length)?;
+        let bytes = read_file_range(file, file_size, range).await?;
+        source_reads = source_reads.saturating_add(1);
+        source_bytes = source_bytes
+            .checked_add(bytes.len())
+            .ok_or_else(|| DataLoadError::new("local source byte count overflow"))?;
+        collector.insert_chunk(request, &bytes)?;
+    }
+    collector.finish(WindowLoadDiagnostics {
+        source_reads,
+        source_bytes,
+        latency_ms: Date::now() - started,
+    })
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn read_browser_summary(
+    file: &File,
+    file_size: u64,
+) -> Result<(mcap::Summary, u64, u64), DataLoadError> {
+    let mut reader =
+        SummaryReader::new_with_options(SummaryReaderOptions::default().with_file_size(file_size));
+    let mut position = 0_u64;
+    let mut seek_count = 0_u32;
+    let mut reads = 0_u64;
+    let mut bytes_read = 0_u64;
+    while let Some(event) = reader.next_event() {
+        match event.map_err(|error| DataLoadError::new(error.to_string()))? {
+            SummaryReadEvent::SeekRequest(seek) => {
+                position = resolve_seek(file_size, position, seek)?;
+                seek_count = seek_count.saturating_add(1);
+                reader.notify_seeked(position);
+            }
+            SummaryReadEvent::ReadRequest(need) => {
+                let remaining =
+                    usize::try_from(file_size.saturating_sub(position)).unwrap_or(usize::MAX);
+                let requested = if seek_count >= 2 {
+                    need.max(SUMMARY_READ_AHEAD).min(remaining)
+                } else {
+                    need
+                };
+                let range = validate_range(file_size, position, requested)?;
+                let bytes = read_file_range(file, file_size, range).await?;
+                reader.insert(bytes.len()).copy_from_slice(&bytes);
+                reader.notify_read(bytes.len());
+                position = position
+                    .checked_add(bytes.len() as u64)
+                    .ok_or_else(|| DataLoadError::new("SummaryReader position overflow"))?;
+                reads = reads.saturating_add(1);
+                bytes_read = bytes_read.saturating_add(bytes.len() as u64);
+            }
+        }
+    }
+    let summary = reader
+        .finish()
+        .ok_or_else(|| DataLoadError::new("MCAP has no Summary section"))?;
+    Ok((summary, reads, bytes_read))
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn read_file_range(
+    file: &File,
+    file_size: u64,
+    range: ByteRange,
+) -> Result<Vec<u8>, DataLoadError> {
+    let range = validate_range(file_size, range.offset, range.length)?;
+    if range.length == 0 {
+        return Ok(Vec::new());
+    }
+    if range.length > u32::MAX as usize {
+        return Err(DataLoadError::new(
+            "MCAP range exceeds Uint8Array addressable length",
+        ));
+    }
+    let blob = file
+        .slice_with_f64_and_f64(range.offset as f64, range.end() as f64)
+        .map_err(js_error)?;
+    let buffer = JsFuture::from(blob.array_buffer())
+        .await
+        .map_err(js_error)?;
+    let bytes = Uint8Array::new(&buffer);
+    if bytes.length() as usize != range.length {
+        return Err(DataLoadError::new(format!(
+            "short MCAP range read: requested {}, received {}",
+            range.length,
+            bytes.length()
+        )));
+    }
+    Ok(bytes.to_vec())
+}
+
+#[cfg(target_arch = "wasm32")]
+fn browser_file_size(file: &File) -> Result<u64, DataLoadError> {
+    let size = file.size();
+    if !size.is_finite() || size < 0.0 || size.fract() != 0.0 {
+        return Err(DataLoadError::new(format!(
+            "browser returned invalid File.size: {size}"
+        )));
+    }
+    let size = size as u64;
+    validate_range(size, 0, 0)?;
+    Ok(size)
+}
+
+#[cfg(target_arch = "wasm32")]
+fn resolve_seek(file_size: u64, current: u64, seek: SeekFrom) -> Result<u64, DataLoadError> {
+    let position = match seek {
+        SeekFrom::Start(position) => i128::from(position),
+        SeekFrom::Current(offset) => i128::from(current) + i128::from(offset),
+        SeekFrom::End(offset) => i128::from(file_size) + i128::from(offset),
+    };
+    if position < 0 || position > i128::from(file_size) {
+        return Err(DataLoadError::new(
+            "SummaryReader seek is outside the MCAP file",
+        ));
+    }
+    u64::try_from(position).map_err(|_| DataLoadError::new("SummaryReader seek overflow"))
+}
+
+#[cfg(target_arch = "wasm32")]
+fn js_error(error: wasm_bindgen::JsValue) -> DataLoadError {
+    DataLoadError::new(
+        error
+            .as_string()
+            .unwrap_or_else(|| format!("Browser File API error: {error:?}")),
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mcap::{Compression, Summary, WriteOptions, Writer, records::MessageHeader};
+    use std::{collections::BTreeMap, io::Cursor};
+
+    fn recording(compression: Option<Compression>) -> Vec<u8> {
+        let mut output = Cursor::new(Vec::new());
+        {
+            let options = WriteOptions::new()
+                .compression(compression)
+                .chunk_size(Some(64));
+            let mut writer = Writer::with_options(&mut output, options).unwrap();
+            let schema = writer
+                .add_schema("sensor_msgs/msg/CompressedImage", "ros2msg", b"schema")
+                .unwrap();
+            let channel = writer
+                .add_channel(schema, "/camera", "cdr", &BTreeMap::new())
+                .unwrap();
+            for sequence in 0..4 {
+                writer
+                    .write_to_known_channel(
+                        &MessageHeader {
+                            channel_id: channel,
+                            sequence,
+                            log_time: 1_000 + u64::from(sequence) * 10,
+                            publish_time: 1_000 + u64::from(sequence) * 10,
+                        },
+                        &[sequence as u8; 16],
+                    )
+                    .unwrap();
+            }
+            writer.finish().unwrap();
+        }
+        output.into_inner()
+    }
+
+    fn collect(bytes: &[u8]) -> (LoadedWindow, usize) {
+        let summary = Summary::read(bytes).unwrap().unwrap();
+        let range = DataWindowTimeRange::new(ArrivalTime(1_000), ArrivalTime(1_031)).unwrap();
+        let mut collector =
+            IndexedWindowCollector::new(&summary, &["/camera".to_owned()], range).unwrap();
+        let mut source_bytes = 0;
+        let mut reads = 0;
+        while let Some(request) = collector.next_read().unwrap() {
+            let range = validate_range(bytes.len() as u64, request.offset, request.length).unwrap();
+            let chunk = &bytes[range.offset as usize..range.end() as usize];
+            source_bytes += chunk.len();
+            reads += 1;
+            collector.insert_chunk(request, chunk).unwrap();
+        }
+        let loaded = collector
+            .finish(WindowLoadDiagnostics {
+                source_reads: reads,
+                source_bytes,
+                latency_ms: 0.0,
+            })
+            .unwrap();
+        (loaded, source_bytes)
+    }
+
+    #[test]
+    fn indexed_windows_read_only_requested_uncompressed_chunks() {
+        let bytes = recording(None);
+        let (loaded, source_bytes) = collect(&bytes);
+        assert_eq!(loaded.window.messages.len(), 4);
+        assert!(source_bytes < bytes.len());
+        assert_eq!(loaded.window.range.start, ArrivalTime(1_000));
+        assert_eq!(loaded.window.range.end_exclusive, ArrivalTime(1_031));
+    }
+
+    #[test]
+    fn indexed_windows_decode_zstd_chunks_through_the_same_collector() {
+        let bytes = recording(Some(Compression::Zstd));
+        let (loaded, source_bytes) = collect(&bytes);
+        assert_eq!(loaded.window.messages.len(), 4);
+        assert!(source_bytes < bytes.len());
+        assert_eq!(loaded.window.messages[0].payload.as_ref(), &[0; 16]);
+    }
+
+    #[test]
+    fn range_validation_rejects_whole_file_api_edge_cases() {
+        assert!(validate_range(0, 0, 0).is_err());
+        assert!(validate_range(10, 9, 2).is_err());
+        assert!(validate_range(10, u64::MAX, 2).is_err());
+        assert!(validate_range(JS_MAX_SAFE_INTEGER + 1, 0, 0).is_err());
+    }
+}
