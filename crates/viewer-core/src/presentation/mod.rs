@@ -83,7 +83,7 @@ mod tests {
             measurement_time: MeasurementTime(1),
             arrival_time: ArrivalTime(2),
             frame_id: "rear".into(),
-            jpeg: vec![],
+            jpeg: vec![].into(),
         });
         state.telemetry.apply(TelemetryFrame {
             measurement_time: MeasurementTime(1),

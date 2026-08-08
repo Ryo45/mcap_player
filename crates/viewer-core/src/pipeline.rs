@@ -1,7 +1,7 @@
 use crate::{
     ArrivalTime, BevPathFrame, CameraFrame, CameraId, DecodeError, PointCloudFrame, TelemetryFrame,
-    TransformBatch, decode_compressed_image, decode_laser_scan, decode_odometry, decode_path,
-    decode_tf_message,
+    TransformBatch, decode_compressed_image_bytes, decode_laser_scan, decode_odometry,
+    decode_path, decode_tf_message,
 };
 use bytes::Bytes;
 use std::collections::HashMap;
@@ -211,7 +211,7 @@ impl StreamPipeline for CompressedImagePipeline {
         message: RawMessage,
         output: &mut Vec<DomainUpdate>,
     ) -> Result<(), DecodeError> {
-        let image = decode_compressed_image(&message.payload)?;
+        let image = decode_compressed_image_bytes(message.payload)?;
         output.push(DomainUpdate::Camera(CameraFrame {
             camera_id: self.camera_id,
             measurement_time: image.measurement_time,
@@ -304,4 +304,53 @@ fn build_pipeline(
         _ => return None,
     };
     Some(pipeline)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{CompressedImage, MeasurementTime, encode_compressed_image_cdr};
+
+    #[test]
+    fn camera_pipeline_retains_jpeg_in_raw_message_backing_allocation() {
+        let stream_id = StreamId(7);
+        let payload = Bytes::from(
+            encode_compressed_image_cdr(&CompressedImage {
+                measurement_time: MeasurementTime(42),
+                frame_id: "camera".into(),
+                format: "jpeg".into(),
+                jpeg: vec![1, 2, 3, 4],
+            })
+            .unwrap(),
+        );
+        let payload_start = payload.as_ptr() as usize;
+        let payload_end = payload_start + payload.len();
+        let mut pipelines = PipelineSet::new(
+            &[StreamDescriptor {
+                id: stream_id,
+                topic: "/camera".into(),
+                schema: "sensor_msgs/msg/CompressedImage".into(),
+                message_encoding: "cdr".into(),
+            }],
+            &[(stream_id, StreamBinding::Camera(CameraId(0)))],
+        );
+        let mut updates = Vec::new();
+
+        pipelines.decode(
+            RawMessage {
+                stream_id,
+                arrival_time: ArrivalTime(100),
+                payload,
+            },
+            &mut updates,
+        );
+
+        let DomainUpdate::Camera(frame) = updates.pop().unwrap() else {
+            panic!("camera pipeline must produce a camera update");
+        };
+        let jpeg_start = frame.jpeg.as_ptr() as usize;
+        assert_eq!(frame.jpeg.as_ref(), [1, 2, 3, 4]);
+        assert!(jpeg_start >= payload_start);
+        assert!(jpeg_start + frame.jpeg.len() <= payload_end);
+    }
 }

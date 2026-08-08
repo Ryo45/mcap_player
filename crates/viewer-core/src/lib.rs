@@ -32,9 +32,10 @@ pub use camera_projection::{
     CalibrationError, CameraCalibration, CameraCalibrationSet, ProjectedPlan, ProjectionError,
 };
 pub use cdr::{
-    CompressedImage, DecodeError, LaserScan, Odometry, PathMessage, TransformStamped,
-    decode_compressed_image, decode_laser_scan, decode_odometry, decode_path, decode_tf_message,
-    encode_compressed_image_cdr, encode_tf_message_cdr,
+    CompressedImage, DecodeError, DecodedCompressedImage, LaserScan, Odometry, PathMessage,
+    TransformStamped, decode_compressed_image, decode_compressed_image_bytes, decode_laser_scan,
+    decode_odometry, decode_path, decode_tf_message, encode_compressed_image_cdr,
+    encode_tf_message_cdr,
 };
 pub use clock::{
     PlaybackClock, PlaybackCommand, PlaybackLoadState, PlaybackSpeed, PlaybackView, SeekFidelity,

@@ -1,5 +1,7 @@
 use crate::MeasurementTime;
+use bytes::Bytes;
 use std::fmt;
+use std::ops::Range;
 
 const MAX_FIELD_BYTES: usize = 64 * 1024 * 1024;
 
@@ -9,6 +11,14 @@ pub struct CompressedImage {
     pub frame_id: String,
     pub format: String,
     pub jpeg: Vec<u8>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct DecodedCompressedImage {
+    pub measurement_time: MeasurementTime,
+    pub frame_id: String,
+    pub format: String,
+    pub jpeg: Bytes,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -214,7 +224,14 @@ fn normalize_format(value: &str) -> Result<String, DecodeError> {
     }
 }
 
-pub fn decode_compressed_image(bytes: &[u8]) -> Result<CompressedImage, DecodeError> {
+struct CompressedImageParts {
+    measurement_time: MeasurementTime,
+    frame_id: String,
+    format: String,
+    jpeg_range: Range<usize>,
+}
+
+fn compressed_image_parts(bytes: &[u8]) -> Result<CompressedImageParts, DecodeError> {
     let mut reader = Reader::new(bytes)?;
     let seconds = reader.i32()?;
     let nanoseconds = reader.u32()?;
@@ -228,12 +245,37 @@ pub fn decode_compressed_image(bytes: &[u8]) -> Result<CompressedImage, DecodeEr
     let frame_id = reader.string()?;
     let format = normalize_format(&reader.string()?)?;
     let jpeg_length = reader.length()?;
-    let jpeg = reader.take(jpeg_length)?.to_vec();
-    Ok(CompressedImage {
+    let jpeg_start = reader.position;
+    reader.take(jpeg_length)?;
+    let jpeg_range = jpeg_start..reader.position;
+    Ok(CompressedImageParts {
         measurement_time: MeasurementTime(measurement),
         frame_id,
         format,
-        jpeg,
+        jpeg_range,
+    })
+}
+
+pub fn decode_compressed_image(bytes: &[u8]) -> Result<CompressedImage, DecodeError> {
+    let parts = compressed_image_parts(bytes)?;
+    Ok(CompressedImage {
+        measurement_time: parts.measurement_time,
+        frame_id: parts.frame_id,
+        format: parts.format,
+        jpeg: bytes[parts.jpeg_range].to_vec(),
+    })
+}
+
+/// Decodes metadata while retaining the JPEG as a shared slice of the CDR payload.
+pub fn decode_compressed_image_bytes(
+    bytes: Bytes,
+) -> Result<DecodedCompressedImage, DecodeError> {
+    let parts = compressed_image_parts(&bytes)?;
+    Ok(DecodedCompressedImage {
+        measurement_time: parts.measurement_time,
+        frame_id: parts.frame_id,
+        format: parts.format,
+        jpeg: bytes.slice(parts.jpeg_range),
     })
 }
 
@@ -521,6 +563,28 @@ mod tests {
                 .format,
             "jpeg"
         );
+    }
+
+    #[test]
+    fn bytes_decoder_retains_jpeg_in_the_cdr_backing_allocation() {
+        let payload = Bytes::from(
+            encode_compressed_image_cdr(&CompressedImage {
+                measurement_time: MeasurementTime(12_345_000_006),
+                frame_id: "front".into(),
+                format: "jpeg".into(),
+                jpeg: vec![0xff, 0xd8, 0x01, 0x02, 0xff, 0xd9],
+            })
+            .unwrap(),
+        );
+        let payload_start = payload.as_ptr() as usize;
+        let payload_end = payload_start + payload.len();
+
+        let decoded = decode_compressed_image_bytes(payload.clone()).unwrap();
+        let jpeg_start = decoded.jpeg.as_ptr() as usize;
+
+        assert_eq!(decoded.jpeg.as_ref(), [0xff, 0xd8, 0x01, 0x02, 0xff, 0xd9]);
+        assert!(jpeg_start >= payload_start);
+        assert!(jpeg_start + decoded.jpeg.len() <= payload_end);
     }
 
     #[test]

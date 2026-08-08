@@ -257,7 +257,7 @@ mod tests {
             measurement_time: MeasurementTime(10),
             arrival_time: ArrivalTime(11),
             frame_id: "camera_front_optical_frame".into(),
-            jpeg: vec![],
+            jpeg: vec![].into(),
         }
     }
 
