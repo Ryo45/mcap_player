@@ -615,15 +615,19 @@ mod browser {
             .focused_camera()
             .map_or(0.0, |camera| camera.fps);
         let performance: HtmlElement = element("performance");
-        let remote = session.remote_diagnostics().map_or_else(String::new, |(metrics, ahead)| {
+        let remote = session.remote_diagnostics().map_or_else(String::new, |metrics| {
             format!(
-                " · Remote {} req/{} pages · {:.1} MB · ahead {:.2}s · last {:.1} ms · buffering {}",
-                metrics.requests,
-                metrics.pages,
-                metrics.bytes_received as f64 / (1024.0 * 1024.0),
-                ahead.as_secs_f64(),
+                " · Remote {} loads/{} reads · {:.1} MB rx · {} windows/{:.1} MB RAM · ahead {:.2}s · {} evicted · last {:.1} ms · buffering {} · stale {}",
+                metrics.load_requests,
+                metrics.source_reads,
+                metrics.source_bytes as f64 / (1024.0 * 1024.0),
+                metrics.window_count,
+                metrics.resident_bytes as f64 / (1024.0 * 1024.0),
+                metrics.buffer_ahead.as_secs_f64(),
+                metrics.eviction_count,
                 metrics.last_window_latency_ms,
                 metrics.buffering_count,
+                metrics.stale_results_discarded,
             )
         });
         performance.set_inner_text(&format!(

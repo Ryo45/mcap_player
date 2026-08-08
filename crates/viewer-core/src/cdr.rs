@@ -267,9 +267,7 @@ pub fn decode_compressed_image(bytes: &[u8]) -> Result<CompressedImage, DecodeEr
 }
 
 /// Decodes metadata while retaining the JPEG as a shared slice of the CDR payload.
-pub fn decode_compressed_image_bytes(
-    bytes: Bytes,
-) -> Result<DecodedCompressedImage, DecodeError> {
+pub fn decode_compressed_image_bytes(bytes: Bytes) -> Result<DecodedCompressedImage, DecodeError> {
     let parts = compressed_image_parts(&bytes)?;
     Ok(DecodedCompressedImage {
         measurement_time: parts.measurement_time,

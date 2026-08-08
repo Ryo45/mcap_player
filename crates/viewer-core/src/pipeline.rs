@@ -1,7 +1,7 @@
 use crate::{
     ArrivalTime, BevPathFrame, CameraFrame, CameraId, DecodeError, PointCloudFrame, TelemetryFrame,
-    TransformBatch, decode_compressed_image_bytes, decode_laser_scan, decode_odometry,
-    decode_path, decode_tf_message,
+    TransformBatch, decode_compressed_image_bytes, decode_laser_scan, decode_odometry, decode_path,
+    decode_tf_message,
 };
 use bytes::Bytes;
 use std::collections::HashMap;

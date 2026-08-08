@@ -208,13 +208,26 @@ impl MemoryWindowStore {
     }
 
     /// Returns each retained message at most once while keeping its Bytes allocation resident.
-    pub fn take_messages_through(&mut self, through: ArrivalTime) -> Vec<RawMessage> {
+    pub fn take_messages_through(
+        &mut self,
+        after: ArrivalTime,
+        through: ArrivalTime,
+        include_after: bool,
+    ) -> Vec<RawMessage> {
         let mut result = Vec::new();
         for stored in &mut self.windows {
             let additional = stored.window.messages[stored.next_message..]
                 .partition_point(|message| message.arrival_time <= through);
             let end = stored.next_message + additional;
-            result.extend_from_slice(&stored.window.messages[stored.next_message..end]);
+            result.extend(
+                stored.window.messages[stored.next_message..end]
+                    .iter()
+                    .filter(|message| {
+                        message.arrival_time > after
+                            || (include_after && message.arrival_time == after)
+                    })
+                    .cloned(),
+            );
             stored.next_message = end;
         }
         result
@@ -369,9 +382,53 @@ mod tests {
         let mut store = MemoryWindowStore::new(ArrivalTime(10), 1024).unwrap();
         store.insert(serialized).unwrap();
 
-        let loaded = store.take_messages_through(ArrivalTime(19));
+        let loaded = store.take_messages_through(ArrivalTime(10), ArrivalTime(19), true);
         assert_eq!(loaded[0].payload.as_ptr(), pointer);
-        assert!(store.take_messages_through(ArrivalTime(19)).is_empty());
+        assert!(
+            store
+                .take_messages_through(ArrivalTime(10), ArrivalTime(19), false)
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn adjacent_windows_deliver_the_boundary_message_once() {
+        let mut store = MemoryWindowStore::new(ArrivalTime(0), 1024).unwrap();
+        store
+            .insert(
+                SerializedWindow::new(
+                    TimeRange::new(ArrivalTime(0), ArrivalTime(10)).unwrap(),
+                    vec![message(9, Bytes::from_static(b"before"))],
+                    6,
+                )
+                .unwrap(),
+            )
+            .unwrap();
+        store
+            .insert(
+                SerializedWindow::new(
+                    TimeRange::new(ArrivalTime(10), ArrivalTime(20)).unwrap(),
+                    vec![message(10, Bytes::from_static(b"boundary"))],
+                    8,
+                )
+                .unwrap(),
+            )
+            .unwrap();
+
+        assert_eq!(
+            store
+                .take_messages_through(ArrivalTime(0), ArrivalTime(9), true)
+                .len(),
+            1
+        );
+        let second = store.take_messages_through(ArrivalTime(9), ArrivalTime(10), false);
+        assert_eq!(second.len(), 1);
+        assert_eq!(second[0].arrival_time, ArrivalTime(10));
+        assert!(
+            store
+                .take_messages_through(ArrivalTime(9), ArrivalTime(10), false)
+                .is_empty()
+        );
     }
 
     #[test]
