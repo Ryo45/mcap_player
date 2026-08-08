@@ -3,7 +3,6 @@
 mod catalog;
 mod client;
 mod loader;
-mod playback;
 #[cfg(target_arch = "wasm32")]
 mod smoke;
 
@@ -12,6 +11,5 @@ pub(crate) use client::RemoteApiClient;
 #[cfg(target_arch = "wasm32")]
 pub(crate) use client::{RemoteBatchRequest, RemoteClientError, RequestGeneration};
 pub(crate) use loader::RemoteWindowLoader;
-pub(crate) use playback::{RemotePlayback, WebPlayback};
 #[cfg(target_arch = "wasm32")]
 pub(crate) use smoke::install;
