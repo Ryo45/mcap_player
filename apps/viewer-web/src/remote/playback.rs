@@ -1,4 +1,7 @@
-use super::{RemoteApiClient, RemoteBatchSource, RemoteCatalog, RemoteSourceMetrics};
+use super::{
+    RecordingDataPlane, RecordingDataPlaneDiagnostics, RemoteApiClient, RemoteCatalog,
+    RemoteWindowLoader,
+};
 use std::{error::Error, fmt, time::Duration};
 use viewer_core::{
     CameraId, DomainState, McapPlayback, PipelineCounters, PlaybackClock, PlaybackCommand,
@@ -25,7 +28,7 @@ impl Error for RemotePlaybackError {}
 pub(crate) struct RemotePlayback {
     clock: PlaybackClock,
     core: PlaybackCore,
-    source: RemoteBatchSource,
+    data: RecordingDataPlane,
     load_state: PlaybackLoadState,
 }
 
@@ -36,51 +39,49 @@ impl RemotePlayback {
     ) -> Result<Self, RemotePlaybackError> {
         let core = PlaybackCore::new(&catalog.core, &catalog.primary_camera_topic)
             .map_err(|error| RemotePlaybackError::new(error.to_string()))?;
-        let source = RemoteBatchSource::new(
+        let loader = RemoteWindowLoader::new(
             client,
             catalog.recording_id,
             catalog.revision,
             catalog.selected_streams,
-            catalog.start,
-            catalog.end_exclusive,
         )
         .map_err(|error| RemotePlaybackError::new(error.to_string()))?;
+        let data = RecordingDataPlane::new(loader, catalog.start, catalog.end_exclusive)
+            .map_err(|error| RemotePlaybackError::new(error.to_string()))?;
         Ok(Self {
             clock: PlaybackClock::new(catalog.start, catalog.end),
             core,
-            source,
+            data,
             load_state: PlaybackLoadState::Ready,
         })
     }
 
     #[cfg(target_arch = "wasm32")]
     pub(crate) fn tick(&mut self, elapsed: Duration) -> Result<(), RemotePlaybackError> {
-        if let Err(error) = self.source.poll_completed_fetch() {
+        if let Err(error) = self.data.poll(self.clock.cursor()) {
             self.load_state = PlaybackLoadState::Failed {
                 message: error.to_string(),
             };
             return Err(RemotePlaybackError::new(error.to_string()));
         }
         let requested = self.clock.cursor_after(elapsed);
-        self.source.ensure_available_through(requested);
+        self.data
+            .ensure_available_through(requested)
+            .map_err(|error| RemotePlaybackError::new(error.to_string()))?;
         if !self.commit_candidate(elapsed, requested) {
             return Ok(());
         }
 
-        let prefetch = viewer_core::ArrivalTime(
-            requested
-                .0
-                .saturating_add(duration_ns(self.source.prefetch_duration()))
-                .min(self.clock.end().0),
-        );
-        self.source.ensure_available_through(prefetch);
+        self.data
+            .ensure_available_through(requested)
+            .map_err(|error| RemotePlaybackError::new(error.to_string()))?;
         Ok(())
     }
 
     fn commit_candidate(&mut self, elapsed: Duration, requested: viewer_core::ArrivalTime) -> bool {
-        if !self.source.is_complete_through(requested) {
+        if !self.data.is_complete_through(requested) {
             if !matches!(self.load_state, PlaybackLoadState::Buffering { .. }) {
-                self.source.note_buffering();
+                self.data.note_buffering();
             }
             self.load_state = PlaybackLoadState::Buffering {
                 requested,
@@ -89,7 +90,7 @@ impl RemotePlayback {
             return false;
         }
 
-        let messages = self.source.drain_through(requested);
+        let messages = self.data.messages_through(self.clock.cursor(), requested);
         self.core.process_forward(elapsed, messages);
         self.clock.commit_cursor(requested);
         self.load_state = PlaybackLoadState::Ready;
@@ -146,18 +147,8 @@ impl RemotePlayback {
         self.load_state.clone()
     }
 
-    pub(crate) fn metrics(&self) -> &RemoteSourceMetrics {
-        self.source.metrics()
-    }
-
-    pub(crate) fn buffer_ahead(&self) -> Duration {
-        let nanoseconds = self
-            .source
-            .complete_until()
-            .0
-            .saturating_sub(self.clock.cursor().0)
-            .max(0) as u64;
-        Duration::from_nanos(nanoseconds)
+    pub(crate) fn diagnostics(&self) -> RecordingDataPlaneDiagnostics {
+        self.data.diagnostics(self.clock.cursor())
     }
 }
 
@@ -242,16 +233,12 @@ impl WebPlayback {
         matches!(self, Self::Remote(_))
     }
 
-    pub(crate) fn remote_diagnostics(&self) -> Option<(&RemoteSourceMetrics, Duration)> {
+    pub(crate) fn remote_diagnostics(&self) -> Option<RecordingDataPlaneDiagnostics> {
         match self {
             Self::Local(_) => None,
-            Self::Remote(playback) => Some((playback.metrics(), playback.buffer_ahead())),
+            Self::Remote(playback) => Some(playback.diagnostics()),
         }
     }
-}
-
-fn duration_ns(duration: Duration) -> i64 {
-    i64::try_from(duration.as_nanos()).unwrap_or(i64::MAX)
 }
 
 #[cfg(test)]
@@ -259,7 +246,8 @@ mod tests {
     use super::*;
     use bytes::Bytes;
     use viewer_core::{
-        CompressedImage, MeasurementTime, RawMessage, StreamId, encode_compressed_image_cdr,
+        CompressedImage, DataWindowTimeRange, MeasurementTime, RawMessage, SerializedWindow,
+        StreamId, encode_compressed_image_cdr,
     };
     use viewer_remote_protocol::{
         CatalogResponse, RemoteTimeRange, StreamDescriptor, StreamSemantic, TimestampNs,
@@ -321,11 +309,28 @@ mod tests {
             PlaybackLoadState::Buffering { .. }
         ));
 
-        playback.source.inject_completed_window(
-            viewer_core::ArrivalTime(2_000_000_000),
-            vec![camera_message(1_050_000_000)],
-        );
-        playback.source.poll_completed_fetch().unwrap();
+        playback.data.ensure_available_through(requested).unwrap();
+        playback
+            .data
+            .inject_loaded_window(super::super::LoadedWindow {
+                window: SerializedWindow::new(
+                    DataWindowTimeRange::new(
+                        viewer_core::ArrivalTime(1_000_000_000),
+                        viewer_core::ArrivalTime(2_000_000_000),
+                    )
+                    .unwrap(),
+                    vec![camera_message(1_050_000_000)],
+                    64,
+                )
+                .unwrap(),
+                diagnostics: super::super::WindowLoadDiagnostics {
+                    source_reads: 1,
+                    source_bytes: 64,
+                    latency_ms: 1.0,
+                },
+            })
+            .unwrap();
+        playback.data.poll(playback.clock.cursor()).unwrap();
         assert!(playback.commit_candidate(elapsed, requested));
         assert_eq!(playback.clock.cursor(), requested);
         assert_eq!(
