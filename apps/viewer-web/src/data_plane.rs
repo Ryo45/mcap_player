@@ -20,6 +20,7 @@ pub(crate) struct WindowLoaderMetrics {
     pub messages_loaded: u64,
     pub request_latency_ms: f64,
     pub last_window_latency_ms: f64,
+    pub last_processing_ms: f64,
     pub stale_results_discarded: u64,
 }
 
@@ -28,6 +29,7 @@ pub(crate) struct WindowLoadDiagnostics {
     pub source_reads: u64,
     pub source_bytes: usize,
     pub latency_ms: f64,
+    pub processing_ms: f64,
 }
 
 #[derive(Debug)]
@@ -128,6 +130,7 @@ pub(crate) struct RecordingDataPlaneDiagnostics {
     pub source_bytes: u64,
     pub messages_loaded: u64,
     pub last_window_latency_ms: f64,
+    pub last_processing_ms: f64,
     pub stale_results_discarded: u64,
     pub buffering_count: u64,
     pub window_count: usize,
@@ -291,6 +294,7 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
             source_bytes: loader.source_bytes,
             messages_loaded: loader.messages_loaded,
             last_window_latency_ms: loader.last_window_latency_ms,
+            last_processing_ms: loader.last_processing_ms,
             stale_results_discarded: loader.stale_results_discarded,
             buffering_count: self.buffering_count,
             window_count: self.store.window_count(),
@@ -398,6 +402,7 @@ mod tests {
                 source_reads: 1,
                 source_bytes: resident_bytes,
                 latency_ms: 1.0,
+                processing_ms: 0.0,
             },
         }
     }

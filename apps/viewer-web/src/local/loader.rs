@@ -139,6 +139,33 @@ fn validate_range(file_size: u64, offset: u64, length: usize) -> Result<ByteRang
     Ok(ByteRange { offset, length })
 }
 
+#[cfg(test)]
+pub(crate) fn collect_window_from_bytes_for_test(
+    summary: &mcap::Summary,
+    topics: &[String],
+    range: DataWindowTimeRange,
+    bytes: &[u8],
+) -> Result<LoadedWindow, DataLoadError> {
+    let mut collector = IndexedWindowCollector::new(summary, topics, range)?;
+    let mut source_bytes = 0_usize;
+    let mut source_reads = 0_u64;
+    while let Some(request) = collector.next_read()? {
+        let range = validate_range(bytes.len() as u64, request.offset, request.length)?;
+        let chunk = &bytes[range.offset as usize..range.end() as usize];
+        source_bytes = source_bytes
+            .checked_add(chunk.len())
+            .ok_or_else(|| DataLoadError::new("test source byte count overflow"))?;
+        source_reads = source_reads.saturating_add(1);
+        collector.insert_chunk(request, chunk)?;
+    }
+    collector.finish(WindowLoadDiagnostics {
+        source_reads,
+        source_bytes,
+        latency_ms: 0.0,
+        processing_ms: 0.0,
+    })
+}
+
 #[cfg(target_arch = "wasm32")]
 #[derive(Debug)]
 enum LocalLoadState {
@@ -257,6 +284,7 @@ impl WindowLoader for BrowserMcapWindowLoader {
                         .messages_loaded
                         .saturating_add(loaded.window.messages.len() as u64);
                     self.metrics.last_window_latency_ms = loaded.diagnostics.latency_ms;
+                    self.metrics.last_processing_ms = loaded.diagnostics.processing_ms;
                     self.metrics.request_latency_ms = loaded.diagnostics.latency_ms;
                     self.state = LocalLoadState::Idle;
                     return Some(Ok(loaded));
@@ -332,6 +360,7 @@ async fn load_browser_window(
     let mut collector = IndexedWindowCollector::new(summary, topics, range)?;
     let mut source_reads = 0_u64;
     let mut source_bytes = 0_usize;
+    let mut processing_ms = 0.0;
     while let Some(request) = collector.next_read()? {
         let range = validate_range(file_size, request.offset, request.length)?;
         let bytes = read_file_range(file, file_size, range).await?;
@@ -339,12 +368,15 @@ async fn load_browser_window(
         source_bytes = source_bytes
             .checked_add(bytes.len())
             .ok_or_else(|| DataLoadError::new("local source byte count overflow"))?;
+        let processing_started = Date::now();
         collector.insert_chunk(request, &bytes)?;
+        processing_ms += Date::now() - processing_started;
     }
     collector.finish(WindowLoadDiagnostics {
         source_reads,
         source_bytes,
         latency_ms: Date::now() - started,
+        processing_ms,
     })
 }
 
@@ -464,6 +496,7 @@ fn js_error(error: wasm_bindgen::JsValue) -> DataLoadError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::local::LocalCatalog;
     use mcap::{Compression, Summary, WriteOptions, Writer, records::MessageHeader};
     use std::{collections::BTreeMap, io::Cursor};
 
@@ -501,24 +534,10 @@ mod tests {
     fn collect(bytes: &[u8]) -> (LoadedWindow, usize) {
         let summary = Summary::read(bytes).unwrap().unwrap();
         let range = DataWindowTimeRange::new(ArrivalTime(1_000), ArrivalTime(1_031)).unwrap();
-        let mut collector =
-            IndexedWindowCollector::new(&summary, &["/camera".to_owned()], range).unwrap();
-        let mut source_bytes = 0;
-        let mut reads = 0;
-        while let Some(request) = collector.next_read().unwrap() {
-            let range = validate_range(bytes.len() as u64, request.offset, request.length).unwrap();
-            let chunk = &bytes[range.offset as usize..range.end() as usize];
-            source_bytes += chunk.len();
-            reads += 1;
-            collector.insert_chunk(request, chunk).unwrap();
-        }
-        let loaded = collector
-            .finish(WindowLoadDiagnostics {
-                source_reads: reads,
-                source_bytes,
-                latency_ms: 0.0,
-            })
-            .unwrap();
+        let loaded =
+            collect_window_from_bytes_for_test(&summary, &["/camera".to_owned()], range, bytes)
+                .unwrap();
+        let source_bytes = loaded.diagnostics.source_bytes;
         (loaded, source_bytes)
     }
 
@@ -547,5 +566,80 @@ mod tests {
         assert!(validate_range(10, 9, 2).is_err());
         assert!(validate_range(10, u64::MAX, 2).is_err());
         assert!(validate_range(JS_MAX_SAFE_INTEGER + 1, 0, 0).is_err());
+    }
+
+    fn collect_file_window(path: &std::path::Path) -> (usize, usize, usize) {
+        use mcap::sans_io::{SummaryReadEvent, SummaryReader};
+        use std::io::{Read, Seek};
+
+        let mut file = std::fs::File::open(path).unwrap();
+        let file_size = file.metadata().unwrap().len();
+        let mut summary_reader = SummaryReader::new();
+        while let Some(event) = summary_reader.next_event() {
+            match event.unwrap() {
+                SummaryReadEvent::ReadRequest(need) => {
+                    let read = file.read(summary_reader.insert(need)).unwrap();
+                    summary_reader.notify_read(read);
+                }
+                SummaryReadEvent::SeekRequest(seek) => {
+                    let position = file.seek(seek).unwrap();
+                    summary_reader.notify_seeked(position);
+                }
+            }
+        }
+        let summary = summary_reader.finish().unwrap();
+        let catalog =
+            LocalCatalog::from_summary(&summary, "/camera/front/image/compressed").unwrap();
+        let end = ArrivalTime(
+            catalog
+                .start
+                .0
+                .saturating_add(1_000_000_000)
+                .min(catalog.end_exclusive.0),
+        );
+        let range = DataWindowTimeRange::new(catalog.start, end).unwrap();
+        let mut collector =
+            IndexedWindowCollector::new(&summary, &catalog.selected_topics, range).unwrap();
+        let mut range_bytes = 0_usize;
+        let mut range_reads = 0_usize;
+        while let Some(request) = collector.next_read().unwrap() {
+            let range = validate_range(file_size, request.offset, request.length).unwrap();
+            let mut bytes = vec![0; range.length];
+            file.seek(std::io::SeekFrom::Start(range.offset)).unwrap();
+            file.read_exact(&mut bytes).unwrap();
+            range_bytes += bytes.len();
+            range_reads += 1;
+            collector.insert_chunk(request, &bytes).unwrap();
+        }
+        let loaded = collector
+            .finish(WindowLoadDiagnostics {
+                source_reads: range_reads as u64,
+                source_bytes: range_bytes,
+                latency_ms: 0.0,
+                processing_ms: 0.0,
+            })
+            .unwrap();
+        assert!(range_bytes < file_size as usize);
+        (loaded.window.messages.len(), range_reads, range_bytes)
+    }
+
+    #[test]
+    #[ignore = "manual lazy-read verification for the 596 MB Zstd recording"]
+    fn reads_requested_window_from_actual_zstd_recording() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../mcap/turtlebot3_7cam_fhd/turtlebot3_7cam_fhd_0.mcap");
+        let (messages, reads, bytes) = collect_file_window(&path);
+        eprintln!("zstd window: {messages} messages, {reads} reads, {bytes} bytes");
+        assert!(messages > 0);
+    }
+
+    #[test]
+    #[ignore = "manual lazy-read verification for the 2.86 GB uncompressed recording"]
+    fn reads_requested_window_from_actual_uncompressed_recording() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../mcap/turtlebot3_7cam_fhd/turtlebot3_7cam_fhd_0_uncompressed.mcap");
+        let (messages, reads, bytes) = collect_file_window(&path);
+        eprintln!("uncompressed window: {messages} messages, {reads} reads, {bytes} bytes");
+        assert!(messages > 0);
     }
 }

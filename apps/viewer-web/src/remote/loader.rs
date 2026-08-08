@@ -149,6 +149,7 @@ impl RemoteWindowLoader {
                         .messages_loaded
                         .saturating_add(loaded.window.messages.len() as u64);
                     self.metrics.last_window_latency_ms = loaded.diagnostics.latency_ms;
+                    self.metrics.last_processing_ms = loaded.diagnostics.processing_ms;
                     self.metrics.request_latency_ms = loaded.diagnostics.latency_ms;
                     self.state = WindowLoadState::Ready(loaded);
                     changed = true;
@@ -254,6 +255,18 @@ struct WindowAssembler {
     complete: bool,
 }
 
+#[cfg(test)]
+pub(crate) fn assemble_pages_for_test(
+    range: DataWindowTimeRange,
+    pages: impl IntoIterator<Item = RemoteBatchPage>,
+) -> Result<LoadedWindow, DataLoadError> {
+    let mut assembler = WindowAssembler::new(range);
+    for page in pages {
+        assembler.push_page(page)?;
+    }
+    assembler.finish(0.0)
+}
+
 impl WindowAssembler {
     fn new(range: DataWindowTimeRange) -> Self {
         Self {
@@ -327,6 +340,7 @@ impl WindowAssembler {
                 source_reads: self.pages,
                 source_bytes: self.source_bytes,
                 latency_ms,
+                processing_ms: 0.0,
             },
         })
     }
