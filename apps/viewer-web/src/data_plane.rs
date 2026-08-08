@@ -1,14 +1,62 @@
-#[cfg(test)]
-use super::LoadedWindow;
-use super::RemoteWindowLoader;
 use std::{error::Error, fmt, time::Duration};
-#[cfg(test)]
-use viewer_core::DataWindowTimeRange;
-use viewer_core::{ArrivalTime, FetchDemand, FetchPlanner, MemoryWindowStore, RawMessage};
+use viewer_core::{
+    ArrivalTime, DataWindowTimeRange, FetchDemand, FetchPlanner, MemoryWindowStore, RawMessage,
+    SerializedWindow,
+};
 
 const DEFAULT_WINDOW_SIZE: Duration = Duration::from_secs(1);
 const DEFAULT_TARGET_AHEAD: Duration = Duration::from_secs(2);
 const DEFAULT_MAX_RESIDENT_BYTES: usize = 256 * 1024 * 1024;
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub(crate) struct WindowLoaderMetrics {
+    pub load_requests: u64,
+    pub source_reads: u64,
+    pub source_bytes: u64,
+    pub messages_loaded: u64,
+    pub request_latency_ms: f64,
+    pub last_window_latency_ms: f64,
+    pub stale_results_discarded: u64,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct WindowLoadDiagnostics {
+    pub source_reads: u64,
+    pub source_bytes: usize,
+    pub latency_ms: f64,
+}
+
+#[derive(Debug)]
+pub(crate) struct LoadedWindow {
+    pub window: SerializedWindow,
+    pub diagnostics: WindowLoadDiagnostics,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct DataLoadError(String);
+
+impl DataLoadError {
+    pub(crate) fn new(message: impl Into<String>) -> Self {
+        Self(message.into())
+    }
+}
+
+impl fmt::Display for DataLoadError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(&self.0)
+    }
+}
+
+impl Error for DataLoadError {}
+
+/// Poll-based boundary implemented by browser and remote recording loaders.
+pub(crate) trait WindowLoader {
+    fn request(&mut self, range: DataWindowTimeRange) -> Result<(), DataLoadError>;
+    fn poll(&mut self) -> Option<Result<LoadedWindow, DataLoadError>>;
+    fn cancel(&mut self);
+    fn is_idle(&self) -> bool;
+    fn metrics(&self) -> &WindowLoaderMetrics;
+}
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct RecordingDataPlaneDiagnostics {
@@ -42,19 +90,19 @@ impl fmt::Display for DataPlaneError {
 
 impl Error for DataPlaneError {}
 
-pub(crate) struct RecordingDataPlane {
+pub(crate) struct RecordingDataPlane<L> {
     planner: FetchPlanner,
     store: MemoryWindowStore,
-    loader: RemoteWindowLoader,
+    loader: L,
     end_exclusive: ArrivalTime,
     buffering_count: u64,
     delivery_started: bool,
     failed: Option<DataPlaneError>,
 }
 
-impl RecordingDataPlane {
+impl<L: WindowLoader> RecordingDataPlane<L> {
     pub(crate) fn new(
-        loader: RemoteWindowLoader,
+        loader: L,
         start: ArrivalTime,
         end_exclusive: ArrivalTime,
     ) -> Result<Self, DataPlaneError> {
@@ -69,7 +117,7 @@ impl RecordingDataPlane {
     }
 
     fn with_limits(
-        loader: RemoteWindowLoader,
+        loader: L,
         start: ArrivalTime,
         end_exclusive: ArrivalTime,
         window_size: Duration,
@@ -96,13 +144,16 @@ impl RecordingDataPlane {
         if let Some(error) = &self.failed {
             return Err(error.clone());
         }
-        if let Err(error) = self.loader.poll() {
-            let error = DataPlaneError::new(error.to_string());
-            self.failed = Some(error.clone());
-            return Err(error);
-        }
-        let Some(loaded) = self.loader.take_ready() else {
+        let Some(result) = self.loader.poll() else {
             return Ok(false);
+        };
+        let loaded = match result {
+            Ok(loaded) => loaded,
+            Err(error) => {
+                let error = DataPlaneError::new(error.to_string());
+                self.failed = Some(error.clone());
+                return Err(error);
+            }
         };
         if let Err(error) = self.store.insert(loaded.window) {
             let error = DataPlaneError::new(error.to_string());
@@ -131,7 +182,7 @@ impl RecordingDataPlane {
         let Some(range) = self.planner.plan(demand) else {
             return Ok(());
         };
-        if let Err(error) = self.loader.start(range) {
+        if let Err(error) = self.loader.request(range) {
             let error = DataPlaneError::new(error.to_string());
             self.failed = Some(error.clone());
             return Err(error);
@@ -165,11 +216,6 @@ impl RecordingDataPlane {
         )
     }
 
-    #[cfg(test)]
-    pub(crate) fn resident_bytes(&self) -> usize {
-        self.store.resident_bytes()
-    }
-
     pub(crate) fn note_buffering(&mut self) {
         self.buffering_count = self.buffering_count.saturating_add(1);
     }
@@ -192,44 +238,75 @@ impl RecordingDataPlane {
     }
 
     #[cfg(test)]
-    pub(crate) fn inject_loaded_window(
-        &mut self,
-        loaded: LoadedWindow,
-    ) -> Result<(), DataPlaneError> {
-        self.loader
-            .inject_loaded(loaded)
-            .map_err(|error| DataPlaneError::new(error.to_string()))
+    pub(crate) fn loader_mut(&mut self) -> &mut L {
+        &mut self.loader
     }
 
     #[cfg(test)]
-    pub(crate) fn inject_stale_window(
-        &mut self,
-        loaded: LoadedWindow,
-    ) -> Result<(), DataPlaneError> {
-        self.loader
-            .inject_stale(loaded)
-            .map_err(|error| DataPlaneError::new(error.to_string()))
+    pub(crate) fn resident_bytes(&self) -> usize {
+        self.store.resident_bytes()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::remote::{RemoteApiClient, WindowLoadDiagnostics};
     use bytes::Bytes;
-    use viewer_core::{RawMessage, SerializedWindow, StreamId};
+    use std::{cell::RefCell, collections::VecDeque, rc::Rc};
+    use viewer_core::StreamId;
 
     const SECOND: i64 = 1_000_000_000;
 
-    fn data_plane(max_bytes: usize) -> RecordingDataPlane {
-        let loader = RemoteWindowLoader::new(
-            RemoteApiClient::new("http://localhost").unwrap(),
-            "demo".into(),
-            "revision".into(),
-            vec![1],
-        )
-        .unwrap();
-        RecordingDataPlane::with_limits(
+    #[derive(Default)]
+    struct TestLoaderState {
+        requested: Option<DataWindowTimeRange>,
+        results: VecDeque<Result<LoadedWindow, DataLoadError>>,
+    }
+
+    struct TestLoader {
+        shared: Rc<RefCell<TestLoaderState>>,
+        metrics: WindowLoaderMetrics,
+    }
+
+    impl WindowLoader for TestLoader {
+        fn request(&mut self, range: DataWindowTimeRange) -> Result<(), DataLoadError> {
+            let mut shared = self.shared.borrow_mut();
+            if shared.requested.is_some() {
+                return Err(DataLoadError::new("test loader is not idle"));
+            }
+            shared.requested = Some(range);
+            self.metrics.load_requests += 1;
+            Ok(())
+        }
+
+        fn poll(&mut self) -> Option<Result<LoadedWindow, DataLoadError>> {
+            let result = self.shared.borrow_mut().results.pop_front()?;
+            self.shared.borrow_mut().requested = None;
+            Some(result)
+        }
+
+        fn cancel(&mut self) {
+            self.shared.borrow_mut().requested = None;
+        }
+
+        fn is_idle(&self) -> bool {
+            self.shared.borrow().requested.is_none()
+        }
+
+        fn metrics(&self) -> &WindowLoaderMetrics {
+            &self.metrics
+        }
+    }
+
+    fn data_plane(
+        max_bytes: usize,
+    ) -> (RecordingDataPlane<TestLoader>, Rc<RefCell<TestLoaderState>>) {
+        let shared = Rc::new(RefCell::new(TestLoaderState::default()));
+        let loader = TestLoader {
+            shared: Rc::clone(&shared),
+            metrics: WindowLoaderMetrics::default(),
+        };
+        let data = RecordingDataPlane::with_limits(
             loader,
             ArrivalTime(0),
             ArrivalTime(4 * SECOND),
@@ -237,7 +314,8 @@ mod tests {
             Duration::from_secs(2),
             max_bytes,
         )
-        .unwrap()
+        .unwrap();
+        (data, shared)
     }
 
     fn loaded(
@@ -269,16 +347,29 @@ mod tests {
         }
     }
 
+    fn complete_request(
+        data: &mut RecordingDataPlane<TestLoader>,
+        shared: &Rc<RefCell<TestLoaderState>>,
+        loaded: LoadedWindow,
+        cursor: ArrivalTime,
+    ) {
+        shared.borrow_mut().results.push_back(Ok(loaded));
+        assert!(data.poll(cursor).unwrap());
+    }
+
     #[test]
     fn complete_windows_publish_once_without_copying_payloads() {
-        let mut data = data_plane(1024);
+        let (mut data, shared) = data_plane(1024);
         data.ensure_available_through(ArrivalTime(0)).unwrap();
         let backing = Bytes::from_static(b"batch-payload");
         let payload = backing.slice(6..);
         let pointer = payload.as_ptr();
-        data.inject_loaded_window(loaded(0, SECOND, vec![message(0, payload)], backing.len()))
-            .unwrap();
-        assert!(data.poll(ArrivalTime(0)).unwrap());
+        complete_request(
+            &mut data,
+            &shared,
+            loaded(0, SECOND, vec![message(0, payload)], backing.len()),
+            ArrivalTime(0),
+        );
 
         let messages = data.messages_through(ArrivalTime(0), ArrivalTime(SECOND - 1));
         assert_eq!(messages.len(), 1);
@@ -292,32 +383,35 @@ mod tests {
     }
 
     #[test]
-    fn stale_loader_result_never_reaches_the_store() {
-        let mut data = data_plane(1024);
-        data.ensure_available_through(ArrivalTime(0)).unwrap();
-        data.inject_stale_window(loaded(0, SECOND, vec![], 16))
-            .unwrap();
-
-        assert!(!data.poll(ArrivalTime(0)).unwrap());
-        assert!(!data.is_complete_through(ArrivalTime(0)));
-        assert_eq!(data.resident_bytes(), 0);
-        assert_eq!(data.diagnostics(ArrivalTime(0)).stale_results_discarded, 1);
-    }
-
-    #[test]
     fn ram_budget_evicts_old_windows_after_cursor_advances() {
-        let mut data = data_plane(8);
+        let (mut data, shared) = data_plane(8);
         for index in 0..3 {
             let start = index * SECOND;
             data.ensure_available_through(ArrivalTime(start)).unwrap();
-            data.inject_loaded_window(loaded(start, start + SECOND, vec![], 4))
-                .unwrap();
-            data.poll(ArrivalTime(start)).unwrap();
+            complete_request(
+                &mut data,
+                &shared,
+                loaded(start, start + SECOND, vec![], 4),
+                ArrivalTime(start),
+            );
         }
 
         let diagnostics = data.diagnostics(ArrivalTime(SECOND + 1));
         assert_eq!(diagnostics.window_count, 2);
         assert_eq!(diagnostics.resident_bytes, 8);
         assert_eq!(diagnostics.eviction_count, 1);
+    }
+
+    #[test]
+    fn loader_failure_never_reaches_the_store() {
+        let (mut data, shared) = data_plane(1024);
+        data.ensure_available_through(ArrivalTime(0)).unwrap();
+        shared
+            .borrow_mut()
+            .results
+            .push_back(Err(DataLoadError::new("stale or failed load")));
+
+        assert!(data.poll(ArrivalTime(0)).is_err());
+        assert_eq!(data.resident_bytes(), 0);
     }
 }

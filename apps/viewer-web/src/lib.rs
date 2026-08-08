@@ -1,4 +1,6 @@
 #[cfg(any(test, target_arch = "wasm32"))]
+mod data_plane;
+#[cfg(any(test, target_arch = "wasm32"))]
 mod range_spike;
 #[cfg(any(test, target_arch = "wasm32"))]
 mod remote;

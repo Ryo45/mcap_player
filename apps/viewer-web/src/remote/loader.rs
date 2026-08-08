@@ -1,53 +1,15 @@
 #[cfg(target_arch = "wasm32")]
 use super::client::RemoteBatchRequest;
 use super::client::{RemoteApiClient, RemoteBatchPage};
-use std::{cell::RefCell, collections::VecDeque, error::Error, fmt, rc::Rc};
+use crate::data_plane::{
+    DataLoadError, LoadedWindow, WindowLoadDiagnostics, WindowLoader, WindowLoaderMetrics,
+};
+use std::{cell::RefCell, collections::VecDeque, rc::Rc};
 use viewer_core::{DataWindowTimeRange, RawMessage, SerializedWindow, StreamId};
 use viewer_remote_protocol::BatchDecoder;
 
 #[cfg(target_arch = "wasm32")]
 use {js_sys::Date, wasm_bindgen_futures::spawn_local, web_sys::AbortController};
-
-#[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct WindowLoaderMetrics {
-    pub load_requests: u64,
-    pub source_reads: u64,
-    pub source_bytes: u64,
-    pub messages_loaded: u64,
-    pub request_latency_ms: f64,
-    pub last_window_latency_ms: f64,
-    pub stale_results_discarded: u64,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct WindowLoadDiagnostics {
-    pub source_reads: u64,
-    pub source_bytes: usize,
-    pub latency_ms: f64,
-}
-
-#[derive(Debug)]
-pub(crate) struct LoadedWindow {
-    pub window: SerializedWindow,
-    pub diagnostics: WindowLoadDiagnostics,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct DataLoadError(String);
-
-impl DataLoadError {
-    fn new(message: impl Into<String>) -> Self {
-        Self(message.into())
-    }
-}
-
-impl fmt::Display for DataLoadError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.0)
-    }
-}
-
-impl Error for DataLoadError {}
 
 #[derive(Debug)]
 pub(crate) enum WindowLoadState {
@@ -248,11 +210,37 @@ impl RemoteWindowLoader {
 
 impl Drop for RemoteWindowLoader {
     fn drop(&mut self) {
+        WindowLoader::cancel(self);
+    }
+}
+
+impl WindowLoader for RemoteWindowLoader {
+    fn request(&mut self, range: DataWindowTimeRange) -> Result<(), DataLoadError> {
+        self.start(range)
+    }
+
+    fn poll(&mut self) -> Option<Result<LoadedWindow, DataLoadError>> {
+        match RemoteWindowLoader::poll(self) {
+            Ok(_) => self.take_ready().map(Ok),
+            Err(error) => Some(Err(error)),
+        }
+    }
+
+    fn cancel(&mut self) {
         self.generation = self.generation.wrapping_add(1);
         #[cfg(target_arch = "wasm32")]
         if let Some(controller) = self.abort.take() {
             controller.abort();
         }
+        self.state = WindowLoadState::Idle;
+    }
+
+    fn is_idle(&self) -> bool {
+        RemoteWindowLoader::is_idle(self)
+    }
+
+    fn metrics(&self) -> &WindowLoaderMetrics {
+        RemoteWindowLoader::metrics(self)
     }
 }
 

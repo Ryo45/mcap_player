@@ -1,7 +1,5 @@
-use super::{
-    RecordingDataPlane, RecordingDataPlaneDiagnostics, RemoteApiClient, RemoteCatalog,
-    RemoteWindowLoader,
-};
+use super::{RemoteApiClient, RemoteCatalog, RemoteWindowLoader};
+use crate::data_plane::{RecordingDataPlane, RecordingDataPlaneDiagnostics};
 use std::{error::Error, fmt, time::Duration};
 use viewer_core::{
     CameraId, DomainState, McapPlayback, PipelineCounters, PlaybackClock, PlaybackCommand,
@@ -28,7 +26,7 @@ impl Error for RemotePlaybackError {}
 pub(crate) struct RemotePlayback {
     clock: PlaybackClock,
     core: PlaybackCore,
-    data: RecordingDataPlane,
+    data: RecordingDataPlane<RemoteWindowLoader>,
     load_state: PlaybackLoadState,
 }
 
@@ -312,7 +310,8 @@ mod tests {
         playback.data.ensure_available_through(requested).unwrap();
         playback
             .data
-            .inject_loaded_window(super::super::LoadedWindow {
+            .loader_mut()
+            .inject_loaded(crate::data_plane::LoadedWindow {
                 window: SerializedWindow::new(
                     DataWindowTimeRange::new(
                         viewer_core::ArrivalTime(1_000_000_000),
@@ -323,7 +322,7 @@ mod tests {
                     64,
                 )
                 .unwrap(),
-                diagnostics: super::super::WindowLoadDiagnostics {
+                diagnostics: crate::data_plane::WindowLoadDiagnostics {
                     source_reads: 1,
                     source_bytes: 64,
                     latency_ms: 1.0,
