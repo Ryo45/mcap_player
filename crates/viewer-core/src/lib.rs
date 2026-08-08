@@ -6,6 +6,7 @@ mod camera;
 mod camera_projection;
 mod cdr;
 mod clock;
+pub mod data_window;
 mod domain;
 mod frame_builder;
 mod mcap_source;
@@ -40,6 +41,10 @@ pub use cdr::{
 pub use clock::{
     PlaybackClock, PlaybackCommand, PlaybackLoadState, PlaybackSpeed, PlaybackView, SeekFidelity,
     SeekRequest,
+};
+pub use data_window::{
+    DataWindowError, FetchDemand, FetchPlanner, MemoryWindowStore, SerializedWindow,
+    TimeRange as DataWindowTimeRange,
 };
 pub use domain::DomainState;
 pub use frame_builder::{
