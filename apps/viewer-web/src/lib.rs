@@ -3,6 +3,8 @@ mod data_plane;
 #[cfg(any(test, target_arch = "wasm32"))]
 mod local;
 #[cfg(any(test, target_arch = "wasm32"))]
+mod playback;
+#[cfg(any(test, target_arch = "wasm32"))]
 mod range_spike;
 #[cfg(any(test, target_arch = "wasm32"))]
 mod remote;
@@ -14,26 +16,26 @@ mod webgpu;
 
 #[cfg(target_arch = "wasm32")]
 mod browser {
-    use crate::remote::{RemotePlayback, WebPlayback};
+    use crate::local::open_browser_mcap;
+    use crate::playback::WebPlayback;
     use crate::webgpu::WebGpuHost;
     use bev_renderer::BevFrame;
-    use js_sys::{Date, Uint8Array};
+    use js_sys::Date;
     use std::{
-        cell::RefCell,
+        cell::{Cell, RefCell},
         collections::{BTreeMap, BTreeSet},
         time::Duration,
     };
     use viewer_core::{
         ArrivalTime, BevFrameBuilder, CameraCalibrationSet, CameraId, DiagnosticsPresentation,
-        McapPlayback, PlaybackCommand, PlaybackLoadState, PlaybackSpeed, PresentationMetrics,
-        ViewerPresentation,
+        PlaybackCommand, PlaybackLoadState, PlaybackSpeed, PresentationMetrics, ViewerPresentation,
     };
     use viewer_renderer::{
         CameraBaseImageTracker, CameraOverlaySnapshot, CameraOverlayState, DecodedImage,
         decode_camera_frame,
     };
     use wasm_bindgen::{Clamped, JsCast, closure::Closure, prelude::*};
-    use wasm_bindgen_futures::{JsFuture, spawn_local};
+    use wasm_bindgen_futures::spawn_local;
     use web_sys::{
         CanvasRenderingContext2d, Event, HtmlButtonElement, HtmlCanvasElement, HtmlElement,
         HtmlInputElement, HtmlSelectElement, ImageData,
@@ -89,6 +91,19 @@ mod browser {
     thread_local! { static WEBGPU: RefCell<WebGpuState> = const {
         RefCell::new(WebGpuState::Initializing)
     }; }
+    thread_local! { static SOURCE_GENERATION: Cell<u64> = const { Cell::new(0) }; }
+
+    fn begin_source_change() -> u64 {
+        SOURCE_GENERATION.with(|generation| {
+            let next = generation.get().wrapping_add(1);
+            generation.set(next);
+            next
+        })
+    }
+
+    fn source_is_current(expected: u64) -> bool {
+        SOURCE_GENERATION.with(|generation| generation.get() == expected)
+    }
 
     fn document() -> web_sys::Document {
         web_sys::window()
@@ -294,18 +309,16 @@ mod browser {
                 return;
             };
             let file_name = file.name();
+            let generation = begin_source_change();
             spawn_local(async move {
-                set_status("Reading MCAP…", false);
-                let result = async {
-                    let buffer = JsFuture::from(file.array_buffer())
-                        .await
-                        .map_err(|_| "File read failed".to_owned())?;
-                    let bytes = Uint8Array::new(&buffer).to_vec();
-                    McapPlayback::new(bytes, TOPIC)
-                        .map(WebPlayback::Local)
-                        .map_err(|error| error.to_string())
+                set_status("Reading MCAP Summary…", false);
+                let result = open_browser_mcap(file, TOPIC).await.and_then(|recording| {
+                    WebPlayback::from_local(recording)
+                        .map_err(|error| crate::data_plane::DataLoadError::new(error.to_string()))
+                });
+                if !source_is_current(generation) {
+                    return;
                 }
-                .await;
                 match result {
                     Ok(playback) => {
                         APP.with(|cell| {
@@ -315,12 +328,15 @@ mod browser {
                             app.focused_camera = None;
                         });
                         let timeline: HtmlInputElement = element("timeline");
-                        timeline.set_disabled(false);
+                        timeline.set_disabled(true);
                         let speed: HtmlSelectElement = element("speed");
                         speed.set_disabled(false);
-                        set_status(&format!("{file_name} ready"), false);
+                        set_status(
+                            &format!("{file_name} ready · lazy File.slice playback"),
+                            false,
+                        );
                     }
-                    Err(error) => set_status(&error, true),
+                    Err(error) => set_status(&error.to_string(), true),
                 }
             });
         });
@@ -551,11 +567,7 @@ mod browser {
             selected_camera,
             &overlay_status,
             DiagnosticsPresentation {
-                source: if session.is_remote() {
-                    "Recording Server".to_owned()
-                } else {
-                    "Browser file".to_owned()
-                },
+                source: session.source_label().to_owned(),
                 primary_topic: session
                     .camera_topics()
                     .first()
@@ -619,23 +631,23 @@ mod browser {
             .focused_camera()
             .map_or(0.0, |camera| camera.fps);
         let performance: HtmlElement = element("performance");
-        let remote = session.remote_diagnostics().map_or_else(String::new, |metrics| {
-            format!(
-                " · Remote {} loads/{} reads · {:.1} MB rx · {} windows/{:.1} MB RAM · ahead {:.2}s · {} evicted · last {:.1} ms · buffering {} · stale {}",
-                metrics.load_requests,
-                metrics.source_reads,
-                metrics.source_bytes as f64 / (1024.0 * 1024.0),
-                metrics.window_count,
-                metrics.resident_bytes as f64 / (1024.0 * 1024.0),
-                metrics.buffer_ahead.as_secs_f64(),
-                metrics.eviction_count,
-                metrics.last_window_latency_ms,
-                metrics.buffering_count,
-                metrics.stale_results_discarded,
-            )
-        });
+        let metrics = session.data_plane_diagnostics();
+        let data_plane = format!(
+            " · {} {} loads/{} reads · {:.1} MB loaded · {} windows/{:.1} MB RAM · ahead {:.2}s · {} evicted · last {:.1} ms · buffering {} · stale {}",
+            session.source_label(),
+            metrics.load_requests,
+            metrics.source_reads,
+            metrics.source_bytes as f64 / (1024.0 * 1024.0),
+            metrics.window_count,
+            metrics.resident_bytes as f64 / (1024.0 * 1024.0),
+            metrics.buffer_ahead.as_secs_f64(),
+            metrics.eviction_count,
+            metrics.last_window_latency_ms,
+            metrics.buffering_count,
+            metrics.stale_results_discarded,
+        );
         performance.set_inner_text(&format!(
-            "Focus {focused_fps:.1}/{:.0} Hz · others ≤{:.0} Hz · JPEG {:.2} ms · canvas {:.2} ms · tick {:.2} ms · source/CDR/state {:.2}/{:.2}/{:.2} ms{remote}",
+            "Focus {focused_fps:.1}/{:.0} Hz · others ≤{:.0} Hz · JPEG {:.2} ms · canvas {:.2} ms · tick {:.2} ms · source/CDR/state {:.2}/{:.2}/{:.2} ms{data_plane}",
             playback_performance.focused_camera_hz(),
             playback_performance.background_camera_hz(),
             diagnostics.performance.jpeg_decode_ms,
@@ -705,7 +717,7 @@ mod browser {
             let timeline: HtmlInputElement = element("timeline");
             timeline
                 .set_value_as_number((session.clock().cursor().0 - start) as f64 / duration as f64);
-            timeline.set_disabled(session.is_remote());
+            timeline.set_disabled(true);
             let speed: HtmlSelectElement = element("speed");
             speed.set_disabled(session.is_remote());
             update_camera_presentation(session, view, calibrations, selected_camera);
@@ -722,10 +734,11 @@ mod browser {
         Duration::from_secs_f64(((Date::now() - started_ms).max(0.0)) / 1_000.0)
     }
 
-    pub(crate) fn install_remote_playback(playback: RemotePlayback) {
+    pub(crate) fn install_remote_playback(playback: WebPlayback) {
+        begin_source_change();
         APP.with(|cell| {
             let mut app = cell.borrow_mut();
-            app.playback = Some(WebPlayback::Remote(playback));
+            app.playback = Some(playback);
             app.view.reset_for_source();
             app.focused_camera = None;
             app.previous_ms = Date::now();

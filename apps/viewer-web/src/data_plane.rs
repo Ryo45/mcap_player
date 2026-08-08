@@ -4,6 +4,10 @@ use viewer_core::{
     SerializedWindow,
 };
 
+#[cfg(target_arch = "wasm32")]
+use crate::local::BrowserMcapWindowLoader;
+use crate::remote::RemoteWindowLoader;
+
 const DEFAULT_WINDOW_SIZE: Duration = Duration::from_secs(1);
 const DEFAULT_TARGET_AHEAD: Duration = Duration::from_secs(2);
 const DEFAULT_MAX_RESIDENT_BYTES: usize = 256 * 1024 * 1024;
@@ -56,6 +60,65 @@ pub(crate) trait WindowLoader {
     fn cancel(&mut self);
     fn is_idle(&self) -> bool;
     fn metrics(&self) -> &WindowLoaderMetrics;
+}
+
+pub(crate) enum WebWindowLoader {
+    Remote(RemoteWindowLoader),
+    #[cfg(target_arch = "wasm32")]
+    LocalFile(BrowserMcapWindowLoader),
+}
+
+impl WindowLoader for WebWindowLoader {
+    fn request(&mut self, range: DataWindowTimeRange) -> Result<(), DataLoadError> {
+        match self {
+            Self::Remote(loader) => loader.request(range),
+            #[cfg(target_arch = "wasm32")]
+            Self::LocalFile(loader) => loader.request(range),
+        }
+    }
+
+    fn poll(&mut self) -> Option<Result<LoadedWindow, DataLoadError>> {
+        match self {
+            Self::Remote(loader) => WindowLoader::poll(loader),
+            #[cfg(target_arch = "wasm32")]
+            Self::LocalFile(loader) => WindowLoader::poll(loader),
+        }
+    }
+
+    fn cancel(&mut self) {
+        match self {
+            Self::Remote(loader) => loader.cancel(),
+            #[cfg(target_arch = "wasm32")]
+            Self::LocalFile(loader) => loader.cancel(),
+        }
+    }
+
+    fn is_idle(&self) -> bool {
+        match self {
+            Self::Remote(loader) => loader.is_idle(),
+            #[cfg(target_arch = "wasm32")]
+            Self::LocalFile(loader) => loader.is_idle(),
+        }
+    }
+
+    fn metrics(&self) -> &WindowLoaderMetrics {
+        match self {
+            Self::Remote(loader) => loader.metrics(),
+            #[cfg(target_arch = "wasm32")]
+            Self::LocalFile(loader) => loader.metrics(),
+        }
+    }
+}
+
+impl WebWindowLoader {
+    #[cfg(test)]
+    pub(crate) fn remote_mut(&mut self) -> &mut RemoteWindowLoader {
+        match self {
+            Self::Remote(loader) => loader,
+            #[cfg(target_arch = "wasm32")]
+            Self::LocalFile(_) => panic!("test expected a remote loader"),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]

@@ -1,78 +1,125 @@
-use super::{RemoteApiClient, RemoteCatalog, RemoteWindowLoader};
-use crate::data_plane::{RecordingDataPlane, RecordingDataPlaneDiagnostics};
+#![cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+
+#[cfg(target_arch = "wasm32")]
+use crate::local::BrowserMcapRecording;
+use crate::{
+    data_plane::{RecordingDataPlane, RecordingDataPlaneDiagnostics, WebWindowLoader},
+    remote::{RemoteApiClient, RemoteCatalog, RemoteWindowLoader},
+};
 use std::{error::Error, fmt, time::Duration};
 use viewer_core::{
-    CameraId, DomainState, McapPlayback, PipelineCounters, PlaybackClock, PlaybackCommand,
-    PlaybackCore, PlaybackEffect, PlaybackLoadState, PlaybackPerformance, PlaybackSpeed,
+    CameraId, DomainState, PipelineCounters, PlaybackClock, PlaybackCommand, PlaybackCore,
+    PlaybackEffect, PlaybackLoadState, PlaybackPerformance, PlaybackSpeed, StreamCatalog,
 };
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct RemotePlaybackError(String);
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum PlaybackSourceKind {
+    LocalFile,
+    Remote,
+}
 
-impl RemotePlaybackError {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct WebPlaybackError(String);
+
+impl WebPlaybackError {
     fn new(message: impl Into<String>) -> Self {
         Self(message.into())
     }
 }
 
-impl fmt::Display for RemotePlaybackError {
+impl fmt::Display for WebPlaybackError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str(&self.0)
     }
 }
 
-impl Error for RemotePlaybackError {}
+impl Error for WebPlaybackError {}
 
-pub(crate) struct RemotePlayback {
+/// Browser playback shared by local File.slice and Recording Server sources.
+pub(crate) struct WebPlayback {
     clock: PlaybackClock,
     core: PlaybackCore,
-    data: RecordingDataPlane<RemoteWindowLoader>,
+    data: RecordingDataPlane<WebWindowLoader>,
     load_state: PlaybackLoadState,
+    source_kind: PlaybackSourceKind,
 }
 
-impl RemotePlayback {
-    pub(crate) fn new(
+impl WebPlayback {
+    pub(crate) fn from_remote(
         client: RemoteApiClient,
         catalog: RemoteCatalog,
-    ) -> Result<Self, RemotePlaybackError> {
-        let core = PlaybackCore::new(&catalog.core, &catalog.primary_camera_topic)
-            .map_err(|error| RemotePlaybackError::new(error.to_string()))?;
+    ) -> Result<Self, WebPlaybackError> {
         let loader = RemoteWindowLoader::new(
             client,
             catalog.recording_id,
             catalog.revision,
             catalog.selected_streams,
         )
-        .map_err(|error| RemotePlaybackError::new(error.to_string()))?;
-        let data = RecordingDataPlane::new(loader, catalog.start, catalog.end_exclusive)
-            .map_err(|error| RemotePlaybackError::new(error.to_string()))?;
-        Ok(Self {
-            clock: PlaybackClock::new(catalog.start, catalog.end),
-            core,
-            data,
-            load_state: PlaybackLoadState::Ready,
-        })
+        .map_err(|error| WebPlaybackError::new(error.to_string()))?;
+        Self::new(
+            &catalog.core,
+            &catalog.primary_camera_topic,
+            catalog.start,
+            catalog.end,
+            catalog.end_exclusive,
+            WebWindowLoader::Remote(loader),
+            PlaybackSourceKind::Remote,
+        )
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn tick(&mut self, elapsed: Duration) -> Result<(), RemotePlaybackError> {
+    pub(crate) fn from_local(recording: BrowserMcapRecording) -> Result<Self, WebPlaybackError> {
+        Self::new(
+            &recording.catalog.core,
+            &recording.catalog.primary_camera_topic,
+            recording.catalog.start,
+            recording.catalog.end,
+            recording.catalog.end_exclusive,
+            WebWindowLoader::LocalFile(recording.loader),
+            PlaybackSourceKind::LocalFile,
+        )
+    }
+
+    fn new(
+        catalog: &StreamCatalog,
+        primary_camera_topic: &str,
+        start: viewer_core::ArrivalTime,
+        end: viewer_core::ArrivalTime,
+        end_exclusive: viewer_core::ArrivalTime,
+        loader: WebWindowLoader,
+        source_kind: PlaybackSourceKind,
+    ) -> Result<Self, WebPlaybackError> {
+        let core = PlaybackCore::new(catalog, primary_camera_topic)
+            .map_err(|error| WebPlaybackError::new(error.to_string()))?;
+        let data = RecordingDataPlane::new(loader, start, end_exclusive)
+            .map_err(|error| WebPlaybackError::new(error.to_string()))?;
+        Ok(Self {
+            clock: PlaybackClock::new(start, end),
+            core,
+            data,
+            load_state: PlaybackLoadState::Ready,
+            source_kind,
+        })
+    }
+
+    pub(crate) fn tick(&mut self, elapsed: Duration) -> Result<(), WebPlaybackError> {
         if let Err(error) = self.data.poll(self.clock.cursor()) {
             self.load_state = PlaybackLoadState::Failed {
                 message: error.to_string(),
             };
-            return Err(RemotePlaybackError::new(error.to_string()));
+            return Err(WebPlaybackError::new(error.to_string()));
         }
         let requested = self.clock.cursor_after(elapsed);
         self.data
             .ensure_available_through(requested)
-            .map_err(|error| RemotePlaybackError::new(error.to_string()))?;
+            .map_err(|error| WebPlaybackError::new(error.to_string()))?;
         if !self.commit_candidate(elapsed, requested) {
             return Ok(());
         }
 
         self.data
             .ensure_available_through(requested)
-            .map_err(|error| RemotePlaybackError::new(error.to_string()))?;
+            .map_err(|error| WebPlaybackError::new(error.to_string()))?;
         Ok(())
     }
 
@@ -98,21 +145,23 @@ impl RemotePlayback {
     pub(crate) fn apply_command(
         &mut self,
         command: PlaybackCommand,
-    ) -> Result<PlaybackEffect, RemotePlaybackError> {
+    ) -> Result<PlaybackEffect, WebPlaybackError> {
         match command {
             PlaybackCommand::Toggle => {
                 self.clock.toggle();
                 Ok(PlaybackEffect::None)
             }
-            PlaybackCommand::SetSpeed(PlaybackSpeed::Normal) => {
-                self.clock.set_speed(PlaybackSpeed::Normal);
+            PlaybackCommand::SetSpeed(speed) => {
+                if self.is_remote() && speed != PlaybackSpeed::Normal {
+                    return Err(WebPlaybackError::new(
+                        "Remote playback currently supports 1x speed only",
+                    ));
+                }
+                self.clock.set_speed(speed);
                 Ok(PlaybackEffect::None)
             }
-            PlaybackCommand::SetSpeed(_) => Err(RemotePlaybackError::new(
-                "Remote playback currently supports 1x speed only",
-            )),
-            PlaybackCommand::Seek(_) => Err(RemotePlaybackError::new(
-                "Remote exact seek is not implemented yet",
+            PlaybackCommand::Seek(_) => Err(WebPlaybackError::new(
+                "Web DataPlane seek is not implemented yet",
             )),
         }
     }
@@ -145,97 +194,19 @@ impl RemotePlayback {
         self.load_state.clone()
     }
 
-    pub(crate) fn diagnostics(&self) -> RecordingDataPlaneDiagnostics {
-        self.data.diagnostics(self.clock.cursor())
-    }
-}
-
-pub(crate) enum WebPlayback {
-    Local(McapPlayback<Vec<u8>>),
-    Remote(RemotePlayback),
-}
-
-impl WebPlayback {
-    #[cfg(target_arch = "wasm32")]
-    pub(crate) fn tick(&mut self, elapsed: Duration) -> Result<(), String> {
-        match self {
-            Self::Local(playback) => playback.tick(elapsed).map_err(|error| error.to_string()),
-            Self::Remote(playback) => playback.tick(elapsed).map_err(|error| error.to_string()),
-        }
-    }
-
-    pub(crate) fn apply_command(
-        &mut self,
-        command: PlaybackCommand,
-    ) -> Result<PlaybackEffect, String> {
-        match self {
-            Self::Local(playback) => playback
-                .apply_command(command)
-                .map_err(|error| error.to_string()),
-            Self::Remote(playback) => playback
-                .apply_command(command)
-                .map_err(|error| error.to_string()),
-        }
-    }
-
-    pub(crate) fn clock(&self) -> &PlaybackClock {
-        match self {
-            Self::Local(playback) => playback.clock(),
-            Self::Remote(playback) => playback.clock(),
-        }
-    }
-
-    pub(crate) fn state(&self) -> &DomainState {
-        match self {
-            Self::Local(playback) => playback.state(),
-            Self::Remote(playback) => playback.state(),
-        }
-    }
-
-    pub(crate) fn camera_topics(&self) -> &[(CameraId, String)] {
-        match self {
-            Self::Local(playback) => playback.camera_topics(),
-            Self::Remote(playback) => playback.camera_topics(),
-        }
-    }
-
-    pub(crate) fn set_focused_camera(&mut self, camera: Option<CameraId>) {
-        match self {
-            Self::Local(playback) => playback.set_focused_camera(camera),
-            Self::Remote(playback) => playback.set_focused_camera(camera),
-        }
-    }
-
-    pub(crate) fn counters(&self) -> PipelineCounters {
-        match self {
-            Self::Local(playback) => playback.counters(),
-            Self::Remote(playback) => playback.counters(),
-        }
-    }
-
-    pub(crate) fn performance(&self) -> &PlaybackPerformance {
-        match self {
-            Self::Local(playback) => playback.performance(),
-            Self::Remote(playback) => playback.performance(),
-        }
-    }
-
-    pub(crate) fn load_state(&self) -> PlaybackLoadState {
-        match self {
-            Self::Local(_) => PlaybackLoadState::Ready,
-            Self::Remote(playback) => playback.load_state(),
-        }
-    }
-
     pub(crate) fn is_remote(&self) -> bool {
-        matches!(self, Self::Remote(_))
+        self.source_kind == PlaybackSourceKind::Remote
     }
 
-    pub(crate) fn remote_diagnostics(&self) -> Option<RecordingDataPlaneDiagnostics> {
-        match self {
-            Self::Local(_) => None,
-            Self::Remote(playback) => Some(playback.diagnostics()),
+    pub(crate) fn source_label(&self) -> &'static str {
+        match self.source_kind {
+            PlaybackSourceKind::LocalFile => "Browser file",
+            PlaybackSourceKind::Remote => "Recording Server",
         }
+    }
+
+    pub(crate) fn data_plane_diagnostics(&self) -> RecordingDataPlaneDiagnostics {
+        self.data.diagnostics(self.clock.cursor())
     }
 }
 
@@ -269,7 +240,7 @@ mod tests {
                 message_encoding: "cdr".into(),
             }],
         );
-        super::super::adapt_catalog(&catalog).unwrap()
+        crate::remote::adapt_catalog(&catalog).unwrap()
     }
 
     fn camera_message(time: i64) -> RawMessage {
@@ -291,7 +262,7 @@ mod tests {
     #[test]
     fn buffering_keeps_committed_cursor_and_domain_until_window_is_complete() {
         let client = RemoteApiClient::new("http://localhost").unwrap();
-        let mut playback = RemotePlayback::new(client, remote_catalog()).unwrap();
+        let mut playback = WebPlayback::from_remote(client, remote_catalog()).unwrap();
         playback.apply_command(PlaybackCommand::Toggle).unwrap();
         let elapsed = Duration::from_millis(100);
         let requested = playback.clock.cursor_after(elapsed);
@@ -311,6 +282,7 @@ mod tests {
         playback
             .data
             .loader_mut()
+            .remote_mut()
             .inject_loaded(crate::data_plane::LoadedWindow {
                 window: SerializedWindow::new(
                     DataWindowTimeRange::new(
@@ -344,9 +316,9 @@ mod tests {
     }
 
     #[test]
-    fn remote_seek_and_non_normal_speed_are_explicitly_unsupported() {
+    fn web_data_plane_seek_and_remote_non_normal_speed_are_explicitly_unsupported() {
         let client = RemoteApiClient::new("http://localhost").unwrap();
-        let mut playback = RemotePlayback::new(client, remote_catalog()).unwrap();
+        let mut playback = WebPlayback::from_remote(client, remote_catalog()).unwrap();
         assert!(
             playback
                 .apply_command(PlaybackCommand::Seek(viewer_core::ArrivalTime(2)))

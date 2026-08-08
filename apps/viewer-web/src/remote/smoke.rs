@@ -1,6 +1,5 @@
-use super::{
-    RemoteApiClient, RemoteBatchRequest, RemotePlayback, RequestGeneration, adapt_catalog,
-};
+use super::{RemoteApiClient, RemoteBatchRequest, RequestGeneration, adapt_catalog};
+use crate::playback::WebPlayback;
 use js_sys::Date;
 use std::cell::RefCell;
 use viewer_remote_protocol::{BatchDecoder, CatalogResponse};
@@ -260,7 +259,7 @@ fn install_open_playback() {
         let result = adapt_catalog(&catalog)
             .map_err(|error| error.to_string())
             .and_then(|catalog| {
-                RemotePlayback::new(client, catalog).map_err(|error| error.to_string())
+                WebPlayback::from_remote(client, catalog).map_err(|error| error.to_string())
             });
         match result {
             Ok(playback) => {
