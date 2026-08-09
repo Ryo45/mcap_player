@@ -1,7 +1,7 @@
 use crate::ArrivalTime;
 use std::time::Duration;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PlaybackSpeed {
     Quarter,
     Half,

@@ -1,16 +1,12 @@
 use std::{error::Error, fmt, time::Duration};
 use viewer_core::{
-    ArrivalTime, DataWindowTimeRange, FetchDemand, FetchPlanner, MemoryWindowStore, RawMessage,
-    SerializedWindow,
+    ArrivalTime, DataWindowTimeRange, FetchDemand, FetchPlanner, FetchProfile, MemoryWindowStore,
+    PlaybackSpeed, RawMessage, SerializedWindow,
 };
 
 #[cfg(target_arch = "wasm32")]
 use crate::local::BrowserMcapWindowLoader;
 use crate::remote::RemoteWindowLoader;
-
-const DEFAULT_WINDOW_SIZE: Duration = Duration::from_secs(1);
-const DEFAULT_TARGET_AHEAD: Duration = Duration::from_secs(2);
-const DEFAULT_MAX_RESIDENT_BYTES: usize = 256 * 1024 * 1024;
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct WindowLoaderMetrics {
@@ -136,14 +132,15 @@ pub(crate) struct RecordingDataPlaneDiagnostics {
     pub last_window_latency_ms: f64,
     pub last_processing_ms: f64,
     pub stale_results_discarded: u64,
-    pub buffering_count: u64,
+    pub buffer_underrun_count: u64,
     pub window_count: usize,
     pub resident_bytes: usize,
     pub logical_payload_bytes: usize,
     pub retention_ratio: Option<f64>,
     pub decompressed_bytes: u64,
     pub per_message_copied_bytes: u64,
-    pub buffer_ahead: Duration,
+    pub target_ahead: Duration,
+    pub actual_buffer_ahead: Duration,
     pub eviction_count: u64,
 }
 
@@ -169,7 +166,7 @@ pub(crate) struct RecordingDataPlane<L> {
     store: MemoryWindowStore,
     loader: L,
     end_exclusive: ArrivalTime,
-    buffering_count: u64,
+    buffer_underrun_count: u64,
     delivery_started: bool,
     failed: Option<DataPlaneError>,
 }
@@ -180,35 +177,25 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
         start: ArrivalTime,
         end_exclusive: ArrivalTime,
     ) -> Result<Self, DataPlaneError> {
-        Self::with_limits(
-            loader,
-            start,
-            end_exclusive,
-            DEFAULT_WINDOW_SIZE,
-            DEFAULT_TARGET_AHEAD,
-            DEFAULT_MAX_RESIDENT_BYTES,
-        )
+        Self::with_profile(loader, start, end_exclusive, FetchProfile::default())
     }
 
-    fn with_limits(
+    fn with_profile(
         loader: L,
         start: ArrivalTime,
         end_exclusive: ArrivalTime,
-        window_size: Duration,
-        target_ahead: Duration,
-        max_resident_bytes: usize,
+        profile: FetchProfile,
     ) -> Result<Self, DataPlaneError> {
         if start >= end_exclusive {
             return Err(DataPlaneError::new("recording data range is empty"));
         }
         Ok(Self {
-            planner: FetchPlanner::new(window_size, target_ahead)
-                .map_err(|error| DataPlaneError::new(error.to_string()))?,
-            store: MemoryWindowStore::new(start, max_resident_bytes)
+            planner: FetchPlanner::new(profile),
+            store: MemoryWindowStore::new(start, profile.max_resident_bytes())
                 .map_err(|error| DataPlaneError::new(error.to_string()))?,
             loader,
             end_exclusive,
-            buffering_count: 0,
+            buffer_underrun_count: 0,
             delivery_started: false,
             failed: None,
         })
@@ -240,7 +227,9 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
 
     pub(crate) fn ensure_available_through(
         &mut self,
-        target: ArrivalTime,
+        committed: ArrivalTime,
+        required_through: ArrivalTime,
+        playback_speed: PlaybackSpeed,
     ) -> Result<(), DataPlaneError> {
         if let Some(error) = &self.failed {
             return Err(error.clone());
@@ -249,9 +238,11 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
             return Ok(());
         }
         let demand = FetchDemand {
-            cursor: target,
+            cursor: committed,
+            required_through,
             complete_until: self.store.complete_until(),
             end_exclusive: self.end_exclusive,
+            playback_speed,
         };
         let Some(range) = self.planner.plan(demand) else {
             return Ok(());
@@ -290,11 +281,15 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
         )
     }
 
-    pub(crate) fn note_buffering(&mut self) {
-        self.buffering_count = self.buffering_count.saturating_add(1);
+    pub(crate) fn note_buffer_underrun(&mut self) {
+        self.buffer_underrun_count = self.buffer_underrun_count.saturating_add(1);
     }
 
-    pub(crate) fn diagnostics(&self, cursor: ArrivalTime) -> RecordingDataPlaneDiagnostics {
+    pub(crate) fn diagnostics(
+        &self,
+        cursor: ArrivalTime,
+        playback_speed: PlaybackSpeed,
+    ) -> RecordingDataPlaneDiagnostics {
         let loader = self.loader.metrics();
         let logical_payload_bytes = self.store.logical_payload_bytes();
         RecordingDataPlaneDiagnostics {
@@ -305,7 +300,7 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
             last_window_latency_ms: loader.last_window_latency_ms,
             last_processing_ms: loader.last_processing_ms,
             stale_results_discarded: loader.stale_results_discarded,
-            buffering_count: self.buffering_count,
+            buffer_underrun_count: self.buffer_underrun_count,
             window_count: self.store.window_count(),
             resident_bytes: self.store.resident_bytes(),
             logical_payload_bytes,
@@ -313,7 +308,8 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
                 .then(|| self.store.resident_bytes() as f64 / logical_payload_bytes as f64),
             decompressed_bytes: loader.decompressed_bytes,
             per_message_copied_bytes: loader.per_message_copied_bytes,
-            buffer_ahead: self.buffer_ahead(cursor),
+            target_ahead: self.planner.profile().target_ahead(playback_speed),
+            actual_buffer_ahead: self.buffer_ahead(cursor),
             eviction_count: self.store.eviction_count(),
         }
     }
@@ -387,13 +383,13 @@ mod tests {
             shared: Rc::clone(&shared),
             metrics: WindowLoaderMetrics::default(),
         };
-        let data = RecordingDataPlane::with_limits(
+        let profile =
+            FetchProfile::new(Duration::from_secs(1), Duration::from_secs(2), max_bytes).unwrap();
+        let data = RecordingDataPlane::with_profile(
             loader,
             ArrivalTime(0),
             ArrivalTime(4 * SECOND),
-            Duration::from_secs(1),
-            Duration::from_secs(2),
-            max_bytes,
+            profile,
         )
         .unwrap();
         (data, shared)
@@ -444,7 +440,8 @@ mod tests {
     #[test]
     fn complete_windows_publish_once_without_copying_payloads() {
         let (mut data, shared) = data_plane(1024);
-        data.ensure_available_through(ArrivalTime(0)).unwrap();
+        data.ensure_available_through(ArrivalTime(0), ArrivalTime(0), PlaybackSpeed::Normal)
+            .unwrap();
         let backing = Bytes::from_static(b"batch-payload");
         let payload = backing.slice(6..);
         let pointer = payload.as_ptr();
@@ -458,13 +455,16 @@ mod tests {
         let messages = data.messages_through(ArrivalTime(0), ArrivalTime(SECOND - 1));
         assert_eq!(messages.len(), 1);
         assert_eq!(messages[0].payload.as_ptr(), pointer);
-        let diagnostics = data.diagnostics(ArrivalTime(0));
+        let diagnostics = data.diagnostics(ArrivalTime(0), PlaybackSpeed::Normal);
         assert_eq!(diagnostics.logical_payload_bytes, 7);
         assert_eq!(diagnostics.resident_bytes, backing.len());
         assert_eq!(
             diagnostics.retention_ratio,
             Some(backing.len() as f64 / 7.0)
         );
+        assert_eq!(diagnostics.target_ahead, Duration::from_secs(2));
+        assert_eq!(diagnostics.actual_buffer_ahead, Duration::from_secs(1));
+        assert_eq!(diagnostics.buffer_underrun_count, 0);
         assert!(
             data.messages_through(ArrivalTime(0), ArrivalTime(SECOND - 1))
                 .is_empty()
@@ -478,7 +478,12 @@ mod tests {
         let (mut data, shared) = data_plane(8);
         for index in 0..3 {
             let start = index * SECOND;
-            data.ensure_available_through(ArrivalTime(start)).unwrap();
+            data.ensure_available_through(
+                ArrivalTime(start),
+                ArrivalTime(start),
+                PlaybackSpeed::Normal,
+            )
+            .unwrap();
             complete_request(
                 &mut data,
                 &shared,
@@ -487,7 +492,7 @@ mod tests {
             );
         }
 
-        let diagnostics = data.diagnostics(ArrivalTime(SECOND + 1));
+        let diagnostics = data.diagnostics(ArrivalTime(SECOND + 1), PlaybackSpeed::Normal);
         assert_eq!(diagnostics.window_count, 2);
         assert_eq!(diagnostics.resident_bytes, 8);
         assert_eq!(diagnostics.eviction_count, 1);
@@ -496,7 +501,8 @@ mod tests {
     #[test]
     fn loader_failure_never_reaches_the_store() {
         let (mut data, shared) = data_plane(1024);
-        data.ensure_available_through(ArrivalTime(0)).unwrap();
+        data.ensure_available_through(ArrivalTime(0), ArrivalTime(0), PlaybackSpeed::Normal)
+            .unwrap();
         shared
             .borrow_mut()
             .results
@@ -504,5 +510,41 @@ mod tests {
 
         assert!(data.poll(ArrivalTime(0)).is_err());
         assert_eq!(data.resident_bytes(), 0);
+    }
+
+    #[test]
+    fn data_plane_uses_speed_scaled_target_ahead_with_one_loader_request() {
+        let (mut data, shared) = data_plane(1024);
+        for index in 0..3 {
+            let start = index * SECOND;
+            data.ensure_available_through(
+                ArrivalTime(0),
+                ArrivalTime(start),
+                PlaybackSpeed::Normal,
+            )
+            .unwrap();
+            complete_request(
+                &mut data,
+                &shared,
+                loaded(start, start + SECOND, vec![], 0),
+                ArrivalTime(0),
+            );
+        }
+
+        data.ensure_available_through(ArrivalTime(0), ArrivalTime(0), PlaybackSpeed::Normal)
+            .unwrap();
+        assert!(shared.borrow().requested.is_none());
+
+        data.ensure_available_through(ArrivalTime(0), ArrivalTime(0), PlaybackSpeed::Double)
+            .unwrap();
+        assert_eq!(
+            shared.borrow().requested,
+            Some(
+                DataWindowTimeRange::new(ArrivalTime(3 * SECOND), ArrivalTime(4 * SECOND)).unwrap()
+            )
+        );
+        let diagnostics = data.diagnostics(ArrivalTime(0), PlaybackSpeed::Double);
+        assert_eq!(diagnostics.target_ahead, Duration::from_secs(4));
+        assert_eq!(diagnostics.actual_buffer_ahead, Duration::from_secs(3));
     }
 }

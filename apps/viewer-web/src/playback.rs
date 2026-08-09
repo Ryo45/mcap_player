@@ -9,7 +9,7 @@ use crate::{
 use std::{error::Error, fmt, time::Duration};
 use viewer_core::{
     CameraId, DomainState, PipelineCounters, PlaybackClock, PlaybackCommand, PlaybackCore,
-    PlaybackEffect, PlaybackLoadState, PlaybackPerformance, PlaybackSpeed, StreamCatalog,
+    PlaybackEffect, PlaybackLoadState, PlaybackPerformance, StreamCatalog,
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -41,6 +41,7 @@ pub(crate) struct WebPlayback {
     core: PlaybackCore,
     data: RecordingDataPlane<WebWindowLoader>,
     load_state: PlaybackLoadState,
+    buffer_underrun_active: bool,
     source_kind: PlaybackSourceKind,
 }
 
@@ -98,6 +99,7 @@ impl WebPlayback {
             core,
             data,
             load_state: PlaybackLoadState::Ready,
+            buffer_underrun_active: false,
             source_kind,
         })
     }
@@ -110,24 +112,28 @@ impl WebPlayback {
             return Err(WebPlaybackError::new(error.to_string()));
         }
         let requested = self.clock.cursor_after(elapsed);
+        let committed = self.clock.cursor();
+        let speed = self.clock.speed();
         self.data
-            .ensure_available_through(requested)
+            .ensure_available_through(committed, requested, speed)
             .map_err(|error| WebPlaybackError::new(error.to_string()))?;
         if !self.commit_candidate(elapsed, requested) {
             return Ok(());
         }
 
         self.data
-            .ensure_available_through(requested)
+            .ensure_available_through(requested, requested, speed)
             .map_err(|error| WebPlaybackError::new(error.to_string()))?;
         Ok(())
     }
 
     fn commit_candidate(&mut self, elapsed: Duration, requested: viewer_core::ArrivalTime) -> bool {
         if !self.data.is_complete_through(requested) {
-            if !matches!(self.load_state, PlaybackLoadState::Buffering { .. }) {
-                self.data.note_buffering();
+            let is_underrun = self.clock.is_playing() && requested > self.clock.cursor();
+            if is_underrun && !self.buffer_underrun_active {
+                self.data.note_buffer_underrun();
             }
+            self.buffer_underrun_active = is_underrun;
             self.load_state = PlaybackLoadState::Buffering {
                 requested,
                 committed: self.clock.cursor(),
@@ -138,6 +144,7 @@ impl WebPlayback {
         let messages = self.data.messages_through(self.clock.cursor(), requested);
         self.core.process_forward(elapsed, messages);
         self.clock.commit_cursor(requested);
+        self.buffer_underrun_active = false;
         self.load_state = PlaybackLoadState::Ready;
         true
     }
@@ -152,11 +159,6 @@ impl WebPlayback {
                 Ok(PlaybackEffect::None)
             }
             PlaybackCommand::SetSpeed(speed) => {
-                if self.is_remote() && speed != PlaybackSpeed::Normal {
-                    return Err(WebPlaybackError::new(
-                        "Remote playback currently supports 1x speed only",
-                    ));
-                }
                 self.clock.set_speed(speed);
                 Ok(PlaybackEffect::None)
             }
@@ -206,7 +208,8 @@ impl WebPlayback {
     }
 
     pub(crate) fn data_plane_diagnostics(&self) -> RecordingDataPlaneDiagnostics {
-        self.data.diagnostics(self.clock.cursor())
+        self.data
+            .diagnostics(self.clock.cursor(), self.clock.speed())
     }
 }
 
@@ -215,8 +218,8 @@ mod tests {
     use super::*;
     use bytes::Bytes;
     use viewer_core::{
-        CompressedImage, DataWindowTimeRange, MeasurementTime, RawMessage, SerializedWindow,
-        StreamId, encode_compressed_image_cdr,
+        CompressedImage, DataWindowTimeRange, MeasurementTime, PlaybackSpeed, RawMessage,
+        SerializedWindow, StreamId, encode_compressed_image_cdr,
     };
     use viewer_remote_protocol::{
         BatchEncoder, CatalogResponse, RemoteMessageRef, RemoteTimeRange, StreamDescriptor,
@@ -278,8 +281,28 @@ mod tests {
             playback.load_state,
             PlaybackLoadState::Buffering { .. }
         ));
+        assert_eq!(
+            playback
+                .data
+                .diagnostics(playback.clock.cursor(), playback.clock.speed())
+                .buffer_underrun_count,
+            1
+        );
 
-        playback.data.ensure_available_through(requested).unwrap();
+        assert!(!playback.commit_candidate(elapsed, requested));
+        assert_eq!(
+            playback
+                .data
+                .diagnostics(playback.clock.cursor(), playback.clock.speed())
+                .buffer_underrun_count,
+            1,
+            "one continuous buffering period is one underrun"
+        );
+
+        playback
+            .data
+            .ensure_available_through(playback.clock.cursor(), requested, playback.clock.speed())
+            .unwrap();
         playback
             .data
             .loader_mut()
@@ -320,7 +343,22 @@ mod tests {
     }
 
     #[test]
-    fn web_data_plane_seek_and_remote_non_normal_speed_are_explicitly_unsupported() {
+    fn initial_paused_loading_is_not_counted_as_a_buffer_underrun() {
+        let client = RemoteApiClient::new("http://localhost").unwrap();
+        let mut playback = WebPlayback::from_remote(client, remote_catalog()).unwrap();
+        let paused_target = playback.clock.cursor();
+
+        assert!(!playback.commit_candidate(Duration::ZERO, paused_target));
+        assert_eq!(playback.data_plane_diagnostics().buffer_underrun_count, 0);
+
+        playback.apply_command(PlaybackCommand::Toggle).unwrap();
+        let requested = playback.clock.cursor_after(Duration::from_millis(10));
+        assert!(!playback.commit_candidate(Duration::from_millis(10), requested));
+        assert_eq!(playback.data_plane_diagnostics().buffer_underrun_count, 1);
+    }
+
+    #[test]
+    fn web_data_plane_seek_is_unsupported_but_remote_speed_updates_prefetch_target() {
         let client = RemoteApiClient::new("http://localhost").unwrap();
         let mut playback = WebPlayback::from_remote(client, remote_catalog()).unwrap();
         assert!(
@@ -328,10 +366,13 @@ mod tests {
                 .apply_command(PlaybackCommand::Seek(viewer_core::ArrivalTime(2)))
                 .is_err()
         );
-        assert!(
-            playback
-                .apply_command(PlaybackCommand::SetSpeed(PlaybackSpeed::Double))
-                .is_err()
+        playback
+            .apply_command(PlaybackCommand::SetSpeed(PlaybackSpeed::Double))
+            .unwrap();
+        assert_eq!(playback.clock.speed(), PlaybackSpeed::Double);
+        assert_eq!(
+            playback.data_plane_diagnostics().target_ahead,
+            Duration::from_secs(4)
         );
     }
 
