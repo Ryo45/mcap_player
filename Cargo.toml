@@ -39,6 +39,7 @@ anyhow = "1.0"
 axum = "0.8"
 base64 = "0.22"
 bytes = "1.10"
+zstd = "0.13"
 bytemuck = { version = "1.24", features = ["derive"] }
 egui = "0.33.2"
 egui_plot = "0.34.1"

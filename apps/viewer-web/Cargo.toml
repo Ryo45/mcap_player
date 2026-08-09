@@ -11,6 +11,7 @@ crate-type = ["cdylib", "rlib"]
 bev-renderer = { path = "../../crates/bev-renderer" }
 bytes.workspace = true
 mcap = { workspace = true, features = ["zstd"] }
+zstd.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 viewer-core = { path = "../../crates/viewer-core" }

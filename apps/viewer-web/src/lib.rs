@@ -632,14 +632,20 @@ mod browser {
             .map_or(0.0, |camera| camera.fps);
         let performance: HtmlElement = element("performance");
         let metrics = session.data_plane_diagnostics();
+        let retention = metrics
+            .retention_ratio
+            .map_or_else(|| "n/a".to_owned(), |ratio| format!("{ratio:.2}x"));
         let data_plane = format!(
-            " · {} {} loads/{} reads · {:.1} MB loaded · {} windows/{:.1} MB RAM · ahead {:.2}s · {} evicted · last {:.1} ms (MCAP {:.1} ms) · buffering {} · stale {}",
+            " · {} {} loads/{} reads · {:.1} MB loaded/{:.1} MB decompressed · {} windows/{:.1} MB logical/{:.1} MB RAM ({retention}) · copied {:.1} MB · ahead {:.2}s · {} evicted · last {:.1} ms (MCAP {:.1} ms) · buffering {} · stale {}",
             session.source_label(),
             metrics.load_requests,
             metrics.source_reads,
             metrics.source_bytes as f64 / (1024.0 * 1024.0),
+            metrics.decompressed_bytes as f64 / (1024.0 * 1024.0),
             metrics.window_count,
+            metrics.logical_payload_bytes as f64 / (1024.0 * 1024.0),
             metrics.resident_bytes as f64 / (1024.0 * 1024.0),
+            metrics.per_message_copied_bytes as f64 / (1024.0 * 1024.0),
             metrics.buffer_ahead.as_secs_f64(),
             metrics.eviction_count,
             metrics.last_window_latency_ms,

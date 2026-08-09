@@ -17,6 +17,8 @@ pub(crate) struct WindowLoaderMetrics {
     pub load_requests: u64,
     pub source_reads: u64,
     pub source_bytes: u64,
+    pub decompressed_bytes: u64,
+    pub per_message_copied_bytes: u64,
     pub messages_loaded: u64,
     pub request_latency_ms: f64,
     pub last_window_latency_ms: f64,
@@ -28,6 +30,8 @@ pub(crate) struct WindowLoaderMetrics {
 pub(crate) struct WindowLoadDiagnostics {
     pub source_reads: u64,
     pub source_bytes: usize,
+    pub decompressed_bytes: usize,
+    pub per_message_copied_bytes: usize,
     pub latency_ms: f64,
     pub processing_ms: f64,
 }
@@ -135,6 +139,10 @@ pub(crate) struct RecordingDataPlaneDiagnostics {
     pub buffering_count: u64,
     pub window_count: usize,
     pub resident_bytes: usize,
+    pub logical_payload_bytes: usize,
+    pub retention_ratio: Option<f64>,
+    pub decompressed_bytes: u64,
+    pub per_message_copied_bytes: u64,
     pub buffer_ahead: Duration,
     pub eviction_count: u64,
 }
@@ -288,6 +296,7 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
 
     pub(crate) fn diagnostics(&self, cursor: ArrivalTime) -> RecordingDataPlaneDiagnostics {
         let loader = self.loader.metrics();
+        let logical_payload_bytes = self.store.logical_payload_bytes();
         RecordingDataPlaneDiagnostics {
             load_requests: loader.load_requests,
             source_reads: loader.source_reads,
@@ -299,6 +308,11 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
             buffering_count: self.buffering_count,
             window_count: self.store.window_count(),
             resident_bytes: self.store.resident_bytes(),
+            logical_payload_bytes,
+            retention_ratio: (logical_payload_bytes != 0)
+                .then(|| self.store.resident_bytes() as f64 / logical_payload_bytes as f64),
+            decompressed_bytes: loader.decompressed_bytes,
+            per_message_copied_bytes: loader.per_message_copied_bytes,
             buffer_ahead: self.buffer_ahead(cursor),
             eviction_count: self.store.eviction_count(),
         }
@@ -401,6 +415,8 @@ mod tests {
             diagnostics: WindowLoadDiagnostics {
                 source_reads: 1,
                 source_bytes: resident_bytes,
+                decompressed_bytes: 0,
+                per_message_copied_bytes: 0,
                 latency_ms: 1.0,
                 processing_ms: 0.0,
             },
@@ -442,6 +458,13 @@ mod tests {
         let messages = data.messages_through(ArrivalTime(0), ArrivalTime(SECOND - 1));
         assert_eq!(messages.len(), 1);
         assert_eq!(messages[0].payload.as_ptr(), pointer);
+        let diagnostics = data.diagnostics(ArrivalTime(0));
+        assert_eq!(diagnostics.logical_payload_bytes, 7);
+        assert_eq!(diagnostics.resident_bytes, backing.len());
+        assert_eq!(
+            diagnostics.retention_ratio,
+            Some(backing.len() as f64 / 7.0)
+        );
         assert!(
             data.messages_through(ArrivalTime(0), ArrivalTime(SECOND - 1))
                 .is_empty()

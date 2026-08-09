@@ -298,6 +298,8 @@ mod tests {
                 diagnostics: crate::data_plane::WindowLoadDiagnostics {
                     source_reads: 1,
                     source_bytes: 64,
+                    decompressed_bytes: 0,
+                    per_message_copied_bytes: 0,
                     latency_ms: 1.0,
                     processing_ms: 0.0,
                 },
@@ -359,6 +361,21 @@ mod tests {
             &bytes,
         )
         .unwrap();
+        let camera_stream = catalog
+            .core
+            .by_topic("/camera/front/image/compressed")
+            .unwrap()
+            .id;
+        let camera_payload_ranges = local
+            .window
+            .messages
+            .iter()
+            .filter(|message| message.stream_id == camera_stream)
+            .map(|message| {
+                let start = message.payload.as_ptr() as usize;
+                start..start + message.payload.len()
+            })
+            .collect::<Vec<_>>();
 
         let mut encoder = BatchEncoder::new();
         for (sequence, message) in local.window.messages.iter().enumerate() {
@@ -405,6 +422,11 @@ mod tests {
             .map(|(id, frame)| (*id, frame.clone()))
             .collect::<Vec<_>>();
         assert_eq!(local_cameras, remote_cameras);
+        let retained_jpeg = &local_cameras.first().unwrap().1.jpeg;
+        let jpeg_start = retained_jpeg.as_ptr() as usize;
+        assert!(camera_payload_ranges.iter().any(|payload| {
+            jpeg_start >= payload.start && jpeg_start + retained_jpeg.len() <= payload.end
+        }));
         assert_eq!(
             local_core.state().telemetry.latest(),
             remote_core.state().telemetry.latest()
