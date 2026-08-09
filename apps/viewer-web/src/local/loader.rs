@@ -1,6 +1,7 @@
 use crate::data_plane::{DataLoadError, LoadedWindow, WindowLoadDiagnostics};
 use bytes::Bytes;
-use mcap::sans_io::{IndexedReadEvent, IndexedReader, IndexedReaderOptions};
+use mcap::records::{ChunkIndex, Record, op};
+use std::collections::{BTreeSet, VecDeque};
 use viewer_core::{ArrivalTime, DataWindowTimeRange, RawMessage, SerializedWindow, StreamId};
 
 #[cfg(target_arch = "wasm32")]
@@ -9,7 +10,7 @@ use {
     crate::data_plane::{WindowLoader, WindowLoaderMetrics},
     js_sys::{Date, Uint8Array},
     mcap::sans_io::{SummaryReadEvent, SummaryReader, SummaryReaderOptions},
-    std::{cell::RefCell, collections::VecDeque, io::SeekFrom, rc::Rc},
+    std::{cell::RefCell, io::SeekFrom, rc::Rc},
     wasm_bindgen_futures::{JsFuture, spawn_local},
     web_sys::File,
 };
@@ -30,20 +31,24 @@ impl ByteRange {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 struct ChunkReadRequest {
     offset: u64,
     length: usize,
+    compression: String,
+    uncompressed_size: usize,
 }
 
-struct IndexedWindowCollector {
-    reader: IndexedReader,
+struct OwnedWindowCollector {
+    pending_chunks: VecDeque<ChunkReadRequest>,
+    selected_channels: BTreeSet<u16>,
     range: DataWindowTimeRange,
     messages: Vec<RawMessage>,
     resident_bytes: usize,
+    decompressed_bytes: usize,
 }
 
-impl IndexedWindowCollector {
+impl OwnedWindowCollector {
     fn new(
         summary: &mcap::Summary,
         topics: &[String],
@@ -53,63 +58,76 @@ impl IndexedWindowCollector {
             .map_err(|_| DataLoadError::new("negative browser MCAP window start"))?;
         let end = u64::try_from(range.end_exclusive.0)
             .map_err(|_| DataLoadError::new("negative browser MCAP window end"))?;
-        let options = IndexedReaderOptions::new()
-            .include_topics(topics.iter().cloned())
-            .log_time_on_or_after(start)
-            .log_time_before(end);
-        let reader = IndexedReader::new_with_options(summary, options)
-            .map_err(|error| DataLoadError::new(error.to_string()))?;
+        let selected_channels = summary
+            .channels
+            .iter()
+            .filter_map(|(id, channel)| topics.contains(&channel.topic).then_some(*id))
+            .collect::<BTreeSet<_>>();
+        let mut chunks = summary
+            .chunk_indexes
+            .iter()
+            .filter(|chunk| chunk.message_end_time >= start)
+            .filter(|chunk| chunk.message_start_time < end)
+            .filter(|chunk| {
+                selected_channels.is_empty()
+                    || chunk.message_index_offsets.is_empty()
+                    || chunk
+                        .message_index_offsets
+                        .keys()
+                        .any(|id| selected_channels.contains(id))
+            })
+            .collect::<Vec<_>>();
+        chunks.sort_by_key(|chunk| (chunk.message_start_time, chunk.chunk_start_offset));
+        let pending_chunks = chunks
+            .into_iter()
+            .map(chunk_request)
+            .collect::<Result<VecDeque<_>, _>>()?;
         Ok(Self {
-            reader,
+            pending_chunks,
+            selected_channels,
             range,
             messages: Vec::new(),
             resident_bytes: 0,
+            decompressed_bytes: 0,
         })
     }
 
-    fn next_read(&mut self) -> Result<Option<ChunkReadRequest>, DataLoadError> {
-        loop {
-            let Some(event) = self.reader.next_event() else {
-                return Ok(None);
-            };
-            match event.map_err(|error| DataLoadError::new(error.to_string()))? {
-                IndexedReadEvent::ReadChunkRequest { offset, length } => {
-                    return Ok(Some(ChunkReadRequest { offset, length }));
-                }
-                IndexedReadEvent::Message { header, data } => {
-                    let arrival = i64::try_from(header.log_time).map_err(|_| {
-                        DataLoadError::new("browser MCAP timestamp exceeds signed nanoseconds")
-                    })?;
-                    self.resident_bytes = self
-                        .resident_bytes
-                        .checked_add(data.len())
-                        .ok_or_else(|| DataLoadError::new("local resident byte count overflow"))?;
-                    // IndexedReader owns and reuses its decompressed chunk slots. One copy is
-                    // required to retain a message beyond the next reader event; downstream Bytes
-                    // clones and Camera JPEG slices share this allocation.
-                    self.messages.push(RawMessage {
-                        stream_id: StreamId(u32::from(header.channel_id)),
-                        arrival_time: ArrivalTime(arrival),
-                        payload: Bytes::copy_from_slice(data),
-                    });
-                }
-            }
-        }
+    fn next_read(&mut self) -> Option<ChunkReadRequest> {
+        self.pending_chunks.pop_front()
     }
 
     fn insert_chunk(
         &mut self,
-        request: ChunkReadRequest,
-        bytes: &[u8],
+        request: &ChunkReadRequest,
+        compressed: Bytes,
     ) -> Result<(), DataLoadError> {
-        self.reader
-            .insert_chunk_record_data(request.offset, bytes)
-            .map_err(|error| DataLoadError::new(error.to_string()))
+        if compressed.len() != request.length {
+            return Err(DataLoadError::new("browser MCAP chunk range is truncated"));
+        }
+        let (backing, decompressed_bytes) = decode_chunk_backing(request, compressed)?;
+        self.decompressed_bytes = self
+            .decompressed_bytes
+            .checked_add(decompressed_bytes)
+            .ok_or_else(|| DataLoadError::new("decompressed byte count overflow"))?;
+        let parsed = parse_chunk_backing(backing, &self.selected_channels, self.range)?;
+        if !parsed.messages.is_empty() {
+            self.resident_bytes = self
+                .resident_bytes
+                .checked_add(parsed.backing.len())
+                .ok_or_else(|| DataLoadError::new("local resident byte count overflow"))?;
+        }
+        self.messages.extend(parsed.messages);
+        Ok(())
     }
 
-    fn finish(mut self, diagnostics: WindowLoadDiagnostics) -> Result<LoadedWindow, DataLoadError> {
+    fn finish(
+        mut self,
+        mut diagnostics: WindowLoadDiagnostics,
+    ) -> Result<LoadedWindow, DataLoadError> {
         self.messages
             .sort_by_key(|message| (message.arrival_time, message.stream_id.0));
+        diagnostics.decompressed_bytes = self.decompressed_bytes;
+        diagnostics.per_message_copied_bytes = 0;
         let window = SerializedWindow::new(self.range, self.messages, self.resident_bytes)
             .map_err(|error| DataLoadError::new(error.to_string()))?;
         Ok(LoadedWindow {
@@ -117,6 +135,106 @@ impl IndexedWindowCollector {
             diagnostics,
         })
     }
+}
+
+fn decode_chunk_backing(
+    request: &ChunkReadRequest,
+    compressed: Bytes,
+) -> Result<(Bytes, usize), DataLoadError> {
+    match request.compression.as_str() {
+        "" => {
+            if compressed.len() != request.uncompressed_size {
+                return Err(DataLoadError::new("uncompressed MCAP chunk size mismatch"));
+            }
+            Ok((compressed, 0))
+        }
+        "zstd" => {
+            let decompressed = zstd::bulk::decompress(&compressed, request.uncompressed_size)
+                .map_err(|error| DataLoadError::new(error.to_string()))?;
+            if decompressed.len() != request.uncompressed_size {
+                return Err(DataLoadError::new("decompressed MCAP chunk size mismatch"));
+            }
+            let decompressed_bytes = decompressed.len();
+            Ok((Bytes::from(decompressed), decompressed_bytes))
+        }
+        compression => Err(DataLoadError::new(format!(
+            "unsupported browser MCAP compression: {compression}"
+        ))),
+    }
+}
+
+fn chunk_request(index: &ChunkIndex) -> Result<ChunkReadRequest, DataLoadError> {
+    Ok(ChunkReadRequest {
+        offset: index
+            .compressed_data_offset()
+            .map_err(|error| DataLoadError::new(error.to_string()))?,
+        length: usize::try_from(index.compressed_size)
+            .map_err(|_| DataLoadError::new("compressed MCAP chunk is too large"))?,
+        compression: index.compression.clone(),
+        uncompressed_size: usize::try_from(index.uncompressed_size)
+            .map_err(|_| DataLoadError::new("uncompressed MCAP chunk is too large"))?,
+    })
+}
+
+struct ParsedChunk {
+    backing: Bytes,
+    messages: Vec<RawMessage>,
+}
+
+fn parse_chunk_backing(
+    backing: Bytes,
+    selected_channels: &BTreeSet<u16>,
+    range: DataWindowTimeRange,
+) -> Result<ParsedChunk, DataLoadError> {
+    let mut offset = 0_usize;
+    let mut messages = Vec::new();
+    while offset < backing.len() {
+        let header_end = offset
+            .checked_add(9)
+            .ok_or_else(|| DataLoadError::new("MCAP record header overflow"))?;
+        if header_end > backing.len() {
+            return Err(DataLoadError::new("truncated MCAP record header in chunk"));
+        }
+        let opcode = backing[offset];
+        let length_bytes: [u8; 8] = backing[offset + 1..header_end]
+            .try_into()
+            .expect("record length slice has eight bytes");
+        let body_length = usize::try_from(u64::from_le_bytes(length_bytes))
+            .map_err(|_| DataLoadError::new("MCAP record body is too large"))?;
+        let body_end = header_end
+            .checked_add(body_length)
+            .ok_or_else(|| DataLoadError::new("MCAP record body overflow"))?;
+        if body_end > backing.len() {
+            return Err(DataLoadError::new("truncated MCAP record body in chunk"));
+        }
+        if opcode == op::MESSAGE {
+            let record = mcap::parse_record(opcode, &backing[header_end..body_end])
+                .map_err(|error| DataLoadError::new(error.to_string()))?;
+            let Record::Message { header, data } = record else {
+                return Err(DataLoadError::new(
+                    "MCAP message opcode parsed as another record",
+                ));
+            };
+            let arrival = i64::try_from(header.log_time).map_err(|_| {
+                DataLoadError::new("browser MCAP timestamp exceeds signed nanoseconds")
+            })?;
+            let arrival_time = ArrivalTime(arrival);
+            if range.contains(arrival_time)
+                && (selected_channels.is_empty() || selected_channels.contains(&header.channel_id))
+            {
+                let payload_start = body_end
+                    .checked_sub(data.len())
+                    .ok_or_else(|| DataLoadError::new("MCAP message payload range underflow"))?;
+                messages.push(RawMessage {
+                    stream_id: StreamId(u32::from(header.channel_id)),
+                    arrival_time,
+                    payload: backing.slice(payload_start..body_end),
+                });
+            }
+        }
+        offset = body_end;
+    }
+    Ok(ParsedChunk { backing, messages })
 }
 
 fn validate_range(file_size: u64, offset: u64, length: usize) -> Result<ByteRange, DataLoadError> {
@@ -146,21 +264,24 @@ pub(crate) fn collect_window_from_bytes_for_test(
     range: DataWindowTimeRange,
     bytes: &[u8],
 ) -> Result<LoadedWindow, DataLoadError> {
-    let mut collector = IndexedWindowCollector::new(summary, topics, range)?;
+    let mut collector = OwnedWindowCollector::new(summary, topics, range)?;
     let mut source_bytes = 0_usize;
     let mut source_reads = 0_u64;
-    while let Some(request) = collector.next_read()? {
+    while let Some(request) = collector.next_read() {
         let range = validate_range(bytes.len() as u64, request.offset, request.length)?;
         let chunk = &bytes[range.offset as usize..range.end() as usize];
         source_bytes = source_bytes
             .checked_add(chunk.len())
             .ok_or_else(|| DataLoadError::new("test source byte count overflow"))?;
         source_reads = source_reads.saturating_add(1);
-        collector.insert_chunk(request, chunk)?;
+        collector.insert_chunk(&request, Bytes::copy_from_slice(chunk))?;
     }
+    let per_message_copied_bytes = collector.resident_bytes;
     collector.finish(WindowLoadDiagnostics {
         source_reads,
         source_bytes,
+        decompressed_bytes: 0,
+        per_message_copied_bytes,
         latency_ms: 0.0,
         processing_ms: 0.0,
     })
@@ -279,6 +400,14 @@ impl WindowLoader for BrowserMcapWindowLoader {
                         .metrics
                         .source_bytes
                         .saturating_add(loaded.diagnostics.source_bytes as u64);
+                    self.metrics.decompressed_bytes = self
+                        .metrics
+                        .decompressed_bytes
+                        .saturating_add(loaded.diagnostics.decompressed_bytes as u64);
+                    self.metrics.per_message_copied_bytes = self
+                        .metrics
+                        .per_message_copied_bytes
+                        .saturating_add(loaded.diagnostics.per_message_copied_bytes as u64);
                     self.metrics.messages_loaded = self
                         .metrics
                         .messages_loaded
@@ -357,11 +486,11 @@ async fn load_browser_window(
     range: DataWindowTimeRange,
 ) -> Result<LoadedWindow, DataLoadError> {
     let started = Date::now();
-    let mut collector = IndexedWindowCollector::new(summary, topics, range)?;
+    let mut collector = OwnedWindowCollector::new(summary, topics, range)?;
     let mut source_reads = 0_u64;
     let mut source_bytes = 0_usize;
     let mut processing_ms = 0.0;
-    while let Some(request) = collector.next_read()? {
+    while let Some(request) = collector.next_read() {
         let range = validate_range(file_size, request.offset, request.length)?;
         let bytes = read_file_range(file, file_size, range).await?;
         source_reads = source_reads.saturating_add(1);
@@ -369,12 +498,15 @@ async fn load_browser_window(
             .checked_add(bytes.len())
             .ok_or_else(|| DataLoadError::new("local source byte count overflow"))?;
         let processing_started = Date::now();
-        collector.insert_chunk(request, &bytes)?;
+        collector.insert_chunk(&request, bytes)?;
         processing_ms += Date::now() - processing_started;
     }
+    let per_message_copied_bytes = collector.resident_bytes;
     collector.finish(WindowLoadDiagnostics {
         source_reads,
         source_bytes,
+        decompressed_bytes: 0,
+        per_message_copied_bytes,
         latency_ms: Date::now() - started,
         processing_ms,
     })
@@ -429,10 +561,10 @@ async fn read_file_range(
     file: &File,
     file_size: u64,
     range: ByteRange,
-) -> Result<Vec<u8>, DataLoadError> {
+) -> Result<Bytes, DataLoadError> {
     let range = validate_range(file_size, range.offset, range.length)?;
     if range.length == 0 {
-        return Ok(Vec::new());
+        return Ok(Bytes::new());
     }
     if range.length > u32::MAX as usize {
         return Err(DataLoadError::new(
@@ -453,7 +585,7 @@ async fn read_file_range(
             bytes.length()
         )));
     }
-    Ok(bytes.to_vec())
+    Ok(Bytes::from(bytes.to_vec()))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -531,6 +663,45 @@ mod tests {
         output.into_inner()
     }
 
+    fn camera_recording(compression: Option<Compression>) -> Vec<u8> {
+        let mut output = Cursor::new(Vec::new());
+        {
+            let options = WriteOptions::new()
+                .compression(compression)
+                .chunk_size(Some(256));
+            let mut writer = Writer::with_options(&mut output, options).unwrap();
+            let schema = writer
+                .add_schema("sensor_msgs/msg/CompressedImage", "ros2msg", b"schema")
+                .unwrap();
+            let channel = writer
+                .add_channel(schema, "/camera", "cdr", &BTreeMap::new())
+                .unwrap();
+            for sequence in 0..4 {
+                let payload =
+                    viewer_core::encode_compressed_image_cdr(&viewer_core::CompressedImage {
+                        measurement_time: viewer_core::MeasurementTime(1_000 + i64::from(sequence)),
+                        frame_id: "camera".to_owned(),
+                        format: "jpeg".to_owned(),
+                        jpeg: vec![0xff, 0xd8, sequence as u8, 0xff, 0xd9],
+                    })
+                    .unwrap();
+                writer
+                    .write_to_known_channel(
+                        &MessageHeader {
+                            channel_id: channel,
+                            sequence,
+                            log_time: 1_000 + u64::from(sequence) * 10,
+                            publish_time: 1_000 + u64::from(sequence) * 10,
+                        },
+                        &payload,
+                    )
+                    .unwrap();
+            }
+            writer.finish().unwrap();
+        }
+        output.into_inner()
+    }
+
     fn collect(bytes: &[u8]) -> (LoadedWindow, usize) {
         let summary = Summary::read(bytes).unwrap().unwrap();
         let range = DataWindowTimeRange::new(ArrivalTime(1_000), ArrivalTime(1_031)).unwrap();
@@ -542,22 +713,138 @@ mod tests {
     }
 
     #[test]
-    fn indexed_windows_read_only_requested_uncompressed_chunks() {
+    fn uncompressed_windows_retain_shared_chunk_backings_without_message_copies() {
         let bytes = recording(None);
         let (loaded, source_bytes) = collect(&bytes);
         assert_eq!(loaded.window.messages.len(), 4);
         assert!(source_bytes < bytes.len());
         assert_eq!(loaded.window.range.start, ArrivalTime(1_000));
         assert_eq!(loaded.window.range.end_exclusive, ArrivalTime(1_031));
+        assert_eq!(loaded.diagnostics.per_message_copied_bytes, 0);
+        assert_eq!(loaded.window.logical_payload_bytes, 64);
+        assert_eq!(loaded.window.resident_bytes, source_bytes);
+        assert!(loaded.window.resident_bytes >= loaded.window.logical_payload_bytes);
     }
 
     #[test]
-    fn indexed_windows_decode_zstd_chunks_through_the_same_collector() {
+    fn zstd_windows_retain_decompressed_backings_without_message_copies() {
         let bytes = recording(Some(Compression::Zstd));
         let (loaded, source_bytes) = collect(&bytes);
         assert_eq!(loaded.window.messages.len(), 4);
         assert!(source_bytes < bytes.len());
         assert_eq!(loaded.window.messages[0].payload.as_ref(), &[0; 16]);
+        assert_eq!(loaded.diagnostics.per_message_copied_bytes, 0);
+        assert!(loaded.diagnostics.decompressed_bytes > 0);
+        assert_eq!(
+            loaded.window.resident_bytes,
+            loaded.diagnostics.decompressed_bytes
+        );
+    }
+
+    fn first_parsed_chunk(bytes: &[u8]) -> ParsedChunk {
+        let summary = Summary::read(bytes).unwrap().unwrap();
+        let range = DataWindowTimeRange::new(ArrivalTime(1_000), ArrivalTime(1_031)).unwrap();
+        let mut collector =
+            OwnedWindowCollector::new(&summary, &["/camera".to_owned()], range).unwrap();
+        let request = collector.next_read().unwrap();
+        let file_range =
+            validate_range(bytes.len() as u64, request.offset, request.length).unwrap();
+        let compressed =
+            Bytes::copy_from_slice(&bytes[file_range.offset as usize..file_range.end() as usize]);
+        let (backing, _) = decode_chunk_backing(&request, compressed).unwrap();
+        parse_chunk_backing(backing, &collector.selected_channels, range).unwrap()
+    }
+
+    fn assert_messages_share_backing(parsed: ParsedChunk) {
+        assert!(!parsed.messages.is_empty());
+        let backing_start = parsed.backing.as_ptr() as usize;
+        let backing_end = backing_start + parsed.backing.len();
+        for message in &parsed.messages {
+            let payload_start = message.payload.as_ptr() as usize;
+            assert!(payload_start >= backing_start);
+            assert!(payload_start + message.payload.len() <= backing_end);
+        }
+        assert!(!parsed.backing.is_unique());
+        drop(parsed.messages);
+        assert!(parsed.backing.is_unique());
+    }
+
+    #[test]
+    fn uncompressed_message_slices_share_the_file_range_allocation() {
+        assert_messages_share_backing(first_parsed_chunk(&recording(None)));
+    }
+
+    #[test]
+    fn zstd_message_slices_share_the_decompressed_allocation() {
+        assert_messages_share_backing(first_parsed_chunk(&recording(Some(Compression::Zstd))));
+    }
+
+    #[test]
+    fn compressed_and_uncompressed_windows_reduce_to_the_same_camera_state() {
+        fn reduce(bytes: &[u8]) -> (Vec<viewer_core::CameraFrame>, viewer_core::PipelineCounters) {
+            let summary = Summary::read(bytes).unwrap().unwrap();
+            let catalog = LocalCatalog::from_summary(&summary, "/camera").unwrap();
+            let range = DataWindowTimeRange::new(ArrivalTime(1_000), ArrivalTime(1_031)).unwrap();
+            let loaded = collect_window_from_bytes_for_test(
+                &summary,
+                &catalog.selected_topics,
+                range,
+                bytes,
+            )
+            .unwrap();
+            let mut core = viewer_core::PlaybackCore::new(&catalog.core, "/camera").unwrap();
+            core.process_forward(std::time::Duration::from_secs(1), loaded.window.messages);
+            let frames = core
+                .state()
+                .camera
+                .frames()
+                .map(|(_, frame)| frame.clone())
+                .collect();
+            (frames, core.counters())
+        }
+
+        assert_eq!(
+            reduce(&camera_recording(None)),
+            reduce(&camera_recording(Some(Compression::Zstd)))
+        );
+    }
+
+    #[test]
+    fn local_camera_jpeg_shares_the_chunk_and_cdr_allocation() {
+        let bytes = std::fs::read(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap"),
+        )
+        .unwrap();
+        let summary = Summary::read(&bytes).unwrap().unwrap();
+        let range = DataWindowTimeRange::new(
+            ArrivalTime(summary.stats.as_ref().unwrap().message_start_time as i64),
+            ArrivalTime(summary.stats.as_ref().unwrap().message_end_time as i64 + 1),
+        )
+        .unwrap();
+        let mut collector = OwnedWindowCollector::new(
+            &summary,
+            &["/camera/front/image/compressed".to_owned()],
+            range,
+        )
+        .unwrap();
+        let request = collector.next_read().unwrap();
+        let file_range =
+            validate_range(bytes.len() as u64, request.offset, request.length).unwrap();
+        let compressed =
+            Bytes::copy_from_slice(&bytes[file_range.offset as usize..file_range.end() as usize]);
+        let (backing, _) = decode_chunk_backing(&request, compressed).unwrap();
+        let parsed = parse_chunk_backing(backing, &collector.selected_channels, range).unwrap();
+        let raw = parsed.messages.into_iter().next().unwrap().payload;
+        let raw_start = raw.as_ptr() as usize;
+        let raw_end = raw_start + raw.len();
+        let image = viewer_core::decode_compressed_image_bytes(raw).unwrap();
+        let jpeg_start = image.jpeg.as_ptr() as usize;
+
+        assert!(raw_start >= parsed.backing.as_ptr() as usize);
+        assert!(raw_end <= parsed.backing.as_ptr() as usize + parsed.backing.len());
+        assert!(jpeg_start >= raw_start);
+        assert!(jpeg_start + image.jpeg.len() <= raw_end);
     }
 
     #[test]
@@ -568,10 +855,23 @@ mod tests {
         assert!(validate_range(JS_MAX_SAFE_INTEGER + 1, 0, 0).is_err());
     }
 
-    fn collect_file_window(path: &std::path::Path) -> (usize, usize, usize) {
+    struct FileWindowMetrics {
+        messages: usize,
+        reads: usize,
+        source_bytes: usize,
+        decompressed_bytes: usize,
+        logical_payload_bytes: usize,
+        resident_bytes: usize,
+        copied_bytes: usize,
+        load_ms: f64,
+        processing_ms: f64,
+    }
+
+    fn collect_file_window(path: &std::path::Path) -> FileWindowMetrics {
         use mcap::sans_io::{SummaryReadEvent, SummaryReader};
         use std::io::{Read, Seek};
 
+        let load_started = std::time::Instant::now();
         let mut file = std::fs::File::open(path).unwrap();
         let file_size = file.metadata().unwrap().len();
         let mut summary_reader = SummaryReader::new();
@@ -599,28 +899,46 @@ mod tests {
         );
         let range = DataWindowTimeRange::new(catalog.start, end).unwrap();
         let mut collector =
-            IndexedWindowCollector::new(&summary, &catalog.selected_topics, range).unwrap();
+            OwnedWindowCollector::new(&summary, &catalog.selected_topics, range).unwrap();
         let mut range_bytes = 0_usize;
         let mut range_reads = 0_usize;
-        while let Some(request) = collector.next_read().unwrap() {
+        let mut processing = std::time::Duration::ZERO;
+        while let Some(request) = collector.next_read() {
             let range = validate_range(file_size, request.offset, request.length).unwrap();
             let mut bytes = vec![0; range.length];
             file.seek(std::io::SeekFrom::Start(range.offset)).unwrap();
             file.read_exact(&mut bytes).unwrap();
             range_bytes += bytes.len();
             range_reads += 1;
-            collector.insert_chunk(request, &bytes).unwrap();
+            let processing_started = std::time::Instant::now();
+            collector
+                .insert_chunk(&request, Bytes::from(bytes))
+                .unwrap();
+            processing += processing_started.elapsed();
         }
+        let per_message_copied_bytes = 0;
         let loaded = collector
             .finish(WindowLoadDiagnostics {
                 source_reads: range_reads as u64,
                 source_bytes: range_bytes,
+                decompressed_bytes: 0,
+                per_message_copied_bytes,
                 latency_ms: 0.0,
-                processing_ms: 0.0,
+                processing_ms: processing.as_secs_f64() * 1_000.0,
             })
             .unwrap();
         assert!(range_bytes < file_size as usize);
-        (loaded.window.messages.len(), range_reads, range_bytes)
+        FileWindowMetrics {
+            messages: loaded.window.messages.len(),
+            reads: range_reads,
+            source_bytes: range_bytes,
+            decompressed_bytes: loaded.diagnostics.decompressed_bytes,
+            logical_payload_bytes: loaded.window.logical_payload_bytes,
+            resident_bytes: loaded.window.resident_bytes,
+            copied_bytes: loaded.diagnostics.per_message_copied_bytes,
+            load_ms: load_started.elapsed().as_secs_f64() * 1_000.0,
+            processing_ms: loaded.diagnostics.processing_ms,
+        }
     }
 
     #[test]
@@ -628,9 +946,21 @@ mod tests {
     fn reads_requested_window_from_actual_zstd_recording() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../mcap/turtlebot3_7cam_fhd/turtlebot3_7cam_fhd_0.mcap");
-        let (messages, reads, bytes) = collect_file_window(&path);
-        eprintln!("zstd window: {messages} messages, {reads} reads, {bytes} bytes");
-        assert!(messages > 0);
+        let metrics = collect_file_window(&path);
+        eprintln!(
+            "zstd window: {} messages, {} reads, {} source, {} decompressed, {} logical, {} resident, {} copied bytes, {:.2} ms load/{:.2} ms processing",
+            metrics.messages,
+            metrics.reads,
+            metrics.source_bytes,
+            metrics.decompressed_bytes,
+            metrics.logical_payload_bytes,
+            metrics.resident_bytes,
+            metrics.copied_bytes,
+            metrics.load_ms,
+            metrics.processing_ms,
+        );
+        assert!(metrics.messages > 0);
+        assert_eq!(metrics.copied_bytes, 0);
     }
 
     #[test]
@@ -638,8 +968,20 @@ mod tests {
     fn reads_requested_window_from_actual_uncompressed_recording() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../mcap/turtlebot3_7cam_fhd/turtlebot3_7cam_fhd_0_uncompressed.mcap");
-        let (messages, reads, bytes) = collect_file_window(&path);
-        eprintln!("uncompressed window: {messages} messages, {reads} reads, {bytes} bytes");
-        assert!(messages > 0);
+        let metrics = collect_file_window(&path);
+        eprintln!(
+            "uncompressed window: {} messages, {} reads, {} source, {} decompressed, {} logical, {} resident, {} copied bytes, {:.2} ms load/{:.2} ms processing",
+            metrics.messages,
+            metrics.reads,
+            metrics.source_bytes,
+            metrics.decompressed_bytes,
+            metrics.logical_payload_bytes,
+            metrics.resident_bytes,
+            metrics.copied_bytes,
+            metrics.load_ms,
+            metrics.processing_ms,
+        );
+        assert!(metrics.messages > 0);
+        assert_eq!(metrics.copied_bytes, 0);
     }
 }

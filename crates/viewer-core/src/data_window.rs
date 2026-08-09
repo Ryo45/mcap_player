@@ -29,8 +29,10 @@ impl TimeRange {
 pub struct SerializedWindow {
     pub range: TimeRange,
     pub messages: Vec<RawMessage>,
-    /// Approximate retained allocation size, including batch framing when known.
+    /// Approximate total size of unique backing allocations pinned by this window.
     pub resident_bytes: usize,
+    /// Sum of the message payload lengths, independent of shared backing size.
+    pub logical_payload_bytes: usize,
 }
 
 impl SerializedWindow {
@@ -39,10 +41,16 @@ impl SerializedWindow {
         messages: Vec<RawMessage>,
         resident_bytes: usize,
     ) -> Result<Self, DataWindowError> {
+        let logical_payload_bytes = messages.iter().try_fold(0_usize, |total, message| {
+            total.checked_add(message.payload.len())
+        });
+        let logical_payload_bytes = logical_payload_bytes
+            .ok_or_else(|| DataWindowError::new("logical payload byte count overflow"))?;
         let window = Self {
             range,
             messages,
             resident_bytes,
+            logical_payload_bytes,
         };
         window.validate()?;
         Ok(window)
@@ -137,6 +145,7 @@ struct StoredWindow {
 pub struct MemoryWindowStore {
     windows: VecDeque<StoredWindow>,
     resident_bytes: usize,
+    logical_payload_bytes: usize,
     max_bytes: usize,
     complete_until: ArrivalTime,
     eviction_count: u64,
@@ -152,6 +161,7 @@ impl MemoryWindowStore {
         Ok(Self {
             windows: VecDeque::new(),
             resident_bytes: 0,
+            logical_payload_bytes: 0,
             max_bytes,
             complete_until: start,
             eviction_count: 0,
@@ -166,10 +176,16 @@ impl MemoryWindowStore {
                 window.range.start.0, self.complete_until.0
             )));
         }
-        self.resident_bytes = self
+        let resident_bytes = self
             .resident_bytes
             .checked_add(window.resident_bytes)
             .ok_or_else(|| DataWindowError::new("resident byte count overflow"))?;
+        let logical_payload_bytes = self
+            .logical_payload_bytes
+            .checked_add(window.logical_payload_bytes)
+            .ok_or_else(|| DataWindowError::new("logical payload byte count overflow"))?;
+        self.resident_bytes = resident_bytes;
+        self.logical_payload_bytes = logical_payload_bytes;
         self.complete_until = window.range.end_exclusive;
         self.windows.push_back(StoredWindow {
             window,
@@ -268,6 +284,10 @@ impl MemoryWindowStore {
         self.max_bytes
     }
 
+    pub fn logical_payload_bytes(&self) -> usize {
+        self.logical_payload_bytes
+    }
+
     pub fn window_count(&self) -> usize {
         self.windows.len()
     }
@@ -281,6 +301,9 @@ impl MemoryWindowStore {
             self.resident_bytes = self
                 .resident_bytes
                 .saturating_sub(stored.window.resident_bytes);
+            self.logical_payload_bytes = self
+                .logical_payload_bytes
+                .saturating_sub(stored.window.logical_payload_bytes);
             self.eviction_count = self.eviction_count.saturating_add(1);
         }
     }
@@ -389,6 +412,31 @@ mod tests {
                 .take_messages_through(ArrivalTime(10), ArrivalTime(19), false)
                 .is_empty()
         );
+        assert_eq!(store.logical_payload_bytes(), 7);
+    }
+
+    #[test]
+    fn window_distinguishes_logical_payload_from_resident_backing() {
+        let backing = Bytes::from(vec![0_u8; 128]);
+        let serialized = SerializedWindow::new(
+            TimeRange::new(ArrivalTime(10), ArrivalTime(20)).unwrap(),
+            vec![
+                message(11, backing.slice(8..16)),
+                message(12, backing.slice(32..40)),
+            ],
+            backing.len(),
+        )
+        .unwrap();
+
+        assert_eq!(serialized.logical_payload_bytes, 16);
+        assert_eq!(serialized.resident_bytes, 128);
+    }
+
+    #[test]
+    fn empty_window_has_no_logical_or_resident_bytes() {
+        let serialized = window(10, 20, 0);
+        assert_eq!(serialized.logical_payload_bytes, 0);
+        assert_eq!(serialized.resident_bytes, 0);
     }
 
     #[test]

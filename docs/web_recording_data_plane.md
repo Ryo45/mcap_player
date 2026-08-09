@@ -24,9 +24,11 @@ buffering decision, and in-memory retention.
 
 Opening a local file drives `mcap::sans_io::SummaryReader` with bounded `File.slice()` reads. It
 does not call `File.arrayBuffer()` and does not allocate a file-sized `Vec<u8>` in WASM. A window
-uses `IndexedReaderOptions` with topic and `[start, endExclusive)` log-time filters. Each
-`ReadChunkRequest` is satisfied by one `File.slice()` of the indexed Chunk payload. Both
-uncompressed and Zstd Chunks go through the same `IndexedReader` state machine.
+uses Summary `ChunkIndex` entries with the same topic and `[start, endExclusive)` pruning rules as
+`IndexedReader`. Each selected Chunk payload is satisfied by one `File.slice()`. The local owned
+collector uses the public `ChunkIndex::compressed_data_offset()` and `mcap::parse_record()` APIs;
+it exists because `IndexedReader` only lends data from private, reusable decompression slots.
+It does not implement whole-file parsing or Summary parsing.
 
 The production file adapter validates range overflow, file bounds, JavaScript's exact integer
 limit, and short reads. MCAPs without Summary or Chunk Index records are rejected rather than
@@ -54,22 +56,38 @@ until those semantics are implemented transactionally for both loader types.
 
 The in-memory window budget is 256 MiB. Oldest windows are evicted after the cursor advances, while
 the current window and its immediate successor are protected. Diagnostics expose load/read counts,
-bytes loaded, resident bytes, window count, buffer ahead, evictions, stale results, load latency,
-and MCAP Chunk processing/decompression time.
+source and decompressed bytes, logical payload bytes, unique retained backing bytes, their
+retention ratio, per-message copied bytes, window count, buffer ahead, evictions, stale results,
+load latency, and MCAP Chunk processing/decompression time.
 
 Copies are:
 
 - Browser `Blob.arrayBuffer()` to the WASM range `Vec<u8>` (one copy per requested range).
-- `IndexedReader` compressed input to its decompressed Chunk slot.
-- Indexed message data to one owned `Bytes` allocation, required because the reader reuses slots.
+- Zstd input to one decompressed `Vec<u8>` backing when the Chunk is compressed.
 - Remote HTTP `ArrayBuffer` to one `Bytes` allocation for the batch body.
 
-After that boundary, `RawMessage` clones share `Bytes`; Camera CDR parsing retains JPEG with
-`Bytes::slice()` and does not copy it again. No full-file allocation or JSON/Base64 payload exists.
+The range/decompressed `Vec<u8>` moves into `Bytes` without copying. Every retained Local message
+is a `Bytes::slice()` of that Chunk backing; every Remote message is a slice of its batch body.
+Camera CDR parsing then retains JPEG with another `Bytes::slice()`. No per-message payload copy,
+full-file allocation, or JSON/Base64 payload exists. `residentBytes` counts unique Chunk/page
+backings pinned by a Window, while `logicalPayloadBytes` sums only visible message payloads. No
+automatic compaction is performed when a small payload pins a large backing.
+
+For the first one-second window of the Turtlebot 7-camera recordings (debug build), the owned
+collector measured:
+
+| Input | Messages | Reads | Source bytes | Decompressed bytes | Logical bytes | Resident bytes | Per-message copied bytes |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Zstd | 181 | 5 | 1,472,278 | 4,029,425 | 3,437,516 | 4,029,425 | 0 |
+| Uncompressed | 181 | 5 | 4,029,425 | 0 | 3,437,516 | 4,029,425 | 0 |
+
+The measured debug-build load/Chunk-processing times were 45.05/6.44 ms for Zstd and
+42.18/0.75 ms for uncompressed. These values are diagnostic baselines, not performance targets.
 
 ## Compression toolchain
 
-`viewer-web` enables the `mcap` Zstd feature so `IndexedReader` handles compressed and
-uncompressed Chunks without a second compression abstraction. `zstd-sys` supports
+`viewer-web` uses the same Zstd implementation already selected by the `mcap` dependency and
+decompresses each selected compressed Chunk exactly once into its final shared backing.
+`zstd-sys` supports
 `wasm32-unknown-unknown` through its WASM shim but needs a WASM-capable C compiler (normally
 Clang) at build time. CI and release-builder images must provide it.

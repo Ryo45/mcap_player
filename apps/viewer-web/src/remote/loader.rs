@@ -144,6 +144,14 @@ impl RemoteWindowLoader {
                         .metrics
                         .source_bytes
                         .saturating_add(loaded.diagnostics.source_bytes as u64);
+                    self.metrics.decompressed_bytes = self
+                        .metrics
+                        .decompressed_bytes
+                        .saturating_add(loaded.diagnostics.decompressed_bytes as u64);
+                    self.metrics.per_message_copied_bytes = self
+                        .metrics
+                        .per_message_copied_bytes
+                        .saturating_add(loaded.diagnostics.per_message_copied_bytes as u64);
                     self.metrics.messages_loaded = self
                         .metrics
                         .messages_loaded
@@ -339,6 +347,8 @@ impl WindowAssembler {
             diagnostics: WindowLoadDiagnostics {
                 source_reads: self.pages,
                 source_bytes: self.source_bytes,
+                decompressed_bytes: 0,
+                per_message_copied_bytes: 0,
                 latency_ms,
                 processing_ms: 0.0,
             },

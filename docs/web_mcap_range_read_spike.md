@@ -22,7 +22,7 @@ File.arrayBuffer()
 `Summary::read()`は渡されたslice全体を一つのMCAP fileとして扱い、その長さをfile sizeとしてFooterへseekする。このため、Summary部分だけを切り出して渡すことはできない。また、`McapSource<B: AsRef<[u8]>>`も全体sliceの存在を前提とする。
 
 この経路は後続の`BrowserMcapWindowLoader`で撤去済みである。現在のproduction Local
-playbackは`File.slice()`、`SummaryReader`、`IndexedReader`から`SerializedWindow`を作り、
+playbackは`File.slice()`、`SummaryReader`、Summaryの`ChunkIndex`とowned backing collectorから`SerializedWindow`を作り、
 Remoteと同じ`RecordingDataPlane`へ渡す。詳細は
 [`web_recording_data_plane.md`](web_recording_data_plane.md)を参照。
 
@@ -148,9 +148,9 @@ Spike実施時のworkspace共通依存は次の設定だった。
 mcap = { version = "0.23.4", default-features = false }
 ```
 
-後続実装で`viewer-web`は`zstd`を有効化した。production Local loaderは
-`mcap::sans_io::IndexedReader`を圧縮・非圧縮の両方に使用する。独自compression abstractionは
-追加していない。
+後続実装で`viewer-web`は`zstd`を有効化した。production Local loaderは、message保持時の
+再コピーを避けるため、SummaryのChunk Index、公開`mcap::parse_record()`、owned Chunk backingを
+使用する。Spikeの`IndexedReader`検証結果はChunk選択・offset semanticsの基準として維持する。
 
 指定ログの3,517 ChunkはすべてZstdだった。Spikeは最初のChunk record rangeを取得し、公開`parse_record()`でheaderを検証した。
 
