@@ -17,8 +17,24 @@ Browser File                    Recording Server
 `PlaybackCore` owns ROS CDR reduction, camera presentation scheduling, counters, and exact domain
 state. It does not know whether bytes came from HTTP, `File.slice()`, an MCAP Chunk, or a cache.
 Loaders own asynchronous I/O and publish only complete logical `[start, endExclusive)` windows.
-The DataPlane owns the one-second fetch plan, two-second target-ahead policy, completeness horizon,
-buffering decision, and in-memory retention.
+The DataPlane owns `FetchProfile`, fetch planning, the completeness horizon, buffering decisions,
+and in-memory retention. Local and Remote loaders use the same planner; loaders do not implement
+source-specific prefetch policy.
+
+The default profile keeps one-second logical windows, two seconds of real-time reserve, and a
+256 MiB resident-memory limit. The planner converts the real-time reserve into log-time ahead from
+the selected playback speed:
+
+| Playback speed | Target log-time ahead |
+| --- | ---: |
+| 0.25x | 0.5 s |
+| 0.5x | 1 s |
+| 1x | 2 s |
+| 2x | 4 s |
+
+This keeps approximately two seconds of playback time buffered without changing the loader or
+window ownership model. `FetchProfile` can be supplied at DataPlane construction when a source
+needs different tuning, but the planning algorithm remains shared. Only one load may be in flight.
 
 ## Browser local MCAP
 
@@ -49,6 +65,10 @@ window reaches the recording's `endExclusive`. While a requested cursor is unava
 PlaybackClock and DomainState stay committed at their previous values. Empty complete windows
 still advance coverage.
 
+Diagnostics report the speed-adjusted target ahead, actual buffer ahead at the committed cursor,
+and buffer-underrun count. An underrun is counted once when playing cannot advance; initial paused
+loading is not an underrun, and repeated ticks during the same underrun do not inflate the count.
+
 Seek, backfill, and TF checkpoints are intentionally absent. The Web timeline is display-only
 until those semantics are implemented transactionally for both loader types.
 
@@ -57,8 +77,8 @@ until those semantics are implemented transactionally for both loader types.
 The in-memory window budget is 256 MiB. Oldest windows are evicted after the cursor advances, while
 the current window and its immediate successor are protected. Diagnostics expose load/read counts,
 source and decompressed bytes, logical payload bytes, unique retained backing bytes, their
-retention ratio, per-message copied bytes, window count, buffer ahead, evictions, stale results,
-load latency, and MCAP Chunk processing/decompression time.
+retention ratio, per-message copied bytes, window count, target/actual buffer ahead, buffer
+underruns, evictions, stale results, load latency, and MCAP Chunk processing/decompression time.
 
 Copies are:
 

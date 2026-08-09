@@ -1,4 +1,4 @@
-use crate::{ArrivalTime, RawMessage};
+use crate::{ArrivalTime, PlaybackSpeed, RawMessage};
 use std::{collections::VecDeque, error::Error, fmt, time::Duration};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -80,28 +80,78 @@ impl SerializedWindow {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct FetchDemand {
     pub cursor: ArrivalTime,
+    pub required_through: ArrivalTime,
     pub complete_until: ArrivalTime,
     pub end_exclusive: ArrivalTime,
+    pub playback_speed: PlaybackSpeed,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct FetchProfile {
+    window_size: Duration,
+    realtime_target_ahead: Duration,
+    max_resident_bytes: usize,
+}
+
+impl FetchProfile {
+    pub fn new(
+        window_size: Duration,
+        realtime_target_ahead: Duration,
+        max_resident_bytes: usize,
+    ) -> Result<Self, DataWindowError> {
+        if window_size.is_zero() {
+            return Err(DataWindowError::new("fetch window size must be positive"));
+        }
+        if realtime_target_ahead.is_zero() {
+            return Err(DataWindowError::new("fetch target ahead must be positive"));
+        }
+        if max_resident_bytes == 0 {
+            return Err(DataWindowError::new(
+                "fetch profile resident budget must be positive",
+            ));
+        }
+        Ok(Self {
+            window_size,
+            realtime_target_ahead,
+            max_resident_bytes,
+        })
+    }
+
+    pub fn window_size(self) -> Duration {
+        self.window_size
+    }
+
+    pub fn realtime_target_ahead(self) -> Duration {
+        self.realtime_target_ahead
+    }
+
+    pub fn target_ahead(self, speed: PlaybackSpeed) -> Duration {
+        scale_duration(self.realtime_target_ahead, speed)
+    }
+
+    pub fn max_resident_bytes(self) -> usize {
+        self.max_resident_bytes
+    }
+}
+
+impl Default for FetchProfile {
+    fn default() -> Self {
+        Self {
+            window_size: Duration::from_secs(1),
+            realtime_target_ahead: Duration::from_secs(2),
+            max_resident_bytes: 256 * 1024 * 1024,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct FetchPlanner {
-    window_size: Duration,
-    target_ahead: Duration,
+    profile: FetchProfile,
 }
 
 impl FetchPlanner {
-    pub fn new(window_size: Duration, target_ahead: Duration) -> Result<Self, DataWindowError> {
-        if window_size.is_zero() {
-            return Err(DataWindowError::new("fetch window size must be positive"));
-        }
-        if target_ahead.is_zero() {
-            return Err(DataWindowError::new("fetch target ahead must be positive"));
-        }
-        Ok(Self {
-            window_size,
-            target_ahead,
-        })
+    pub fn new(profile: FetchProfile) -> Self {
+        Self { profile }
     }
 
     pub fn plan(self, demand: FetchDemand) -> Option<TimeRange> {
@@ -113,25 +163,23 @@ impl FetchPlanner {
             .0
             .saturating_sub(demand.cursor.0)
             .max(0);
-        if ahead_ns >= duration_ns(self.target_ahead) {
+        let target_ahead = self.profile.target_ahead(demand.playback_speed);
+        let requested_is_complete = demand.required_through < demand.complete_until;
+        if requested_is_complete && ahead_ns >= duration_ns(target_ahead) {
             return None;
         }
         let end_exclusive = ArrivalTime(
             demand
                 .complete_until
                 .0
-                .saturating_add(duration_ns(self.window_size))
+                .saturating_add(duration_ns(self.profile.window_size))
                 .min(demand.end_exclusive.0),
         );
         TimeRange::new(demand.complete_until, end_exclusive).ok()
     }
 
-    pub fn window_size(self) -> Duration {
-        self.window_size
-    }
-
-    pub fn target_ahead(self) -> Duration {
-        self.target_ahead
+    pub fn profile(self) -> FetchProfile {
+        self.profile
     }
 }
 
@@ -330,6 +378,18 @@ fn duration_ns(duration: Duration) -> i64 {
     i64::try_from(duration.as_nanos()).unwrap_or(i64::MAX)
 }
 
+fn scale_duration(duration: Duration, speed: PlaybackSpeed) -> Duration {
+    let nanos = duration.as_nanos();
+    let scaled = match speed {
+        PlaybackSpeed::Quarter => nanos / 4,
+        PlaybackSpeed::Half => nanos / 2,
+        PlaybackSpeed::Normal => nanos,
+        PlaybackSpeed::Double => nanos.saturating_mul(2),
+    }
+    .max(1);
+    Duration::from_nanos(u64::try_from(scaled).unwrap_or(u64::MAX))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -355,19 +415,23 @@ mod tests {
 
     #[test]
     fn planner_uses_adjacent_exclusive_windows_and_target_ahead() {
-        let planner = FetchPlanner::new(Duration::from_secs(1), Duration::from_secs(2)).unwrap();
+        let planner = FetchPlanner::new(FetchProfile::default());
         let first = planner
             .plan(FetchDemand {
                 cursor: ArrivalTime(0),
+                required_through: ArrivalTime(0),
                 complete_until: ArrivalTime(0),
                 end_exclusive: ArrivalTime(2_500_000_000),
+                playback_speed: PlaybackSpeed::Normal,
             })
             .unwrap();
         let second = planner
             .plan(FetchDemand {
                 cursor: ArrivalTime(0),
+                required_through: ArrivalTime(0),
                 complete_until: first.end_exclusive,
                 end_exclusive: ArrivalTime(2_500_000_000),
+                playback_speed: PlaybackSpeed::Normal,
             })
             .unwrap();
         assert_eq!(first.end_exclusive, second.start);
@@ -375,11 +439,75 @@ mod tests {
             planner
                 .plan(FetchDemand {
                     cursor: ArrivalTime(0),
+                    required_through: ArrivalTime(0),
                     complete_until: second.end_exclusive,
                     end_exclusive: ArrivalTime(2_500_000_000),
+                    playback_speed: PlaybackSpeed::Normal,
                 })
                 .is_none()
         );
+    }
+
+    #[test]
+    fn default_profile_scales_log_time_ahead_to_playback_speed() {
+        let profile = FetchProfile::default();
+        assert_eq!(profile.window_size(), Duration::from_secs(1));
+        assert_eq!(profile.realtime_target_ahead(), Duration::from_secs(2));
+        assert_eq!(profile.max_resident_bytes(), 256 * 1024 * 1024);
+        assert_eq!(
+            profile.target_ahead(PlaybackSpeed::Quarter),
+            Duration::from_millis(500)
+        );
+        assert_eq!(
+            profile.target_ahead(PlaybackSpeed::Half),
+            Duration::from_secs(1)
+        );
+        assert_eq!(
+            profile.target_ahead(PlaybackSpeed::Normal),
+            Duration::from_secs(2)
+        );
+        assert_eq!(
+            profile.target_ahead(PlaybackSpeed::Double),
+            Duration::from_secs(4)
+        );
+    }
+
+    #[test]
+    fn double_speed_fetches_when_normal_speed_has_enough_log_time_ahead() {
+        let planner = FetchPlanner::new(FetchProfile::default());
+        let demand = |playback_speed| FetchDemand {
+            cursor: ArrivalTime(0),
+            required_through: ArrivalTime(0),
+            complete_until: ArrivalTime(3_000_000_000),
+            end_exclusive: ArrivalTime(10_000_000_000),
+            playback_speed,
+        };
+
+        assert!(planner.plan(demand(PlaybackSpeed::Normal)).is_none());
+        assert!(planner.plan(demand(PlaybackSpeed::Double)).is_some());
+    }
+
+    #[test]
+    fn required_cursor_at_completeness_boundary_forces_the_next_window() {
+        let planner = FetchPlanner::new(FetchProfile::default());
+        assert!(
+            planner
+                .plan(FetchDemand {
+                    cursor: ArrivalTime(0),
+                    required_through: ArrivalTime(2_000_000_000),
+                    complete_until: ArrivalTime(2_000_000_000),
+                    end_exclusive: ArrivalTime(4_000_000_000),
+                    playback_speed: PlaybackSpeed::Normal,
+                })
+                .is_some()
+        );
+    }
+
+    #[test]
+    fn fetch_profile_rejects_zero_policy_values() {
+        assert!(FetchProfile::new(Duration::ZERO, Duration::from_secs(2), 1).is_err());
+        assert!(FetchProfile::new(Duration::from_secs(1), Duration::ZERO, 1).is_err());
+        assert!(FetchProfile::new(Duration::from_secs(1), Duration::from_secs(2), 0).is_err());
     }
 
     #[test]

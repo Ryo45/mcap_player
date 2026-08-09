@@ -636,7 +636,7 @@ mod browser {
             .retention_ratio
             .map_or_else(|| "n/a".to_owned(), |ratio| format!("{ratio:.2}x"));
         let data_plane = format!(
-            " · {} {} loads/{} reads · {:.1} MB loaded/{:.1} MB decompressed · {} windows/{:.1} MB logical/{:.1} MB RAM ({retention}) · copied {:.1} MB · ahead {:.2}s · {} evicted · last {:.1} ms (MCAP {:.1} ms) · buffering {} · stale {}",
+            " · {} {} loads/{} reads · {:.1} MB loaded/{:.1} MB decompressed · {} windows/{:.1} MB logical/{:.1} MB RAM ({retention}) · copied {:.1} MB · ahead {:.2}/{:.2}s actual/target · {} evicted · last {:.1} ms (MCAP {:.1} ms) · underruns {} · stale {}",
             session.source_label(),
             metrics.load_requests,
             metrics.source_reads,
@@ -646,11 +646,12 @@ mod browser {
             metrics.logical_payload_bytes as f64 / (1024.0 * 1024.0),
             metrics.resident_bytes as f64 / (1024.0 * 1024.0),
             metrics.per_message_copied_bytes as f64 / (1024.0 * 1024.0),
-            metrics.buffer_ahead.as_secs_f64(),
+            metrics.actual_buffer_ahead.as_secs_f64(),
+            metrics.target_ahead.as_secs_f64(),
             metrics.eviction_count,
             metrics.last_window_latency_ms,
             metrics.last_processing_ms,
-            metrics.buffering_count,
+            metrics.buffer_underrun_count,
             metrics.stale_results_discarded,
         );
         performance.set_inner_text(&format!(
