@@ -1,7 +1,7 @@
 use std::{error::Error, fmt, time::Duration};
 use viewer_core::{
-    ArrivalTime, DataWindowTimeRange, FetchDemand, FetchPlanner, FetchProfile, MemoryWindowStore,
-    PlaybackSpeed, RawMessage, SerializedWindow,
+    ArrivalTime, DataWindowTimeRange, FetchDemand, FetchIntent, FetchPlanner, FetchProfile,
+    MemoryWindowStore, PlaybackSpeed, RawMessage, SerializedWindow,
 };
 
 #[cfg(target_arch = "wasm32")]
@@ -165,6 +165,7 @@ pub(crate) struct RecordingDataPlane<L> {
     planner: FetchPlanner,
     store: MemoryWindowStore,
     loader: L,
+    start: ArrivalTime,
     end_exclusive: ArrivalTime,
     buffer_underrun_count: u64,
     delivery_started: bool,
@@ -194,6 +195,7 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
             store: MemoryWindowStore::new(start, profile.max_resident_bytes())
                 .map_err(|error| DataPlaneError::new(error.to_string()))?,
             loader,
+            start,
             end_exclusive,
             buffer_underrun_count: 0,
             delivery_started: false,
@@ -230,6 +232,7 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
         committed: ArrivalTime,
         required_through: ArrivalTime,
         playback_speed: PlaybackSpeed,
+        intent: FetchIntent,
     ) -> Result<(), DataPlaneError> {
         if let Some(error) = &self.failed {
             return Err(error.clone());
@@ -243,6 +246,7 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
             complete_until: self.store.complete_until(),
             end_exclusive: self.end_exclusive,
             playback_speed,
+            intent,
         };
         let Some(range) = self.planner.plan(demand) else {
             return Ok(());
@@ -257,6 +261,20 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
 
     pub(crate) fn is_complete_through(&self, target: ArrivalTime) -> bool {
         self.store.is_complete_through(target, self.end_exclusive)
+    }
+
+    pub(crate) fn begin_seek(&mut self, target: ArrivalTime) -> Result<(), DataPlaneError> {
+        if target < self.start || target >= self.end_exclusive {
+            return Err(DataPlaneError::new(format!(
+                "seek target {} is outside recording [{}, {})",
+                target.0, self.start.0, self.end_exclusive.0
+            )));
+        }
+        self.loader.cancel();
+        self.store.reset(target);
+        self.delivery_started = false;
+        self.failed = None;
+        Ok(())
     }
 
     pub(crate) fn messages_through(
@@ -338,6 +356,7 @@ mod tests {
     struct TestLoaderState {
         requested: Option<DataWindowTimeRange>,
         results: VecDeque<Result<LoadedWindow, DataLoadError>>,
+        cancel_count: u64,
     }
 
     struct TestLoader {
@@ -363,7 +382,9 @@ mod tests {
         }
 
         fn cancel(&mut self) {
-            self.shared.borrow_mut().requested = None;
+            let mut shared = self.shared.borrow_mut();
+            shared.requested = None;
+            shared.cancel_count = shared.cancel_count.saturating_add(1);
         }
 
         fn is_idle(&self) -> bool {
@@ -440,8 +461,13 @@ mod tests {
     #[test]
     fn complete_windows_publish_once_without_copying_payloads() {
         let (mut data, shared) = data_plane(1024);
-        data.ensure_available_through(ArrivalTime(0), ArrivalTime(0), PlaybackSpeed::Normal)
-            .unwrap();
+        data.ensure_available_through(
+            ArrivalTime(0),
+            ArrivalTime(0),
+            PlaybackSpeed::Normal,
+            FetchIntent::PlaybackAhead,
+        )
+        .unwrap();
         let backing = Bytes::from_static(b"batch-payload");
         let payload = backing.slice(6..);
         let pointer = payload.as_ptr();
@@ -482,6 +508,7 @@ mod tests {
                 ArrivalTime(start),
                 ArrivalTime(start),
                 PlaybackSpeed::Normal,
+                FetchIntent::PlaybackAhead,
             )
             .unwrap();
             complete_request(
@@ -501,8 +528,13 @@ mod tests {
     #[test]
     fn loader_failure_never_reaches_the_store() {
         let (mut data, shared) = data_plane(1024);
-        data.ensure_available_through(ArrivalTime(0), ArrivalTime(0), PlaybackSpeed::Normal)
-            .unwrap();
+        data.ensure_available_through(
+            ArrivalTime(0),
+            ArrivalTime(0),
+            PlaybackSpeed::Normal,
+            FetchIntent::PlaybackAhead,
+        )
+        .unwrap();
         shared
             .borrow_mut()
             .results
@@ -510,6 +542,41 @@ mod tests {
 
         assert!(data.poll(ArrivalTime(0)).is_err());
         assert_eq!(data.resident_bytes(), 0);
+    }
+
+    #[test]
+    fn seek_cancels_the_old_request_and_rebases_the_next_required_window() {
+        let (mut data, shared) = data_plane(1024);
+        data.ensure_available_through(
+            ArrivalTime(0),
+            ArrivalTime(0),
+            PlaybackSpeed::Normal,
+            FetchIntent::PlaybackAhead,
+        )
+        .unwrap();
+        assert_eq!(
+            shared.borrow().requested,
+            Some(DataWindowTimeRange::new(ArrivalTime(0), ArrivalTime(SECOND)).unwrap())
+        );
+
+        data.begin_seek(ArrivalTime(2 * SECOND)).unwrap();
+        assert_eq!(shared.borrow().cancel_count, 1);
+        assert!(shared.borrow().requested.is_none());
+        assert!(!data.is_complete_through(ArrivalTime(2 * SECOND)));
+
+        data.ensure_available_through(
+            ArrivalTime(2 * SECOND),
+            ArrivalTime(2 * SECOND),
+            PlaybackSpeed::Normal,
+            FetchIntent::RequiredOnly,
+        )
+        .unwrap();
+        assert_eq!(
+            shared.borrow().requested,
+            Some(
+                DataWindowTimeRange::new(ArrivalTime(2 * SECOND), ArrivalTime(3 * SECOND)).unwrap()
+            )
+        );
     }
 
     #[test]
@@ -521,6 +588,7 @@ mod tests {
                 ArrivalTime(0),
                 ArrivalTime(start),
                 PlaybackSpeed::Normal,
+                FetchIntent::PlaybackAhead,
             )
             .unwrap();
             complete_request(
@@ -531,12 +599,22 @@ mod tests {
             );
         }
 
-        data.ensure_available_through(ArrivalTime(0), ArrivalTime(0), PlaybackSpeed::Normal)
-            .unwrap();
+        data.ensure_available_through(
+            ArrivalTime(0),
+            ArrivalTime(0),
+            PlaybackSpeed::Normal,
+            FetchIntent::PlaybackAhead,
+        )
+        .unwrap();
         assert!(shared.borrow().requested.is_none());
 
-        data.ensure_available_through(ArrivalTime(0), ArrivalTime(0), PlaybackSpeed::Double)
-            .unwrap();
+        data.ensure_available_through(
+            ArrivalTime(0),
+            ArrivalTime(0),
+            PlaybackSpeed::Double,
+            FetchIntent::PlaybackAhead,
+        )
+        .unwrap();
         assert_eq!(
             shared.borrow().requested,
             Some(
