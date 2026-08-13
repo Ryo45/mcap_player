@@ -36,6 +36,11 @@ This keeps approximately two seconds of playback time buffered without changing 
 window ownership model. `FetchProfile` can be supplied at DataPlane construction when a source
 needs different tuning, but the planning algorithm remains shared. Only one load may be in flight.
 
+Fetch intent is explicit. While playing, `PlaybackAhead` keeps filling the profile target one
+window at a time. While paused, `RequiredOnly` fetches the cursor window but does not continue
+filling target-ahead. An already in-flight window may finish after Pause because it remains useful,
+but completion does not start another request. Local and Remote use these same rules.
+
 ## Browser local MCAP
 
 Opening a local file drives `mcap::sans_io::SummaryReader` with bounded `File.slice()` reads. It
@@ -69,8 +74,29 @@ Diagnostics report the speed-adjusted target ahead, actual buffer ahead at the c
 and buffer-underrun count. An underrun is counted once when playing cannot advance; initial paused
 loading is not an underrun, and repeated ticks during the same underrun do not inflate the count.
 
-Seek, backfill, and TF checkpoints are intentionally absent. The Web timeline is display-only
-until those semantics are implemented transactionally for both loader types.
+## Seek lifecycle
+
+The Web timeline performs a source-independent cold seek:
+
+```text
+seek intent
+  -> cancel old loader generation
+  -> discard retained windows and rebase coverage at target
+  -> fetch target window with RequiredOnly
+  -> keep committed Clock and DomainState visible while loading
+  -> atomically reset exact dynamic state and commit Clock after the window completes
+  -> resume PlaybackAhead only when playback is running
+```
+
+Rapid replacement seeks cancel Remote HTTP with `AbortController`; both Remote and Browser-file
+loaders increment generation so a result that finishes after cancellation cannot enter the Store.
+Partial continuation pages never reach the DataPlane. The seek window is fetched even while paused,
+but it does not trigger unrelated target-ahead fetches after completion.
+
+This is deliberately a cold seek. Dynamic TF backfill, checkpoints, and exact historical state
+restoration are still absent; messages exactly at the target are applied, and later messages enter
+through ordinary forward playback. The committed presentation is invalidated only when seek data
+has successfully loaded and `PlaybackEffect::Seeked` is emitted.
 
 ## Memory and copies
 

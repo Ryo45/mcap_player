@@ -43,8 +43,8 @@ pub use clock::{
     SeekRequest,
 };
 pub use data_window::{
-    DataWindowError, FetchDemand, FetchPlanner, FetchProfile, MemoryWindowStore, SerializedWindow,
-    TimeRange as DataWindowTimeRange,
+    DataWindowError, FetchDemand, FetchIntent, FetchPlanner, FetchProfile, MemoryWindowStore,
+    SerializedWindow, TimeRange as DataWindowTimeRange,
 };
 pub use domain::DomainState;
 pub use frame_builder::{

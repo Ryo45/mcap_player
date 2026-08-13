@@ -78,12 +78,21 @@ impl SerializedWindow {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum FetchIntent {
+    /// Fetch only when the requested cursor is outside completed coverage.
+    RequiredOnly,
+    /// Continue filling the profile's speed-adjusted target-ahead reserve.
+    PlaybackAhead,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct FetchDemand {
     pub cursor: ArrivalTime,
     pub required_through: ArrivalTime,
     pub complete_until: ArrivalTime,
     pub end_exclusive: ArrivalTime,
     pub playback_speed: PlaybackSpeed,
+    pub intent: FetchIntent,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -165,7 +174,9 @@ impl FetchPlanner {
             .max(0);
         let target_ahead = self.profile.target_ahead(demand.playback_speed);
         let requested_is_complete = demand.required_through < demand.complete_until;
-        if requested_is_complete && ahead_ns >= duration_ns(target_ahead) {
+        if requested_is_complete
+            && (demand.intent == FetchIntent::RequiredOnly || ahead_ns >= duration_ns(target_ahead))
+        {
             return None;
         }
         let end_exclusive = ArrivalTime(
@@ -240,6 +251,15 @@ impl MemoryWindowStore {
             next_message: 0,
         });
         Ok(())
+    }
+
+    /// Drops retained coverage and starts a new contiguous range at `start`.
+    /// Capacity-eviction metrics are preserved because a seek reset is not an eviction.
+    pub fn reset(&mut self, start: ArrivalTime) {
+        self.windows.clear();
+        self.resident_bytes = 0;
+        self.logical_payload_bytes = 0;
+        self.complete_until = start;
     }
 
     pub fn contains(&self, time: ArrivalTime) -> bool {
@@ -423,6 +443,7 @@ mod tests {
                 complete_until: ArrivalTime(0),
                 end_exclusive: ArrivalTime(2_500_000_000),
                 playback_speed: PlaybackSpeed::Normal,
+                intent: FetchIntent::PlaybackAhead,
             })
             .unwrap();
         let second = planner
@@ -432,6 +453,7 @@ mod tests {
                 complete_until: first.end_exclusive,
                 end_exclusive: ArrivalTime(2_500_000_000),
                 playback_speed: PlaybackSpeed::Normal,
+                intent: FetchIntent::PlaybackAhead,
             })
             .unwrap();
         assert_eq!(first.end_exclusive, second.start);
@@ -443,6 +465,7 @@ mod tests {
                     complete_until: second.end_exclusive,
                     end_exclusive: ArrivalTime(2_500_000_000),
                     playback_speed: PlaybackSpeed::Normal,
+                    intent: FetchIntent::PlaybackAhead,
                 })
                 .is_none()
         );
@@ -481,6 +504,7 @@ mod tests {
             complete_until: ArrivalTime(3_000_000_000),
             end_exclusive: ArrivalTime(10_000_000_000),
             playback_speed,
+            intent: FetchIntent::PlaybackAhead,
         };
 
         assert!(planner.plan(demand(PlaybackSpeed::Normal)).is_none());
@@ -498,8 +522,33 @@ mod tests {
                     complete_until: ArrivalTime(2_000_000_000),
                     end_exclusive: ArrivalTime(4_000_000_000),
                     playback_speed: PlaybackSpeed::Normal,
+                    intent: FetchIntent::PlaybackAhead,
                 })
                 .is_some()
+        );
+    }
+
+    #[test]
+    fn required_only_stops_when_the_requested_cursor_is_complete() {
+        let planner = FetchPlanner::new(FetchProfile::default());
+        let demand = FetchDemand {
+            cursor: ArrivalTime(0),
+            required_through: ArrivalTime(0),
+            complete_until: ArrivalTime(1_000_000_000),
+            end_exclusive: ArrivalTime(10_000_000_000),
+            playback_speed: PlaybackSpeed::Double,
+            intent: FetchIntent::RequiredOnly,
+        };
+
+        assert!(planner.plan(demand).is_none());
+        assert!(
+            planner
+                .plan(FetchDemand {
+                    required_through: demand.complete_until,
+                    ..demand
+                })
+                .is_some(),
+            "required coverage still wins over disabled prefetch"
         );
     }
 
@@ -517,6 +566,20 @@ mod tests {
         assert_eq!(store.complete_until(), ArrivalTime(20));
         assert!(store.is_complete_through(ArrivalTime(19), ArrivalTime(30)));
         assert!(!store.is_complete_through(ArrivalTime(20), ArrivalTime(30)));
+    }
+
+    #[test]
+    fn reset_rebases_coverage_without_counting_a_capacity_eviction() {
+        let mut store = MemoryWindowStore::new(ArrivalTime(0), 1024).unwrap();
+        store.insert(window(0, 10, 7)).unwrap();
+
+        store.reset(ArrivalTime(100));
+
+        assert_eq!(store.complete_until(), ArrivalTime(100));
+        assert_eq!(store.window_count(), 0);
+        assert_eq!(store.resident_bytes(), 0);
+        assert_eq!(store.logical_payload_bytes(), 0);
+        assert_eq!(store.eviction_count(), 0);
     }
 
     #[test]

@@ -264,10 +264,7 @@ fn install_open_playback() {
         match result {
             Ok(playback) => {
                 crate::browser::install_remote_playback(playback);
-                set_output(
-                    "Remote playback opened. Exact seek remains disabled.",
-                    false,
-                );
+                set_output("Remote playback opened. Cold seek is available.", false);
             }
             Err(error) => set_output(&error, true),
         }

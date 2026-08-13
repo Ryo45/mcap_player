@@ -328,7 +328,7 @@ mod browser {
                             app.focused_camera = None;
                         });
                         let timeline: HtmlInputElement = element("timeline");
-                        timeline.set_disabled(true);
+                        timeline.set_disabled(false);
                         let speed: HtmlSelectElement = element("speed");
                         speed.set_disabled(false);
                         set_status(
@@ -429,15 +429,15 @@ mod browser {
         session: &mut WebPlayback,
         focused_camera: &mut Option<CameraId>,
         elapsed: Duration,
-    ) -> Result<Option<CameraId>, String> {
+    ) -> Result<(Option<CameraId>, viewer_core::PlaybackEffect), String> {
         let camera_topics = session.camera_topics();
         let selected_camera = (*focused_camera)
             .filter(|camera_id| camera_topics.iter().any(|(id, _)| id == camera_id))
             .or_else(|| camera_topics.first().map(|(id, _)| *id));
         *focused_camera = selected_camera;
         session.set_focused_camera(selected_camera);
-        session.tick(elapsed).map_err(|error| error.to_string())?;
-        Ok(selected_camera)
+        let effect = session.tick(elapsed).map_err(|error| error.to_string())?;
+        Ok((selected_camera, effect))
     }
 
     fn update_camera_presentation(
@@ -711,23 +711,24 @@ mod browser {
                 });
                 return;
             };
-            let selected_camera =
+            let (selected_camera, playback_effect) =
                 match advance_source_and_playback(session, focused_camera, elapsed) {
-                    Ok(selected_camera) => selected_camera,
+                    Ok(result) => result,
                     Err(error) => {
                         set_status(&error, true);
                         return;
                     }
                 };
+            view.apply_playback_effect(playback_effect);
 
             let start = session.clock().start().0;
             let duration = (session.clock().end().0 - start).max(1);
             let timeline: HtmlInputElement = element("timeline");
             timeline
-                .set_value_as_number((session.clock().cursor().0 - start) as f64 / duration as f64);
-            timeline.set_disabled(true);
+                .set_value_as_number((session.display_cursor().0 - start) as f64 / duration as f64);
+            timeline.set_disabled(false);
             let speed: HtmlSelectElement = element("speed");
-            speed.set_disabled(session.is_remote());
+            speed.set_disabled(false);
             update_camera_presentation(session, view, calibrations, selected_camera);
             let presentation = build_viewer_presentation(session, view, selected_camera);
             update_dom_diagnostics(&presentation, session);
@@ -752,13 +753,16 @@ mod browser {
             app.previous_ms = Date::now();
         });
         let timeline: HtmlInputElement = element("timeline");
-        timeline.set_disabled(true);
+        timeline.set_disabled(false);
         let speed: HtmlSelectElement = element("speed");
         speed.set_value("1");
-        speed.set_disabled(true);
+        speed.set_disabled(false);
         let play: HtmlButtonElement = element("play");
         play.set_inner_text("Play");
-        set_status("Remote playback opened · buffering first window", false);
+        set_status(
+            "Remote playback opened · buffering first window · seek available",
+            false,
+        );
     }
 
     #[wasm_bindgen(start)]
