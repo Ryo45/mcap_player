@@ -6,23 +6,6 @@ use crate::{
 use bytes::Bytes;
 use std::collections::HashMap;
 
-pub const PATH_TOPIC: &str = "/planning/path";
-pub const ODOM_TOPIC: &str = "/odom";
-pub const SCAN_TOPIC: &str = "/scan";
-pub const TF_TOPIC: &str = "/tf";
-pub const TF_STATIC_TOPIC: &str = "/tf_static";
-
-const OPTIONAL_BINDINGS: &[(&str, StreamBinding)] = &[
-    (PATH_TOPIC, StreamBinding::Path),
-    (ODOM_TOPIC, StreamBinding::Odometry),
-    (SCAN_TOPIC, StreamBinding::LaserScan),
-    (TF_TOPIC, StreamBinding::Transforms { is_static: false }),
-    (
-        TF_STATIC_TOPIC,
-        StreamBinding::Transforms { is_static: true },
-    ),
-];
-
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct StreamId(pub u32);
 
@@ -54,35 +37,28 @@ pub fn standard_bindings(
     catalog: &crate::StreamCatalog,
     camera_topic: &str,
 ) -> Result<Vec<(StreamId, StreamBinding)>, String> {
-    let cameras = camera_topics(catalog, camera_topic)?;
-    let mut bindings = cameras
-        .iter()
-        .enumerate()
-        .map(|(index, (id, _))| (*id, StreamBinding::Camera(CameraId(index as u16))))
-        .collect::<Vec<_>>();
-    bindings.extend(OPTIONAL_BINDINGS.iter().filter_map(|(topic, binding)| {
-        catalog
-            .by_topic(topic)
-            .map(|descriptor| (descriptor.id, *binding))
-    }));
-    Ok(bindings)
+    crate::SessionPlan::build(catalog, camera_topic)
+        .map(|plan| plan.stream_bindings())
+        .map_err(|error| error.to_string())
 }
 
 pub fn camera_topics(
     catalog: &crate::StreamCatalog,
     primary_topic: &str,
 ) -> Result<Vec<(StreamId, String)>, String> {
-    let mut cameras = catalog
-        .streams
-        .iter()
-        .filter(|stream| stream.schema == "sensor_msgs/msg/CompressedImage")
-        .map(|stream| (stream.id, stream.topic.clone()))
-        .collect::<Vec<_>>();
-    let Some(primary_index) = cameras.iter().position(|(_, topic)| topic == primary_topic) else {
-        return Err(format!("topic {primary_topic} is not present"));
-    };
-    cameras.swap(0, primary_index);
-    Ok(cameras)
+    crate::SessionPlan::build(catalog, primary_topic)
+        .map(|plan| {
+            plan.domain_routes()
+                .iter()
+                .filter_map(|route| match route.target {
+                    crate::DomainTarget::Camera(_) => {
+                        Some((route.stream.id, route.stream.topic.clone()))
+                    }
+                    _ => None,
+                })
+                .collect()
+        })
+        .map_err(|error| error.to_string())
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -309,7 +285,10 @@ fn build_pipeline(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{CompressedImage, MeasurementTime, StreamCatalog, encode_compressed_image_cdr};
+    use crate::{
+        CompressedImage, MeasurementTime, ODOM_TOPIC, PATH_TOPIC, SCAN_TOPIC, StreamCatalog,
+        TF_STATIC_TOPIC, TF_TOPIC, encode_compressed_image_cdr,
+    };
 
     fn descriptor(id: u32, topic: &str, schema: &str) -> StreamDescriptor {
         StreamDescriptor {

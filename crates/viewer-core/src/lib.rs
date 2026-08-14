@@ -18,6 +18,7 @@ mod plot;
 mod point_cloud;
 mod presentation;
 mod preview;
+mod session_plan;
 mod source_identity;
 mod telemetry;
 mod time;
@@ -53,9 +54,8 @@ pub use frame_builder::{
 pub use mcap_source::{McapOpenError, McapSource, StreamCatalog};
 pub use performance::{PresentationMetrics, PresentationSnapshot};
 pub use pipeline::{
-    DomainUpdate, ODOM_TOPIC, PATH_TOPIC, PipelineCounters, PipelineSet, RawMessage, SCAN_TOPIC,
-    StreamBinding, StreamDescriptor, StreamId, StreamPipeline, TF_STATIC_TOPIC, TF_TOPIC,
-    camera_topics, standard_bindings,
+    DomainUpdate, PipelineCounters, PipelineSet, RawMessage, StreamBinding, StreamDescriptor,
+    StreamId, StreamPipeline, camera_topics, standard_bindings,
 };
 pub use playback::{McapPlayback, McapPlaybackError, PlaybackEffect};
 pub use playback_core::{PlaybackCore, PlaybackCoreError, PlaybackPerformance, StageTiming};
@@ -73,6 +73,10 @@ pub use preview::{
     CURRENT_PREVIEW_SCHEMA_VERSION, CameraPreviewFrame, DataFidelity, PreviewBudget,
     PreviewImageEncoding, PreviewRequest, PreviewSnapshot, PreviewValidationError, SignalBucket,
     SignalFidelity, SignalOverview, TimeRange, TimedPosition2, merge_signal_buckets,
+};
+pub use session_plan::{
+    DomainRoute, DomainTarget, ODOM_TOPIC, PATH_TOPIC, SCAN_TOPIC, SessionPlan, SessionPlanError,
+    TF_STATIC_TOPIC, TF_TOPIC,
 };
 pub use source_identity::{
     MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity, mcap_summary_fingerprint,

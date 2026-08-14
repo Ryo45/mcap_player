@@ -1,6 +1,6 @@
 use crate::{
-    CameraId, DomainState, DomainUpdate, PipelineCounters, PipelineSet, RawMessage, StreamBinding,
-    StreamCatalog, StreamId, camera_topics, standard_bindings,
+    CameraId, DomainState, DomainTarget, DomainUpdate, PipelineCounters, PipelineSet, RawMessage,
+    SessionPlan, StreamCatalog, StreamId,
 };
 use std::{
     collections::{BTreeMap, HashMap},
@@ -112,30 +112,26 @@ impl PlaybackCore {
         catalog: &StreamCatalog,
         primary_camera_topic: &str,
     ) -> Result<Self, PlaybackCoreError> {
-        let catalog_cameras =
-            camera_topics(catalog, primary_camera_topic).map_err(PlaybackCoreError)?;
-        let bindings =
-            standard_bindings(catalog, primary_camera_topic).map_err(PlaybackCoreError)?;
-        let transform_streams = bindings
+        let plan = SessionPlan::build(catalog, primary_camera_topic)
+            .map_err(|error| PlaybackCoreError(error.to_string()))?;
+        let transform_streams = plan
+            .domain_routes()
             .iter()
-            .filter_map(|(id, binding)| {
-                matches!(binding, StreamBinding::Transforms { .. }).then_some(*id)
+            .filter_map(|route| {
+                matches!(route.target, DomainTarget::Transforms { .. }).then_some(route.stream.id)
             })
             .collect();
-        let camera_streams = bindings
+        let camera_streams = plan
+            .domain_routes()
             .iter()
-            .filter_map(|(id, binding)| match binding {
-                StreamBinding::Camera(camera_id) => Some((*id, *camera_id)),
+            .filter_map(|route| match route.target {
+                DomainTarget::Camera(camera_id) => Some((route.stream.id, camera_id)),
                 _ => None,
             })
             .collect::<HashMap<_, _>>();
-        let camera_topics: Vec<_> = catalog_cameras
-            .into_iter()
-            .enumerate()
-            .map(|(index, (_, topic))| (CameraId(index as u16), topic))
-            .collect();
-        let focused_camera = camera_topics.first().map(|(camera_id, _)| *camera_id);
-        let pipelines = PipelineSet::new(&catalog.streams, &bindings);
+        let camera_topics = plan.camera_topics();
+        let focused_camera = plan.primary_camera();
+        let pipelines = PipelineSet::new(&catalog.streams, &plan.stream_bindings());
         let mut core = Self {
             pipelines,
             state: DomainState::default(),
