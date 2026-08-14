@@ -1,6 +1,6 @@
 use crate::{
-    ArrivalTime, CameraId, DomainState, McapOpenError, McapSource, PipelineCounters, PlaybackClock,
-    PlaybackCommand, PlaybackCore, PlaybackPerformance,
+    ArrivalTime, CameraId, DomainRuntime, DomainState, McapOpenError, McapSource, PipelineCounters,
+    PlaybackClock, PlaybackCommand, PlaybackPerformance, StageTiming,
 };
 use std::{fmt, time::Duration};
 use web_time::Instant;
@@ -40,19 +40,21 @@ impl From<McapOpenError> for McapPlaybackError {
 pub struct McapPlayback<B: AsRef<[u8]>> {
     source: McapSource<B>,
     clock: PlaybackClock,
-    core: PlaybackCore,
+    domain: DomainRuntime,
+    source_read: StageTiming,
 }
 
 impl<B: AsRef<[u8]>> McapPlayback<B> {
     pub fn new(backing: B, camera_topic: &str) -> Result<Self, McapPlaybackError> {
         let source = McapSource::new(backing)?;
-        let core = PlaybackCore::new(source.catalog(), camera_topic)
+        let domain = DomainRuntime::from_catalog(source.catalog(), camera_topic)
             .map_err(|error| McapPlaybackError::Binding(error.to_string()))?;
         let (start, end) = source.time_range();
         Ok(Self {
             source,
             clock: PlaybackClock::new(start, end),
-            core,
+            domain,
+            source_read: StageTiming::default(),
         })
     }
 
@@ -60,8 +62,8 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
         let candidate = self.clock.cursor_after(elapsed);
         let read_started = Instant::now();
         let messages = self.source.read_until(candidate)?;
-        self.core.record_source_read(read_started.elapsed());
-        self.core.process_forward(elapsed, messages);
+        self.source_read.record(read_started.elapsed());
+        self.domain.process(elapsed, messages);
         self.clock.commit_cursor(candidate);
         Ok(())
     }
@@ -69,19 +71,19 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
     fn seek(&mut self, cursor: ArrivalTime) -> Result<(), McapOpenError> {
         let target = ArrivalTime(cursor.0.clamp(self.clock.start().0, self.clock.end().0));
         let mut staging_source = McapSource::new(self.source.backing_bytes())?;
-        let mut staging_core = self.core.staging_for_restore();
+        let mut staging_domain = self.domain.staging_for_restore();
         let start = self.source.time_range().0;
         let pre_roll = ArrivalTime(target.0.saturating_sub(TF_SEEK_PREROLL_NS).max(start.0));
         staging_source.seek(pre_roll)?;
         let messages = staging_source.read_until(target)?;
-        staging_core.apply_transform_restore(messages);
+        staging_domain.apply_transform_restore(messages);
         // Rewind after internal TF pre-roll so messages exactly at the cursor
         // remain part of normal playback.
         staging_source.seek(target)?;
         drop(staging_source);
 
         self.source.seek(target)?;
-        self.core.commit_restore(staging_core);
+        self.domain.commit_restore(staging_domain);
         self.clock.seek(target);
         Ok(())
     }
@@ -111,27 +113,27 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
     }
 
     pub fn state(&self) -> &DomainState {
-        self.core.state()
+        self.domain.state()
     }
 
     pub fn counters(&self) -> PipelineCounters {
-        self.core.counters()
+        self.domain.counters()
     }
 
     pub fn camera_topics(&self) -> &[(CameraId, String)] {
-        self.core.camera_topics()
+        self.domain.camera_topics()
     }
 
     pub fn focused_camera(&self) -> Option<CameraId> {
-        self.core.focused_camera()
+        self.domain.focused_camera()
     }
 
     pub fn set_focused_camera(&mut self, focused_camera: Option<CameraId>) {
-        self.core.set_focused_camera(focused_camera);
+        self.domain.set_focused_camera(focused_camera);
     }
 
     pub fn performance(&self) -> PlaybackPerformance {
-        self.core.performance()
+        PlaybackPerformance::from_parts(self.source_read, self.domain.performance())
     }
 }
 
@@ -275,7 +277,7 @@ mod tests {
         assert_eq!(
             playback.counters().dropped
                 + performance.camera_presented_frames
-                + playback.core.pending_camera_count() as u64,
+                + playback.domain.pending_camera_count() as u64,
             performance.camera_input_frames
         );
     }
