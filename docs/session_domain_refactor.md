@@ -87,9 +87,9 @@ Web local-file and remote-server recordings already share `RecordingDataPlane`; 
 playback retains its mmap-based `McapPlayback` path. Those source differences are intentionally not
 part of this refactor stage.
 
-Native Live currently has a camera-only `LatestMailbox` followed by its own `PipelineSet` and
-`DomainState`. The latest-only behavior is valid for that current camera adapter, but it must not
-be generalized to all future live domain streams: ordered TF updates cannot safely use the same
+Native Live now feeds its camera-only `LatestMailbox` into the same `DomainRuntime` used by
+Recording. The latest-only behavior belongs to that current camera adapter; it must not be
+generalized to all future live domain streams because ordered TF updates cannot safely use the same
 drop policy.
 
 ## Invariants to preserve

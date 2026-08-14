@@ -229,9 +229,8 @@ pub use ros::RosLiveHandle;
 mod tests {
     use super::*;
     use viewer_core::{
-        ArrivalTime, CameraId, CompressedImage, DomainPipelineSet, DomainRoute, DomainState,
-        DomainTarget, DomainUpdate, MeasurementTime, RawMessage, StreamDescriptor, StreamId,
-        encode_compressed_image_cdr,
+        ArrivalTime, CameraId, CompressedImage, DomainRuntime, MeasurementTime, RawMessage,
+        SessionPlan, StreamCatalog, StreamDescriptor, StreamId, encode_compressed_image_cdr,
     };
 
     #[test]
@@ -261,25 +260,23 @@ mod tests {
                 .into(),
             });
         }
-        let mut pipelines = DomainPipelineSet::from_routes(&[DomainRoute {
-            stream: StreamDescriptor {
+        let catalog = StreamCatalog {
+            streams: vec![StreamDescriptor {
                 id: stream_id,
                 topic: "/camera/live/image/compressed".into(),
                 schema: "sensor_msgs/msg/CompressedImage".into(),
                 message_encoding: "cdr".into(),
-            },
-            target: DomainTarget::Camera(CameraId(0)),
-        }]);
-        let mut updates = Vec::<DomainUpdate>::new();
+            }],
+        };
+        let plan = SessionPlan::build(&catalog, "/camera/live/image/compressed").unwrap();
+        let mut runtime = DomainRuntime::new(plan);
 
-        pipelines.decode(mailbox.take().unwrap(), &mut updates);
-        let mut state = DomainState::default();
-        state.apply_all(updates);
+        runtime.process(std::time::Duration::ZERO, mailbox.take());
 
-        let latest = state.camera.latest_for(CameraId(0)).unwrap();
+        let latest = runtime.state().camera.latest_for(CameraId(0)).unwrap();
         assert_eq!(latest.arrival_time, ArrivalTime(200));
         assert_eq!(latest.jpeg.as_ref(), [2]);
         assert_eq!(mailbox.coalesced(), 1);
-        assert_eq!(pipelines.counters().decoded, 1);
+        assert_eq!(runtime.counters().decoded, 1);
     }
 }
