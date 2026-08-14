@@ -1,6 +1,6 @@
 use crate::{
-    CameraId, DomainState, DomainTarget, DomainUpdate, PipelineCounters, PipelineSet, RawMessage,
-    SessionPlan, StreamCatalog, StreamId,
+    CameraId, DomainPipelineSet, DomainState, DomainTarget, DomainUpdate, PipelineCounters,
+    RawMessage, SessionPlan, StreamCatalog, StreamId,
 };
 use std::{
     collections::{BTreeMap, HashMap},
@@ -93,7 +93,7 @@ impl std::error::Error for PlaybackCoreError {}
 
 /// Source-independent playback reduction, camera scheduling, and domain state.
 pub struct PlaybackCore {
-    pipelines: PipelineSet,
+    pipelines: DomainPipelineSet,
     state: DomainState,
     transform_streams: Vec<StreamId>,
     camera_streams: HashMap<StreamId, CameraId>,
@@ -131,7 +131,7 @@ impl PlaybackCore {
             .collect::<HashMap<_, _>>();
         let camera_topics = plan.camera_topics();
         let focused_camera = plan.primary_camera();
-        let pipelines = PipelineSet::new(&catalog.streams, &plan.stream_bindings());
+        let pipelines = DomainPipelineSet::new(&plan);
         let mut core = Self {
             pipelines,
             state: DomainState::default(),

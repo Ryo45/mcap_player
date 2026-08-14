@@ -10,8 +10,8 @@ use mcap::{
 };
 use std::{borrow::Cow, fmt, io::SeekFrom};
 use viewer_core::{
-    ArrivalTime, CameraId, DomainState, PipelineSet, RawMessage, StreamBinding, StreamDescriptor,
-    StreamId,
+    ArrivalTime, CameraId, DomainPipelineSet, DomainRoute, DomainState, DomainTarget, RawMessage,
+    StreamDescriptor, StreamId,
 };
 
 pub(crate) const RECORD_HEADER_LEN: usize = 1 + 8;
@@ -269,10 +269,10 @@ pub(crate) fn feed_pipeline(
         schema,
         message_encoding: channel.message_encoding.clone(),
     };
-    let (binding, domain) = if topic == viewer_core::ODOM_TOPIC {
-        (StreamBinding::Odometry, "odometry")
+    let (target, domain) = if topic == viewer_core::ODOM_TOPIC {
+        (DomainTarget::Telemetry, "odometry")
     } else if descriptor.schema == "sensor_msgs/msg/CompressedImage" {
-        (StreamBinding::Camera(CameraId(0)), "camera")
+        (DomainTarget::Camera(CameraId(0)), "camera")
     } else {
         return Err(format!(
             "spike only routes odometry or compressed camera data, got {topic} ({})",
@@ -282,7 +282,10 @@ pub(crate) fn feed_pipeline(
     let arrival = i64::try_from(header.log_time)
         .map(ArrivalTime)
         .map_err(|_| "message log time exceeds ArrivalTime".to_owned())?;
-    let mut pipelines = PipelineSet::new(&[descriptor], &[(stream_id, binding)]);
+    let mut pipelines = DomainPipelineSet::from_routes(&[DomainRoute {
+        stream: descriptor,
+        target,
+    }]);
     let mut updates = Vec::new();
     pipelines.decode(
         RawMessage {
@@ -302,19 +305,21 @@ pub(crate) fn feed_pipeline(
     }
     let mut state = DomainState::default();
     state.apply_all(updates);
-    let updated = match binding {
-        StreamBinding::Odometry => state
+    let updated = match target {
+        DomainTarget::Telemetry => state
             .telemetry
             .latest()
             .is_some_and(|frame| frame.arrival_time == arrival),
-        StreamBinding::Camera(camera_id) => state
+        DomainTarget::Camera(camera_id) => state
             .camera
             .latest_for(camera_id)
             .is_some_and(|frame| frame.arrival_time == arrival),
         _ => false,
     };
     if !updated {
-        return Err(format!("{domain} PipelineSet did not update DomainState"));
+        return Err(format!(
+            "{domain} DomainPipelineSet did not update DomainState"
+        ));
     }
     Ok(PipelineProbeResult {
         domain,

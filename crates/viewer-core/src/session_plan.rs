@@ -1,4 +1,4 @@
-use crate::{CameraId, StreamBinding, StreamCatalog, StreamDescriptor, StreamId};
+use crate::{CameraId, StreamCatalog, StreamDescriptor};
 use std::fmt;
 
 pub const PATH_TOPIC: &str = "/planning/path";
@@ -103,25 +103,6 @@ impl SessionPlan {
             })
             .collect()
     }
-
-    /// Temporary adapter for the existing domain pipeline constructor.
-    pub(crate) fn stream_bindings(&self) -> Vec<(StreamId, StreamBinding)> {
-        self.domain_routes
-            .iter()
-            .map(|route| {
-                let binding = match route.target {
-                    DomainTarget::Camera(camera_id) => StreamBinding::Camera(camera_id),
-                    DomainTarget::Telemetry => StreamBinding::Odometry,
-                    DomainTarget::Path => StreamBinding::Path,
-                    DomainTarget::PointCloud => StreamBinding::LaserScan,
-                    DomainTarget::Transforms { is_static } => {
-                        StreamBinding::Transforms { is_static }
-                    }
-                };
-                (route.stream.id, binding)
-            })
-            .collect()
-    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -138,6 +119,7 @@ impl std::error::Error for SessionPlanError {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::StreamId;
 
     fn descriptor(id: u32, topic: &str, schema: &str) -> StreamDescriptor {
         StreamDescriptor {

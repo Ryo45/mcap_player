@@ -75,12 +75,11 @@ needed for this migration.
 
 ## Current ownership and temporary boundaries
 
-Today, `standard_bindings()` owns the standard Viewer policy for cameras, `/planning/path`,
-`/odom`, `/scan`, `/tf`, and `/tf_static`. `camera_topics()` discovers compressed-image streams,
-moves the configured primary stream to the first slot, and therefore determines `CameraId`
-assignment. `PipelineSet` turns those bindings into schema-checked pipelines. `PlaybackCore` owns
-that pipeline set, `DomainState`, camera coalescing, camera presentation scheduling, and reduction
-metrics.
+`SessionPlan` now owns the standard Viewer policy for cameras, `/planning/path`, `/odom`, `/scan`,
+`/tf`, and `/tf_static`. It discovers compressed-image streams, moves the configured primary stream
+to the first slot, and therefore determines `CameraId` assignment. `DomainPipelineSet` turns the
+plan's routes into schema-checked pipelines. `PlaybackCore` owns that pipeline set, `DomainState`,
+camera coalescing, camera presentation scheduling, and reduction metrics.
 
 Recording I/O, buffering, prefetch, and cursor candidate/commit remain outside `PlaybackCore`.
 Web local-file and remote-server recordings already share `RecordingDataPlane`; Native local
@@ -113,7 +112,7 @@ drop policy.
 
 | Behavior | Test boundary |
 | --- | --- |
-| camera discovery, primary camera, CameraId order, standard topic routes | `pipeline::tests::standard_bindings_capture_current_session_routing_policy` |
+| camera discovery, primary camera, CameraId order, standard topic routes | `session_plan::tests::builds_current_camera_and_shared_domain_policy_once` |
 | Camera, odometry, path, scan, dynamic/static TF reduction | `tests/tf_fixture.rs` |
 | schema-checked pipeline dispatch and Camera CDR/JPEG ownership | `pipeline::tests` |
 | focused/background scheduling and camera coalescing | `tests/playback_scenario.rs` |

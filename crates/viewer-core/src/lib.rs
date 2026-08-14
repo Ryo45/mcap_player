@@ -54,8 +54,8 @@ pub use frame_builder::{
 pub use mcap_source::{McapOpenError, McapSource, StreamCatalog};
 pub use performance::{PresentationMetrics, PresentationSnapshot};
 pub use pipeline::{
-    DomainUpdate, PipelineCounters, PipelineSet, RawMessage, StreamBinding, StreamDescriptor,
-    StreamId, StreamPipeline, camera_topics, standard_bindings,
+    DomainPipeline, DomainPipelineSet, DomainUpdate, PipelineCounters, RawMessage,
+    StreamDescriptor, StreamId,
 };
 pub use playback::{McapPlayback, McapPlaybackError, PlaybackEffect};
 pub use playback_core::{PlaybackCore, PlaybackCoreError, PlaybackPerformance, StageTiming};

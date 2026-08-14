@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, fs, path::PathBuf, time::Duration, time::Instant};
 use viewer_core::{
-    ArrivalTime, CameraId, CameraState, DomainUpdate, McapPlayback, McapSource, PipelineSet,
-    StreamBinding,
+    ArrivalTime, CameraId, CameraState, DomainPipelineSet, DomainRoute, DomainTarget, DomainUpdate,
+    McapPlayback, McapSource,
 };
 use viewer_renderer::decode_camera_frame;
 
@@ -24,10 +24,10 @@ fn fixture_has_30_decodable_frames_and_distinct_time_domains() {
         .catalog()
         .by_topic("/camera/front/image/compressed")
         .unwrap();
-    let mut pipelines = PipelineSet::new(
-        &source.catalog().streams,
-        &[(descriptor.id, StreamBinding::Camera(CameraId(0)))],
-    );
+    let mut pipelines = DomainPipelineSet::from_routes(&[DomainRoute {
+        stream: descriptor.clone(),
+        target: DomainTarget::Camera(CameraId(0)),
+    }]);
     let (_, end) = source.time_range();
     let mut updates = vec![];
     for message in source.read_until(end).unwrap() {
@@ -80,10 +80,10 @@ fn malformed_message_does_not_stop_the_next_frame() {
         .catalog()
         .by_topic("/camera/front/image/compressed")
         .unwrap();
-    let mut pipelines = PipelineSet::new(
-        &source.catalog().streams,
-        &[(descriptor.id, StreamBinding::Camera(CameraId(0)))],
-    );
+    let mut pipelines = DomainPipelineSet::from_routes(&[DomainRoute {
+        stream: descriptor.clone(),
+        target: DomainTarget::Camera(CameraId(0)),
+    }]);
     let (_, end) = source.time_range();
     let messages = source.read_until(end).unwrap();
     let mut bad = messages[0].clone();

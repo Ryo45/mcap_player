@@ -10,7 +10,7 @@ use viewer_core::{
     PlaybackPerformance, PlaybackView,
 };
 #[cfg(feature = "ros2-live")]
-use viewer_core::{PipelineSet, StreamBinding};
+use viewer_core::{DomainPipelineSet, DomainRoute, DomainTarget};
 
 pub(crate) struct PlaybackSession {
     source: SessionSource,
@@ -24,7 +24,7 @@ enum SessionSource {
     #[cfg(feature = "ros2-live")]
     Ros {
         handle: live::RosLiveHandle,
-        pipelines: PipelineSet,
+        pipelines: DomainPipelineSet,
         state: DomainState,
     },
 }
@@ -62,10 +62,10 @@ impl PlaybackSession {
             schema: "sensor_msgs/msg/CompressedImage".into(),
             message_encoding: "cdr".into(),
         };
-        let pipelines = PipelineSet::new(
-            std::slice::from_ref(&descriptor),
-            &[(descriptor.id, StreamBinding::Camera(CameraId(0)))],
-        );
+        let pipelines = DomainPipelineSet::from_routes(&[DomainRoute {
+            stream: descriptor,
+            target: DomainTarget::Camera(CameraId(0)),
+        }]);
         let camera_topics = vec![(CameraId(0), topic.clone())];
         Self {
             source: SessionSource::Ros {

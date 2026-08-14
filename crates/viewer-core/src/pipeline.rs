@@ -1,7 +1,7 @@
 use crate::{
-    ArrivalTime, BevPathFrame, CameraFrame, CameraId, DecodeError, PointCloudFrame, TelemetryFrame,
-    TransformBatch, decode_compressed_image_bytes, decode_laser_scan, decode_odometry, decode_path,
-    decode_tf_message,
+    ArrivalTime, BevPathFrame, CameraFrame, CameraId, DecodeError, DomainRoute, DomainTarget,
+    PointCloudFrame, SessionPlan, TelemetryFrame, TransformBatch, decode_compressed_image_bytes,
+    decode_laser_scan, decode_odometry, decode_path, decode_tf_message,
 };
 use bytes::Bytes;
 use std::collections::HashMap;
@@ -24,43 +24,6 @@ pub struct StreamDescriptor {
     pub message_encoding: String,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum StreamBinding {
-    Camera(CameraId),
-    Path,
-    Odometry,
-    LaserScan,
-    Transforms { is_static: bool },
-}
-
-pub fn standard_bindings(
-    catalog: &crate::StreamCatalog,
-    camera_topic: &str,
-) -> Result<Vec<(StreamId, StreamBinding)>, String> {
-    crate::SessionPlan::build(catalog, camera_topic)
-        .map(|plan| plan.stream_bindings())
-        .map_err(|error| error.to_string())
-}
-
-pub fn camera_topics(
-    catalog: &crate::StreamCatalog,
-    primary_topic: &str,
-) -> Result<Vec<(StreamId, String)>, String> {
-    crate::SessionPlan::build(catalog, primary_topic)
-        .map(|plan| {
-            plan.domain_routes()
-                .iter()
-                .filter_map(|route| match route.target {
-                    crate::DomainTarget::Camera(_) => {
-                        Some((route.stream.id, route.stream.topic.clone()))
-                    }
-                    _ => None,
-                })
-                .collect()
-        })
-        .map_err(|error| error.to_string())
-}
-
 #[derive(Clone, Debug, PartialEq)]
 pub enum DomainUpdate {
     Camera(CameraFrame),
@@ -72,7 +35,7 @@ pub enum DomainUpdate {
 
 struct PathPipeline;
 
-impl StreamPipeline for PathPipeline {
+impl DomainPipeline for PathPipeline {
     fn decode(
         &mut self,
         message: RawMessage,
@@ -96,7 +59,7 @@ impl StreamPipeline for PathPipeline {
 
 struct OdometryPipeline;
 
-impl StreamPipeline for OdometryPipeline {
+impl DomainPipeline for OdometryPipeline {
     fn decode(
         &mut self,
         message: RawMessage,
@@ -125,7 +88,7 @@ impl StreamPipeline for OdometryPipeline {
 
 struct LaserScanPipeline;
 
-impl StreamPipeline for LaserScanPipeline {
+impl DomainPipeline for LaserScanPipeline {
     fn decode(
         &mut self,
         message: RawMessage,
@@ -154,7 +117,7 @@ struct TransformPipeline {
     is_static: bool,
 }
 
-impl StreamPipeline for TransformPipeline {
+impl DomainPipeline for TransformPipeline {
     fn decode(
         &mut self,
         message: RawMessage,
@@ -169,7 +132,7 @@ impl StreamPipeline for TransformPipeline {
     }
 }
 
-pub trait StreamPipeline {
+pub trait DomainPipeline {
     fn decode(
         &mut self,
         message: RawMessage,
@@ -181,7 +144,7 @@ struct CompressedImagePipeline {
     camera_id: CameraId,
 }
 
-impl StreamPipeline for CompressedImagePipeline {
+impl DomainPipeline for CompressedImagePipeline {
     fn decode(
         &mut self,
         message: RawMessage,
@@ -208,20 +171,21 @@ pub struct PipelineCounters {
     pub dropped: u64,
 }
 
-pub struct PipelineSet {
-    pipelines: HashMap<StreamId, Box<dyn StreamPipeline>>,
+pub struct DomainPipelineSet {
+    pipelines: HashMap<StreamId, Box<dyn DomainPipeline>>,
     counters: PipelineCounters,
 }
 
-impl PipelineSet {
-    pub fn new(descriptors: &[StreamDescriptor], bindings: &[(StreamId, StreamBinding)]) -> Self {
-        let mut pipelines: HashMap<StreamId, Box<dyn StreamPipeline>> = HashMap::new();
-        for (id, binding) in bindings {
-            let Some(descriptor) = descriptors.iter().find(|item| item.id == *id) else {
-                continue;
-            };
-            if let Some(pipeline) = build_pipeline(descriptor, *binding) {
-                pipelines.insert(*id, pipeline);
+impl DomainPipelineSet {
+    pub fn new(plan: &SessionPlan) -> Self {
+        Self::from_routes(plan.domain_routes())
+    }
+
+    pub fn from_routes(routes: &[DomainRoute]) -> Self {
+        let mut pipelines: HashMap<StreamId, Box<dyn DomainPipeline>> = HashMap::new();
+        for route in routes {
+            if let Some(pipeline) = build_pipeline(route) {
+                pipelines.insert(route.stream.id, pipeline);
             }
         }
         Self {
@@ -255,25 +219,22 @@ impl PipelineSet {
     }
 }
 
-fn build_pipeline(
-    descriptor: &StreamDescriptor,
-    binding: StreamBinding,
-) -> Option<Box<dyn StreamPipeline>> {
-    let pipeline: Box<dyn StreamPipeline> = match binding {
-        StreamBinding::Camera(camera_id)
-            if descriptor.schema == "sensor_msgs/msg/CompressedImage" =>
+fn build_pipeline(route: &DomainRoute) -> Option<Box<dyn DomainPipeline>> {
+    let pipeline: Box<dyn DomainPipeline> = match route.target {
+        DomainTarget::Camera(camera_id)
+            if route.stream.schema == "sensor_msgs/msg/CompressedImage" =>
         {
             Box::new(CompressedImagePipeline { camera_id })
         }
-        StreamBinding::Path if descriptor.schema == "nav_msgs/msg/Path" => Box::new(PathPipeline),
-        StreamBinding::Odometry if descriptor.schema == "nav_msgs/msg/Odometry" => {
+        DomainTarget::Path if route.stream.schema == "nav_msgs/msg/Path" => Box::new(PathPipeline),
+        DomainTarget::Telemetry if route.stream.schema == "nav_msgs/msg/Odometry" => {
             Box::new(OdometryPipeline)
         }
-        StreamBinding::LaserScan if descriptor.schema == "sensor_msgs/msg/LaserScan" => {
+        DomainTarget::PointCloud if route.stream.schema == "sensor_msgs/msg/LaserScan" => {
             Box::new(LaserScanPipeline)
         }
-        StreamBinding::Transforms { is_static }
-            if descriptor.schema == "tf2_msgs/msg/TFMessage" =>
+        DomainTarget::Transforms { is_static }
+            if route.stream.schema == "tf2_msgs/msg/TFMessage" =>
         {
             Box::new(TransformPipeline { is_static })
         }
@@ -285,70 +246,7 @@ fn build_pipeline(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        CompressedImage, MeasurementTime, ODOM_TOPIC, PATH_TOPIC, SCAN_TOPIC, StreamCatalog,
-        TF_STATIC_TOPIC, TF_TOPIC, encode_compressed_image_cdr,
-    };
-
-    fn descriptor(id: u32, topic: &str, schema: &str) -> StreamDescriptor {
-        StreamDescriptor {
-            id: StreamId(id),
-            topic: topic.into(),
-            schema: schema.into(),
-            message_encoding: "cdr".into(),
-        }
-    }
-
-    #[test]
-    fn standard_bindings_capture_current_session_routing_policy() {
-        let catalog = StreamCatalog {
-            streams: vec![
-                descriptor(
-                    9,
-                    "/camera/rear/image/compressed",
-                    "sensor_msgs/msg/CompressedImage",
-                ),
-                descriptor(20, PATH_TOPIC, "nav_msgs/msg/Path"),
-                descriptor(
-                    7,
-                    "/camera/front/image/compressed",
-                    "sensor_msgs/msg/CompressedImage",
-                ),
-                descriptor(21, ODOM_TOPIC, "nav_msgs/msg/Odometry"),
-                descriptor(22, SCAN_TOPIC, "sensor_msgs/msg/LaserScan"),
-                descriptor(23, TF_TOPIC, "tf2_msgs/msg/TFMessage"),
-                descriptor(24, TF_STATIC_TOPIC, "tf2_msgs/msg/TFMessage"),
-                descriptor(
-                    11,
-                    "/camera/left/image/compressed",
-                    "sensor_msgs/msg/CompressedImage",
-                ),
-                descriptor(30, "/unrelated", "example_msgs/msg/Other"),
-            ],
-        };
-
-        assert_eq!(
-            camera_topics(&catalog, "/camera/front/image/compressed").unwrap(),
-            vec![
-                (StreamId(7), "/camera/front/image/compressed".into()),
-                (StreamId(9), "/camera/rear/image/compressed".into()),
-                (StreamId(11), "/camera/left/image/compressed".into()),
-            ]
-        );
-        assert_eq!(
-            standard_bindings(&catalog, "/camera/front/image/compressed").unwrap(),
-            vec![
-                (StreamId(7), StreamBinding::Camera(CameraId(0))),
-                (StreamId(9), StreamBinding::Camera(CameraId(1))),
-                (StreamId(11), StreamBinding::Camera(CameraId(2))),
-                (StreamId(20), StreamBinding::Path),
-                (StreamId(21), StreamBinding::Odometry),
-                (StreamId(22), StreamBinding::LaserScan),
-                (StreamId(23), StreamBinding::Transforms { is_static: false },),
-                (StreamId(24), StreamBinding::Transforms { is_static: true },),
-            ]
-        );
-    }
+    use crate::{CameraId, CompressedImage, MeasurementTime, encode_compressed_image_cdr};
 
     #[test]
     fn camera_pipeline_retains_jpeg_in_raw_message_backing_allocation() {
@@ -364,15 +262,15 @@ mod tests {
         );
         let payload_start = payload.as_ptr() as usize;
         let payload_end = payload_start + payload.len();
-        let mut pipelines = PipelineSet::new(
-            &[StreamDescriptor {
+        let mut pipelines = DomainPipelineSet::from_routes(&[DomainRoute {
+            stream: StreamDescriptor {
                 id: stream_id,
                 topic: "/camera".into(),
                 schema: "sensor_msgs/msg/CompressedImage".into(),
                 message_encoding: "cdr".into(),
-            }],
-            &[(stream_id, StreamBinding::Camera(CameraId(0)))],
-        );
+            },
+            target: DomainTarget::Camera(CameraId(0)),
+        }]);
         let mut updates = Vec::new();
 
         pipelines.decode(
