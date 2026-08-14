@@ -245,7 +245,7 @@ impl WebPlayback {
         self.core.counters()
     }
 
-    pub(crate) fn performance(&self) -> &PlaybackPerformance {
+    pub(crate) fn performance(&self) -> PlaybackPerformance {
         self.core.performance()
     }
 

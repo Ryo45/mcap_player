@@ -78,8 +78,9 @@ needed for this migration.
 `SessionPlan` now owns the standard Viewer policy for cameras, `/planning/path`, `/odom`, `/scan`,
 `/tf`, and `/tf_static`. It discovers compressed-image streams, moves the configured primary stream
 to the first slot, and therefore determines `CameraId` assignment. `DomainPipelineSet` turns the
-plan's routes into schema-checked pipelines. `PlaybackCore` owns that pipeline set, `DomainState`,
-camera coalescing, camera presentation scheduling, and reduction metrics.
+plan's routes into schema-checked pipelines. `DomainRuntime` owns that pipeline set, `DomainState`,
+camera coalescing, camera presentation scheduling, and domain reduction metrics. `PlaybackCore` is
+now a compatibility facade that adds source-read timing and delegates shared-domain work.
 
 Recording I/O, buffering, prefetch, and cursor candidate/commit remain outside `PlaybackCore`.
 Web local-file and remote-server recordings already share `RecordingDataPlane`; Native local
