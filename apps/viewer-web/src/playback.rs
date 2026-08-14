@@ -10,7 +10,7 @@ use std::{error::Error, fmt, time::Duration};
 use viewer_core::{
     ArrivalTime, CameraId, DomainState, FetchIntent, PipelineCounters, PlaybackClock,
     PlaybackCommand, PlaybackCore, PlaybackEffect, PlaybackLoadState, PlaybackPerformance,
-    StreamCatalog,
+    SessionPlan,
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -60,8 +60,7 @@ impl WebPlayback {
         )
         .map_err(|error| WebPlaybackError::new(error.to_string()))?;
         Self::new(
-            &catalog.core,
-            &catalog.primary_camera_topic,
+            catalog.plan,
             catalog.start,
             catalog.end,
             catalog.end_exclusive,
@@ -73,8 +72,7 @@ impl WebPlayback {
     #[cfg(target_arch = "wasm32")]
     pub(crate) fn from_local(recording: BrowserMcapRecording) -> Result<Self, WebPlaybackError> {
         Self::new(
-            &recording.catalog.core,
-            &recording.catalog.primary_camera_topic,
+            recording.catalog.plan,
             recording.catalog.start,
             recording.catalog.end,
             recording.catalog.end_exclusive,
@@ -84,16 +82,14 @@ impl WebPlayback {
     }
 
     fn new(
-        catalog: &StreamCatalog,
-        primary_camera_topic: &str,
+        plan: SessionPlan,
         start: viewer_core::ArrivalTime,
         end: viewer_core::ArrivalTime,
         end_exclusive: viewer_core::ArrivalTime,
         loader: WebWindowLoader,
         source_kind: PlaybackSourceKind,
     ) -> Result<Self, WebPlaybackError> {
-        let core = PlaybackCore::new(catalog, primary_camera_topic)
-            .map_err(|error| WebPlaybackError::new(error.to_string()))?;
+        let core = PlaybackCore::from_plan(plan);
         let data = RecordingDataPlane::new(loader, start, end_exclusive)
             .map_err(|error| WebPlaybackError::new(error.to_string()))?;
         Ok(Self {
@@ -705,10 +701,8 @@ mod tests {
         .unwrap();
         assert_eq!(local.window.messages, remote.window.messages);
 
-        let mut local_core =
-            PlaybackCore::new(&catalog.core, &catalog.primary_camera_topic).unwrap();
-        let mut remote_core =
-            PlaybackCore::new(&catalog.core, &catalog.primary_camera_topic).unwrap();
+        let mut local_core = PlaybackCore::from_plan(catalog.plan.clone());
+        let mut remote_core = PlaybackCore::from_plan(catalog.plan);
         local_core.process_forward(Duration::from_secs(1), local.window.messages);
         remote_core.process_forward(Duration::from_secs(1), remote.window.messages);
 
