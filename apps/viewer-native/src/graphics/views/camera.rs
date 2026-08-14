@@ -17,6 +17,18 @@ pub(crate) struct CameraViewInput<'a> {
     pub(crate) focused_camera: Option<CameraId>,
     pub(crate) show_thumbnails: bool,
     pub(crate) overlays: &'a CameraOverlayState,
+    pub(crate) show_overlay: bool,
+    pub(crate) heading: &'a str,
+}
+
+pub(crate) struct CameraImageInput<'a> {
+    pub(crate) camera_id: Option<CameraId>,
+    pub(crate) textures: &'a [CameraTextureView],
+    pub(crate) preview_textures: &'a [CameraTextureView],
+    pub(crate) preview_active: bool,
+    pub(crate) overlays: &'a CameraOverlayState,
+    pub(crate) show_overlay: bool,
+    pub(crate) empty_label: &'a str,
 }
 
 #[derive(Default)]
@@ -35,43 +47,38 @@ pub(crate) fn show_camera_view(ui: &mut egui::Ui, input: CameraViewInput<'_>) ->
     let focused = input
         .focused_camera
         .and_then(|camera_id| input.cameras.iter().find(|camera| camera.id == camera_id));
-    let focused_texture = input.focused_camera.and_then(|camera_id| {
-        visible_textures
-            .iter()
-            .find(|texture| texture.camera_id == camera_id)
-    });
     let focused_label = focused.map_or("waiting", |camera| camera.topic.as_str());
-    let focused_overlay = focused.map_or_else(
-        || "overlay waiting".to_owned(),
-        |camera| camera.overlay.to_string(),
-    );
+    let focused_overlay = if input.show_overlay {
+        focused.map_or_else(
+            || "overlay waiting".to_owned(),
+            |camera| camera.overlay.to_string(),
+        )
+    } else {
+        "overlay off".to_owned()
+    };
 
     let source_label = if showing_preview { "PREVIEW" } else { "EXACT" };
     ui.heading(format!(
-        "CAMERA FOCUS · {source_label} · {focused_label} · {focused_overlay}"
+        "{} · {source_label} · {focused_label} · {focused_overlay}",
+        input.heading
     ));
     ui.separator();
-    if let Some(texture) = focused_texture {
-        let available = ui.available_size();
-        let focus_area = egui::vec2(available.x, (available.y - 70.0).max(1.0));
-        let (focus_rect, _) = ui.allocate_exact_size(focus_area, egui::Sense::hover());
-        let image_rect = contain_image_rect(focus_rect, texture.size);
-        ui.put(
-            image_rect,
-            egui::Image::new((texture.texture_id, image_rect.size())),
-        )
-        .on_hover_text("Focused camera");
-        if !showing_preview {
-            paint_camera_overlay(ui, image_rect, texture, input.overlays);
-        }
-    } else {
-        ui.centered_and_justified(|ui| {
-            ui.vertical_centered(|ui| {
-                ui.spinner();
-                ui.label("Waiting for camera frame");
-            });
-        });
-    }
+    let available = ui.available_size();
+    let thumbnail_reserve = if input.show_thumbnails { 70.0 } else { 0.0 };
+    let focus_area = egui::vec2(available.x, (available.y - thumbnail_reserve).max(1.0));
+    show_camera_image(
+        ui,
+        focus_area,
+        CameraImageInput {
+            camera_id: input.focused_camera,
+            textures: input.textures,
+            preview_textures: input.preview_textures,
+            preview_active: input.preview_active,
+            overlays: input.overlays,
+            show_overlay: input.show_overlay,
+            empty_label: "Waiting for camera frame",
+        },
+    );
     if input.show_thumbnails {
         ui.horizontal_wrapped(|ui| {
             for texture in visible_textures {
@@ -84,7 +91,7 @@ pub(crate) fn show_camera_view(ui: &mut egui::Ui, input: CameraViewInput<'_>) ->
                 let response = ui
                     .add(egui::Image::new((texture.texture_id, size)).sense(egui::Sense::click()))
                     .on_hover_text(format!("Focus camera {}", texture.camera_id.0));
-                if !showing_preview {
+                if input.show_overlay && !showing_preview {
                     paint_camera_overlay(ui, response.rect, texture, input.overlays);
                 }
                 if response.clicked() {
@@ -97,6 +104,58 @@ pub(crate) fn show_camera_view(ui: &mut egui::Ui, input: CameraViewInput<'_>) ->
         });
     }
     output
+}
+
+/// Draws one selected camera into a contained image rect without owning camera state.
+///
+/// The exact and preview texture caches remain Graphics-owned. Path overlay is applied only to an
+/// exact frame whose arrival and dimensions match the CPU-side overlay snapshot.
+pub(crate) fn show_camera_image(
+    ui: &mut egui::Ui,
+    desired_size: egui::Vec2,
+    input: CameraImageInput<'_>,
+) {
+    let preview_texture = input.camera_id.and_then(|camera_id| {
+        input
+            .preview_textures
+            .iter()
+            .find(|texture| texture.camera_id == camera_id)
+    });
+    let showing_preview = input.preview_active && preview_texture.is_some();
+    let texture = if showing_preview {
+        preview_texture
+    } else {
+        input.camera_id.and_then(|camera_id| {
+            input
+                .textures
+                .iter()
+                .find(|texture| texture.camera_id == camera_id)
+        })
+    };
+    let (container, _) = ui.allocate_exact_size(
+        egui::vec2(desired_size.x.max(1.0), desired_size.y.max(1.0)),
+        egui::Sense::hover(),
+    );
+    let Some(texture) = texture else {
+        ui.painter()
+            .rect_filled(container, 4.0, egui::Color32::from_gray(18));
+        ui.painter().text(
+            container.center(),
+            egui::Align2::CENTER_CENTER,
+            input.empty_label,
+            egui::FontId::proportional(14.0),
+            egui::Color32::GRAY,
+        );
+        return;
+    };
+    let image_rect = contain_image_rect(container, texture.size);
+    ui.put(
+        image_rect,
+        egui::Image::new((texture.texture_id, image_rect.size())),
+    );
+    if input.show_overlay && !showing_preview {
+        paint_camera_overlay(ui, image_rect, texture, input.overlays);
+    }
 }
 
 pub(crate) fn contain_image_rect(container: egui::Rect, image_size: (u32, u32)) -> egui::Rect {

@@ -11,6 +11,23 @@ use viewer_layout::{
 };
 
 const BUNDLED_DEFAULT_LAYOUT: &str = include_str!("../../../config/layouts/native_default.json");
+const BUNDLED_SHOWCASE_LAYOUT: &str = include_str!("../../../config/layouts/native_showcase.json");
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub(crate) enum WorkspaceLayout {
+    #[default]
+    Standard,
+    Showcase,
+}
+
+impl WorkspaceLayout {
+    fn bundled_json(self) -> &'static str {
+        match self {
+            Self::Standard => BUNDLED_DEFAULT_LAYOUT,
+            Self::Showcase => BUNDLED_SHOWCASE_LAYOUT,
+        }
+    }
+}
 
 pub(crate) struct NativeWorkspace {
     pub(crate) layout: LayoutDocument,
@@ -28,13 +45,15 @@ pub(crate) struct CameraViewState {
 #[derive(Default)]
 pub(crate) struct PlotViewState {
     pub(crate) panel: Option<PlotPanelState>,
-    pub(crate) cache: Option<SpeedPlotCache>,
+    pub(crate) cache: Option<SignalPlotCache>,
     pub(crate) preview_cache: Option<PreviewPlotCache>,
 }
 
-pub(crate) struct SpeedPlotCache {
+pub(crate) struct SignalPlotCache {
     pub(crate) origin: ArrivalTime,
     pub(crate) display_len: usize,
+    pub(crate) sample_len: usize,
+    pub(crate) last_arrival: Option<ArrivalTime>,
     pub(crate) points: Vec<PlotPoint>,
 }
 
@@ -71,8 +90,8 @@ impl ViewerInteractionState {
 }
 
 impl NativeWorkspace {
-    pub(crate) fn load_bundled_or_fallback() -> Self {
-        match Self::from_json(BUNDLED_DEFAULT_LAYOUT) {
+    pub(crate) fn load_bundled_or_fallback(layout: WorkspaceLayout) -> Self {
+        match Self::from_json(layout.bundled_json()) {
             Ok(workspace) => workspace,
             Err(error) => Self::emergency(error),
         }
@@ -163,7 +182,10 @@ impl NativeWorkspace {
 
     pub(crate) fn focused_camera(&self) -> Option<CameraId> {
         self.scheduler_focused_camera
-            .or_else(|| self.panels.first_focused_camera())
+    }
+
+    pub(crate) fn scheduler_priority_topic(&self) -> Option<&str> {
+        self.panels.scheduler_priority_topic()
     }
 
     pub(crate) fn accumulate_points(&self) -> bool {
@@ -188,7 +210,7 @@ impl NativeWorkspace {
 
 impl Default for NativeWorkspace {
     fn default() -> Self {
-        Self::load_bundled_or_fallback()
+        Self::load_bundled_or_fallback(WorkspaceLayout::Standard)
     }
 }
 
@@ -221,9 +243,51 @@ mod tests {
             workspace.data_requirements(),
             PanelDataRequirements {
                 vehicle_speed: true,
+                yaw_rate: false,
                 inspections: Vec::new(),
             }
         );
+    }
+
+    #[test]
+    fn bundled_showcase_is_selectable_without_changing_the_standard_default() {
+        let workspace = NativeWorkspace::load_bundled_or_fallback(WorkspaceLayout::Showcase);
+        assert!(workspace.startup_warning().is_none());
+        assert_eq!(workspace.panels.len(), 6);
+        assert_eq!(workspace.panels.placeholder_count(), 0);
+        assert_eq!(workspace.panel("camera-left").kind_name(), "camera");
+        assert_eq!(workspace.panel("camera-front").kind_name(), "camera");
+        assert_eq!(workspace.panel("camera-right").kind_name(), "camera");
+        assert_eq!(workspace.panel("speed-showcase").kind_name(), "plot");
+        assert_eq!(workspace.panel("yaw-rate-showcase").kind_name(), "plot");
+        assert_eq!(workspace.panel("status-showcase").kind_name(), "status");
+        assert_eq!(
+            workspace.data_requirements(),
+            PanelDataRequirements {
+                vehicle_speed: true,
+                yaw_rate: true,
+                inspections: Vec::new(),
+            }
+        );
+        assert_eq!(NativeWorkspace::default().panels.len(), 4);
+        assert_eq!(
+            workspace.scheduler_priority_topic(),
+            Some("/camera/front/image/compressed")
+        );
+    }
+
+    #[test]
+    fn fixed_showcase_camera_is_not_an_interactive_scheduler_focus_target() {
+        let mut workspace = NativeWorkspace::load_bundled_or_fallback(WorkspaceLayout::Showcase);
+        workspace.reset_for_source(Some(CameraId(0)));
+        assert!(matches!(
+            workspace.apply_action(ViewerAction::SetFocusedCamera {
+                panel_id: PanelId::new("camera-left").unwrap(),
+                camera_id: Some(CameraId(1)),
+            }),
+            WorkspaceEffect::None
+        ));
+        assert_eq!(workspace.focused_camera(), Some(CameraId(0)));
     }
 
     #[test]

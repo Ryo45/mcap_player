@@ -1,14 +1,80 @@
 use crate::{
     interaction::ViewerAction,
-    workspace::{PlotViewState, PreviewPlotCache, SpeedPlotCache},
+    workspace::{PlotViewState, PreviewPlotCache, SignalPlotCache},
 };
 use egui_plot::{Line, Plot, PlotPoints, VLine};
 use viewer_core::{
     ArrivalTime, Bookmark, LoadedSignal, PlaybackCommand, PlaybackView, PlotMode, PlotPanelState,
-    PlotViewport, SignalOverview, arrival_time_from_plot_x, cursor_seconds, sample_at_or_before,
+    PlotViewport, SignalId, SignalOverview, arrival_time_from_plot_x, cursor_seconds,
+    sample_at_or_before,
 };
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum PlotViewKind {
+    VehicleSpeed,
+    YawRate,
+}
+
+impl PlotViewKind {
+    fn signal_id(self) -> SignalId {
+        match self {
+            Self::VehicleSpeed => SignalId::Speed,
+            Self::YawRate => SignalId::YawRate,
+        }
+    }
+
+    fn heading(self) -> &'static str {
+        match self {
+            Self::VehicleSpeed => "SPEED · /odom",
+            Self::YawRate => "YAW RATE · /odom",
+        }
+    }
+
+    fn loading_label(self) -> &'static str {
+        match self {
+            Self::VehicleSpeed => "Loading /odom speed series…",
+            Self::YawRate => "Loading /odom yaw-rate series…",
+        }
+    }
+
+    fn empty_label(self) -> &'static str {
+        match self {
+            Self::VehicleSpeed => "No /odom speed samples in this log",
+            Self::YawRate => "No /odom yaw-rate samples in this log",
+        }
+    }
+
+    fn plot_id(self) -> &'static str {
+        match self {
+            Self::VehicleSpeed => "vehicle-speed-plot",
+            Self::YawRate => "yaw-rate-plot",
+        }
+    }
+
+    fn series_name(self) -> &'static str {
+        match self {
+            Self::VehicleSpeed => "speed",
+            Self::YawRate => "yaw rate",
+        }
+    }
+
+    fn axis_label(self) -> &'static str {
+        match self {
+            Self::VehicleSpeed => "speed (m/s)",
+            Self::YawRate => "yaw rate (rad/s)",
+        }
+    }
+
+    fn current_value(self, value: f64) -> String {
+        match self {
+            Self::VehicleSpeed => format!("{value:.2} m/s · {:.1} km/h", value * 3.6),
+            Self::YawRate => format!("{value:.3} rad/s"),
+        }
+    }
+}
+
 pub(crate) struct PlotViewInput<'a> {
+    pub(crate) kind: PlotViewKind,
     pub(crate) signal: Option<&'a LoadedSignal>,
     pub(crate) loading: bool,
     pub(crate) error: Option<&'a str>,
@@ -16,6 +82,7 @@ pub(crate) struct PlotViewInput<'a> {
     pub(crate) display_time: ArrivalTime,
     pub(crate) preview_signal: Option<&'a SignalOverview>,
     pub(crate) bookmarks: &'a [Bookmark],
+    pub(crate) plot_height: f32,
 }
 
 #[derive(Default)]
@@ -30,32 +97,35 @@ pub(crate) fn show_plot_view(
 ) -> PlotViewOutput {
     let mut output = PlotViewOutput::default();
     ui.horizontal(|ui| {
-        ui.heading("SPEED · /odom");
+        ui.heading(input.kind.heading());
         if let Some(signal) = input.signal {
             let current = sample_at_or_before(&signal.samples, input.display_time);
             ui.separator();
             ui.monospace(
                 current
-                    .map(|sample| {
-                        format!("{:.2} m/s · {:.1} km/h", sample.value, sample.value * 3.6)
-                    })
+                    .map(|sample| input.kind.current_value(sample.value))
                     .unwrap_or_else(|| "waiting for first sample".to_owned()),
             );
+        }
+        if input.loading {
+            ui.separator();
+            ui.spinner();
+            ui.small("indexing full series");
         }
     });
 
     if input.signal.is_none() && input.preview_signal.is_none() {
-        ui.allocate_ui(egui::vec2(ui.available_width(), 170.0), |ui| {
+        ui.allocate_ui(egui::vec2(ui.available_width(), input.plot_height), |ui| {
             ui.centered_and_justified(|ui| {
                 if input.loading {
                     ui.horizontal(|ui| {
                         ui.spinner();
-                        ui.label("Loading /odom speed series…");
+                        ui.label(input.kind.loading_label());
                     });
                 } else if let Some(error) = input.error {
                     ui.colored_label(egui::Color32::RED, format!("Plot load failed: {error}"));
                 } else {
-                    ui.label("No /odom speed samples in this log");
+                    ui.label(input.kind.empty_label());
                 }
             });
         });
@@ -71,7 +141,11 @@ pub(crate) fn show_plot_view(
     );
     let playhead = cursor_seconds(input.display_time, origin);
     let panel = state.panel.get_or_insert_with(|| {
-        PlotPanelState::overview(overview.start_seconds, overview.end_seconds)
+        PlotPanelState::overview_for(
+            input.kind.signal_id(),
+            overview.start_seconds,
+            overview.end_seconds,
+        )
     });
     panel.update_follow(playhead, input.playback.playing);
 
@@ -133,13 +207,19 @@ pub(crate) fn show_plot_view(
         let signal = input
             .signal
             .expect("exact signal required outside preview overview");
+        let last_arrival = signal.samples.last().map(|sample| sample.arrival_time);
         let cache_matches = state.cache.as_ref().is_some_and(|cache| {
-            cache.origin == origin && cache.display_len == signal.display.x_seconds.len()
+            cache.origin == origin
+                && cache.display_len == signal.display.x_seconds.len()
+                && cache.sample_len == signal.samples.len()
+                && cache.last_arrival == last_arrival
         });
         if !cache_matches {
-            state.cache = Some(SpeedPlotCache {
+            state.cache = Some(SignalPlotCache {
                 origin,
                 display_len: signal.display.x_seconds.len(),
+                sample_len: signal.samples.len(),
+                last_arrival,
                 points: signal
                     .display
                     .x_seconds
@@ -159,10 +239,10 @@ pub(crate) fn show_plot_view(
         )
     };
     let viewport = panel.viewport;
-    let response = Plot::new("vehicle-speed-plot")
-        .height(170.0)
+    let response = Plot::new(input.kind.plot_id())
+        .height(input.plot_height)
         .x_axis_label("arrival time (s)")
-        .y_axis_label("speed (m/s)")
+        .y_axis_label(input.kind.axis_label())
         .allow_drag([true, false])
         .allow_scroll([true, false])
         .allow_zoom([true, false])
@@ -171,7 +251,7 @@ pub(crate) fn show_plot_view(
         .show(ui, |plot_ui| {
             plot_ui.set_plot_bounds_x(viewport.start_seconds..=viewport.end_seconds);
             plot_ui.line(
-                Line::new("speed", points)
+                Line::new(input.kind.series_name(), points)
                     .color(egui::Color32::from_rgb(80, 190, 255))
                     .allow_hover(false),
             );

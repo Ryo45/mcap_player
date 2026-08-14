@@ -61,9 +61,10 @@ pub use pipeline::{
 };
 pub use playback::{McapPlayback, McapPlaybackError, PlaybackEffect};
 pub use plot::{
-    LoadedSignal, PlotMode, PlotPanelState, PlotSeries, PlotViewport, SignalId, SignalSample,
-    arrival_time_from_plot_x, cursor_seconds, downsample_min_max, followed_viewport,
-    load_speed_signal, sample_at_or_before, should_shift_viewport,
+    LoadedOdometrySignals, LoadedSignal, PlotMode, PlotPanelState, PlotSeries, PlotViewport,
+    SignalId, SignalSample, arrival_time_from_plot_x, cursor_seconds, downsample_min_max,
+    followed_viewport, load_odometry_signals, load_odometry_signals_with_progress,
+    load_speed_signal, load_yaw_rate_signal, sample_at_or_before, should_shift_viewport,
 };
 pub use point_cloud::{PointCloudFrame, PointCloudState};
 pub use presentation::{

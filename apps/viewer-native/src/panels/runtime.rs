@@ -1,6 +1,6 @@
 use super::{
     BevPanel, CameraPanel, InspectorPanel, NativePanel, PanelDataRequirements, PlaceholderPanel,
-    PlotPanel, ScenePanel,
+    PlotPanel, ScenePanel, StatusPanel,
 };
 use std::collections::BTreeMap;
 use viewer_core::CameraId;
@@ -43,6 +43,7 @@ impl PanelRuntimeStore {
                 NativePanel::Camera(_)
                 | NativePanel::Plot(_)
                 | NativePanel::Inspector(_)
+                | NativePanel::Status(_)
                 | NativePanel::Placeholder(_) => {}
             }
             if panels.insert(node.id.clone(), panel).is_some() {
@@ -92,15 +93,17 @@ impl PanelRuntimeStore {
             .is_some_and(|panel| panel.set_accumulate_points(accumulate))
     }
 
-    pub(crate) fn first_focused_camera(&self) -> Option<CameraId> {
-        self.panels.values().find_map(NativePanel::focused_camera)
-    }
-
     pub(crate) fn first_accumulate_points(&self) -> bool {
         self.panels
             .values()
             .find_map(NativePanel::accumulate_points)
             .unwrap_or(false)
+    }
+
+    pub(crate) fn scheduler_priority_topic(&self) -> Option<&str> {
+        self.panels
+            .values()
+            .find_map(NativePanel::scheduler_priority_topic)
     }
 
     #[cfg(test)]
@@ -129,6 +132,7 @@ pub(crate) fn create_native_panel(node: &PanelNode) -> NativePanel {
         "plot" => PlotPanel::create(node),
         "inspector" => InspectorPanel::create(node),
         "scene-3d" => ScenePanel::create(node),
+        "status" => StatusPanel::create(node),
         _ => NativePanel::Placeholder(PlaceholderPanel::unknown_type(node)),
     }
 }
@@ -195,6 +199,8 @@ mod tests {
             json!({"topic": "/diagnostics", "maxMessages": 8}),
         ));
         assert_eq!(inspector.kind_name(), "inspector");
+        let status = create_native_panel(&node("status", "status", json!({})));
+        assert_eq!(status.kind_name(), "status");
     }
 
     #[test]

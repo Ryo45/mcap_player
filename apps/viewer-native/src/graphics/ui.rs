@@ -3,7 +3,7 @@ use crate::{
     interaction::ViewerAction,
     panels::{
         PanelFrameContext, PanelRenderRequests, PanelResourceView, PlotDataView, PreviewDataView,
-        SceneDataView,
+        SceneDataView, SignalDataView,
     },
     workspace::NativeWorkspace,
 };
@@ -72,9 +72,16 @@ impl Graphics {
             dynamic_transform_count: render_input.dynamic_transform_count,
         };
         let plot = PlotDataView {
-            signal: render_input.speed_signal,
-            loading: render_input.plot_loading,
-            error: render_input.plot_error,
+            speed: SignalDataView {
+                signal: render_input.speed_signal,
+                loading: render_input.speed_plot_loading,
+                error: render_input.speed_plot_error,
+            },
+            yaw_rate: SignalDataView {
+                signal: render_input.yaw_rate_signal,
+                loading: render_input.yaw_rate_plot_loading,
+                error: render_input.yaw_rate_plot_error,
+            },
         };
         let interaction = &workspace.interaction;
         let preview = PreviewDataView {

@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "root": {
+    "kind": "split",
+    "direction": "column",
+    "children": [
+      {
+        "weight": 0.7,
+        "node": {
+          "kind": "split",
+          "direction": "row",
+          "children": [
+            {
+              "weight": 0.22,
+              "node": {
+                "kind": "panel",
+                "id": "camera-left",
+                "panelType": "camera",
+                "configVersion": 1,
+                "title": "LEFT CAMERA",
+                "config": {
+                  "fit": "contain",
+                  "showThumbnails": false,
+                  "cameraTopic": "/camera/front_left/image/compressed",
+                  "showOverlay": false
+                }
+              }
+            },
+            {
+              "weight": 0.56,
+              "node": {
+                "kind": "panel",
+                "id": "camera-front",
+                "panelType": "camera",
+                "configVersion": 1,
+                "title": "FRONT CAMERA + PATH",
+                "config": {
+                  "fit": "contain",
+                  "showThumbnails": false,
+                  "cameraTopic": "/camera/front/image/compressed",
+                  "showOverlay": true,
+                  "schedulerPriority": true
+                }
+              }
+            },
+            {
+              "weight": 0.22,
+              "node": {
+                "kind": "panel",
+                "id": "camera-right",
+                "panelType": "camera",
+                "configVersion": 1,
+                "title": "RIGHT CAMERA",
+                "config": {
+                  "fit": "contain",
+                  "showThumbnails": false,
+                  "cameraTopic": "/camera/front_right/image/compressed",
+                  "showOverlay": false
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "weight": 0.3,
+        "node": {
+          "kind": "split",
+          "direction": "row",
+          "children": [
+            {
+              "weight": 0.38,
+              "node": {
+                "kind": "panel",
+                "id": "speed-showcase",
+                "panelType": "plot",
+                "configVersion": 1,
+                "title": "Vehicle Speed",
+                "config": {
+                  "signal": "vehicle-speed"
+                }
+              }
+            },
+            {
+              "weight": 0.38,
+              "node": {
+                "kind": "panel",
+                "id": "yaw-rate-showcase",
+                "panelType": "plot",
+                "configVersion": 1,
+                "title": "Yaw Rate",
+                "config": {
+                  "signal": "yaw-rate"
+                }
+              }
+            },
+            {
+              "weight": 0.24,
+              "node": {
+                "kind": "panel",
+                "id": "status-showcase",
+                "panelType": "status",
+                "configVersion": 1,
+                "title": "SESSION STATUS",
+                "config": {}
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

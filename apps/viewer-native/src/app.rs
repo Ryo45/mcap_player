@@ -42,12 +42,12 @@ impl App {
         match ViewerSession::open(path, self.args.topic.clone()) {
             Ok(mut session) => {
                 self.diagnostics.reset_for_source();
-                self.workspace
-                    .reset_for_source(session.default_focused_camera());
+                let scheduler_camera = Self::scheduler_camera_for(&self.workspace, &session);
+                self.workspace.reset_for_source(scheduler_camera);
                 session.set_focused_camera(self.workspace.focused_camera());
                 let requirements = self.workspace.data_requirements();
-                if requirements.vehicle_speed
-                    && let Err(error) = session.request_speed_signal(4_000)
+                if (requirements.vehicle_speed || requirements.yaw_rate)
+                    && let Err(error) = session.request_plot_signals(4_000)
                 {
                     log::warn!("Plot unavailable: {error}");
                 }
@@ -120,6 +120,7 @@ impl App {
         let error = self.diagnostics.message(&[
             workspace_warning.as_deref(),
             session.speed_signal_error(),
+            session.yaw_rate_signal_error(),
             self.preview.warning(),
             self.bookmarks.warning(),
         ]);
@@ -139,8 +140,11 @@ impl App {
                     camera_overlays: presentation.camera_overlays,
                     playback,
                     speed_signal: session.speed_signal(),
-                    plot_loading: session.speed_signal_loading(),
-                    plot_error: session.speed_signal_error(),
+                    speed_plot_loading: session.speed_signal_loading(),
+                    speed_plot_error: session.speed_signal_error(),
+                    yaw_rate_signal: session.yaw_rate_signal(),
+                    yaw_rate_plot_loading: session.yaw_rate_signal_loading(),
+                    yaw_rate_plot_error: session.yaw_rate_signal_error(),
                     inspections: session.inspections(),
                     preview: self.preview.snapshot(),
                     preview_speed: self.preview.speed_overview(),
@@ -184,6 +188,22 @@ impl App {
         if let Some(graphics) = graphics {
             graphics.apply_transition(transition);
         }
+    }
+
+    fn scheduler_camera_for(
+        workspace: &NativeWorkspace,
+        session: &ViewerSession,
+    ) -> Option<viewer_core::CameraId> {
+        let default = session.default_focused_camera();
+        let Some(topic) = workspace.scheduler_priority_topic() else {
+            return default;
+        };
+        session.camera_id_for_topic(topic).or_else(|| {
+            log::warn!(
+                "configured scheduler-priority Camera topic {topic:?} is unavailable; using the session primary Camera"
+            );
+            default
+        })
     }
 
     fn apply_actions(
@@ -306,8 +326,8 @@ impl ApplicationHandler for App {
                     self.graphics.as_mut(),
                     PresentationTransition::SourceChanged,
                 );
-                self.workspace
-                    .reset_for_source(session.default_focused_camera());
+                let scheduler_camera = Self::scheduler_camera_for(&self.workspace, &session);
+                self.workspace.reset_for_source(scheduler_camera);
                 session.set_focused_camera(self.workspace.focused_camera());
                 self.session = Some(session);
             }

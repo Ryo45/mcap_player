@@ -13,7 +13,7 @@ use std::{
 };
 use viewer_core::{
     CameraId, DomainState, LoadedSignal, McapPlayback, PipelineCounters, PlaybackCommand,
-    PlaybackEffect, PlaybackPerformance, PlaybackView,
+    PlaybackEffect, PlaybackPerformance, PlaybackView, SignalId,
 };
 #[cfg(feature = "ros2-live")]
 use viewer_core::{DomainRuntime, SessionPlan, StreamCatalog};
@@ -29,7 +29,7 @@ pub(crate) struct ViewerSession {
     inspections: Vec<TopicInspection>,
 }
 
-pub(crate) struct SpeedSignalRequest {
+pub(crate) struct PlotSignalRequest {
     pub(crate) path: PathBuf,
     pub(crate) origin: viewer_core::ArrivalTime,
     pub(crate) max_points: usize,
@@ -104,20 +104,20 @@ impl ViewerSession {
         }
     }
 
-    pub(crate) fn speed_signal_request(&self, max_points: usize) -> Option<SpeedSignalRequest> {
-        Some(SpeedSignalRequest {
+    pub(crate) fn plot_signal_request(&self, max_points: usize) -> Option<PlotSignalRequest> {
+        Some(PlotSignalRequest {
             path: self.recording_path.clone()?,
             origin: self.playback_view()?.start,
             max_points,
         })
     }
 
-    pub(crate) fn request_speed_signal(&mut self, max_points: usize) -> Result<()> {
-        let Some(request) = self.speed_signal_request(max_points) else {
+    pub(crate) fn request_plot_signals(&mut self, max_points: usize) -> Result<()> {
+        let Some(request) = self.plot_signal_request(max_points) else {
             self.plot_loader.clear();
             return Ok(());
         };
-        self.plot_loader.start_speed_overview(request)
+        self.plot_loader.start_overview(request)
     }
 
     pub(crate) fn poll_queries(&mut self) {
@@ -125,7 +125,7 @@ impl ViewerSession {
     }
 
     pub(crate) fn speed_signal(&self) -> Option<&LoadedSignal> {
-        self.plot_loader.signal()
+        self.plot_loader.signal(SignalId::Speed)
     }
 
     pub(crate) fn speed_signal_loading(&self) -> bool {
@@ -133,6 +133,18 @@ impl ViewerSession {
     }
 
     pub(crate) fn speed_signal_error(&self) -> Option<&str> {
+        self.plot_loader.error()
+    }
+
+    pub(crate) fn yaw_rate_signal(&self) -> Option<&LoadedSignal> {
+        self.plot_loader.signal(SignalId::YawRate)
+    }
+
+    pub(crate) fn yaw_rate_signal_loading(&self) -> bool {
+        self.plot_loader.is_loading()
+    }
+
+    pub(crate) fn yaw_rate_signal_error(&self) -> Option<&str> {
         self.plot_loader.error()
     }
 
@@ -210,6 +222,13 @@ impl ViewerSession {
 
     pub(crate) fn default_focused_camera(&self) -> Option<CameraId> {
         self.camera_topics.first().map(|(camera_id, _)| *camera_id)
+    }
+
+    pub(crate) fn camera_id_for_topic(&self, topic: &str) -> Option<CameraId> {
+        self.camera_topics
+            .iter()
+            .find(|(_, candidate)| candidate == topic)
+            .map(|(camera_id, _)| *camera_id)
     }
 
     pub(crate) fn set_focused_camera(&mut self, focused_camera: Option<CameraId>) {
