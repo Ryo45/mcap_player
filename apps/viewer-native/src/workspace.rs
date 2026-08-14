@@ -1,6 +1,9 @@
 #[cfg(test)]
 use crate::panels::NativePanel;
-use crate::{interaction::ViewerAction, panels::PanelRuntimeStore};
+use crate::{
+    interaction::ViewerAction,
+    panels::{PanelDataRequirements, PanelRuntimeStore},
+};
 use egui_plot::PlotPoint;
 use viewer_core::{ArrivalTime, CameraId, PlaybackCommand, PlaybackView, PlotPanelState};
 use viewer_layout::{
@@ -171,6 +174,10 @@ impl NativeWorkspace {
         (!self.startup_warnings.is_empty()).then(|| self.startup_warnings.join("; "))
     }
 
+    pub(crate) fn data_requirements(&self) -> PanelDataRequirements {
+        self.panels.data_requirements()
+    }
+
     #[cfg(test)]
     fn panel(&self, id: &str) -> &NativePanel {
         self.panels
@@ -210,6 +217,12 @@ mod tests {
         assert_eq!(workspace.panel("bev-main").kind_name(), "bev");
         assert_eq!(workspace.panel("speed-main").kind_name(), "plot");
         assert_eq!(workspace.panel("scene-main").kind_name(), "scene-3d");
+        assert_eq!(
+            workspace.data_requirements(),
+            PanelDataRequirements {
+                vehicle_speed: true
+            }
+        );
     }
 
     #[test]

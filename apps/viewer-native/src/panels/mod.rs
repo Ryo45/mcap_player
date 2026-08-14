@@ -88,6 +88,12 @@ impl NativePanel {
         }
     }
 
+    pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
+        if let Self::Plot(panel) = self {
+            panel.contribute_data_requirements(requirements);
+        }
+    }
+
     #[cfg(test)]
     pub(crate) fn kind_name(&self) -> &'static str {
         match self {
@@ -98,6 +104,11 @@ impl NativePanel {
             Self::Placeholder(_) => "placeholder",
         }
     }
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub(crate) struct PanelDataRequirements {
+    pub(crate) vehicle_speed: bool,
 }
 
 #[derive(Clone, Copy)]

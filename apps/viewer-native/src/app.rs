@@ -44,18 +44,18 @@ impl App {
         match PlaybackSession::open(path, self.args.topic.clone()) {
             Ok(mut session) => {
                 self.diagnostics.reset_for_source();
-                let plot_origin = session
-                    .playback_view()
-                    .expect("MCAP session has a playback view")
-                    .start;
                 self.workspace
                     .reset_for_source(session.default_focused_camera());
                 session.set_focused_camera(self.workspace.focused_camera());
-                if let Err(error) =
-                    self.plot_loader
-                        .start_speed_overview(path.to_owned(), plot_origin, 4_000)
-                {
-                    log::warn!("Plot unavailable: {error}");
+                let requirements = self.workspace.data_requirements();
+                if requirements.vehicle_speed {
+                    if let Some(request) = session.speed_signal_request(4_000)
+                        && let Err(error) = self.plot_loader.start_speed_overview(request)
+                    {
+                        log::warn!("Plot unavailable: {error}");
+                    }
+                } else {
+                    self.plot_loader.clear();
                 }
                 self.args.mcap = path.to_owned();
                 self.session = Some(session);

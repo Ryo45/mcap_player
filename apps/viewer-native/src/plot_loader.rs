@@ -1,3 +1,4 @@
+use crate::session::SpeedSignalRequest;
 use anyhow::{Context, Result};
 use memmap2::Mmap;
 use std::{
@@ -47,27 +48,22 @@ impl Default for PlotLoader {
 }
 
 impl PlotLoader {
-    #[cfg(any(test, feature = "ros2-live"))]
     pub(crate) fn clear(&mut self) {
         self.generation = self.generation.wrapping_add(1);
         self.state = PlotLoadState::Idle;
         self.discard_pending_results();
     }
 
-    pub(crate) fn start_speed_overview(
-        &mut self,
-        path: PathBuf,
-        origin: ArrivalTime,
-        max_points: usize,
-    ) -> Result<()> {
+    pub(crate) fn start_speed_overview(&mut self, request: SpeedSignalRequest) -> Result<()> {
         self.generation = self.generation.wrapping_add(1);
         let generation = self.generation;
         let sender = self.result_sender.clone();
         let worker = std::thread::Builder::new()
             .name("plot-loader".to_owned())
             .spawn(move || {
-                let result = load_speed_from_path(&path, origin, max_points)
-                    .map_err(|error| error.to_string());
+                let result =
+                    load_speed_from_path(&request.path, request.origin, request.max_points)
+                        .map_err(|error| error.to_string());
                 let _ = sender.send(PlotLoadResult { generation, result });
             });
         match worker {
@@ -140,7 +136,6 @@ impl PlotLoader {
         }
     }
 
-    #[cfg(any(test, feature = "ros2-live"))]
     fn discard_pending_results(&mut self) {
         while self.result_receiver.try_recv().is_ok() {}
     }
@@ -189,6 +184,14 @@ mod tests {
         ));
         std::fs::write(&path, odometry_mcap()).unwrap();
         path
+    }
+
+    fn request(path: PathBuf, origin: ArrivalTime) -> SpeedSignalRequest {
+        SpeedSignalRequest {
+            path,
+            origin,
+            max_points: 4_000,
+        }
     }
 
     fn align_cdr(output: &mut Vec<u8>, alignment: usize) {
@@ -299,7 +302,7 @@ mod tests {
     fn live_mode_clear_does_not_start_a_worker() {
         let mut loader = PlotLoader::default();
         loader
-            .start_speed_overview(missing_fixture(), ArrivalTime(0), 4_000)
+            .start_speed_overview(request(missing_fixture(), ArrivalTime(0)))
             .unwrap();
         assert!(loader.is_loading());
 
@@ -314,7 +317,7 @@ mod tests {
     fn start_enters_loading_and_worker_failure_becomes_failed() {
         let mut loader = PlotLoader::default();
         loader
-            .start_speed_overview(missing_fixture(), ArrivalTime(0), 4_000)
+            .start_speed_overview(request(missing_fixture(), ArrivalTime(0)))
             .unwrap();
         assert!(loader.is_loading());
         loader.poll_until_settled_for_test();
@@ -327,7 +330,7 @@ mod tests {
     fn successful_worker_result_becomes_ready_even_without_speed_samples() {
         let mut loader = PlotLoader::default();
         loader
-            .start_speed_overview(camera_fixture(), ArrivalTime(0), 4_000)
+            .start_speed_overview(request(camera_fixture(), ArrivalTime(0)))
             .unwrap();
         assert!(loader.is_loading());
         loader.poll_until_settled_for_test();
@@ -342,7 +345,7 @@ mod tests {
         let path = speed_fixture();
         let mut loader = PlotLoader::default();
         loader
-            .start_speed_overview(path.clone(), ArrivalTime(1_000_000_000), 4_000)
+            .start_speed_overview(request(path.clone(), ArrivalTime(1_000_000_000)))
             .unwrap();
         loader.poll_until_settled_for_test();
         let signal = loader.signal().expect("speed signal");
@@ -356,7 +359,7 @@ mod tests {
     fn stale_generation_result_is_ignored() {
         let mut loader = PlotLoader::default();
         loader
-            .start_speed_overview(missing_fixture(), ArrivalTime(0), 4_000)
+            .start_speed_overview(request(missing_fixture(), ArrivalTime(0)))
             .unwrap();
         let current_generation = loader.generation;
         loader.apply_result(PlotLoadResult {
@@ -382,7 +385,7 @@ mod tests {
         let start = session.playback_view().unwrap().cursor;
         let mut loader = PlotLoader::default();
         loader
-            .start_speed_overview(missing_fixture(), start, 4_000)
+            .start_speed_overview(request(missing_fixture(), start))
             .unwrap();
         session.tick(Duration::from_millis(250)).unwrap();
         loader.poll_until_settled_for_test();
