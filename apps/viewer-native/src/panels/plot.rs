@@ -3,7 +3,7 @@ use super::{
     PlaceholderPanel,
 };
 use crate::{
-    graphics::views::{PlotViewInput, show_plot_view},
+    graphics::views::{PlotViewInput, PlotViewKind, show_plot_view},
     workspace::PlotViewState,
 };
 use serde::{Deserialize, Serialize};
@@ -13,6 +13,7 @@ use viewer_layout::{PanelId, PanelNode};
 #[serde(rename_all = "kebab-case")]
 pub(crate) enum PlotSignal {
     VehicleSpeed,
+    YawRate,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -57,6 +58,7 @@ impl PlotPanel {
     pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
         match self.config.signal {
             PlotSignal::VehicleSpeed => requirements.vehicle_speed = true,
+            PlotSignal::YawRate => requirements.yaw_rate = true,
         }
     }
 
@@ -77,13 +79,36 @@ impl PlotPanel {
                     let output = show_plot_view(
                         ui,
                         PlotViewInput {
-                            signal: context.plot.signal,
-                            loading: context.plot.loading,
-                            error: context.plot.error,
+                            kind: PlotViewKind::VehicleSpeed,
+                            signal: context.plot.speed.signal,
+                            loading: context.plot.speed.loading,
+                            error: context.plot.speed.error,
                             playback,
                             display_time: context.interaction.display_time(playback),
                             preview_signal: context.preview.speed_overview,
                             bookmarks: context.preview.bookmarks,
+                            plot_height: 170.0,
+                        },
+                        &mut self.state,
+                    );
+                    PanelOutput {
+                        actions: output.actions,
+                        ..PanelOutput::default()
+                    }
+                }
+                PlotSignal::YawRate => {
+                    let output = show_plot_view(
+                        ui,
+                        PlotViewInput {
+                            kind: PlotViewKind::YawRate,
+                            signal: context.plot.yaw_rate.signal,
+                            loading: context.plot.yaw_rate.loading,
+                            error: context.plot.yaw_rate.error,
+                            playback,
+                            display_time: context.interaction.display_time(playback),
+                            preview_signal: None,
+                            bookmarks: context.preview.bookmarks,
+                            plot_height: 170.0,
                         },
                         &mut self.state,
                     );

@@ -3,11 +3,13 @@ use mcap::MessageStream;
 use serde::{Deserialize, Serialize};
 
 const NANOS_PER_SECOND: f64 = 1_000_000_000.0;
+const ODOMETRY_PROGRESS_INTERVAL: usize = 4_096;
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum SignalId {
     Speed,
+    YawRate,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -33,6 +35,12 @@ pub struct LoadedSignal {
     pub samples: Vec<SignalSample>,
     /// Bounded, display-oriented series. Playback never rebuilds this value.
     pub display: PlotSeries,
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct LoadedOdometrySignals {
+    pub speed: Option<LoadedSignal>,
+    pub yaw_rate: Option<LoadedSignal>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -73,10 +81,14 @@ pub struct PlotPanelState {
 
 impl PlotPanelState {
     pub fn overview(start_seconds: f64, end_seconds: f64) -> Self {
+        Self::overview_for(SignalId::Speed, start_seconds, end_seconds)
+    }
+
+    pub fn overview_for(signal_id: SignalId, start_seconds: f64, end_seconds: f64) -> Self {
         Self {
             mode: PlotMode::Overview,
             viewport: PlotViewport::new(start_seconds, end_seconds),
-            selected_signals: vec![SignalId::Speed],
+            selected_signals: vec![signal_id],
         }
     }
 
@@ -199,7 +211,44 @@ pub fn load_speed_signal(
     origin: ArrivalTime,
     max_display_points: usize,
 ) -> Result<Option<LoadedSignal>, McapOpenError> {
-    let mut samples = Vec::new();
+    Ok(load_odometry_signals(backing, origin, max_display_points)?.speed)
+}
+
+/// Scans `/odom` in an MCAP and builds the yaw-rate signal.
+///
+/// This remains a plot query: it does not add history to the shared Domain state.
+pub fn load_yaw_rate_signal(
+    backing: &[u8],
+    origin: ArrivalTime,
+    max_display_points: usize,
+) -> Result<Option<LoadedSignal>, McapOpenError> {
+    Ok(load_odometry_signals(backing, origin, max_display_points)?.yaw_rate)
+}
+
+/// Scans `/odom` once and derives both concrete signals used by the Native plot panels.
+pub fn load_odometry_signals(
+    backing: &[u8],
+    origin: ArrivalTime,
+    max_display_points: usize,
+) -> Result<LoadedOdometrySignals, McapOpenError> {
+    load_odometry_signals_with_progress(backing, origin, max_display_points, |_| {})
+}
+
+/// Scans `/odom` once, periodically publishing bounded snapshots while retaining the exact final
+/// result.
+///
+/// Native uses the progress callback to avoid keeping large compressed recordings behind a
+/// loading placeholder until the complete sequential query finishes. The callback remains a
+/// concrete plot-query concern; it does not feed signal history into the shared Domain state.
+pub fn load_odometry_signals_with_progress(
+    backing: &[u8],
+    origin: ArrivalTime,
+    max_display_points: usize,
+    mut on_progress: impl FnMut(LoadedOdometrySignals),
+) -> Result<LoadedOdometrySignals, McapOpenError> {
+    let mut speed_samples = Vec::new();
+    let mut yaw_rate_samples = Vec::new();
+    let mut odometry_count = 0_usize;
     for message in MessageStream::new(backing)? {
         let message = message?;
         if message.channel.topic != ODOM_TOPIC
@@ -219,21 +268,74 @@ pub fn load_speed_signal(
         };
         let [vx, vy, _] = odometry.linear_velocity;
         let speed = vx.hypot(vy);
+        let yaw_rate = odometry.angular_velocity[2];
+        let sample = |value| SignalSample {
+            measurement_time: Some(odometry.measurement_time),
+            arrival_time: ArrivalTime(arrival_ns),
+            value,
+        };
         if speed.is_finite() {
-            samples.push(SignalSample {
-                measurement_time: Some(odometry.measurement_time),
-                arrival_time: ArrivalTime(arrival_ns),
-                value: speed,
-            });
+            speed_samples.push(sample(speed));
+        }
+        if yaw_rate.is_finite() {
+            yaw_rate_samples.push(sample(yaw_rate));
+        }
+        odometry_count = odometry_count.saturating_add(1);
+        if odometry_count == 1 || odometry_count.is_multiple_of(ODOMETRY_PROGRESS_INTERVAL) {
+            on_progress(snapshot_odometry_signals(
+                &speed_samples,
+                &yaw_rate_samples,
+                origin,
+                max_display_points,
+            ));
         }
     }
+    Ok(LoadedOdometrySignals {
+        speed: finish_signal(speed_samples, origin, max_display_points, SignalId::Speed),
+        yaw_rate: finish_signal(
+            yaw_rate_samples,
+            origin,
+            max_display_points,
+            SignalId::YawRate,
+        ),
+    })
+}
+
+fn snapshot_odometry_signals(
+    speed_samples: &[SignalSample],
+    yaw_rate_samples: &[SignalSample],
+    origin: ArrivalTime,
+    max_display_points: usize,
+) -> LoadedOdometrySignals {
+    LoadedOdometrySignals {
+        speed: finish_signal(
+            speed_samples.to_vec(),
+            origin,
+            max_display_points,
+            SignalId::Speed,
+        ),
+        yaw_rate: finish_signal(
+            yaw_rate_samples.to_vec(),
+            origin,
+            max_display_points,
+            SignalId::YawRate,
+        ),
+    }
+}
+
+fn finish_signal(
+    mut samples: Vec<SignalSample>,
+    origin: ArrivalTime,
+    max_display_points: usize,
+    signal_id: SignalId,
+) -> Option<LoadedSignal> {
     if samples.is_empty() {
-        return Ok(None);
+        return None;
     }
     samples.sort_by_key(|sample| sample.arrival_time);
     let display_samples = downsample_min_max(&samples, max_display_points);
     let display = PlotSeries {
-        signal_id: SignalId::Speed,
+        signal_id,
         origin,
         x_seconds: display_samples
             .iter()
@@ -241,7 +343,7 @@ pub fn load_speed_signal(
             .collect(),
         values: display_samples.iter().map(|sample| sample.value).collect(),
     };
-    Ok(Some(LoadedSignal { samples, display }))
+    Some(LoadedSignal { samples, display })
 }
 
 #[cfg(test)]
@@ -282,7 +384,7 @@ mod tests {
         output.extend_from_slice(&value.to_le_bytes());
     }
 
-    fn odometry_cdr(measurement_ns: i64, vx: f64, vy: f64) -> Vec<u8> {
+    fn odometry_cdr(measurement_ns: i64, vx: f64, vy: f64, yaw_rate: f64) -> Vec<u8> {
         let mut output = vec![0, 1, 0, 0];
         push_u32(&mut output, measurement_ns.div_euclid(1_000_000_000) as u32);
         push_u32(&mut output, measurement_ns.rem_euclid(1_000_000_000) as u32);
@@ -294,7 +396,7 @@ mod tests {
         for _ in 0..36 {
             push_f64(&mut output, 0.0);
         }
-        for value in [vx, vy, 0.0, 0.0, 0.0, 0.0] {
+        for value in [vx, vy, 0.0, 0.0, 0.0, yaw_rate] {
             push_f64(&mut output, value);
         }
         for _ in 0..36 {
@@ -303,7 +405,7 @@ mod tests {
         output
     }
 
-    fn odometry_mcap(messages: &[(i64, i64, f64, f64)]) -> Vec<u8> {
+    fn odometry_mcap(messages: &[(i64, i64, f64, f64, f64)]) -> Vec<u8> {
         let mut bytes = Cursor::new(Vec::new());
         {
             let mut writer =
@@ -314,7 +416,8 @@ mod tests {
             let channel = writer
                 .add_channel(schema, ODOM_TOPIC, "cdr", &BTreeMap::new())
                 .unwrap();
-            for (sequence, &(arrival, measurement, vx, vy)) in messages.iter().enumerate() {
+            for (sequence, &(arrival, measurement, vx, vy, yaw_rate)) in messages.iter().enumerate()
+            {
                 writer
                     .write_to_known_channel(
                         &MessageHeader {
@@ -323,7 +426,7 @@ mod tests {
                             log_time: arrival as u64,
                             publish_time: measurement as u64,
                         },
-                        &odometry_cdr(measurement, vx, vy),
+                        &odometry_cdr(measurement, vx, vy, yaw_rate),
                     )
                     .unwrap();
             }
@@ -390,8 +493,8 @@ mod tests {
     fn loads_speed_by_arrival_time_and_keeps_measurement_time_separate() {
         let origin = ArrivalTime(1_000_000_000);
         let bytes = odometry_mcap(&[
-            (1_500_000_000, 10_000_000_000, 3.0, 4.0),
-            (2_500_000_000, 11_000_000_000, 5.0, 12.0),
+            (1_500_000_000, 10_000_000_000, 3.0, 4.0, 0.25),
+            (2_500_000_000, 11_000_000_000, 5.0, 12.0, -0.5),
         ]);
         let loaded = load_speed_signal(&bytes, origin, 4)
             .unwrap()
@@ -405,5 +508,26 @@ mod tests {
         assert_eq!(loaded.samples[0].value, 5.0);
         assert_eq!(loaded.samples[1].value, 13.0);
         assert_eq!(loaded.display.x_seconds, vec![0.5, 1.5]);
+    }
+
+    #[test]
+    fn loads_yaw_rate_as_a_panel_query_without_changing_speed_semantics() {
+        let origin = ArrivalTime(1_000_000_000);
+        let bytes = odometry_mcap(&[
+            (1_500_000_000, 10_000_000_000, 3.0, 4.0, 0.25),
+            (2_500_000_000, 11_000_000_000, 5.0, 12.0, -0.5),
+        ]);
+        let loaded = load_yaw_rate_signal(&bytes, origin, 4)
+            .unwrap()
+            .expect("yaw-rate signal");
+        assert_eq!(loaded.display.signal_id, SignalId::YawRate);
+        assert_eq!(
+            loaded
+                .samples
+                .iter()
+                .map(|sample| sample.value)
+                .collect::<Vec<_>>(),
+            vec![0.25, -0.5]
+        );
     }
 }

@@ -1,3 +1,4 @@
+use crate::workspace::WorkspaceLayout;
 use anyhow::{Context, Result, bail};
 use std::path::PathBuf;
 
@@ -19,6 +20,7 @@ pub(crate) struct Args {
     pub(crate) topic: String,
     pub(crate) calibration: PathBuf,
     pub(crate) mode: SourceMode,
+    pub(crate) layout: WorkspaceLayout,
 }
 
 impl Args {
@@ -28,6 +30,7 @@ impl Args {
         let mut calibration = PathBuf::from(DEFAULT_CALIBRATION);
         let mut live = false;
         let mut reliable = false;
+        let mut layout = WorkspaceLayout::Standard;
         let mut values = std::env::args().skip(1);
         while let Some(value) = values.next() {
             match value.as_str() {
@@ -39,9 +42,16 @@ impl Args {
                     calibration =
                         PathBuf::from(values.next().context("--camera-calibration needs a path")?)
                 }
+                "--layout" => {
+                    layout = parse_layout(
+                        &values
+                            .next()
+                            .context("--layout needs standard or showcase")?,
+                    )?
+                }
                 "--help" | "-h" => {
                     println!(
-                        "viewer-native [--mcap PATH] [--camera-topic TOPIC] [--camera-calibration JSON] [--live [--reliable]]\n\nFiles can also be dropped onto the window."
+                        "viewer-native [--mcap PATH] [--camera-topic TOPIC] [--camera-calibration JSON] [--layout standard|showcase] [--live [--reliable]]\n\nFiles can also be dropped onto the window."
                     );
                     std::process::exit(0);
                 }
@@ -70,6 +80,27 @@ impl Args {
             topic,
             calibration,
             mode,
+            layout,
         })
+    }
+}
+
+fn parse_layout(value: &str) -> Result<WorkspaceLayout> {
+    match value {
+        "standard" => Ok(WorkspaceLayout::Standard),
+        "showcase" => Ok(WorkspaceLayout::Showcase),
+        value => bail!("unsupported layout {value:?}; expected standard or showcase"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn layout_config_accepts_only_the_two_bundled_views() {
+        assert_eq!(parse_layout("standard").unwrap(), WorkspaceLayout::Standard);
+        assert_eq!(parse_layout("showcase").unwrap(), WorkspaceLayout::Showcase);
+        assert!(parse_layout("dashboard").is_err());
     }
 }

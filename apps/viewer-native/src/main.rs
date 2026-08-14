@@ -26,13 +26,14 @@ use workspace::NativeWorkspace;
 fn main() -> Result<()> {
     env_logger::init();
     let args = Args::parse()?;
+    let workspace = NativeWorkspace::load_bundled_or_fallback(args.layout);
     let event_loop = EventLoop::new()?;
     event_loop.set_control_flow(ControlFlow::Poll);
     let mut app = App {
         args,
         window: None,
         session: None,
-        workspace: NativeWorkspace::load_bundled_or_fallback(),
+        workspace,
         preview: PreviewCoordinator::default(),
         bookmarks: bookmarks::BookmarkState::default(),
         presentation_state: PresentationState::default(),

@@ -25,12 +25,14 @@ pub fn parse_camera_topic(topic: &str) -> Option<CameraId> {
 pub fn signal_topic(signal_id: SignalId) -> String {
     match signal_id {
         SignalId::Speed => format!("{SIGNAL_TOPIC_PREFIX}speed"),
+        SignalId::YawRate => format!("{SIGNAL_TOPIC_PREFIX}yaw-rate"),
     }
 }
 
 pub fn parse_signal_topic(topic: &str) -> Option<SignalId> {
     match topic.strip_prefix(SIGNAL_TOPIC_PREFIX)? {
         "speed" => Some(SignalId::Speed),
+        "yaw-rate" => Some(SignalId::YawRate),
         _ => None,
     }
 }

@@ -5,6 +5,7 @@ mod placeholder;
 mod plot;
 mod runtime;
 mod scene;
+mod status;
 
 pub(crate) use bev::BevPanel;
 pub(crate) use camera::CameraPanel;
@@ -13,6 +14,7 @@ pub(crate) use placeholder::PlaceholderPanel;
 pub(crate) use plot::PlotPanel;
 pub(crate) use runtime::PanelRuntimeStore;
 pub(crate) use scene::ScenePanel;
+pub(crate) use status::StatusPanel;
 
 use crate::{
     graphics::views::{CameraTextureView, SceneViewOutput},
@@ -30,6 +32,7 @@ pub(crate) const BEV_CONFIG_VERSION: u32 = 1;
 pub(crate) const PLOT_CONFIG_VERSION: u32 = 1;
 pub(crate) const INSPECTOR_CONFIG_VERSION: u32 = 1;
 pub(crate) const SCENE_CONFIG_VERSION: u32 = 1;
+pub(crate) const STATUS_CONFIG_VERSION: u32 = 1;
 
 pub(crate) enum NativePanel {
     Camera(CameraPanel),
@@ -37,6 +40,7 @@ pub(crate) enum NativePanel {
     Plot(PlotPanel),
     Inspector(InspectorPanel),
     Scene(ScenePanel),
+    Status(StatusPanel),
     Placeholder(PlaceholderPanel),
 }
 
@@ -52,6 +56,7 @@ impl NativePanel {
             Self::Plot(panel) => panel.show(ui, context),
             Self::Inspector(panel) => panel.show(ui, context),
             Self::Scene(panel) => panel.show(ui, context),
+            Self::Status(panel) => panel.show(ui, context),
             Self::Placeholder(panel) => panel.show(ui),
         }
     }
@@ -60,7 +65,11 @@ impl NativePanel {
         match self {
             Self::Camera(panel) => panel.state.focused_camera = focused_camera,
             Self::Plot(panel) => panel.reset_for_source(),
-            Self::Bev(_) | Self::Inspector(_) | Self::Scene(_) | Self::Placeholder(_) => {}
+            Self::Bev(_)
+            | Self::Inspector(_)
+            | Self::Scene(_)
+            | Self::Status(_)
+            | Self::Placeholder(_) => {}
         }
     }
 
@@ -68,8 +77,7 @@ impl NativePanel {
         let Self::Camera(panel) = self else {
             return false;
         };
-        panel.state.focused_camera = camera_id;
-        true
+        panel.set_focused_camera(camera_id)
     }
 
     pub(crate) fn set_accumulate_points(&mut self, accumulate: bool) -> bool {
@@ -78,13 +86,6 @@ impl NativePanel {
         };
         panel.state.accumulate_points = accumulate;
         true
-    }
-
-    pub(crate) fn focused_camera(&self) -> Option<viewer_core::CameraId> {
-        match self {
-            Self::Camera(panel) => panel.state.focused_camera,
-            _ => None,
-        }
     }
 
     pub(crate) fn accumulate_points(&self) -> Option<bool> {
@@ -98,7 +99,15 @@ impl NativePanel {
         match self {
             Self::Plot(panel) => panel.contribute_data_requirements(requirements),
             Self::Inspector(panel) => panel.contribute_data_requirements(requirements),
+            Self::Status(panel) => panel.contribute_data_requirements(requirements),
             _ => {}
+        }
+    }
+
+    pub(crate) fn scheduler_priority_topic(&self) -> Option<&str> {
+        match self {
+            Self::Camera(panel) => panel.scheduler_priority_topic(),
+            _ => None,
         }
     }
 
@@ -110,6 +119,7 @@ impl NativePanel {
             Self::Plot(_) => "plot",
             Self::Inspector(_) => "inspector",
             Self::Scene(_) => "scene-3d",
+            Self::Status(_) => "status",
             Self::Placeholder(_) => "placeholder",
         }
     }
@@ -118,14 +128,21 @@ impl NativePanel {
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub(crate) struct PanelDataRequirements {
     pub(crate) vehicle_speed: bool,
+    pub(crate) yaw_rate: bool,
     pub(crate) inspections: Vec<InspectorRequirement>,
 }
 
 #[derive(Clone, Copy)]
-pub(crate) struct PlotDataView<'a> {
+pub(crate) struct SignalDataView<'a> {
     pub(crate) signal: Option<&'a LoadedSignal>,
     pub(crate) loading: bool,
     pub(crate) error: Option<&'a str>,
+}
+
+#[derive(Clone, Copy)]
+pub(crate) struct PlotDataView<'a> {
+    pub(crate) speed: SignalDataView<'a>,
+    pub(crate) yaw_rate: SignalDataView<'a>,
 }
 
 #[derive(Clone, Copy)]

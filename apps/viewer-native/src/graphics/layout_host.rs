@@ -177,6 +177,7 @@ mod tests {
     use crate::{
         panels::{
             PanelFrameContext, PanelResourceView, PlotDataView, PreviewDataView, SceneDataView,
+            SignalDataView,
         },
         workspace::NativeWorkspace,
     };
@@ -273,9 +274,16 @@ mod tests {
                     camera_overlays: &viewer_renderer::CameraOverlayState::default(),
                     interaction: &interaction,
                     plot: PlotDataView {
-                        signal: None,
-                        loading: false,
-                        error: None,
+                        speed: SignalDataView {
+                            signal: None,
+                            loading: false,
+                            error: None,
+                        },
+                        yaw_rate: SignalDataView {
+                            signal: None,
+                            loading: false,
+                            error: None,
+                        },
                     },
                     preview: PreviewDataView {
                         active: false,
