@@ -220,7 +220,8 @@ mod tests {
         assert_eq!(
             workspace.data_requirements(),
             PanelDataRequirements {
-                vehicle_speed: true
+                vehicle_speed: true,
+                inspections: Vec::new(),
             }
         );
     }

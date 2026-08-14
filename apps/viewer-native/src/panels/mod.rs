@@ -1,5 +1,6 @@
 mod bev;
 mod camera;
+mod inspector;
 mod placeholder;
 mod plot;
 mod runtime;
@@ -7,6 +8,7 @@ mod scene;
 
 pub(crate) use bev::BevPanel;
 pub(crate) use camera::CameraPanel;
+pub(crate) use inspector::InspectorPanel;
 pub(crate) use placeholder::PlaceholderPanel;
 pub(crate) use plot::PlotPanel;
 pub(crate) use runtime::PanelRuntimeStore;
@@ -14,6 +16,7 @@ pub(crate) use scene::ScenePanel;
 
 use crate::{
     graphics::views::{CameraTextureView, SceneViewOutput},
+    inspection::{InspectorRequirement, TopicInspection},
     interaction::ViewerAction,
     workspace::ViewerInteractionState,
 };
@@ -25,12 +28,14 @@ use viewer_core::{
 pub(crate) const CAMERA_CONFIG_VERSION: u32 = 1;
 pub(crate) const BEV_CONFIG_VERSION: u32 = 1;
 pub(crate) const PLOT_CONFIG_VERSION: u32 = 1;
+pub(crate) const INSPECTOR_CONFIG_VERSION: u32 = 1;
 pub(crate) const SCENE_CONFIG_VERSION: u32 = 1;
 
 pub(crate) enum NativePanel {
     Camera(CameraPanel),
     Bev(BevPanel),
     Plot(PlotPanel),
+    Inspector(InspectorPanel),
     Scene(ScenePanel),
     Placeholder(PlaceholderPanel),
 }
@@ -45,6 +50,7 @@ impl NativePanel {
             Self::Camera(panel) => panel.show(ui, context),
             Self::Bev(panel) => panel.show(ui, context),
             Self::Plot(panel) => panel.show(ui, context),
+            Self::Inspector(panel) => panel.show(ui, context),
             Self::Scene(panel) => panel.show(ui, context),
             Self::Placeholder(panel) => panel.show(ui),
         }
@@ -54,7 +60,7 @@ impl NativePanel {
         match self {
             Self::Camera(panel) => panel.state.focused_camera = focused_camera,
             Self::Plot(panel) => panel.reset_for_source(),
-            Self::Bev(_) | Self::Scene(_) | Self::Placeholder(_) => {}
+            Self::Bev(_) | Self::Inspector(_) | Self::Scene(_) | Self::Placeholder(_) => {}
         }
     }
 
@@ -89,8 +95,10 @@ impl NativePanel {
     }
 
     pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
-        if let Self::Plot(panel) = self {
-            panel.contribute_data_requirements(requirements);
+        match self {
+            Self::Plot(panel) => panel.contribute_data_requirements(requirements),
+            Self::Inspector(panel) => panel.contribute_data_requirements(requirements),
+            _ => {}
         }
     }
 
@@ -100,15 +108,17 @@ impl NativePanel {
             Self::Camera(_) => "camera",
             Self::Bev(_) => "bev",
             Self::Plot(_) => "plot",
+            Self::Inspector(_) => "inspector",
             Self::Scene(_) => "scene-3d",
             Self::Placeholder(_) => "placeholder",
         }
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub(crate) struct PanelDataRequirements {
     pub(crate) vehicle_speed: bool,
+    pub(crate) inspections: Vec<InspectorRequirement>,
 }
 
 #[derive(Clone, Copy)]
@@ -153,6 +163,7 @@ pub(crate) struct PanelFrameContext<'a> {
     pub(crate) preview: PreviewDataView<'a>,
     pub(crate) resources: PanelResourceView<'a>,
     pub(crate) scene: SceneDataView<'a>,
+    pub(crate) inspections: &'a [TopicInspection],
 }
 
 #[derive(Default)]

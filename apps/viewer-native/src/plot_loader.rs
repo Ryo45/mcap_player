@@ -1,5 +1,7 @@
+use crate::inspection::InspectedMessage;
 use crate::session::SpeedSignalRequest;
 use anyhow::{Context, Result};
+use mcap::MessageStream;
 use memmap2::Mmap;
 use std::{
     fs::File,
@@ -153,6 +155,39 @@ fn load_speed_from_path(
     load_speed_signal(&mapping, origin, max_points).map_err(anyhow::Error::from)
 }
 
+pub(crate) fn inspect_topic_from_path(
+    path: &PathBuf,
+    topic: &str,
+    max_messages: usize,
+) -> Result<Vec<InspectedMessage>> {
+    if max_messages == 0 {
+        return Ok(Vec::new());
+    }
+    let file =
+        File::open(path).with_context(|| format!("open {} for inspection", path.display()))?;
+    // SAFETY: the query owns this read-only mapping until iteration completes.
+    let mapping = unsafe { Mmap::map(&file) }
+        .with_context(|| format!("map {} for inspection", path.display()))?;
+    let mut inspected = Vec::new();
+    for message in MessageStream::new(&mapping)? {
+        let message = message?;
+        if message.channel.topic != topic {
+            continue;
+        }
+        let arrival_time = i64::try_from(message.log_time)
+            .map(ArrivalTime)
+            .context("inspected message timestamp exceeds signed nanoseconds")?;
+        inspected.push(InspectedMessage {
+            arrival_time,
+            payload_bytes: message.data.len(),
+        });
+        if inspected.len() == max_messages {
+            break;
+        }
+    }
+    Ok(inspected)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -170,6 +205,11 @@ mod tests {
     fn camera_fixture() -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../tests/fixtures/camera-jpeg/camera_front_3s.mcap")
+    }
+
+    fn shared_domain_fixture() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap")
     }
 
     fn missing_fixture() -> PathBuf {
@@ -408,5 +448,26 @@ mod tests {
 
         assert!(loader.is_loading());
         assert!(session.playback_view().unwrap().cursor > start);
+    }
+
+    #[test]
+    fn session_inspector_reads_topic_metadata_without_mutating_domain() {
+        let session = PlaybackSession::open(
+            &shared_domain_fixture(),
+            "/camera/front/image/compressed".to_owned(),
+        )
+        .unwrap();
+        assert!(session.state().telemetry.latest().is_none());
+
+        let messages = session.inspect_topic(viewer_core::ODOM_TOPIC, 3).unwrap();
+
+        assert_eq!(messages.len(), 3);
+        assert!(
+            messages
+                .windows(2)
+                .all(|pair| { pair[0].arrival_time <= pair[1].arrival_time })
+        );
+        assert!(messages.iter().all(|message| message.payload_bytes > 0));
+        assert!(session.state().telemetry.latest().is_none());
     }
 }

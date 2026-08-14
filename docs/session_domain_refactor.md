@@ -96,10 +96,12 @@ panel-specific queries.
 
 The first concrete panel-specific path is the Native vehicle-speed Plot. The Plot contributes a
 single concrete `vehicle_speed` requirement through `NativeWorkspace`; `PlaybackSession` turns it
-into a recording-only speed query request, and the existing App-owned worker returns
-`LoadedSignal` to the Plot view. The panel never receives a path, mmap, playback session, or MCAP
-reader, and odometry samples are not added to `DomainState` merely to serve the full-resolution
-Plot query.
+into a recording-only speed query request, and a Session-owned worker returns `LoadedSignal` to the
+Plot view. The panel never receives a path, mmap, playback session, or MCAP reader, and odometry
+samples are not added to `DomainState` merely to serve the full-resolution Plot query. A second,
+explicit Inspector query can read bounded arrival/payload metadata for one topic through the same
+Session ownership boundary without mutating `DomainState`; no generic query manager or Inspector
+UI framework was introduced.
 
 Native Live now feeds its camera-only `LatestMailbox` into the same `DomainRuntime` used by
 Recording. The latest-only behavior belongs to that current camera adapter; it must not be

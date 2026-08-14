@@ -120,6 +120,7 @@ impl Graphics {
                         preview,
                         resources,
                         scene,
+                        inspections: render_input.inspections,
                     },
                 );
                 actions.extend(output.actions);
