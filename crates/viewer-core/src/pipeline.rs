@@ -309,7 +309,67 @@ fn build_pipeline(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{CompressedImage, MeasurementTime, encode_compressed_image_cdr};
+    use crate::{CompressedImage, MeasurementTime, StreamCatalog, encode_compressed_image_cdr};
+
+    fn descriptor(id: u32, topic: &str, schema: &str) -> StreamDescriptor {
+        StreamDescriptor {
+            id: StreamId(id),
+            topic: topic.into(),
+            schema: schema.into(),
+            message_encoding: "cdr".into(),
+        }
+    }
+
+    #[test]
+    fn standard_bindings_capture_current_session_routing_policy() {
+        let catalog = StreamCatalog {
+            streams: vec![
+                descriptor(
+                    9,
+                    "/camera/rear/image/compressed",
+                    "sensor_msgs/msg/CompressedImage",
+                ),
+                descriptor(20, PATH_TOPIC, "nav_msgs/msg/Path"),
+                descriptor(
+                    7,
+                    "/camera/front/image/compressed",
+                    "sensor_msgs/msg/CompressedImage",
+                ),
+                descriptor(21, ODOM_TOPIC, "nav_msgs/msg/Odometry"),
+                descriptor(22, SCAN_TOPIC, "sensor_msgs/msg/LaserScan"),
+                descriptor(23, TF_TOPIC, "tf2_msgs/msg/TFMessage"),
+                descriptor(24, TF_STATIC_TOPIC, "tf2_msgs/msg/TFMessage"),
+                descriptor(
+                    11,
+                    "/camera/left/image/compressed",
+                    "sensor_msgs/msg/CompressedImage",
+                ),
+                descriptor(30, "/unrelated", "example_msgs/msg/Other"),
+            ],
+        };
+
+        assert_eq!(
+            camera_topics(&catalog, "/camera/front/image/compressed").unwrap(),
+            vec![
+                (StreamId(7), "/camera/front/image/compressed".into()),
+                (StreamId(9), "/camera/rear/image/compressed".into()),
+                (StreamId(11), "/camera/left/image/compressed".into()),
+            ]
+        );
+        assert_eq!(
+            standard_bindings(&catalog, "/camera/front/image/compressed").unwrap(),
+            vec![
+                (StreamId(7), StreamBinding::Camera(CameraId(0))),
+                (StreamId(9), StreamBinding::Camera(CameraId(1))),
+                (StreamId(11), StreamBinding::Camera(CameraId(2))),
+                (StreamId(20), StreamBinding::Path),
+                (StreamId(21), StreamBinding::Odometry),
+                (StreamId(22), StreamBinding::LaserScan),
+                (StreamId(23), StreamBinding::Transforms { is_static: false },),
+                (StreamId(24), StreamBinding::Transforms { is_static: true },),
+            ]
+        );
+    }
 
     #[test]
     fn camera_pipeline_retains_jpeg_in_raw_message_backing_allocation() {
