@@ -4,7 +4,7 @@ use crate::{
     decode_laser_scan, decode_odometry, decode_path, decode_tf_message,
 };
 use bytes::Bytes;
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct StreamId(pub u32);
@@ -176,22 +176,33 @@ pub struct DomainPipelineSet {
     counters: PipelineCounters,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct DomainPipelineError(String);
+
+impl fmt::Display for DomainPipelineError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(&self.0)
+    }
+}
+
+impl std::error::Error for DomainPipelineError {}
+
 impl DomainPipelineSet {
     pub fn new(plan: &SessionPlan) -> Self {
         Self::from_routes(plan.domain_routes())
+            .expect("SessionPlan routes must satisfy DomainTarget requirements")
     }
 
-    pub fn from_routes(routes: &[DomainRoute]) -> Self {
+    pub fn from_routes(routes: &[DomainRoute]) -> Result<Self, DomainPipelineError> {
         let mut pipelines: HashMap<StreamId, Box<dyn DomainPipeline>> = HashMap::new();
         for route in routes {
-            if let Some(pipeline) = build_pipeline(route) {
-                pipelines.insert(route.stream.id, pipeline);
-            }
+            let pipeline = build_pipeline(route)?;
+            pipelines.insert(route.stream.id, pipeline);
         }
-        Self {
+        Ok(Self {
             pipelines,
             counters: PipelineCounters::default(),
-        }
+        })
     }
 
     pub fn decode(&mut self, message: RawMessage, output: &mut Vec<DomainUpdate>) {
@@ -219,28 +230,24 @@ impl DomainPipelineSet {
     }
 }
 
-fn build_pipeline(route: &DomainRoute) -> Option<Box<dyn DomainPipeline>> {
+fn build_pipeline(route: &DomainRoute) -> Result<Box<dyn DomainPipeline>, DomainPipelineError> {
+    if !route.target.accepts_stream(&route.stream) {
+        return Err(DomainPipelineError(format!(
+            "stream {} ({}) cannot target {:?}: expected cdr {}",
+            route.stream.topic,
+            route.stream.schema,
+            route.target,
+            route.target.expected_schema(),
+        )));
+    }
     let pipeline: Box<dyn DomainPipeline> = match route.target {
-        DomainTarget::Camera(camera_id)
-            if route.stream.schema == "sensor_msgs/msg/CompressedImage" =>
-        {
-            Box::new(CompressedImagePipeline { camera_id })
-        }
-        DomainTarget::Path if route.stream.schema == "nav_msgs/msg/Path" => Box::new(PathPipeline),
-        DomainTarget::Telemetry if route.stream.schema == "nav_msgs/msg/Odometry" => {
-            Box::new(OdometryPipeline)
-        }
-        DomainTarget::PointCloud if route.stream.schema == "sensor_msgs/msg/LaserScan" => {
-            Box::new(LaserScanPipeline)
-        }
-        DomainTarget::Transforms { is_static }
-            if route.stream.schema == "tf2_msgs/msg/TFMessage" =>
-        {
-            Box::new(TransformPipeline { is_static })
-        }
-        _ => return None,
+        DomainTarget::Camera(camera_id) => Box::new(CompressedImagePipeline { camera_id }),
+        DomainTarget::Path => Box::new(PathPipeline),
+        DomainTarget::Telemetry => Box::new(OdometryPipeline),
+        DomainTarget::PointCloud => Box::new(LaserScanPipeline),
+        DomainTarget::Transforms { is_static } => Box::new(TransformPipeline { is_static }),
     };
-    Some(pipeline)
+    Ok(pipeline)
 }
 
 #[cfg(test)]
@@ -270,7 +277,8 @@ mod tests {
                 message_encoding: "cdr".into(),
             },
             target: DomainTarget::Camera(CameraId(0)),
-        }]);
+        }])
+        .unwrap();
         let mut updates = Vec::new();
 
         pipelines.decode(
@@ -289,5 +297,22 @@ mod tests {
         assert_eq!(frame.jpeg.as_ref(), [1, 2, 3, 4]);
         assert!(jpeg_start >= payload_start);
         assert!(jpeg_start + frame.jpeg.len() <= payload_end);
+    }
+
+    #[test]
+    fn invalid_domain_route_is_rejected_instead_of_silently_skipped() {
+        let error = DomainPipelineSet::from_routes(&[DomainRoute {
+            stream: StreamDescriptor {
+                id: StreamId(1),
+                topic: crate::ODOM_TOPIC.into(),
+                schema: "example_msgs/msg/Foo".into(),
+                message_encoding: "cdr".into(),
+            },
+            target: DomainTarget::Telemetry,
+        }])
+        .err()
+        .expect("wrong-schema route must fail");
+
+        assert!(error.to_string().contains("nav_msgs/msg/Odometry"));
     }
 }

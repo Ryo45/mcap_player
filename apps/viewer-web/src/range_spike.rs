@@ -285,7 +285,8 @@ pub(crate) fn feed_pipeline(
     let mut pipelines = DomainPipelineSet::from_routes(&[DomainRoute {
         stream: descriptor,
         target,
-    }]);
+    }])
+    .map_err(|error| error.to_string())?;
     let mut updates = Vec::new();
     pipelines.decode(
         RawMessage {

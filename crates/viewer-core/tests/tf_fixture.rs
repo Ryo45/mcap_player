@@ -29,7 +29,8 @@ fn every_scan_resolves_to_world_at_its_measurement_time() {
             stream: static_tf.clone(),
             target: DomainTarget::Transforms { is_static: true },
         },
-    ]);
+    ])
+    .unwrap();
     let (_, end) = source.time_range();
     let mut transforms = TransformState::default();
     let mut scan_count = 0;
