@@ -6,7 +6,7 @@ use crate::{
     interaction::ViewerAction,
     presentation::{PresentationState, PresentationTransition},
     preview::{PreviewCoordinator, fingerprint_source},
-    session::PlaybackSession,
+    session::ViewerSession,
     workspace::{NativeWorkspace, WorkspaceEffect},
 };
 use std::{
@@ -27,7 +27,7 @@ use winit::{
 pub(crate) struct App {
     pub(crate) args: Args,
     pub(crate) window: Option<Arc<Window>>,
-    pub(crate) session: Option<PlaybackSession>,
+    pub(crate) session: Option<ViewerSession>,
     pub(crate) workspace: NativeWorkspace,
     pub(crate) preview: PreviewCoordinator,
     pub(crate) bookmarks: BookmarkState,
@@ -39,7 +39,7 @@ pub(crate) struct App {
 
 impl App {
     fn load(&mut self, path: &Path) {
-        match PlaybackSession::open(path, self.args.topic.clone()) {
+        match ViewerSession::open(path, self.args.topic.clone()) {
             Ok(mut session) => {
                 self.diagnostics.reset_for_source();
                 self.workspace
@@ -187,7 +187,7 @@ impl App {
     }
 
     fn apply_actions(
-        session: &mut PlaybackSession,
+        session: &mut ViewerSession,
         workspace: &mut NativeWorkspace,
         preview: &mut PreviewCoordinator,
         diagnostics: &mut AppDiagnostics,
@@ -296,7 +296,7 @@ impl ApplicationHandler for App {
             }
             #[cfg(feature = "ros2-live")]
             SourceMode::Ros { reliable } => {
-                let mut session = PlaybackSession::open_live(self.args.topic.clone(), reliable);
+                let mut session = ViewerSession::open_live(self.args.topic.clone(), reliable);
                 let requirements = self.workspace.data_requirements();
                 session.load_inspections(&requirements.inspections);
                 self.preview.clear();
@@ -359,10 +359,10 @@ mod tests {
     use super::*;
     use viewer_core::{ArrivalTime, PlaybackCommand};
 
-    fn session() -> PlaybackSession {
+    fn session() -> ViewerSession {
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../tests/fixtures/camera-jpeg/camera_front_3s.mcap");
-        PlaybackSession::open(&path, "/camera/front/image/compressed".to_owned()).unwrap()
+        ViewerSession::open(&path, "/camera/front/image/compressed".to_owned()).unwrap()
     }
 
     #[test]
@@ -406,7 +406,7 @@ mod tests {
     }
 
     #[test]
-    fn seek_action_still_reaches_the_playback_session() {
+    fn seek_action_still_reaches_the_viewer_session() {
         let mut session = session();
         let playback = session.playback_view().unwrap();
         let target = ArrivalTime((playback.start.0 + playback.end.0) / 2);

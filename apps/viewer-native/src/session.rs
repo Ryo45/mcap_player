@@ -18,7 +18,8 @@ use viewer_core::{
 #[cfg(feature = "ros2-live")]
 use viewer_core::{DomainRuntime, SessionPlan, StreamCatalog};
 
-pub(crate) struct PlaybackSession {
+/// The currently open Viewer data session, backed by either Recording or Live input.
+pub(crate) struct ViewerSession {
     source: SessionSource,
     topic: String,
     camera_topics: Vec<(CameraId, String)>,
@@ -51,7 +52,7 @@ pub(crate) struct SessionDiagnostics {
     pub(crate) playback_performance: Option<PlaybackPerformance>,
 }
 
-impl PlaybackSession {
+impl ViewerSession {
     pub(crate) fn open(path: &Path, topic: String) -> Result<Self> {
         let file = File::open(path).with_context(|| format!("open {}", path.display()))?;
         // SAFETY: the mapping is read-only and owns an independent reference to the file pages.

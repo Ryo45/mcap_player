@@ -4,7 +4,7 @@
 
 ```text
 App
-├─ PlaybackSession        exact clock and DomainState
+├─ ViewerSession          Recording/Live source, exact DomainState, and playback capability
 ├─ PlotLoader             exact/full-resolution speed query
 ├─ PreviewCoordinator     PreviewArtifact + latest PreviewSnapshot
 ├─ BookmarkState          durable bookmarks.json document

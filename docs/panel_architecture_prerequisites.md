@@ -35,7 +35,7 @@ PlaybackView + Presentation snapshots + WorkspaceState
   → fixed Camera / BEV / Plot / Scene view functions
   → ViewerAction
   → App::apply_actions
-  → WorkspaceState / PlaybackSession
+  → WorkspaceState / ViewerSession
 ```
 
 `PlaybackView` is read-only. Playback operations use `PlaybackCommand` as their
@@ -50,7 +50,7 @@ egui frame is painted.
 
 ```text
 App
-├─ PlaybackSession
+├─ ViewerSession
 │  ├─ MCAP or ROS live source
 │  ├─ playback clock
 │  └─ current DomainState
@@ -84,7 +84,7 @@ Graphics
 
 GPU upload and JPEG presentation failures are reported through `AppDiagnostics`.
 They never mutate `DomainState`; only successfully decoded domain updates enter the
-authoritative exact state. `PlaybackSession` exposes that state read-only.
+authoritative exact state. `ViewerSession` exposes that state read-only.
 
 ## Fixed view boundaries
 
@@ -98,7 +98,7 @@ show_scene_view(input)          → SceneViewOutput { actions, size, camera inpu
 ```
 
 These inputs and outputs are the prototypes for future panel interfaces. They do
-not receive `PlaybackSession`, `DomainState`, MCAP readers, worker channels, or the
+not receive `ViewerSession`, `DomainState`, MCAP readers, worker channels, or the
 whole `Graphics` object.
 
 ## Assumptions retained by the first panel implementation
