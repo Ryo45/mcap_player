@@ -217,7 +217,8 @@ impl Default for NativeWorkspace {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use viewer_core::{PlaybackSpeed, PlaybackView};
+    use std::collections::BTreeSet;
+    use viewer_core::{PlaybackSpeed, PlaybackView, SignalId};
 
     fn playback(cursor: i64) -> PlaybackView {
         PlaybackView {
@@ -242,8 +243,7 @@ mod tests {
         assert_eq!(
             workspace.data_requirements(),
             PanelDataRequirements {
-                vehicle_speed: true,
-                yaw_rate: false,
+                signals: BTreeSet::from([SignalId::Speed]),
                 inspections: Vec::new(),
             }
         );
@@ -264,8 +264,7 @@ mod tests {
         assert_eq!(
             workspace.data_requirements(),
             PanelDataRequirements {
-                vehicle_speed: true,
-                yaw_rate: true,
+                signals: BTreeSet::from([SignalId::Speed, SignalId::YawRate]),
                 inspections: Vec::new(),
             }
         );

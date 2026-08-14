@@ -175,10 +175,8 @@ fn show_node(
 mod tests {
     use super::*;
     use crate::{
-        panels::{
-            PanelFrameContext, PanelResourceView, PlotDataView, PreviewDataView, SceneDataView,
-            SignalDataView,
-        },
+        panels::{PanelFrameContext, PanelResourceView, PreviewDataView, SceneDataView},
+        signal_query::SignalQueryView,
         workspace::NativeWorkspace,
     };
     use scene_renderer::SceneCameraMode;
@@ -273,18 +271,7 @@ mod tests {
                     presentation: &presentation,
                     camera_overlays: &viewer_renderer::CameraOverlayState::default(),
                     interaction: &interaction,
-                    plot: PlotDataView {
-                        speed: SignalDataView {
-                            signal: None,
-                            loading: false,
-                            error: None,
-                        },
-                        yaw_rate: SignalDataView {
-                            signal: None,
-                            loading: false,
-                            error: None,
-                        },
-                    },
+                    signals: SignalQueryView::empty(),
                     preview: PreviewDataView {
                         active: false,
                         speed_overview: None,

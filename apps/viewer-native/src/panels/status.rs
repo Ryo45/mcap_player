@@ -2,8 +2,9 @@ use super::{
     NativePanel, PanelDataRequirements, PanelFrameContext, PanelOutput, PlaceholderPanel,
     STATUS_CONFIG_VERSION,
 };
+use crate::signal_query::SignalQueryView;
 use serde::{Deserialize, Serialize};
-use viewer_core::{PlaybackView, sample_at_or_before};
+use viewer_core::{ArrivalTime, PlaybackView, SignalId, SignalSample, sample_at_or_before};
 use viewer_layout::{PanelId, PanelNode};
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
@@ -35,7 +36,7 @@ impl StatusPanel {
     }
 
     pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
-        requirements.vehicle_speed = true;
+        requirements.signals.insert(SignalId::Speed);
     }
 
     pub(crate) fn show(&self, ui: &mut egui::Ui, context: &PanelFrameContext<'_>) -> PanelOutput {
@@ -46,13 +47,7 @@ impl StatusPanel {
             let display_time = context
                 .playback
                 .map(|playback| context.interaction.display_time(playback));
-            let speed = display_time.and_then(|time| {
-                context
-                    .plot
-                    .speed
-                    .signal
-                    .and_then(|signal| sample_at_or_before(&signal.samples, time))
-            });
+            let speed = display_time.and_then(|time| current_speed(context.signals, time));
             status_row(
                 ui,
                 "Playback",
@@ -104,6 +99,14 @@ impl StatusPanel {
     }
 }
 
+fn current_speed(signals: SignalQueryView<'_>, time: ArrivalTime) -> Option<SignalSample> {
+    signals
+        .get(SignalId::Speed)
+        .signal
+        .and_then(|signal| sample_at_or_before(&signal.samples, time))
+        .copied()
+}
+
 fn status_row(ui: &mut egui::Ui, label: &str, value: &str) {
     ui.horizontal(|ui| {
         ui.label(egui::RichText::new(format!("{label}:")).color(egui::Color32::GRAY));
@@ -114,4 +117,41 @@ fn status_row(ui: &mut egui::Ui, label: &str, value: &str) {
 fn format_playback_time(playback: PlaybackView) -> String {
     let seconds = playback.cursor.0.saturating_sub(playback.start.0) as f64 / 1_000_000_000.0;
     format!("{seconds:.2} s")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::signal_query::SignalDataView;
+    use viewer_core::{LoadedSignal, PlotSeries};
+
+    #[test]
+    fn speed_status_reads_the_session_signal_query_view() {
+        let speed = LoadedSignal {
+            samples: vec![SignalSample {
+                measurement_time: None,
+                arrival_time: ArrivalTime(10),
+                value: 4.5,
+            }],
+            display: PlotSeries {
+                signal_id: SignalId::Speed,
+                origin: ArrivalTime(0),
+                x_seconds: vec![0.0],
+                values: vec![4.5],
+            },
+        };
+        let signals = SignalQueryView::new(
+            SignalDataView {
+                signal: Some(&speed),
+                loading: false,
+                error: None,
+            },
+            SignalDataView::default(),
+        );
+
+        assert_eq!(
+            current_speed(signals, ArrivalTime(10)).map(|sample| sample.value),
+            Some(4.5)
+        );
+    }
 }

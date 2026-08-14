@@ -4,6 +4,8 @@ use super::{
 };
 use std::collections::BTreeMap;
 use viewer_core::CameraId;
+#[cfg(test)]
+use viewer_core::SignalId;
 use viewer_layout::{LayoutDocument, LayoutNode, PanelId, PanelNode};
 
 pub(crate) struct PanelRuntimeStore {
@@ -252,12 +254,25 @@ mod tests {
             node("camera-a", "camera", json!({})),
             node("camera-b", "camera", json!({})),
             node("plot-a", "plot", json!({"signal": "vehicle-speed"})),
-            node("plot-b", "plot", json!({"signal": "vehicle-speed"})),
+            node("plot-b", "plot", json!({"signal": "yaw-rate"})),
         ]));
         assert_eq!(result.store.len(), 4);
         assert_eq!(result.store.placeholder_count(), 0);
         assert!(result.warnings.is_empty());
-        assert!(result.store.data_requirements().vehicle_speed);
+        assert_eq!(
+            result.store.data_requirements().signals,
+            std::collections::BTreeSet::from([SignalId::Speed, SignalId::YawRate])
+        );
+    }
+
+    #[test]
+    fn status_requires_speed_without_a_plot_specific_dependency() {
+        let result =
+            PanelRuntimeStore::from_layout(&layout(vec![node("status", "status", json!({}))]));
+        assert_eq!(
+            result.store.data_requirements().signals,
+            std::collections::BTreeSet::from([SignalId::Speed])
+        );
     }
 
     #[test]

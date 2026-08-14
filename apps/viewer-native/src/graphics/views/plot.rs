@@ -9,72 +9,42 @@ use viewer_core::{
     sample_at_or_before,
 };
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum PlotViewKind {
-    VehicleSpeed,
-    YawRate,
+#[derive(Clone, Copy)]
+struct SignalPresentation {
+    heading: &'static str,
+    loading_label: &'static str,
+    empty_label: &'static str,
+    plot_id: &'static str,
+    series_name: &'static str,
+    axis_label: &'static str,
+    format_current: fn(f64) -> String,
 }
 
-impl PlotViewKind {
-    fn signal_id(self) -> SignalId {
-        match self {
-            Self::VehicleSpeed => SignalId::Speed,
-            Self::YawRate => SignalId::YawRate,
-        }
-    }
-
-    fn heading(self) -> &'static str {
-        match self {
-            Self::VehicleSpeed => "SPEED · /odom",
-            Self::YawRate => "YAW RATE · /odom",
-        }
-    }
-
-    fn loading_label(self) -> &'static str {
-        match self {
-            Self::VehicleSpeed => "Loading /odom speed series…",
-            Self::YawRate => "Loading /odom yaw-rate series…",
-        }
-    }
-
-    fn empty_label(self) -> &'static str {
-        match self {
-            Self::VehicleSpeed => "No /odom speed samples in this log",
-            Self::YawRate => "No /odom yaw-rate samples in this log",
-        }
-    }
-
-    fn plot_id(self) -> &'static str {
-        match self {
-            Self::VehicleSpeed => "vehicle-speed-plot",
-            Self::YawRate => "yaw-rate-plot",
-        }
-    }
-
-    fn series_name(self) -> &'static str {
-        match self {
-            Self::VehicleSpeed => "speed",
-            Self::YawRate => "yaw rate",
-        }
-    }
-
-    fn axis_label(self) -> &'static str {
-        match self {
-            Self::VehicleSpeed => "speed (m/s)",
-            Self::YawRate => "yaw rate (rad/s)",
-        }
-    }
-
-    fn current_value(self, value: f64) -> String {
-        match self {
-            Self::VehicleSpeed => format!("{value:.2} m/s · {:.1} km/h", value * 3.6),
-            Self::YawRate => format!("{value:.3} rad/s"),
-        }
+fn signal_presentation(signal_id: SignalId) -> SignalPresentation {
+    match signal_id {
+        SignalId::Speed => SignalPresentation {
+            heading: "SPEED · /odom",
+            loading_label: "Loading /odom speed series…",
+            empty_label: "No /odom speed samples in this log",
+            plot_id: "vehicle-speed-plot",
+            series_name: "speed",
+            axis_label: "speed (m/s)",
+            format_current: |value| format!("{value:.2} m/s · {:.1} km/h", value * 3.6),
+        },
+        SignalId::YawRate => SignalPresentation {
+            heading: "YAW RATE · /odom",
+            loading_label: "Loading /odom yaw-rate series…",
+            empty_label: "No /odom yaw-rate samples in this log",
+            plot_id: "yaw-rate-plot",
+            series_name: "yaw rate",
+            axis_label: "yaw rate (rad/s)",
+            format_current: |value| format!("{value:.3} rad/s"),
+        },
     }
 }
 
 pub(crate) struct PlotViewInput<'a> {
-    pub(crate) kind: PlotViewKind,
+    pub(crate) signal_id: SignalId,
     pub(crate) signal: Option<&'a LoadedSignal>,
     pub(crate) loading: bool,
     pub(crate) error: Option<&'a str>,
@@ -96,14 +66,15 @@ pub(crate) fn show_plot_view(
     state: &mut PlotViewState,
 ) -> PlotViewOutput {
     let mut output = PlotViewOutput::default();
+    let presentation = signal_presentation(input.signal_id);
     ui.horizontal(|ui| {
-        ui.heading(input.kind.heading());
+        ui.heading(presentation.heading);
         if let Some(signal) = input.signal {
             let current = sample_at_or_before(&signal.samples, input.display_time);
             ui.separator();
             ui.monospace(
                 current
-                    .map(|sample| input.kind.current_value(sample.value))
+                    .map(|sample| (presentation.format_current)(sample.value))
                     .unwrap_or_else(|| "waiting for first sample".to_owned()),
             );
         }
@@ -120,12 +91,12 @@ pub(crate) fn show_plot_view(
                 if input.loading {
                     ui.horizontal(|ui| {
                         ui.spinner();
-                        ui.label(input.kind.loading_label());
+                        ui.label(presentation.loading_label);
                     });
                 } else if let Some(error) = input.error {
                     ui.colored_label(egui::Color32::RED, format!("Plot load failed: {error}"));
                 } else {
-                    ui.label(input.kind.empty_label());
+                    ui.label(presentation.empty_label);
                 }
             });
         });
@@ -142,7 +113,7 @@ pub(crate) fn show_plot_view(
     let playhead = cursor_seconds(input.display_time, origin);
     let panel = state.panel.get_or_insert_with(|| {
         PlotPanelState::overview_for(
-            input.kind.signal_id(),
+            input.signal_id,
             overview.start_seconds,
             overview.end_seconds,
         )
@@ -239,10 +210,10 @@ pub(crate) fn show_plot_view(
         )
     };
     let viewport = panel.viewport;
-    let response = Plot::new(input.kind.plot_id())
+    let response = Plot::new(presentation.plot_id)
         .height(input.plot_height)
         .x_axis_label("arrival time (s)")
-        .y_axis_label(input.kind.axis_label())
+        .y_axis_label(presentation.axis_label)
         .allow_drag([true, false])
         .allow_scroll([true, false])
         .allow_zoom([true, false])
@@ -251,7 +222,7 @@ pub(crate) fn show_plot_view(
         .show(ui, |plot_ui| {
             plot_ui.set_plot_bounds_x(viewport.start_seconds..=viewport.end_seconds);
             plot_ui.line(
-                Line::new(input.kind.series_name(), points)
+                Line::new(presentation.series_name, points)
                     .color(egui::Color32::from_rgb(80, 190, 255))
                     .allow_hover(false),
             );

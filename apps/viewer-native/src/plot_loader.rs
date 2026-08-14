@@ -1,5 +1,6 @@
 use crate::inspection::InspectedMessage;
 use crate::session::PlotSignalRequest;
+use crate::signal_query::{SignalDataView, SignalQueryView};
 use anyhow::{Context, Result};
 use mcap::MessageStream;
 use memmap2::Mmap;
@@ -134,6 +135,15 @@ impl PlotLoader {
             },
             _ => None,
         }
+    }
+
+    pub(crate) fn query_view(&self) -> SignalQueryView<'_> {
+        let data = |signal_id| SignalDataView {
+            signal: self.signal(signal_id),
+            loading: self.is_loading(),
+            error: self.error(),
+        };
+        SignalQueryView::new(data(SignalId::Speed), data(SignalId::YawRate))
     }
 
     pub(crate) fn is_loading(&self) -> bool {
@@ -471,6 +481,11 @@ mod tests {
             complete: true,
         });
         assert_eq!(loader.error(), Some("current failure"));
+        for signal_id in [SignalId::Speed, SignalId::YawRate] {
+            let view = loader.query_view().get(signal_id);
+            assert!(!view.loading);
+            assert_eq!(view.error, Some("current failure"));
+        }
     }
 
     #[test]
@@ -495,9 +510,12 @@ mod tests {
         });
 
         assert!(loader.is_loading());
+        let speed_view = loader.query_view().get(SignalId::Speed);
+        assert!(speed_view.loading);
+        assert!(speed_view.error.is_none());
         assert_eq!(
-            loader
-                .signal(SignalId::Speed)
+            speed_view
+                .signal
                 .expect("partial speed signal")
                 .samples
                 .len(),

@@ -23,8 +23,9 @@ use crate::{
     workspace::ViewerInteractionState,
 };
 use scene_renderer::SceneCameraMode;
+use std::collections::BTreeSet;
 use viewer_core::{
-    Bookmark, LoadedSignal, PlaybackView, SceneDiagnostics, SignalOverview, ViewerPresentation,
+    Bookmark, PlaybackView, SceneDiagnostics, SignalId, SignalOverview, ViewerPresentation,
 };
 
 pub(crate) const CAMERA_CONFIG_VERSION: u32 = 1;
@@ -127,22 +128,8 @@ impl NativePanel {
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub(crate) struct PanelDataRequirements {
-    pub(crate) vehicle_speed: bool,
-    pub(crate) yaw_rate: bool,
+    pub(crate) signals: BTreeSet<SignalId>,
     pub(crate) inspections: Vec<InspectorRequirement>,
-}
-
-#[derive(Clone, Copy)]
-pub(crate) struct SignalDataView<'a> {
-    pub(crate) signal: Option<&'a LoadedSignal>,
-    pub(crate) loading: bool,
-    pub(crate) error: Option<&'a str>,
-}
-
-#[derive(Clone, Copy)]
-pub(crate) struct PlotDataView<'a> {
-    pub(crate) speed: SignalDataView<'a>,
-    pub(crate) yaw_rate: SignalDataView<'a>,
 }
 
 #[derive(Clone, Copy)]
@@ -176,7 +163,7 @@ pub(crate) struct PanelFrameContext<'a> {
     pub(crate) presentation: &'a ViewerPresentation,
     pub(crate) camera_overlays: &'a viewer_renderer::CameraOverlayState,
     pub(crate) interaction: &'a ViewerInteractionState,
-    pub(crate) plot: PlotDataView<'a>,
+    pub(crate) signals: crate::signal_query::SignalQueryView<'a>,
     pub(crate) preview: PreviewDataView<'a>,
     pub(crate) resources: PanelResourceView<'a>,
     pub(crate) scene: SceneDataView<'a>,
