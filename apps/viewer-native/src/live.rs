@@ -229,8 +229,8 @@ pub use ros::RosLiveHandle;
 mod tests {
     use super::*;
     use viewer_core::{
-        ArrivalTime, CameraId, CompressedImage, DomainState, DomainUpdate, MeasurementTime,
-        PipelineSet, RawMessage, StreamBinding, StreamDescriptor, StreamId,
+        ArrivalTime, CameraId, CompressedImage, DomainPipelineSet, DomainRoute, DomainState,
+        DomainTarget, DomainUpdate, MeasurementTime, RawMessage, StreamDescriptor, StreamId,
         encode_compressed_image_cdr,
     };
 
@@ -261,15 +261,15 @@ mod tests {
                 .into(),
             });
         }
-        let mut pipelines = PipelineSet::new(
-            &[StreamDescriptor {
+        let mut pipelines = DomainPipelineSet::from_routes(&[DomainRoute {
+            stream: StreamDescriptor {
                 id: stream_id,
                 topic: "/camera/live/image/compressed".into(),
                 schema: "sensor_msgs/msg/CompressedImage".into(),
                 message_encoding: "cdr".into(),
-            }],
-            &[(stream_id, StreamBinding::Camera(CameraId(0)))],
-        );
+            },
+            target: DomainTarget::Camera(CameraId(0)),
+        }]);
         let mut updates = Vec::<DomainUpdate>::new();
 
         pipelines.decode(mailbox.take().unwrap(), &mut updates);

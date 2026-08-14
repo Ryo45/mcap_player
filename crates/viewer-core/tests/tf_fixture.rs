@@ -1,7 +1,7 @@
 use std::{fs, path::PathBuf};
 use viewer_core::{
-    CameraCalibrationSet, DomainUpdate, McapSource, PipelineSet, SceneFrameBuilder, StreamBinding,
-    TransformState,
+    CameraCalibrationSet, DomainPipelineSet, DomainRoute, DomainTarget, DomainUpdate, McapSource,
+    SceneFrameBuilder, TransformState,
 };
 
 fn fixture() -> Vec<u8> {
@@ -16,17 +16,20 @@ fn every_scan_resolves_to_world_at_its_measurement_time() {
     let scan = source.catalog().by_topic("/scan").unwrap();
     let dynamic_tf = source.catalog().by_topic("/tf").unwrap();
     let static_tf = source.catalog().by_topic("/tf_static").unwrap();
-    let mut pipelines = PipelineSet::new(
-        &source.catalog().streams,
-        &[
-            (scan.id, StreamBinding::LaserScan),
-            (
-                dynamic_tf.id,
-                StreamBinding::Transforms { is_static: false },
-            ),
-            (static_tf.id, StreamBinding::Transforms { is_static: true }),
-        ],
-    );
+    let mut pipelines = DomainPipelineSet::from_routes(&[
+        DomainRoute {
+            stream: scan.clone(),
+            target: DomainTarget::PointCloud,
+        },
+        DomainRoute {
+            stream: dynamic_tf.clone(),
+            target: DomainTarget::Transforms { is_static: false },
+        },
+        DomainRoute {
+            stream: static_tf.clone(),
+            target: DomainTarget::Transforms { is_static: true },
+        },
+    ]);
     let (_, end) = source.time_range();
     let mut transforms = TransformState::default();
     let mut scan_count = 0;

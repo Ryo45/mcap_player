@@ -663,7 +663,7 @@ fn format_report(report: &SpikeReport) -> String {
     .unwrap();
     writeln!(
         output,
-        "  PipelineSet → DomainState: OK ({} at {} ns)",
+        "  DomainPipelineSet → DomainState: OK ({} at {} ns)",
         report.indexed.pipeline.domain, report.indexed.pipeline.arrival_time.0
     )
     .unwrap();
