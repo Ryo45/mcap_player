@@ -1,4 +1,7 @@
-use super::{NativePanel, PLOT_CONFIG_VERSION, PanelFrameContext, PanelOutput, PlaceholderPanel};
+use super::{
+    NativePanel, PLOT_CONFIG_VERSION, PanelDataRequirements, PanelFrameContext, PanelOutput,
+    PlaceholderPanel,
+};
 use crate::{
     graphics::views::{PlotViewInput, show_plot_view},
     workspace::PlotViewState,
@@ -49,6 +52,12 @@ impl PlotPanel {
 
     pub(crate) fn reset_for_source(&mut self) {
         self.state = PlotViewState::default();
+    }
+
+    pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
+        match self.config.signal {
+            PlotSignal::VehicleSpeed => requirements.vehicle_speed = true,
+        }
     }
 
     pub(crate) fn show(

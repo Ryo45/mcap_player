@@ -4,7 +4,11 @@ use crate::live;
 use anyhow::bail;
 use anyhow::{Context, Result};
 use memmap2::Mmap;
-use std::{fs::File, path::Path, time::Duration};
+use std::{
+    fs::File,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 use viewer_core::{
     CameraId, DomainState, McapPlayback, PipelineCounters, PlaybackCommand, PlaybackEffect,
     PlaybackPerformance, PlaybackView,
@@ -17,6 +21,13 @@ pub(crate) struct PlaybackSession {
     topic: String,
     camera_topics: Vec<(CameraId, String)>,
     source_name: String,
+    recording_path: Option<PathBuf>,
+}
+
+pub(crate) struct SpeedSignalRequest {
+    pub(crate) path: PathBuf,
+    pub(crate) origin: viewer_core::ArrivalTime,
+    pub(crate) max_points: usize,
 }
 
 enum SessionSource {
@@ -50,6 +61,7 @@ impl PlaybackSession {
             topic,
             camera_topics,
             source_name: path.display().to_string(),
+            recording_path: Some(path.to_owned()),
         })
     }
 
@@ -79,7 +91,16 @@ impl PlaybackSession {
                 "ROS 2 live ({})",
                 if reliable { "reliable" } else { "best effort" }
             ),
+            recording_path: None,
         }
+    }
+
+    pub(crate) fn speed_signal_request(&self, max_points: usize) -> Option<SpeedSignalRequest> {
+        Some(SpeedSignalRequest {
+            path: self.recording_path.clone()?,
+            origin: self.playback_view()?.start,
+            max_points,
+        })
     }
 
     pub(crate) fn tick(&mut self, elapsed: Duration) -> Result<()> {

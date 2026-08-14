@@ -1,4 +1,7 @@
-use super::{BevPanel, CameraPanel, NativePanel, PlaceholderPanel, PlotPanel, ScenePanel};
+use super::{
+    BevPanel, CameraPanel, NativePanel, PanelDataRequirements, PlaceholderPanel, PlotPanel,
+    ScenePanel,
+};
 use std::collections::BTreeMap;
 use viewer_core::CameraId;
 use viewer_layout::{LayoutDocument, LayoutNode, PanelId, PanelNode};
@@ -54,6 +57,14 @@ impl PanelRuntimeStore {
 
     pub(crate) fn get_mut(&mut self, id: &PanelId) -> Option<&mut NativePanel> {
         self.panels.get_mut(id)
+    }
+
+    pub(crate) fn data_requirements(&self) -> PanelDataRequirements {
+        let mut requirements = PanelDataRequirements::default();
+        for panel in self.panels.values() {
+            panel.contribute_data_requirements(&mut requirements);
+        }
+        requirements
     }
 
     pub(crate) fn reset_for_source(&mut self, focused_camera: Option<CameraId>) {
@@ -230,5 +241,6 @@ mod tests {
         assert_eq!(result.store.len(), 4);
         assert_eq!(result.store.placeholder_count(), 0);
         assert!(result.warnings.is_empty());
+        assert!(result.store.data_requirements().vehicle_speed);
     }
 }
