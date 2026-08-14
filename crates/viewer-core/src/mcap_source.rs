@@ -1,20 +1,9 @@
-use crate::{ArrivalTime, RawMessage, StreamDescriptor, StreamId};
+use crate::{ArrivalTime, RawMessage, StreamCatalog, StreamDescriptor, StreamId};
 use bytes::Bytes;
 use mcap::{MessageStream, Summary};
 use std::fmt;
 
 const LINEAR_FALLBACK_LIMIT: usize = 64 * 1024 * 1024;
-
-#[derive(Clone, Debug, Default)]
-pub struct StreamCatalog {
-    pub streams: Vec<StreamDescriptor>,
-}
-
-impl StreamCatalog {
-    pub fn by_topic(&self, topic: &str) -> Option<&StreamDescriptor> {
-        self.streams.iter().find(|stream| stream.topic == topic)
-    }
-}
 
 #[derive(Debug)]
 pub enum McapOpenError {

@@ -112,6 +112,12 @@ Native `App` owns one `ViewerSession`: the currently open Viewer data session. I
 Recording or Live source, exposes the shared Domain read-only, and owns panel-specific query paths.
 Only a Recording-backed session exposes a `PlaybackView` and applies playback commands.
 
+Core namespace ownership follows the runtime boundary: `stream.rs` owns `StreamId`, descriptors,
+and catalogs; `raw_message.rs` owns the source-neutral serialized message; `pipeline.rs` owns only
+Domain decoding and updates; and `mcap_source.rs` owns MCAP-specific I/O. `StreamId` is a
+source/session-local token, not a global or persistent identity. `CameraId` is likewise a Viewer
+Domain/session identity rather than a physical camera serial number.
+
 ## Invariants to preserve
 
 - Catalog order plus primary-camera selection produces the same Camera IDs and topics.
@@ -162,8 +168,8 @@ chosen.
    panel-owned state before designing any reusable query/router mechanism.
 8. **Stage 7 — Plot and Inspector:** move source access behind session/recording query boundaries
    while keeping query results outside `DomainState`.
-9. **Stage 8 — namespace and ID cleanup:** reconsider names and newtypes only after ownership has
-   stabilized.
+9. **Stage 8 — namespace and ID cleanup:** align stream, raw-message, pipeline, and MCAP module
+   ownership while preserving crate-root API paths and existing ID names.
 
 Each stage is independently buildable and testable. A new abstraction is deferred until at least
 two concrete uses demonstrate the need for it.

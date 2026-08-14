@@ -18,8 +18,10 @@ mod plot;
 mod point_cloud;
 mod presentation;
 mod preview;
+mod raw_message;
 mod session_plan;
 mod source_identity;
+mod stream;
 mod telemetry;
 mod time;
 mod transform;
@@ -29,7 +31,7 @@ pub use bookmark::{
     Bookmark, BookmarkDocument, BookmarkId, BookmarkValidationError,
     CURRENT_BOOKMARK_SCHEMA_VERSION, PreviewBuildInfo, SourceFingerprint,
 };
-pub use camera::{CameraFrame, CameraState, CameraStatus};
+pub use camera::{CameraFrame, CameraId, CameraState, CameraStatus};
 pub use camera_projection::{
     CalibrationError, CameraCalibration, CameraCalibrationSet, ProjectedPlan, ProjectionError,
 };
@@ -52,11 +54,10 @@ pub use domain_runtime::{DomainPerformance, DomainRuntime, StageTiming};
 pub use frame_builder::{
     BevFrameBuilder, BevSnapshot, SceneDiagnostics, SceneFrameBuilder, SceneSnapshot, SceneTfError,
 };
-pub use mcap_source::{McapOpenError, McapSource, StreamCatalog};
+pub use mcap_source::{McapOpenError, McapSource};
 pub use performance::{PlaybackPerformance, PresentationMetrics, PresentationSnapshot};
 pub use pipeline::{
     DomainPipeline, DomainPipelineError, DomainPipelineSet, DomainUpdate, PipelineCounters,
-    RawMessage, StreamDescriptor, StreamId,
 };
 pub use playback::{McapPlayback, McapPlaybackError, PlaybackEffect};
 pub use plot::{
@@ -74,6 +75,7 @@ pub use preview::{
     PreviewImageEncoding, PreviewRequest, PreviewSnapshot, PreviewValidationError, SignalBucket,
     SignalFidelity, SignalOverview, TimeRange, TimedPosition2, merge_signal_buckets,
 };
+pub use raw_message::RawMessage;
 pub use session_plan::{
     DomainRoute, DomainTarget, ODOM_TOPIC, PATH_TOPIC, SCAN_TOPIC, SessionPlan, SessionPlanError,
     TF_STATIC_TOPIC, TF_TOPIC,
@@ -81,6 +83,7 @@ pub use session_plan::{
 pub use source_identity::{
     MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity, mcap_summary_fingerprint,
 };
+pub use stream::{StreamCatalog, StreamDescriptor, StreamId};
 pub use telemetry::{TelemetryFrame, TelemetryState};
-pub use time::{ArrivalTime, CameraId, MeasurementTime};
+pub use time::{ArrivalTime, MeasurementTime};
 pub use transform::{TransformBatch, TransformState};
