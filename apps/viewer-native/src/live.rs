@@ -228,6 +228,12 @@ pub use ros::RosLiveHandle;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use viewer_core::{
+        ArrivalTime, CameraId, CompressedImage, DomainState, DomainUpdate, MeasurementTime,
+        PipelineSet, RawMessage, StreamBinding, StreamDescriptor, StreamId,
+        encode_compressed_image_cdr,
+    };
+
     #[test]
     fn replaces_unconsumed_value() {
         let mailbox = LatestMailbox::default();
@@ -235,5 +241,45 @@ mod tests {
         mailbox.push(2);
         assert_eq!(mailbox.take(), Some(2));
         assert_eq!(mailbox.coalesced(), 1);
+    }
+
+    #[test]
+    fn current_camera_live_mailbox_reduces_latest_message_into_domain() {
+        let stream_id = StreamId(1);
+        let mailbox = LatestMailbox::default();
+        for (arrival, marker) in [(100, 1), (200, 2)] {
+            mailbox.push(RawMessage {
+                stream_id,
+                arrival_time: ArrivalTime(arrival),
+                payload: encode_compressed_image_cdr(&CompressedImage {
+                    measurement_time: MeasurementTime(arrival),
+                    frame_id: "camera".into(),
+                    format: "jpeg".into(),
+                    jpeg: vec![marker],
+                })
+                .unwrap()
+                .into(),
+            });
+        }
+        let mut pipelines = PipelineSet::new(
+            &[StreamDescriptor {
+                id: stream_id,
+                topic: "/camera/live/image/compressed".into(),
+                schema: "sensor_msgs/msg/CompressedImage".into(),
+                message_encoding: "cdr".into(),
+            }],
+            &[(stream_id, StreamBinding::Camera(CameraId(0)))],
+        );
+        let mut updates = Vec::<DomainUpdate>::new();
+
+        pipelines.decode(mailbox.take().unwrap(), &mut updates);
+        let mut state = DomainState::default();
+        state.apply_all(updates);
+
+        let latest = state.camera.latest_for(CameraId(0)).unwrap();
+        assert_eq!(latest.arrival_time, ArrivalTime(200));
+        assert_eq!(latest.jpeg.as_ref(), [2]);
+        assert_eq!(mailbox.coalesced(), 1);
+        assert_eq!(pipelines.counters().decoded, 1);
     }
 }

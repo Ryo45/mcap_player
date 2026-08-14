@@ -132,6 +132,14 @@ fn seven_camera_fixture_discovers_and_decodes_all_topics() {
         CameraCalibrationSet::from_json(include_str!("../../../config/camera_calibration.json"))
             .unwrap();
     let path = playback.state().bev.latest().expect("fixture path");
+    let telemetry = playback
+        .state()
+        .telemetry
+        .latest()
+        .expect("fixture odometry");
+    assert!(telemetry.speed.is_finite());
+    assert_eq!(playback.state().transforms.static_len(), 15);
+    assert_eq!(playback.state().transforms.dynamic_len(), 3);
     let mut total_visible = 0;
     for (camera_id, camera) in playback.state().camera.frames() {
         let projected = calibrations
@@ -157,4 +165,5 @@ fn seven_camera_fixture_discovers_and_decodes_all_topics() {
         scene.diagnostics.last_tf_route.as_deref(),
         Some("base_scan → odom")
     );
+    assert_eq!(playback.counters().errors, 0);
 }
