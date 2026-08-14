@@ -792,7 +792,7 @@ mod tests {
                 bytes,
             )
             .unwrap();
-            let mut core = viewer_core::PlaybackCore::new(&catalog.core, "/camera").unwrap();
+            let mut core = viewer_core::PlaybackCore::from_plan(catalog.plan);
             core.process_forward(std::time::Duration::from_secs(1), loaded.window.messages);
             let frames = core
                 .state()

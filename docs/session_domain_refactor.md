@@ -87,6 +87,13 @@ Web local-file and remote-server recordings already share `RecordingDataPlane`; 
 playback retains its mmap-based `McapPlayback` path. Those source differences are intentionally not
 part of this refactor stage.
 
+Web Local now retains every MCAP channel in its source catalog, while Web Remote retains every
+raw ROS 2 CDR representation supported by the existing transport contract. Both build the same
+`SessionPlan` and derive their fixed loader selection from its routes: Local translates routes to
+topics and Remote translates them to server stream IDs. Loader coverage therefore remains defined
+against one immutable selection, while unselected source descriptors stay available for future
+panel-specific queries.
+
 Native Live now feeds its camera-only `LatestMailbox` into the same `DomainRuntime` used by
 Recording. The latest-only behavior belongs to that current camera adapter; it must not be
 generalized to all future live domain streams because ordered TF updates cannot safely use the same

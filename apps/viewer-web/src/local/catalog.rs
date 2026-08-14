@@ -1,8 +1,5 @@
 use std::{error::Error, fmt};
-use viewer_core::{
-    ArrivalTime, ODOM_TOPIC, PATH_TOPIC, SCAN_TOPIC, StreamCatalog, StreamDescriptor, StreamId,
-    TF_STATIC_TOPIC, TF_TOPIC,
-};
+use viewer_core::{ArrivalTime, SessionPlan, StreamCatalog, StreamDescriptor, StreamId};
 
 #[derive(Clone, Debug)]
 pub(crate) struct LocalCatalog {
@@ -10,7 +7,7 @@ pub(crate) struct LocalCatalog {
     pub start: ArrivalTime,
     pub end: ArrivalTime,
     pub end_exclusive: ArrivalTime,
-    pub primary_camera_topic: String,
+    pub plan: SessionPlan,
     pub selected_topics: Vec<String>,
 }
 
@@ -67,51 +64,32 @@ impl LocalCatalog {
         let mut streams = summary
             .channels
             .values()
-            .filter(|channel| channel.message_encoding == "cdr")
-            .filter_map(|channel| {
-                let schema = channel.schema.as_ref()?.name.as_str();
-                (schema == "sensor_msgs/msg/CompressedImage" || is_standard_topic(&channel.topic))
-                    .then(|| StreamDescriptor {
-                        id: StreamId(u32::from(channel.id)),
-                        topic: channel.topic.clone(),
-                        schema: schema.to_owned(),
-                        message_encoding: channel.message_encoding.clone(),
-                    })
+            .map(|channel| StreamDescriptor {
+                id: StreamId(u32::from(channel.id)),
+                topic: channel.topic.clone(),
+                schema: channel
+                    .schema
+                    .as_ref()
+                    .map(|schema| schema.name.clone())
+                    .unwrap_or_default(),
+                message_encoding: channel.message_encoding.clone(),
             })
             .collect::<Vec<_>>();
         streams.sort_by_key(|stream| stream.id.0);
-
-        if !streams.iter().any(|stream| {
-            stream.schema == "sensor_msgs/msg/CompressedImage"
-                && stream.topic == primary_camera_topic
-        }) {
-            return Err(LocalCatalogError::new(format!(
-                "topic {primary_camera_topic} is not present"
-            )));
-        }
-        let mut selected_topics = streams
-            .iter()
-            .map(|stream| stream.topic.clone())
-            .collect::<Vec<_>>();
-        selected_topics.sort();
-        selected_topics.dedup();
+        let core = StreamCatalog { streams };
+        let plan = SessionPlan::build(&core, primary_camera_topic)
+            .map_err(|error| LocalCatalogError::new(error.to_string()))?;
+        let selected_topics = plan.selected_topics();
 
         Ok(Self {
-            core: StreamCatalog { streams },
+            core,
             start,
             end,
             end_exclusive,
-            primary_camera_topic: primary_camera_topic.to_owned(),
+            plan,
             selected_topics,
         })
     }
-}
-
-fn is_standard_topic(topic: &str) -> bool {
-    matches!(
-        topic,
-        ODOM_TOPIC | PATH_TOPIC | SCAN_TOPIC | TF_TOPIC | TF_STATIC_TOPIC
-    )
 }
 
 fn to_arrival(value: u64) -> Result<ArrivalTime, LocalCatalogError> {
@@ -123,6 +101,7 @@ fn to_arrival(value: u64) -> Result<ArrivalTime, LocalCatalogError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use viewer_core::ODOM_TOPIC;
 
     #[test]
     fn fixture_catalog_keeps_all_cameras_and_standard_streams() {
@@ -146,5 +125,10 @@ mod tests {
         );
         assert!(catalog.core.by_topic(ODOM_TOPIC).is_some());
         assert_eq!(catalog.end_exclusive.0, catalog.end.0 + 1);
+        assert_eq!(
+            catalog.selected_topics,
+            catalog.plan.selected_topics(),
+            "loader selection comes only from the shared SessionPlan"
+        );
     }
 }

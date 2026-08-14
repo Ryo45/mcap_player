@@ -1,7 +1,6 @@
 use std::{error::Error, fmt};
 use viewer_core::{
-    ArrivalTime, ODOM_TOPIC, PATH_TOPIC, SCAN_TOPIC, StreamCatalog,
-    StreamDescriptor as CoreStreamDescriptor, StreamId, TF_STATIC_TOPIC, TF_TOPIC,
+    ArrivalTime, SessionPlan, StreamCatalog, StreamDescriptor as CoreStreamDescriptor, StreamId,
 };
 use viewer_remote_protocol::{CatalogResponse, StreamDescriptor};
 
@@ -13,7 +12,7 @@ pub(crate) struct RemoteCatalog {
     pub start: ArrivalTime,
     pub end: ArrivalTime,
     pub end_exclusive: ArrivalTime,
-    pub primary_camera_topic: String,
+    pub plan: SessionPlan,
     pub selected_streams: Vec<u32>,
 }
 
@@ -54,31 +53,30 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
         .ok_or_else(|| {
             RemoteCatalogError("remote catalog has no supported camera stream".into())
         })?;
-
-    let mut selected = vec![camera.id];
-    selected.extend(
-        supported
-            .iter()
-            .copied()
-            .filter(|stream| is_standard_topic(&stream.topic))
-            .map(|stream| stream.id),
-    );
-    selected.sort_unstable();
-    selected.dedup();
+    let primary_camera_topic = camera.topic.clone();
 
     let streams = supported
         .into_iter()
-        .filter(|stream| selected.binary_search(&stream.id).is_ok())
         .map(to_core_descriptor)
         .collect::<Vec<_>>();
+    let core = StreamCatalog { streams };
+    let plan = SessionPlan::build(&core, &primary_camera_topic)
+        .map_err(|error| RemoteCatalogError(error.to_string()))?;
+    let mut selected = plan
+        .selected_stream_ids()
+        .into_iter()
+        .map(|stream_id| stream_id.0)
+        .collect::<Vec<_>>();
+    selected.sort_unstable();
+    selected.dedup();
     Ok(RemoteCatalog {
-        core: StreamCatalog { streams },
+        core,
         recording_id: remote.recording_id.clone(),
         revision: remote.recording_revision.clone(),
         start,
         end,
         end_exclusive,
-        primary_camera_topic: camera.topic.clone(),
+        plan,
         selected_streams: selected,
     })
 }
@@ -92,13 +90,6 @@ fn to_core_descriptor(stream: &StreamDescriptor) -> CoreStreamDescriptor {
     }
 }
 
-fn is_standard_topic(topic: &str) -> bool {
-    matches!(
-        topic,
-        ODOM_TOPIC | PATH_TOPIC | SCAN_TOPIC | TF_TOPIC | TF_STATIC_TOPIC
-    )
-}
-
 fn to_arrival(value: u64) -> Result<ArrivalTime, RemoteCatalogError> {
     i64::try_from(value)
         .map(ArrivalTime)
@@ -108,6 +99,7 @@ fn to_arrival(value: u64) -> Result<ArrivalTime, RemoteCatalogError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use viewer_core::ODOM_TOPIC;
     use viewer_remote_protocol::{
         CatalogResponse, RemoteTimeRange, StreamDescriptor, StreamSemantic, TimestampNs,
     };
@@ -138,7 +130,14 @@ mod tests {
             },
             vec![
                 stream(7, "/camera", "sensor_msgs/msg/CompressedImage", "ros2-cdr"),
+                stream(
+                    8,
+                    "/camera/rear",
+                    "sensor_msgs/msg/CompressedImage",
+                    "ros2-cdr",
+                ),
                 stream(3, ODOM_TOPIC, "nav_msgs/msg/Odometry", "ros2-cdr"),
+                stream(4, "/extra", "example/msg/Extra", "ros2-cdr"),
                 stream(9, "/future", "example/msg/Future", "viewer.future.v1"),
             ],
         )
@@ -150,15 +149,18 @@ mod tests {
         assert_eq!(adapted.start, ArrivalTime(100));
         assert_eq!(adapted.end, ArrivalTime(199));
         assert_eq!(adapted.end_exclusive, ArrivalTime(200));
-        assert_eq!(adapted.primary_camera_topic, "/camera");
-        assert_eq!(adapted.selected_streams, vec![3, 7]);
-        assert_eq!(adapted.core.streams.len(), 2);
+        assert_eq!(adapted.plan.primary_camera_topic(), Some("/camera"));
+        assert_eq!(adapted.selected_streams, vec![3, 7, 8]);
+        assert_eq!(adapted.core.streams.len(), 4);
+        assert!(adapted.core.by_topic("/extra").is_some());
     }
 
     #[test]
     fn rejects_missing_camera_and_timestamp_overflow() {
         let mut value = catalog();
-        value.streams.remove(0);
+        value
+            .streams
+            .retain(|stream| stream.schema_name != "sensor_msgs/msg/CompressedImage");
         assert!(adapt_catalog(&value).is_err());
 
         let mut value = catalog();

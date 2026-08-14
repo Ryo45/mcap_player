@@ -1,6 +1,6 @@
 use crate::{
     CameraId, DomainPerformance, DomainRuntime, DomainState, PipelineCounters, RawMessage,
-    SessionPlanError, StageTiming, StreamCatalog,
+    SessionPlan, SessionPlanError, StageTiming, StreamCatalog,
 };
 use std::{fmt, time::Duration};
 
@@ -67,6 +67,13 @@ impl PlaybackCore {
             runtime: DomainRuntime::from_catalog(catalog, primary_camera_topic)?,
             source_read: StageTiming::default(),
         })
+    }
+
+    pub fn from_plan(plan: SessionPlan) -> Self {
+        Self {
+            runtime: DomainRuntime::new(plan),
+            source_read: StageTiming::default(),
+        }
     }
 
     pub fn process_forward(

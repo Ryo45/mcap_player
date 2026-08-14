@@ -49,7 +49,10 @@ impl SessionPlan {
         let mut cameras = catalog
             .streams
             .iter()
-            .filter(|stream| stream.schema == "sensor_msgs/msg/CompressedImage")
+            .filter(|stream| {
+                stream.message_encoding == "cdr"
+                    && stream.schema == "sensor_msgs/msg/CompressedImage"
+            })
             .cloned()
             .collect::<Vec<_>>();
         let Some(primary_index) = cameras
@@ -71,10 +74,15 @@ impl SessionPlan {
             })
             .collect::<Vec<_>>();
         domain_routes.extend(OPTIONAL_ROUTES.iter().filter_map(|(topic, target)| {
-            catalog.by_topic(topic).cloned().map(|stream| DomainRoute {
-                stream,
-                target: *target,
-            })
+            catalog
+                .streams
+                .iter()
+                .find(|stream| stream.topic == *topic && stream.message_encoding == "cdr")
+                .cloned()
+                .map(|stream| DomainRoute {
+                    stream,
+                    target: *target,
+                })
         }));
 
         Ok(Self {
@@ -102,6 +110,32 @@ impl SessionPlan {
                 _ => None,
             })
             .collect()
+    }
+
+    pub fn primary_camera_topic(&self) -> Option<&str> {
+        let primary = self.primary_camera?;
+        self.domain_routes
+            .iter()
+            .find(|route| route.target == DomainTarget::Camera(primary))
+            .map(|route| route.stream.topic.as_str())
+    }
+
+    pub fn selected_stream_ids(&self) -> Vec<crate::StreamId> {
+        self.domain_routes
+            .iter()
+            .map(|route| route.stream.id)
+            .collect()
+    }
+
+    pub fn selected_topics(&self) -> Vec<String> {
+        let mut topics = self
+            .domain_routes
+            .iter()
+            .map(|route| route.stream.topic.clone())
+            .collect::<Vec<_>>();
+        topics.sort();
+        topics.dedup();
+        topics
     }
 }
 
