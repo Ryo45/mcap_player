@@ -46,7 +46,7 @@ impl App {
                 self.workspace.reset_for_source(scheduler_camera);
                 session.set_focused_camera(self.workspace.focused_camera());
                 let requirements = self.workspace.data_requirements();
-                if (requirements.vehicle_speed || requirements.yaw_rate)
+                if !requirements.signals.is_empty()
                     && let Err(error) = session.request_plot_signals(4_000)
                 {
                     log::warn!("Plot unavailable: {error}");
@@ -116,11 +116,11 @@ impl App {
 
         let diagnostics = session.diagnostics();
         let playback = session.playback_view();
+        let signals = session.signal_query_view();
         let workspace_warning = self.workspace.startup_warning();
         let error = self.diagnostics.message(&[
             workspace_warning.as_deref(),
-            session.speed_signal_error(),
-            session.yaw_rate_signal_error(),
+            signals.first_error(),
             self.preview.warning(),
             self.bookmarks.warning(),
         ]);
@@ -139,12 +139,7 @@ impl App {
                     presentation: &presentation.viewer,
                     camera_overlays: presentation.camera_overlays,
                     playback,
-                    speed_signal: session.speed_signal(),
-                    speed_plot_loading: session.speed_signal_loading(),
-                    speed_plot_error: session.speed_signal_error(),
-                    yaw_rate_signal: session.yaw_rate_signal(),
-                    yaw_rate_plot_loading: session.yaw_rate_signal_loading(),
-                    yaw_rate_plot_error: session.yaw_rate_signal_error(),
+                    signals,
                     inspections: session.inspections(),
                     preview: self.preview.snapshot(),
                     preview_speed: self.preview.speed_overview(),

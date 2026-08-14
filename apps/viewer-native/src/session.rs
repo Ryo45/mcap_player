@@ -2,6 +2,7 @@ use crate::inspection::{InspectedMessage, InspectorRequirement, TopicInspection}
 #[cfg(feature = "ros2-live")]
 use crate::live;
 use crate::plot_loader::{PlotLoader, inspect_topic_from_path};
+use crate::signal_query::SignalQueryView;
 #[cfg(feature = "ros2-live")]
 use anyhow::bail;
 use anyhow::{Context, Result};
@@ -12,8 +13,8 @@ use std::{
     time::Duration,
 };
 use viewer_core::{
-    CameraId, DomainState, LoadedSignal, McapPlayback, PipelineCounters, PlaybackCommand,
-    PlaybackEffect, PlaybackPerformance, PlaybackView, SignalId,
+    CameraId, DomainState, McapPlayback, PipelineCounters, PlaybackCommand, PlaybackEffect,
+    PlaybackPerformance, PlaybackView,
 };
 #[cfg(feature = "ros2-live")]
 use viewer_core::{DomainRuntime, SessionPlan, StreamCatalog};
@@ -124,28 +125,8 @@ impl ViewerSession {
         self.plot_loader.poll();
     }
 
-    pub(crate) fn speed_signal(&self) -> Option<&LoadedSignal> {
-        self.plot_loader.signal(SignalId::Speed)
-    }
-
-    pub(crate) fn speed_signal_loading(&self) -> bool {
-        self.plot_loader.is_loading()
-    }
-
-    pub(crate) fn speed_signal_error(&self) -> Option<&str> {
-        self.plot_loader.error()
-    }
-
-    pub(crate) fn yaw_rate_signal(&self) -> Option<&LoadedSignal> {
-        self.plot_loader.signal(SignalId::YawRate)
-    }
-
-    pub(crate) fn yaw_rate_signal_loading(&self) -> bool {
-        self.plot_loader.is_loading()
-    }
-
-    pub(crate) fn yaw_rate_signal_error(&self) -> Option<&str> {
-        self.plot_loader.error()
+    pub(crate) fn signal_query_view(&self) -> SignalQueryView<'_> {
+        self.plot_loader.query_view()
     }
 
     pub(crate) fn inspect_topic(

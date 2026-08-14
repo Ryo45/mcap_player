@@ -11,6 +11,7 @@ mod plot_loader;
 mod presentation;
 mod preview;
 mod session;
+mod signal_query;
 mod workspace;
 
 use anyhow::Result;

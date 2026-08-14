@@ -2,8 +2,7 @@ use super::{Graphics, RenderInput, layout_host::show_layout_host, views::CameraT
 use crate::{
     interaction::ViewerAction,
     panels::{
-        PanelFrameContext, PanelRenderRequests, PanelResourceView, PlotDataView, PreviewDataView,
-        SceneDataView, SignalDataView,
+        PanelFrameContext, PanelRenderRequests, PanelResourceView, PreviewDataView, SceneDataView,
     },
     workspace::NativeWorkspace,
 };
@@ -71,18 +70,6 @@ impl Graphics {
             static_transform_count: render_input.static_transform_count,
             dynamic_transform_count: render_input.dynamic_transform_count,
         };
-        let plot = PlotDataView {
-            speed: SignalDataView {
-                signal: render_input.speed_signal,
-                loading: render_input.speed_plot_loading,
-                error: render_input.speed_plot_error,
-            },
-            yaw_rate: SignalDataView {
-                signal: render_input.yaw_rate_signal,
-                loading: render_input.yaw_rate_plot_loading,
-                error: render_input.yaw_rate_plot_error,
-            },
-        };
         let interaction = &workspace.interaction;
         let preview = PreviewDataView {
             active: interaction.preview_time.is_some(),
@@ -123,7 +110,7 @@ impl Graphics {
                         presentation,
                         camera_overlays: render_input.camera_overlays,
                         interaction,
-                        plot,
+                        signals: render_input.signals,
                         preview,
                         resources,
                         scene,

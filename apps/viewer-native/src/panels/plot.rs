@@ -3,10 +3,11 @@ use super::{
     PlaceholderPanel,
 };
 use crate::{
-    graphics::views::{PlotViewInput, PlotViewKind, show_plot_view},
+    graphics::views::{PlotViewInput, show_plot_view},
     workspace::PlotViewState,
 };
 use serde::{Deserialize, Serialize};
+use viewer_core::SignalId;
 use viewer_layout::{PanelId, PanelNode};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -14,6 +15,15 @@ use viewer_layout::{PanelId, PanelNode};
 pub(crate) enum PlotSignal {
     VehicleSpeed,
     YawRate,
+}
+
+impl PlotSignal {
+    pub(crate) fn signal_id(self) -> SignalId {
+        match self {
+            Self::VehicleSpeed => SignalId::Speed,
+            Self::YawRate => SignalId::YawRate,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -56,10 +66,7 @@ impl PlotPanel {
     }
 
     pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
-        match self.config.signal {
-            PlotSignal::VehicleSpeed => requirements.vehicle_speed = true,
-            PlotSignal::YawRate => requirements.yaw_rate = true,
-        }
+        requirements.signals.insert(self.config.signal.signal_id());
     }
 
     pub(crate) fn show(
@@ -74,51 +81,43 @@ impl PlotPanel {
                 });
                 return PanelOutput::default();
             };
-            match self.config.signal {
-                PlotSignal::VehicleSpeed => {
-                    let output = show_plot_view(
-                        ui,
-                        PlotViewInput {
-                            kind: PlotViewKind::VehicleSpeed,
-                            signal: context.plot.speed.signal,
-                            loading: context.plot.speed.loading,
-                            error: context.plot.speed.error,
-                            playback,
-                            display_time: context.interaction.display_time(playback),
-                            preview_signal: context.preview.speed_overview,
-                            bookmarks: context.preview.bookmarks,
-                            plot_height: 170.0,
-                        },
-                        &mut self.state,
-                    );
-                    PanelOutput {
-                        actions: output.actions,
-                        ..PanelOutput::default()
-                    }
-                }
-                PlotSignal::YawRate => {
-                    let output = show_plot_view(
-                        ui,
-                        PlotViewInput {
-                            kind: PlotViewKind::YawRate,
-                            signal: context.plot.yaw_rate.signal,
-                            loading: context.plot.yaw_rate.loading,
-                            error: context.plot.yaw_rate.error,
-                            playback,
-                            display_time: context.interaction.display_time(playback),
-                            preview_signal: None,
-                            bookmarks: context.preview.bookmarks,
-                            plot_height: 170.0,
-                        },
-                        &mut self.state,
-                    );
-                    PanelOutput {
-                        actions: output.actions,
-                        ..PanelOutput::default()
-                    }
-                }
+            let signal_id = self.config.signal.signal_id();
+            let signal = context.signals.get(signal_id);
+            let preview_signal = match signal_id {
+                SignalId::Speed => context.preview.speed_overview,
+                SignalId::YawRate => None,
+            };
+            let output = show_plot_view(
+                ui,
+                PlotViewInput {
+                    signal_id,
+                    signal: signal.signal,
+                    loading: signal.loading,
+                    error: signal.error,
+                    playback,
+                    display_time: context.interaction.display_time(playback),
+                    preview_signal,
+                    bookmarks: context.preview.bookmarks,
+                    plot_height: 170.0,
+                },
+                &mut self.state,
+            );
+            PanelOutput {
+                actions: output.actions,
+                ..PanelOutput::default()
             }
         })
         .inner
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn layout_plot_signals_map_to_the_closed_signal_ids() {
+        assert_eq!(PlotSignal::VehicleSpeed.signal_id(), SignalId::Speed);
+        assert_eq!(PlotSignal::YawRate.signal_id(), SignalId::YawRate);
     }
 }

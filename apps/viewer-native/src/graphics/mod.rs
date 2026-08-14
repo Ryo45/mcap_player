@@ -6,15 +6,15 @@ pub(crate) mod views;
 
 use crate::{
     inspection::TopicInspection, interaction::ViewerAction, presentation::PresentationTransition,
-    workspace::NativeWorkspace,
+    signal_query::SignalQueryView, workspace::NativeWorkspace,
 };
 use bev_renderer::{BevFrame, BevRenderer};
 use egui_wgpu::Renderer as EguiRenderer;
 use scene_renderer::{SceneCameraMode, SceneFrame, SceneRenderer};
 use std::collections::BTreeMap;
 use viewer_core::{
-    BevSnapshot, Bookmark, CameraId, LoadedSignal, PlaybackView, PreviewSnapshot, SceneSnapshot,
-    SignalOverview, ViewerPresentation,
+    BevSnapshot, Bookmark, CameraId, PlaybackView, PreviewSnapshot, SceneSnapshot, SignalOverview,
+    ViewerPresentation,
 };
 use viewer_renderer::{CameraBaseImageTracker, CameraTextureSlot};
 use winit::window::Window;
@@ -23,12 +23,7 @@ pub(crate) struct RenderInput<'a> {
     pub(crate) presentation: &'a ViewerPresentation,
     pub(crate) camera_overlays: &'a viewer_renderer::CameraOverlayState,
     pub(crate) playback: Option<PlaybackView>,
-    pub(crate) speed_signal: Option<&'a LoadedSignal>,
-    pub(crate) speed_plot_loading: bool,
-    pub(crate) speed_plot_error: Option<&'a str>,
-    pub(crate) yaw_rate_signal: Option<&'a LoadedSignal>,
-    pub(crate) yaw_rate_plot_loading: bool,
-    pub(crate) yaw_rate_plot_error: Option<&'a str>,
+    pub(crate) signals: SignalQueryView<'a>,
     pub(crate) inspections: &'a [TopicInspection],
     pub(crate) preview: Option<&'a PreviewSnapshot>,
     pub(crate) preview_speed: Option<&'a SignalOverview>,
