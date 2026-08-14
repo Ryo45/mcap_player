@@ -160,7 +160,7 @@ impl PlaybackSession {
         }
     }
 
-    fn playback_performance(&self) -> Option<&PlaybackPerformance> {
+    fn playback_performance(&self) -> Option<PlaybackPerformance> {
         match &self.source {
             SessionSource::Mcap(playback) => Some(playback.performance()),
             #[cfg(feature = "ros2-live")]
@@ -206,7 +206,7 @@ impl PlaybackSession {
             primary_topic: self.topic.clone(),
             camera_topics: self.camera_topics.clone(),
             counters: self.counters(),
-            playback_performance: self.playback_performance().cloned(),
+            playback_performance: self.playback_performance(),
         }
     }
 }

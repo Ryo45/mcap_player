@@ -573,7 +573,7 @@ mod browser {
                     .first()
                     .map_or_else(|| TOPIC.to_owned(), |(_, topic)| topic.clone()),
                 counters: session.counters(),
-                playback_performance: Some(session.performance().clone()),
+                playback_performance: Some(session.performance()),
                 performance: view.presentation_metrics.snapshot().clone(),
                 cursor_seconds: Some((session.clock().cursor().0 - start) as f64 / 1e9),
                 ..DiagnosticsPresentation::default()

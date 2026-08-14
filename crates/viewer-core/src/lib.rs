@@ -8,6 +8,7 @@ mod cdr;
 mod clock;
 pub mod data_window;
 mod domain;
+mod domain_runtime;
 mod frame_builder;
 mod mcap_source;
 mod performance;
@@ -48,6 +49,7 @@ pub use data_window::{
     SerializedWindow, TimeRange as DataWindowTimeRange,
 };
 pub use domain::DomainState;
+pub use domain_runtime::{DomainPerformance, DomainRuntime, StageTiming};
 pub use frame_builder::{
     BevFrameBuilder, BevSnapshot, SceneDiagnostics, SceneFrameBuilder, SceneSnapshot, SceneTfError,
 };
@@ -58,7 +60,7 @@ pub use pipeline::{
     StreamDescriptor, StreamId,
 };
 pub use playback::{McapPlayback, McapPlaybackError, PlaybackEffect};
-pub use playback_core::{PlaybackCore, PlaybackCoreError, PlaybackPerformance, StageTiming};
+pub use playback_core::{PlaybackCore, PlaybackCoreError, PlaybackPerformance};
 pub use plot::{
     LoadedSignal, PlotMode, PlotPanelState, PlotSeries, PlotViewport, SignalId, SignalSample,
     arrival_time_from_plot_x, cursor_seconds, downsample_min_max, followed_viewport,

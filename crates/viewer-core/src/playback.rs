@@ -60,10 +60,7 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
         let candidate = self.clock.cursor_after(elapsed);
         let read_started = Instant::now();
         let messages = self.source.read_until(candidate)?;
-        self.core
-            .performance_mut()
-            .source_read
-            .record(read_started.elapsed());
+        self.core.record_source_read(read_started.elapsed());
         self.core.process_forward(elapsed, messages);
         self.clock.commit_cursor(candidate);
         Ok(())
@@ -72,7 +69,7 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
     fn seek(&mut self, cursor: ArrivalTime) -> Result<(), McapOpenError> {
         let target = ArrivalTime(cursor.0.clamp(self.clock.start().0, self.clock.end().0));
         let mut staging_source = McapSource::new(self.source.backing_bytes())?;
-        let mut staging_core = self.core.staging_for_restore(staging_source.catalog());
+        let mut staging_core = self.core.staging_for_restore();
         let start = self.source.time_range().0;
         let pre_roll = ArrivalTime(target.0.saturating_sub(TF_SEEK_PREROLL_NS).max(start.0));
         staging_source.seek(pre_roll)?;
@@ -133,7 +130,7 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
         self.core.set_focused_camera(focused_camera);
     }
 
-    pub fn performance(&self) -> &PlaybackPerformance {
+    pub fn performance(&self) -> PlaybackPerformance {
         self.core.performance()
     }
 }

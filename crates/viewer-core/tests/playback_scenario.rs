@@ -72,7 +72,7 @@ impl PlaybackScenario {
             domain_state: playback.state().clone(),
             playback_status: playback.clock().view(),
             counters: playback.counters(),
-            performance: playback.performance().clone(),
+            performance: playback.performance(),
             observations,
         }
     }
