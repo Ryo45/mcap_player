@@ -1,6 +1,15 @@
-use crate::{ArrivalTime, CameraId, MeasurementTime};
+use crate::{ArrivalTime, MeasurementTime};
 use bytes::Bytes;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+
+/// Identifies a camera within one Viewer Domain/session.
+///
+/// This is not a physical camera serial number or a persistent identity across sessions.
+#[derive(
+    Clone, Copy, Debug, Default, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize,
+)]
+pub struct CameraId(pub u16);
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CameraFrame {

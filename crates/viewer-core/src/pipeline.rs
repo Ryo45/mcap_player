@@ -1,28 +1,10 @@
 use crate::{
-    ArrivalTime, BevPathFrame, CameraFrame, CameraId, DecodeError, DomainRoute, DomainTarget,
-    PointCloudFrame, SessionPlan, TelemetryFrame, TransformBatch, decode_compressed_image_bytes,
-    decode_laser_scan, decode_odometry, decode_path, decode_tf_message,
+    BevPathFrame, CameraFrame, CameraId, DecodeError, DomainRoute, DomainTarget, PointCloudFrame,
+    RawMessage, SessionPlan, StreamId, TelemetryFrame, TransformBatch,
+    decode_compressed_image_bytes, decode_laser_scan, decode_odometry, decode_path,
+    decode_tf_message,
 };
-use bytes::Bytes;
 use std::{collections::HashMap, fmt};
-
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub struct StreamId(pub u32);
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct RawMessage {
-    pub stream_id: StreamId,
-    pub arrival_time: ArrivalTime,
-    pub payload: Bytes,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct StreamDescriptor {
-    pub id: StreamId,
-    pub topic: String,
-    pub schema: String,
-    pub message_encoding: String,
-}
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum DomainUpdate {
@@ -253,7 +235,11 @@ fn build_pipeline(route: &DomainRoute) -> Result<Box<dyn DomainPipeline>, Domain
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{CameraId, CompressedImage, MeasurementTime, encode_compressed_image_cdr};
+    use crate::{
+        ArrivalTime, CameraId, CompressedImage, MeasurementTime, StreamDescriptor,
+        encode_compressed_image_cdr,
+    };
+    use bytes::Bytes;
 
     #[test]
     fn camera_pipeline_retains_jpeg_in_raw_message_backing_allocation() {
