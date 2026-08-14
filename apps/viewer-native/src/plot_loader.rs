@@ -191,7 +191,7 @@ pub(crate) fn inspect_topic_from_path(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::session::PlaybackSession;
+    use crate::session::ViewerSession;
     use mcap::{WriteOptions, Writer, records::MessageHeader};
     use std::{
         collections::BTreeMap,
@@ -417,7 +417,7 @@ mod tests {
 
     #[test]
     fn plot_failure_does_not_stop_playback_progress() {
-        let mut session = PlaybackSession::open(
+        let mut session = ViewerSession::open(
             &camera_fixture(),
             "/camera/front/image/compressed".to_owned(),
         )
@@ -435,7 +435,7 @@ mod tests {
 
     #[test]
     fn playback_progresses_while_plot_loading_is_pending() {
-        let mut session = PlaybackSession::open(
+        let mut session = ViewerSession::open(
             &camera_fixture(),
             "/camera/front/image/compressed".to_owned(),
         )
@@ -452,7 +452,7 @@ mod tests {
 
     #[test]
     fn session_inspector_reads_topic_metadata_without_mutating_domain() {
-        let session = PlaybackSession::open(
+        let session = ViewerSession::open(
             &shared_domain_fixture(),
             "/camera/front/image/compressed".to_owned(),
         )

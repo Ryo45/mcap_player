@@ -8,7 +8,7 @@ file opening, and application errors remain outside the layout document.
 
 ```text
 App
-├─ PlaybackSession
+├─ ViewerSession
 ├─ PlotLoader
 ├─ PresentationState
 ├─ NativeWorkspace
@@ -34,7 +34,7 @@ while building `PanelRuntimeStore`.
 
 Panel-local camera focus is intentionally separate from the one decode-scheduler
 focus. Each Camera panel remembers what it displays. The last camera interaction is
-also forwarded to `PlaybackSession` because the current decoder has one global
+also forwarded to `ViewerSession` because the current decoder has one global
 priority camera. The bundled layout contains one Camera panel, so this preserves
 the previous behavior.
 

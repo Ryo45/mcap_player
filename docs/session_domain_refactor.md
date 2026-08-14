@@ -95,7 +95,7 @@ against one immutable selection, while unselected source descriptors stay availa
 panel-specific queries.
 
 The first concrete panel-specific path is the Native vehicle-speed Plot. The Plot contributes a
-single concrete `vehicle_speed` requirement through `NativeWorkspace`; `PlaybackSession` turns it
+single concrete `vehicle_speed` requirement through `NativeWorkspace`; `ViewerSession` turns it
 into a recording-only speed query request, and a Session-owned worker returns `LoadedSignal` to the
 Plot view. The panel never receives a path, mmap, playback session, or MCAP reader, and odometry
 samples are not added to `DomainState` merely to serve the full-resolution Plot query. A second,
@@ -107,6 +107,10 @@ Native Live now feeds its camera-only `LatestMailbox` into the same `DomainRunti
 Recording. The latest-only behavior belongs to that current camera adapter; it must not be
 generalized to all future live domain streams because ordered TF updates cannot safely use the same
 drop policy.
+
+Native `App` owns one `ViewerSession`: the currently open Viewer data session. It owns either a
+Recording or Live source, exposes the shared Domain read-only, and owns panel-specific query paths.
+Only a Recording-backed session exposes a `PlaybackView` and applies playback commands.
 
 ## Invariants to preserve
 

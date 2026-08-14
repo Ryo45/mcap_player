@@ -189,7 +189,7 @@ Preview build information例：
 
 - `DomainState`はPreviewを所有しない。
 - `LoadedSignal`は変更せず、Signal Overviewと共有しない。
-- `PlaybackSession`はPreview APIを持たない。
+- `ViewerSession`はPreview APIを持たない。
 - `PlotLoader`をPreview loaderへ一般化しない。
 - `ViewerInteractionState.preview_time`は今回変更しない。
 - Range Read Spikeをproduction readerへ移動しない。
