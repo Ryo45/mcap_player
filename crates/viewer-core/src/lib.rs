@@ -14,7 +14,6 @@ mod mcap_source;
 mod performance;
 mod pipeline;
 mod playback;
-mod playback_core;
 mod plot;
 mod point_cloud;
 mod presentation;
@@ -54,13 +53,12 @@ pub use frame_builder::{
     BevFrameBuilder, BevSnapshot, SceneDiagnostics, SceneFrameBuilder, SceneSnapshot, SceneTfError,
 };
 pub use mcap_source::{McapOpenError, McapSource, StreamCatalog};
-pub use performance::{PresentationMetrics, PresentationSnapshot};
+pub use performance::{PlaybackPerformance, PresentationMetrics, PresentationSnapshot};
 pub use pipeline::{
     DomainPipeline, DomainPipelineError, DomainPipelineSet, DomainUpdate, PipelineCounters,
     RawMessage, StreamDescriptor, StreamId,
 };
 pub use playback::{McapPlayback, McapPlaybackError, PlaybackEffect};
-pub use playback_core::{PlaybackCore, PlaybackCoreError, PlaybackPerformance};
 pub use plot::{
     LoadedSignal, PlotMode, PlotPanelState, PlotSeries, PlotViewport, SignalId, SignalSample,
     arrival_time_from_plot_x, cursor_seconds, downsample_min_max, followed_viewport,

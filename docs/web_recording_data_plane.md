@@ -10,11 +10,11 @@ Browser File                    Recording Server
               \                    /
                -> SerializedWindow
                -> RecordingDataPlane
-               -> PlaybackCore
+               -> DomainRuntime
                -> DomainState
 ```
 
-`PlaybackCore` owns ROS CDR reduction, camera presentation scheduling, counters, and exact domain
+`DomainRuntime` owns ROS CDR reduction, camera presentation scheduling, counters, and exact domain
 state. It does not know whether bytes came from HTTP, `File.slice()`, an MCAP Chunk, or a cache.
 Loaders own asynchronous I/O and publish only complete logical `[start, endExclusive)` windows.
 The DataPlane owns `FetchProfile`, fetch planning, the completeness horizon, buffering decisions,

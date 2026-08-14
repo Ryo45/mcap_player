@@ -1,5 +1,36 @@
-use crate::CameraId;
+use crate::{CameraId, DomainPerformance, StageTiming};
 use std::{collections::BTreeMap, time::Duration};
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct PlaybackPerformance {
+    pub source_read: StageTiming,
+    pub pipeline_decode: StageTiming,
+    pub state_apply: StageTiming,
+    pub camera_input_frames: u64,
+    pub camera_presented_frames: u64,
+    pub camera_presented_by_id: BTreeMap<CameraId, u64>,
+}
+
+impl PlaybackPerformance {
+    pub fn from_parts(source_read: StageTiming, domain: &DomainPerformance) -> Self {
+        Self {
+            source_read,
+            pipeline_decode: domain.pipeline_decode,
+            state_apply: domain.state_apply,
+            camera_input_frames: domain.camera_input_frames,
+            camera_presented_frames: domain.camera_presented_frames,
+            camera_presented_by_id: domain.camera_presented_by_id.clone(),
+        }
+    }
+
+    pub fn focused_camera_hz(&self) -> f64 {
+        DomainPerformance::default().focused_camera_hz()
+    }
+
+    pub fn background_camera_hz(&self) -> f64 {
+        DomainPerformance::default().background_camera_hz()
+    }
+}
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct PresentationSnapshot {

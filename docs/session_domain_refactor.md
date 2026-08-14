@@ -79,10 +79,10 @@ needed for this migration.
 `/tf`, and `/tf_static`. It discovers compressed-image streams, moves the configured primary stream
 to the first slot, and therefore determines `CameraId` assignment. `DomainPipelineSet` turns the
 plan's routes into schema-checked pipelines. `DomainRuntime` owns that pipeline set, `DomainState`,
-camera coalescing, camera presentation scheduling, and domain reduction metrics. `PlaybackCore` is
-now a compatibility facade that adds source-read timing and delegates shared-domain work.
+camera coalescing, camera presentation scheduling, and domain reduction metrics.
 
-Recording I/O, buffering, prefetch, and cursor candidate/commit remain outside `PlaybackCore`.
+Recording I/O, buffering, prefetch, source-read timing, and cursor candidate/commit remain outside
+`DomainRuntime`.
 Web local-file and remote-server recordings already share `RecordingDataPlane`; Native local
 playback retains its mmap-based `McapPlayback` path. Those source differences are intentionally not
 part of this refactor stage.
@@ -148,9 +148,8 @@ chosen.
    routing behavior, then make the builder the single owner of Viewer domain policy.
 3. **Stage 2 — domain pipeline naming and construction:** make the domain-only role of
    `PipelineSet` explicit and build it from the plan while keeping decoder functions reusable.
-4. **Stage 3 — `DomainRuntime`:** move domain reduction, state, camera admission/scheduling, and
-   domain metrics out of `PlaybackCore`; leave clock, data plane, buffering, and seek orchestration
-   outside.
+4. **Stage 3 — `DomainRuntime`:** own domain reduction, state, camera admission/scheduling, and
+   domain metrics directly; clock, data plane, buffering, and seek orchestration remain outside.
 5. **Stage 4 — Live convergence:** replace Live's duplicate pipeline/state pair with the same
    `DomainRuntime`, without forcing Recording and Live behind one source trait.
 6. **Stage 5 — Local/Remote planning cleanup:** make catalogs describe source contents and make

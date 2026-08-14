@@ -8,9 +8,9 @@ use crate::{
 };
 use std::{error::Error, fmt, time::Duration};
 use viewer_core::{
-    ArrivalTime, CameraId, DomainState, FetchIntent, PipelineCounters, PlaybackClock,
-    PlaybackCommand, PlaybackCore, PlaybackEffect, PlaybackLoadState, PlaybackPerformance,
-    SessionPlan,
+    ArrivalTime, CameraId, DomainRuntime, DomainState, FetchIntent, PipelineCounters,
+    PlaybackClock, PlaybackCommand, PlaybackEffect, PlaybackLoadState, PlaybackPerformance,
+    SessionPlan, StageTiming,
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -39,7 +39,7 @@ impl Error for WebPlaybackError {}
 /// Browser playback shared by local File.slice and Recording Server sources.
 pub(crate) struct WebPlayback {
     clock: PlaybackClock,
-    core: PlaybackCore,
+    domain: DomainRuntime,
     data: RecordingDataPlane<WebWindowLoader>,
     load_state: PlaybackLoadState,
     pending_seek: Option<ArrivalTime>,
@@ -89,12 +89,12 @@ impl WebPlayback {
         loader: WebWindowLoader,
         source_kind: PlaybackSourceKind,
     ) -> Result<Self, WebPlaybackError> {
-        let core = PlaybackCore::from_plan(plan);
+        let domain = DomainRuntime::new(plan);
         let data = RecordingDataPlane::new(loader, start, end_exclusive)
             .map_err(|error| WebPlaybackError::new(error.to_string()))?;
         Ok(Self {
             clock: PlaybackClock::new(start, end),
-            core,
+            domain,
             data,
             load_state: PlaybackLoadState::Ready,
             pending_seek: None,
@@ -150,8 +150,8 @@ impl WebPlayback {
         }
 
         let messages = self.data.messages_through(target, target);
-        self.core.reset_for_restore();
-        self.core.process_forward(Duration::ZERO, messages);
+        self.domain.reset_for_restore();
+        self.domain.process(Duration::ZERO, messages);
         self.clock.seek(target);
         self.pending_seek = None;
         self.buffer_underrun_active = false;
@@ -185,7 +185,7 @@ impl WebPlayback {
         }
 
         let messages = self.data.messages_through(self.clock.cursor(), requested);
-        self.core.process_forward(elapsed, messages);
+        self.domain.process(elapsed, messages);
         self.clock.commit_cursor(requested);
         self.buffer_underrun_active = false;
         self.load_state = PlaybackLoadState::Ready;
@@ -226,23 +226,23 @@ impl WebPlayback {
     }
 
     pub(crate) fn state(&self) -> &DomainState {
-        self.core.state()
+        self.domain.state()
     }
 
     pub(crate) fn camera_topics(&self) -> &[(CameraId, String)] {
-        self.core.camera_topics()
+        self.domain.camera_topics()
     }
 
     pub(crate) fn set_focused_camera(&mut self, camera: Option<CameraId>) {
-        self.core.set_focused_camera(camera);
+        self.domain.set_focused_camera(camera);
     }
 
     pub(crate) fn counters(&self) -> PipelineCounters {
-        self.core.counters()
+        self.domain.counters()
     }
 
     pub(crate) fn performance(&self) -> PlaybackPerformance {
-        self.core.performance()
+        PlaybackPerformance::from_parts(StageTiming::default(), self.domain.performance())
     }
 
     pub(crate) fn load_state(&self) -> PlaybackLoadState {
@@ -701,18 +701,18 @@ mod tests {
         .unwrap();
         assert_eq!(local.window.messages, remote.window.messages);
 
-        let mut local_core = PlaybackCore::from_plan(catalog.plan.clone());
-        let mut remote_core = PlaybackCore::from_plan(catalog.plan);
-        local_core.process_forward(Duration::from_secs(1), local.window.messages);
-        remote_core.process_forward(Duration::from_secs(1), remote.window.messages);
+        let mut local_domain = DomainRuntime::new(catalog.plan.clone());
+        let mut remote_domain = DomainRuntime::new(catalog.plan);
+        local_domain.process(Duration::from_secs(1), local.window.messages);
+        remote_domain.process(Duration::from_secs(1), remote.window.messages);
 
-        let local_cameras = local_core
+        let local_cameras = local_domain
             .state()
             .camera
             .frames()
             .map(|(id, frame)| (*id, frame.clone()))
             .collect::<Vec<_>>();
-        let remote_cameras = remote_core
+        let remote_cameras = remote_domain
             .state()
             .camera
             .frames()
@@ -725,17 +725,17 @@ mod tests {
             jpeg_start >= payload.start && jpeg_start + retained_jpeg.len() <= payload.end
         }));
         assert_eq!(
-            local_core.state().telemetry.latest(),
-            remote_core.state().telemetry.latest()
+            local_domain.state().telemetry.latest(),
+            remote_domain.state().telemetry.latest()
         );
         assert_eq!(
-            local_core.state().bev.latest(),
-            remote_core.state().bev.latest()
+            local_domain.state().bev.latest(),
+            remote_domain.state().bev.latest()
         );
         assert_eq!(
-            local_core.state().point_cloud.latest(),
-            remote_core.state().point_cloud.latest()
+            local_domain.state().point_cloud.latest(),
+            remote_domain.state().point_cloud.latest()
         );
-        assert_eq!(local_core.counters(), remote_core.counters());
+        assert_eq!(local_domain.counters(), remote_domain.counters());
     }
 }

@@ -792,15 +792,15 @@ mod tests {
                 bytes,
             )
             .unwrap();
-            let mut core = viewer_core::PlaybackCore::from_plan(catalog.plan);
-            core.process_forward(std::time::Duration::from_secs(1), loaded.window.messages);
-            let frames = core
+            let mut domain = viewer_core::DomainRuntime::new(catalog.plan);
+            domain.process(std::time::Duration::from_secs(1), loaded.window.messages);
+            let frames = domain
                 .state()
                 .camera
                 .frames()
                 .map(|(_, frame)| frame.clone())
                 .collect();
-            (frames, core.counters())
+            (frames, domain.counters())
         }
 
         assert_eq!(

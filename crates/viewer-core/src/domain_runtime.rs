@@ -316,6 +316,7 @@ impl DomainRuntime {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{McapPlayback, McapSource, PlaybackCommand};
 
     #[test]
     fn camera_rates_are_derived_from_the_scheduling_intervals() {
@@ -328,6 +329,48 @@ mod tests {
         assert_eq!(
             DomainPerformance::default().background_camera_hz(),
             CAMERA_PRESENTATION_POLICY.background_hz()
+        );
+    }
+
+    #[test]
+    fn direct_message_reduction_matches_local_playback() {
+        let bytes = std::fs::read(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../tests/fixtures/camera-jpeg/camera_front_3s.mcap"),
+        )
+        .unwrap();
+        let mut source = McapSource::new(bytes.as_slice()).unwrap();
+        let mut domain =
+            DomainRuntime::from_catalog(source.catalog(), "/camera/front/image/compressed")
+                .unwrap();
+        let messages = source.read_until(source.time_range().1).unwrap();
+        domain.process(Duration::from_secs(10), messages);
+
+        let mut playback =
+            McapPlayback::new(bytes.as_slice(), "/camera/front/image/compressed").unwrap();
+        playback.apply_command(PlaybackCommand::Toggle).unwrap();
+        playback.tick(Duration::from_secs(10)).unwrap();
+
+        assert_eq!(domain.counters(), playback.counters());
+        assert_eq!(
+            domain
+                .state()
+                .camera
+                .latest_by_arrival()
+                .map(|frame| frame.arrival_time),
+            playback
+                .state()
+                .camera
+                .latest_by_arrival()
+                .map(|frame| frame.arrival_time)
+        );
+        assert_eq!(
+            domain.performance().camera_input_frames,
+            playback.performance().camera_input_frames
+        );
+        assert_eq!(
+            domain.performance().camera_presented_frames,
+            playback.performance().camera_presented_frames
         );
     }
 }
