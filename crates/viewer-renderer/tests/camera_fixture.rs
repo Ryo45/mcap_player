@@ -27,7 +27,8 @@ fn fixture_has_30_decodable_frames_and_distinct_time_domains() {
     let mut pipelines = DomainPipelineSet::from_routes(&[DomainRoute {
         stream: descriptor.clone(),
         target: DomainTarget::Camera(CameraId(0)),
-    }]);
+    }])
+    .unwrap();
     let (_, end) = source.time_range();
     let mut updates = vec![];
     for message in source.read_until(end).unwrap() {
@@ -83,7 +84,8 @@ fn malformed_message_does_not_stop_the_next_frame() {
     let mut pipelines = DomainPipelineSet::from_routes(&[DomainRoute {
         stream: descriptor.clone(),
         target: DomainTarget::Camera(CameraId(0)),
-    }]);
+    }])
+    .unwrap();
     let (_, end) = source.time_range();
     let messages = source.read_until(end).unwrap();
     let mut bad = messages[0].clone();

@@ -28,6 +28,22 @@ pub enum DomainTarget {
     Transforms { is_static: bool },
 }
 
+impl DomainTarget {
+    pub(crate) const fn expected_schema(self) -> &'static str {
+        match self {
+            Self::Camera(_) => "sensor_msgs/msg/CompressedImage",
+            Self::Telemetry => "nav_msgs/msg/Odometry",
+            Self::Path => "nav_msgs/msg/Path",
+            Self::PointCloud => "sensor_msgs/msg/LaserScan",
+            Self::Transforms { .. } => "tf2_msgs/msg/TFMessage",
+        }
+    }
+
+    pub(crate) fn accepts_stream(self, stream: &StreamDescriptor) -> bool {
+        stream.message_encoding == "cdr" && stream.schema == self.expected_schema()
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DomainRoute {
     pub stream: StreamDescriptor,
@@ -49,10 +65,7 @@ impl SessionPlan {
         let mut cameras = catalog
             .streams
             .iter()
-            .filter(|stream| {
-                stream.message_encoding == "cdr"
-                    && stream.schema == "sensor_msgs/msg/CompressedImage"
-            })
+            .filter(|stream| DomainTarget::Camera(CameraId(0)).accepts_stream(stream))
             .cloned()
             .collect::<Vec<_>>();
         let Some(primary_index) = cameras
@@ -77,7 +90,7 @@ impl SessionPlan {
             catalog
                 .streams
                 .iter()
-                .find(|stream| stream.topic == *topic && stream.message_encoding == "cdr")
+                .find(|stream| stream.topic == *topic && target.accepts_stream(stream))
                 .cloned()
                 .map(|stream| DomainRoute {
                     stream,
@@ -153,7 +166,7 @@ impl std::error::Error for SessionPlanError {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::StreamId;
+    use crate::{DomainPipelineSet, StreamId};
 
     fn descriptor(id: u32, topic: &str, schema: &str) -> StreamDescriptor {
         StreamDescriptor {
@@ -212,5 +225,81 @@ mod tests {
                 (StreamId(24), DomainTarget::Transforms { is_static: true },),
             ]
         );
+    }
+
+    #[test]
+    fn optional_domain_routes_require_the_expected_schema() {
+        let catalog = StreamCatalog {
+            streams: vec![
+                descriptor(1, "/camera", "sensor_msgs/msg/CompressedImage"),
+                descriptor(2, ODOM_TOPIC, "nav_msgs/msg/Odometry"),
+                descriptor(3, ODOM_TOPIC, "example_msgs/msg/Foo"),
+                descriptor(4, SCAN_TOPIC, "sensor_msgs/msg/LaserScan"),
+                descriptor(5, SCAN_TOPIC, "example_msgs/msg/Foo"),
+                descriptor(6, TF_TOPIC, "tf2_msgs/msg/TFMessage"),
+                descriptor(7, TF_STATIC_TOPIC, "tf2_msgs/msg/TFMessage"),
+                descriptor(8, PATH_TOPIC, "example_msgs/msg/Foo"),
+            ],
+        };
+
+        let plan = SessionPlan::build(&catalog, "/camera").unwrap();
+
+        assert!(plan.domain_routes().iter().any(|route| {
+            route.stream.id == StreamId(2) && route.target == DomainTarget::Telemetry
+        }));
+        assert!(plan.domain_routes().iter().any(|route| {
+            route.stream.id == StreamId(4) && route.target == DomainTarget::PointCloud
+        }));
+        assert!(plan.domain_routes().iter().any(|route| {
+            route.stream.id == StreamId(6)
+                && route.target == DomainTarget::Transforms { is_static: false }
+        }));
+        assert!(plan.domain_routes().iter().any(|route| {
+            route.stream.id == StreamId(7)
+                && route.target == DomainTarget::Transforms { is_static: true }
+        }));
+        assert!(
+            plan.domain_routes()
+                .iter()
+                .all(|route| { !matches!(route.stream.id, StreamId(3 | 5 | 8)) })
+        );
+    }
+
+    #[test]
+    fn duplicate_topic_selects_the_stream_with_the_expected_schema() {
+        let catalog = StreamCatalog {
+            streams: vec![
+                descriptor(1, "/camera", "sensor_msgs/msg/CompressedImage"),
+                descriptor(2, ODOM_TOPIC, "example_msgs/msg/Foo"),
+                descriptor(3, ODOM_TOPIC, "nav_msgs/msg/Odometry"),
+            ],
+        };
+
+        let plan = SessionPlan::build(&catalog, "/camera").unwrap();
+
+        let telemetry = plan
+            .domain_routes()
+            .iter()
+            .find(|route| route.target == DomainTarget::Telemetry)
+            .unwrap();
+        assert_eq!(telemetry.stream.id, StreamId(3));
+    }
+
+    #[test]
+    fn every_built_route_can_construct_a_domain_pipeline() {
+        let catalog = StreamCatalog {
+            streams: vec![
+                descriptor(1, "/camera", "sensor_msgs/msg/CompressedImage"),
+                descriptor(2, ODOM_TOPIC, "nav_msgs/msg/Odometry"),
+                descriptor(3, PATH_TOPIC, "nav_msgs/msg/Path"),
+                descriptor(4, SCAN_TOPIC, "sensor_msgs/msg/LaserScan"),
+                descriptor(5, TF_TOPIC, "tf2_msgs/msg/TFMessage"),
+                descriptor(6, TF_STATIC_TOPIC, "tf2_msgs/msg/TFMessage"),
+            ],
+        };
+
+        let plan = SessionPlan::build(&catalog, "/camera").unwrap();
+
+        DomainPipelineSet::from_routes(plan.domain_routes()).unwrap();
     }
 }
