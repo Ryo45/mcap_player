@@ -4,7 +4,6 @@ use crate::{
     diagnostics::AppDiagnostics,
     graphics::{Graphics, RenderInput},
     interaction::ViewerAction,
-    plot_loader::PlotLoader,
     presentation::{PresentationState, PresentationTransition},
     preview::{PreviewCoordinator, fingerprint_source},
     session::PlaybackSession,
@@ -30,7 +29,6 @@ pub(crate) struct App {
     pub(crate) window: Option<Arc<Window>>,
     pub(crate) session: Option<PlaybackSession>,
     pub(crate) workspace: NativeWorkspace,
-    pub(crate) plot_loader: PlotLoader,
     pub(crate) preview: PreviewCoordinator,
     pub(crate) bookmarks: BookmarkState,
     pub(crate) presentation_state: PresentationState,
@@ -48,15 +46,12 @@ impl App {
                     .reset_for_source(session.default_focused_camera());
                 session.set_focused_camera(self.workspace.focused_camera());
                 let requirements = self.workspace.data_requirements();
-                if requirements.vehicle_speed {
-                    if let Some(request) = session.speed_signal_request(4_000)
-                        && let Err(error) = self.plot_loader.start_speed_overview(request)
-                    {
-                        log::warn!("Plot unavailable: {error}");
-                    }
-                } else {
-                    self.plot_loader.clear();
+                if requirements.vehicle_speed
+                    && let Err(error) = session.request_speed_signal(4_000)
+                {
+                    log::warn!("Plot unavailable: {error}");
                 }
+                session.load_inspections(&requirements.inspections);
                 self.args.mcap = path.to_owned();
                 self.session = Some(session);
                 match fingerprint_source(path) {
@@ -89,7 +84,7 @@ impl App {
         if let Err(error) = session.tick(elapsed) {
             self.diagnostics.set_playback_error(error.to_string());
         }
-        self.plot_loader.poll();
+        session.poll_queries();
 
         let Some(graphics) = &mut self.graphics else {
             return Ok(());
@@ -124,7 +119,7 @@ impl App {
         let workspace_warning = self.workspace.startup_warning();
         let error = self.diagnostics.message(&[
             workspace_warning.as_deref(),
-            self.plot_loader.error(),
+            session.speed_signal_error(),
             self.preview.warning(),
             self.bookmarks.warning(),
         ]);
@@ -143,9 +138,10 @@ impl App {
                     presentation: &presentation.viewer,
                     camera_overlays: presentation.camera_overlays,
                     playback,
-                    speed_signal: self.plot_loader.signal(),
-                    plot_loading: self.plot_loader.is_loading(),
-                    plot_error: self.plot_loader.error(),
+                    speed_signal: session.speed_signal(),
+                    plot_loading: session.speed_signal_loading(),
+                    plot_error: session.speed_signal_error(),
+                    inspections: session.inspections(),
                     preview: self.preview.snapshot(),
                     preview_speed: self.preview.speed_overview(),
                     bookmarks: self.bookmarks.bookmarks(),
@@ -301,7 +297,8 @@ impl ApplicationHandler for App {
             #[cfg(feature = "ros2-live")]
             SourceMode::Ros { reliable } => {
                 let mut session = PlaybackSession::open_live(self.args.topic.clone(), reliable);
-                self.plot_loader.clear();
+                let requirements = self.workspace.data_requirements();
+                session.load_inspections(&requirements.inspections);
                 self.preview.clear();
                 self.bookmarks = BookmarkState::default();
                 Self::apply_presentation_transition(

@@ -3,6 +3,7 @@ mod args;
 mod bookmarks;
 mod diagnostics;
 mod graphics;
+mod inspection;
 mod interaction;
 mod live;
 mod panels;
@@ -16,7 +17,6 @@ use anyhow::Result;
 use app::App;
 use args::Args;
 use diagnostics::AppDiagnostics;
-use plot_loader::PlotLoader;
 use presentation::PresentationState;
 use preview::PreviewCoordinator;
 use std::time::Instant;
@@ -33,7 +33,6 @@ fn main() -> Result<()> {
         window: None,
         session: None,
         workspace: NativeWorkspace::load_bundled_or_fallback(),
-        plot_loader: PlotLoader::default(),
         preview: PreviewCoordinator::default(),
         bookmarks: bookmarks::BookmarkState::default(),
         presentation_state: PresentationState::default(),

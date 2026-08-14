@@ -296,6 +296,7 @@ mod tests {
                         static_transform_count: 0,
                         dynamic_transform_count: 0,
                     },
+                    inspections: &[],
                 },
             );
             assert!(output.render_requests.bev_size.is_some());

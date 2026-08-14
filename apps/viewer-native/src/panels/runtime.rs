@@ -1,6 +1,6 @@
 use super::{
-    BevPanel, CameraPanel, NativePanel, PanelDataRequirements, PlaceholderPanel, PlotPanel,
-    ScenePanel,
+    BevPanel, CameraPanel, InspectorPanel, NativePanel, PanelDataRequirements, PlaceholderPanel,
+    PlotPanel, ScenePanel,
 };
 use std::collections::BTreeMap;
 use viewer_core::CameraId;
@@ -40,7 +40,10 @@ impl PanelRuntimeStore {
                     panel = NativePanel::Placeholder(PlaceholderPanel::duplicate_singleton(node));
                 }
                 NativePanel::Scene(_) => has_scene = true,
-                NativePanel::Camera(_) | NativePanel::Plot(_) | NativePanel::Placeholder(_) => {}
+                NativePanel::Camera(_)
+                | NativePanel::Plot(_)
+                | NativePanel::Inspector(_)
+                | NativePanel::Placeholder(_) => {}
             }
             if panels.insert(node.id.clone(), panel).is_some() {
                 warnings.push(format!(
@@ -124,6 +127,7 @@ pub(crate) fn create_native_panel(node: &PanelNode) -> NativePanel {
         "camera" => CameraPanel::create(node),
         "bev" => BevPanel::create(node),
         "plot" => PlotPanel::create(node),
+        "inspector" => InspectorPanel::create(node),
         "scene-3d" => ScenePanel::create(node),
         _ => NativePanel::Placeholder(PlaceholderPanel::unknown_type(node)),
     }
@@ -185,6 +189,12 @@ mod tests {
         assert_eq!(camera.kind_name(), "camera");
         let plot = create_native_panel(&node("plot", "plot", json!({"signal": "vehicle-speed"})));
         assert_eq!(plot.kind_name(), "plot");
+        let inspector = create_native_panel(&node(
+            "inspector",
+            "inspector",
+            json!({"topic": "/diagnostics", "maxMessages": 8}),
+        ));
+        assert_eq!(inspector.kind_name(), "inspector");
     }
 
     #[test]
@@ -242,5 +252,21 @@ mod tests {
         assert_eq!(result.store.placeholder_count(), 0);
         assert!(result.warnings.is_empty());
         assert!(result.store.data_requirements().vehicle_speed);
+    }
+
+    #[test]
+    fn inspector_contributes_a_bounded_topic_requirement() {
+        let result = PanelRuntimeStore::from_layout(&layout(vec![node(
+            "inspector",
+            "inspector",
+            json!({"topic": "/diagnostics", "maxMessages": 8}),
+        )]));
+        assert_eq!(
+            result.store.data_requirements().inspections,
+            vec![crate::inspection::InspectorRequirement {
+                topic: "/diagnostics".into(),
+                max_messages: 8,
+            }]
+        );
     }
 }

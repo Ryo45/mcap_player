@@ -1,5 +1,7 @@
+use crate::inspection::{InspectedMessage, InspectorRequirement, TopicInspection};
 #[cfg(feature = "ros2-live")]
 use crate::live;
+use crate::plot_loader::{PlotLoader, inspect_topic_from_path};
 #[cfg(feature = "ros2-live")]
 use anyhow::bail;
 use anyhow::{Context, Result};
@@ -10,8 +12,8 @@ use std::{
     time::Duration,
 };
 use viewer_core::{
-    CameraId, DomainState, McapPlayback, PipelineCounters, PlaybackCommand, PlaybackEffect,
-    PlaybackPerformance, PlaybackView,
+    CameraId, DomainState, LoadedSignal, McapPlayback, PipelineCounters, PlaybackCommand,
+    PlaybackEffect, PlaybackPerformance, PlaybackView,
 };
 #[cfg(feature = "ros2-live")]
 use viewer_core::{DomainRuntime, SessionPlan, StreamCatalog};
@@ -22,6 +24,8 @@ pub(crate) struct PlaybackSession {
     camera_topics: Vec<(CameraId, String)>,
     source_name: String,
     recording_path: Option<PathBuf>,
+    plot_loader: PlotLoader,
+    inspections: Vec<TopicInspection>,
 }
 
 pub(crate) struct SpeedSignalRequest {
@@ -62,6 +66,8 @@ impl PlaybackSession {
             camera_topics,
             source_name: path.display().to_string(),
             recording_path: Some(path.to_owned()),
+            plot_loader: PlotLoader::default(),
+            inspections: Vec::new(),
         })
     }
 
@@ -92,6 +98,8 @@ impl PlaybackSession {
                 if reliable { "reliable" } else { "best effort" }
             ),
             recording_path: None,
+            plot_loader: PlotLoader::default(),
+            inspections: Vec::new(),
         }
     }
 
@@ -101,6 +109,66 @@ impl PlaybackSession {
             origin: self.playback_view()?.start,
             max_points,
         })
+    }
+
+    pub(crate) fn request_speed_signal(&mut self, max_points: usize) -> Result<()> {
+        let Some(request) = self.speed_signal_request(max_points) else {
+            self.plot_loader.clear();
+            return Ok(());
+        };
+        self.plot_loader.start_speed_overview(request)
+    }
+
+    pub(crate) fn poll_queries(&mut self) {
+        self.plot_loader.poll();
+    }
+
+    pub(crate) fn speed_signal(&self) -> Option<&LoadedSignal> {
+        self.plot_loader.signal()
+    }
+
+    pub(crate) fn speed_signal_loading(&self) -> bool {
+        self.plot_loader.is_loading()
+    }
+
+    pub(crate) fn speed_signal_error(&self) -> Option<&str> {
+        self.plot_loader.error()
+    }
+
+    pub(crate) fn inspect_topic(
+        &self,
+        topic: &str,
+        max_messages: usize,
+    ) -> Result<Vec<InspectedMessage>> {
+        let path = self
+            .recording_path
+            .as_ref()
+            .context("message inspection is unavailable for this source")?;
+        inspect_topic_from_path(path, topic, max_messages)
+    }
+
+    pub(crate) fn load_inspections(&mut self, requirements: &[InspectorRequirement]) {
+        self.inspections = requirements
+            .iter()
+            .map(|requirement| {
+                match self.inspect_topic(&requirement.topic, requirement.max_messages) {
+                    Ok(messages) => TopicInspection {
+                        topic: requirement.topic.clone(),
+                        messages,
+                        error: None,
+                    },
+                    Err(error) => TopicInspection {
+                        topic: requirement.topic.clone(),
+                        messages: Vec::new(),
+                        error: Some(error.to_string()),
+                    },
+                }
+            })
+            .collect();
+    }
+
+    pub(crate) fn inspections(&self) -> &[TopicInspection] {
+        &self.inspections
     }
 
     pub(crate) fn tick(&mut self, elapsed: Duration) -> Result<()> {

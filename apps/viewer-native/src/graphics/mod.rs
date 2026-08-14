@@ -5,7 +5,8 @@ mod ui;
 pub(crate) mod views;
 
 use crate::{
-    interaction::ViewerAction, presentation::PresentationTransition, workspace::NativeWorkspace,
+    inspection::TopicInspection, interaction::ViewerAction, presentation::PresentationTransition,
+    workspace::NativeWorkspace,
 };
 use bev_renderer::{BevFrame, BevRenderer};
 use egui_wgpu::Renderer as EguiRenderer;
@@ -25,6 +26,7 @@ pub(crate) struct RenderInput<'a> {
     pub(crate) speed_signal: Option<&'a LoadedSignal>,
     pub(crate) plot_loading: bool,
     pub(crate) plot_error: Option<&'a str>,
+    pub(crate) inspections: &'a [TopicInspection],
     pub(crate) preview: Option<&'a PreviewSnapshot>,
     pub(crate) preview_speed: Option<&'a SignalOverview>,
     pub(crate) bookmarks: &'a [Bookmark],
