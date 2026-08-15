@@ -1,4 +1,4 @@
-use crate::{CameraId, StreamCatalog, StreamDescriptor};
+use crate::{CameraId, SourceCatalog, StreamDescriptor};
 use std::fmt;
 
 pub const PATH_TOPIC: &str = "/planning/path";
@@ -59,7 +59,7 @@ pub struct SessionPlan {
 
 impl SessionPlan {
     pub fn build(
-        catalog: &StreamCatalog,
+        catalog: &SourceCatalog,
         primary_camera_topic: &str,
     ) -> Result<Self, SessionPlanError> {
         let mut cameras = catalog
@@ -174,12 +174,14 @@ mod tests {
             topic: topic.into(),
             schema: schema.into(),
             message_encoding: "cdr".into(),
+            timing: crate::StreamTimingSummary::default(),
         }
     }
 
     #[test]
     fn builds_current_camera_and_shared_domain_policy_once() {
-        let catalog = StreamCatalog {
+        let catalog = SourceCatalog {
+            time_range: None,
             streams: vec![
                 descriptor(
                     9,
@@ -229,7 +231,8 @@ mod tests {
 
     #[test]
     fn optional_domain_routes_require_the_expected_schema() {
-        let catalog = StreamCatalog {
+        let catalog = SourceCatalog {
+            time_range: None,
             streams: vec![
                 descriptor(1, "/camera", "sensor_msgs/msg/CompressedImage"),
                 descriptor(2, ODOM_TOPIC, "nav_msgs/msg/Odometry"),
@@ -267,7 +270,8 @@ mod tests {
 
     #[test]
     fn duplicate_topic_selects_the_stream_with_the_expected_schema() {
-        let catalog = StreamCatalog {
+        let catalog = SourceCatalog {
+            time_range: None,
             streams: vec![
                 descriptor(1, "/camera", "sensor_msgs/msg/CompressedImage"),
                 descriptor(2, ODOM_TOPIC, "example_msgs/msg/Foo"),
@@ -287,7 +291,8 @@ mod tests {
 
     #[test]
     fn every_built_route_can_construct_a_domain_pipeline() {
-        let catalog = StreamCatalog {
+        let catalog = SourceCatalog {
+            time_range: None,
             streams: vec![
                 descriptor(1, "/camera", "sensor_msgs/msg/CompressedImage"),
                 descriptor(2, ODOM_TOPIC, "nav_msgs/msg/Odometry"),

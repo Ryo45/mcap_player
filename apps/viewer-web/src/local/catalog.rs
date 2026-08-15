@@ -1,9 +1,12 @@
 use std::{error::Error, fmt};
-use viewer_core::{ArrivalTime, SessionPlan, StreamCatalog, StreamDescriptor, StreamId};
+use viewer_core::{
+    ArrivalTime, RecordingTimeRange, SessionPlan, SourceCatalog, StreamDescriptor, StreamId,
+    StreamTimingSummary,
+};
 
 #[derive(Clone, Debug)]
 pub(crate) struct LocalCatalog {
-    pub core: StreamCatalog,
+    pub core: SourceCatalog,
     pub start: ArrivalTime,
     pub end: ArrivalTime,
     pub end_exclusive: ArrivalTime,
@@ -73,10 +76,22 @@ impl LocalCatalog {
                     .map(|schema| schema.name.clone())
                     .unwrap_or_default(),
                 message_encoding: channel.message_encoding.clone(),
+                timing: StreamTimingSummary {
+                    message_count: summary
+                        .stats
+                        .as_ref()
+                        .and_then(|stats| stats.channel_message_counts.get(&channel.id).copied()),
+                },
             })
             .collect::<Vec<_>>();
         streams.sort_by_key(|stream| stream.id.0);
-        let core = StreamCatalog { streams };
+        let core = SourceCatalog {
+            time_range: Some(RecordingTimeRange {
+                start,
+                end_exclusive,
+            }),
+            streams,
+        };
         let plan = SessionPlan::build(&core, primary_camera_topic)
             .map_err(|error| LocalCatalogError::new(error.to_string()))?;
         let selected_topics = plan.selected_topics();
@@ -124,6 +139,20 @@ mod tests {
             7
         );
         assert!(catalog.core.by_topic(ODOM_TOPIC).is_some());
+        assert!(
+            catalog
+                .core
+                .streams
+                .iter()
+                .all(|stream| stream.timing.message_count.is_some())
+        );
+        assert_eq!(
+            catalog.core.time_range,
+            Some(RecordingTimeRange {
+                start: catalog.start,
+                end_exclusive: catalog.end_exclusive,
+            })
+        );
         assert_eq!(catalog.end_exclusive.0, catalog.end.0 + 1);
         assert_eq!(
             catalog.selected_topics,

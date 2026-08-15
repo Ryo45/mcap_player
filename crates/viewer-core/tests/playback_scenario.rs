@@ -132,6 +132,7 @@ fn camera_stream(id: u32, topic: &str) -> StreamDescriptor {
         topic: topic.into(),
         schema: "sensor_msgs/msg/CompressedImage".into(),
         message_encoding: "cdr".into(),
+        timing: viewer_core::StreamTimingSummary::default(),
     }
 }
 
