@@ -5,9 +5,10 @@ use std::{
     time::Duration,
 };
 use viewer_core::{
-    ArrivalTime, CameraId, CameraStatus, CompressedImage, DomainState, McapPlayback,
-    MeasurementTime, PipelineCounters, PlaybackCommand, PlaybackPerformance, PlaybackSpeed,
-    PlaybackView, RawMessage, StreamDescriptor, StreamId, encode_compressed_image_cdr,
+    ArrivalTime, CameraController, CameraId, CameraState, CameraStatus, CompressedImage,
+    McapPlayback, MeasurementTime, PlaybackCommand, PlaybackPerformance, PlaybackRequirements,
+    PlaybackSpeed, PlaybackView, ProcessingCounters, RawMessage, SessionPlan, StageTiming,
+    StreamDescriptor, StreamId, encode_compressed_image_cdr,
 };
 
 const CAMERA_TOPIC: &str = "/camera/front/image/compressed";
@@ -31,13 +32,13 @@ struct PlaybackObservation {
     playback: PlaybackView,
     latest_camera_arrival: Option<ArrivalTime>,
     camera_status: CameraStatus,
-    counters: PipelineCounters,
+    counters: ProcessingCounters,
 }
 
 struct PlaybackOutcome {
-    domain_state: DomainState,
+    camera_state: CameraState,
     playback_status: PlaybackView,
-    counters: PipelineCounters,
+    counters: ProcessingCounters,
     performance: PlaybackPerformance,
     observations: Vec<PlaybackObservation>,
 }
@@ -45,34 +46,62 @@ struct PlaybackOutcome {
 impl PlaybackScenario {
     fn run(self) -> PlaybackOutcome {
         let backing = write_mcap(&self.streams, &self.messages);
-        let mut playback = McapPlayback::new(backing, &self.primary_camera_topic).unwrap();
-        playback.set_focused_camera(self.initial_focus);
+        let mut playback = McapPlayback::new(backing).unwrap();
+        let plan = SessionPlan::build(
+            playback.catalog(),
+            &self.primary_camera_topic,
+            &PlaybackRequirements::default(),
+        )
+        .unwrap();
+        playback.select_streams(plan.selected_stream_ids());
+        let mut cameras = CameraController::new(&plan);
+        cameras.set_focused_camera(self.initial_focus);
         let mut observations = Vec::with_capacity(self.steps.len());
 
         for step in self.steps {
             match step {
-                PlaybackStep::Elapse(elapsed) => playback.tick(elapsed).unwrap(),
-                PlaybackStep::Command(command) => {
-                    playback.apply_command(command).unwrap();
+                PlaybackStep::Elapse(elapsed) => playback
+                    .tick(elapsed, |elapsed, messages| {
+                        for message in &messages {
+                            cameras.admit(message);
+                        }
+                        cameras.advance(elapsed);
+                    })
+                    .unwrap(),
+                PlaybackStep::Command(PlaybackCommand::Toggle) => playback.clock_mut().toggle(),
+                PlaybackStep::Command(PlaybackCommand::SetSpeed(speed)) => {
+                    playback.clock_mut().set_speed(speed);
                 }
+                PlaybackStep::Command(PlaybackCommand::Seek(cursor)) => playback
+                    .seek_with(cursor, |messages| {
+                        cameras.reset_for_restore();
+                        for message in &messages {
+                            cameras.admit(message);
+                        }
+                        cameras.advance(Duration::ZERO);
+                    })
+                    .unwrap(),
             }
             observations.push(PlaybackObservation {
                 playback: playback.clock().view(),
-                latest_camera_arrival: playback
+                latest_camera_arrival: cameras
                     .state()
-                    .camera
                     .latest_for(CameraId(0))
                     .map(|frame| frame.arrival_time),
-                camera_status: playback.state().camera.status_for(CameraId(0)),
-                counters: playback.counters(),
+                camera_status: cameras.state().status_for(CameraId(0)),
+                counters: cameras.counters(),
             });
         }
 
         PlaybackOutcome {
-            domain_state: playback.state().clone(),
+            camera_state: cameras.state().clone(),
             playback_status: playback.clock().view(),
-            counters: playback.counters(),
-            performance: playback.performance(),
+            counters: cameras.counters(),
+            performance: PlaybackPerformance::from_controllers(
+                playback.source_read_timing(),
+                StageTiming::default(),
+                &cameras,
+            ),
             observations,
         }
     }
@@ -208,7 +237,7 @@ fn supplied_elapsed_and_commands_control_cursor_and_message_cutoff() {
     );
     assert!(!outcome.playback_status.playing);
     assert_eq!(outcome.counters.decoded, 3);
-    let latest = outcome.domain_state.camera.latest_for(CameraId(0)).unwrap();
+    let latest = outcome.camera_state.latest_for(CameraId(0)).unwrap();
     assert_eq!(latest.arrival_time, ArrivalTime(START + 500_000_000));
     assert_eq!(latest.jpeg, vec![2]);
 }
@@ -280,7 +309,7 @@ fn focused_camera_is_presented_at_ten_hz_and_background_cameras_at_five_hz() {
     assert_eq!(outcome.performance.camera_input_frames, 7 * 51);
     assert!(outcome.counters.dropped > 0);
 
-    let focused_frame = outcome.domain_state.camera.latest_for(CameraId(0)).unwrap();
+    let focused_frame = outcome.camera_state.latest_for(CameraId(0)).unwrap();
     assert_eq!(
         focused_frame.arrival_time,
         ArrivalTime(START + 1_000_000_000)
@@ -289,7 +318,7 @@ fn focused_camera_is_presented_at_ten_hz_and_background_cameras_at_five_hz() {
 }
 
 #[test]
-fn seek_clears_stale_camera_and_waits_for_the_next_reached_frame() {
+fn seek_restores_the_recent_camera_sample_before_committing() {
     let seek_cursor = ArrivalTime(START + 650_000_000);
     let outcome = PlaybackScenario {
         streams: vec![camera_stream(1, CAMERA_TOPIC)],
@@ -319,19 +348,19 @@ fn seek_clears_stale_camera_and_waits_for_the_next_reached_frame() {
     let immediately_after_seek = outcome.observations[3];
     assert_eq!(immediately_after_seek.playback.cursor, seek_cursor);
     assert!(immediately_after_seek.playback.playing);
-    assert_eq!(immediately_after_seek.latest_camera_arrival, None);
     assert_eq!(
-        immediately_after_seek.camera_status,
-        CameraStatus::WaitingForCameraFrame
+        immediately_after_seek.latest_camera_arrival,
+        Some(ArrivalTime(START + 50_000_000))
     );
+    assert_eq!(immediately_after_seek.camera_status, CameraStatus::Ready);
 
     let zero_elapsed_after_seek = outcome.observations[4];
     assert_eq!(zero_elapsed_after_seek.playback.cursor, seek_cursor);
-    assert_eq!(zero_elapsed_after_seek.latest_camera_arrival, None);
     assert_eq!(
-        zero_elapsed_after_seek.camera_status,
-        CameraStatus::WaitingForCameraFrame
+        zero_elapsed_after_seek.latest_camera_arrival,
+        Some(ArrivalTime(START + 50_000_000))
     );
+    assert_eq!(zero_elapsed_after_seek.camera_status, CameraStatus::Ready);
 
     let next_reached_frame = outcome.observations[5];
     assert_eq!(
@@ -344,7 +373,7 @@ fn seek_clears_stale_camera_and_waits_for_the_next_reached_frame() {
     );
     assert_eq!(next_reached_frame.camera_status, CameraStatus::Ready);
 
-    let latest = outcome.domain_state.camera.latest_for(CameraId(0)).unwrap();
+    let latest = outcome.camera_state.latest_for(CameraId(0)).unwrap();
     assert_eq!(latest.arrival_time, ArrivalTime(START + 750_000_000));
     assert_eq!(latest.jpeg, vec![2]);
 }

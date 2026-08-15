@@ -79,6 +79,12 @@ impl PanelRuntimeStore {
         }
     }
 
+    pub(crate) fn has_scene(&self) -> bool {
+        self.panels
+            .values()
+            .any(|panel| matches!(panel, NativePanel::Scene(_)))
+    }
+
     pub(crate) fn set_focused_camera(
         &mut self,
         panel_id: &PanelId,

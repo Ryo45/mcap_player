@@ -1,4 +1,7 @@
-use super::{NativePanel, PanelFrameContext, PanelOutput, PlaceholderPanel, SCENE_CONFIG_VERSION};
+use super::{
+    NativePanel, PanelDataRequirements, PanelFrameContext, PanelOutput, PlaceholderPanel,
+    SCENE_CONFIG_VERSION,
+};
 use crate::{
     graphics::views::{SceneViewInput, show_scene_view},
     interaction::ViewerAction,
@@ -37,6 +40,13 @@ impl ScenePanel {
                 format!("Invalid scene config: {error}"),
             )),
         }
+    }
+
+    pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
+        requirements.playback.require_path();
+        requirements.playback.require_odometry();
+        requirements.playback.require_point_cloud();
+        requirements.playback.require_transforms();
     }
 
     pub(crate) fn show(

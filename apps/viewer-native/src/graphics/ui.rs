@@ -2,10 +2,12 @@ use super::{Graphics, RenderInput, layout_host::show_layout_host, views::CameraT
 use crate::{
     interaction::ViewerAction,
     panels::{
-        PanelFrameContext, PanelRenderRequests, PanelResourceView, PreviewDataView, SceneDataView,
+        PanelFrameContext, PanelRenderRequests, PanelResourceView, PanelRuntimeStore,
+        PreviewDataView, SceneDataView,
     },
-    workspace::NativeWorkspace,
+    workspace::ViewerInteractionState,
 };
+use viewer_layout::LayoutDocument;
 use viewer_ui::{playback_controls, source_status};
 use winit::window::Window;
 
@@ -20,7 +22,9 @@ impl Graphics {
         &mut self,
         window: &Window,
         render_input: &RenderInput<'_>,
-        workspace: &mut NativeWorkspace,
+        layout: &LayoutDocument,
+        panels: &mut PanelRuntimeStore,
+        interaction: &ViewerInteractionState,
     ) -> UiOutput {
         let input = self.egui_state.take_egui_input(window);
         let presentation = render_input.presentation;
@@ -70,14 +74,11 @@ impl Graphics {
             static_transform_count: render_input.static_transform_count,
             dynamic_transform_count: render_input.dynamic_transform_count,
         };
-        let interaction = &workspace.interaction;
         let preview = PreviewDataView {
             active: interaction.preview_time.is_some(),
             speed_overview: render_input.preview_speed,
             bookmarks: render_input.bookmarks,
         };
-        let layout = &workspace.layout;
-        let panels = &mut workspace.panels;
         let mut actions = Vec::new();
         let mut render_requests = PanelRenderRequests::default();
 

@@ -6,7 +6,7 @@ pub use camera::{CameraPresentation, OverlayStatus};
 pub use diagnostics::DiagnosticsPresentation;
 pub use telemetry::TelemetryPresentation;
 
-use crate::{CameraId, DomainState};
+use crate::{BevState, CameraId, CameraState, PointCloudState, TelemetryState};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -16,25 +16,40 @@ pub struct ViewerPresentation {
     pub diagnostics: DiagnosticsPresentation,
 }
 
+/// Narrow read-only input used to build one UI presentation snapshot.
+pub struct ViewerPresentationInput<'a> {
+    pub cameras: &'a CameraState,
+    pub telemetry: &'a TelemetryState,
+    pub path: &'a BevState,
+    pub point_cloud: Option<&'a PointCloudState>,
+    pub camera_topics: &'a [(CameraId, String)],
+    pub focused_camera: Option<CameraId>,
+    pub overlays: &'a BTreeMap<CameraId, OverlayStatus>,
+    pub diagnostics: DiagnosticsPresentation,
+}
+
 impl ViewerPresentation {
-    pub fn from_domain(
-        state: &DomainState,
-        camera_topics: &[(CameraId, String)],
-        focused_camera: Option<CameraId>,
-        overlays: &BTreeMap<CameraId, OverlayStatus>,
-        mut diagnostics: DiagnosticsPresentation,
-    ) -> Self {
-        diagnostics.path_points = state.bev.latest().map_or(0, |frame| frame.points.len());
-        diagnostics.scan_points = state
-            .point_cloud
-            .latest()
+    pub fn from_features(input: ViewerPresentationInput<'_>) -> Self {
+        let ViewerPresentationInput {
+            cameras,
+            telemetry,
+            path,
+            point_cloud,
+            camera_topics,
+            focused_camera,
+            overlays,
+            mut diagnostics,
+        } = input;
+        diagnostics.path_points = path.latest().map_or(0, |frame| frame.points.len());
+        diagnostics.scan_points = point_cloud
+            .and_then(PointCloudState::latest)
             .map_or(0, |frame| frame.points.len());
 
         let topics = camera_topics.iter().cloned().collect::<BTreeMap<_, _>>();
         let camera_ids = topics
             .keys()
             .copied()
-            .chain(state.camera.ids())
+            .chain(cameras.ids())
             .collect::<BTreeSet<_>>();
         let cameras = camera_ids
             .into_iter()
@@ -44,7 +59,7 @@ impl ViewerPresentation {
                     .get(&camera_id)
                     .cloned()
                     .unwrap_or_else(|| format!("camera {}", camera_id.0)),
-                status: state.camera.status_for(camera_id),
+                status: cameras.status_for(camera_id),
                 fps: diagnostics
                     .performance
                     .camera_fps
@@ -57,7 +72,7 @@ impl ViewerPresentation {
             .collect();
         Self {
             cameras,
-            telemetry: state.telemetry.latest().map(TelemetryPresentation::from),
+            telemetry: telemetry.latest().map(TelemetryPresentation::from),
             diagnostics,
         }
     }
@@ -76,16 +91,17 @@ mod tests {
     };
 
     #[test]
-    fn builds_camera_and_telemetry_values_from_domain_state() {
-        let mut state = DomainState::default();
-        state.camera.apply(CameraFrame {
+    fn builds_camera_and_telemetry_values_from_feature_states() {
+        let mut cameras = CameraState::default();
+        cameras.apply(CameraFrame {
             camera_id: CameraId(1),
             measurement_time: MeasurementTime(1),
             arrival_time: ArrivalTime(2),
             frame_id: "rear".into(),
             jpeg: vec![].into(),
         });
-        state.telemetry.apply(TelemetryFrame {
+        let mut telemetry = TelemetryState::default();
+        telemetry.apply(TelemetryFrame {
             measurement_time: MeasurementTime(1),
             arrival_time: ArrivalTime(2),
             frame_id: "odom".into(),
@@ -101,19 +117,24 @@ mod tests {
         performance.camera_fps.insert(CameraId(1), 5.0);
         let mut overlays = BTreeMap::new();
         overlays.insert(CameraId(1), OverlayStatus::Ready { visible_points: 7 });
-        let model = ViewerPresentation::from_domain(
-            &state,
-            &[
-                (CameraId(0), "/front".into()),
-                (CameraId(1), "/rear".into()),
-            ],
-            Some(CameraId(1)),
-            &overlays,
-            DiagnosticsPresentation {
+        let path = BevState::default();
+        let topics = [
+            (CameraId(0), "/front".into()),
+            (CameraId(1), "/rear".into()),
+        ];
+        let model = ViewerPresentation::from_features(ViewerPresentationInput {
+            cameras: &cameras,
+            telemetry: &telemetry,
+            path: &path,
+            point_cloud: None,
+            camera_topics: &topics,
+            focused_camera: Some(CameraId(1)),
+            overlays: &overlays,
+            diagnostics: DiagnosticsPresentation {
                 performance,
                 ..DiagnosticsPresentation::default()
             },
-        );
+        });
 
         assert_eq!(model.cameras.len(), 2);
         let focused = model.focused_camera().unwrap();

@@ -92,8 +92,12 @@ impl LocalCatalog {
             }),
             streams,
         };
-        let plan = SessionPlan::build(&core, primary_camera_topic)
-            .map_err(|error| LocalCatalogError::new(error.to_string()))?;
+        let plan = SessionPlan::build(
+            &core,
+            primary_camera_topic,
+            &crate::playback::web_playback_requirements(),
+        )
+        .map_err(|error| LocalCatalogError::new(error.to_string()))?;
         let selected_topics = plan.selected_topics();
 
         Ok(Self {

@@ -4,7 +4,7 @@ use crate::{
 };
 use bytes::Bytes;
 use mcap::{MessageStream, Summary};
-use std::fmt;
+use std::{collections::HashSet, fmt};
 
 const LINEAR_FALLBACK_LIMIT: usize = 64 * 1024 * 1024;
 
@@ -50,6 +50,7 @@ pub struct McapSource<B: AsRef<[u8]>> {
     cache: Vec<CachedMessage>,
     chunk: Option<usize>,
     position: usize,
+    selected_streams: Option<HashSet<StreamId>>,
 }
 
 impl<B: AsRef<[u8]>> McapSource<B> {
@@ -110,6 +111,7 @@ impl<B: AsRef<[u8]>> McapSource<B> {
             cache: vec![],
             chunk: None,
             position: 0,
+            selected_streams: None,
         };
         if !source.has_chunks() {
             source.load_linear()?;
@@ -134,6 +136,21 @@ impl<B: AsRef<[u8]>> McapSource<B> {
 
     pub(crate) fn backing_bytes(&self) -> &[u8] {
         self.backing.as_ref()
+    }
+
+    pub fn select_streams(&mut self, streams: impl IntoIterator<Item = StreamId>) {
+        let selected = streams.into_iter().collect::<HashSet<_>>();
+        if self.has_chunks() {
+            self.cache.clear();
+            self.chunk = None;
+        } else {
+            // Summary-less/unchunked sources are loaded once during construction. Keep that
+            // bounded fallback buffer and prune it in place instead of clearing the only copy.
+            self.cache
+                .retain(|message| selected.contains(&message.stream_id));
+        }
+        self.selected_streams = Some(selected);
+        self.position = 0;
     }
 
     pub fn seek(&mut self, cursor: ArrivalTime) -> Result<(), McapOpenError> {
@@ -201,9 +218,17 @@ impl<B: AsRef<[u8]>> McapSource<B> {
         let mut cache = vec![];
         for message in summary.stream_chunk(self.backing.as_ref(), chunk)? {
             let message = message?;
+            let stream_id = StreamId(u32::from(message.channel.id));
+            if self
+                .selected_streams
+                .as_ref()
+                .is_some_and(|streams| !streams.contains(&stream_id))
+            {
+                continue;
+            }
             cache.push(CachedMessage {
                 arrival: to_arrival(message.log_time)?,
-                stream_id: StreamId(u32::from(message.channel.id)),
+                stream_id,
                 payload: Bytes::from(message.data.into_owned()),
             });
         }
@@ -221,6 +246,7 @@ impl<B: AsRef<[u8]>> McapSource<B> {
         let mut cache = vec![];
         for message in MessageStream::new(self.backing.as_ref())? {
             let message = message?;
+            let stream_id = StreamId(u32::from(message.channel.id));
             if !self
                 .catalog
                 .streams
@@ -240,9 +266,16 @@ impl<B: AsRef<[u8]>> McapSource<B> {
                     timing: StreamTimingSummary::default(),
                 });
             }
+            if self
+                .selected_streams
+                .as_ref()
+                .is_some_and(|streams| !streams.contains(&stream_id))
+            {
+                continue;
+            }
             cache.push(CachedMessage {
                 arrival: to_arrival(message.log_time)?,
-                stream_id: StreamId(u32::from(message.channel.id)),
+                stream_id,
                 payload: Bytes::from(message.data.into_owned()),
             });
         }

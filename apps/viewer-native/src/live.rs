@@ -229,8 +229,9 @@ pub use ros::RosLiveHandle;
 mod tests {
     use super::*;
     use viewer_core::{
-        ArrivalTime, CameraId, CompressedImage, DomainRuntime, MeasurementTime, RawMessage,
-        SessionPlan, SourceCatalog, StreamDescriptor, StreamId, encode_compressed_image_cdr,
+        ArrivalTime, CameraController, CameraId, CompressedImage, MeasurementTime,
+        PlaybackRequirements, RawMessage, SessionPlan, SourceCatalog, StreamDescriptor, StreamId,
+        encode_compressed_image_cdr,
     };
 
     #[test]
@@ -243,7 +244,7 @@ mod tests {
     }
 
     #[test]
-    fn current_camera_live_mailbox_reduces_latest_message_into_domain() {
+    fn current_camera_live_mailbox_routes_latest_message_to_camera_controller() {
         let stream_id = StreamId(1);
         let mailbox = LatestMailbox::default();
         for (arrival, marker) in [(100, 1), (200, 2)] {
@@ -270,15 +271,21 @@ mod tests {
             }],
             time_range: None,
         };
-        let plan = SessionPlan::build(&catalog, "/camera/live/image/compressed").unwrap();
-        let mut runtime = DomainRuntime::new(plan);
+        let plan = SessionPlan::build(
+            &catalog,
+            "/camera/live/image/compressed",
+            &PlaybackRequirements::default(),
+        )
+        .unwrap();
+        let mut cameras = CameraController::new(&plan);
 
-        runtime.process(std::time::Duration::ZERO, mailbox.take());
+        cameras.admit(&mailbox.take().unwrap());
+        cameras.advance(std::time::Duration::ZERO);
 
-        let latest = runtime.state().camera.latest_for(CameraId(0)).unwrap();
+        let latest = cameras.state().latest_for(CameraId(0)).unwrap();
         assert_eq!(latest.arrival_time, ArrivalTime(200));
         assert_eq!(latest.jpeg.as_ref(), [2]);
         assert_eq!(mailbox.coalesced(), 1);
-        assert_eq!(runtime.counters().decoded, 1);
+        assert_eq!(cameras.counters().decoded, 1);
     }
 }

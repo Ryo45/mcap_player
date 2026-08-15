@@ -6,13 +6,11 @@ mod camera;
 mod camera_projection;
 mod cdr;
 mod clock;
+mod controllers;
 pub mod data_window;
-mod domain;
-mod domain_runtime;
 mod frame_builder;
 mod mcap_source;
 mod performance;
-mod pipeline;
 mod playback;
 mod plot;
 mod point_cloud;
@@ -45,19 +43,20 @@ pub use clock::{
     PlaybackClock, PlaybackCommand, PlaybackLoadState, PlaybackSpeed, PlaybackView, SeekFidelity,
     SeekRequest,
 };
+pub use controllers::{
+    CameraController, OdometryController, PathController, ProcessingCounters, SceneController,
+    TransformController,
+};
 pub use data_window::{
     DataWindowError, FetchDemand, FetchIntent, FetchPlanner, FetchProfile, MemoryWindowStore,
     SerializedWindow, TimeRange as DataWindowTimeRange,
 };
-pub use domain::DomainState;
-pub use domain_runtime::{DomainPerformance, DomainRuntime, StageTiming};
 pub use frame_builder::{
     BevFrameBuilder, BevSnapshot, SceneDiagnostics, SceneFrameBuilder, SceneSnapshot, SceneTfError,
 };
 pub use mcap_source::{McapOpenError, McapSource};
-pub use performance::{PlaybackPerformance, PresentationMetrics, PresentationSnapshot};
-pub use pipeline::{
-    DomainPipeline, DomainPipelineError, DomainPipelineSet, DomainUpdate, PipelineCounters,
+pub use performance::{
+    PlaybackPerformance, PresentationMetrics, PresentationSnapshot, StageTiming,
 };
 pub use playback::{McapPlayback, McapPlaybackError, PlaybackEffect};
 pub use plot::{
@@ -69,7 +68,7 @@ pub use plot::{
 pub use point_cloud::{PointCloudFrame, PointCloudState};
 pub use presentation::{
     CameraPresentation, DiagnosticsPresentation, OverlayStatus, TelemetryPresentation,
-    ViewerPresentation,
+    ViewerPresentation, ViewerPresentationInput,
 };
 pub use preview::{
     CURRENT_PREVIEW_SCHEMA_VERSION, CameraPreviewFrame, DataFidelity, PreviewBudget,
@@ -78,8 +77,8 @@ pub use preview::{
 };
 pub use raw_message::RawMessage;
 pub use session_plan::{
-    DomainRoute, DomainTarget, ODOM_TOPIC, PATH_TOPIC, SCAN_TOPIC, SessionPlan, SessionPlanError,
-    TF_STATIC_TOPIC, TF_TOPIC,
+    CameraRoute, ODOM_TOPIC, PATH_TOPIC, PlaybackRequirements, SCAN_TOPIC, SessionPlan,
+    SessionPlanError, TF_STATIC_TOPIC, TF_TOPIC,
 };
 pub use source_identity::{
     MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity, mcap_summary_fingerprint,

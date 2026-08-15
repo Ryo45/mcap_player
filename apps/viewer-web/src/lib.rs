@@ -456,9 +456,9 @@ mod browser {
             view.last_drawn_camera = selected_camera;
         }
 
-        let state = session.state();
+        let cameras = session.cameras().state();
         let mut camera_visual_changes = BTreeSet::new();
-        for (camera_id, frame) in state.camera.frames() {
+        for (camera_id, frame) in cameras.frames() {
             if view.camera_base_images.needs_update(frame) {
                 let decode_started = Date::now();
                 match decode_camera_frame(frame) {
@@ -498,10 +498,10 @@ mod browser {
                 if view.camera_overlays.update(
                     frame,
                     (base_canvas.width(), base_canvas.height()),
-                    state.bev.latest(),
-                    state.bev.revision(),
-                    &state.transforms,
-                    state.transforms.revision(),
+                    session.path().state().latest(),
+                    session.path().state().revision(),
+                    session.transforms().state(),
+                    session.transforms().state().revision(),
                     calibrations,
                 ) {
                     camera_visual_changes.insert(*camera_id);
@@ -520,7 +520,7 @@ mod browser {
         }
 
         let selected_has_base = selected_camera.is_some_and(|camera_id| {
-            state.camera.latest_for(camera_id).is_some_and(|frame| {
+            cameras.latest_for(camera_id).is_some_and(|frame| {
                 view.camera_base_images.arrival(camera_id) == Some(frame.arrival_time)
             })
         });
@@ -529,7 +529,7 @@ mod browser {
             view.last_drawn = None;
         }
         if let Some(camera_id) = selected_camera
-            && let Some(frame) = state.camera.latest_for(camera_id)
+            && let Some(frame) = cameras.latest_for(camera_id)
             && selected_has_base
             && (view.last_drawn != Some(frame.arrival_time.0)
                 || camera_visual_changes.contains(&camera_id))
@@ -542,7 +542,7 @@ mod browser {
             );
             view.last_drawn = Some(frame.arrival_time.0);
         }
-        if state.camera.frames().next().is_none() {
+        if cameras.frames().next().is_none() {
             for (camera_id, _) in camera_topics {
                 clear_canvas(&format!("camera-thumb-{}", camera_id.0));
             }
@@ -554,19 +554,21 @@ mod browser {
         view: &WebViewState,
         selected_camera: Option<CameraId>,
     ) -> ViewerPresentation {
-        let state = session.state();
         let start = session.clock().start().0;
         let overlay_status = view
             .camera_overlays
             .snapshots()
             .map(|snapshot| (snapshot.camera_id, snapshot.status.clone()))
             .collect::<BTreeMap<_, _>>();
-        ViewerPresentation::from_domain(
-            state,
-            session.camera_topics(),
-            selected_camera,
-            &overlay_status,
-            DiagnosticsPresentation {
+        ViewerPresentation::from_features(viewer_core::ViewerPresentationInput {
+            cameras: session.cameras().state(),
+            telemetry: session.odometry().state(),
+            path: session.path().state(),
+            point_cloud: None,
+            camera_topics: session.camera_topics(),
+            focused_camera: selected_camera,
+            overlays: &overlay_status,
+            diagnostics: DiagnosticsPresentation {
                 source: session.source_label().to_owned(),
                 primary_topic: session
                     .camera_topics()
@@ -578,7 +580,7 @@ mod browser {
                 cursor_seconds: Some((session.clock().cursor().0 - start) as f64 / 1e9),
                 ..DiagnosticsPresentation::default()
             },
-        )
+        })
     }
 
     fn update_dom_diagnostics(presentation: &ViewerPresentation, session: &WebPlayback) {
@@ -682,7 +684,7 @@ mod browser {
     }
 
     fn update_bev_presentation(session: &WebPlayback) {
-        let bev = BevFrameBuilder::new(session.state()).build();
+        let bev = BevFrameBuilder::new(session.path().state()).build();
         render_bev(BevFrame {
             revision: bev.revision,
             path: bev.path,

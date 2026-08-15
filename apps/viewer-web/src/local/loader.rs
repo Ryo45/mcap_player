@@ -781,7 +781,12 @@ mod tests {
 
     #[test]
     fn compressed_and_uncompressed_windows_reduce_to_the_same_camera_state() {
-        fn reduce(bytes: &[u8]) -> (Vec<viewer_core::CameraFrame>, viewer_core::PipelineCounters) {
+        fn reduce(
+            bytes: &[u8],
+        ) -> (
+            Vec<viewer_core::CameraFrame>,
+            viewer_core::ProcessingCounters,
+        ) {
             let summary = Summary::read(bytes).unwrap().unwrap();
             let catalog = LocalCatalog::from_summary(&summary, "/camera").unwrap();
             let range = DataWindowTimeRange::new(ArrivalTime(1_000), ArrivalTime(1_031)).unwrap();
@@ -792,15 +797,17 @@ mod tests {
                 bytes,
             )
             .unwrap();
-            let mut domain = viewer_core::DomainRuntime::new(catalog.plan);
-            domain.process(std::time::Duration::from_secs(1), loaded.window.messages);
-            let frames = domain
+            let mut cameras = viewer_core::CameraController::new(&catalog.plan);
+            for message in &loaded.window.messages {
+                cameras.admit(message);
+            }
+            cameras.advance(std::time::Duration::from_secs(1));
+            let frames = cameras
                 .state()
-                .camera
                 .frames()
                 .map(|(_, frame)| frame.clone())
                 .collect();
-            (frames, domain.counters())
+            (frames, cameras.counters())
         }
 
         assert_eq!(

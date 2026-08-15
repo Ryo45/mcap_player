@@ -1,4 +1,7 @@
-use super::{BEV_CONFIG_VERSION, NativePanel, PanelFrameContext, PanelOutput, PlaceholderPanel};
+use super::{
+    BEV_CONFIG_VERSION, NativePanel, PanelDataRequirements, PanelFrameContext, PanelOutput,
+    PlaceholderPanel,
+};
 use crate::graphics::views::{BevViewInput, show_bev_view};
 use serde::{Deserialize, Serialize};
 use viewer_layout::{PanelId, PanelNode};
@@ -13,6 +16,10 @@ pub(crate) struct BevPanel {
 }
 
 impl BevPanel {
+    pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
+        requirements.playback.require_path();
+    }
+
     pub(crate) fn create(node: &PanelNode) -> NativePanel {
         if node.config_version != BEV_CONFIG_VERSION {
             return NativePanel::Placeholder(PlaceholderPanel::unsupported_version(

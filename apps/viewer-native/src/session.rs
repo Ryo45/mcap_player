@@ -13,17 +13,20 @@ use std::{
     time::Duration,
 };
 use viewer_core::{
-    CameraId, DomainState, McapPlayback, PipelineCounters, PlaybackCommand, PlaybackEffect,
-    PlaybackPerformance, PlaybackView,
+    ArrivalTime, CameraId, McapPlayback, PlaybackCommand, PlaybackEffect, PlaybackPerformance,
+    PlaybackRequirements, PlaybackView, ProcessingCounters, RawMessage, SessionPlan, StageTiming,
 };
 #[cfg(feature = "ros2-live")]
-use viewer_core::{DomainRuntime, SessionPlan, SourceCatalog};
+use viewer_core::{SourceCatalog, StreamDescriptor};
 
 /// The currently open Viewer data session, backed by either Recording or Live input.
+///
+/// It owns source access and playback/query capabilities, but feature/controller state belongs
+/// to the workspace and is updated through exact serialized messages.
 pub(crate) struct ViewerSession {
     source: SessionSource,
+    plan: SessionPlan,
     topic: String,
-    camera_topics: Vec<(CameraId, String)>,
     source_name: String,
     recording_path: Option<PathBuf>,
     plot_loader: PlotLoader,
@@ -32,7 +35,7 @@ pub(crate) struct ViewerSession {
 
 pub(crate) struct PlotSignalRequest {
     pub(crate) path: PathBuf,
-    pub(crate) origin: viewer_core::ArrivalTime,
+    pub(crate) origin: ArrivalTime,
     pub(crate) max_points: usize,
 }
 
@@ -41,7 +44,6 @@ enum SessionSource {
     #[cfg(feature = "ros2-live")]
     Ros {
         handle: live::RosLiveHandle,
-        runtime: DomainRuntime,
     },
 }
 
@@ -49,23 +51,28 @@ pub(crate) struct SessionDiagnostics {
     pub(crate) source_name: String,
     pub(crate) primary_topic: String,
     pub(crate) camera_topics: Vec<(CameraId, String)>,
-    pub(crate) counters: PipelineCounters,
+    pub(crate) counters: ProcessingCounters,
     pub(crate) playback_performance: Option<PlaybackPerformance>,
 }
 
 impl ViewerSession {
-    pub(crate) fn open(path: &Path, topic: String) -> Result<Self> {
+    pub(crate) fn open(
+        path: &Path,
+        topic: String,
+        requirements: &PlaybackRequirements,
+    ) -> Result<Self> {
         let file = File::open(path).with_context(|| format!("open {}", path.display()))?;
         // SAFETY: the mapping is read-only and owns an independent reference to the file pages.
         let mapping =
             unsafe { Mmap::map(&file) }.with_context(|| format!("map {}", path.display()))?;
-        let mut playback = McapPlayback::new(mapping, &topic)?;
-        playback.apply_command(PlaybackCommand::Toggle)?;
-        let camera_topics = playback.camera_topics().to_vec();
+        let mut playback = McapPlayback::new(mapping)?;
+        let plan = SessionPlan::build(playback.catalog(), &topic, requirements)?;
+        playback.select_streams(plan.selected_stream_ids());
+        playback.clock_mut().toggle();
         Ok(Self {
             source: SessionSource::Mcap(Box::new(playback)),
+            plan,
             topic,
-            camera_topics,
             source_name: path.display().to_string(),
             recording_path: Some(path.to_owned()),
             plot_loader: PlotLoader::default(),
@@ -74,8 +81,12 @@ impl ViewerSession {
     }
 
     #[cfg(feature = "ros2-live")]
-    pub(crate) fn open_live(topic: String, reliable: bool) -> Self {
-        let descriptor = viewer_core::StreamDescriptor {
+    pub(crate) fn open_live(
+        topic: String,
+        reliable: bool,
+        requirements: &PlaybackRequirements,
+    ) -> Self {
+        let descriptor = StreamDescriptor {
             id: viewer_core::StreamId(1),
             topic: topic.clone(),
             schema: "sensor_msgs/msg/CompressedImage".into(),
@@ -86,17 +97,14 @@ impl ViewerSession {
             time_range: None,
             streams: vec![descriptor],
         };
-        let plan = SessionPlan::build(&catalog, &topic)
+        let plan = SessionPlan::build(&catalog, &topic, requirements)
             .expect("the live Camera descriptor matches its configured primary topic");
-        let runtime = DomainRuntime::new(plan);
-        let camera_topics = runtime.camera_topics().to_vec();
         Self {
             source: SessionSource::Ros {
                 handle: live::RosLiveHandle::start(topic.clone(), reliable),
-                runtime,
             },
+            plan,
             topic,
-            camera_topics,
             source_name: format!(
                 "ROS 2 live ({})",
                 if reliable { "reliable" } else { "best effort" }
@@ -105,6 +113,10 @@ impl ViewerSession {
             plot_loader: PlotLoader::default(),
             inspections: Vec::new(),
         }
+    }
+
+    pub(crate) fn plan(&self) -> &SessionPlan {
+        &self.plan
     }
 
     pub(crate) fn plot_signal_request(&self, max_points: usize) -> Option<PlotSignalRequest> {
@@ -167,62 +179,34 @@ impl ViewerSession {
         &self.inspections
     }
 
-    pub(crate) fn tick(&mut self, elapsed: Duration) -> Result<()> {
+    pub(crate) fn tick(
+        &mut self,
+        elapsed: Duration,
+        process: impl FnOnce(Duration, Vec<RawMessage>),
+    ) -> Result<()> {
         match &mut self.source {
-            SessionSource::Mcap(playback) => playback.tick(elapsed)?,
+            SessionSource::Mcap(playback) => playback.tick(elapsed, process)?,
             #[cfg(feature = "ros2-live")]
-            SessionSource::Ros { handle, runtime } => {
+            SessionSource::Ros { handle } => {
                 if let Some(error) = handle.error() {
                     bail!("ROS executor: {error}");
                 }
-                runtime.process(elapsed, handle.take());
+                process(elapsed, handle.take().into_iter().collect());
             }
         }
         Ok(())
     }
 
-    pub(crate) fn state(&self) -> &DomainState {
-        match &self.source {
-            SessionSource::Mcap(playback) => playback.state(),
-            #[cfg(feature = "ros2-live")]
-            SessionSource::Ros { runtime, .. } => runtime.state(),
-        }
-    }
-
-    fn counters(&self) -> PipelineCounters {
-        match &self.source {
-            SessionSource::Mcap(playback) => playback.counters(),
-            #[cfg(feature = "ros2-live")]
-            SessionSource::Ros {
-                handle, runtime, ..
-            } => {
-                let mut counters = runtime.counters();
-                counters.dropped = counters.dropped.saturating_add(handle.coalesced());
-                counters
-            }
-        }
-    }
-
     pub(crate) fn default_focused_camera(&self) -> Option<CameraId> {
-        self.camera_topics.first().map(|(camera_id, _)| *camera_id)
+        self.plan.primary_camera()
     }
 
     pub(crate) fn camera_id_for_topic(&self, topic: &str) -> Option<CameraId> {
-        self.camera_topics
+        self.plan
+            .camera_routes()
             .iter()
-            .find(|(_, candidate)| candidate == topic)
-            .map(|(camera_id, _)| *camera_id)
-    }
-
-    pub(crate) fn set_focused_camera(&mut self, focused_camera: Option<CameraId>) {
-        let focused_camera = focused_camera
-            .filter(|camera_id| self.camera_topics.iter().any(|(id, _)| id == camera_id))
-            .or_else(|| self.camera_topics.first().map(|(camera_id, _)| *camera_id));
-        match &mut self.source {
-            SessionSource::Mcap(playback) => playback.set_focused_camera(focused_camera),
-            #[cfg(feature = "ros2-live")]
-            SessionSource::Ros { runtime, .. } => runtime.set_focused_camera(focused_camera),
-        }
+            .find(|route| route.stream.topic == topic)
+            .map(|route| route.camera_id)
     }
 
     pub(crate) fn playback_view(&self) -> Option<PlaybackView> {
@@ -236,39 +220,52 @@ impl ViewerSession {
     pub(crate) fn apply_playback_command(
         &mut self,
         command: PlaybackCommand,
+        restore: impl FnOnce(Vec<RawMessage>),
     ) -> Result<PlaybackEffect> {
         match &mut self.source {
-            SessionSource::Mcap(playback) => Ok(playback.apply_command(command)?),
+            SessionSource::Mcap(playback) => match command {
+                PlaybackCommand::Toggle => {
+                    playback.clock_mut().toggle();
+                    Ok(PlaybackEffect::None)
+                }
+                PlaybackCommand::SetSpeed(speed) => {
+                    playback.clock_mut().set_speed(speed);
+                    Ok(PlaybackEffect::None)
+                }
+                PlaybackCommand::Seek(cursor) => {
+                    playback.seek_with(cursor, restore)?;
+                    Ok(PlaybackEffect::Seeked)
+                }
+            },
             #[cfg(feature = "ros2-live")]
             SessionSource::Ros { .. } => Ok(PlaybackEffect::None),
         }
     }
 
-    fn playback_performance(&self) -> Option<PlaybackPerformance> {
+    pub(crate) fn source_read_timing(&self) -> StageTiming {
         match &self.source {
-            SessionSource::Mcap(playback) => Some(playback.performance()),
+            SessionSource::Mcap(playback) => playback.source_read_timing(),
             #[cfg(feature = "ros2-live")]
-            SessionSource::Ros { .. } => None,
+            SessionSource::Ros { .. } => StageTiming::default(),
         }
     }
 
-    pub(crate) fn diagnostics(&self) -> SessionDiagnostics {
+    pub(crate) fn diagnostics(
+        &self,
+        counters: ProcessingCounters,
+        playback_performance: Option<PlaybackPerformance>,
+        _latest_camera_arrival: Option<ArrivalTime>,
+    ) -> SessionDiagnostics {
         #[cfg(feature = "ros2-live")]
         let source_name = match &self.source {
-            SessionSource::Ros {
-                handle, runtime, ..
-            } => {
-                let age = runtime
-                    .state()
-                    .camera
-                    .latest_by_arrival()
-                    .and_then(|frame| {
-                        let now = std::time::SystemTime::now()
-                            .duration_since(std::time::UNIX_EPOCH)
-                            .ok()?;
-                        let now = i64::try_from(now.as_nanos()).ok()?;
-                        Some((now - frame.arrival_time.0).max(0) as f64 / 1e9)
-                    });
+            SessionSource::Ros { handle } => {
+                let age = _latest_camera_arrival.and_then(|arrival| {
+                    let now = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .ok()?;
+                    let now = i64::try_from(now.as_nanos()).ok()?;
+                    Some((now - arrival.0).max(0) as f64 / 1e9)
+                });
                 let freshness = age.map_or_else(
                     || "waiting".to_owned(),
                     |value| {
@@ -294,9 +291,9 @@ impl ViewerSession {
         SessionDiagnostics {
             source_name,
             primary_topic: self.topic.clone(),
-            camera_topics: self.camera_topics.clone(),
-            counters: self.counters(),
-            playback_performance: self.playback_performance(),
+            camera_topics: self.plan.camera_topics(),
+            counters,
+            playback_performance,
         }
     }
 }
