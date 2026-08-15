@@ -1,12 +1,13 @@
 use std::{error::Error, fmt};
 use viewer_core::{
-    ArrivalTime, SessionPlan, StreamCatalog, StreamDescriptor as CoreStreamDescriptor, StreamId,
+    ArrivalTime, RecordingTimeRange, SessionPlan, SourceCatalog,
+    StreamDescriptor as CoreStreamDescriptor, StreamId, StreamTimingSummary,
 };
 use viewer_remote_protocol::{CatalogResponse, StreamDescriptor};
 
 #[derive(Clone, Debug)]
 pub(crate) struct RemoteCatalog {
-    pub core: StreamCatalog,
+    pub core: SourceCatalog,
     pub recording_id: String,
     pub revision: String,
     pub start: ArrivalTime,
@@ -59,7 +60,13 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
         .into_iter()
         .map(to_core_descriptor)
         .collect::<Vec<_>>();
-    let core = StreamCatalog { streams };
+    let core = SourceCatalog {
+        time_range: Some(RecordingTimeRange {
+            start,
+            end_exclusive,
+        }),
+        streams,
+    };
     let plan = SessionPlan::build(&core, &primary_camera_topic)
         .map_err(|error| RemoteCatalogError(error.to_string()))?;
     let mut selected = plan
@@ -87,6 +94,9 @@ fn to_core_descriptor(stream: &StreamDescriptor) -> CoreStreamDescriptor {
         topic: stream.topic.clone(),
         schema: stream.schema_name.clone(),
         message_encoding: stream.message_encoding.clone(),
+        timing: StreamTimingSummary {
+            message_count: stream.message_count.map(|count| count.get()),
+        },
     }
 }
 
@@ -117,6 +127,7 @@ mod tests {
             schema_name: schema.into(),
             schema_encoding: "ros2msg".into(),
             message_encoding: "cdr".into(),
+            message_count: Some(viewer_remote_protocol::MessageCount::new(10)),
         }
     }
 

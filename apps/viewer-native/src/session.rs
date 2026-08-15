@@ -17,7 +17,7 @@ use viewer_core::{
     PlaybackPerformance, PlaybackView,
 };
 #[cfg(feature = "ros2-live")]
-use viewer_core::{DomainRuntime, SessionPlan, StreamCatalog};
+use viewer_core::{DomainRuntime, SessionPlan, SourceCatalog};
 
 /// The currently open Viewer data session, backed by either Recording or Live input.
 pub(crate) struct ViewerSession {
@@ -80,8 +80,10 @@ impl ViewerSession {
             topic: topic.clone(),
             schema: "sensor_msgs/msg/CompressedImage".into(),
             message_encoding: "cdr".into(),
+            timing: viewer_core::StreamTimingSummary::default(),
         };
-        let catalog = StreamCatalog {
+        let catalog = SourceCatalog {
+            time_range: None,
             streams: vec![descriptor],
         };
         let plan = SessionPlan::build(&catalog, &topic)

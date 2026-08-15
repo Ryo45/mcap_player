@@ -84,7 +84,9 @@ pub use session_plan::{
 pub use source_identity::{
     MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity, mcap_summary_fingerprint,
 };
-pub use stream::{StreamCatalog, StreamDescriptor, StreamId};
+pub use stream::{
+    RecordingTimeRange, SourceCatalog, StreamDescriptor, StreamId, StreamTimingSummary,
+};
 pub use telemetry::{TelemetryFrame, TelemetryState};
 pub use time::{ArrivalTime, MeasurementTime};
 pub use transform::{TransformBatch, TransformState};

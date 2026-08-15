@@ -268,6 +268,7 @@ pub(crate) fn feed_pipeline(
         topic: channel.topic.clone(),
         schema,
         message_encoding: channel.message_encoding.clone(),
+        timing: viewer_core::StreamTimingSummary::default(),
     };
     let (target, domain) = if topic == viewer_core::ODOM_TOPIC {
         (DomainTarget::Telemetry, "odometry")

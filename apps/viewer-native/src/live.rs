@@ -230,7 +230,7 @@ mod tests {
     use super::*;
     use viewer_core::{
         ArrivalTime, CameraId, CompressedImage, DomainRuntime, MeasurementTime, RawMessage,
-        SessionPlan, StreamCatalog, StreamDescriptor, StreamId, encode_compressed_image_cdr,
+        SessionPlan, SourceCatalog, StreamDescriptor, StreamId, encode_compressed_image_cdr,
     };
 
     #[test]
@@ -260,13 +260,15 @@ mod tests {
                 .into(),
             });
         }
-        let catalog = StreamCatalog {
+        let catalog = SourceCatalog {
             streams: vec![StreamDescriptor {
                 id: stream_id,
                 topic: "/camera/live/image/compressed".into(),
                 schema: "sensor_msgs/msg/CompressedImage".into(),
                 message_encoding: "cdr".into(),
+                timing: viewer_core::StreamTimingSummary::default(),
             }],
+            time_range: None,
         };
         let plan = SessionPlan::build(&catalog, "/camera/live/image/compressed").unwrap();
         let mut runtime = DomainRuntime::new(plan);

@@ -295,6 +295,7 @@ mod tests {
                 schema_name: "sensor_msgs/msg/CompressedImage".into(),
                 schema_encoding: "ros2msg".into(),
                 message_encoding: "cdr".into(),
+                message_count: Some(viewer_remote_protocol::MessageCount::new(30)),
             }],
         );
         crate::remote::adapt_catalog(&catalog).unwrap()

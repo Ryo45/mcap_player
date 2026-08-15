@@ -1,4 +1,7 @@
-use crate::{ArrivalTime, RawMessage, StreamCatalog, StreamDescriptor, StreamId};
+use crate::{
+    ArrivalTime, RawMessage, RecordingTimeRange, SourceCatalog, StreamDescriptor, StreamId,
+    StreamTimingSummary,
+};
 use bytes::Bytes;
 use mcap::{MessageStream, Summary};
 use std::fmt;
@@ -42,7 +45,7 @@ struct CachedMessage {
 pub struct McapSource<B: AsRef<[u8]>> {
     backing: B,
     summary: Option<Summary>,
-    catalog: StreamCatalog,
+    catalog: SourceCatalog,
     range: (ArrivalTime, ArrivalTime),
     cache: Vec<CachedMessage>,
     chunk: Option<usize>,
@@ -56,7 +59,7 @@ impl<B: AsRef<[u8]>> McapSource<B> {
         if summary.is_none() && bytes.len() > LINEAR_FALLBACK_LIMIT {
             return Err(McapOpenError::SummaryRequired(bytes.len()));
         }
-        let mut catalog = StreamCatalog::default();
+        let mut catalog = SourceCatalog::default();
         if let Some(value) = &summary {
             for channel in value.channels.values() {
                 catalog.streams.push(StreamDescriptor {
@@ -68,6 +71,11 @@ impl<B: AsRef<[u8]>> McapSource<B> {
                         .map(|schema| schema.name.clone())
                         .unwrap_or_default(),
                     message_encoding: channel.message_encoding.clone(),
+                    timing: StreamTimingSummary {
+                        message_count: value.stats.as_ref().and_then(|stats| {
+                            stats.channel_message_counts.get(&channel.id).copied()
+                        }),
+                    },
                 });
             }
             catalog.streams.sort_by_key(|stream| stream.id.0);
@@ -89,6 +97,11 @@ impl<B: AsRef<[u8]>> McapSource<B> {
         } else {
             (ArrivalTime(0), ArrivalTime(0))
         };
+        catalog.time_range = range
+            .1
+            .0
+            .checked_add(1)
+            .and_then(|end| RecordingTimeRange::new(range.0, ArrivalTime(end)));
         let mut source = Self {
             backing,
             summary,
@@ -102,12 +115,17 @@ impl<B: AsRef<[u8]>> McapSource<B> {
             source.load_linear()?;
             if let (Some(first), Some(last)) = (source.cache.first(), source.cache.last()) {
                 source.range = (first.arrival, last.arrival);
+                source.catalog.time_range = last
+                    .arrival
+                    .0
+                    .checked_add(1)
+                    .and_then(|end| RecordingTimeRange::new(first.arrival, ArrivalTime(end)));
             }
         }
         Ok(source)
     }
 
-    pub fn catalog(&self) -> &StreamCatalog {
+    pub fn catalog(&self) -> &SourceCatalog {
         &self.catalog
     }
     pub fn time_range(&self) -> (ArrivalTime, ArrivalTime) {
@@ -219,6 +237,7 @@ impl<B: AsRef<[u8]>> McapSource<B> {
                         .map(|schema| schema.name.clone())
                         .unwrap_or_default(),
                     message_encoding: message.channel.message_encoding.clone(),
+                    timing: StreamTimingSummary::default(),
                 });
             }
             cache.push(CachedMessage {
@@ -229,6 +248,14 @@ impl<B: AsRef<[u8]>> McapSource<B> {
         }
         cache.sort_by_key(|message| message.arrival);
         self.cache = cache;
+        let mut counts = std::collections::HashMap::<StreamId, u64>::new();
+        for message in &self.cache {
+            let count = counts.entry(message.stream_id).or_default();
+            *count = count.saturating_add(1);
+        }
+        for stream in &mut self.catalog.streams {
+            stream.timing.message_count = counts.get(&stream.id).copied();
+        }
         Ok(())
     }
 

@@ -1,6 +1,6 @@
 use crate::{
     CameraId, DomainPipelineSet, DomainState, DomainTarget, DomainUpdate, PipelineCounters,
-    RawMessage, SessionPlan, SessionPlanError, StreamCatalog, StreamId,
+    RawMessage, SessionPlan, SessionPlanError, SourceCatalog, StreamId,
 };
 use std::{
     collections::{BTreeMap, HashMap},
@@ -96,7 +96,7 @@ pub struct DomainRuntime {
 
 impl DomainRuntime {
     pub fn from_catalog(
-        catalog: &StreamCatalog,
+        catalog: &SourceCatalog,
         primary_camera_topic: &str,
     ) -> Result<Self, SessionPlanError> {
         Ok(Self::new(SessionPlan::build(

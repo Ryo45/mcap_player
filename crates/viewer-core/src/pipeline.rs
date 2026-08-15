@@ -261,6 +261,7 @@ mod tests {
                 topic: "/camera".into(),
                 schema: "sensor_msgs/msg/CompressedImage".into(),
                 message_encoding: "cdr".into(),
+                timing: crate::StreamTimingSummary::default(),
             },
             target: DomainTarget::Camera(CameraId(0)),
         }])
@@ -293,6 +294,7 @@ mod tests {
                 topic: crate::ODOM_TOPIC.into(),
                 schema: "example_msgs/msg/Foo".into(),
                 message_encoding: "cdr".into(),
+                timing: crate::StreamTimingSummary::default(),
             },
             target: DomainTarget::Telemetry,
         }])

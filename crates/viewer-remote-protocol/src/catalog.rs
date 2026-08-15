@@ -16,6 +16,50 @@ impl TimestampNs {
     }
 }
 
+/// Recording-observed stream message count encoded as a decimal JSON string.
+///
+/// Counts use the same precision-safe wire representation as timestamps, but remain a
+/// semantically distinct type so consumers cannot accidentally treat them as nanoseconds.
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct MessageCount(u64);
+
+impl MessageCount {
+    pub const fn new(value: u64) -> Self {
+        Self(value)
+    }
+
+    pub const fn get(self) -> u64 {
+        self.0
+    }
+}
+
+impl Serialize for MessageCount {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.0.to_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for MessageCount {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = String::deserialize(deserializer)?;
+        if value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_digit()) {
+            return Err(serde::de::Error::custom(
+                "message count must be an unsigned decimal integer",
+            ));
+        }
+        value
+            .parse::<u64>()
+            .map(Self)
+            .map_err(|_| serde::de::Error::custom("message count exceeds u64"))
+    }
+}
+
 impl fmt::Display for TimestampNs {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(formatter)
@@ -81,6 +125,8 @@ pub struct StreamDescriptor {
     pub schema_name: String,
     pub schema_encoding: String,
     pub message_encoding: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub message_count: Option<MessageCount>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -187,6 +233,7 @@ mod tests {
                 schema_name: "sensor_msgs/msg/CompressedImage".into(),
                 schema_encoding: "ros2msg".into(),
                 message_encoding: "cdr".into(),
+                message_count: Some(MessageCount::new(42)),
             }],
         );
         let json = serde_json::to_string(&catalog).unwrap();
@@ -194,5 +241,23 @@ mod tests {
             serde_json::from_str::<CatalogResponse>(&json).unwrap(),
             catalog
         );
+        assert!(json.contains("\"messageCount\":\"42\""));
+    }
+
+    #[test]
+    fn message_count_is_precision_safe_and_rejects_invalid_values() {
+        let count = MessageCount::new(u64::MAX);
+        assert_eq!(
+            serde_json::to_string(&count).unwrap(),
+            format!("\"{}\"", u64::MAX)
+        );
+        assert_eq!(
+            serde_json::from_str::<MessageCount>(&format!("\"{}\"", u64::MAX))
+                .unwrap()
+                .get(),
+            u64::MAX
+        );
+        assert!(serde_json::from_str::<MessageCount>("\"-1\"").is_err());
+        assert!(serde_json::from_str::<MessageCount>("\"18446744073709551616\"").is_err());
     }
 }

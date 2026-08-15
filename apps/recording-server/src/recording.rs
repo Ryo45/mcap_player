@@ -10,8 +10,8 @@ use mcap::{
 };
 use viewer_core::McapSummaryIdentity;
 use viewer_remote_protocol::{
-    CatalogResponse, RecordingDescriptor, RemoteTimeRange, StreamDescriptor, StreamSemantic,
-    TimestampNs,
+    CatalogResponse, MessageCount, RecordingDescriptor, RemoteTimeRange, StreamDescriptor,
+    StreamSemantic, TimestampNs,
 };
 
 use crate::{
@@ -142,6 +142,11 @@ impl Recording {
                 schema_name,
                 schema_encoding,
                 message_encoding: channel.message_encoding.clone(),
+                message_count: stats
+                    .channel_message_counts
+                    .get(&channel.id)
+                    .copied()
+                    .map(MessageCount::new),
             });
         }
 
@@ -350,6 +355,14 @@ path = "{}"
             stream.semantic == StreamSemantic::Camera
                 && stream.schema_name == "sensor_msgs/msg/CompressedImage"
         }));
+        assert!(
+            first
+                .catalog
+                .streams
+                .iter()
+                .all(|stream| stream.message_count.is_some()),
+            "MCAP Statistics channel counts are part of the remote catalog"
+        );
         assert_eq!(
             first.catalog.time_range.end_ns_exclusive.get(),
             first.summary.stats.as_ref().unwrap().message_end_time + 1
