@@ -8,9 +8,9 @@ cloud VM therefore use the same code path. It neither detects the mount technolo
 path or URL from a client.
 
 The server owns immutable startup catalogs, open file handles, request limits, CORS policy, and
-bounded blocking work. It does not construct `DomainState`, run `PipelineSet`, decode ROS messages,
-or transform camera data. A future `RemoteBatchSource` will turn returned CDR frames into the
-existing `RawMessage → PipelineSet → DomainState` path.
+bounded blocking work. It does not construct feature state, run Viewer controllers, decode ROS
+messages, or transform camera data. `RemoteWindowLoader` turns returned CDR frames into exact
+`RawMessage` values which are routed to the same controllers as Browser-local playback.
 
 ## Configuration and operation
 

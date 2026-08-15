@@ -10,12 +10,12 @@ Browser File                    Recording Server
               \                    /
                -> SerializedWindow
                -> RecordingDataPlane
-               -> DomainRuntime
-               -> DomainState
+               -> RawMessage routes
+               -> concrete feature controllers
 ```
 
-`DomainRuntime` owns ROS CDR reduction, camera presentation scheduling, counters, and exact domain
-state. It does not know whether bytes came from HTTP, `File.slice()`, an MCAP Chunk, or a cache.
+Feature controllers own ROS CDR decode, admission, scheduling, counters, and bounded feature state.
+They do not know whether bytes came from HTTP, `File.slice()`, an MCAP Chunk, or a cache.
 Loaders own asynchronous I/O and publish only complete logical `[start, endExclusive)` windows.
 The DataPlane owns `FetchProfile`, fetch planning, the completeness horizon, buffering decisions,
 and in-memory retention. Local and Remote loaders use the same planner; loaders do not implement
@@ -67,7 +67,7 @@ escape the loader.
 For stored coverage `[start, completeUntil)`, a target is serviceable only when
 `target < completeUntil`. The inclusive final recording timestamp is serviceable when the final
 window reaches the recording's `endExclusive`. While a requested cursor is unavailable, the
-PlaybackClock and DomainState stay committed at their previous values. Empty complete windows
+PlaybackClock and controller state stay committed at their previous values. Empty complete windows
 still advance coverage.
 
 Diagnostics report the speed-adjusted target ahead, actual buffer ahead at the committed cursor,
@@ -83,8 +83,8 @@ seek intent
   -> cancel old loader generation
   -> discard retained windows and rebase coverage at target
   -> fetch target window with RequiredOnly
-  -> keep committed Clock and DomainState visible while loading
-  -> atomically reset exact dynamic state and commit Clock after the window completes
+  -> keep committed Clock and controller state visible while loading
+  -> atomically reset/replay exact bounded state and commit Clock after restore completes
   -> resume PlaybackAhead only when playback is running
 ```
 
@@ -93,10 +93,13 @@ loaders increment generation so a result that finishes after cancellation cannot
 Partial continuation pages never reach the DataPlane. The seek window is fetched even while paused,
 but it does not trigger unrelated target-ahead fetches after completion.
 
-This is deliberately a cold seek. Dynamic TF backfill, checkpoints, and exact historical state
-restoration are still absent; messages exactly at the target are applied, and later messages enter
-through ordinary forward playback. The committed presentation is invalidated only when seek data
-has successfully loaded and `PlaybackEffect::Seeked` is emitted.
+Restore ranges are derived from the same catalog message counts and feature semantics used by
+Native: recent Camera/Path/Odometry/Scan samples use a bounded estimated lookback and dynamic TF
+uses one second of history. Static TF is explicitly persistent and the controller replays all
+already observed persistent messages valid at the target. A direct Web seek before a sparse static
+update has ever been observed still needs a source-level persistent bootstrap; no unbounded generic
+backwards query is used. The committed presentation is invalidated only after restore data has
+loaded and `PlaybackEffect::Seeked` is emitted.
 
 ## Memory and copies
 

@@ -11,8 +11,9 @@ Playback-derived, continuously updated data uses the push path:
 
 ```text
 McapPlayback / ROS live
-  → DomainUpdate
-  → DomainState
+  → RawMessage
+  → static StreamId route
+  → concrete feature controller
   → PresentationState
   → Camera / BEV / Scene views
 ```
@@ -52,18 +53,19 @@ egui frame is painted.
 App
 ├─ ViewerSession
 │  ├─ MCAP or ROS live source
-│  ├─ playback clock
-│  └─ current DomainState
-├─ PlotLoader
-│  └─ generation-scoped background speed query
+│  ├─ SourceCatalog / SessionPlan
+│  ├─ playback clock (Recording only)
+│  └─ panel-specific query paths
+│     └─ PlotLoader generation-scoped background signal query
 ├─ PresentationState
 │  └─ CPU-side presentation builders, metrics, and overlay status
 ├─ AppDiagnostics
 │  ├─ playback errors
 │  ├─ presentation / GPU errors
 │  └─ sidecar warnings
-└─ WorkspaceState
+└─ NativeWorkspace
    ├─ LayoutDocument
+   ├─ Camera / Path / Odometry / Transform / Scene controllers
    ├─ PanelRuntimeStore
    │  ├─ CameraPanel → focused camera
    │  ├─ PlotPanel → Overview / Follow and plot cache
@@ -83,8 +85,8 @@ Graphics
 ```
 
 GPU upload and JPEG presentation failures are reported through `AppDiagnostics`.
-They never mutate `DomainState`; only successfully decoded domain updates enter the
-authoritative exact state. `ViewerSession` exposes that state read-only.
+They never mutate controller state. Only messages accepted and successfully decoded by a feature
+controller update that feature's exact state.
 
 ## Fixed view boundaries
 
@@ -98,7 +100,7 @@ show_scene_view(input)          → SceneViewOutput { actions, size, camera inpu
 ```
 
 These inputs and outputs are the prototypes for future panel interfaces. They do
-not receive `ViewerSession`, `DomainState`, MCAP readers, worker channels, or the
+not receive `ViewerSession`, feature controllers, MCAP readers, worker channels, or the
 whole `Graphics` object.
 
 ## Assumptions retained by the first panel implementation
@@ -109,6 +111,6 @@ whole `Graphics` object.
 - The first panel implementation allows at most one Scene panel.
 - Plot and other view states now live in their corresponding panel runtimes.
 - The fixed view input/output types should guide the initial panel interface.
-- Push-domain data and background query data must not be merged into one manager.
+- Continuous message routing and background query data must not be merged into one manager.
 - Split editing, tabs, user persistence, and generic query management remain
   deliberately deferred.
