@@ -1,13 +1,13 @@
 # MCAP JPEG Camera + BEV MVP
 
-Native and browser viewers share `McapPlayback<B>`, including the MCAP catalog,
-playback clock, pipeline bindings and `DomainState` for Camera, BEV, Telemetry,
-PointCloud and TF. Native supplies an mmap while Web supplies a `Vec<u8>`.
+Native and browser viewers share the source catalog, session planning, exact `RawMessage` format,
+and concrete Camera/Path/Odometry/TF/Scene controllers. Native playback reads an mmap-backed MCAP;
+Web Local uses bounded `File.slice()` reads and Web Remote consumes filtered binary CDR batches.
+The recording remains canonical and neither browser path loads the whole file.
 The camera wall is catalog-driven: clicking a thumbnail selects that camera in
 the focus panel, and adding another `CompressedImage` topic requires no new
-renderer path. Raw
-`sensor_msgs/msg/Image`, H.264, remote URLs and web live input are not
-supported.
+renderer path. Raw `sensor_msgs/msg/Image`, H.264, and web live input are not supported. Browser
+Remote playback uses the separately configured LAN Recording Server.
 
 Native playback displays the JPEG camera beside a GPU-rendered BEV with a
 metric grid and fixed ego footprint. The BEV target follows panel size without
@@ -17,8 +17,8 @@ Native also includes a perspective 3D view below the Camera/BEV row. It renders
 a world grid, an odometry-driven ego wireframe and the planned path using a
 depth-tested offscreen target. Real `/scan` points are shown only in this 3D
 view. At acquisition time, the viewer resolves `base_scan -> odom` through
-measurement-time-indexed `/tf_static` and `/tf`. `DomainState` retains the raw
-scan, while the stateful scene snapshot builder transforms each new scan once
+measurement-time-indexed `/tf_static` and `/tf`. `SceneController` retains the latest raw
+scan, while its snapshot builder transforms each new scan once
 and caches the resulting world coordinates. A scan with missing TF remains
 available for a retry when TF arrives. Later ego-pose updates never transform
 historical points.
@@ -92,8 +92,9 @@ Open the page and choose
 the camera, dummy planned path, real odometry, scan and TF streams together.
 The browser camera panel matches Native: it shows a focused frame and a
 catalog-driven thumbnail row; click a thumbnail to change focus.
-The browser reads the complete local file, which is intentional for this
-small-file MVP.
+Browser Local reads only Summary and selected indexed Chunk ranges. Zstd and uncompressed MCAPs
+use the same bounded `RecordingDataPlane`; Camera CDR and JPEG payloads remain shared `Bytes`
+slices after entering WASM memory.
 
 ## ROS 2 live
 
@@ -108,7 +109,7 @@ cargo run -p viewer-native --features ros2-live -- \
 Add `--reliable` to replace the default sensor-data best-effort/volatile QoS.
 The ROS executor runs on its own thread. Its callback records Unix arrival time
 before introspection, reconstructs a CDR payload, and writes to a capacity-one
-latest mailbox; domain state and GPU writes remain on the application thread.
+latest mailbox; Camera controller state and GPU writes remain on the application thread.
 
 See [tools/ros-fixture/README.md](tools/ros-fixture/README.md) for synthetic and
 TurtleBot3 smoke procedures.

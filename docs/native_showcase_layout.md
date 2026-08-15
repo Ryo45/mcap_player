@@ -40,10 +40,10 @@ This scheduler choice is separate from the camera selected for display by each f
 
 ## Data ownership
 
-- Camera images and Path overlay use the shared Domain presentation path. Graphics continues to
-  own exact/preview textures and the overlay snapshot cache.
+- Camera images and Path overlay use their concrete Camera/Path/TF controllers and a read-only
+  presentation snapshot. Graphics continues to own exact/preview textures and the overlay cache.
 - Speed and yaw-rate histories are independent ViewerSession-owned `/odom` queries. They are not
-  added to `DomainState` as time-series history. One background scan derives both signals and
+  added to continuous controller state as time-series history. One background scan derives both signals and
   publishes bounded intermediate series, so a large compressed recording does not keep the panels
   behind a loading placeholder until the complete query finishes.
 - `StatusPanel` is a normal `NativePanel` and reads only the narrow per-frame panel context.

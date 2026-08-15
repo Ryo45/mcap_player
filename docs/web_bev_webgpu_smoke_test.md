@@ -13,7 +13,7 @@ with `BevFrameBuilder`. Browser-specific code owns the canvas surface and
 presents the shared renderer's offscreen texture:
 
 ```text
-DomainState
+Path/Odometry/TF controller state
   -> BevFrameBuilder
   -> BevFrame
   -> shared BevRenderer
@@ -44,7 +44,7 @@ though it compiles successfully.
 fullscreen-triangle presenter; there is no CPU readback or `ImageData` copy.
 The present pipeline is created once. The presenter bind group is recreated
 only when `BevRenderer::resize()` replaces its output texture view. BEV path
-uploads remain controlled by the existing domain revision.
+uploads remain controlled by the existing BEV feature revision.
 
 The old Canvas 2D `draw_bev` implementation has been removed from the normal
 Web path. Camera canvases remain Canvas 2D and are outside this spike.

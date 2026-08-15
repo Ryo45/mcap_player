@@ -6,7 +6,7 @@ Previewはログ全体を低コストで探索するための粗いデータ経�
 
 ```text
 Push
-  McapPlayback → DomainState → Exact state at playback cursor
+  Recording playback → feature controllers → Exact state at playback cursor
 
 Query
   PlotLoader → LoadedSignal → full-resolution plot query
@@ -187,7 +187,7 @@ Preview build information例：
 
 ## 8. 所有関係と既存経路との境界
 
-- `DomainState`はPreviewを所有しない。
+- Exact feature controllersはPreviewを所有しない。
 - `LoadedSignal`は変更せず、Signal Overviewと共有しない。
 - `ViewerSession`はPreview APIを持たない。
 - `PlotLoader`をPreview loaderへ一般化しない。

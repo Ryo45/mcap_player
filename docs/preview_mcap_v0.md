@@ -3,7 +3,7 @@
 ## Purpose
 
 `preview.mcap` is a reproducible, low-resolution catalog used for log-wide exploration. The main
-MCAP remains the source of truth. Preview data does not enter `DomainState`, does not replace
+MCAP remains the source of truth. Preview data does not enter exact feature controllers, does not replace
 `LoadedSignal`, and is not bookmark storage.
 
 ## Topics and payloads
@@ -62,6 +62,6 @@ Output overwrite requires `--force`. The default output is `preview.mcap` beside
 ## Ownership and future Web reading
 
 `viewer-preview-mcap` depends only on `viewer-core`, `mcap`, and Serde. It constructs
-`PreviewArtifact` and `PreviewSnapshot`, never `DomainState`. A future Web source can use MCAP
+`PreviewArtifact` and `PreviewSnapshot`, never exact controller state. A future Web source can use MCAP
 Summary/Message Index ranges and the same wire reader/query rules; this change does not introduce a
 production RangeSource or async reader.

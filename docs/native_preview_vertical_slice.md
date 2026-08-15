@@ -4,12 +4,12 @@
 
 ```text
 App
-├─ ViewerSession          Recording/Live source, exact DomainState, and playback capability
-├─ PlotLoader             exact/full-resolution speed query
+├─ ViewerSession          Recording/Live source, SessionPlan, and playback capability
+│  └─ PlotLoader          exact/full-resolution signal query
+├─ NativeWorkspace        exact feature controllers + layout/Panel runtime + preview_time
 ├─ PreviewCoordinator     PreviewArtifact + latest PreviewSnapshot
 ├─ BookmarkState          durable bookmarks.json document
 ├─ PresentationState      exact presentation snapshots
-├─ NativeWorkspace        layout, Panel runtime, preview_time
 └─ Graphics
    ├─ exact Camera textures
    └─ preview Camera textures (latest frame per CameraId)
@@ -21,7 +21,7 @@ sidecars produce diagnostics while exact playback continues. The Viewer never st
 
 Panels receive only the latest snapshot-derived Camera texture handles, SignalOverview, bookmark
 slice, and Preview availability. They do not receive the Coordinator, artifact, playback session,
-domain state, file handles, or MCAP reader.
+controller state, file handles, or MCAP reader.
 
 ## Scrub lifecycle
 
@@ -37,7 +37,7 @@ pointer down
 
 pointer move
   → update preview_time and PreviewSnapshot
-  → leave Playback cursor and DomainState unchanged
+  → leave Playback cursor and exact controller state unchanged
 
 pointer release
   → clear preview_time
@@ -69,6 +69,6 @@ only the selected frames are decoded and the GPU cache is bounded to the latest 
 Signal points have a Panel-owned CPU display cache. If Preview is unavailable, the exact camera,
 PlotLoader, playback controls, BEV, and Scene continue unchanged.
 
-Deferred work includes async loading/cancellation, automatic generation, multi-resolution signal
-LOD, LiDAR/detection Preview, bookmark editing, Web production IndexedReader playback, and compressed
+Deferred work includes async Preview loading/cancellation, automatic generation, multi-resolution
+signal LOD, LiDAR/detection Preview, bookmark editing, Web Preview connection, and compressed
 Preview chunks.
