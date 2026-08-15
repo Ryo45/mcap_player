@@ -1,4 +1,7 @@
-use super::{CAMERA_CONFIG_VERSION, NativePanel, PanelFrameContext, PanelOutput, PlaceholderPanel};
+use super::{
+    CAMERA_CONFIG_VERSION, NativePanel, PanelDataRequirements, PanelFrameContext, PanelOutput,
+    PlaceholderPanel,
+};
 use crate::{
     graphics::views::{CameraViewInput, show_camera_view},
     interaction::ViewerAction,
@@ -124,6 +127,20 @@ impl CameraPanel {
             .scheduler_priority
             .then_some(self.config.camera_topic.as_deref())
             .flatten()
+    }
+
+    pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
+        if self.config.show_thumbnails && self.config.camera_topic.is_none() {
+            requirements.playback.require_all_cameras();
+        } else if let Some(topic) = &self.config.camera_topic {
+            requirements.playback.require_camera_topic(topic.clone());
+        } else {
+            requirements.playback.require_all_cameras();
+        }
+        if self.config.show_overlay {
+            requirements.playback.require_path();
+            requirements.playback.require_transforms();
+        }
     }
 
     pub(crate) fn set_focused_camera(&mut self, camera_id: Option<viewer_core::CameraId>) -> bool {

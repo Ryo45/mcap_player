@@ -8,10 +8,12 @@ use crate::{
 };
 use std::{error::Error, fmt, time::Duration};
 use viewer_core::{
-    ArrivalTime, CameraId, DomainRuntime, DomainState, FetchIntent, PipelineCounters,
+    ArrivalTime, CameraController, CameraId, FetchIntent, OdometryController, PathController,
     PlaybackClock, PlaybackCommand, PlaybackEffect, PlaybackLoadState, PlaybackPerformance,
-    SessionPlan, StageTiming,
+    PlaybackRequirements, ProcessingCounters, RawMessage, SessionPlan, StageTiming,
+    TransformController,
 };
+use web_time::Instant;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum PlaybackSourceKind {
@@ -39,7 +41,12 @@ impl Error for WebPlaybackError {}
 /// Browser playback shared by local File.slice and Recording Server sources.
 pub(crate) struct WebPlayback {
     clock: PlaybackClock,
-    domain: DomainRuntime,
+    cameras: CameraController,
+    path: PathController,
+    odometry: OdometryController,
+    transforms: TransformController,
+    unknown_streams: u64,
+    processing_time: StageTiming,
     data: RecordingDataPlane<WebWindowLoader>,
     load_state: PlaybackLoadState,
     pending_seek: Option<ArrivalTime>,
@@ -89,12 +96,20 @@ impl WebPlayback {
         loader: WebWindowLoader,
         source_kind: PlaybackSourceKind,
     ) -> Result<Self, WebPlaybackError> {
-        let domain = DomainRuntime::new(plan);
+        let cameras = CameraController::new(&plan);
+        let path = PathController::new(&plan);
+        let odometry = OdometryController::new(&plan);
+        let transforms = TransformController::new(&plan);
         let data = RecordingDataPlane::new(loader, start, end_exclusive)
             .map_err(|error| WebPlaybackError::new(error.to_string()))?;
         Ok(Self {
             clock: PlaybackClock::new(start, end),
-            domain,
+            cameras,
+            path,
+            odometry,
+            transforms,
+            unknown_streams: 0,
+            processing_time: StageTiming::default(),
             data,
             load_state: PlaybackLoadState::Ready,
             pending_seek: None,
@@ -150,8 +165,8 @@ impl WebPlayback {
         }
 
         let messages = self.data.messages_through(target, target);
-        self.domain.reset_for_restore();
-        self.domain.process(Duration::ZERO, messages);
+        self.reset_for_restore();
+        self.process_messages(Duration::ZERO, messages);
         self.clock.seek(target);
         self.pending_seek = None;
         self.buffer_underrun_active = false;
@@ -185,7 +200,7 @@ impl WebPlayback {
         }
 
         let messages = self.data.messages_through(self.clock.cursor(), requested);
-        self.domain.process(elapsed, messages);
+        self.process_messages(elapsed, messages);
         self.clock.commit_cursor(requested);
         self.buffer_underrun_active = false;
         self.load_state = PlaybackLoadState::Ready;
@@ -225,24 +240,48 @@ impl WebPlayback {
         &self.clock
     }
 
-    pub(crate) fn state(&self) -> &DomainState {
-        self.domain.state()
+    pub(crate) fn cameras(&self) -> &CameraController {
+        &self.cameras
+    }
+
+    pub(crate) fn path(&self) -> &PathController {
+        &self.path
+    }
+
+    pub(crate) fn odometry(&self) -> &OdometryController {
+        &self.odometry
+    }
+
+    pub(crate) fn transforms(&self) -> &TransformController {
+        &self.transforms
     }
 
     pub(crate) fn camera_topics(&self) -> &[(CameraId, String)] {
-        self.domain.camera_topics()
+        self.cameras.topics()
     }
 
     pub(crate) fn set_focused_camera(&mut self, camera: Option<CameraId>) {
-        self.domain.set_focused_camera(camera);
+        self.cameras.set_focused_camera(camera);
     }
 
-    pub(crate) fn counters(&self) -> PipelineCounters {
-        self.domain.counters()
+    pub(crate) fn counters(&self) -> ProcessingCounters {
+        let mut counters = ProcessingCounters {
+            unknown_streams: self.unknown_streams,
+            ..ProcessingCounters::default()
+        };
+        counters.merge(self.cameras.counters());
+        counters.merge(self.path.counters());
+        counters.merge(self.odometry.counters());
+        counters.merge(self.transforms.counters());
+        counters
     }
 
     pub(crate) fn performance(&self) -> PlaybackPerformance {
-        PlaybackPerformance::from_parts(StageTiming::default(), self.domain.performance())
+        PlaybackPerformance::from_controllers(
+            StageTiming::default(),
+            self.processing_time,
+            &self.cameras,
+        )
     }
 
     pub(crate) fn load_state(&self) -> PlaybackLoadState {
@@ -264,6 +303,37 @@ impl WebPlayback {
         self.data
             .diagnostics(self.clock.cursor(), self.clock.speed())
     }
+
+    fn process_messages(&mut self, elapsed: Duration, messages: Vec<RawMessage>) {
+        let started = Instant::now();
+        for message in &messages {
+            let matched = self.cameras.admit(message)
+                | self.path.process(message)
+                | self.odometry.process(message)
+                | self.transforms.process(message);
+            if !matched {
+                self.unknown_streams = self.unknown_streams.saturating_add(1);
+            }
+        }
+        self.cameras.advance(elapsed);
+        self.processing_time.record(started.elapsed());
+    }
+
+    fn reset_for_restore(&mut self) {
+        self.cameras.reset_for_restore();
+        self.path.reset_for_restore();
+        self.odometry.reset_for_restore();
+        self.transforms.reset_for_restore();
+    }
+}
+
+pub(crate) fn web_playback_requirements() -> PlaybackRequirements {
+    let mut requirements = PlaybackRequirements::empty();
+    requirements.require_all_cameras();
+    requirements.require_path();
+    requirements.require_odometry();
+    requirements.require_transforms();
+    requirements
 }
 
 #[cfg(test)]
@@ -350,7 +420,7 @@ mod tests {
     }
 
     #[test]
-    fn buffering_keeps_committed_cursor_and_domain_until_window_is_complete() {
+    fn buffering_keeps_committed_cursor_and_controller_state_until_window_is_complete() {
         let client = RemoteApiClient::new("http://localhost").unwrap();
         let mut playback = WebPlayback::from_remote(client, remote_catalog()).unwrap();
         playback.apply_command(PlaybackCommand::Toggle).unwrap();
@@ -362,7 +432,7 @@ mod tests {
             playback.clock.cursor(),
             viewer_core::ArrivalTime(1_000_000_000)
         );
-        assert!(playback.state().camera.latest_by_arrival().is_none());
+        assert!(playback.cameras().state().latest_by_arrival().is_none());
         assert!(matches!(
             playback.load_state,
             PlaybackLoadState::Buffering { .. }
@@ -424,8 +494,8 @@ mod tests {
         assert_eq!(playback.clock.cursor(), requested);
         assert_eq!(
             playback
+                .cameras()
                 .state()
-                .camera
                 .latest_by_arrival()
                 .unwrap()
                 .arrival_time,
@@ -556,8 +626,8 @@ mod tests {
         assert_eq!(playback.tick(Duration::ZERO).unwrap(), PlaybackEffect::None);
         assert_eq!(
             playback
+                .cameras()
                 .state()
-                .camera
                 .latest_by_arrival()
                 .unwrap()
                 .arrival_time,
@@ -578,13 +648,13 @@ mod tests {
         assert_eq!(playback.clock.cursor(), committed_before_seek);
         assert_eq!(
             playback
+                .cameras()
                 .state()
-                .camera
                 .latest_by_arrival()
                 .unwrap()
                 .arrival_time,
             viewer_core::ArrivalTime(START),
-            "committed domain stays visible while the seek window is loading"
+            "committed controller state stays visible while the seek window is loading"
         );
         assert_eq!(
             playback.load_state(),
@@ -625,8 +695,8 @@ mod tests {
         assert_eq!(playback.clock.cursor(), viewer_core::ArrivalTime(TARGET));
         assert_eq!(
             playback
+                .cameras()
                 .state()
-                .camera
                 .latest_by_arrival()
                 .unwrap()
                 .arrival_time,
@@ -636,7 +706,7 @@ mod tests {
     }
 
     #[test]
-    fn local_indexed_and_remote_batch_windows_reduce_to_the_same_domain_state() {
+    fn local_indexed_and_remote_batch_windows_reduce_to_the_same_feature_state() {
         let bytes = std::fs::read(
             std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
                 .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap"),
@@ -702,41 +772,59 @@ mod tests {
         .unwrap();
         assert_eq!(local.window.messages, remote.window.messages);
 
-        let mut local_domain = DomainRuntime::new(catalog.plan.clone());
-        let mut remote_domain = DomainRuntime::new(catalog.plan);
-        local_domain.process(Duration::from_secs(1), local.window.messages);
-        remote_domain.process(Duration::from_secs(1), remote.window.messages);
+        struct ReducedFeatureState {
+            cameras: Vec<(CameraId, viewer_core::CameraFrame)>,
+            telemetry: Option<viewer_core::TelemetryFrame>,
+            path: Option<viewer_core::BevPathFrame>,
+            transform_counts: (usize, usize),
+            counters: ProcessingCounters,
+        }
 
-        let local_cameras = local_domain
-            .state()
-            .camera
-            .frames()
-            .map(|(id, frame)| (*id, frame.clone()))
-            .collect::<Vec<_>>();
-        let remote_cameras = remote_domain
-            .state()
-            .camera
-            .frames()
-            .map(|(id, frame)| (*id, frame.clone()))
-            .collect::<Vec<_>>();
+        fn reduce(plan: &SessionPlan, messages: &[RawMessage]) -> ReducedFeatureState {
+            let mut cameras = CameraController::new(plan);
+            let mut path = PathController::new(plan);
+            let mut odometry = OdometryController::new(plan);
+            let mut transforms = TransformController::new(plan);
+            for message in messages {
+                cameras.admit(message);
+                path.process(message);
+                odometry.process(message);
+                transforms.process(message);
+            }
+            cameras.advance(Duration::from_secs(1));
+            let mut counters = cameras.counters();
+            counters.merge(path.counters());
+            counters.merge(odometry.counters());
+            counters.merge(transforms.counters());
+            ReducedFeatureState {
+                cameras: cameras
+                    .state()
+                    .frames()
+                    .map(|(id, frame)| (*id, frame.clone()))
+                    .collect(),
+                telemetry: odometry.state().latest().cloned(),
+                path: path.state().latest().cloned(),
+                transform_counts: (
+                    transforms.state().static_len(),
+                    transforms.state().dynamic_len(),
+                ),
+                counters,
+            }
+        }
+
+        let local_state = reduce(&catalog.plan, &local.window.messages);
+        let remote_state = reduce(&catalog.plan, &remote.window.messages);
+        let local_cameras = &local_state.cameras;
+        let remote_cameras = &remote_state.cameras;
         assert_eq!(local_cameras, remote_cameras);
         let retained_jpeg = &local_cameras.first().unwrap().1.jpeg;
         let jpeg_start = retained_jpeg.as_ptr() as usize;
         assert!(camera_payload_ranges.iter().any(|payload| {
             jpeg_start >= payload.start && jpeg_start + retained_jpeg.len() <= payload.end
         }));
-        assert_eq!(
-            local_domain.state().telemetry.latest(),
-            remote_domain.state().telemetry.latest()
-        );
-        assert_eq!(
-            local_domain.state().bev.latest(),
-            remote_domain.state().bev.latest()
-        );
-        assert_eq!(
-            local_domain.state().point_cloud.latest(),
-            remote_domain.state().point_cloud.latest()
-        );
-        assert_eq!(local_domain.counters(), remote_domain.counters());
+        assert_eq!(local_state.telemetry, remote_state.telemetry);
+        assert_eq!(local_state.path, remote_state.path);
+        assert_eq!(local_state.transform_counts, remote_state.transform_counts);
+        assert_eq!(local_state.counters, remote_state.counters);
     }
 }

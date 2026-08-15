@@ -4,7 +4,7 @@ use crate::{
     diagnostics::AppDiagnostics,
     graphics::{Graphics, RenderInput},
     interaction::ViewerAction,
-    presentation::{PresentationState, PresentationTransition},
+    presentation::{PresentationBuildInput, PresentationState, PresentationTransition},
     preview::{PreviewCoordinator, fingerprint_source},
     session::ViewerSession,
     workspace::{NativeWorkspace, WorkspaceEffect},
@@ -39,13 +39,13 @@ pub(crate) struct App {
 
 impl App {
     fn load(&mut self, path: &Path) {
-        match ViewerSession::open(path, self.args.topic.clone()) {
+        let requirements = self.workspace.data_requirements();
+        match ViewerSession::open(path, self.args.topic.clone(), &requirements.playback) {
             Ok(mut session) => {
                 self.diagnostics.reset_for_source();
+                self.workspace.configure_session(session.plan());
                 let scheduler_camera = Self::scheduler_camera_for(&self.workspace, &session);
                 self.workspace.reset_for_source(scheduler_camera);
-                session.set_focused_camera(self.workspace.focused_camera());
-                let requirements = self.workspace.data_requirements();
                 if !requirements.signals.is_empty()
                     && let Err(error) = session.request_plot_signals(4_000)
                 {
@@ -81,7 +81,9 @@ impl App {
         let Some(session) = &mut self.session else {
             return Ok(());
         };
-        if let Err(error) = session.tick(elapsed) {
+        if let Err(error) = session.tick(elapsed, |elapsed, messages| {
+            self.workspace.process_messages(elapsed, messages);
+        }) {
             self.diagnostics.set_playback_error(error.to_string());
         }
         session.poll_queries();
@@ -97,10 +99,8 @@ impl App {
             presentation_errors.push(error.to_string());
         }
         let mut camera_updates = Vec::new();
-        let upload_result = {
-            let state = session.state();
-            graphics.upload_latest(&state.camera, &mut camera_updates)
-        };
+        let upload_result =
+            { graphics.upload_latest(self.workspace.cameras().state(), &mut camera_updates) };
         if let Err(error) = upload_result {
             presentation_errors.push(error.to_string());
         }
@@ -111,11 +111,27 @@ impl App {
         self.presentation_state
             .record_camera_updates(camera_updates);
         let camera_base_images = graphics.camera_base_images().collect::<Vec<_>>();
-        self.presentation_state
-            .update_camera_overlays(session.state(), &camera_base_images);
+        self.presentation_state.update_camera_overlays(
+            self.workspace.cameras(),
+            self.workspace.path(),
+            self.workspace.transforms(),
+            &camera_base_images,
+        );
 
-        let diagnostics = session.diagnostics();
         let playback = session.playback_view();
+        let playback_performance = playback.map(|_| {
+            self.workspace
+                .playback_performance(session.source_read_timing())
+        });
+        let diagnostics = session.diagnostics(
+            self.workspace.counters(),
+            playback_performance,
+            self.workspace
+                .cameras()
+                .state()
+                .latest_by_arrival()
+                .map(|frame| frame.arrival_time),
+        );
         let signals = session.signal_query_view();
         let workspace_warning = self.workspace.startup_warning();
         let error = self.diagnostics.message(&[
@@ -124,14 +140,40 @@ impl App {
             self.preview.warning(),
             self.bookmarks.warning(),
         ]);
+        let focused_camera = self.workspace.focused_camera();
+        let accumulate_points = self.workspace.accumulate_points();
         let (render_result, render_elapsed) = {
-            let presentation = self.presentation_state.build(
-                session.state(),
+            let cameras = self
+                .workspace
+                .camera_controller
+                .as_ref()
+                .expect("workspace Camera controller");
+            let path = self
+                .workspace
+                .path_controller
+                .as_ref()
+                .expect("workspace Path controller");
+            let odometry = self
+                .workspace
+                .odometry_controller
+                .as_ref()
+                .expect("workspace Odometry controller");
+            let transforms = self
+                .workspace
+                .transform_controller
+                .as_ref()
+                .expect("workspace Transform controller");
+            let presentation = self.presentation_state.build(PresentationBuildInput {
+                cameras,
+                path,
+                odometry,
+                transforms,
+                scene_controller: self.workspace.scene_controller.as_mut(),
                 diagnostics,
-                self.workspace.focused_camera(),
-                self.workspace.accumulate_points(),
+                focused_camera,
+                accumulate_points,
                 error,
-            );
+            });
             let render_started = Instant::now();
             let result = graphics.render(
                 window,
@@ -149,7 +191,9 @@ impl App {
                     static_transform_count: presentation.static_transform_count,
                     dynamic_transform_count: presentation.dynamic_transform_count,
                 },
-                &mut self.workspace,
+                &self.workspace.layout,
+                &mut self.workspace.panels,
+                &self.workspace.interaction,
             );
             (result, render_started.elapsed())
         };
@@ -211,8 +255,10 @@ impl App {
         let mut playback_effect = PlaybackEffect::None;
         for action in actions {
             match workspace.apply_action(action) {
-                WorkspaceEffect::Playback(command) => match session.apply_playback_command(command)
-                {
+                WorkspaceEffect::Playback(command) => match session
+                    .apply_playback_command(command, |messages| {
+                        workspace.restore_messages(messages)
+                    }) {
                     Ok(PlaybackEffect::Seeked) => playback_effect = PlaybackEffect::Seeked,
                     Ok(PlaybackEffect::None) => {}
                     Err(command_error) => {
@@ -220,15 +266,15 @@ impl App {
                     }
                 },
                 WorkspaceEffect::FocusedCameraChanged(camera_id) => {
-                    session.set_focused_camera(camera_id);
+                    let _ = camera_id;
                 }
                 WorkspaceEffect::BeginPreview(time) => {
                     let playing = session
                         .playback_view()
                         .is_some_and(|playback| playback.playing);
                     if preview.drag.begin(playing)
-                        && let Err(command_error) =
-                            session.apply_playback_command(viewer_core::PlaybackCommand::Toggle)
+                        && let Err(command_error) = session
+                            .apply_playback_command(viewer_core::PlaybackCommand::Toggle, |_| {})
                     {
                         diagnostics.set_playback_error(command_error.to_string());
                     }
@@ -236,7 +282,10 @@ impl App {
                 }
                 WorkspaceEffect::UpdatePreview(time) => preview.update(time),
                 WorkspaceEffect::CommitPreview(time) => {
-                    match session.apply_playback_command(viewer_core::PlaybackCommand::Seek(time)) {
+                    match session.apply_playback_command(
+                        viewer_core::PlaybackCommand::Seek(time),
+                        |messages| workspace.restore_messages(messages),
+                    ) {
                         Ok(PlaybackEffect::Seeked) => playback_effect = PlaybackEffect::Seeked,
                         Ok(PlaybackEffect::None) => {}
                         Err(command_error) => {
@@ -244,8 +293,8 @@ impl App {
                         }
                     }
                     if preview.drag.finish()
-                        && let Err(command_error) =
-                            session.apply_playback_command(viewer_core::PlaybackCommand::Toggle)
+                        && let Err(command_error) = session
+                            .apply_playback_command(viewer_core::PlaybackCommand::Toggle, |_| {})
                     {
                         diagnostics.set_playback_error(command_error.to_string());
                     }
@@ -311,8 +360,13 @@ impl ApplicationHandler for App {
             }
             #[cfg(feature = "ros2-live")]
             SourceMode::Ros { reliable } => {
-                let mut session = ViewerSession::open_live(self.args.topic.clone(), reliable);
                 let requirements = self.workspace.data_requirements();
+                let mut session = ViewerSession::open_live(
+                    self.args.topic.clone(),
+                    reliable,
+                    &requirements.playback,
+                );
+                self.workspace.configure_session(session.plan());
                 session.load_inspections(&requirements.inspections);
                 self.preview.clear();
                 self.bookmarks = BookmarkState::default();
@@ -323,7 +377,6 @@ impl ApplicationHandler for App {
                 );
                 let scheduler_camera = Self::scheduler_camera_for(&self.workspace, &session);
                 self.workspace.reset_for_source(scheduler_camera);
-                session.set_focused_camera(self.workspace.focused_camera());
                 self.session = Some(session);
             }
         }
@@ -372,12 +425,17 @@ impl ApplicationHandler for App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use viewer_core::{ArrivalTime, PlaybackCommand};
+    use viewer_core::{ArrivalTime, PlaybackCommand, PlaybackRequirements};
 
     fn session() -> ViewerSession {
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../tests/fixtures/camera-jpeg/camera_front_3s.mcap");
-        ViewerSession::open(&path, "/camera/front/image/compressed".to_owned()).unwrap()
+        ViewerSession::open(
+            &path,
+            "/camera/front/image/compressed".to_owned(),
+            &PlaybackRequirements::default(),
+        )
+        .unwrap()
     }
 
     #[test]

@@ -1,10 +1,10 @@
-use crate::{PipelineCounters, PlaybackPerformance, PresentationSnapshot};
+use crate::{PlaybackPerformance, PresentationSnapshot, ProcessingCounters};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct DiagnosticsPresentation {
     pub source: String,
     pub primary_topic: String,
-    pub counters: PipelineCounters,
+    pub counters: ProcessingCounters,
     pub playback_performance: Option<PlaybackPerformance>,
     pub performance: PresentationSnapshot,
     pub path_points: usize,

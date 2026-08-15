@@ -536,6 +536,7 @@ mod tests {
         let mut session = ViewerSession::open(
             &camera_fixture(),
             "/camera/front/image/compressed".to_owned(),
+            &viewer_core::PlaybackRequirements::default(),
         )
         .unwrap();
         let start = session.playback_view().unwrap().cursor;
@@ -543,7 +544,7 @@ mod tests {
         loader
             .start_overview(request(missing_fixture(), start))
             .unwrap();
-        session.tick(Duration::from_millis(250)).unwrap();
+        session.tick(Duration::from_millis(250), |_, _| {}).unwrap();
         loader.poll_until_settled_for_test();
         assert!(session.playback_view().unwrap().cursor > start);
         assert!(loader.error().is_some());
@@ -554,13 +555,14 @@ mod tests {
         let mut session = ViewerSession::open(
             &camera_fixture(),
             "/camera/front/image/compressed".to_owned(),
+            &viewer_core::PlaybackRequirements::default(),
         )
         .unwrap();
         let start = session.playback_view().unwrap().cursor;
         let mut loader = PlotLoader::default();
         loader.hold_loading_for_test();
 
-        session.tick(Duration::from_millis(250)).unwrap();
+        session.tick(Duration::from_millis(250), |_, _| {}).unwrap();
 
         assert!(loader.is_loading());
         assert!(session.playback_view().unwrap().cursor > start);
@@ -571,9 +573,10 @@ mod tests {
         let session = ViewerSession::open(
             &shared_domain_fixture(),
             "/camera/front/image/compressed".to_owned(),
+            &viewer_core::PlaybackRequirements::default(),
         )
         .unwrap();
-        assert!(session.state().telemetry.latest().is_none());
+        let cursor = session.playback_view().unwrap().cursor;
 
         let messages = session.inspect_topic(viewer_core::ODOM_TOPIC, 3).unwrap();
 
@@ -584,6 +587,6 @@ mod tests {
                 .all(|pair| { pair[0].arrival_time <= pair[1].arrival_time })
         );
         assert!(messages.iter().all(|message| message.payload_bytes > 0));
-        assert!(session.state().telemetry.latest().is_none());
+        assert_eq!(session.playback_view().unwrap().cursor, cursor);
     }
 }

@@ -5,8 +5,9 @@ mod ui;
 pub(crate) mod views;
 
 use crate::{
-    inspection::TopicInspection, interaction::ViewerAction, presentation::PresentationTransition,
-    signal_query::SignalQueryView, workspace::NativeWorkspace,
+    inspection::TopicInspection, interaction::ViewerAction, panels::PanelRuntimeStore,
+    presentation::PresentationTransition, signal_query::SignalQueryView,
+    workspace::ViewerInteractionState,
 };
 use bev_renderer::{BevFrame, BevRenderer};
 use egui_wgpu::Renderer as EguiRenderer;
@@ -16,6 +17,7 @@ use viewer_core::{
     BevSnapshot, Bookmark, CameraId, PlaybackView, PreviewSnapshot, SceneSnapshot, SignalOverview,
     ViewerPresentation,
 };
+use viewer_layout::LayoutDocument;
 use viewer_renderer::{CameraBaseImageTracker, CameraTextureSlot};
 use winit::window::Window;
 
@@ -86,9 +88,11 @@ impl Graphics {
         &mut self,
         window: &Window,
         input: RenderInput<'_>,
-        workspace: &mut NativeWorkspace,
+        layout: &LayoutDocument,
+        panels: &mut PanelRuntimeStore,
+        interaction: &ViewerInteractionState,
     ) -> Result<RenderOutput, wgpu::SurfaceError> {
-        let ui = self.build_ui(window, &input, workspace);
+        let ui = self.build_ui(window, &input, layout, panels, interaction);
         let view_requests = ViewRenderRequests {
             bev_size: ui.render_requests.bev_size,
             scene: ui.render_requests.scene.map(|scene| SceneRenderRequest {

@@ -10,8 +10,8 @@ use mcap::{
 };
 use std::{borrow::Cow, fmt, io::SeekFrom};
 use viewer_core::{
-    ArrivalTime, CameraId, DomainPipelineSet, DomainRoute, DomainState, DomainTarget, RawMessage,
-    StreamDescriptor, StreamId,
+    ArrivalTime, CameraController, OdometryController, PlaybackRequirements, RawMessage,
+    SessionPlan, SourceCatalog, StreamDescriptor, StreamId,
 };
 
 pub(crate) const RECORD_HEADER_LEN: usize = 1 + 8;
@@ -270,10 +270,14 @@ pub(crate) fn feed_pipeline(
         message_encoding: channel.message_encoding.clone(),
         timing: viewer_core::StreamTimingSummary::default(),
     };
-    let (target, domain) = if topic == viewer_core::ODOM_TOPIC {
-        (DomainTarget::Telemetry, "odometry")
+    let (requirements, domain) = if topic == viewer_core::ODOM_TOPIC {
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_odometry();
+        (requirements, "odometry")
     } else if descriptor.schema == "sensor_msgs/msg/CompressedImage" {
-        (DomainTarget::Camera(CameraId(0)), "camera")
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_camera_topic(topic);
+        (requirements, "camera")
     } else {
         return Err(format!(
             "spike only routes odometry or compressed camera data, got {topic} ({})",
@@ -283,44 +287,38 @@ pub(crate) fn feed_pipeline(
     let arrival = i64::try_from(header.log_time)
         .map(ArrivalTime)
         .map_err(|_| "message log time exceeds ArrivalTime".to_owned())?;
-    let mut pipelines = DomainPipelineSet::from_routes(&[DomainRoute {
-        stream: descriptor,
-        target,
-    }])
-    .map_err(|error| error.to_string())?;
-    let mut updates = Vec::new();
-    pipelines.decode(
-        RawMessage {
-            stream_id,
-            arrival_time: arrival,
-            payload: data.to_vec().into(),
-        },
-        &mut updates,
-    );
-    if pipelines.counters().decoded != 1 || updates.len() != 1 {
-        return Err(format!(
-            "pipeline did not decode exactly one message: decoded={} errors={} updates={}",
-            pipelines.counters().decoded,
-            pipelines.counters().errors,
-            updates.len()
-        ));
-    }
-    let mut state = DomainState::default();
-    state.apply_all(updates);
-    let updated = match target {
-        DomainTarget::Telemetry => state
-            .telemetry
-            .latest()
-            .is_some_and(|frame| frame.arrival_time == arrival),
-        DomainTarget::Camera(camera_id) => state
-            .camera
-            .latest_for(camera_id)
-            .is_some_and(|frame| frame.arrival_time == arrival),
-        _ => false,
+    let catalog = SourceCatalog {
+        time_range: None,
+        streams: vec![descriptor],
+    };
+    let plan =
+        SessionPlan::build(&catalog, topic, &requirements).map_err(|error| error.to_string())?;
+    let message = RawMessage {
+        stream_id,
+        arrival_time: arrival,
+        payload: data.to_vec().into(),
+    };
+    let updated = if domain == "odometry" {
+        let mut controller = OdometryController::new(&plan);
+        controller.process(&message)
+            && controller
+                .state()
+                .latest()
+                .is_some_and(|frame| frame.arrival_time == arrival)
+            && controller.counters().decoded == 1
+    } else {
+        let mut controller = CameraController::new(&plan);
+        controller.admit(&message);
+        controller.advance(std::time::Duration::ZERO);
+        controller
+            .state()
+            .latest_by_arrival()
+            .is_some_and(|frame| frame.arrival_time == arrival)
+            && controller.counters().decoded == 1
     };
     if !updated {
         return Err(format!(
-            "{domain} DomainPipelineSet did not update DomainState"
+            "{domain} controller did not retain the decoded message"
         ));
     }
     Ok(PipelineProbeResult {

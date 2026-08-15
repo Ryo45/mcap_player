@@ -90,6 +90,12 @@ pub struct TransformState {
 }
 
 impl TransformState {
+    pub fn clear(&mut self) {
+        self.static_edges.clear();
+        self.dynamic_edges.clear();
+        self.revision = self.revision.wrapping_add(1);
+    }
+
     pub fn apply(&mut self, batch: TransformBatch) {
         self.revision = self.revision.wrapping_add(1);
         for transform in batch.transforms {

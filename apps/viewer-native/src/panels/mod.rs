@@ -98,10 +98,13 @@ impl NativePanel {
 
     pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
         match self {
+            Self::Camera(panel) => panel.contribute_data_requirements(requirements),
+            Self::Bev(panel) => panel.contribute_data_requirements(requirements),
+            Self::Scene(panel) => panel.contribute_data_requirements(requirements),
             Self::Plot(panel) => panel.contribute_data_requirements(requirements),
             Self::Inspector(panel) => panel.contribute_data_requirements(requirements),
             Self::Status(panel) => panel.contribute_data_requirements(requirements),
-            _ => {}
+            Self::Placeholder(_) => {}
         }
     }
 
@@ -126,10 +129,21 @@ impl NativePanel {
     }
 }
 
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct PanelDataRequirements {
+    pub(crate) playback: viewer_core::PlaybackRequirements,
     pub(crate) signals: BTreeSet<SignalId>,
     pub(crate) inspections: Vec<InspectorRequirement>,
+}
+
+impl Default for PanelDataRequirements {
+    fn default() -> Self {
+        Self {
+            playback: viewer_core::PlaybackRequirements::empty(),
+            signals: BTreeSet::new(),
+            inspections: Vec::new(),
+        }
+    }
 }
 
 #[derive(Clone, Copy)]

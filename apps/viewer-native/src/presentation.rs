@@ -3,8 +3,8 @@ use std::{collections::BTreeMap, time::Duration};
 #[cfg(test)]
 use viewer_core::OverlayStatus;
 use viewer_core::{
-    BevFrameBuilder, BevSnapshot, CameraCalibrationSet, CameraId, DiagnosticsPresentation,
-    DomainState, PresentationMetrics, SceneFrameBuilder, SceneSnapshot, ViewerPresentation,
+    BevSnapshot, CameraCalibrationSet, CameraId, DiagnosticsPresentation, PresentationMetrics,
+    SceneSnapshot, ViewerPresentation,
 };
 use viewer_renderer::CameraOverlayState;
 
@@ -23,6 +23,18 @@ pub(crate) struct PresentationFrame<'a> {
     pub(crate) dynamic_transform_count: usize,
 }
 
+pub(crate) struct PresentationBuildInput<'a> {
+    pub(crate) cameras: &'a viewer_core::CameraController,
+    pub(crate) path: &'a viewer_core::PathController,
+    pub(crate) odometry: &'a viewer_core::OdometryController,
+    pub(crate) transforms: &'a viewer_core::TransformController,
+    pub(crate) scene_controller: Option<&'a mut viewer_core::SceneController>,
+    pub(crate) diagnostics: SessionDiagnostics,
+    pub(crate) focused_camera: Option<CameraId>,
+    pub(crate) accumulate_points: bool,
+    pub(crate) error: Option<String>,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum PresentationTransition {
     SourceChanged,
@@ -31,7 +43,6 @@ pub(crate) enum PresentationTransition {
 
 #[derive(Default)]
 pub(crate) struct PresentationState {
-    scene_builder: SceneFrameBuilder,
     camera_overlays: CameraOverlayState,
     calibrations: CameraCalibrationSet,
     metrics: PresentationMetrics,
@@ -45,11 +56,13 @@ impl PresentationState {
 
     pub(crate) fn update_camera_overlays(
         &mut self,
-        state: &DomainState,
+        cameras: &viewer_core::CameraController,
+        path: &viewer_core::PathController,
+        transforms: &viewer_core::TransformController,
         base_images: &[(CameraId, viewer_core::ArrivalTime, (u32, u32))],
     ) {
         for (camera_id, base_arrival, image_size) in base_images {
-            let Some(frame) = state.camera.latest_for(*camera_id) else {
+            let Some(frame) = cameras.state().latest_for(*camera_id) else {
                 continue;
             };
             if frame.arrival_time != *base_arrival {
@@ -58,10 +71,10 @@ impl PresentationState {
             self.camera_overlays.update(
                 frame,
                 *image_size,
-                state.bev.latest(),
-                state.bev.revision(),
-                &state.transforms,
-                state.transforms.revision(),
+                path.state().latest(),
+                path.state().revision(),
+                transforms.state(),
+                transforms.state().revision(),
                 &self.calibrations,
             );
         }
@@ -69,23 +82,35 @@ impl PresentationState {
 
     pub(crate) fn build<'a>(
         &'a mut self,
-        state: &'a DomainState,
-        diagnostics: SessionDiagnostics,
-        focused_camera: Option<CameraId>,
-        accumulate_points: bool,
-        error: Option<String>,
+        input: PresentationBuildInput<'a>,
     ) -> PresentationFrame<'a> {
+        let PresentationBuildInput {
+            cameras,
+            path,
+            odometry,
+            transforms,
+            scene_controller,
+            diagnostics,
+            focused_camera,
+            accumulate_points,
+            error,
+        } = input;
         let overlay_status = self
             .camera_overlays
             .snapshots()
             .map(|snapshot| (snapshot.camera_id, snapshot.status.clone()))
             .collect::<BTreeMap<_, _>>();
-        let viewer = ViewerPresentation::from_domain(
-            state,
-            &diagnostics.camera_topics,
+        let viewer = ViewerPresentation::from_features(viewer_core::ViewerPresentationInput {
+            cameras: cameras.state(),
+            telemetry: odometry.state(),
+            path: path.state(),
+            point_cloud: scene_controller
+                .as_deref()
+                .map(viewer_core::SceneController::point_cloud),
+            camera_topics: &diagnostics.camera_topics,
             focused_camera,
-            &overlay_status,
-            DiagnosticsPresentation {
+            overlays: &overlay_status,
+            diagnostics: DiagnosticsPresentation {
                 source: diagnostics.source_name,
                 primary_topic: diagnostics.primary_topic,
                 counters: diagnostics.counters,
@@ -94,16 +119,25 @@ impl PresentationState {
                 error,
                 ..DiagnosticsPresentation::default()
             },
-        );
-        let bev = BevFrameBuilder::new(state).build();
-        let scene = self.scene_builder.build(state, accumulate_points);
+        });
+        let static_transform_count = transforms.state().static_len();
+        let dynamic_transform_count = transforms.state().dynamic_len();
+        let bev = viewer_core::BevFrameBuilder::new(path.state()).build();
+        let scene = scene_controller.map_or_else(SceneSnapshot::default, |controller| {
+            controller.snapshot(
+                path.state(),
+                odometry.state(),
+                transforms.state(),
+                accumulate_points,
+            )
+        });
         PresentationFrame {
             viewer,
             camera_overlays: &self.camera_overlays,
             bev,
             scene,
-            static_transform_count: state.transforms.static_len(),
-            dynamic_transform_count: state.transforms.dynamic_len(),
+            static_transform_count,
+            dynamic_transform_count,
         }
     }
 
@@ -129,7 +163,6 @@ impl PresentationState {
     }
 
     pub(crate) fn apply_transition(&mut self, _transition: PresentationTransition) {
-        self.scene_builder.reset();
         self.camera_overlays.reset_source();
         self.metrics.reset();
     }
@@ -138,27 +171,41 @@ impl PresentationState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use viewer_core::{ArrivalTime, BevPathFrame, MeasurementTime, PipelineCounters};
+    use viewer_core::{
+        PlaybackRequirements, ProcessingCounters, SessionPlan, SourceCatalog, StreamDescriptor,
+        StreamId, StreamTimingSummary,
+    };
 
     fn diagnostics() -> SessionDiagnostics {
         SessionDiagnostics {
             source_name: "fixture".into(),
             primary_topic: "/camera/front/image/compressed".into(),
             camera_topics: vec![(CameraId(0), "/camera/front/image/compressed".into())],
-            counters: PipelineCounters::default(),
+            counters: ProcessingCounters::default(),
             playback_performance: None,
         }
     }
 
     #[test]
     fn owns_and_resets_cpu_presentation_caches() {
-        let mut state = DomainState::default();
-        state.bev.apply(BevPathFrame {
-            measurement_time: MeasurementTime(1),
-            arrival_time: ArrivalTime(2),
-            frame_id: "base_link".into(),
-            points: vec![[1.0, 2.0]],
-        });
+        let mut workspace = crate::workspace::NativeWorkspace::default();
+        let catalog = SourceCatalog {
+            time_range: None,
+            streams: vec![StreamDescriptor {
+                id: StreamId(1),
+                topic: "/camera/front/image/compressed".into(),
+                schema: "sensor_msgs/msg/CompressedImage".into(),
+                message_encoding: "cdr".into(),
+                timing: StreamTimingSummary::default(),
+            }],
+        };
+        let plan = SessionPlan::build(
+            &catalog,
+            "/camera/front/image/compressed",
+            &PlaybackRequirements::default(),
+        )
+        .unwrap();
+        workspace.configure_session(&plan);
         let mut presentation = PresentationState::default();
         presentation.record_camera_updates([CameraBasePresentationUpdate {
             camera_id: CameraId(0),
@@ -167,16 +214,36 @@ mod tests {
         }]);
         presentation.advance_metrics(Duration::from_secs(1));
 
-        let frame = presentation.build(&state, diagnostics(), Some(CameraId(0)), true, None);
+        let frame = presentation.build(PresentationBuildInput {
+            cameras: workspace.camera_controller.as_ref().unwrap(),
+            path: workspace.path_controller.as_ref().unwrap(),
+            odometry: workspace.odometry_controller.as_ref().unwrap(),
+            transforms: workspace.transform_controller.as_ref().unwrap(),
+            scene_controller: workspace.scene_controller.as_mut(),
+            diagnostics: diagnostics(),
+            focused_camera: Some(CameraId(0)),
+            accumulate_points: true,
+            error: None,
+        });
         let camera = frame.viewer.focused_camera().unwrap();
         assert_eq!(camera.overlay, OverlayStatus::Waiting);
         assert_eq!(camera.fps, 1.0);
-        assert_eq!(frame.bev.path, [[1.0, 2.0]]);
+        assert!(frame.bev.path.is_empty());
         assert!(frame.scene.accumulate);
         drop(frame);
 
         presentation.apply_transition(PresentationTransition::Seeked);
-        let frame = presentation.build(&state, diagnostics(), Some(CameraId(0)), true, None);
+        let frame = presentation.build(PresentationBuildInput {
+            cameras: workspace.camera_controller.as_ref().unwrap(),
+            path: workspace.path_controller.as_ref().unwrap(),
+            odometry: workspace.odometry_controller.as_ref().unwrap(),
+            transforms: workspace.transform_controller.as_ref().unwrap(),
+            scene_controller: workspace.scene_controller.as_mut(),
+            diagnostics: diagnostics(),
+            focused_camera: Some(CameraId(0)),
+            accumulate_points: true,
+            error: None,
+        });
         let camera = frame.viewer.focused_camera().unwrap();
         assert_eq!(camera.overlay, OverlayStatus::Waiting);
         assert_eq!(camera.fps, 0.0);

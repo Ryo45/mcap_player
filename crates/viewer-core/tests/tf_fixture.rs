@@ -1,7 +1,7 @@
-use std::{fs, path::PathBuf};
+use std::{fs, path::PathBuf, time::Duration};
 use viewer_core::{
-    CameraCalibrationSet, DomainPipelineSet, DomainRoute, DomainTarget, DomainUpdate, McapSource,
-    SceneFrameBuilder, TransformState,
+    CameraCalibrationSet, CameraController, McapPlayback, McapSource, OdometryController,
+    PathController, PlaybackRequirements, SceneController, SessionPlan, TransformController,
 };
 
 fn fixture() -> Vec<u8> {
@@ -13,55 +13,35 @@ fn fixture() -> Vec<u8> {
 #[test]
 fn every_scan_resolves_to_world_at_its_measurement_time() {
     let mut source = McapSource::new(fixture()).unwrap();
-    let scan = source.catalog().by_topic("/scan").unwrap();
-    let dynamic_tf = source.catalog().by_topic("/tf").unwrap();
-    let static_tf = source.catalog().by_topic("/tf_static").unwrap();
-    let mut pipelines = DomainPipelineSet::from_routes(&[
-        DomainRoute {
-            stream: scan.clone(),
-            target: DomainTarget::PointCloud,
-        },
-        DomainRoute {
-            stream: dynamic_tf.clone(),
-            target: DomainTarget::Transforms { is_static: false },
-        },
-        DomainRoute {
-            stream: static_tf.clone(),
-            target: DomainTarget::Transforms { is_static: true },
-        },
-    ])
+    let plan = SessionPlan::build(
+        source.catalog(),
+        "/camera/front/image/compressed",
+        &PlaybackRequirements::default(),
+    )
     .unwrap();
+    source.select_streams(plan.selected_stream_ids());
+    let mut transforms = TransformController::new(&plan);
+    let mut scene = SceneController::new(&plan);
     let (_, end) = source.time_range();
-    let mut transforms = TransformState::default();
     let mut scan_count = 0;
 
     for message in source.read_until(end).unwrap() {
-        let mut updates = Vec::new();
-        pipelines.decode(message, &mut updates);
-        for update in updates {
-            match update {
-                DomainUpdate::Transforms(batch) => transforms.apply(batch),
-                DomainUpdate::PointCloud(scan) => {
-                    let world = transforms
-                        .transform_points_at(
-                            &scan.frame_id,
-                            "odom",
-                            scan.measurement_time,
-                            &scan.points,
-                        )
-                        .expect("scan-time base_scan -> odom transform");
-                    assert_eq!(world.len(), scan.points.len());
-                    assert!(world.iter().flatten().all(|value| value.is_finite()));
-                    scan_count += 1;
-                }
-                _ => unreachable!("only scan and TF streams are bound"),
-            }
+        transforms.process(&message);
+        if scene.process(&message) {
+            let scan = scene.point_cloud().latest().expect("decoded scan");
+            let world = transforms
+                .state()
+                .transform_points_at(&scan.frame_id, "odom", scan.measurement_time, &scan.points)
+                .expect("scan-time base_scan -> odom transform");
+            assert_eq!(world.len(), scan.points.len());
+            assert!(world.iter().flatten().all(|value| value.is_finite()));
+            scan_count += 1;
         }
     }
 
     assert_eq!(scan_count, 44);
-    assert_eq!(transforms.static_len(), 15);
-    assert_eq!(transforms.dynamic_len(), 3);
+    assert_eq!(transforms.state().static_len(), 15);
+    assert_eq!(transforms.state().dynamic_len(), 3);
     for frame in [
         "camera_front_optical_frame",
         "camera_rear_optical_frame",
@@ -73,6 +53,7 @@ fn every_scan_resolves_to_world_at_its_measurement_time() {
     ] {
         assert!(
             transforms
+                .state()
                 .transform_points("base_link", frame, &[[1.0, 0.0, 0.0]])
                 .is_some(),
             "base_link -> {frame} is missing"
@@ -81,16 +62,37 @@ fn every_scan_resolves_to_world_at_its_measurement_time() {
 }
 
 #[test]
-fn seven_camera_fixture_discovers_and_decodes_all_topics() {
+fn seven_camera_fixture_routes_exact_messages_to_concrete_controllers() {
     let bytes = fixture();
-    let mut playback =
-        viewer_core::McapPlayback::new(bytes, "/camera/front/image/compressed").unwrap();
+    let mut playback = McapPlayback::new(bytes).unwrap();
+    let plan = SessionPlan::build(
+        playback.catalog(),
+        "/camera/front/image/compressed",
+        &PlaybackRequirements::default(),
+    )
+    .unwrap();
+    playback.select_streams(plan.selected_stream_ids());
+    let mut cameras = CameraController::new(&plan);
+    let mut path = PathController::new(&plan);
+    let mut odometry = OdometryController::new(&plan);
+    let mut transforms = TransformController::new(&plan);
+    let mut scene = SceneController::new(&plan);
+    playback.clock_mut().toggle();
     playback
-        .apply_command(viewer_core::PlaybackCommand::Toggle)
+        .tick(Duration::from_secs(10), |elapsed, messages| {
+            for message in &messages {
+                cameras.admit(message);
+                path.process(message);
+                odometry.process(message);
+                transforms.process(message);
+                scene.process(message);
+            }
+            cameras.advance(elapsed);
+        })
         .unwrap();
-    playback.tick(std::time::Duration::from_secs(10)).unwrap();
+
     assert_eq!(
-        playback.camera_topics(),
+        cameras.topics(),
         &[
             (
                 viewer_core::CameraId(0),
@@ -124,30 +126,26 @@ fn seven_camera_fixture_discovers_and_decodes_all_topics() {
     );
     for camera_id in 0..7 {
         assert!(
-            playback
+            cameras
                 .state()
-                .camera
                 .latest_for(viewer_core::CameraId(camera_id))
                 .is_some(),
             "camera {camera_id} did not decode"
         );
     }
+
     let calibrations =
         CameraCalibrationSet::from_json(include_str!("../../../config/camera_calibration.json"))
             .unwrap();
-    let path = playback.state().bev.latest().expect("fixture path");
-    let telemetry = playback
-        .state()
-        .telemetry
-        .latest()
-        .expect("fixture odometry");
+    let path_frame = path.state().latest().expect("fixture path");
+    let telemetry = odometry.state().latest().expect("fixture odometry");
     assert!(telemetry.speed.is_finite());
-    assert_eq!(playback.state().transforms.static_len(), 15);
-    assert_eq!(playback.state().transforms.dynamic_len(), 3);
+    assert_eq!(transforms.state().static_len(), 15);
+    assert_eq!(transforms.state().dynamic_len(), 3);
     let mut total_visible = 0;
-    for (camera_id, camera) in playback.state().camera.frames() {
+    for (camera_id, camera) in cameras.state().frames() {
         let projected = calibrations
-            .project_plan(camera, path, &playback.state().transforms, (320, 240))
+            .project_plan(camera, path_frame, transforms.state(), (320, 240))
             .expect("camera projection");
         if *camera_id == viewer_core::CameraId(0) {
             assert!(
@@ -160,14 +158,17 @@ fn seven_camera_fixture_discovers_and_decodes_all_topics() {
     }
     assert!(total_visible > 0, "plan is not visible in any camera");
 
-    let raw_scan = playback.state().point_cloud.latest().expect("fixture scan");
+    let raw_scan = scene.point_cloud().latest().expect("fixture scan");
     assert_eq!(raw_scan.frame_id, "base_scan");
-    let mut scene_builder = SceneFrameBuilder::new();
-    let scene = scene_builder.build(playback.state(), true);
-    assert!(!scene.cloud.is_empty());
+    let snapshot = scene.snapshot(path.state(), odometry.state(), transforms.state(), true);
+    assert!(!snapshot.cloud.is_empty());
     assert_eq!(
-        scene.diagnostics.last_tf_route.as_deref(),
+        snapshot.diagnostics.last_tf_route.as_deref(),
         Some("base_scan → odom")
     );
-    assert_eq!(playback.counters().errors, 0);
+    assert_eq!(cameras.counters().errors, 0);
+    assert_eq!(path.counters().errors, 0);
+    assert_eq!(odometry.counters().errors, 0);
+    assert_eq!(transforms.counters().errors, 0);
+    assert_eq!(scene.counters().errors, 0);
 }

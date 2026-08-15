@@ -1,4 +1,4 @@
-use crate::{CameraId, DomainPerformance, StageTiming};
+use crate::{CameraController, CameraId};
 use std::{collections::BTreeMap, time::Duration};
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -12,23 +12,27 @@ pub struct PlaybackPerformance {
 }
 
 impl PlaybackPerformance {
-    pub fn from_parts(source_read: StageTiming, domain: &DomainPerformance) -> Self {
+    pub fn from_controllers(
+        source_read: StageTiming,
+        processing: StageTiming,
+        cameras: &CameraController,
+    ) -> Self {
         Self {
             source_read,
-            pipeline_decode: domain.pipeline_decode,
-            state_apply: domain.state_apply,
-            camera_input_frames: domain.camera_input_frames,
-            camera_presented_frames: domain.camera_presented_frames,
-            camera_presented_by_id: domain.camera_presented_by_id.clone(),
+            pipeline_decode: processing,
+            state_apply: StageTiming::default(),
+            camera_input_frames: cameras.input_frames(),
+            camera_presented_frames: cameras.presented_frames(),
+            camera_presented_by_id: cameras.presented_by_id().clone(),
         }
     }
 
     pub fn focused_camera_hz(&self) -> f64 {
-        DomainPerformance::default().focused_camera_hz()
+        CameraController::focused_hz()
     }
 
     pub fn background_camera_hz(&self) -> f64 {
-        DomainPerformance::default().background_camera_hz()
+        CameraController::background_hz()
     }
 }
 
@@ -147,5 +151,22 @@ mod tests {
         assert!((snapshot.jpeg_decode_ms - 2.666_666).abs() < 0.001);
         assert!((snapshot.upload_ms - 1.333_333).abs() < 0.001);
         assert_eq!(snapshot.render_ms, 8.0);
+    }
+}
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct StageTiming {
+    pub last_ms: f64,
+    pub average_ms: f64,
+    pub max_ms: f64,
+    samples: u64,
+}
+
+impl StageTiming {
+    pub fn record(&mut self, elapsed: Duration) {
+        let milliseconds = elapsed.as_secs_f64() * 1_000.0;
+        self.last_ms = milliseconds;
+        self.max_ms = self.max_ms.max(milliseconds);
+        self.samples = self.samples.saturating_add(1);
+        self.average_ms += (milliseconds - self.average_ms) / self.samples as f64;
     }
 }

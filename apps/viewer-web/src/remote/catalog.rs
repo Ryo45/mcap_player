@@ -67,8 +67,12 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
         }),
         streams,
     };
-    let plan = SessionPlan::build(&core, &primary_camera_topic)
-        .map_err(|error| RemoteCatalogError(error.to_string()))?;
+    let plan = SessionPlan::build(
+        &core,
+        &primary_camera_topic,
+        &crate::playback::web_playback_requirements(),
+    )
+    .map_err(|error| RemoteCatalogError(error.to_string()))?;
     let mut selected = plan
         .selected_stream_ids()
         .into_iter()
