@@ -1,4 +1,7 @@
-use crate::{CameraId, SourceCatalog, StreamDescriptor, StreamId};
+use crate::{
+    CameraController, CameraId, OdometryController, PathController, RestoreInput, SceneController,
+    SourceCatalog, StreamDescriptor, StreamId, TransformController,
+};
 use std::{collections::BTreeSet, fmt};
 
 pub const PATH_TOPIC: &str = "/planning/path";
@@ -243,6 +246,36 @@ impl SessionPlan {
         topics.sort();
         topics.dedup();
         topics
+    }
+
+    pub fn restore_inputs(&self) -> Vec<RestoreInput> {
+        self.camera_routes
+            .iter()
+            .map(|route| RestoreInput {
+                stream_id: route.stream.id,
+                semantics: CameraController::restore_semantics(),
+            })
+            .chain(self.path_stream.iter().map(|stream| RestoreInput {
+                stream_id: stream.id,
+                semantics: PathController::restore_semantics(),
+            }))
+            .chain(self.odometry_stream.iter().map(|stream| RestoreInput {
+                stream_id: stream.id,
+                semantics: OdometryController::restore_semantics(),
+            }))
+            .chain(self.point_cloud_stream.iter().map(|stream| RestoreInput {
+                stream_id: stream.id,
+                semantics: SceneController::restore_semantics(),
+            }))
+            .chain(self.dynamic_tf_stream.iter().map(|stream| RestoreInput {
+                stream_id: stream.id,
+                semantics: TransformController::dynamic_restore_semantics(),
+            }))
+            .chain(self.static_tf_stream.iter().map(|stream| RestoreInput {
+                stream_id: stream.id,
+                semantics: TransformController::static_restore_semantics(),
+            }))
+            .collect()
     }
 
     fn feature_streams(&self) -> impl Iterator<Item = &StreamDescriptor> {

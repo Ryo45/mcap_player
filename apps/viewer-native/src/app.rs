@@ -256,8 +256,8 @@ impl App {
         for action in actions {
             match workspace.apply_action(action) {
                 WorkspaceEffect::Playback(command) => match session
-                    .apply_playback_command(command, |messages| {
-                        workspace.restore_messages(messages)
+                    .apply_playback_command(command, |target, messages| {
+                        workspace.restore_messages(target, messages)
                     }) {
                     Ok(PlaybackEffect::Seeked) => playback_effect = PlaybackEffect::Seeked,
                     Ok(PlaybackEffect::None) => {}
@@ -274,7 +274,7 @@ impl App {
                         .is_some_and(|playback| playback.playing);
                     if preview.drag.begin(playing)
                         && let Err(command_error) = session
-                            .apply_playback_command(viewer_core::PlaybackCommand::Toggle, |_| {})
+                            .apply_playback_command(viewer_core::PlaybackCommand::Toggle, |_, _| {})
                     {
                         diagnostics.set_playback_error(command_error.to_string());
                     }
@@ -284,7 +284,7 @@ impl App {
                 WorkspaceEffect::CommitPreview(time) => {
                     match session.apply_playback_command(
                         viewer_core::PlaybackCommand::Seek(time),
-                        |messages| workspace.restore_messages(messages),
+                        |target, messages| workspace.restore_messages(target, messages),
                     ) {
                         Ok(PlaybackEffect::Seeked) => playback_effect = PlaybackEffect::Seeked,
                         Ok(PlaybackEffect::None) => {}
@@ -294,7 +294,7 @@ impl App {
                     }
                     if preview.drag.finish()
                         && let Err(command_error) = session
-                            .apply_playback_command(viewer_core::PlaybackCommand::Toggle, |_| {})
+                            .apply_playback_command(viewer_core::PlaybackCommand::Toggle, |_, _| {})
                     {
                         diagnostics.set_playback_error(command_error.to_string());
                     }

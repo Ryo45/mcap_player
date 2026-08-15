@@ -73,13 +73,18 @@ impl PlaybackScenario {
                     playback.clock_mut().set_speed(speed);
                 }
                 PlaybackStep::Command(PlaybackCommand::Seek(cursor)) => playback
-                    .seek_with(cursor, |messages| {
-                        cameras.reset_for_restore();
-                        for message in &messages {
-                            cameras.admit(message);
-                        }
-                        cameras.advance(Duration::ZERO);
-                    })
+                    .seek_with(
+                        &viewer_core::RestorePlanner::new(playback.catalog())
+                            .plan(cursor, plan.restore_inputs())
+                            .unwrap(),
+                        |_, messages| {
+                            cameras.reset_for_restore();
+                            for message in &messages {
+                                cameras.admit(message);
+                            }
+                            cameras.advance(Duration::ZERO);
+                        },
+                    )
                     .unwrap(),
             }
             observations.push(PlaybackObservation {
@@ -376,4 +381,31 @@ fn seek_restores_the_recent_camera_sample_before_committing() {
     let latest = outcome.camera_state.latest_for(CameraId(0)).unwrap();
     assert_eq!(latest.arrival_time, ArrivalTime(START + 750_000_000));
     assert_eq!(latest.jpeg, vec![2]);
+}
+
+#[test]
+fn seek_leaves_recent_sample_unavailable_when_bounded_restore_finds_none() {
+    let seek_cursor = ArrivalTime(START + 50_000_000_000);
+    let outcome = PlaybackScenario {
+        streams: vec![camera_stream(1, CAMERA_TOPIC)],
+        primary_camera_topic: CAMERA_TOPIC.into(),
+        messages: vec![
+            camera_message(StreamId(1), START, 0),
+            camera_message(StreamId(1), START + 100_000_000_000, 1),
+        ],
+        steps: vec![
+            PlaybackStep::Elapse(Duration::ZERO),
+            PlaybackStep::Command(PlaybackCommand::Seek(seek_cursor)),
+        ],
+        initial_focus: Some(CameraId(0)),
+    }
+    .run();
+
+    let after_seek = outcome.observations[1];
+    assert_eq!(after_seek.playback.cursor, seek_cursor);
+    assert_eq!(after_seek.latest_camera_arrival, None);
+    assert_eq!(
+        after_seek.camera_status,
+        CameraStatus::WaitingForCameraFrame
+    );
 }

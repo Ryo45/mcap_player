@@ -1,7 +1,7 @@
 use crate::inspection::{InspectedMessage, InspectorRequirement, TopicInspection};
 #[cfg(feature = "ros2-live")]
 use crate::live;
-use crate::plot_loader::{PlotLoader, inspect_topic_from_path};
+use crate::plot_loader::PlotLoader;
 use crate::signal_query::SignalQueryView;
 #[cfg(feature = "ros2-live")]
 use anyhow::bail;
@@ -148,11 +148,41 @@ impl ViewerSession {
         topic: &str,
         max_messages: usize,
     ) -> Result<Vec<InspectedMessage>> {
-        let path = self
-            .recording_path
-            .as_ref()
-            .context("message inspection is unavailable for this source")?;
-        inspect_topic_from_path(path, topic, max_messages)
+        if max_messages == 0 {
+            return Ok(Vec::new());
+        }
+        #[cfg(not(feature = "ros2-live"))]
+        let SessionSource::Mcap(playback) = &self.source;
+        #[cfg(feature = "ros2-live")]
+        let playback = match &self.source {
+            SessionSource::Mcap(playback) => playback,
+            SessionSource::Ros { .. } => {
+                anyhow::bail!("message inspection is unavailable for this source")
+            }
+        };
+        let stream = playback
+            .catalog()
+            .by_topic(topic)
+            .with_context(|| format!("recording has no topic {topic}"))?;
+        let recording = playback
+            .catalog()
+            .time_range
+            .context("recording has no indexed time range")?;
+        let range =
+            viewer_core::DataWindowTimeRange::new(recording.start, recording.end_exclusive)?;
+        let result = playback.query_range(&viewer_core::RangeQuery {
+            streams: vec![stream.id],
+            range,
+            limits: viewer_core::QueryLimits::new(max_messages, 16 * 1024 * 1024)?,
+        })?;
+        Ok(result
+            .messages
+            .into_iter()
+            .map(|message| InspectedMessage {
+                arrival_time: message.arrival_time,
+                payload_bytes: message.payload.len(),
+            })
+            .collect())
     }
 
     pub(crate) fn load_inspections(&mut self, requirements: &[InspectorRequirement]) {
@@ -220,7 +250,7 @@ impl ViewerSession {
     pub(crate) fn apply_playback_command(
         &mut self,
         command: PlaybackCommand,
-        restore: impl FnOnce(Vec<RawMessage>),
+        restore: impl FnOnce(ArrivalTime, Vec<RawMessage>),
     ) -> Result<PlaybackEffect> {
         match &mut self.source {
             SessionSource::Mcap(playback) => match command {
@@ -233,7 +263,10 @@ impl ViewerSession {
                     Ok(PlaybackEffect::None)
                 }
                 PlaybackCommand::Seek(cursor) => {
-                    playback.seek_with(cursor, restore)?;
+                    let target = cursor.clamp(playback.clock().start(), playback.clock().end());
+                    let restore_plan = viewer_core::RestorePlanner::new(playback.catalog())
+                        .plan(target, self.plan.restore_inputs())?;
+                    playback.seek_with(&restore_plan, restore)?;
                     Ok(PlaybackEffect::Seeked)
                 }
             },

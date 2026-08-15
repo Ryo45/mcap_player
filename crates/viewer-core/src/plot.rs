@@ -216,7 +216,7 @@ pub fn load_speed_signal(
 
 /// Scans `/odom` in an MCAP and builds the yaw-rate signal.
 ///
-/// This remains a plot query: it does not add history to the shared Domain state.
+/// This remains a plot query: it does not add history to continuous feature-controller state.
 pub fn load_yaw_rate_signal(
     backing: &[u8],
     origin: ArrivalTime,
@@ -239,7 +239,7 @@ pub fn load_odometry_signals(
 ///
 /// Native uses the progress callback to avoid keeping large compressed recordings behind a
 /// loading placeholder until the complete sequential query finishes. The callback remains a
-/// concrete plot-query concern; it does not feed signal history into the shared Domain state.
+/// concrete plot-query concern; it does not feed signal history into continuous controller state.
 pub fn load_odometry_signals_with_progress(
     backing: &[u8],
     origin: ArrivalTime,

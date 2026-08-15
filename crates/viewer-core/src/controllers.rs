@@ -1,7 +1,7 @@
 use crate::{
     BevPathFrame, BevState, CameraFrame, CameraId, CameraState, PointCloudFrame, PointCloudState,
-    RawMessage, SceneFrameBuilder, SceneSnapshot, SessionPlan, StreamId, TelemetryFrame,
-    TelemetryState, TransformBatch, TransformState, decode_compressed_image_bytes,
+    RawMessage, RestoreSemantics, SceneFrameBuilder, SceneSnapshot, SessionPlan, StreamId,
+    TelemetryFrame, TelemetryState, TransformBatch, TransformState, decode_compressed_image_bytes,
     decode_laser_scan, decode_odometry, decode_path, decode_tf_message,
 };
 use std::{
@@ -50,6 +50,10 @@ pub struct CameraController {
 }
 
 impl CameraController {
+    pub const fn restore_semantics() -> RestoreSemantics {
+        RestoreSemantics::RecentSample
+    }
+
     pub fn new(plan: &SessionPlan) -> Self {
         let stream_to_camera = plan
             .camera_routes()
@@ -230,6 +234,10 @@ pub struct PathController {
 }
 
 impl PathController {
+    pub const fn restore_semantics() -> RestoreSemantics {
+        RestoreSemantics::RecentSample
+    }
+
     pub fn new(plan: &SessionPlan) -> Self {
         Self {
             stream: plan.path_stream().map(|stream| stream.id),
@@ -282,6 +290,10 @@ pub struct OdometryController {
 }
 
 impl OdometryController {
+    pub const fn restore_semantics() -> RestoreSemantics {
+        RestoreSemantics::RecentSample
+    }
+
     pub fn new(plan: &SessionPlan) -> Self {
         Self {
             stream: plan.odometry_stream().map(|stream| stream.id),
@@ -337,21 +349,36 @@ pub struct TransformController {
     dynamic_stream: Option<StreamId>,
     static_stream: Option<StreamId>,
     state: TransformState,
+    persistent_messages: Vec<RawMessage>,
     counters: ProcessingCounters,
 }
 
 impl TransformController {
+    pub const fn dynamic_restore_semantics() -> RestoreSemantics {
+        RestoreSemantics::History(Duration::from_secs(1))
+    }
+
+    pub const fn static_restore_semantics() -> RestoreSemantics {
+        RestoreSemantics::Persistent
+    }
+
     pub fn new(plan: &SessionPlan) -> Self {
         Self {
             dynamic_stream: plan.dynamic_tf_stream().map(|stream| stream.id),
             static_stream: plan.static_tf_stream().map(|stream| stream.id),
             state: TransformState::default(),
+            persistent_messages: Vec::new(),
             counters: ProcessingCounters::default(),
         }
     }
 
     pub fn process(&mut self, message: &RawMessage) -> bool {
         let is_static = if Some(message.stream_id) == self.static_stream {
+            if !self.persistent_messages.contains(message) {
+                self.persistent_messages.push(message.clone());
+                self.persistent_messages
+                    .sort_by_key(|message| message.arrival_time);
+            }
             true
         } else if Some(message.stream_id) == self.dynamic_stream {
             false
@@ -372,8 +399,17 @@ impl TransformController {
         true
     }
 
-    pub fn reset_for_restore(&mut self) {
+    pub fn reset_for_restore(&mut self, target: crate::ArrivalTime) {
         self.state.clear();
+        let persistent = self
+            .persistent_messages
+            .iter()
+            .filter(|message| message.arrival_time <= target)
+            .cloned()
+            .collect::<Vec<_>>();
+        for message in &persistent {
+            self.apply_without_archiving(message, true);
+        }
     }
 
     pub fn state(&self) -> &TransformState {
@@ -382,6 +418,21 @@ impl TransformController {
 
     pub fn counters(&self) -> ProcessingCounters {
         self.counters
+    }
+
+    pub fn persistent_message_count(&self) -> usize {
+        self.persistent_messages.len()
+    }
+
+    fn apply_without_archiving(&mut self, message: &RawMessage, is_static: bool) {
+        match decode_tf_message(&message.payload) {
+            Ok(transforms) => self.state.apply(TransformBatch {
+                arrival_time: message.arrival_time,
+                is_static,
+                transforms,
+            }),
+            Err(_) => self.counters.errors = self.counters.errors.saturating_add(1),
+        }
     }
 }
 
@@ -394,6 +445,10 @@ pub struct SceneController {
 }
 
 impl SceneController {
+    pub const fn restore_semantics() -> RestoreSemantics {
+        RestoreSemantics::RecentSample
+    }
+
     pub fn new(plan: &SessionPlan) -> Self {
         Self {
             stream: plan.point_cloud_stream().map(|stream| stream.id),
@@ -460,7 +515,7 @@ mod tests {
     use super::*;
     use crate::{
         ArrivalTime, CompressedImage, MeasurementTime, PlaybackRequirements, SourceCatalog,
-        StreamDescriptor, StreamTimingSummary,
+        StreamDescriptor, StreamTimingSummary, TransformStamped, encode_tf_message_cdr,
     };
     use bytes::Bytes;
 
@@ -511,5 +566,57 @@ mod tests {
     fn camera_rates_preserve_the_existing_policy() {
         assert_eq!(CameraController::focused_hz(), 10.0);
         assert_eq!(CameraController::background_hz(), 5.0);
+    }
+
+    #[test]
+    fn repeated_static_transforms_restore_only_updates_valid_at_target() {
+        let catalog = SourceCatalog {
+            time_range: None,
+            streams: vec![StreamDescriptor {
+                id: StreamId(9),
+                topic: crate::TF_STATIC_TOPIC.into(),
+                schema: "tf2_msgs/msg/TFMessage".into(),
+                message_encoding: "cdr".into(),
+                timing: StreamTimingSummary::default(),
+            }],
+        };
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_transforms();
+        let plan = SessionPlan::build(&catalog, "/unused", &requirements).unwrap();
+        let mut controller = TransformController::new(&plan);
+        for (arrival, x) in [(10, 1.0), (20, 2.0)] {
+            let message = RawMessage {
+                stream_id: StreamId(9),
+                arrival_time: ArrivalTime(arrival),
+                payload: encode_tf_message_cdr(&[TransformStamped {
+                    measurement_time: MeasurementTime(arrival),
+                    frame_id: "map".into(),
+                    child_frame_id: "base".into(),
+                    translation: [x, 0.0, 0.0],
+                    rotation: [0.0, 0.0, 0.0, 1.0],
+                }])
+                .unwrap()
+                .into(),
+            };
+            assert!(controller.process(&message));
+        }
+        assert_eq!(controller.persistent_message_count(), 2);
+
+        controller.reset_for_restore(ArrivalTime(15));
+        assert_eq!(
+            controller
+                .state()
+                .transform_points("base", "map", &[[0.0, 0.0, 0.0]])
+                .unwrap(),
+            vec![[1.0, 0.0, 0.0]]
+        );
+        controller.reset_for_restore(ArrivalTime(25));
+        assert_eq!(
+            controller
+                .state()
+                .transform_points("base", "map", &[[0.0, 0.0, 0.0]])
+                .unwrap(),
+            vec![[2.0, 0.0, 0.0]]
+        );
     }
 }

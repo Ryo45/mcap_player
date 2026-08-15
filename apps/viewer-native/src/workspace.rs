@@ -215,7 +215,7 @@ impl NativeWorkspace {
         self.processing_time.record(started.elapsed());
     }
 
-    pub(crate) fn restore_messages(&mut self, messages: Vec<RawMessage>) {
+    pub(crate) fn restore_messages(&mut self, target: ArrivalTime, messages: Vec<RawMessage>) {
         if let Some(controller) = &mut self.camera_controller {
             controller.reset_for_restore();
         }
@@ -226,7 +226,7 @@ impl NativeWorkspace {
             controller.reset_for_restore();
         }
         if let Some(controller) = &mut self.transform_controller {
-            controller.reset_for_restore();
+            controller.reset_for_restore(target);
         }
         if let Some(controller) = &mut self.scene_controller {
             controller.reset_for_restore();

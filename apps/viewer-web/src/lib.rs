@@ -657,15 +657,14 @@ mod browser {
             metrics.stale_results_discarded,
         );
         performance.set_inner_text(&format!(
-            "Focus {focused_fps:.1}/{:.0} Hz · others ≤{:.0} Hz · JPEG {:.2} ms · canvas {:.2} ms · tick {:.2} ms · source/CDR/state {:.2}/{:.2}/{:.2} ms{data_plane}",
+            "Focus {focused_fps:.1}/{:.0} Hz · others ≤{:.0} Hz · JPEG {:.2} ms · canvas {:.2} ms · tick {:.2} ms · source/controller {:.2}/{:.2} ms{data_plane}",
             playback_performance.focused_camera_hz(),
             playback_performance.background_camera_hz(),
             diagnostics.performance.jpeg_decode_ms,
             diagnostics.performance.upload_ms,
             diagnostics.performance.render_ms,
             playback_performance.source_read.average_ms,
-            playback_performance.pipeline_decode.average_ms,
-            playback_performance.state_apply.average_ms,
+            playback_performance.message_processing.average_ms,
         ));
         let telemetry: HtmlElement = element("telemetry");
         telemetry.set_inner_text(&presentation.telemetry.as_ref().map_or_else(

@@ -11,7 +11,7 @@ pub(crate) struct SignalDataView<'a> {
 /// Narrow, read-only view of exact Signal query results exposed by `ViewerSession`.
 ///
 /// The closed `SignalId` match intentionally keeps this separate from Preview, Inspection, and
-/// shared Domain presentation data.
+/// continuous feature presentation data.
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct SignalQueryView<'a> {
     speed: SignalDataView<'a>,

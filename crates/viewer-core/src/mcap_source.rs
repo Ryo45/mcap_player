@@ -1,6 +1,6 @@
 use crate::{
-    ArrivalTime, RawMessage, RecordingTimeRange, SourceCatalog, StreamDescriptor, StreamId,
-    StreamTimingSummary,
+    ArrivalTime, RangeQuery, RangeQueryError, RangeQueryResult, RawMessage, RecordingTimeRange,
+    SourceCatalog, StreamDescriptor, StreamId, StreamTimingSummary,
 };
 use bytes::Bytes;
 use mcap::{MessageStream, Summary};
@@ -206,6 +206,87 @@ impl<B: AsRef<[u8]>> McapSource<B> {
         }
     }
 
+    /// Executes a bounded exact-message query without mutating this source's playback cursor.
+    pub fn query_range(&self, query: &RangeQuery) -> Result<RangeQueryResult, RangeQueryError> {
+        if query.streams.is_empty() {
+            return Err(RangeQueryError::Invalid(
+                "range query requires at least one stream".into(),
+            ));
+        }
+        if query.limits.max_messages == 0 || query.limits.max_payload_bytes == 0 {
+            return Err(RangeQueryError::Invalid(
+                "range query limits must be non-zero".into(),
+            ));
+        }
+        if let Some(unknown) = query
+            .streams
+            .iter()
+            .find(|id| self.catalog.by_id(**id).is_none())
+        {
+            return Err(RangeQueryError::Invalid(format!(
+                "range query references unknown stream {}",
+                unknown.0
+            )));
+        }
+
+        let mut source = McapSource::new(self.backing.as_ref())?;
+        source.select_streams(query.streams.iter().copied());
+        source.seek(query.range.start)?;
+        let mut messages = Vec::new();
+        let mut payload_bytes = 0_usize;
+        loop {
+            while let Some(message) = source.cache.get(source.position) {
+                if message.arrival >= query.range.end_exclusive {
+                    return Ok(RangeQueryResult {
+                        messages,
+                        payload_bytes,
+                        complete: true,
+                    });
+                }
+                let next_bytes = payload_bytes
+                    .checked_add(message.payload.len())
+                    .ok_or_else(|| {
+                        RangeQueryError::Invalid("range query payload size overflow".into())
+                    })?;
+                if messages.len() == query.limits.max_messages
+                    || next_bytes > query.limits.max_payload_bytes
+                {
+                    return Ok(RangeQueryResult {
+                        messages,
+                        payload_bytes,
+                        complete: false,
+                    });
+                }
+                messages.push(RawMessage {
+                    stream_id: message.stream_id,
+                    arrival_time: message.arrival,
+                    payload: message.payload.clone(),
+                });
+                payload_bytes = next_bytes;
+                source.position += 1;
+            }
+            let Some(next) = source.chunk.map(|value| value + 1) else {
+                return Ok(RangeQueryResult {
+                    messages,
+                    payload_bytes,
+                    complete: true,
+                });
+            };
+            let count = source
+                .summary
+                .as_ref()
+                .map_or(0, |summary| summary.chunk_indexes.len());
+            if next >= count {
+                return Ok(RangeQueryResult {
+                    messages,
+                    payload_bytes,
+                    complete: true,
+                });
+            }
+            source.load_chunk(next)?;
+        }
+    }
+
     fn load_chunk(&mut self, index: usize) -> Result<(), McapOpenError> {
         let summary = self
             .summary
@@ -232,7 +313,7 @@ impl<B: AsRef<[u8]>> McapSource<B> {
                 payload: Bytes::from(message.data.into_owned()),
             });
         }
-        cache.sort_by_key(|message| message.arrival);
+        cache.sort_by_key(|message| (message.arrival, message.stream_id.0));
         self.cache = cache;
         self.chunk = Some(index);
         self.position = 0;
@@ -279,7 +360,7 @@ impl<B: AsRef<[u8]>> McapSource<B> {
                 payload: Bytes::from(message.data.into_owned()),
             });
         }
-        cache.sort_by_key(|message| message.arrival);
+        cache.sort_by_key(|message| (message.arrival, message.stream_id.0));
         self.cache = cache;
         let mut counts = std::collections::HashMap::<StreamId, u64>::new();
         for message in &self.cache {
@@ -337,11 +418,53 @@ mod tests {
                     &[1, 2, 3],
                 )
                 .unwrap();
+            writer
+                .write_to_known_channel(
+                    &MessageHeader {
+                        channel_id: channel,
+                        sequence: 1,
+                        log_time: 21,
+                        publish_time: 11,
+                    },
+                    &[4, 5],
+                )
+                .unwrap();
             writer.finish().unwrap();
         }
 
         let mut source = McapSource::new(bytes.into_inner()).unwrap();
-        assert_eq!(source.time_range(), (ArrivalTime(20), ArrivalTime(20)));
+        assert_eq!(source.time_range(), (ArrivalTime(20), ArrivalTime(21)));
+        let stream = source.catalog().by_topic("/value").unwrap().id;
+        let query = RangeQuery {
+            streams: vec![stream],
+            range: crate::DataWindowTimeRange::new(ArrivalTime(20), ArrivalTime(21)).unwrap(),
+            limits: crate::QueryLimits::new(1, 3).unwrap(),
+        };
+        let result = source.query_range(&query).unwrap();
+        assert!(result.complete);
+        assert_eq!(result.payload_bytes, 3);
+        assert_eq!(result.messages[0].payload, vec![1, 2, 3]);
+
+        let message_limited = source
+            .query_range(&RangeQuery {
+                streams: vec![stream],
+                range: crate::DataWindowTimeRange::new(ArrivalTime(20), ArrivalTime(22)).unwrap(),
+                limits: crate::QueryLimits::new(1, 16).unwrap(),
+            })
+            .unwrap();
+        assert!(!message_limited.complete);
+        assert_eq!(message_limited.messages.len(), 1);
+
+        let too_small = source
+            .query_range(&RangeQuery {
+                limits: crate::QueryLimits::new(1, 2).unwrap(),
+                ..query
+            })
+            .unwrap();
+        assert!(!too_small.complete);
+        assert!(too_small.messages.is_empty());
+
+        // The independent bounded query must not move sequential playback state.
         let messages = source.read_until(ArrivalTime(20)).unwrap();
         assert_eq!(messages.len(), 1);
         assert_eq!(messages[0].payload, vec![1, 2, 3]);

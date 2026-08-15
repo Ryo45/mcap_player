@@ -3,7 +3,7 @@ use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-/// Identifies a camera within one Viewer Domain/session.
+/// Identifies a camera within one Viewer session.
 ///
 /// This is not a physical camera serial number or a persistent identity across sessions.
 #[derive(
