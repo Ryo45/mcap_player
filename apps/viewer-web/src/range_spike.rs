@@ -36,8 +36,8 @@ impl RequestGeneration {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct PipelineProbeResult {
-    pub(crate) domain: &'static str,
+pub(crate) struct ControllerProbeResult {
+    pub(crate) feature: &'static str,
     pub(crate) arrival_time: ArrivalTime,
 }
 
@@ -241,12 +241,12 @@ pub(crate) fn resolve_seek(
     Ok(resolved)
 }
 
-pub(crate) fn feed_pipeline(
+pub(crate) fn feed_controller(
     summary: &mcap::Summary,
     header: records::MessageHeader,
     data: &[u8],
     topic: &str,
-) -> Result<PipelineProbeResult, String> {
+) -> Result<ControllerProbeResult, String> {
     let channel = summary
         .channels
         .get(&header.channel_id)
@@ -270,7 +270,7 @@ pub(crate) fn feed_pipeline(
         message_encoding: channel.message_encoding.clone(),
         timing: viewer_core::StreamTimingSummary::default(),
     };
-    let (requirements, domain) = if topic == viewer_core::ODOM_TOPIC {
+    let (requirements, feature) = if topic == viewer_core::ODOM_TOPIC {
         let mut requirements = PlaybackRequirements::empty();
         requirements.require_odometry();
         (requirements, "odometry")
@@ -298,7 +298,7 @@ pub(crate) fn feed_pipeline(
         arrival_time: arrival,
         payload: data.to_vec().into(),
     };
-    let updated = if domain == "odometry" {
+    let updated = if feature == "odometry" {
         let mut controller = OdometryController::new(&plan);
         controller.process(&message)
             && controller
@@ -318,11 +318,11 @@ pub(crate) fn feed_pipeline(
     };
     if !updated {
         return Err(format!(
-            "{domain} controller did not retain the decoded message"
+            "{feature} controller did not retain the decoded message"
         ));
     }
-    Ok(PipelineProbeResult {
-        domain,
+    Ok(ControllerProbeResult {
+        feature,
         arrival_time: arrival,
     })
 }
@@ -635,7 +635,7 @@ mod tests {
     }
 
     #[test]
-    fn indexed_reader_filters_seeks_and_updates_camera_domain() {
+    fn indexed_reader_filters_seeks_and_updates_camera_controller() {
         use mcap::sans_io::{
             IndexedReadEvent, IndexedReader, IndexedReaderOptions, SummaryReadEvent, SummaryReader,
             SummaryReaderOptions,
@@ -727,11 +727,11 @@ mod tests {
                 }
                 IndexedReadEvent::Message { header, data } => {
                     assert_eq!(header.log_time, 30);
-                    break feed_pipeline(&summary, header, data, camera_topic).unwrap();
+                    break feed_controller(&summary, header, data, camera_topic).unwrap();
                 }
             }
         };
-        assert_eq!(pipeline.domain, "camera");
+        assert_eq!(pipeline.feature, "camera");
         assert_eq!(pipeline.arrival_time, ArrivalTime(30));
         assert_eq!(requested.len(), 1, "topic index should prune ignored chunk");
         let requested_offset = requested[0].0;
@@ -797,7 +797,7 @@ mod tests {
 
     #[test]
     #[ignore = "manual IndexedReader end-to-end measurement for the uncompressed recording"]
-    fn measure_uncompressed_indexed_reader_to_domain_state() {
+    fn measure_uncompressed_indexed_reader_to_controller_state() {
         use mcap::sans_io::{
             IndexedReadEvent, IndexedReader, IndexedReaderOptions, SummaryReadEvent, SummaryReader,
             SummaryReaderOptions,
@@ -898,7 +898,7 @@ mod tests {
                     let message_time = header.log_time;
                     break (
                         message_time,
-                        feed_pipeline(&summary, header, data, &topic).unwrap(),
+                        feed_controller(&summary, header, data, &topic).unwrap(),
                     );
                 }
             }
@@ -913,8 +913,8 @@ mod tests {
         eprintln!("chunk_reads={chunk_reads}");
         eprintln!("chunk_bytes={chunk_bytes}");
         eprintln!("requested_chunks={requested_chunks:?}");
-        eprintln!("pipeline_domain={}", pipeline.domain);
-        eprintln!("domain_arrival={}", pipeline.arrival_time.0);
+        eprintln!("controller_feature={}", pipeline.feature);
+        eprintln!("controller_arrival={}", pipeline.arrival_time.0);
         assert_eq!(pipeline.arrival_time, ArrivalTime(message_time as i64));
     }
 

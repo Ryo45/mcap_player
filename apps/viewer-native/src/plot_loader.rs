@@ -1,8 +1,6 @@
-use crate::inspection::InspectedMessage;
 use crate::session::PlotSignalRequest;
 use crate::signal_query::{SignalDataView, SignalQueryView};
 use anyhow::{Context, Result};
-use mcap::MessageStream;
 use memmap2::Mmap;
 use std::{
     fs::File,
@@ -214,39 +212,6 @@ fn load_signals_from_path(
         .map_err(anyhow::Error::from)
 }
 
-pub(crate) fn inspect_topic_from_path(
-    path: &PathBuf,
-    topic: &str,
-    max_messages: usize,
-) -> Result<Vec<InspectedMessage>> {
-    if max_messages == 0 {
-        return Ok(Vec::new());
-    }
-    let file =
-        File::open(path).with_context(|| format!("open {} for inspection", path.display()))?;
-    // SAFETY: the query owns this read-only mapping until iteration completes.
-    let mapping = unsafe { Mmap::map(&file) }
-        .with_context(|| format!("map {} for inspection", path.display()))?;
-    let mut inspected = Vec::new();
-    for message in MessageStream::new(&mapping)? {
-        let message = message?;
-        if message.channel.topic != topic {
-            continue;
-        }
-        let arrival_time = i64::try_from(message.log_time)
-            .map(ArrivalTime)
-            .context("inspected message timestamp exceeds signed nanoseconds")?;
-        inspected.push(InspectedMessage {
-            arrival_time,
-            payload_bytes: message.data.len(),
-        });
-        if inspected.len() == max_messages {
-            break;
-        }
-    }
-    Ok(inspected)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -266,7 +231,7 @@ mod tests {
             .join("../../tests/fixtures/camera-jpeg/camera_front_3s.mcap")
     }
 
-    fn shared_domain_fixture() -> PathBuf {
+    fn multimodal_fixture() -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap")
     }
@@ -569,9 +534,9 @@ mod tests {
     }
 
     #[test]
-    fn session_inspector_reads_topic_metadata_without_mutating_domain() {
+    fn session_inspector_reads_bounded_exact_messages_without_moving_playback() {
         let session = ViewerSession::open(
-            &shared_domain_fixture(),
+            &multimodal_fixture(),
             "/camera/front/image/compressed".to_owned(),
             &viewer_core::PlaybackRequirements::default(),
         )

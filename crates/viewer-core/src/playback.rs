@@ -1,11 +1,9 @@
 use crate::{
-    ArrivalTime, McapOpenError, McapSource, PlaybackClock, RawMessage, SourceCatalog, StageTiming,
-    StreamId,
+    McapOpenError, McapSource, PlaybackClock, RangeQuery, RangeQueryError, RangeQueryResult,
+    RawMessage, RestorePlan, SourceCatalog, StageTiming, StreamId,
 };
 use std::{fmt, time::Duration};
 use web_time::Instant;
-
-const TEMPORARY_RESTORE_PREROLL_NS: i64 = 1_000_000_000;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum PlaybackEffect {
@@ -60,6 +58,10 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
         self.source.select_streams(streams);
     }
 
+    pub fn query_range(&self, query: &RangeQuery) -> Result<RangeQueryResult, RangeQueryError> {
+        self.source.query_range(query)
+    }
+
     /// Reads the candidate interval, lets the caller process it, then commits the visible cursor.
     /// A source read failure leaves the cursor unchanged.
     pub fn tick(
@@ -76,31 +78,30 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
         Ok(())
     }
 
-    /// Performs the existing bounded pre-roll read transactionally and commits only after the
-    /// caller has synchronously rebuilt its controller state.
+    /// Executes a catalog- and feature-derived restore plan transactionally.
     ///
-    /// The fixed range is replaced by the catalog-driven RestorePlanner later in this migration.
+    /// Every physical read and the forward-source reposition complete before the caller replaces
+    /// visible controller state. The exact target message is part of restoration and is skipped by
+    /// subsequent forward delivery.
     pub fn seek_with(
         &mut self,
-        cursor: ArrivalTime,
-        restore: impl FnOnce(Vec<RawMessage>),
+        plan: &RestorePlan,
+        restore: impl FnOnce(crate::ArrivalTime, Vec<RawMessage>),
     ) -> Result<(), McapOpenError> {
-        let target = ArrivalTime(cursor.0.clamp(self.clock.start().0, self.clock.end().0));
-        let mut staging_source = McapSource::new(self.source.backing_bytes())?;
-        staging_source.select_streams(self.source.catalog().streams.iter().map(|stream| stream.id));
-        let start = self.source.time_range().0;
-        let pre_roll = ArrivalTime(
-            target
-                .0
-                .saturating_sub(TEMPORARY_RESTORE_PREROLL_NS)
-                .max(start.0),
-        );
-        staging_source.seek(pre_roll)?;
-        let messages = staging_source.read_until(target)?;
+        let mut messages = Vec::new();
+        for read in &plan.reads {
+            let mut staging_source = McapSource::new(self.source.backing_bytes())?;
+            staging_source.select_streams(read.streams.iter().copied());
+            staging_source.seek(read.range.start)?;
+            let inclusive_end = crate::ArrivalTime(read.range.end_exclusive.0 - 1);
+            messages.extend(staging_source.read_until(inclusive_end)?);
+        }
+        messages.sort_by_key(|message| (message.arrival_time, message.stream_id.0));
 
-        self.source.seek(target)?;
-        restore(messages);
-        self.clock.seek(target);
+        let after_target = crate::ArrivalTime(plan.target.0.saturating_add(1));
+        self.source.seek(after_target)?;
+        restore(plan.target, messages);
+        self.clock.seek(plan.target);
         Ok(())
     }
 
@@ -120,6 +121,7 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ArrivalTime;
     use mcap::Summary;
 
     fn fixture(name: &str) -> Vec<u8> {
@@ -181,10 +183,26 @@ mod tests {
         let mut playback = McapPlayback::new(bytes.as_slice()).unwrap();
         let committed = playback.clock().cursor();
         let mut restored = false;
+        let restore_plan = RestorePlan {
+            target: corrupt_target,
+            reads: vec![crate::RestoreRead {
+                streams: playback
+                    .catalog()
+                    .streams
+                    .iter()
+                    .map(|stream| stream.id)
+                    .collect(),
+                range: crate::DataWindowTimeRange::new(
+                    playback.clock().start(),
+                    crate::ArrivalTime(corrupt_target.0 + 1),
+                )
+                .unwrap(),
+            }],
+        };
 
         assert!(
             playback
-                .seek_with(corrupt_target, |_| restored = true)
+                .seek_with(&restore_plan, |_, _| restored = true)
                 .is_err()
         );
         assert_eq!(playback.clock().cursor(), committed);

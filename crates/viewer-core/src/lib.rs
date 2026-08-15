@@ -1,4 +1,4 @@
-//! Platform-neutral playback, MCAP indexing and camera-domain contracts.
+//! Platform-neutral recording access, playback planning, and feature-controller contracts.
 
 mod bev;
 mod bookmark;
@@ -16,7 +16,9 @@ mod plot;
 mod point_cloud;
 mod presentation;
 mod preview;
+mod range_query;
 mod raw_message;
+mod restore;
 mod session_plan;
 mod source_identity;
 mod stream;
@@ -75,7 +77,12 @@ pub use preview::{
     PreviewImageEncoding, PreviewRequest, PreviewSnapshot, PreviewValidationError, SignalBucket,
     SignalFidelity, SignalOverview, TimeRange, TimedPosition2, merge_signal_buckets,
 };
+pub use range_query::{QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult};
 pub use raw_message::RawMessage;
+pub use restore::{
+    DEFAULT_RECENT_LOOKBACK, MAX_RECENT_LOOKBACK, MIN_RECENT_LOOKBACK, RECENT_SAMPLE_PERIODS,
+    RestoreInput, RestorePlan, RestorePlanError, RestorePlanner, RestoreRead, RestoreSemantics,
+};
 pub use session_plan::{
     CameraRoute, ODOM_TOPIC, PATH_TOPIC, PlaybackRequirements, SCAN_TOPIC, SessionPlan,
     SessionPlanError, TF_STATIC_TOPIC, TF_TOPIC,

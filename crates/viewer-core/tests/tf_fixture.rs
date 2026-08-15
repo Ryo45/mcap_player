@@ -1,7 +1,8 @@
 use std::{fs, path::PathBuf, time::Duration};
 use viewer_core::{
     CameraCalibrationSet, CameraController, McapPlayback, McapSource, OdometryController,
-    PathController, PlaybackRequirements, SceneController, SessionPlan, TransformController,
+    PathController, PlaybackRequirements, RestorePlanner, SceneController, SessionPlan,
+    TransformController,
 };
 
 fn fixture() -> Vec<u8> {
@@ -171,4 +172,107 @@ fn seven_camera_fixture_routes_exact_messages_to_concrete_controllers() {
     assert_eq!(odometry.counters().errors, 0);
     assert_eq!(transforms.counters().errors, 0);
     assert_eq!(scene.counters().errors, 0);
+}
+
+#[test]
+fn bounded_restore_matches_sequential_recent_feature_state() {
+    let bytes = fixture();
+    let mut sequential_source = McapSource::new(bytes.as_slice()).unwrap();
+    let plan = SessionPlan::build(
+        sequential_source.catalog(),
+        "/camera/front/image/compressed",
+        &PlaybackRequirements::default(),
+    )
+    .unwrap();
+    sequential_source.select_streams(plan.selected_stream_ids());
+    let target = viewer_core::ArrivalTime(sequential_source.time_range().0.0 + 3_000_000_000);
+
+    let mut sequential_cameras = CameraController::new(&plan);
+    let mut sequential_path = PathController::new(&plan);
+    let mut sequential_odometry = OdometryController::new(&plan);
+    let mut sequential_transforms = TransformController::new(&plan);
+    let mut sequential_scene = SceneController::new(&plan);
+    for message in sequential_source.read_until(target).unwrap() {
+        sequential_cameras.admit(&message);
+        sequential_path.process(&message);
+        sequential_odometry.process(&message);
+        sequential_transforms.process(&message);
+        sequential_scene.process(&message);
+    }
+    sequential_cameras.advance(Duration::ZERO);
+
+    let restore_plan = RestorePlanner::new(sequential_source.catalog())
+        .plan(target, plan.restore_inputs())
+        .unwrap();
+    let mut restored_cameras = CameraController::new(&plan);
+    let mut restored_path = PathController::new(&plan);
+    let mut restored_odometry = OdometryController::new(&plan);
+    let mut restored_transforms = TransformController::new(&plan);
+    let mut restored_scene = SceneController::new(&plan);
+    let mut playback = McapPlayback::new(bytes.as_slice()).unwrap();
+    playback.select_streams(plan.selected_stream_ids());
+    playback
+        .seek_with(&restore_plan, |restore_target, messages| {
+            restored_cameras.reset_for_restore();
+            restored_path.reset_for_restore();
+            restored_odometry.reset_for_restore();
+            restored_transforms.reset_for_restore(restore_target);
+            restored_scene.reset_for_restore();
+            for message in &messages {
+                restored_cameras.admit(message);
+                restored_path.process(message);
+                restored_odometry.process(message);
+                restored_transforms.process(message);
+                restored_scene.process(message);
+            }
+            restored_cameras.advance(Duration::ZERO);
+        })
+        .unwrap();
+
+    let sequential_camera_times = sequential_cameras
+        .state()
+        .frames()
+        .map(|(camera, frame)| (*camera, frame.arrival_time))
+        .collect::<Vec<_>>();
+    let restored_camera_times = restored_cameras
+        .state()
+        .frames()
+        .map(|(camera, frame)| (*camera, frame.arrival_time))
+        .collect::<Vec<_>>();
+    assert_eq!(restored_camera_times, sequential_camera_times);
+    assert_eq!(
+        restored_path
+            .state()
+            .latest()
+            .map(|frame| frame.arrival_time),
+        sequential_path
+            .state()
+            .latest()
+            .map(|frame| frame.arrival_time)
+    );
+    assert_eq!(
+        restored_odometry
+            .state()
+            .latest()
+            .map(|frame| frame.arrival_time),
+        sequential_odometry
+            .state()
+            .latest()
+            .map(|frame| frame.arrival_time)
+    );
+    assert_eq!(
+        restored_scene
+            .point_cloud()
+            .latest()
+            .map(|frame| frame.arrival_time),
+        sequential_scene
+            .point_cloud()
+            .latest()
+            .map(|frame| frame.arrival_time)
+    );
+    assert_eq!(
+        restored_transforms.state().static_len(),
+        sequential_transforms.state().static_len()
+    );
+    assert_eq!(playback.clock().cursor(), target);
 }

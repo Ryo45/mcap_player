@@ -98,10 +98,8 @@ pub fn source_status(ui: &mut egui::Ui, model: &ViewerPresentation) {
     ));
     if let Some(performance) = &diagnostics.playback_performance {
         ui.monospace(format!(
-            "MCAP {:>5.2} · CDR {:>5.2} · state {:>5.2} ms",
-            performance.source_read.average_ms,
-            performance.pipeline_decode.average_ms,
-            performance.state_apply.average_ms
+            "MCAP {:>5.2} · controller {:>5.2} ms",
+            performance.source_read.average_ms, performance.message_processing.average_ms
         ));
         ui.monospace(format!(
             "Camera input {} · presented {}",

@@ -4,9 +4,9 @@
 //! an async trait intended for shared code.
 
 use crate::range_spike::{
-    ByteRange, ChunkInspection, FooterInfo, PipelineProbeResult, RequestGeneration, SummaryCatalog,
-    chunk_range, feed_pipeline, footer_tail_range, inspect_chunk, parse_footer_tail,
-    parse_summary_range, resolve_seek, validate_range,
+    ByteRange, ChunkInspection, ControllerProbeResult, FooterInfo, RequestGeneration,
+    SummaryCatalog, chunk_range, feed_controller, footer_tail_range, inspect_chunk,
+    parse_footer_tail, parse_summary_range, resolve_seek, validate_range,
 };
 use js_sys::{Date, Uint8Array};
 use mcap::sans_io::{
@@ -52,7 +52,7 @@ struct IndexedProbeReport {
     message_index_lists_topic: bool,
     topic_filter_matched: bool,
     absolute_offset_matched: bool,
-    pipeline: PipelineProbeResult,
+    controller: ControllerProbeResult,
     summary_range_reads: u32,
     summary_bytes_requested: u64,
 }
@@ -293,7 +293,7 @@ async fn run_indexed_probe(
                         "IndexedReader yielded {message_log_time} before seek {target_log_time}"
                     ));
                 }
-                let pipeline = feed_pipeline(&summary, header, data, &target_topic)?;
+                let controller = feed_controller(&summary, header, data, &target_topic)?;
                 let (chunk_data_range, chunk_start_offset, message_index_length) = first_chunk
                     .ok_or_else(|| {
                         "IndexedReader yielded a message without a chunk read".to_owned()
@@ -308,7 +308,7 @@ async fn run_indexed_probe(
                     message_index_lists_topic: any_requested_chunk_lists_topic,
                     topic_filter_matched,
                     absolute_offset_matched: all_absolute_offsets_match,
-                    pipeline,
+                    controller,
                     summary_range_reads,
                     summary_bytes_requested,
                 });
@@ -664,7 +664,7 @@ fn format_report(report: &SpikeReport) -> String {
     writeln!(
         output,
         "  exact RawMessage → feature controller: OK ({} at {} ns)",
-        report.indexed.pipeline.domain, report.indexed.pipeline.arrival_time.0
+        report.indexed.controller.feature, report.indexed.controller.arrival_time.0
     )
     .unwrap();
     writeln!(

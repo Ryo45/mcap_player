@@ -10,8 +10,8 @@ use std::{error::Error, fmt, time::Duration};
 use viewer_core::{
     ArrivalTime, CameraController, CameraId, FetchIntent, OdometryController, PathController,
     PlaybackClock, PlaybackCommand, PlaybackEffect, PlaybackLoadState, PlaybackPerformance,
-    PlaybackRequirements, ProcessingCounters, RawMessage, SessionPlan, StageTiming,
-    TransformController,
+    PlaybackRequirements, ProcessingCounters, RawMessage, RestorePlanner, RestoreSemantics,
+    SessionPlan, SourceCatalog, StageTiming, TransformController,
 };
 use web_time::Instant;
 
@@ -19,6 +19,12 @@ use web_time::Instant;
 enum PlaybackSourceKind {
     LocalFile,
     Remote,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct PendingSeek {
+    target: ArrivalTime,
+    restore_start: ArrivalTime,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -45,11 +51,13 @@ pub(crate) struct WebPlayback {
     path: PathController,
     odometry: OdometryController,
     transforms: TransformController,
+    catalog: SourceCatalog,
+    restore_inputs: Vec<viewer_core::RestoreInput>,
     unknown_streams: u64,
     processing_time: StageTiming,
     data: RecordingDataPlane<WebWindowLoader>,
     load_state: PlaybackLoadState,
-    pending_seek: Option<ArrivalTime>,
+    pending_seek: Option<PendingSeek>,
     buffer_underrun_active: bool,
     source_kind: PlaybackSourceKind,
 }
@@ -68,6 +76,7 @@ impl WebPlayback {
         .map_err(|error| WebPlaybackError::new(error.to_string()))?;
         Self::new(
             catalog.plan,
+            catalog.core,
             catalog.start,
             catalog.end,
             catalog.end_exclusive,
@@ -80,6 +89,7 @@ impl WebPlayback {
     pub(crate) fn from_local(recording: BrowserMcapRecording) -> Result<Self, WebPlaybackError> {
         Self::new(
             recording.catalog.plan,
+            recording.catalog.core,
             recording.catalog.start,
             recording.catalog.end,
             recording.catalog.end_exclusive,
@@ -90,6 +100,7 @@ impl WebPlayback {
 
     fn new(
         plan: SessionPlan,
+        catalog: SourceCatalog,
         start: viewer_core::ArrivalTime,
         end: viewer_core::ArrivalTime,
         end_exclusive: viewer_core::ArrivalTime,
@@ -100,6 +111,7 @@ impl WebPlayback {
         let path = PathController::new(&plan);
         let odometry = OdometryController::new(&plan);
         let transforms = TransformController::new(&plan);
+        let restore_inputs = plan.restore_inputs();
         let data = RecordingDataPlane::new(loader, start, end_exclusive)
             .map_err(|error| WebPlaybackError::new(error.to_string()))?;
         Ok(Self {
@@ -108,6 +120,8 @@ impl WebPlayback {
             path,
             odometry,
             transforms,
+            catalog,
+            restore_inputs,
             unknown_streams: 0,
             processing_time: StageTiming::default(),
             data,
@@ -125,8 +139,8 @@ impl WebPlayback {
             };
             return Err(WebPlaybackError::new(error.to_string()));
         }
-        if let Some(target) = self.pending_seek {
-            return self.tick_seek(target);
+        if let Some(seek) = self.pending_seek {
+            return self.tick_seek(seek);
         }
 
         let requested = self.clock.cursor_after(elapsed);
@@ -150,10 +164,11 @@ impl WebPlayback {
         Ok(PlaybackEffect::None)
     }
 
-    fn tick_seek(&mut self, target: ArrivalTime) -> Result<PlaybackEffect, WebPlaybackError> {
+    fn tick_seek(&mut self, seek: PendingSeek) -> Result<PlaybackEffect, WebPlaybackError> {
+        let target = seek.target;
         self.data
             .ensure_available_through(
-                target,
+                seek.restore_start,
                 target,
                 self.clock.speed(),
                 FetchIntent::RequiredOnly,
@@ -164,8 +179,8 @@ impl WebPlayback {
             return Ok(PlaybackEffect::None);
         }
 
-        let messages = self.data.messages_through(target, target);
-        self.reset_for_restore();
+        let messages = self.data.messages_through(seek.restore_start, target);
+        self.reset_for_restore(target);
         self.process_messages(Duration::ZERO, messages);
         self.clock.seek(target);
         self.pending_seek = None;
@@ -222,13 +237,31 @@ impl WebPlayback {
             }
             PlaybackCommand::Seek(cursor) => {
                 let target = cursor.clamp(self.clock.start(), self.clock.end());
-                if self.pending_seek == Some(target) {
+                if self.pending_seek.is_some_and(|seek| seek.target == target) {
                     return Ok(PlaybackEffect::None);
                 }
-                self.data
-                    .begin_seek(target)
+                let restore = RestorePlanner::new(&self.catalog)
+                    .plan(
+                        target,
+                        self.restore_inputs
+                            .iter()
+                            .copied()
+                            .filter(|input| input.semantics != RestoreSemantics::Persistent),
+                    )
                     .map_err(|error| WebPlaybackError::new(error.to_string()))?;
-                self.pending_seek = Some(target);
+                let restore_start = restore
+                    .reads
+                    .iter()
+                    .map(|read| read.range.start)
+                    .min()
+                    .unwrap_or(target);
+                self.data
+                    .begin_seek(restore_start)
+                    .map_err(|error| WebPlaybackError::new(error.to_string()))?;
+                self.pending_seek = Some(PendingSeek {
+                    target,
+                    restore_start,
+                });
                 self.buffer_underrun_active = false;
                 self.load_state = PlaybackLoadState::Seeking { target };
                 Ok(PlaybackEffect::None)
@@ -289,7 +322,8 @@ impl WebPlayback {
     }
 
     pub(crate) fn display_cursor(&self) -> ArrivalTime {
-        self.pending_seek.unwrap_or_else(|| self.clock.cursor())
+        self.pending_seek
+            .map_or_else(|| self.clock.cursor(), |seek| seek.target)
     }
 
     pub(crate) fn source_label(&self) -> &'static str {
@@ -319,11 +353,11 @@ impl WebPlayback {
         self.processing_time.record(started.elapsed());
     }
 
-    fn reset_for_restore(&mut self) {
+    fn reset_for_restore(&mut self, target: ArrivalTime) {
         self.cameras.reset_for_restore();
         self.path.reset_for_restore();
         self.odometry.reset_for_restore();
-        self.transforms.reset_for_restore();
+        self.transforms.reset_for_restore(target);
     }
 }
 
@@ -611,10 +645,25 @@ mod tests {
     fn seek_replaces_old_prefetch_and_commits_only_the_current_generation() {
         const START: i64 = 1_000_000_000;
         const TARGET: i64 = 2_000_000_000;
-        const END_EXCLUSIVE: i64 = 3_000_000_000;
-
         let client = RemoteApiClient::new("http://localhost").unwrap();
-        let mut playback = WebPlayback::from_remote(client, remote_catalog()).unwrap();
+        let catalog = remote_catalog();
+        let restore_start = RestorePlanner::new(&catalog.core)
+            .plan(
+                viewer_core::ArrivalTime(TARGET),
+                catalog
+                    .plan
+                    .restore_inputs()
+                    .into_iter()
+                    .filter(|input| input.semantics != RestoreSemantics::Persistent),
+            )
+            .unwrap()
+            .reads
+            .iter()
+            .map(|read| read.range.start.0)
+            .min()
+            .unwrap();
+        let restore_end = (restore_start + 1_000_000_000).min(catalog.end_exclusive.0);
+        let mut playback = WebPlayback::from_remote(client, catalog).unwrap();
 
         playback.tick(Duration::ZERO).unwrap();
         playback
@@ -669,8 +718,8 @@ mod tests {
             .loader_mut()
             .remote_mut()
             .inject_stale(loaded_window(
-                TARGET,
-                END_EXCLUSIVE,
+                restore_start,
+                restore_end,
                 vec![camera_message(TARGET)],
             ))
             .unwrap();
@@ -683,8 +732,8 @@ mod tests {
             .loader_mut()
             .remote_mut()
             .inject_loaded(loaded_window(
-                TARGET,
-                END_EXCLUSIVE,
+                restore_start,
+                restore_end,
                 vec![camera_message(TARGET)],
             ))
             .unwrap();

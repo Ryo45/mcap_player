@@ -52,6 +52,10 @@ pub struct SourceCatalog {
 }
 
 impl SourceCatalog {
+    pub fn by_id(&self, id: StreamId) -> Option<&StreamDescriptor> {
+        self.streams.iter().find(|stream| stream.id == id)
+    }
+
     pub fn by_topic(&self, topic: &str) -> Option<&StreamDescriptor> {
         self.streams.iter().find(|stream| stream.topic == topic)
     }
