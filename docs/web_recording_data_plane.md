@@ -76,15 +76,15 @@ loading is not an underrun, and repeated ticks during the same underrun do not i
 
 ## Seek lifecycle
 
-The Web timeline performs a source-independent cold seek:
+The Web timeline performs a source-independent transactional seek:
 
 ```text
 seek intent
   -> cancel old loader generation
-  -> discard retained windows and rebase coverage at target
-  -> fetch target window with RequiredOnly
   -> keep committed Clock and controller state visible while loading
-  -> atomically reset/replay exact bounded state and commit Clock after restore completes
+  -> resolve latest-before/history/persistent inputs through the source-specific restore loader
+  -> only after success, discard/rebase playback windows at target
+  -> atomically reset/replay exact state and commit Clock
   -> resume PlaybackAhead only when playback is running
 ```
 
@@ -93,13 +93,13 @@ loaders increment generation so a result that finishes after cancellation cannot
 Partial continuation pages never reach the DataPlane. The seek window is fetched even while paused,
 but it does not trigger unrelated target-ahead fetches after completion.
 
-Restore ranges are derived from the same catalog message counts and feature semantics used by
-Native: recent Camera/Path/Odometry/Scan samples use a bounded estimated lookback and dynamic TF
-uses one second of history. Static TF is explicitly persistent and the controller replays all
-already observed persistent messages valid at the target. A direct Web seek before a sparse static
-update has ever been observed still needs a source-level persistent bootstrap; no unbounded generic
-backwards query is used. The committed presentation is invalidated only after restore data has
-loaded and `PlaybackEffect::Seeked` is emitted.
+Camera/Path/Odometry/Scan use MCAP Message Index predecessor lookup (`latest log_time <= target`),
+not a message-count lookback heuristic. Dynamic TF restores the same one-second history that normal
+playback retains. Static TF is explicitly persistent: Browser Local reads its indexed archive and
+Remote receives the complete archive from `/restore`; the Web session keeps it once and filters
+updates by each target. Missing Message Index support is an explicit restore error, never a hidden
+prefix scan. The committed presentation is invalidated only after all restore data has loaded and
+`PlaybackEffect::Seeked` is emitted.
 
 ## Memory and copies
 

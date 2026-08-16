@@ -25,8 +25,12 @@ Native indexed source / Web RecordingDataPlane / ROS live push
 `SourceCatalog` contains source facts only: recording time range, topic, schema, encoding, stable
 session-local `StreamId`, and an optional recording-wide message count. It does not assign Camera,
 TF, Scene, or UI meaning. `SessionPlan` resolves the current workspace's closed
-`PlaybackRequirements` once when a session opens. The playback hot path therefore dispatches by
-`StreamId`; it does not repeatedly inspect topic or schema strings.
+`PlaybackRequirements` and `WorkspaceBindings` once when a session opens. The workspace owns the
+configurable Path/Odometry/PointCloud/dynamic-TF/static-TF topic bindings; viewer-core owns only
+their expected ROS schemas. A Camera panel selects its own topic. The configured priority Camera
+only changes scheduling among already-selected Camera streams and never expands physical
+selection. The playback hot path therefore dispatches by `StreamId`; it does not repeatedly inspect
+topic or schema strings.
 
 Controllers own feature-specific semantics. Camera admission and focused/background scheduling
 happen before JPEG decode. Dynamic TF retains ordered bounded history; static TF keeps a small exact
@@ -62,25 +66,32 @@ to a universal drop policy because ordered streams such as TF have different sem
 
 ## Seek restoration
 
-Callers request only `seek(T)`. Each controller declares a concrete restore meaning and the planner
-combines it with catalog facts:
+Callers request only `seek(T)`. Each controller declares a concrete restore meaning:
 
-- Camera, Path, Odometry, and Scene use `RecentSample`.
+- Camera, Path, Odometry, and Scene use the exact latest message whose MCAP log time is `<= T`.
 - Dynamic TF uses `History(1 second)`.
 - Static TF uses explicit `Persistent` semantics.
 
-For a recent sample, the planner estimates a period from recording duration divided by recorded
-message count and reads four periods, clamped to 250 ms–20 s. Missing statistics use a centralized
-10 s fallback. A bounded range with no matching sample leaves that feature unavailable; it does not
-trigger recursive or unbounded `latest_before` reads.
+Latest-before restoration is a small physical primitive, not a generic query API. Native builds a
+sparse `StreamId -> ChunkIndex` list at open, reads Message Index records lazily for the requested
+streams, chooses predecessor entries without decompressing data, groups candidates by Chunk, and
+streams each selected Chunk once. It does not expand all Message Index entries into RAM. Browser
+Local performs the same candidate/group/read operation with `File.slice`; Remote calls the
+Recording Server restore endpoint. An indexed recording with no predecessor leaves that feature
+unavailable. A non-empty stream without Message Index records reports indexed restore as
+unavailable rather than scanning the recording prefix or constructing a side index.
 
-Native restore reads all planned ranges into temporary messages, repositions the forward source,
-then resets/replays controllers and commits the cursor. Any physical read failure leaves both the
-visible controller state and cursor unchanged. Repeated `/tf_static` messages are retained and
-replayed only when valid at the target. Web uses the same planner for bounded non-persistent restore,
-cancels stale loader generations, and publishes no partial window. Its concrete static-TF archive is
-replayed on restore; a source-level sparse persistent bootstrap for a direct Web seek before static
-messages have ever been observed remains a focused follow-up rather than a generic temporal store.
+The one-second dynamic-TF policy controls both normal runtime retention and seek history. Static TF
+is different: each recording session bootstraps its complete, expected-small persistent message
+archive once and replays updates with log time `<= T`, including repeated publications after node
+restart. Native reads the archive from indexed chunks; Browser Local and Remote retain it in the Web
+session after the first cold seek.
+
+Every platform gathers latest/history/persistent restore messages before changing visible state.
+It then repositions/rebases forward playback, synchronously resets and replays controllers, and
+finally commits the cursor. Any read, decompression, index, or generation failure leaves the old
+cursor and controller values visible. Restore describes practical feature state at `T`; it does not
+promise reconstruction of unrelated messages that no selected controller consumes.
 
 ## Bounded inspection
 
@@ -99,6 +110,7 @@ remains a source-identified derived artifact; neither is folded into playback or
 - Camera CDR parsing retains JPEG as a slice of the same payload backing.
 - Camera and point-cloud decode occur only after a route accepts the message.
 - Physical chunk/page caches are bounded accelerators, never semantic truth.
+- Multi-stream latest-before decompresses a shared candidate Chunk at most once per restore.
 - Exact log time is the playback/query timeline; equal-time ordering is deterministic by stream ID
   while stable source order within a stream is retained.
 
