@@ -213,7 +213,7 @@ async fn run_indexed_probe(
     let target_channel = summary
         .channels
         .values()
-        .find(|channel| channel.topic == viewer_core::ODOM_TOPIC)
+        .find(|channel| channel.topic == crate::playback::web_workspace_bindings().odometry_topic)
         .or_else(|| {
             summary.channels.values().find(|channel| {
                 channel

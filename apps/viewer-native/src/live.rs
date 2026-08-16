@@ -271,10 +271,13 @@ mod tests {
             }],
             time_range: None,
         };
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_all_cameras();
         let plan = SessionPlan::build(
             &catalog,
             "/camera/live/image/compressed",
-            &PlaybackRequirements::default(),
+            &requirements,
+            crate::workspace::NativeWorkspace::default().bindings(),
         )
         .unwrap();
         let mut cameras = CameraController::new(&plan);

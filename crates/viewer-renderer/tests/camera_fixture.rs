@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, fs, path::PathBuf, time::Duration, time::Instant};
 use viewer_core::{
     ArrivalTime, CameraController, CameraId, McapPlayback, McapSource, PlaybackRequirements,
-    SessionPlan,
+    SessionPlan, WorkspaceBindings,
 };
 use viewer_renderer::decode_camera_frame;
 
@@ -17,6 +17,16 @@ fn seven_camera_fixture() -> Vec<u8> {
     fs::read(path).expect("seven-camera fixture")
 }
 
+fn bindings() -> WorkspaceBindings {
+    WorkspaceBindings {
+        path_topic: "/planning/path".into(),
+        odometry_topic: "/odom".into(),
+        point_cloud_topic: "/scan".into(),
+        dynamic_tf_topic: "/tf".into(),
+        static_tf_topic: "/tf_static".into(),
+    }
+}
+
 #[test]
 fn fixture_has_30_decodable_frames_and_distinct_time_domains() {
     let mut source = McapSource::new(fixture()).unwrap();
@@ -26,6 +36,7 @@ fn fixture_has_30_decodable_frames_and_distinct_time_domains() {
         source.catalog(),
         "/camera/front/image/compressed",
         &requirements,
+        &bindings(),
     )
     .unwrap();
     source.select_streams(plan.selected_stream_ids());
@@ -77,6 +88,7 @@ fn malformed_message_does_not_stop_the_next_frame() {
         source.catalog(),
         "/camera/front/image/compressed",
         &requirements,
+        &bindings(),
     )
     .unwrap();
     source.select_streams(plan.selected_stream_ids());
@@ -97,10 +109,13 @@ fn malformed_message_does_not_stop_the_next_frame() {
 #[ignore = "manual release-mode performance diagnostic"]
 fn seven_camera_display_policy_stays_within_the_decode_budget() {
     let mut playback = McapPlayback::new(seven_camera_fixture()).unwrap();
+    let mut requirements = PlaybackRequirements::empty();
+    requirements.require_all_cameras();
     let plan = SessionPlan::build(
         playback.catalog(),
         "/camera/front/image/compressed",
-        &PlaybackRequirements::default(),
+        &requirements,
+        &bindings(),
     )
     .unwrap();
     playback.select_streams(plan.selected_stream_ids());

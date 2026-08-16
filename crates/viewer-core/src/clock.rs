@@ -62,30 +62,6 @@ pub enum PlaybackLoadState {
     },
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum SeekFidelity {
-    Preview,
-    ExactVisible,
-    ExactRequired,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct SeekRequest {
-    pub target: ArrivalTime,
-    pub fidelity: SeekFidelity,
-    pub required_streams: Vec<crate::StreamId>,
-}
-
-impl SeekRequest {
-    pub fn exact_visible(target: ArrivalTime) -> Self {
-        Self {
-            target,
-            fidelity: SeekFidelity::ExactVisible,
-            required_streams: Vec::new(),
-        }
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct PlaybackClock {
     start: ArrivalTime,

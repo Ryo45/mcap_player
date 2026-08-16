@@ -1,19 +1,26 @@
 #![cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 
 #[cfg(target_arch = "wasm32")]
-use crate::local::BrowserMcapRecording;
+use crate::local::{BrowserMcapRecording, BrowserMcapRestoreLoader};
 use crate::{
     data_plane::{RecordingDataPlane, RecordingDataPlaneDiagnostics, WebWindowLoader},
-    remote::{RemoteApiClient, RemoteCatalog, RemoteWindowLoader},
+    remote::{RemoteApiClient, RemoteCatalog, RemoteRestoreLoader, RemoteWindowLoader},
 };
 use std::{error::Error, fmt, time::Duration};
 use viewer_core::{
     ArrivalTime, CameraController, CameraId, FetchIntent, OdometryController, PathController,
     PlaybackClock, PlaybackCommand, PlaybackEffect, PlaybackLoadState, PlaybackPerformance,
-    PlaybackRequirements, ProcessingCounters, RawMessage, RestorePlanner, RestoreSemantics,
-    SessionPlan, SourceCatalog, StageTiming, TransformController,
+    PlaybackRequirements, ProcessingCounters, RawMessage, RestorePlanner, SessionPlan,
+    SourceCatalog, StageTiming, TransformController, WorkspaceBindings,
 };
 use web_time::Instant;
+
+const WEB_WORKSPACE_BINDINGS: &str = include_str!("../../../config/workspace_bindings.json");
+
+pub(crate) fn web_workspace_bindings() -> WorkspaceBindings {
+    serde_json::from_str(WEB_WORKSPACE_BINDINGS)
+        .expect("bundled Web workspace bindings must be valid")
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum PlaybackSourceKind {
@@ -21,10 +28,46 @@ enum PlaybackSourceKind {
     Remote,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 struct PendingSeek {
     target: ArrivalTime,
-    restore_start: ArrivalTime,
+    persistent_streams: Vec<viewer_core::StreamId>,
+    bootstraps_persistent: bool,
+}
+
+enum WebRestoreLoader {
+    Remote(RemoteRestoreLoader),
+    #[cfg(target_arch = "wasm32")]
+    LocalFile(BrowserMcapRestoreLoader),
+}
+
+impl WebRestoreLoader {
+    fn request(&mut self, plan: viewer_core::RestorePlan) -> Result<(), WebPlaybackError> {
+        match self {
+            Self::Remote(loader) => loader.request(&plan),
+            #[cfg(target_arch = "wasm32")]
+            Self::LocalFile(loader) => loader.request(plan),
+        }
+        .map_err(|error| WebPlaybackError::new(error.to_string()))
+    }
+
+    fn poll(&mut self) -> Option<Result<Vec<RawMessage>, WebPlaybackError>> {
+        match self {
+            Self::Remote(loader) => loader.poll(),
+            #[cfg(target_arch = "wasm32")]
+            Self::LocalFile(loader) => loader.poll(),
+        }
+        .map(|result| result.map_err(|error| WebPlaybackError::new(error.to_string())))
+    }
+
+    #[cfg(test)]
+    fn remote_mut(&mut self) -> &mut RemoteRestoreLoader {
+        match self {
+            Self::Remote(loader) => loader,
+            #[cfg(target_arch = "wasm32")]
+            Self::LocalFile(_) => panic!("test expected Remote restore loader"),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -56,6 +99,8 @@ pub(crate) struct WebPlayback {
     unknown_streams: u64,
     processing_time: StageTiming,
     data: RecordingDataPlane<WebWindowLoader>,
+    restore: WebRestoreLoader,
+    persistent_archive: Option<Vec<RawMessage>>,
     load_state: PlaybackLoadState,
     pending_seek: Option<PendingSeek>,
     buffer_underrun_active: bool,
@@ -67,6 +112,11 @@ impl WebPlayback {
         client: RemoteApiClient,
         catalog: RemoteCatalog,
     ) -> Result<Self, WebPlaybackError> {
+        let restore = RemoteRestoreLoader::new(
+            client.clone(),
+            catalog.recording_id.clone(),
+            catalog.revision.clone(),
+        );
         let loader = RemoteWindowLoader::new(
             client,
             catalog.recording_id,
@@ -77,23 +127,24 @@ impl WebPlayback {
         Self::new(
             catalog.plan,
             catalog.core,
-            catalog.start,
-            catalog.end,
-            catalog.end_exclusive,
             WebWindowLoader::Remote(loader),
+            WebRestoreLoader::Remote(restore),
             PlaybackSourceKind::Remote,
         )
     }
 
     #[cfg(target_arch = "wasm32")]
     pub(crate) fn from_local(recording: BrowserMcapRecording) -> Result<Self, WebPlaybackError> {
+        let BrowserMcapRecording {
+            catalog,
+            loader,
+            restore,
+        } = recording;
         Self::new(
-            recording.catalog.plan,
-            recording.catalog.core,
-            recording.catalog.start,
-            recording.catalog.end,
-            recording.catalog.end_exclusive,
-            WebWindowLoader::LocalFile(recording.loader),
+            catalog.plan,
+            catalog.core,
+            WebWindowLoader::LocalFile(loader),
+            WebRestoreLoader::LocalFile(restore),
             PlaybackSourceKind::LocalFile,
         )
     }
@@ -101,12 +152,16 @@ impl WebPlayback {
     fn new(
         plan: SessionPlan,
         catalog: SourceCatalog,
-        start: viewer_core::ArrivalTime,
-        end: viewer_core::ArrivalTime,
-        end_exclusive: viewer_core::ArrivalTime,
         loader: WebWindowLoader,
+        restore: WebRestoreLoader,
         source_kind: PlaybackSourceKind,
     ) -> Result<Self, WebPlaybackError> {
+        let recording = catalog
+            .time_range
+            .ok_or_else(|| WebPlaybackError::new("recording catalog has no time range"))?;
+        let start = recording.start;
+        let end_exclusive = recording.end_exclusive;
+        let end = ArrivalTime(end_exclusive.0 - 1);
         let cameras = CameraController::new(&plan);
         let path = PathController::new(&plan);
         let odometry = OdometryController::new(&plan);
@@ -125,6 +180,8 @@ impl WebPlayback {
             unknown_streams: 0,
             processing_time: StageTiming::default(),
             data,
+            restore,
+            persistent_archive: None,
             load_state: PlaybackLoadState::Ready,
             pending_seek: None,
             buffer_underrun_active: false,
@@ -133,16 +190,15 @@ impl WebPlayback {
     }
 
     pub(crate) fn tick(&mut self, elapsed: Duration) -> Result<PlaybackEffect, WebPlaybackError> {
+        if let Some(seek) = self.pending_seek.clone() {
+            return self.tick_seek(seek);
+        }
         if let Err(error) = self.data.poll(self.clock.cursor()) {
             self.load_state = PlaybackLoadState::Failed {
                 message: error.to_string(),
             };
             return Err(WebPlaybackError::new(error.to_string()));
         }
-        if let Some(seek) = self.pending_seek {
-            return self.tick_seek(seek);
-        }
-
         let requested = self.clock.cursor_after(elapsed);
         let committed = self.clock.cursor();
         let speed = self.clock.speed();
@@ -166,22 +222,54 @@ impl WebPlayback {
 
     fn tick_seek(&mut self, seek: PendingSeek) -> Result<PlaybackEffect, WebPlaybackError> {
         let target = seek.target;
-        self.data
-            .ensure_available_through(
-                seek.restore_start,
-                target,
-                self.clock.speed(),
-                FetchIntent::RequiredOnly,
-            )
-            .map_err(|error| WebPlaybackError::new(error.to_string()))?;
-        if !self.data.is_complete_through(target) {
+        let Some(result) = self.restore.poll() else {
             self.load_state = PlaybackLoadState::Seeking { target };
             return Ok(PlaybackEffect::None);
+        };
+        let mut messages = match result {
+            Ok(messages) => messages,
+            Err(error) => {
+                self.pending_seek = None;
+                self.load_state = PlaybackLoadState::Failed {
+                    message: error.to_string(),
+                };
+                return Err(error);
+            }
+        };
+        if seek.bootstraps_persistent {
+            let persistent = seek
+                .persistent_streams
+                .iter()
+                .copied()
+                .collect::<std::collections::HashSet<_>>();
+            let mut archive = Vec::new();
+            messages.retain(|message| {
+                if persistent.contains(&message.stream_id) {
+                    archive.push(message.clone());
+                    false
+                } else {
+                    true
+                }
+            });
+            self.persistent_archive = Some(archive);
         }
-
-        let messages = self.data.messages_through(seek.restore_start, target);
+        if let Some(archive) = &self.persistent_archive {
+            messages.extend(
+                archive
+                    .iter()
+                    .filter(|message| {
+                        seek.persistent_streams.contains(&message.stream_id)
+                            && message.arrival_time <= target
+                    })
+                    .cloned(),
+            );
+        }
+        messages.sort_by_key(|message| (message.arrival_time, message.stream_id.0));
+        self.data
+            .begin_seek(target)
+            .map_err(|error| WebPlaybackError::new(error.to_string()))?;
         self.reset_for_restore(target);
-        self.process_messages(Duration::ZERO, messages);
+        self.process_restore_messages(messages);
         self.clock.seek(target);
         self.pending_seek = None;
         self.buffer_underrun_active = false;
@@ -237,30 +325,28 @@ impl WebPlayback {
             }
             PlaybackCommand::Seek(cursor) => {
                 let target = cursor.clamp(self.clock.start(), self.clock.end());
-                if self.pending_seek.is_some_and(|seek| seek.target == target) {
+                if self
+                    .pending_seek
+                    .as_ref()
+                    .is_some_and(|seek| seek.target == target)
+                {
                     return Ok(PlaybackEffect::None);
                 }
-                let restore = RestorePlanner::new(&self.catalog)
-                    .plan(
-                        target,
-                        self.restore_inputs
-                            .iter()
-                            .copied()
-                            .filter(|input| input.semantics != RestoreSemantics::Persistent),
-                    )
+                let mut restore = RestorePlanner::new(&self.catalog)
+                    .plan(target, self.restore_inputs.iter().copied())
                     .map_err(|error| WebPlaybackError::new(error.to_string()))?;
-                let restore_start = restore
-                    .reads
-                    .iter()
-                    .map(|read| read.range.start)
-                    .min()
-                    .unwrap_or(target);
-                self.data
-                    .begin_seek(restore_start)
-                    .map_err(|error| WebPlaybackError::new(error.to_string()))?;
+                let persistent_streams = restore.persistent.clone();
+                let bootstraps_persistent =
+                    !persistent_streams.is_empty() && self.persistent_archive.is_none();
+                if !bootstraps_persistent {
+                    restore.persistent.clear();
+                }
+                self.data.cancel_pending();
+                self.restore.request(restore)?;
                 self.pending_seek = Some(PendingSeek {
                     target,
-                    restore_start,
+                    persistent_streams,
+                    bootstraps_persistent,
                 });
                 self.buffer_underrun_active = false;
                 self.load_state = PlaybackLoadState::Seeking { target };
@@ -322,8 +408,7 @@ impl WebPlayback {
     }
 
     pub(crate) fn display_cursor(&self) -> ArrivalTime {
-        self.pending_seek
-            .map_or_else(|| self.clock.cursor(), |seek| seek.target)
+        self.clock.cursor()
     }
 
     pub(crate) fn source_label(&self) -> &'static str {
@@ -359,6 +444,20 @@ impl WebPlayback {
         self.odometry.reset_for_restore();
         self.transforms.reset_for_restore(target);
     }
+
+    fn process_restore_messages(&mut self, messages: Vec<RawMessage>) {
+        let started = Instant::now();
+        for message in &messages {
+            let matched = self.cameras.restore(message)
+                | self.path.process(message)
+                | self.odometry.process(message)
+                | self.transforms.process(message);
+            if !matched {
+                self.unknown_streams = self.unknown_streams.saturating_add(1);
+            }
+        }
+        self.processing_time.record(started.elapsed());
+    }
 }
 
 pub(crate) fn web_playback_requirements() -> PlaybackRequirements {
@@ -376,7 +475,8 @@ mod tests {
     use bytes::Bytes;
     use viewer_core::{
         CompressedImage, DataWindowTimeRange, MeasurementTime, PlaybackSpeed, RawMessage,
-        SerializedWindow, StreamId, encode_compressed_image_cdr,
+        SerializedWindow, StreamId, TransformStamped, encode_compressed_image_cdr,
+        encode_tf_message_cdr,
     };
     use viewer_remote_protocol::{
         BatchEncoder, CatalogResponse, RemoteMessageRef, RemoteTimeRange, StreamDescriptor,
@@ -409,6 +509,40 @@ mod tests {
         remote_catalog_until(3_000_000_000)
     }
 
+    fn remote_catalog_with_static_tf() -> RemoteCatalog {
+        let catalog = CatalogResponse::new(
+            "demo".into(),
+            "revision".into(),
+            RemoteTimeRange {
+                start_ns: TimestampNs::new(1_000_000_000),
+                end_ns_exclusive: TimestampNs::new(3_000_000_000),
+            },
+            vec![
+                StreamDescriptor {
+                    id: 1,
+                    topic: "/camera".into(),
+                    semantic: StreamSemantic::Camera,
+                    representation: "ros2-cdr".into(),
+                    schema_name: "sensor_msgs/msg/CompressedImage".into(),
+                    schema_encoding: "ros2msg".into(),
+                    message_encoding: "cdr".into(),
+                    message_count: Some(viewer_remote_protocol::MessageCount::new(30)),
+                },
+                StreamDescriptor {
+                    id: 2,
+                    topic: "/tf_static".into(),
+                    semantic: StreamSemantic::RosMessage,
+                    representation: "ros2-cdr".into(),
+                    schema_name: "tf2_msgs/msg/TFMessage".into(),
+                    schema_encoding: "ros2msg".into(),
+                    message_encoding: "cdr".into(),
+                    message_count: Some(viewer_remote_protocol::MessageCount::new(2)),
+                },
+            ],
+        );
+        crate::remote::adapt_catalog(&catalog).unwrap()
+    }
+
     fn camera_message(time: i64) -> RawMessage {
         RawMessage {
             stream_id: StreamId(1),
@@ -420,6 +554,23 @@ mod tests {
                     format: "jpeg".into(),
                     jpeg: vec![1, 2, 3],
                 })
+                .unwrap(),
+            ),
+        }
+    }
+
+    fn static_tf_message(time: i64, x: f64) -> RawMessage {
+        RawMessage {
+            stream_id: StreamId(2),
+            arrival_time: ArrivalTime(time),
+            payload: Bytes::from(
+                encode_tf_message_cdr(&[TransformStamped {
+                    measurement_time: MeasurementTime(time),
+                    frame_id: "map".into(),
+                    child_frame_id: "base".into(),
+                    translation: [x, 0.0, 0.0],
+                    rotation: [0.0, 0.0, 0.0, 1.0],
+                }])
                 .unwrap(),
             ),
         }
@@ -646,24 +797,7 @@ mod tests {
         const START: i64 = 1_000_000_000;
         const TARGET: i64 = 2_000_000_000;
         let client = RemoteApiClient::new("http://localhost").unwrap();
-        let catalog = remote_catalog();
-        let restore_start = RestorePlanner::new(&catalog.core)
-            .plan(
-                viewer_core::ArrivalTime(TARGET),
-                catalog
-                    .plan
-                    .restore_inputs()
-                    .into_iter()
-                    .filter(|input| input.semantics != RestoreSemantics::Persistent),
-            )
-            .unwrap()
-            .reads
-            .iter()
-            .map(|read| read.range.start.0)
-            .min()
-            .unwrap();
-        let restore_end = (restore_start + 1_000_000_000).min(catalog.end_exclusive.0);
-        let mut playback = WebPlayback::from_remote(client, catalog).unwrap();
+        let mut playback = WebPlayback::from_remote(client, remote_catalog()).unwrap();
 
         playback.tick(Duration::ZERO).unwrap();
         playback
@@ -712,31 +846,17 @@ mod tests {
             }
         );
 
-        playback.tick(Duration::ZERO).unwrap();
         playback
-            .data
-            .loader_mut()
+            .restore
             .remote_mut()
-            .inject_stale(loaded_window(
-                restore_start,
-                restore_end,
-                vec![camera_message(TARGET)],
-            ))
-            .unwrap();
+            .inject_stale(vec![camera_message(TARGET)]);
         assert_eq!(playback.tick(Duration::ZERO).unwrap(), PlaybackEffect::None);
         assert_eq!(playback.clock.cursor(), committed_before_seek);
-        assert_eq!(playback.data_plane_diagnostics().stale_results_discarded, 1);
 
         playback
-            .data
-            .loader_mut()
+            .restore
             .remote_mut()
-            .inject_loaded(loaded_window(
-                restore_start,
-                restore_end,
-                vec![camera_message(TARGET)],
-            ))
-            .unwrap();
+            .inject(vec![camera_message(TARGET)]);
         assert_eq!(
             playback.tick(Duration::ZERO).unwrap(),
             PlaybackEffect::Seeked
@@ -755,6 +875,84 @@ mod tests {
     }
 
     #[test]
+    fn failed_restore_keeps_the_old_cursor_and_visible_controller_state() {
+        let client = RemoteApiClient::new("http://localhost").unwrap();
+        let mut playback = WebPlayback::from_remote(client, remote_catalog()).unwrap();
+        playback.process_messages(Duration::ZERO, vec![camera_message(1_000_000_000)]);
+        let committed = playback.clock().cursor();
+
+        playback
+            .apply_command(PlaybackCommand::Seek(ArrivalTime(2_000_000_000)))
+            .unwrap();
+        playback
+            .restore
+            .remote_mut()
+            .inject_error("indexed restore failed");
+
+        assert!(playback.tick(Duration::ZERO).is_err());
+        assert_eq!(playback.clock().cursor(), committed);
+        assert_eq!(
+            playback
+                .cameras()
+                .state()
+                .latest_for(CameraId(0))
+                .unwrap()
+                .arrival_time,
+            ArrivalTime(1_000_000_000)
+        );
+    }
+
+    #[test]
+    fn remote_static_tf_archive_is_bootstrapped_once_and_filtered_per_seek() {
+        let client = RemoteApiClient::new("http://localhost").unwrap();
+        let mut playback =
+            WebPlayback::from_remote(client, remote_catalog_with_static_tf()).unwrap();
+
+        playback
+            .apply_command(PlaybackCommand::Seek(ArrivalTime(1_500_000_000)))
+            .unwrap();
+        playback.restore.remote_mut().inject(vec![
+            camera_message(1_400_000_000),
+            static_tf_message(1_100_000_000, 1.0),
+            static_tf_message(2_500_000_000, 2.0),
+        ]);
+        assert_eq!(
+            playback.tick(Duration::ZERO).unwrap(),
+            PlaybackEffect::Seeked
+        );
+        assert_eq!(playback.persistent_archive.as_ref().unwrap().len(), 2);
+        assert_eq!(
+            playback
+                .transforms()
+                .state()
+                .transform_points("base", "map", &[[0.0; 3]])
+                .unwrap(),
+            vec![[1.0, 0.0, 0.0]]
+        );
+
+        playback
+            .apply_command(PlaybackCommand::Seek(ArrivalTime(2_700_000_000)))
+            .unwrap();
+        playback
+            .restore
+            .remote_mut()
+            .inject(vec![camera_message(2_600_000_000)]);
+        assert_eq!(
+            playback.tick(Duration::ZERO).unwrap(),
+            PlaybackEffect::Seeked
+        );
+        assert_eq!(playback.persistent_archive.as_ref().unwrap().len(), 2);
+        assert_eq!(
+            playback
+                .transforms()
+                .state()
+                .transform_points("base", "map", &[[0.0; 3]])
+                .unwrap(),
+            vec![[2.0, 0.0, 0.0]]
+        );
+    }
+
+    #[test]
     fn local_indexed_and_remote_batch_windows_reduce_to_the_same_feature_state() {
         let bytes = std::fs::read(
             std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -765,14 +963,15 @@ mod tests {
         let catalog =
             crate::local::LocalCatalog::from_summary(&summary, "/camera/front/image/compressed")
                 .unwrap();
+        let recording = catalog.core.time_range.unwrap();
         let window_end = viewer_core::ArrivalTime(
-            catalog
+            recording
                 .start
                 .0
                 .saturating_add(1_000_000_000)
-                .min(catalog.end_exclusive.0),
+                .min(recording.end_exclusive.0),
         );
-        let range = DataWindowTimeRange::new(catalog.start, window_end).unwrap();
+        let range = DataWindowTimeRange::new(recording.start, window_end).unwrap();
         let local = crate::local::collect_window_from_bytes_for_test(
             &summary,
             &catalog.selected_topics,

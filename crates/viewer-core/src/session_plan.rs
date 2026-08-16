@@ -2,13 +2,8 @@ use crate::{
     CameraController, CameraId, OdometryController, PathController, RestoreInput, SceneController,
     SourceCatalog, StreamDescriptor, StreamId, TransformController,
 };
+use serde::{Deserialize, Serialize};
 use std::{collections::BTreeSet, fmt};
-
-pub const PATH_TOPIC: &str = "/planning/path";
-pub const ODOM_TOPIC: &str = "/odom";
-pub const SCAN_TOPIC: &str = "/scan";
-pub const TF_TOPIC: &str = "/tf";
-pub const TF_STATIC_TOPIC: &str = "/tf_static";
 
 const COMPRESSED_IMAGE_SCHEMA: &str = "sensor_msgs/msg/CompressedImage";
 const PATH_SCHEMA: &str = "nav_msgs/msg/Path";
@@ -68,26 +63,20 @@ impl PlaybackRequirements {
         self.dynamic_transforms = true;
         self.static_transforms = true;
     }
-
-    pub fn requires_all_cameras(&self) -> bool {
-        self.all_cameras
-    }
-
-    pub fn camera_topics(&self) -> &BTreeSet<String> {
-        &self.camera_topics
-    }
 }
 
-impl Default for PlaybackRequirements {
-    fn default() -> Self {
-        let mut requirements = Self::empty();
-        requirements.require_all_cameras();
-        requirements.require_path();
-        requirements.require_odometry();
-        requirements.require_point_cloud();
-        requirements.require_transforms();
-        requirements
-    }
+/// Workspace-owned bindings from semantic continuous inputs to source topics.
+///
+/// These are configuration facts, not recording facts and not viewer-core policy. Cameras remain
+/// panel-selected because separate Camera panels may request different topics.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WorkspaceBindings {
+    pub path_topic: String,
+    pub odometry_topic: String,
+    pub point_cloud_topic: String,
+    pub dynamic_tf_topic: String,
+    pub static_tf_topic: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -113,39 +102,46 @@ pub struct SessionPlan {
 impl SessionPlan {
     pub fn build(
         catalog: &SourceCatalog,
-        primary_camera_topic: &str,
+        priority_camera_topic: &str,
         requirements: &PlaybackRequirements,
+        bindings: &WorkspaceBindings,
     ) -> Result<Self, SessionPlanError> {
-        let mut available_cameras = catalog
+        let available_cameras = catalog
             .streams
             .iter()
             .filter(|stream| accepts(stream, COMPRESSED_IMAGE_SCHEMA))
             .cloned()
             .collect::<Vec<_>>();
 
-        let cameras_requested = requirements.all_cameras || !requirements.camera_topics.is_empty();
-        let primary_camera = if cameras_requested {
-            let Some(primary_index) = available_cameras
-                .iter()
-                .position(|stream| stream.topic == primary_camera_topic)
-            else {
-                return Err(SessionPlanError(format!(
-                    "primary Camera topic {primary_camera_topic} is not a CDR CompressedImage stream"
-                )));
-            };
-            available_cameras.swap(0, primary_index);
-            Some(CameraId(0))
-        } else {
-            None
-        };
-
-        let selected_cameras = available_cameras
+        let mut selected_cameras = available_cameras
             .into_iter()
             .filter(|stream| {
-                requirements.all_cameras
-                    || stream.topic == primary_camera_topic
-                    || requirements.camera_topics.contains(&stream.topic)
+                requirements.all_cameras || requirements.camera_topics.contains(&stream.topic)
             })
+            .collect::<Vec<_>>();
+        let priority_is_required =
+            requirements.all_cameras || requirements.camera_topics.contains(priority_camera_topic);
+        if priority_is_required
+            && !selected_cameras
+                .iter()
+                .any(|stream| stream.topic == priority_camera_topic)
+        {
+            return Err(SessionPlanError(format!(
+                "priority Camera topic {priority_camera_topic} is not a selected CDR CompressedImage stream"
+            )));
+        }
+        if let Some(priority_index) = selected_cameras
+            .iter()
+            .position(|stream| stream.topic == priority_camera_topic)
+        {
+            selected_cameras.swap(0, priority_index);
+        }
+        let primary_camera = selected_cameras
+            .first()
+            .filter(|stream| stream.topic == priority_camera_topic)
+            .map(|_| CameraId(0));
+        let selected_cameras = selected_cameras
+            .into_iter()
             .enumerate()
             .map(|(index, stream)| {
                 let camera_id = u16::try_from(index).map(CameraId).map_err(|_| {
@@ -159,23 +155,23 @@ impl SessionPlan {
             camera_routes: selected_cameras,
             path_stream: requirements
                 .path
-                .then(|| select_stream(catalog, PATH_TOPIC, PATH_SCHEMA))
+                .then(|| select_stream(catalog, &bindings.path_topic, PATH_SCHEMA))
                 .flatten(),
             odometry_stream: requirements
                 .odometry
-                .then(|| select_stream(catalog, ODOM_TOPIC, ODOMETRY_SCHEMA))
+                .then(|| select_stream(catalog, &bindings.odometry_topic, ODOMETRY_SCHEMA))
                 .flatten(),
             point_cloud_stream: requirements
                 .point_cloud
-                .then(|| select_stream(catalog, SCAN_TOPIC, LASER_SCAN_SCHEMA))
+                .then(|| select_stream(catalog, &bindings.point_cloud_topic, LASER_SCAN_SCHEMA))
                 .flatten(),
             dynamic_tf_stream: requirements
                 .dynamic_transforms
-                .then(|| select_stream(catalog, TF_TOPIC, TF_MESSAGE_SCHEMA))
+                .then(|| select_stream(catalog, &bindings.dynamic_tf_topic, TF_MESSAGE_SCHEMA))
                 .flatten(),
             static_tf_stream: requirements
                 .static_transforms
-                .then(|| select_stream(catalog, TF_STATIC_TOPIC, TF_MESSAGE_SCHEMA))
+                .then(|| select_stream(catalog, &bindings.static_tf_topic, TF_MESSAGE_SCHEMA))
                 .flatten(),
             primary_camera,
         })
@@ -333,28 +329,49 @@ mod tests {
         }
     }
 
+    fn bindings() -> WorkspaceBindings {
+        WorkspaceBindings {
+            path_topic: "/planning/path".into(),
+            odometry_topic: "/odom".into(),
+            point_cloud_topic: "/scan".into(),
+            dynamic_tf_topic: "/tf".into(),
+            static_tf_topic: "/tf_static".into(),
+        }
+    }
+
+    fn standard_requirements() -> PlaybackRequirements {
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_all_cameras();
+        requirements.require_path();
+        requirements.require_odometry();
+        requirements.require_point_cloud();
+        requirements.require_transforms();
+        requirements
+    }
+
     fn catalog() -> SourceCatalog {
         SourceCatalog {
             time_range: None,
             streams: vec![
                 descriptor(9, "/camera/rear/image/compressed", COMPRESSED_IMAGE_SCHEMA),
-                descriptor(20, PATH_TOPIC, PATH_SCHEMA),
+                descriptor(20, "/planning/path", PATH_SCHEMA),
                 descriptor(7, "/camera/front/image/compressed", COMPRESSED_IMAGE_SCHEMA),
-                descriptor(21, ODOM_TOPIC, ODOMETRY_SCHEMA),
-                descriptor(22, SCAN_TOPIC, LASER_SCAN_SCHEMA),
-                descriptor(23, TF_TOPIC, TF_MESSAGE_SCHEMA),
-                descriptor(24, TF_STATIC_TOPIC, TF_MESSAGE_SCHEMA),
+                descriptor(21, "/odom", ODOMETRY_SCHEMA),
+                descriptor(22, "/scan", LASER_SCAN_SCHEMA),
+                descriptor(23, "/tf", TF_MESSAGE_SCHEMA),
+                descriptor(24, "/tf_static", TF_MESSAGE_SCHEMA),
                 descriptor(30, "/unrelated", "example_msgs/msg/Other"),
             ],
         }
     }
 
     #[test]
-    fn default_requirements_preserve_camera_order_and_standard_selection() {
+    fn explicit_standard_requirements_preserve_camera_order_and_selection() {
         let plan = SessionPlan::build(
             &catalog(),
             "/camera/front/image/compressed",
-            &PlaybackRequirements::default(),
+            &standard_requirements(),
+            &bindings(),
         )
         .unwrap();
 
@@ -378,8 +395,13 @@ mod tests {
         let mut requirements = PlaybackRequirements::empty();
         requirements.require_camera_topic("/camera/front/image/compressed");
         requirements.require_path();
-        let plan = SessionPlan::build(&catalog(), "/camera/front/image/compressed", &requirements)
-            .unwrap();
+        let plan = SessionPlan::build(
+            &catalog(),
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings(),
+        )
+        .unwrap();
 
         assert_eq!(plan.selected_stream_ids(), vec![StreamId(7), StreamId(20)]);
         assert!(plan.odometry_stream().is_none());
@@ -392,27 +414,52 @@ mod tests {
         let mut catalog = catalog();
         catalog
             .streams
-            .insert(0, descriptor(2, ODOM_TOPIC, "example_msgs/msg/Foo"));
+            .insert(0, descriptor(2, "/odom", "example_msgs/msg/Foo"));
         let plan = SessionPlan::build(
             &catalog,
             "/camera/front/image/compressed",
-            &PlaybackRequirements::default(),
+            &standard_requirements(),
+            &bindings(),
         )
         .unwrap();
         assert_eq!(plan.odometry_stream().unwrap().id, StreamId(21));
     }
 
     #[test]
-    fn primary_camera_must_be_a_cdr_compressed_image() {
-        let mut catalog = catalog();
-        catalog.streams.push(descriptor(
+    fn priority_camera_does_not_expand_physical_selection() {
+        let mut source = catalog();
+        source.streams.push(descriptor(
+            31,
+            "/camera/left/image/compressed",
+            COMPRESSED_IMAGE_SCHEMA,
+        ));
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_camera_topic("/camera/left/image/compressed");
+        let plan = SessionPlan::build(
+            &source,
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings(),
+        )
+        .unwrap();
+        assert_eq!(
+            plan.selected_stream_ids(),
+            vec![StreamId(31)],
+            "scheduler priority must not add an unrequested Camera stream"
+        );
+        assert_eq!(plan.primary_camera(), None);
+    }
+
+    #[test]
+    fn a_required_priority_camera_must_be_cdr_compressed_image() {
+        let mut source = catalog();
+        source.streams.push(descriptor(
             31,
             "/camera/wrong",
             "example_msgs/msg/CameraLike",
         ));
-        assert!(
-            SessionPlan::build(&catalog, "/camera/wrong", &PlaybackRequirements::default(),)
-                .is_err()
-        );
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_camera_topic("/camera/wrong");
+        assert!(SessionPlan::build(&source, "/camera/wrong", &requirements, &bindings(),).is_err());
     }
 }

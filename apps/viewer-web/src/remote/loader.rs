@@ -1,5 +1,7 @@
 #[cfg(target_arch = "wasm32")]
 use super::client::RemoteBatchRequest;
+#[cfg(target_arch = "wasm32")]
+use super::client::RemoteRestoreRequest;
 use super::client::{RemoteApiClient, RemoteBatchPage};
 use crate::data_plane::{
     DataLoadError, LoadedWindow, WindowLoadDiagnostics, WindowLoader, WindowLoaderMetrics,
@@ -10,6 +12,152 @@ use viewer_remote_protocol::BatchDecoder;
 
 #[cfg(target_arch = "wasm32")]
 use {js_sys::Date, wasm_bindgen_futures::spawn_local, web_sys::AbortController};
+
+type RestoreInbox = Rc<RefCell<VecDeque<(u64, Result<Vec<RawMessage>, DataLoadError>)>>>;
+
+#[derive(Debug)]
+pub(crate) struct RemoteRestoreLoader {
+    client: RemoteApiClient,
+    recording_id: String,
+    revision: String,
+    generation: u64,
+    loading: bool,
+    inbox: RestoreInbox,
+    #[cfg(target_arch = "wasm32")]
+    abort: Option<AbortController>,
+}
+
+impl RemoteRestoreLoader {
+    pub(crate) fn new(client: RemoteApiClient, recording_id: String, revision: String) -> Self {
+        Self {
+            client,
+            recording_id,
+            revision,
+            generation: 0,
+            loading: false,
+            inbox: Rc::new(RefCell::new(VecDeque::new())),
+            #[cfg(target_arch = "wasm32")]
+            abort: None,
+        }
+    }
+
+    pub(crate) fn request(&mut self, plan: &viewer_core::RestorePlan) -> Result<(), DataLoadError> {
+        self.cancel();
+        self.loading = true;
+        #[cfg(not(target_arch = "wasm32"))]
+        let _ = plan;
+        #[cfg(target_arch = "wasm32")]
+        {
+            let generation = self.generation;
+            let controller = AbortController::new()
+                .map_err(|error| DataLoadError::new(format!("AbortController: {error:?}")))?;
+            let signal = controller.signal();
+            self.abort = Some(controller);
+            let client = self.client.clone();
+            let inbox = Rc::clone(&self.inbox);
+            let request = RemoteRestoreRequest {
+                recording_id: self.recording_id.clone(),
+                revision: self.revision.clone(),
+                target_ns: u64::try_from(plan.target.0)
+                    .map_err(|_| DataLoadError::new("negative restore target"))?,
+                latest_streams: plan.latest_before.iter().map(|stream| stream.0).collect(),
+                history_streams: plan
+                    .histories
+                    .iter()
+                    .flat_map(|read| read.streams.iter().map(|stream| stream.0))
+                    .collect(),
+                history_start_ns: plan
+                    .histories
+                    .iter()
+                    .map(|read| read.range.start.0)
+                    .min()
+                    .map(u64::try_from)
+                    .transpose()
+                    .map_err(|_| DataLoadError::new("negative restore history start"))?,
+                persistent_streams: plan.persistent.iter().map(|stream| stream.0).collect(),
+            };
+            spawn_local(async move {
+                let result = client
+                    .fetch_restore(&request, Some(&signal))
+                    .await
+                    .map_err(|error| DataLoadError::new(error.to_string()))
+                    .and_then(decode_restore_page);
+                inbox.borrow_mut().push_back((generation, result));
+            });
+        }
+        Ok(())
+    }
+
+    pub(crate) fn poll(&mut self) -> Option<Result<Vec<RawMessage>, DataLoadError>> {
+        loop {
+            let (generation, result) = self.inbox.borrow_mut().pop_front()?;
+            if generation != self.generation || !self.loading {
+                continue;
+            }
+            self.loading = false;
+            #[cfg(target_arch = "wasm32")]
+            {
+                self.abort = None;
+            }
+            return Some(result);
+        }
+    }
+
+    pub(crate) fn cancel(&mut self) {
+        self.generation = self.generation.wrapping_add(1);
+        self.loading = false;
+        #[cfg(target_arch = "wasm32")]
+        if let Some(controller) = self.abort.take() {
+            controller.abort();
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn inject(&mut self, messages: Vec<RawMessage>) {
+        self.inbox
+            .borrow_mut()
+            .push_back((self.generation, Ok(messages)));
+    }
+
+    #[cfg(test)]
+    pub(crate) fn inject_stale(&mut self, messages: Vec<RawMessage>) {
+        self.inbox
+            .borrow_mut()
+            .push_back((self.generation.wrapping_sub(1), Ok(messages)));
+    }
+
+    #[cfg(test)]
+    pub(crate) fn inject_error(&mut self, message: &str) {
+        self.inbox
+            .borrow_mut()
+            .push_back((self.generation, Err(DataLoadError::new(message.to_owned()))));
+    }
+}
+
+fn decode_restore_page(page: RemoteBatchPage) -> Result<Vec<RawMessage>, DataLoadError> {
+    if !page.complete {
+        return Err(DataLoadError::new("restore batch is incomplete"));
+    }
+    let decoded = BatchDecoder::new(&page.body)
+        .and_then(BatchDecoder::collect)
+        .map_err(|error| DataLoadError::new(error.to_string()))?;
+    decoded
+        .into_iter()
+        .map(|message| {
+            let arrival_time = i64::try_from(message.log_time_ns)
+                .map(viewer_core::ArrivalTime)
+                .map_err(|_| DataLoadError::new("remote timestamp exceeds signed nanoseconds"))?;
+            let payload_range = message
+                .payload_range_in(&page.body)
+                .ok_or_else(|| DataLoadError::new("restore payload is outside its batch body"))?;
+            Ok(RawMessage {
+                stream_id: StreamId(message.stream_id),
+                arrival_time,
+                payload: page.body.slice(payload_range),
+            })
+        })
+        .collect()
+}
 
 #[derive(Debug)]
 pub(crate) enum WindowLoadState {

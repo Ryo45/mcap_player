@@ -277,6 +277,11 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
         Ok(())
     }
 
+    pub(crate) fn cancel_pending(&mut self) {
+        self.loader.cancel();
+        self.failed = None;
+    }
+
     pub(crate) fn messages_through(
         &mut self,
         after: ArrivalTime,

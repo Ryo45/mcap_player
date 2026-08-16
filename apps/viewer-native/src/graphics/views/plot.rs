@@ -23,18 +23,18 @@ struct SignalPresentation {
 fn signal_presentation(signal_id: SignalId) -> SignalPresentation {
     match signal_id {
         SignalId::Speed => SignalPresentation {
-            heading: "SPEED · /odom",
-            loading_label: "Loading /odom speed series…",
-            empty_label: "No /odom speed samples in this log",
+            heading: "SPEED",
+            loading_label: "Loading speed series…",
+            empty_label: "No speed samples in this log",
             plot_id: "vehicle-speed-plot",
             series_name: "speed",
             axis_label: "speed (m/s)",
             format_current: |value| format!("{value:.2} m/s · {:.1} km/h", value * 3.6),
         },
         SignalId::YawRate => SignalPresentation {
-            heading: "YAW RATE · /odom",
-            loading_label: "Loading /odom yaw-rate series…",
-            empty_label: "No /odom yaw-rate samples in this log",
+            heading: "YAW RATE",
+            loading_label: "Loading yaw-rate series…",
+            empty_label: "No yaw-rate samples in this log",
             plot_id: "yaw-rate-plot",
             series_name: "yaw rate",
             axis_label: "yaw rate (rad/s)",

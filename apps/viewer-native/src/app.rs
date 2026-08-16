@@ -40,7 +40,12 @@ pub(crate) struct App {
 impl App {
     fn load(&mut self, path: &Path) {
         let requirements = self.workspace.data_requirements();
-        match ViewerSession::open(path, self.args.topic.clone(), &requirements.playback) {
+        match ViewerSession::open(
+            path,
+            self.args.topic.clone(),
+            &requirements.playback,
+            self.workspace.bindings(),
+        ) {
             Ok(mut session) => {
                 self.diagnostics.reset_for_source();
                 self.workspace.configure_session(session.plan());
@@ -365,6 +370,7 @@ impl ApplicationHandler for App {
                     self.args.topic.clone(),
                     reliable,
                     &requirements.playback,
+                    self.workspace.bindings(),
                 );
                 self.workspace.configure_session(session.plan());
                 session.load_inspections(&requirements.inspections);
@@ -427,13 +433,24 @@ mod tests {
     use super::*;
     use viewer_core::{ArrivalTime, PlaybackCommand, PlaybackRequirements};
 
+    fn standard_test_requirements() -> PlaybackRequirements {
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_all_cameras();
+        requirements.require_path();
+        requirements.require_odometry();
+        requirements.require_point_cloud();
+        requirements.require_transforms();
+        requirements
+    }
+
     fn session() -> ViewerSession {
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../tests/fixtures/camera-jpeg/camera_front_3s.mcap");
         ViewerSession::open(
             &path,
             "/camera/front/image/compressed".to_owned(),
-            &PlaybackRequirements::default(),
+            &standard_test_requirements(),
+            NativeWorkspace::default().bindings(),
         )
         .unwrap()
     }
@@ -496,6 +513,93 @@ mod tests {
         assert_eq!(effect, PlaybackEffect::Seeked);
         assert_eq!(session.playback_view().unwrap().cursor, target);
         assert!(diagnostics.message(&[]).is_none());
+    }
+
+    #[test]
+    fn native_workspace_seek_restores_the_indexed_camera_predecessor() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap");
+        let mut workspace = NativeWorkspace::default();
+        let mut session = ViewerSession::open(
+            &path,
+            "/camera/front/image/compressed".to_owned(),
+            &workspace.data_requirements().playback,
+            workspace.bindings(),
+        )
+        .unwrap();
+        workspace.configure_session(session.plan());
+        workspace.reset_for_source(session.default_focused_camera());
+        let playback = session.playback_view().unwrap();
+        let target = ArrivalTime((playback.start.0 + playback.end.0) / 2);
+
+        let bytes = std::fs::read(&path).unwrap();
+        let source = viewer_core::McapSource::new(bytes).unwrap();
+        let stream = source
+            .catalog()
+            .by_topic("/camera/front/image/compressed")
+            .unwrap()
+            .id;
+        let expected = source
+            .latest_before(&[stream], target)
+            .unwrap()
+            .messages
+            .pop()
+            .unwrap();
+        let expected_image = viewer_core::decode_compressed_image_bytes(expected.payload).unwrap();
+
+        let mut preview = PreviewCoordinator::default();
+        let mut diagnostics = AppDiagnostics::default();
+        let effect = App::apply_actions(
+            &mut session,
+            &mut workspace,
+            &mut preview,
+            &mut diagnostics,
+            vec![ViewerAction::Playback(PlaybackCommand::Seek(target))],
+        );
+
+        assert_eq!(effect, PlaybackEffect::Seeked);
+        let restored = workspace
+            .cameras()
+            .state()
+            .latest_for(session.default_focused_camera().unwrap())
+            .unwrap();
+        assert_eq!(restored.arrival_time, expected.arrival_time);
+        assert_eq!(restored.jpeg, expected_image.jpeg);
+        assert_eq!(session.playback_view().unwrap().cursor, target);
+        assert!(diagnostics.message(&[]).is_none());
+    }
+
+    #[test]
+    fn exact_inspection_does_not_mutate_playback_or_workspace_state() {
+        let mut session = session();
+        let mut workspace = NativeWorkspace::default();
+        workspace.configure_session(session.plan());
+        workspace.reset_for_source(session.default_focused_camera());
+        session
+            .tick(Duration::ZERO, |elapsed, messages| {
+                workspace.process_messages(elapsed, messages)
+            })
+            .unwrap();
+        let committed = session.playback_view().unwrap().cursor;
+        let camera = workspace
+            .cameras()
+            .state()
+            .latest_for(session.default_focused_camera().unwrap())
+            .cloned();
+
+        let inspected = session
+            .inspect_topic("/camera/front/image/compressed", 1)
+            .unwrap();
+
+        assert_eq!(inspected.len(), 1);
+        assert_eq!(session.playback_view().unwrap().cursor, committed);
+        assert_eq!(
+            workspace
+                .cameras()
+                .state()
+                .latest_for(session.default_focused_camera().unwrap()),
+            camera.as_ref()
+        );
     }
 
     #[test]

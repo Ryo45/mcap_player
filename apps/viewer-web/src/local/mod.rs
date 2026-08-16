@@ -7,4 +7,6 @@ pub(crate) use catalog::LocalCatalog;
 #[cfg(test)]
 pub(crate) use loader::collect_window_from_bytes_for_test;
 #[cfg(target_arch = "wasm32")]
-pub(crate) use loader::{BrowserMcapRecording, BrowserMcapWindowLoader, open_browser_mcap};
+pub(crate) use loader::{
+    BrowserMcapRecording, BrowserMcapRestoreLoader, BrowserMcapWindowLoader, open_browser_mcap,
+};
