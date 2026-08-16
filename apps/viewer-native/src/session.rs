@@ -14,7 +14,8 @@ use std::{
 };
 use viewer_core::{
     ArrivalTime, CameraId, McapPlayback, PlaybackCommand, PlaybackEffect, PlaybackPerformance,
-    PlaybackRequirements, PlaybackView, ProcessingCounters, RawMessage, SessionPlan, StageTiming,
+    PlaybackRequirements, PlaybackView, ProcessingCounters, RawMessage, RestoreSemantics,
+    SessionPlan, StageTiming, WorkspaceBindings,
 };
 #[cfg(feature = "ros2-live")]
 use viewer_core::{SourceCatalog, StreamDescriptor};
@@ -37,6 +38,7 @@ pub(crate) struct PlotSignalRequest {
     pub(crate) path: PathBuf,
     pub(crate) origin: ArrivalTime,
     pub(crate) max_points: usize,
+    pub(crate) odometry_topic: String,
 }
 
 enum SessionSource {
@@ -60,14 +62,22 @@ impl ViewerSession {
         path: &Path,
         topic: String,
         requirements: &PlaybackRequirements,
+        bindings: &WorkspaceBindings,
     ) -> Result<Self> {
         let file = File::open(path).with_context(|| format!("open {}", path.display()))?;
         // SAFETY: the mapping is read-only and owns an independent reference to the file pages.
         let mapping =
             unsafe { Mmap::map(&file) }.with_context(|| format!("map {}", path.display()))?;
         let mut playback = McapPlayback::new(mapping)?;
-        let plan = SessionPlan::build(playback.catalog(), &topic, requirements)?;
+        let plan = SessionPlan::build(playback.catalog(), &topic, requirements, bindings)?;
         playback.select_streams(plan.selected_stream_ids());
+        let persistent = plan
+            .restore_inputs()
+            .into_iter()
+            .filter(|input| input.semantics == RestoreSemantics::Persistent)
+            .map(|input| input.stream_id)
+            .collect::<Vec<_>>();
+        playback.bootstrap_persistent(&persistent)?;
         playback.clock_mut().toggle();
         Ok(Self {
             source: SessionSource::Mcap(Box::new(playback)),
@@ -85,6 +95,7 @@ impl ViewerSession {
         topic: String,
         reliable: bool,
         requirements: &PlaybackRequirements,
+        bindings: &WorkspaceBindings,
     ) -> Self {
         let descriptor = StreamDescriptor {
             id: viewer_core::StreamId(1),
@@ -97,7 +108,7 @@ impl ViewerSession {
             time_range: None,
             streams: vec![descriptor],
         };
-        let plan = SessionPlan::build(&catalog, &topic, requirements)
+        let plan = SessionPlan::build(&catalog, &topic, requirements, bindings)
             .expect("the live Camera descriptor matches its configured primary topic");
         Self {
             source: SessionSource::Ros {
@@ -124,6 +135,7 @@ impl ViewerSession {
             path: self.recording_path.clone()?,
             origin: self.playback_view()?.start,
             max_points,
+            odometry_topic: self.plan.odometry_stream()?.topic.clone(),
         })
     }
 

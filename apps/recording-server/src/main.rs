@@ -6,6 +6,7 @@ mod error;
 mod file_reader;
 mod metrics;
 mod recording;
+mod restore_service;
 
 use std::{env, fs, path::PathBuf};
 

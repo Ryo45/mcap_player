@@ -8,9 +8,7 @@ use std::{
     sync::mpsc::{Receiver, Sender, TryRecvError},
     time::Instant,
 };
-use viewer_core::{
-    ArrivalTime, LoadedOdometrySignals, LoadedSignal, SignalId, load_odometry_signals_with_progress,
-};
+use viewer_core::{ArrivalTime, LoadedOdometrySignals, LoadedSignal, SignalId};
 
 pub(crate) struct PlotLoader {
     generation: u64,
@@ -73,6 +71,7 @@ impl PlotLoader {
                     &request.path,
                     request.origin,
                     request.max_points,
+                    &request.odometry_topic,
                     |signals| {
                         let _ = sender.send(PlotLoadResult {
                             generation,
@@ -202,14 +201,21 @@ fn load_signals_from_path(
     path: &PathBuf,
     origin: ArrivalTime,
     max_points: usize,
+    odometry_topic: &str,
     on_progress: impl FnMut(LoadedOdometrySignals),
 ) -> Result<LoadedOdometrySignals> {
     let file = File::open(path).with_context(|| format!("open {} for plot", path.display()))?;
     // SAFETY: this worker owns the read-only mapping for its entire scan.
     let mapping =
         unsafe { Mmap::map(&file) }.with_context(|| format!("map {} for plot", path.display()))?;
-    load_odometry_signals_with_progress(&mapping, origin, max_points, on_progress)
-        .map_err(anyhow::Error::from)
+    viewer_core::load_odometry_signals_for_topic_with_progress(
+        &mapping,
+        origin,
+        max_points,
+        odometry_topic,
+        on_progress,
+    )
+    .map_err(anyhow::Error::from)
 }
 
 #[cfg(test)]
@@ -255,6 +261,7 @@ mod tests {
             path,
             origin,
             max_points: 4_000,
+            odometry_topic: "/odom".into(),
         }
     }
 
@@ -455,9 +462,13 @@ mod tests {
 
     #[test]
     fn partial_result_is_visible_while_full_scan_remains_loading() {
-        let signals =
-            viewer_core::load_odometry_signals(&odometry_mcap(), ArrivalTime(1_000_000_000), 4_000)
-                .unwrap();
+        let signals = viewer_core::load_odometry_signals(
+            &odometry_mcap(),
+            ArrivalTime(1_000_000_000),
+            4_000,
+            "/odom",
+        )
+        .unwrap();
         let mut loader = PlotLoader {
             generation: 1,
             state: PlotLoadState::Loading {
@@ -498,10 +509,12 @@ mod tests {
 
     #[test]
     fn plot_failure_does_not_stop_playback_progress() {
+        let workspace = crate::workspace::NativeWorkspace::default();
         let mut session = ViewerSession::open(
             &camera_fixture(),
             "/camera/front/image/compressed".to_owned(),
-            &viewer_core::PlaybackRequirements::default(),
+            &workspace.data_requirements().playback,
+            workspace.bindings(),
         )
         .unwrap();
         let start = session.playback_view().unwrap().cursor;
@@ -517,10 +530,12 @@ mod tests {
 
     #[test]
     fn playback_progresses_while_plot_loading_is_pending() {
+        let workspace = crate::workspace::NativeWorkspace::default();
         let mut session = ViewerSession::open(
             &camera_fixture(),
             "/camera/front/image/compressed".to_owned(),
-            &viewer_core::PlaybackRequirements::default(),
+            &workspace.data_requirements().playback,
+            workspace.bindings(),
         )
         .unwrap();
         let start = session.playback_view().unwrap().cursor;
@@ -535,15 +550,17 @@ mod tests {
 
     #[test]
     fn session_inspector_reads_bounded_exact_messages_without_moving_playback() {
+        let workspace = crate::workspace::NativeWorkspace::default();
         let session = ViewerSession::open(
             &multimodal_fixture(),
             "/camera/front/image/compressed".to_owned(),
-            &viewer_core::PlaybackRequirements::default(),
+            &workspace.data_requirements().playback,
+            workspace.bindings(),
         )
         .unwrap();
         let cursor = session.playback_view().unwrap().cursor;
 
-        let messages = session.inspect_topic(viewer_core::ODOM_TOPIC, 3).unwrap();
+        let messages = session.inspect_topic("/odom", 3).unwrap();
 
         assert_eq!(messages.len(), 3);
         assert!(

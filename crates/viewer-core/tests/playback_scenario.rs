@@ -8,11 +8,21 @@ use viewer_core::{
     ArrivalTime, CameraController, CameraId, CameraState, CameraStatus, CompressedImage,
     McapPlayback, MeasurementTime, PlaybackCommand, PlaybackPerformance, PlaybackRequirements,
     PlaybackSpeed, PlaybackView, ProcessingCounters, RawMessage, SessionPlan, StageTiming,
-    StreamDescriptor, StreamId, encode_compressed_image_cdr,
+    StreamDescriptor, StreamId, WorkspaceBindings, encode_compressed_image_cdr,
 };
 
 const CAMERA_TOPIC: &str = "/camera/front/image/compressed";
 const START: i64 = 1_000_000_000;
+
+fn bindings() -> WorkspaceBindings {
+    WorkspaceBindings {
+        path_topic: "/planning/path".into(),
+        odometry_topic: "/odom".into(),
+        point_cloud_topic: "/scan".into(),
+        dynamic_tf_topic: "/tf".into(),
+        static_tf_topic: "/tf_static".into(),
+    }
+}
 
 enum PlaybackStep {
     Elapse(Duration),
@@ -47,10 +57,13 @@ impl PlaybackScenario {
     fn run(self) -> PlaybackOutcome {
         let backing = write_mcap(&self.streams, &self.messages);
         let mut playback = McapPlayback::new(backing).unwrap();
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_all_cameras();
         let plan = SessionPlan::build(
             playback.catalog(),
             &self.primary_camera_topic,
-            &PlaybackRequirements::default(),
+            &requirements,
+            &bindings(),
         )
         .unwrap();
         playback.select_streams(plan.selected_stream_ids());
@@ -80,9 +93,8 @@ impl PlaybackScenario {
                         |_, messages| {
                             cameras.reset_for_restore();
                             for message in &messages {
-                                cameras.admit(message);
+                                cameras.restore(message);
                             }
-                            cameras.advance(Duration::ZERO);
                         },
                     )
                     .unwrap(),
@@ -115,8 +127,11 @@ impl PlaybackScenario {
 fn write_mcap(streams: &[StreamDescriptor], messages: &[RawMessage]) -> Vec<u8> {
     let mut bytes = Cursor::new(Vec::new());
     {
-        let mut writer =
-            Writer::with_options(&mut bytes, WriteOptions::new().use_chunks(false)).unwrap();
+        let mut writer = Writer::with_options(
+            &mut bytes,
+            WriteOptions::new().use_chunks(true).chunk_size(Some(128)),
+        )
+        .unwrap();
         let mut channels = HashMap::new();
         for stream in streams {
             let schema = writer
@@ -323,7 +338,7 @@ fn focused_camera_is_presented_at_ten_hz_and_background_cameras_at_five_hz() {
 }
 
 #[test]
-fn seek_restores_the_recent_camera_sample_before_committing() {
+fn seek_restores_the_latest_camera_predecessor_before_committing() {
     let seek_cursor = ArrivalTime(START + 650_000_000);
     let outcome = PlaybackScenario {
         streams: vec![camera_stream(1, CAMERA_TOPIC)],
@@ -384,7 +399,7 @@ fn seek_restores_the_recent_camera_sample_before_committing() {
 }
 
 #[test]
-fn seek_leaves_recent_sample_unavailable_when_bounded_restore_finds_none() {
+fn seek_restores_sparse_predecessor_without_a_bounded_lookback() {
     let seek_cursor = ArrivalTime(START + 50_000_000_000);
     let outcome = PlaybackScenario {
         streams: vec![camera_stream(1, CAMERA_TOPIC)],
@@ -403,9 +418,6 @@ fn seek_leaves_recent_sample_unavailable_when_bounded_restore_finds_none() {
 
     let after_seek = outcome.observations[1];
     assert_eq!(after_seek.playback.cursor, seek_cursor);
-    assert_eq!(after_seek.latest_camera_arrival, None);
-    assert_eq!(
-        after_seek.camera_status,
-        CameraStatus::WaitingForCameraFrame
-    );
+    assert_eq!(after_seek.latest_camera_arrival, Some(ArrivalTime(START)));
+    assert_eq!(after_seek.camera_status, CameraStatus::Ready);
 }

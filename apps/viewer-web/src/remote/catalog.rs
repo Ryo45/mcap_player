@@ -10,9 +10,6 @@ pub(crate) struct RemoteCatalog {
     pub core: SourceCatalog,
     pub recording_id: String,
     pub revision: String,
-    pub start: ArrivalTime,
-    pub end: ArrivalTime,
-    pub end_exclusive: ArrivalTime,
     pub plan: SessionPlan,
     pub selected_streams: Vec<u32>,
 }
@@ -41,7 +38,6 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
     if start >= end_exclusive {
         return Err(RemoteCatalogError("remote time range is empty".into()));
     }
-    let end = ArrivalTime(end_exclusive.0 - 1);
     let supported = remote
         .streams
         .iter()
@@ -71,6 +67,7 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
         &core,
         &primary_camera_topic,
         &crate::playback::web_playback_requirements(),
+        &crate::playback::web_workspace_bindings(),
     )
     .map_err(|error| RemoteCatalogError(error.to_string()))?;
     let mut selected = plan
@@ -84,9 +81,6 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
         core,
         recording_id: remote.recording_id.clone(),
         revision: remote.recording_revision.clone(),
-        start,
-        end,
-        end_exclusive,
         plan,
         selected_streams: selected,
     })
@@ -113,7 +107,6 @@ fn to_arrival(value: u64) -> Result<ArrivalTime, RemoteCatalogError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use viewer_core::ODOM_TOPIC;
     use viewer_remote_protocol::{
         CatalogResponse, RemoteTimeRange, StreamDescriptor, StreamSemantic, TimestampNs,
     };
@@ -151,7 +144,7 @@ mod tests {
                     "sensor_msgs/msg/CompressedImage",
                     "ros2-cdr",
                 ),
-                stream(3, ODOM_TOPIC, "nav_msgs/msg/Odometry", "ros2-cdr"),
+                stream(3, "/odom", "nav_msgs/msg/Odometry", "ros2-cdr"),
                 stream(4, "/extra", "example/msg/Extra", "ros2-cdr"),
                 stream(9, "/future", "example/msg/Future", "viewer.future.v1"),
             ],
@@ -161,9 +154,13 @@ mod tests {
     #[test]
     fn adapts_supported_streams_and_selects_camera_and_odometry() {
         let adapted = adapt_catalog(&catalog()).unwrap();
-        assert_eq!(adapted.start, ArrivalTime(100));
-        assert_eq!(adapted.end, ArrivalTime(199));
-        assert_eq!(adapted.end_exclusive, ArrivalTime(200));
+        assert_eq!(
+            adapted.core.time_range,
+            Some(RecordingTimeRange {
+                start: ArrivalTime(100),
+                end_exclusive: ArrivalTime(200),
+            })
+        );
         assert_eq!(adapted.plan.primary_camera_topic(), Some("/camera"));
         assert_eq!(adapted.selected_streams, vec![3, 7, 8]);
         assert_eq!(adapted.core.streams.len(), 4);

@@ -12,6 +12,7 @@ pub(crate) use client::RemoteApiClient;
 pub(crate) use client::RemoteBatchPage;
 #[cfg(target_arch = "wasm32")]
 pub(crate) use client::{RemoteBatchRequest, RemoteClientError, RequestGeneration};
+pub(crate) use loader::RemoteRestoreLoader;
 pub(crate) use loader::RemoteWindowLoader;
 #[cfg(test)]
 pub(crate) use loader::assemble_pages_for_test;

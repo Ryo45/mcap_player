@@ -199,10 +199,13 @@ mod tests {
                 timing: StreamTimingSummary::default(),
             }],
         };
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_all_cameras();
         let plan = SessionPlan::build(
             &catalog,
             "/camera/front/image/compressed",
-            &PlaybackRequirements::default(),
+            &requirements,
+            workspace.bindings(),
         )
         .unwrap();
         workspace.configure_session(&plan);

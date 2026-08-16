@@ -27,6 +27,46 @@ pub(crate) struct RemoteBatchRequest {
     pub cursor: Option<String>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct RemoteRestoreRequest {
+    pub recording_id: String,
+    pub revision: String,
+    pub target_ns: u64,
+    pub latest_streams: Vec<u32>,
+    pub history_streams: Vec<u32>,
+    pub history_start_ns: Option<u64>,
+    pub persistent_streams: Vec<u32>,
+}
+
+impl RemoteRestoreRequest {
+    fn query_pairs(&self) -> Vec<(&'static str, String)> {
+        let streams = |values: &[u32]| {
+            values
+                .iter()
+                .map(u32::to_string)
+                .collect::<Vec<_>>()
+                .join(",")
+        };
+        let mut pairs = vec![
+            ("revision", self.revision.clone()),
+            ("target_ns", self.target_ns.to_string()),
+        ];
+        if !self.latest_streams.is_empty() {
+            pairs.push(("latest_streams", streams(&self.latest_streams)));
+        }
+        if !self.history_streams.is_empty() {
+            pairs.push(("history_streams", streams(&self.history_streams)));
+        }
+        if let Some(start) = self.history_start_ns {
+            pairs.push(("history_start_ns", start.to_string()));
+        }
+        if !self.persistent_streams.is_empty() {
+            pairs.push(("persistent_streams", streams(&self.persistent_streams)));
+        }
+        pairs
+    }
+}
+
 impl RemoteBatchRequest {
     fn query_pairs(&self) -> Vec<(&'static str, String)> {
         let mut pairs = vec![
@@ -173,6 +213,45 @@ impl RemoteApiClient {
             .map_err(js_error)?;
         let body = Bytes::from(Uint8Array::new(&buffer).to_vec());
         validate_batch_response(metadata, body, &request.revision)
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) async fn fetch_restore(
+        &self,
+        request: &RemoteRestoreRequest,
+        abort: Option<&AbortSignal>,
+    ) -> Result<RemoteBatchPage, RemoteClientError> {
+        let recording_id = encode_path_segment(&request.recording_id);
+        let url = Url::new(&format!(
+            "{}/v1/recordings/{recording_id}/restore",
+            self.base_url
+        ))
+        .map_err(js_error)?;
+        let search = url.search_params();
+        for (name, value) in request.query_pairs() {
+            search.set(name, &value);
+        }
+        let response = fetch(&url.href(), abort).await?;
+        ensure_success(&response).await?;
+        let headers = response.headers();
+        let metadata = BatchResponseMetadata {
+            content_type: headers.get("content-type").map_err(js_error)?,
+            recording_revision: headers.get(RECORDING_REVISION_HEADER).map_err(js_error)?,
+            complete: headers.get(BATCH_COMPLETE_HEADER).map_err(js_error)?,
+            next_cursor: headers.get(NEXT_CURSOR_HEADER).map_err(js_error)?,
+            message_count: headers.get(MESSAGE_COUNT_HEADER).map_err(js_error)?,
+        };
+        let buffer = JsFuture::from(response.array_buffer().map_err(js_error)?)
+            .await
+            .map_err(js_error)?;
+        let body = Bytes::from(Uint8Array::new(&buffer).to_vec());
+        let page = validate_batch_response(metadata, body, &request.revision)?;
+        if !page.complete {
+            return Err(RemoteClientError::new(
+                "restore response must be complete and unpaginated",
+            ));
+        }
+        Ok(page)
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -371,6 +450,24 @@ mod tests {
         assert!(pairs.contains(&("start_ns", "18446744073709551000".into())));
         assert!(pairs.contains(&("end_ns", "18446744073709551615".into())));
         assert_eq!(encode_path_segment(&request.recording_id), "run%20one");
+    }
+
+    #[test]
+    fn restore_query_preserves_exact_timestamp_and_closed_stream_sets() {
+        let request = RemoteRestoreRequest {
+            recording_id: "demo".into(),
+            revision: "revision".into(),
+            target_ns: u64::MAX,
+            latest_streams: vec![1, 2],
+            history_streams: vec![3],
+            history_start_ns: Some(18_446_744_073_000_000_000),
+            persistent_streams: vec![4],
+        };
+        let pairs = request.query_pairs();
+        assert!(pairs.contains(&("target_ns", "18446744073709551615".into())));
+        assert!(pairs.contains(&("latest_streams", "1,2".into())));
+        assert!(pairs.contains(&("history_streams", "3".into())));
+        assert!(pairs.contains(&("persistent_streams", "4".into())));
     }
 
     #[test]

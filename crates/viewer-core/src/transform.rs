@@ -1,7 +1,11 @@
 use crate::{ArrivalTime, MeasurementTime, TransformStamped};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    time::Duration,
+};
 
-const MAX_DYNAMIC_SAMPLES_PER_EDGE: usize = 8_192;
+/// One policy controls both normal-playback retention and seek history restoration.
+pub const DYNAMIC_TF_HISTORY: Duration = Duration::from_secs(1);
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TransformBatch {
@@ -131,12 +135,10 @@ impl TransformState {
                 {
                     history.insert(measurement_time, edge);
                 }
-                while history.len() > MAX_DYNAMIC_SAMPLES_PER_EDGE {
-                    let Some(oldest) = history.first_key_value().map(|(time, _)| *time) else {
-                        break;
-                    };
-                    history.remove(&oldest);
-                }
+                let history_start = batch.arrival_time.0.saturating_sub(
+                    i64::try_from(DYNAMIC_TF_HISTORY.as_nanos()).unwrap_or(i64::MAX),
+                );
+                history.retain(|_, edge| edge.arrival_time.0 >= history_start);
             }
         }
     }
@@ -368,6 +370,40 @@ mod tests {
         assert_eq!(
             state
                 .transform_points_at("base", "odom", MeasurementTime(200), &[[0.0; 3]])
+                .unwrap(),
+            vec![[2.0, 0.0, 0.0]]
+        );
+    }
+
+    #[test]
+    fn dynamic_retention_uses_the_same_time_window_as_seek_restore() {
+        let mut state = TransformState::default();
+        let history_ns = i64::try_from(DYNAMIC_TF_HISTORY.as_nanos()).unwrap();
+        state.apply(TransformBatch {
+            arrival_time: ArrivalTime(0),
+            is_static: false,
+            transforms: vec![timed_transform(0, "odom", "base", [1.0, 0.0, 0.0])],
+        });
+        state.apply(TransformBatch {
+            arrival_time: ArrivalTime(history_ns + 1),
+            is_static: false,
+            transforms: vec![timed_transform(
+                history_ns + 1,
+                "odom",
+                "base",
+                [2.0, 0.0, 0.0],
+            )],
+        });
+
+        assert!(
+            state
+                .transform_points_at("base", "odom", MeasurementTime(0), &[[0.0; 3]])
+                .is_none(),
+            "normal playback must not retain more dynamic TF history than seek restores"
+        );
+        assert_eq!(
+            state
+                .transform_points_at("base", "odom", MeasurementTime(history_ns + 1), &[[0.0; 3]],)
                 .unwrap(),
             vec![[2.0, 0.0, 0.0]]
         );

@@ -2,8 +2,28 @@ use std::{fs, path::PathBuf, time::Duration};
 use viewer_core::{
     CameraCalibrationSet, CameraController, McapPlayback, McapSource, OdometryController,
     PathController, PlaybackRequirements, RestorePlanner, SceneController, SessionPlan,
-    TransformController,
+    TransformController, WorkspaceBindings,
 };
+
+fn bindings() -> WorkspaceBindings {
+    WorkspaceBindings {
+        path_topic: "/planning/path".into(),
+        odometry_topic: "/odom".into(),
+        point_cloud_topic: "/scan".into(),
+        dynamic_tf_topic: "/tf".into(),
+        static_tf_topic: "/tf_static".into(),
+    }
+}
+
+fn requirements() -> PlaybackRequirements {
+    let mut requirements = PlaybackRequirements::empty();
+    requirements.require_all_cameras();
+    requirements.require_path();
+    requirements.require_odometry();
+    requirements.require_point_cloud();
+    requirements.require_transforms();
+    requirements
+}
 
 fn fixture() -> Vec<u8> {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -17,7 +37,8 @@ fn every_scan_resolves_to_world_at_its_measurement_time() {
     let plan = SessionPlan::build(
         source.catalog(),
         "/camera/front/image/compressed",
-        &PlaybackRequirements::default(),
+        &requirements(),
+        &bindings(),
     )
     .unwrap();
     source.select_streams(plan.selected_stream_ids());
@@ -69,7 +90,8 @@ fn seven_camera_fixture_routes_exact_messages_to_concrete_controllers() {
     let plan = SessionPlan::build(
         playback.catalog(),
         "/camera/front/image/compressed",
-        &PlaybackRequirements::default(),
+        &requirements(),
+        &bindings(),
     )
     .unwrap();
     playback.select_streams(plan.selected_stream_ids());
@@ -175,13 +197,14 @@ fn seven_camera_fixture_routes_exact_messages_to_concrete_controllers() {
 }
 
 #[test]
-fn bounded_restore_matches_sequential_recent_feature_state() {
+fn indexed_restore_matches_sequential_feature_values() {
     let bytes = fixture();
     let mut sequential_source = McapSource::new(bytes.as_slice()).unwrap();
     let plan = SessionPlan::build(
         sequential_source.catalog(),
         "/camera/front/image/compressed",
-        &PlaybackRequirements::default(),
+        &requirements(),
+        &bindings(),
     )
     .unwrap();
     sequential_source.select_streams(plan.selected_stream_ids());
@@ -193,13 +216,14 @@ fn bounded_restore_matches_sequential_recent_feature_state() {
     let mut sequential_transforms = TransformController::new(&plan);
     let mut sequential_scene = SceneController::new(&plan);
     for message in sequential_source.read_until(target).unwrap() {
-        sequential_cameras.admit(&message);
+        // Camera seek semantics are exact latest-before rather than reproduction of the
+        // presentation-rate scheduler, so build the canonical per-Camera latest value directly.
+        sequential_cameras.restore(&message);
         sequential_path.process(&message);
         sequential_odometry.process(&message);
         sequential_transforms.process(&message);
         sequential_scene.process(&message);
     }
-    sequential_cameras.advance(Duration::ZERO);
 
     let restore_plan = RestorePlanner::new(sequential_source.catalog())
         .plan(target, plan.restore_inputs())
@@ -211,6 +235,8 @@ fn bounded_restore_matches_sequential_recent_feature_state() {
     let mut restored_scene = SceneController::new(&plan);
     let mut playback = McapPlayback::new(bytes.as_slice()).unwrap();
     playback.select_streams(plan.selected_stream_ids());
+    let persistent = restore_plan.persistent.clone();
+    playback.bootstrap_persistent(&persistent).unwrap();
     playback
         .seek_with(&restore_plan, |restore_target, messages| {
             restored_cameras.reset_for_restore();
@@ -219,13 +245,12 @@ fn bounded_restore_matches_sequential_recent_feature_state() {
             restored_transforms.reset_for_restore(restore_target);
             restored_scene.reset_for_restore();
             for message in &messages {
-                restored_cameras.admit(message);
+                restored_cameras.restore(message);
                 restored_path.process(message);
                 restored_odometry.process(message);
                 restored_transforms.process(message);
                 restored_scene.process(message);
             }
-            restored_cameras.advance(Duration::ZERO);
         })
         .unwrap();
 
@@ -240,6 +265,13 @@ fn bounded_restore_matches_sequential_recent_feature_state() {
         .map(|(camera, frame)| (*camera, frame.arrival_time))
         .collect::<Vec<_>>();
     assert_eq!(restored_camera_times, sequential_camera_times);
+    for (camera_id, sequential) in sequential_cameras.state().frames() {
+        assert_eq!(
+            restored_cameras.state().latest_for(*camera_id),
+            Some(sequential),
+            "Camera restore must preserve the exact decoded payload and metadata",
+        );
+    }
     assert_eq!(
         restored_path
             .state()
@@ -249,6 +281,10 @@ fn bounded_restore_matches_sequential_recent_feature_state() {
             .state()
             .latest()
             .map(|frame| frame.arrival_time)
+    );
+    assert_eq!(
+        restored_path.state().latest(),
+        sequential_path.state().latest()
     );
     assert_eq!(
         restored_odometry
@@ -261,6 +297,10 @@ fn bounded_restore_matches_sequential_recent_feature_state() {
             .map(|frame| frame.arrival_time)
     );
     assert_eq!(
+        restored_odometry.state().latest(),
+        sequential_odometry.state().latest()
+    );
+    assert_eq!(
         restored_scene
             .point_cloud()
             .latest()
@@ -271,8 +311,29 @@ fn bounded_restore_matches_sequential_recent_feature_state() {
             .map(|frame| frame.arrival_time)
     );
     assert_eq!(
+        restored_scene.point_cloud().latest(),
+        sequential_scene.point_cloud().latest()
+    );
+    assert_eq!(
         restored_transforms.state().static_len(),
         sequential_transforms.state().static_len()
+    );
+    let scan = sequential_scene.point_cloud().latest().unwrap();
+    let point = [[1.0, 0.0, 0.0]];
+    assert_eq!(
+        restored_transforms.state().transform_points_at(
+            &scan.frame_id,
+            "odom",
+            scan.measurement_time,
+            &point,
+        ),
+        sequential_transforms.state().transform_points_at(
+            &scan.frame_id,
+            "odom",
+            scan.measurement_time,
+            &point,
+        ),
+        "seek and sequential playback must resolve the same concrete transform",
     );
     assert_eq!(playback.clock().cursor(), target);
 }

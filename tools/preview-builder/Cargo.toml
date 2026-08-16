@@ -9,6 +9,7 @@ anyhow.workspace = true
 image.workspace = true
 mcap = { workspace = true, features = ["lz4", "zstd"] }
 memmap2.workspace = true
+serde_json.workspace = true
 viewer-core = { path = "../../crates/viewer-core" }
 viewer-preview-mcap = { path = "../../crates/viewer-preview-mcap" }
 

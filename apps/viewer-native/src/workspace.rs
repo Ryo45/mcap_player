@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 use viewer_core::{
     ArrivalTime, CameraController, CameraId, OdometryController, PathController, PlaybackCommand,
     PlaybackPerformance, PlaybackView, PlotPanelState, ProcessingCounters, RawMessage, SessionPlan,
-    StageTiming, TransformController,
+    StageTiming, TransformController, WorkspaceBindings,
 };
 use viewer_layout::{
     CURRENT_LAYOUT_SCHEMA_VERSION, LayoutDocument, LayoutNode, PanelId, PanelNode,
@@ -17,6 +17,7 @@ use viewer_layout::{
 
 const BUNDLED_DEFAULT_LAYOUT: &str = include_str!("../../../config/layouts/native_default.json");
 const BUNDLED_SHOWCASE_LAYOUT: &str = include_str!("../../../config/layouts/native_showcase.json");
+const BUNDLED_WORKSPACE_BINDINGS: &str = include_str!("../../../config/workspace_bindings.json");
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(crate) enum WorkspaceLayout {
@@ -38,6 +39,7 @@ pub(crate) struct NativeWorkspace {
     pub(crate) layout: LayoutDocument,
     pub(crate) panels: PanelRuntimeStore,
     pub(crate) interaction: ViewerInteractionState,
+    bindings: WorkspaceBindings,
     scheduler_focused_camera: Option<CameraId>,
     pub(crate) camera_controller: Option<CameraController>,
     pub(crate) path_controller: Option<PathController>,
@@ -121,6 +123,7 @@ impl NativeWorkspace {
             layout: document,
             panels: runtime.store,
             interaction: ViewerInteractionState::default(),
+            bindings: bundled_workspace_bindings(),
             scheduler_focused_camera: None,
             camera_controller: None,
             path_controller: None,
@@ -150,6 +153,7 @@ impl NativeWorkspace {
             layout: document,
             panels: runtime.store,
             interaction: ViewerInteractionState::default(),
+            bindings: bundled_workspace_bindings(),
             scheduler_focused_camera: None,
             camera_controller: None,
             path_controller: None,
@@ -162,6 +166,10 @@ impl NativeWorkspace {
                 "Bundled layout could not be loaded; using emergency layout: {error}"
             )],
         }
+    }
+
+    pub(crate) fn bindings(&self) -> &WorkspaceBindings {
+        &self.bindings
     }
 
     pub(crate) fn reset_for_source(&mut self, focused_camera: Option<CameraId>) {
@@ -216,6 +224,7 @@ impl NativeWorkspace {
     }
 
     pub(crate) fn restore_messages(&mut self, target: ArrivalTime, messages: Vec<RawMessage>) {
+        let started = Instant::now();
         if let Some(controller) = &mut self.camera_controller {
             controller.reset_for_restore();
         }
@@ -231,7 +240,28 @@ impl NativeWorkspace {
         if let Some(controller) = &mut self.scene_controller {
             controller.reset_for_restore();
         }
-        self.process_messages(Duration::ZERO, messages);
+        for message in &messages {
+            let mut matched = false;
+            if let Some(controller) = &mut self.camera_controller {
+                matched |= controller.restore(message);
+            }
+            if let Some(controller) = &mut self.path_controller {
+                matched |= controller.process(message);
+            }
+            if let Some(controller) = &mut self.odometry_controller {
+                matched |= controller.process(message);
+            }
+            if let Some(controller) = &mut self.transform_controller {
+                matched |= controller.process(message);
+            }
+            if let Some(controller) = &mut self.scene_controller {
+                matched |= controller.process(message);
+            }
+            if !matched {
+                self.unknown_streams = self.unknown_streams.saturating_add(1);
+            }
+        }
+        self.processing_time.record(started.elapsed());
     }
 
     pub(crate) fn cameras(&self) -> &CameraController {
@@ -346,6 +376,11 @@ impl NativeWorkspace {
     }
 }
 
+fn bundled_workspace_bindings() -> WorkspaceBindings {
+    serde_json::from_str(BUNDLED_WORKSPACE_BINDINGS)
+        .expect("bundled workspace bindings must be valid")
+}
+
 impl Default for NativeWorkspace {
     fn default() -> Self {
         Self::load_bundled_or_fallback(WorkspaceLayout::Standard)
@@ -378,7 +413,12 @@ mod tests {
         assert_eq!(workspace.panel("bev-main").kind_name(), "bev");
         assert_eq!(workspace.panel("speed-main").kind_name(), "plot");
         assert_eq!(workspace.panel("scene-main").kind_name(), "scene-3d");
-        let expected_playback = viewer_core::PlaybackRequirements::default();
+        let mut expected_playback = viewer_core::PlaybackRequirements::empty();
+        expected_playback.require_all_cameras();
+        expected_playback.require_path();
+        expected_playback.require_odometry();
+        expected_playback.require_point_cloud();
+        expected_playback.require_transforms();
         assert_eq!(
             workspace.data_requirements(),
             PanelDataRequirements {

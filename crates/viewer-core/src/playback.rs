@@ -37,6 +37,7 @@ pub struct McapPlayback<B: AsRef<[u8]>> {
     source: McapSource<B>,
     clock: PlaybackClock,
     source_read: StageTiming,
+    persistent_archive: Vec<RawMessage>,
 }
 
 impl<B: AsRef<[u8]>> McapPlayback<B> {
@@ -47,6 +48,7 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
             source,
             clock: PlaybackClock::new(start, end),
             source_read: StageTiming::default(),
+            persistent_archive: Vec::new(),
         })
     }
 
@@ -60,6 +62,17 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
 
     pub fn query_range(&self, query: &RangeQuery) -> Result<RangeQueryResult, RangeQueryError> {
         self.source.query_range(query)
+    }
+
+    /// Loads explicitly persistent inputs once. The archive is small feature data, not a generic
+    /// temporal store, and is replayed transactionally during later seeks.
+    pub fn bootstrap_persistent(&mut self, streams: &[StreamId]) -> Result<(), McapOpenError> {
+        self.persistent_archive = if streams.is_empty() {
+            Vec::new()
+        } else {
+            self.source.indexed_streams(streams)?.messages
+        };
+        Ok(())
     }
 
     /// Reads the candidate interval, lets the caller process it, then commits the visible cursor.
@@ -88,14 +101,30 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
         plan: &RestorePlan,
         restore: impl FnOnce(crate::ArrivalTime, Vec<RawMessage>),
     ) -> Result<(), McapOpenError> {
-        let mut messages = Vec::new();
-        for read in &plan.reads {
-            let mut staging_source = McapSource::new(self.source.backing_bytes())?;
-            staging_source.select_streams(read.streams.iter().copied());
-            staging_source.seek(read.range.start)?;
-            let inclusive_end = crate::ArrivalTime(read.range.end_exclusive.0 - 1);
-            messages.extend(staging_source.read_until(inclusive_end)?);
+        let mut messages = self
+            .source
+            .latest_before(&plan.latest_before, plan.target)?
+            .messages;
+        for read in &plan.histories {
+            messages.extend(
+                self.source
+                    .indexed_range(&read.streams, read.range)?
+                    .messages,
+            );
         }
+        let persistent = plan
+            .persistent
+            .iter()
+            .copied()
+            .collect::<std::collections::HashSet<_>>();
+        messages.extend(
+            self.persistent_archive
+                .iter()
+                .filter(|message| {
+                    persistent.contains(&message.stream_id) && message.arrival_time <= plan.target
+                })
+                .cloned(),
+        );
         messages.sort_by_key(|message| (message.arrival_time, message.stream_id.0));
 
         let after_target = crate::ArrivalTime(plan.target.0.saturating_add(1));
@@ -185,7 +214,8 @@ mod tests {
         let mut restored = false;
         let restore_plan = RestorePlan {
             target: corrupt_target,
-            reads: vec![crate::RestoreRead {
+            latest_before: Vec::new(),
+            histories: vec![crate::RestoreRead {
                 streams: playback
                     .catalog()
                     .streams
@@ -198,6 +228,7 @@ mod tests {
                 )
                 .unwrap(),
             }],
+            persistent: Vec::new(),
         };
 
         assert!(

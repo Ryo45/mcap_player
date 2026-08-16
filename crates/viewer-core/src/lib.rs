@@ -41,10 +41,7 @@ pub use cdr::{
     decode_odometry, decode_path, decode_tf_message, encode_compressed_image_cdr,
     encode_tf_message_cdr,
 };
-pub use clock::{
-    PlaybackClock, PlaybackCommand, PlaybackLoadState, PlaybackSpeed, PlaybackView, SeekFidelity,
-    SeekRequest,
-};
+pub use clock::{PlaybackClock, PlaybackCommand, PlaybackLoadState, PlaybackSpeed, PlaybackView};
 pub use controllers::{
     CameraController, OdometryController, PathController, ProcessingCounters, SceneController,
     TransformController,
@@ -56,7 +53,7 @@ pub use data_window::{
 pub use frame_builder::{
     BevFrameBuilder, BevSnapshot, SceneDiagnostics, SceneFrameBuilder, SceneSnapshot, SceneTfError,
 };
-pub use mcap_source::{McapOpenError, McapSource};
+pub use mcap_source::{IndexedMessages, IndexedReadDiagnostics, McapOpenError, McapSource};
 pub use performance::{
     PlaybackPerformance, PresentationMetrics, PresentationSnapshot, StageTiming,
 };
@@ -64,7 +61,7 @@ pub use playback::{McapPlayback, McapPlaybackError, PlaybackEffect};
 pub use plot::{
     LoadedOdometrySignals, LoadedSignal, PlotMode, PlotPanelState, PlotSeries, PlotViewport,
     SignalId, SignalSample, arrival_time_from_plot_x, cursor_seconds, downsample_min_max,
-    followed_viewport, load_odometry_signals, load_odometry_signals_with_progress,
+    followed_viewport, load_odometry_signals, load_odometry_signals_for_topic_with_progress,
     load_speed_signal, load_yaw_rate_signal, sample_at_or_before, should_shift_viewport,
 };
 pub use point_cloud::{PointCloudFrame, PointCloudState};
@@ -80,12 +77,10 @@ pub use preview::{
 pub use range_query::{QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult};
 pub use raw_message::RawMessage;
 pub use restore::{
-    DEFAULT_RECENT_LOOKBACK, MAX_RECENT_LOOKBACK, MIN_RECENT_LOOKBACK, RECENT_SAMPLE_PERIODS,
     RestoreInput, RestorePlan, RestorePlanError, RestorePlanner, RestoreRead, RestoreSemantics,
 };
 pub use session_plan::{
-    CameraRoute, ODOM_TOPIC, PATH_TOPIC, PlaybackRequirements, SCAN_TOPIC, SessionPlan,
-    SessionPlanError, TF_STATIC_TOPIC, TF_TOPIC,
+    CameraRoute, PlaybackRequirements, SessionPlan, SessionPlanError, WorkspaceBindings,
 };
 pub use source_identity::{
     MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity, mcap_summary_fingerprint,
@@ -95,4 +90,4 @@ pub use stream::{
 };
 pub use telemetry::{TelemetryFrame, TelemetryState};
 pub use time::{ArrivalTime, MeasurementTime};
-pub use transform::{TransformBatch, TransformState};
+pub use transform::{DYNAMIC_TF_HISTORY, TransformBatch, TransformState};

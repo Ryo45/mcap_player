@@ -270,7 +270,8 @@ pub(crate) fn feed_controller(
         message_encoding: channel.message_encoding.clone(),
         timing: viewer_core::StreamTimingSummary::default(),
     };
-    let (requirements, feature) = if topic == viewer_core::ODOM_TOPIC {
+    let bindings = crate::playback::web_workspace_bindings();
+    let (requirements, feature) = if topic == bindings.odometry_topic {
         let mut requirements = PlaybackRequirements::empty();
         requirements.require_odometry();
         (requirements, "odometry")
@@ -291,8 +292,13 @@ pub(crate) fn feed_controller(
         time_range: None,
         streams: vec![descriptor],
     };
-    let plan =
-        SessionPlan::build(&catalog, topic, &requirements).map_err(|error| error.to_string())?;
+    let plan = SessionPlan::build(
+        &catalog,
+        topic,
+        &requirements,
+        &crate::playback::web_workspace_bindings(),
+    )
+    .map_err(|error| error.to_string())?;
     let message = RawMessage {
         stream_id,
         arrival_time: arrival,
@@ -841,7 +847,9 @@ mod tests {
         let channel = summary
             .channels
             .values()
-            .find(|channel| channel.topic == viewer_core::ODOM_TOPIC)
+            .find(|channel| {
+                channel.topic == crate::playback::web_workspace_bindings().odometry_topic
+            })
             .or_else(|| {
                 summary.channels.values().find(|channel| {
                     channel

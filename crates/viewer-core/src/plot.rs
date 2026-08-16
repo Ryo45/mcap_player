@@ -1,4 +1,4 @@
-use crate::{ArrivalTime, McapOpenError, MeasurementTime, ODOM_TOPIC, decode_odometry};
+use crate::{ArrivalTime, McapOpenError, MeasurementTime, decode_odometry};
 use mcap::MessageStream;
 use serde::{Deserialize, Serialize};
 
@@ -203,47 +203,57 @@ pub fn downsample_min_max(samples: &[SignalSample], max_points: usize) -> Vec<Si
     output
 }
 
-/// Scans `/odom` in an MCAP and builds the speed signal.
+/// Scans the configured Odometry topic in an MCAP and builds the speed signal.
 ///
 /// This function is synchronous by design; native callers run it on their plot-loading worker.
 pub fn load_speed_signal(
     backing: &[u8],
     origin: ArrivalTime,
     max_display_points: usize,
+    odometry_topic: &str,
 ) -> Result<Option<LoadedSignal>, McapOpenError> {
-    Ok(load_odometry_signals(backing, origin, max_display_points)?.speed)
+    Ok(load_odometry_signals(backing, origin, max_display_points, odometry_topic)?.speed)
 }
 
-/// Scans `/odom` in an MCAP and builds the yaw-rate signal.
+/// Scans the configured Odometry topic in an MCAP and builds the yaw-rate signal.
 ///
 /// This remains a plot query: it does not add history to continuous feature-controller state.
 pub fn load_yaw_rate_signal(
     backing: &[u8],
     origin: ArrivalTime,
     max_display_points: usize,
+    odometry_topic: &str,
 ) -> Result<Option<LoadedSignal>, McapOpenError> {
-    Ok(load_odometry_signals(backing, origin, max_display_points)?.yaw_rate)
+    Ok(load_odometry_signals(backing, origin, max_display_points, odometry_topic)?.yaw_rate)
 }
 
-/// Scans `/odom` once and derives both concrete signals used by the Native plot panels.
+/// Scans the configured Odometry topic once and derives both Native plot signals.
 pub fn load_odometry_signals(
     backing: &[u8],
     origin: ArrivalTime,
     max_display_points: usize,
+    odometry_topic: &str,
 ) -> Result<LoadedOdometrySignals, McapOpenError> {
-    load_odometry_signals_with_progress(backing, origin, max_display_points, |_| {})
+    load_odometry_signals_for_topic_with_progress(
+        backing,
+        origin,
+        max_display_points,
+        odometry_topic,
+        |_| {},
+    )
 }
 
-/// Scans `/odom` once, periodically publishing bounded snapshots while retaining the exact final
-/// result.
+/// Scans the configured Odometry topic once, periodically publishing bounded snapshots while
+/// retaining the exact final result.
 ///
 /// Native uses the progress callback to avoid keeping large compressed recordings behind a
 /// loading placeholder until the complete sequential query finishes. The callback remains a
 /// concrete plot-query concern; it does not feed signal history into continuous controller state.
-pub fn load_odometry_signals_with_progress(
+pub fn load_odometry_signals_for_topic_with_progress(
     backing: &[u8],
     origin: ArrivalTime,
     max_display_points: usize,
+    odometry_topic: &str,
     mut on_progress: impl FnMut(LoadedOdometrySignals),
 ) -> Result<LoadedOdometrySignals, McapOpenError> {
     let mut speed_samples = Vec::new();
@@ -251,7 +261,7 @@ pub fn load_odometry_signals_with_progress(
     let mut odometry_count = 0_usize;
     for message in MessageStream::new(backing)? {
         let message = message?;
-        if message.channel.topic != ODOM_TOPIC
+        if message.channel.topic != odometry_topic
             || message
                 .channel
                 .schema
@@ -414,7 +424,7 @@ mod tests {
                 .add_schema("nav_msgs/msg/Odometry", "ros2msg", b"")
                 .unwrap();
             let channel = writer
-                .add_channel(schema, ODOM_TOPIC, "cdr", &BTreeMap::new())
+                .add_channel(schema, "/odom", "cdr", &BTreeMap::new())
                 .unwrap();
             for (sequence, &(arrival, measurement, vx, vy, yaw_rate)) in messages.iter().enumerate()
             {
@@ -496,7 +506,7 @@ mod tests {
             (1_500_000_000, 10_000_000_000, 3.0, 4.0, 0.25),
             (2_500_000_000, 11_000_000_000, 5.0, 12.0, -0.5),
         ]);
-        let loaded = load_speed_signal(&bytes, origin, 4)
+        let loaded = load_speed_signal(&bytes, origin, 4, "/odom")
             .unwrap()
             .expect("speed signal");
         assert_eq!(loaded.samples.len(), 2);
@@ -517,7 +527,7 @@ mod tests {
             (1_500_000_000, 10_000_000_000, 3.0, 4.0, 0.25),
             (2_500_000_000, 11_000_000_000, 5.0, 12.0, -0.5),
         ]);
-        let loaded = load_yaw_rate_signal(&bytes, origin, 4)
+        let loaded = load_yaw_rate_signal(&bytes, origin, 4, "/odom")
             .unwrap()
             .expect("yaw-rate signal");
         assert_eq!(loaded.display.signal_id, SignalId::YawRate);

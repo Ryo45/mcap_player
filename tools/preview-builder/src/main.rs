@@ -17,6 +17,8 @@ use viewer_core::{
 };
 use viewer_preview_mcap::{PreviewMcapWriter, source_fingerprint};
 
+const WORKSPACE_BINDINGS: &str = include_str!("../../../config/workspace_bindings.json");
+
 const CAMERA_BUCKET_NS: i64 = 1_000_000_000;
 const SPEED_BUCKET_NS: i64 = 100_000_000;
 const TRAJECTORY_INTERVAL_NS: i64 = 500_000_000;
@@ -57,6 +59,8 @@ struct SpeedAccumulator {
 
 fn main() -> Result<()> {
     let options = parse_options()?;
+    let bindings: viewer_core::WorkspaceBindings =
+        serde_json::from_str(WORKSPACE_BINDINGS).context("parse bundled workspace bindings")?;
     if options.output.exists() && !options.force {
         bail!(
             "{} already exists; pass --force to overwrite it",
@@ -124,7 +128,7 @@ fn main() -> Result<()> {
                 }
                 Err(_) => report.skipped_camera_frames += 1,
             }
-        } else if message.channel.topic == viewer_core::ODOM_TOPIC {
+        } else if message.channel.topic == bindings.odometry_topic {
             let Ok(odometry) = decode_odometry(&message.data) else {
                 continue;
             };

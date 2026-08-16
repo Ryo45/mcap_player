@@ -28,6 +28,7 @@ use crate::{
     config::{Limits, ServerConfig},
     error::ServerError,
     recording::Recording,
+    restore_service::{RestoreRequest, read_restore},
 };
 
 #[derive(Clone)]
@@ -82,9 +83,98 @@ pub(crate) fn router(config: &ServerConfig, state: AppState) -> Result<Router, S
         .route("/v1/recordings", get(list_recordings))
         .route("/v1/recordings/{recording_id}/catalog", get(catalog))
         .route("/v1/recordings/{recording_id}/messages", get(messages))
+        .route("/v1/recordings/{recording_id}/restore", get(restore))
         .layer(TraceLayer::new_for_http())
         .layer(cors)
         .with_state(state))
+}
+
+#[derive(Debug, Deserialize)]
+struct RestoreQuery {
+    revision: String,
+    target_ns: String,
+    latest_streams: Option<String>,
+    history_streams: Option<String>,
+    history_start_ns: Option<String>,
+    persistent_streams: Option<String>,
+}
+
+async fn restore(
+    State(state): State<AppState>,
+    Path(recording_id): Path<String>,
+    query: Result<Query<RestoreQuery>, QueryRejection>,
+) -> Result<Response, ServerError> {
+    let Query(query) = query.map_err(|_| {
+        ServerError::bad_request("invalid_query", "restore query is missing or malformed")
+    })?;
+    let request_id = state.request_sequence.fetch_add(1, Ordering::Relaxed);
+    let recording = find_recording(&state, &recording_id)?;
+    let request = RestoreRequest {
+        revision: query.revision,
+        latest_streams: parse_optional_streams(query.latest_streams.as_deref())?,
+        history_streams: parse_optional_streams(query.history_streams.as_deref())?,
+        history_start_ns: query
+            .history_start_ns
+            .as_deref()
+            .map(|value| parse_timestamp("history_start_ns", value))
+            .transpose()?
+            .unwrap_or_else(|| recording.catalog.time_range.start_ns.get()),
+        persistent_streams: parse_optional_streams(query.persistent_streams.as_deref())?,
+        target_ns: parse_timestamp("target_ns", &query.target_ns)?,
+    };
+    let target_ns = request.target_ns;
+    let latest_stream_count = request.latest_streams.len();
+    let history_stream_count = request.history_streams.len();
+    let persistent_stream_count = request.persistent_streams.len();
+    let permit = Arc::clone(&state.blocking_requests)
+        .acquire_owned()
+        .await
+        .map_err(|error| ServerError::internal("request limiter is unavailable", error))?;
+    let limits = state.limits.clone();
+    let recording_for_job = Arc::clone(&recording);
+    let batch = tokio::task::spawn_blocking(move || {
+        let _permit = permit;
+        read_restore(recording_for_job, request, limits, request_id)
+    })
+    .await
+    .map_err(|error| ServerError::internal("blocking restore request failed", error))??;
+
+    let total_response_ms = batch.metrics.started.elapsed().as_secs_f64() * 1_000.0;
+    tracing::info!(
+        request_id = batch.metrics.request_id,
+        recording_id = %recording.id,
+        recording_revision = %recording.revision,
+        target_ns,
+        latest_stream_count,
+        history_stream_count,
+        persistent_stream_count,
+        storage_read_calls = batch.metrics.reads.calls,
+        storage_read_bytes = batch.metrics.reads.bytes,
+        chunk_count = batch.metrics.chunk_count,
+        chunk_decompress_ms = batch.metrics.chunk_decompress_ms,
+        batch_encode_ms = batch.metrics.batch_encode_ms,
+        response_bytes = batch.body.len(),
+        messages_returned = batch.message_count,
+        total_response_ms,
+        http_status = StatusCode::OK.as_u16(),
+        "restore batch served"
+    );
+    let mut response = Response::new(Body::from(batch.body));
+    response
+        .headers_mut()
+        .insert(CONTENT_TYPE, HeaderValue::from_static(BATCH_CONTENT_TYPE));
+    insert_header(
+        &mut response,
+        RECORDING_REVISION_HEADER,
+        recording.revision.as_str(),
+    )?;
+    insert_header(&mut response, BATCH_COMPLETE_HEADER, "true")?;
+    insert_header(
+        &mut response,
+        MESSAGE_COUNT_HEADER,
+        &batch.message_count.to_string(),
+    )?;
+    Ok(response)
 }
 
 async fn health() -> &'static str {
@@ -208,8 +298,27 @@ fn parse_batch_request(query: MessageQuery, limits: &Limits) -> Result<BatchRequ
                 ServerError::bad_request("invalid_timestamp", "default end_ns overflows u64")
             })?,
     };
-    let stream_ids = query
-        .streams
+    let stream_ids = parse_streams(&query.streams)?;
+    Ok(BatchRequest {
+        revision: query.revision,
+        stream_ids,
+        start_ns,
+        end_ns,
+        max_bytes: query.max_bytes.unwrap_or(limits.default_response_bytes),
+        max_messages: query.max_messages.unwrap_or(limits.default_max_messages),
+        cursor: query.cursor,
+    })
+}
+
+fn parse_optional_streams(value: Option<&str>) -> Result<Vec<u32>, ServerError> {
+    value
+        .map(parse_streams)
+        .transpose()
+        .map(Option::unwrap_or_default)
+}
+
+fn parse_streams(value: &str) -> Result<Vec<u32>, ServerError> {
+    value
         .split(',')
         .map(|value| {
             if value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_digit()) {
@@ -229,16 +338,7 @@ fn parse_batch_request(query: MessageQuery, limits: &Limits) -> Result<BatchRequ
             }
             Ok(stream_id)
         })
-        .collect::<Result<_, _>>()?;
-    Ok(BatchRequest {
-        revision: query.revision,
-        stream_ids,
-        start_ns,
-        end_ns,
-        max_bytes: query.max_bytes.unwrap_or(limits.default_response_bytes),
-        max_messages: query.max_messages.unwrap_or(limits.default_max_messages),
-        cursor: query.cursor,
-    })
+        .collect()
 }
 
 fn parse_timestamp(name: &str, value: &str) -> Result<u64, ServerError> {
@@ -410,6 +510,28 @@ path = "{}"
             .unwrap();
         assert_eq!(messages.len(), 1);
         assert_eq!(messages[0].stream_id, stream_id);
+
+        let restore = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri(format!(
+                        "/v1/recordings/demo/restore?revision={revision}&latest_streams={stream_id}&target_ns={start}"
+                    ))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(restore.status(), StatusCode::OK);
+        assert_eq!(restore.headers()[BATCH_COMPLETE_HEADER], "true");
+        let restore_body = to_bytes(restore.into_body(), usize::MAX).await.unwrap();
+        let restored = viewer_remote_protocol::BatchDecoder::new(&restore_body)
+            .unwrap()
+            .collect()
+            .unwrap();
+        assert_eq!(restored.len(), 1);
+        assert_eq!(restored[0].log_time_ns, start);
 
         let stale = app
             .clone()
