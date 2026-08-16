@@ -1,5 +1,10 @@
 # Web MCAP range-read technical spike
 
+> **Historical spike report.** References to Pipeline/DomainState below describe the experiment at
+> that time, not the current viewer architecture. Current production ownership and restore
+> semantics are documented in `docs/message_centric_architecture.md` and
+> `docs/web_recording_data_plane.md`.
+
 ## 1. 目的
 
 Browser `File.slice()`でMCAPのFooter、Summary、代表Chunkだけを取得できるかを確認し、production readerを設計する前に、現在使用している`mcap 0.23.4`の低レベルAPIと非同期境界を評価する。

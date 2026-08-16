@@ -66,7 +66,14 @@ GET /readyz
 GET /v1/recordings
 GET /v1/recordings/{recording_id}/catalog
 GET /v1/recordings/{recording_id}/messages
+GET /v1/recordings/{recording_id}/restore
 ```
+
+`/restore` is the dedicated playback-seek primitive. It accepts latest-before, bounded history,
+and explicitly persistent stream sets. Latest-before uses reverse indexed traversal; a recording
+without Message Index records returns `422 restore_index_unavailable`. Persistent streams return
+their complete expected-small archive so a Browser session can cache it once and replay only
+updates valid at its target. Restore remains separate from the paginated exact range API.
 
 Catalog time is MCAP log time with start-inclusive/end-exclusive semantics. Nanosecond values are
 decimal JSON strings, avoiding JavaScript number precision loss. Only `message_encoding == "cdr"`

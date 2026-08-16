@@ -1,6 +1,10 @@
 # 自動運転ログ／ライブ可視化プレイヤー
 # Implementation Design & MVP Development Plan
 
+> **Historical document.** This 2026-07-19 MVP plan describes the removed Domain/Pipeline
+> architecture. It is not current implementation guidance. See
+> `docs/message_centric_architecture.md` for the source of truth.
+
 > **Implemented MVP scope (2026-07-19):** `crates/` と `apps/` のworkspaceを
 > 新baselineとし、Native/Webの単一JPEG `CompressedImage` camera、Webの固定grid/ego
 > BEV、Native ROS live cameraを対象とする。`sensor_msgs/msg/Image` rawはアプリ本体では
