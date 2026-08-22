@@ -1,83 +1,25 @@
 # MCAP Player
 
-MCAP を再生して、カメラ映像と車両データを確認する Rust 製のビューアです。
+ROS 2 の MCAP を再生し、カメラ映像・車両状態・周辺情報をまとめて確認する Rust 製ビューアです。Native、ブラウザ、Recording Server 経由のリモート再生、ROS 2 live 入力に対応します。
 
-できること:
+## 主な機能
 
-- JPEG の `sensor_msgs/msg/CompressedImage` を読み込み、複数カメラを一覧・フォーカス表示できます。
-- BEV にグリッド、車両位置、計画経路を表示できます。
-- 3D ビューで odometry/TF に基づく車両姿勢、軌跡、LaserScan を表示できます。
-- `/odom` などのテレメトリを再生位置に合わせて確認できます。
-- Native、ブラウザ、Recording Server 経由のリモート再生、ROS 2 live 入力に対応しています。
+- 複数の JPEG カメラ（`sensor_msgs/msg/CompressedImage`）を一覧・フォーカス表示
+- カメラ画像上に計画経路を投影
+- BEV にグリッド、車両位置、計画経路を表示
+- 3D ビューに車両姿勢、軌跡、LaserScan を表示
+- `/odom` の位置、向き、速度、ヨーレートを再生位置に同期して表示
+- `/tf` と `/tf_static` による座標変換
 
-## 詳細
+## Native で再生
 
-Native and browser viewers share the source catalog, session planning, exact `RawMessage` format,
-and concrete Camera/Path/Odometry/TF/Scene controllers. Native playback reads an mmap-backed MCAP;
-Web Local uses bounded `File.slice()` reads and Web Remote consumes filtered binary CDR batches.
-The recording remains canonical and neither browser path loads the whole file.
-The camera wall is catalog-driven: clicking a thumbnail selects that camera in
-the focus panel, and adding another `CompressedImage` topic requires no new
-renderer path. Raw `sensor_msgs/msg/Image`, H.264, and web live input are not supported. Browser
-Remote playback uses the separately configured LAN Recording Server.
-
-Native playback displays the JPEG camera beside a GPU-rendered BEV with a
-metric grid and fixed ego footprint. The BEV target follows panel size without
-re-uploading scene layers.
-
-Native also includes a perspective 3D view below the Camera/BEV row. It renders
-a world grid, an odometry-driven ego wireframe and the planned path using a
-depth-tested offscreen target. Real `/scan` points are shown only in this 3D
-view. At acquisition time, the viewer resolves `base_scan -> odom` through
-measurement-time-indexed `/tf_static` and `/tf`. `SceneController` retains the latest raw
-scan, while its snapshot builder transforms each new scan once
-and caches the resulting world coordinates. A scan with missing TF remains
-available for a retry when TF arrives. Later ego-pose updates never transform
-historical points.
-`Accumulate scans` switches between the latest scan and bounded,
-odometry-anchored scan history; seek and file reload clear that history.
-The 3D camera defaults to a vehicle-following rear/right chase view. The view
-selector also provides a mouse-orbiting free view and a forward vehicle-eye
-view. Hover the 3D panel and use the mouse wheel to zoom in chase/free mode;
-left-drag orbits in free mode, and double-click resets the camera. Camera-only
-changes update the view uniform without re-uploading scene or point buffers.
-
-The sample fixture contains seven JPEG camera topics. Native shows them as a
-camera wall; click a thumbnail to select the focused view. Additional
-`sensor_msgs/msg/CompressedImage` topics are discovered from the MCAP catalog
-and follow the same path automatically.
-
-The planned path is projected onto every camera image. The path is interpreted
-in its ROS `base_link` frame, while each `CompressedImage.header.frame_id`
-selects its `base_link -> camera optical frame` transform from `/tf_static`.
-Pinhole intrinsics and `plumb_bob` distortion coefficients are loaded from
-`config/camera_calibration.json`. The bundled coefficients are zero (ideal
-pinhole), but non-zero coefficients use the same projection path. Native can
-select another file with `--camera-calibration FILE`; Web embeds the same
-default file in its production bundle.
-
-For the Camera + fixed dummy path sample, run:
-
-```bash
-cargo run -p viewer-native -- \
-  --mcap tests/fixtures/camera-jpeg/camera_7_5s.mcap \
-  --camera-topic /camera/front/image/compressed \
-  --camera-calibration config/camera_calibration.json
-```
-
-The BEV path is read from `/planning/path` as `nav_msgs/msg/Path`. The telemetry
-panel reads real `/odom` messages and shows position, heading, speed and yaw
-rate at the playback cursor.
-
-## Native playback
-
-The bundled fixture is used when no arguments are provided:
+引数なしの場合は同梱サンプルを再生します。
 
 ```bash
 cargo run -p viewer-native
 ```
 
-The canonical explicit command is:
+ファイルとカメラトピックを指定する場合:
 
 ```bash
 cargo run -p viewer-native -- \
@@ -85,12 +27,9 @@ cargo run -p viewer-native -- \
   --camera-topic /camera/front/image/compressed
 ```
 
-An `.mcap` file can also be dropped onto the running window. Resize changes
-only GPU sampling/layout; it does not decode or CPU-resize the JPEG again.
+起動中のウィンドウへ `.mcap` ファイルをドロップして開くこともできます。カメラキャリブレーションを変更する場合は `--camera-calibration FILE` を指定してください。
 
-## Browser playback
-
-Install Trunk and the Rust WASM target, then serve the web package:
+## ブラウザで再生
 
 ```bash
 rustup target add wasm32-unknown-unknown
@@ -99,18 +38,24 @@ cd apps/viewer-web
 trunk serve --release
 ```
 
-Open the page and choose
-`tests/fixtures/camera-jpeg/camera_7_5s.mcap` to play
-the camera, dummy planned path, real odometry, scan and TF streams together.
-The browser camera panel matches Native: it shows a focused frame and a
-catalog-driven thumbnail row; click a thumbnail to change focus.
-Browser Local reads only Summary and selected indexed Chunk ranges. Zstd and uncompressed MCAPs
-use the same bounded `RecordingDataPlane`; Camera CDR and JPEG payloads remain shared `Bytes`
-slices after entering WASM memory.
+表示されたページでローカルの MCAP ファイルを選択します。ファイル全体は読み込まず、再生に必要な範囲だけを取得します。
 
-## ROS 2 live
+## Recording Server
 
-Source ROS Jazzy and build the isolated feature:
+LAN 上の MCAP をブラウザから再生する場合に使用します。
+
+```bash
+cp config/recording-server.toml.example config/recording-server.toml
+# config/recording-server.toml に MCAP のパスと許可する Origin を設定
+cargo run -p recording-server -- \
+  --config config/recording-server.toml
+```
+
+ブラウザでサーバー URL（既定値: `http://localhost:8081`）を入力し、Remote Playback を開きます。設定の詳細は [Filesystem Recording Server](docs/filesystem_recording_server.md) を参照してください。
+
+## ROS 2 live 入力
+
+ROS 2 Jazzy の環境を読み込み、`ros2-live` 機能を有効にします。
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -118,29 +63,18 @@ cargo run -p viewer-native --features ros2-live -- \
   --live --camera-topic /camera/front/image/compressed
 ```
 
-Add `--reliable` to replace the default sensor-data best-effort/volatile QoS.
-The ROS executor runs on its own thread. Its callback records Unix arrival time
-before introspection, reconstructs a CDR payload, and writes to a capacity-one
-latest mailbox; Camera controller state and GPU writes remain on the application thread.
+既定の QoS は best effort / volatile です。Reliable にする場合は `--reliable` を追加してください。動作確認用データの生成手順は [ROS fixture](tools/ros-fixture/README.md) を参照してください。
 
-See [tools/ros-fixture/README.md](tools/ros-fixture/README.md) for synthetic and
-TurtleBot3 smoke procedures.
+## 対応データと制約
 
-## Recording Server
+- カメラ: JPEG の `sensor_msgs/msg/CompressedImage`
+- 計画経路: `/planning/path` の `nav_msgs/msg/Path`
+- 車両状態: `/odom`
+- 点群表示: `LaserScan`
+- カメラ内部パラメータ: `config/camera_calibration.json`
+- 未対応: Raw `sensor_msgs/msg/Image`、H.264、ブラウザでの live 入力
 
-Copy `config/recording-server.toml.example`, set the MCAP `path` and allowed browser origins,
-then start the server:
-
-```bash
-cp config/recording-server.toml.example config/recording-server.toml
-cargo run -p recording-server -- \
-  --config config/recording-server.toml
-```
-
-In the browser, enter the server URL (the default is `http://localhost:8081`) and open Remote
-Playback. See [docs/filesystem_recording_server.md](docs/filesystem_recording_server.md) for details.
-
-## Required checks
+## 開発時のチェック
 
 ```bash
 cargo fmt --check
