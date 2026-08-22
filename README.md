@@ -1,4 +1,16 @@
-# MCAP JPEG Camera + BEV MVP
+# MCAP Player
+
+MCAP を再生して、カメラ映像と車両データを確認する Rust 製のビューアです。
+
+できること:
+
+- JPEG の `sensor_msgs/msg/CompressedImage` を読み込み、複数カメラを一覧・フォーカス表示できます。
+- BEV にグリッド、車両位置、計画経路を表示できます。
+- 3D ビューで odometry/TF に基づく車両姿勢、軌跡、LaserScan を表示できます。
+- `/odom` などのテレメトリを再生位置に合わせて確認できます。
+- Native、ブラウザ、Recording Server 経由のリモート再生、ROS 2 live 入力に対応しています。
+
+## 詳細
 
 Native and browser viewers share the source catalog, session planning, exact `RawMessage` format,
 and concrete Camera/Path/Odometry/TF/Scene controllers. Native playback reads an mmap-backed MCAP;
@@ -113,6 +125,20 @@ latest mailbox; Camera controller state and GPU writes remain on the application
 
 See [tools/ros-fixture/README.md](tools/ros-fixture/README.md) for synthetic and
 TurtleBot3 smoke procedures.
+
+## Recording Server
+
+Copy `config/recording-server.toml.example`, set the MCAP `path` and allowed browser origins,
+then start the server:
+
+```bash
+cp config/recording-server.toml.example config/recording-server.toml
+cargo run -p recording-server -- \
+  --config config/recording-server.toml
+```
+
+In the browser, enter the server URL (the default is `http://localhost:8081`) and open Remote
+Playback. See [docs/filesystem_recording_server.md](docs/filesystem_recording_server.md) for details.
 
 ## Required checks
 
