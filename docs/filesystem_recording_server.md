@@ -78,9 +78,9 @@ updates valid at its target. Restore remains separate from the paginated exact r
 Catalog time is MCAP log time with start-inclusive/end-exclusive semantics. Nanosecond values are
 decimal JSON strings, avoiding JavaScript number precision loss. Only `message_encoding == "cdr"`
 channels are exposed. Channels are sorted by topic, schema name, message encoding, and original
-channel ID, then assigned logical stream IDs starting at one. A stream currently has one
-representation, `ros2-cdr`; optimized representations can later receive separate stream IDs
-without changing Batch v1.
+channel ID, then assigned logical stream IDs starting at one. Catalog streams contain recording
+facts only: logical ID, topic, schema name/encoding, message encoding, and optional message count.
+Cameraなどのviewer feature分類はclientがschema factsから行います。
 
 The revision is:
 

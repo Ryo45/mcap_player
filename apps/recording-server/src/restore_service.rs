@@ -309,6 +309,7 @@ fn normalize_streams(recording: &Recording, streams: &mut Vec<u32>) -> Result<()
 }
 
 fn ensure_message_indexes(recording: &Recording, streams: &[u32]) -> Result<(), ServerError> {
+    let facts = recording.indexed_chunk_facts();
     for stream in streams {
         let channel = recording.stream_to_channel.get(stream).ok_or_else(|| {
             ServerError::bad_request("unknown_stream", format!("unknown stream ID: {stream}"))
@@ -317,20 +318,14 @@ fn ensure_message_indexes(recording: &Recording, streams: &[u32]) -> Result<(), 
             .summary
             .stats
             .as_ref()
-            .and_then(|stats| stats.channel_message_counts.get(channel).copied())
-            .unwrap_or(0);
-        if message_count > 0
-            && !recording
-                .summary
-                .chunk_indexes
-                .iter()
-                .any(|chunk| chunk.message_index_offsets.contains_key(channel))
-        {
-            return Err(ServerError::unprocessable(
-                "restore_index_unavailable",
-                format!("recording cannot provide indexed restore for stream {stream}"),
-            ));
-        }
+            .and_then(|stats| stats.channel_message_counts.get(channel).copied());
+        viewer_core::ensure_indexed(&facts, viewer_core::StreamId(*stream), message_count)
+            .map_err(|error| {
+                ServerError::unprocessable(
+                    "restore_index_unavailable",
+                    format!("recording cannot provide indexed restore: {error}"),
+                )
+            })?;
     }
     Ok(())
 }
@@ -383,7 +378,7 @@ mod tests {
 
     fn synthetic_recording(
         emit_message_indexes: bool,
-    ) -> (TemporaryRecording, Arc<Recording>, Limits) {
+    ) -> Result<(TemporaryRecording, Arc<Recording>, Limits), ServerError> {
         let mut output = Cursor::new(Vec::new());
         {
             let mut writer = Writer::with_options(
@@ -434,9 +429,8 @@ mod tests {
                 path,
             },
             &limits,
-        )
-        .unwrap();
-        (guard, recording, limits)
+        )?;
+        Ok((guard, recording, limits))
     }
 
     fn fixture() -> (Arc<Recording>, Limits) {
@@ -503,7 +497,7 @@ path = "{}"
 
     #[test]
     fn persistent_restore_bootstraps_the_full_small_archive_once() {
-        let (_guard, recording, limits) = synthetic_recording(true);
+        let (_guard, recording, limits) = synthetic_recording(true).unwrap();
         let stream = recording.catalog.streams[0].id;
         let batch = read_restore(
             Arc::clone(&recording),
@@ -532,28 +526,16 @@ path = "{}"
 
     #[test]
     fn restore_without_message_indexes_is_explicitly_unavailable() {
-        let (_guard, recording, limits) = synthetic_recording(false);
-        let error = read_restore(
-            Arc::clone(&recording),
-            RestoreRequest {
-                revision: recording.revision.clone(),
-                latest_streams: vec![recording.catalog.streams[0].id],
-                history_streams: Vec::new(),
-                history_start_ns: 10,
-                persistent_streams: Vec::new(),
-                target_ns: 10,
-            },
-            limits,
-            3,
-        )
-        .unwrap_err();
+        let Err(error) = synthetic_recording(false) else {
+            panic!("unindexed recording must fail while opening the catalog");
+        };
         assert_eq!(error.status(), axum::http::StatusCode::UNPROCESSABLE_ENTITY);
         assert_eq!(error.code, "restore_index_unavailable");
     }
 
     #[test]
     fn restore_hard_limit_is_enforced_before_retaining_another_message() {
-        let (_guard, recording, mut limits) = synthetic_recording(true);
+        let (_guard, recording, mut limits) = synthetic_recording(true).unwrap();
         limits.max_messages = 1;
         let stream = recording.catalog.streams[0].id;
         let error = read_restore(

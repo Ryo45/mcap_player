@@ -1,6 +1,5 @@
 use super::{
-    CAMERA_CONFIG_VERSION, NativePanel, PanelDataRequirements, PanelFrameContext, PanelOutput,
-    PlaceholderPanel,
+    CAMERA_CONFIG_VERSION, NativePanel, PanelDataRequirements, PanelOutput, PlaceholderPanel,
 };
 use crate::{
     graphics::views::{CameraViewInput, show_camera_view},
@@ -10,18 +9,18 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use viewer_layout::{PanelId, PanelNode};
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub(crate) enum ImageFit {
-    #[default]
-    Contain,
+#[derive(Clone, Copy)]
+pub(crate) struct CameraPanelInput<'a> {
+    pub(crate) cameras: &'a [viewer_core::CameraPresentation],
+    pub(crate) textures: &'a [crate::graphics::views::CameraTextureView],
+    pub(crate) preview_textures: &'a [crate::graphics::views::CameraTextureView],
+    pub(crate) preview_active: bool,
+    pub(crate) overlays: &'a viewer_renderer::CameraOverlayState,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct CameraPanelConfig {
-    #[serde(default)]
-    pub(crate) fit: ImageFit,
     #[serde(default = "default_true")]
     pub(crate) show_thumbnails: bool,
     #[serde(default)]
@@ -77,29 +76,23 @@ impl CameraPanel {
         }
     }
 
-    pub(crate) fn show(
-        &mut self,
-        ui: &mut egui::Ui,
-        context: &PanelFrameContext<'_>,
-    ) -> PanelOutput {
+    pub(crate) fn show(&mut self, ui: &mut egui::Ui, input: CameraPanelInput<'_>) -> PanelOutput {
         ui.push_id((self.id.as_str(), self.title.as_deref()), |ui| {
-            let camera_id = self.selected_camera(context);
-            let output = match self.config.fit {
-                ImageFit::Contain => show_camera_view(
-                    ui,
-                    CameraViewInput {
-                        cameras: &context.presentation.cameras,
-                        textures: context.resources.camera_textures,
-                        preview_textures: context.resources.preview_camera_textures,
-                        preview_active: context.preview.active,
-                        focused_camera: camera_id,
-                        show_thumbnails: self.config.show_thumbnails,
-                        overlays: context.camera_overlays,
-                        show_overlay: self.config.show_overlay,
-                        heading: self.title.as_deref().unwrap_or("CAMERA"),
-                    },
-                ),
-            };
+            let camera_id = self.selected_camera(input.cameras);
+            let output = show_camera_view(
+                ui,
+                CameraViewInput {
+                    cameras: input.cameras,
+                    textures: input.textures,
+                    preview_textures: input.preview_textures,
+                    preview_active: input.preview_active,
+                    focused_camera: camera_id,
+                    show_thumbnails: self.config.show_thumbnails,
+                    overlays: input.overlays,
+                    show_overlay: self.config.show_overlay,
+                    heading: self.title.as_deref().unwrap_or("CAMERA"),
+                },
+            );
             let mut panel_output = PanelOutput::default();
             if self.config.camera_topic.is_none()
                 && let Some(camera_id) = output.selected_camera
@@ -114,11 +107,14 @@ impl CameraPanel {
         .inner
     }
 
-    fn selected_camera(&self, context: &PanelFrameContext<'_>) -> Option<viewer_core::CameraId> {
+    fn selected_camera(
+        &self,
+        cameras: &[viewer_core::CameraPresentation],
+    ) -> Option<viewer_core::CameraId> {
         select_camera_id(
             self.config.camera_topic.as_deref(),
             self.state.focused_camera,
-            &context.presentation.cameras,
+            cameras,
         )
     }
 
@@ -138,8 +134,8 @@ impl CameraPanel {
             requirements.playback.require_all_cameras();
         }
         if self.config.show_overlay {
-            requirements.playback.require_path();
-            requirements.playback.require_transforms();
+            requirements.playback.optional_path();
+            requirements.playback.optional_transforms();
         }
     }
 
@@ -171,7 +167,7 @@ mod tests {
     use viewer_core::{CameraId, CameraPresentation, CameraStatus, OverlayStatus};
 
     #[test]
-    fn fixed_camera_selector_config_is_typed_and_backward_compatible() {
+    fn fixed_camera_selector_config_is_typed() {
         let default: CameraPanelConfig = serde_json::from_value(serde_json::json!({})).unwrap();
         assert_eq!(default.camera_topic, None);
         assert!(default.show_overlay);

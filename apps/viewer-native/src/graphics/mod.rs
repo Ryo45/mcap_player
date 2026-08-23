@@ -78,7 +78,6 @@ pub(crate) struct Graphics {
 impl Graphics {
     pub(crate) fn apply_transition(&mut self, transition: PresentationTransition) {
         self.hide_camera();
-        self.clear_scene_history();
         if transition == PresentationTransition::SourceChanged {
             self.clear_preview();
         }
@@ -185,15 +184,10 @@ impl Graphics {
             ego_yaw: snapshot.ego_yaw,
             path: snapshot.path,
             cloud: snapshot.cloud,
-            accumulate: snapshot.accumulate,
         };
         if scene_resized || self.scene_renderer.needs_render(frame) {
             self.scene_renderer.render(&self.device, &self.queue, frame);
         }
-    }
-
-    pub(crate) fn clear_scene_history(&mut self) {
-        self.scene_renderer.clear_cloud_history();
     }
 }
 

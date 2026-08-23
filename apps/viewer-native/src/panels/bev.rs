@@ -1,10 +1,15 @@
 use super::{
-    BEV_CONFIG_VERSION, NativePanel, PanelDataRequirements, PanelFrameContext, PanelOutput,
-    PlaceholderPanel,
+    BEV_CONFIG_VERSION, NativePanel, PanelDataRequirements, PanelOutput, PlaceholderPanel,
 };
 use crate::graphics::views::{BevViewInput, show_bev_view};
 use serde::{Deserialize, Serialize};
 use viewer_layout::{PanelId, PanelNode};
+
+#[derive(Clone, Copy)]
+pub(crate) struct BevPanelInput {
+    pub(crate) texture_id: egui::TextureId,
+    pub(crate) path_points: usize,
+}
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub(crate) struct BevPanelConfig {}
@@ -40,17 +45,13 @@ impl BevPanel {
         }
     }
 
-    pub(crate) fn show(
-        &mut self,
-        ui: &mut egui::Ui,
-        context: &PanelFrameContext<'_>,
-    ) -> PanelOutput {
+    pub(crate) fn show(&mut self, ui: &mut egui::Ui, input: BevPanelInput) -> PanelOutput {
         ui.push_id((self.id.as_str(), self.title.as_deref()), |ui| {
             let output = show_bev_view(
                 ui,
                 BevViewInput {
-                    texture_id: context.resources.bev_texture,
-                    path_points: context.presentation.diagnostics.path_points,
+                    texture_id: input.texture_id,
+                    path_points: input.path_points,
                 },
             );
             PanelOutput {

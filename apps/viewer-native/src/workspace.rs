@@ -4,12 +4,11 @@ use crate::{
     interaction::ViewerAction,
     panels::{PanelDataRequirements, PanelRuntimeStore},
 };
-use egui_plot::PlotPoint;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use viewer_core::{
-    ArrivalTime, CameraController, CameraId, OdometryController, PathController, PlaybackCommand,
-    PlaybackPerformance, PlaybackView, PlotPanelState, ProcessingCounters, RawMessage, SessionPlan,
-    StageTiming, TransformController, WorkspaceBindings,
+    ArrivalTime, CameraId, FeatureRestoreError, FeatureRuntime, PlaybackCommand,
+    PlaybackPerformance, PlaybackView, ProcessingCounters, RawMessage, SessionPlan, StageTiming,
+    WorkspaceBindings,
 };
 use viewer_layout::{
     CURRENT_LAYOUT_SCHEMA_VERSION, LayoutDocument, LayoutNode, PanelId, PanelNode,
@@ -40,42 +39,13 @@ pub(crate) struct NativeWorkspace {
     pub(crate) panels: PanelRuntimeStore,
     pub(crate) interaction: ViewerInteractionState,
     bindings: WorkspaceBindings,
-    scheduler_focused_camera: Option<CameraId>,
-    pub(crate) camera_controller: Option<CameraController>,
-    pub(crate) path_controller: Option<PathController>,
-    pub(crate) odometry_controller: Option<OdometryController>,
-    pub(crate) transform_controller: Option<TransformController>,
-    pub(crate) scene_controller: Option<viewer_core::SceneController>,
-    unknown_streams: u64,
-    processing_time: StageTiming,
+    pub(crate) runtime: Option<FeatureRuntime>,
     startup_warnings: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct CameraViewState {
     pub(crate) focused_camera: Option<CameraId>,
-}
-
-#[derive(Default)]
-pub(crate) struct PlotViewState {
-    pub(crate) panel: Option<PlotPanelState>,
-    pub(crate) cache: Option<SignalPlotCache>,
-    pub(crate) preview_cache: Option<PreviewPlotCache>,
-}
-
-pub(crate) struct SignalPlotCache {
-    pub(crate) origin: ArrivalTime,
-    pub(crate) display_len: usize,
-    pub(crate) sample_len: usize,
-    pub(crate) last_arrival: Option<ArrivalTime>,
-    pub(crate) points: Vec<PlotPoint>,
-}
-
-pub(crate) struct PreviewPlotCache {
-    pub(crate) origin: ArrivalTime,
-    pub(crate) first_bucket: Option<ArrivalTime>,
-    pub(crate) bucket_len: usize,
-    pub(crate) points: Vec<PlotPoint>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -91,7 +61,6 @@ pub(crate) struct ViewerInteractionState {
 pub(crate) enum WorkspaceEffect {
     None,
     Playback(PlaybackCommand),
-    FocusedCameraChanged(Option<CameraId>),
     BeginPreview(ArrivalTime),
     UpdatePreview(Option<ArrivalTime>),
     CommitPreview(ArrivalTime),
@@ -124,14 +93,7 @@ impl NativeWorkspace {
             panels: runtime.store,
             interaction: ViewerInteractionState::default(),
             bindings: bundled_workspace_bindings(),
-            scheduler_focused_camera: None,
-            camera_controller: None,
-            path_controller: None,
-            odometry_controller: None,
-            transform_controller: None,
-            scene_controller: None,
-            unknown_streams: 0,
-            processing_time: StageTiming::default(),
+            runtime: None,
             startup_warnings: runtime.warnings,
         })
     }
@@ -154,14 +116,7 @@ impl NativeWorkspace {
             panels: runtime.store,
             interaction: ViewerInteractionState::default(),
             bindings: bundled_workspace_bindings(),
-            scheduler_focused_camera: None,
-            camera_controller: None,
-            path_controller: None,
-            odometry_controller: None,
-            transform_controller: None,
-            scene_controller: None,
-            unknown_streams: 0,
-            processing_time: StageTiming::default(),
+            runtime: None,
             startup_warnings: vec![format!(
                 "Bundled layout could not be loaded; using emergency layout: {error}"
             )],
@@ -173,140 +128,63 @@ impl NativeWorkspace {
     }
 
     pub(crate) fn reset_for_source(&mut self, focused_camera: Option<CameraId>) {
-        self.scheduler_focused_camera = focused_camera;
-        if let Some(controller) = &mut self.camera_controller {
-            controller.set_focused_camera(focused_camera);
+        if let Some(runtime) = &mut self.runtime {
+            runtime.set_scheduling_priority(focused_camera);
         }
         self.panels.reset_for_source(focused_camera);
         self.interaction = ViewerInteractionState::default();
     }
 
     pub(crate) fn configure_session(&mut self, plan: &SessionPlan) {
-        self.camera_controller = Some(CameraController::new(plan));
-        self.path_controller = Some(PathController::new(plan));
-        self.odometry_controller = Some(OdometryController::new(plan));
-        self.transform_controller = Some(TransformController::new(plan));
-        self.scene_controller = self
-            .panels
-            .has_scene()
-            .then(|| viewer_core::SceneController::new(plan));
-        self.unknown_streams = 0;
-        self.processing_time = StageTiming::default();
+        self.runtime = Some(FeatureRuntime::new(plan, self.panels.has_scene()));
     }
 
     pub(crate) fn process_messages(&mut self, elapsed: Duration, messages: Vec<RawMessage>) {
-        let started = Instant::now();
-        for message in &messages {
-            let mut matched = false;
-            if let Some(controller) = &mut self.camera_controller {
-                matched |= controller.admit(message);
-            }
-            if let Some(controller) = &mut self.path_controller {
-                matched |= controller.process(message);
-            }
-            if let Some(controller) = &mut self.odometry_controller {
-                matched |= controller.process(message);
-            }
-            if let Some(controller) = &mut self.transform_controller {
-                matched |= controller.process(message);
-            }
-            if let Some(controller) = &mut self.scene_controller {
-                matched |= controller.process(message);
-            }
-            if !matched {
-                self.unknown_streams = self.unknown_streams.saturating_add(1);
-            }
-        }
-        if let Some(controller) = &mut self.camera_controller {
-            controller.advance(elapsed);
-        }
-        self.processing_time.record(started.elapsed());
+        self.runtime_mut().process_messages(elapsed, &messages);
     }
 
-    pub(crate) fn restore_messages(&mut self, target: ArrivalTime, messages: Vec<RawMessage>) {
-        let started = Instant::now();
-        if let Some(controller) = &mut self.camera_controller {
-            controller.reset_for_restore();
-        }
-        if let Some(controller) = &mut self.path_controller {
-            controller.reset_for_restore();
-        }
-        if let Some(controller) = &mut self.odometry_controller {
-            controller.reset_for_restore();
-        }
-        if let Some(controller) = &mut self.transform_controller {
-            controller.reset_for_restore(target);
-        }
-        if let Some(controller) = &mut self.scene_controller {
-            controller.reset_for_restore();
-        }
-        for message in &messages {
-            let mut matched = false;
-            if let Some(controller) = &mut self.camera_controller {
-                matched |= controller.restore(message);
-            }
-            if let Some(controller) = &mut self.path_controller {
-                matched |= controller.process(message);
-            }
-            if let Some(controller) = &mut self.odometry_controller {
-                matched |= controller.process(message);
-            }
-            if let Some(controller) = &mut self.transform_controller {
-                matched |= controller.process(message);
-            }
-            if let Some(controller) = &mut self.scene_controller {
-                matched |= controller.process(message);
-            }
-            if !matched {
-                self.unknown_streams = self.unknown_streams.saturating_add(1);
-            }
-        }
-        self.processing_time.record(started.elapsed());
+    pub(crate) fn restore_messages(
+        &mut self,
+        target: ArrivalTime,
+        messages: Vec<RawMessage>,
+    ) -> Result<(), FeatureRestoreError> {
+        self.runtime_mut().restore_transactional(target, &messages)
     }
 
-    pub(crate) fn cameras(&self) -> &CameraController {
-        self.camera_controller
+    pub(crate) fn runtime(&self) -> &FeatureRuntime {
+        self.runtime
             .as_ref()
             .expect("workspace is configured for an open session")
     }
 
-    pub(crate) fn path(&self) -> &PathController {
-        self.path_controller
-            .as_ref()
+    pub(crate) fn runtime_mut(&mut self) -> &mut FeatureRuntime {
+        self.runtime
+            .as_mut()
             .expect("workspace is configured for an open session")
     }
 
-    pub(crate) fn transforms(&self) -> &TransformController {
-        self.transform_controller
-            .as_ref()
-            .expect("workspace is configured for an open session")
+    pub(crate) fn cameras(&self) -> &viewer_core::CameraController {
+        self.runtime().cameras()
+    }
+
+    pub(crate) fn path(&self) -> &viewer_core::PathController {
+        self.runtime().path()
+    }
+
+    pub(crate) fn odometry(&self) -> &viewer_core::OdometryController {
+        self.runtime().odometry()
+    }
+
+    pub(crate) fn transforms(&self) -> &viewer_core::TransformController {
+        self.runtime().transforms()
     }
 
     pub(crate) fn counters(&self) -> ProcessingCounters {
-        let mut counters = ProcessingCounters {
-            unknown_streams: self.unknown_streams,
-            ..ProcessingCounters::default()
-        };
-        if let Some(controller) = &self.camera_controller {
-            counters.merge(controller.counters());
-        }
-        if let Some(controller) = &self.path_controller {
-            counters.merge(controller.counters());
-        }
-        if let Some(controller) = &self.odometry_controller {
-            counters.merge(controller.counters());
-        }
-        if let Some(controller) = &self.transform_controller {
-            counters.merge(controller.counters());
-        }
-        if let Some(controller) = &self.scene_controller {
-            counters.merge(controller.counters());
-        }
-        counters
+        self.runtime().counters()
     }
 
     pub(crate) fn playback_performance(&self, source_read: StageTiming) -> PlaybackPerformance {
-        PlaybackPerformance::from_controllers(source_read, self.processing_time, self.cameras())
+        self.runtime().playback_performance(source_read)
     }
 
     pub(crate) fn apply_action(&mut self, action: ViewerAction) -> WorkspaceEffect {
@@ -317,11 +195,10 @@ impl NativeWorkspace {
                 camera_id,
             } => {
                 if self.panels.set_focused_camera(&panel_id, camera_id) {
-                    self.scheduler_focused_camera = camera_id;
-                    if let Some(controller) = &mut self.camera_controller {
-                        controller.set_focused_camera(camera_id);
+                    if let Some(runtime) = &mut self.runtime {
+                        runtime.set_scheduling_priority(camera_id);
                     }
-                    WorkspaceEffect::FocusedCameraChanged(camera_id)
+                    WorkspaceEffect::None
                 } else {
                     WorkspaceEffect::None
                 }
@@ -349,7 +226,9 @@ impl NativeWorkspace {
     }
 
     pub(crate) fn focused_camera(&self) -> Option<CameraId> {
-        self.scheduler_focused_camera
+        self.runtime
+            .as_ref()
+            .and_then(FeatureRuntime::scheduling_priority)
     }
 
     pub(crate) fn scheduler_priority_topic(&self) -> Option<&str> {
@@ -391,7 +270,10 @@ impl Default for NativeWorkspace {
 mod tests {
     use super::*;
     use std::collections::BTreeSet;
-    use viewer_core::{PlaybackSpeed, PlaybackView, SignalId};
+    use viewer_core::{
+        PlaybackRequirements, PlaybackSpeed, PlaybackView, SessionPlan, SignalId, SourceCatalog,
+        StreamDescriptor, StreamId, StreamTimingSummary,
+    };
 
     fn playback(cursor: i64) -> PlaybackView {
         PlaybackView {
@@ -401,6 +283,36 @@ mod tests {
             playing: false,
             speed: PlaybackSpeed::Normal,
         }
+    }
+
+    fn configure_camera_runtime(workspace: &mut NativeWorkspace, camera_count: u32) {
+        let catalog = SourceCatalog {
+            time_range: None,
+            streams: (0..camera_count)
+                .map(|index| StreamDescriptor {
+                    id: StreamId(index + 1),
+                    topic: if index == 0 {
+                        "/camera/front/image/compressed".into()
+                    } else {
+                        format!("/camera/{index}/image/compressed")
+                    },
+                    schema: "sensor_msgs/msg/CompressedImage".into(),
+                    message_encoding: "cdr".into(),
+                    timing: StreamTimingSummary::default(),
+                })
+                .collect(),
+            capabilities: Default::default(),
+        };
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_all_cameras();
+        let plan = SessionPlan::build(
+            &catalog,
+            "/camera/front/image/compressed",
+            &requirements,
+            workspace.bindings(),
+        )
+        .unwrap();
+        workspace.configure_session(&plan);
     }
 
     #[test]
@@ -445,8 +357,9 @@ mod tests {
         expected_playback.require_camera_topic("/camera/front_left/image/compressed");
         expected_playback.require_camera_topic("/camera/front/image/compressed");
         expected_playback.require_camera_topic("/camera/front_right/image/compressed");
-        expected_playback.require_path();
-        expected_playback.require_transforms();
+        expected_playback.optional_path();
+        expected_playback.require_odometry();
+        expected_playback.optional_transforms();
         assert_eq!(
             workspace.data_requirements(),
             PanelDataRequirements {
@@ -465,6 +378,7 @@ mod tests {
     #[test]
     fn fixed_showcase_camera_is_not_an_interactive_scheduler_focus_target() {
         let mut workspace = NativeWorkspace::load_bundled_or_fallback(WorkspaceLayout::Showcase);
+        configure_camera_runtime(&mut workspace, 4);
         workspace.reset_for_source(Some(CameraId(0)));
         assert!(matches!(
             workspace.apply_action(ViewerAction::SetFocusedCamera {
@@ -479,6 +393,7 @@ mod tests {
     #[test]
     fn scoped_actions_update_only_the_target_panel_state() {
         let mut workspace = NativeWorkspace::default();
+        configure_camera_runtime(&mut workspace, 4);
         let camera_id = PanelId::new("camera-main").unwrap();
         let scene_id = PanelId::new("scene-main").unwrap();
         assert!(matches!(
@@ -486,7 +401,7 @@ mod tests {
                 panel_id: camera_id,
                 camera_id: Some(CameraId(3)),
             }),
-            WorkspaceEffect::FocusedCameraChanged(Some(CameraId(3)))
+            WorkspaceEffect::None
         ));
         assert_eq!(workspace.focused_camera(), Some(CameraId(3)));
         assert!(!workspace.accumulate_points());

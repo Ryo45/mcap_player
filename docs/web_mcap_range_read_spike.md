@@ -179,7 +179,7 @@ Chunk parsing/decompression requires a different boundary
 
 現行feature無効のTrunk debug buildに含まれるWASMは3,099,447 bytesだった。圧縮をproductionで有効化する場合は、CIへclangを追加してrelease＋wasm-opt後のサイズと展開速度を別途比較する必要がある。
 
-比較のため、Spike専用`mcap-uncompress-spike` binで全566,775 messages、9 schemas、18 channels、2 metadataを非圧縮Chunkへ再書き込みした。元ファイルは保持し、次の別ファイルを生成した。
+比較のため、当時のone-off変換ツールで全566,775 messages、9 schemas、18 channels、2 metadataを非圧縮Chunkへ再書き込みした。元ファイルは保持し、次の別ファイルを生成した。計測完了後、このツールはrelease/workspace targetから削除した。
 
 ```text
 mcap/turtlebot3_7cam_fhd/turtlebot3_7cam_fhd_0_uncompressed.mcap

@@ -1,8 +1,7 @@
-use super::{RemoteApiClient, RemoteBatchRequest, RequestGeneration, adapt_catalog};
+use super::{RemoteApiClient, RequestGeneration, adapt_catalog};
 use crate::playback::WebPlayback;
-use js_sys::Date;
 use std::cell::RefCell;
-use viewer_remote_protocol::{BatchDecoder, CatalogResponse};
+use viewer_remote_protocol::CatalogResponse;
 use wasm_bindgen::{JsCast, closure::Closure};
 use wasm_bindgen_futures::spawn_local;
 use web_sys::{
@@ -10,7 +9,7 @@ use web_sys::{
 };
 
 #[derive(Default)]
-struct SmokeState {
+struct RemoteSourceState {
     generation: RequestGeneration,
     abort: Option<AbortController>,
     client: Option<RemoteApiClient>,
@@ -18,7 +17,7 @@ struct SmokeState {
 }
 
 thread_local! {
-    static STATE: RefCell<SmokeState> = RefCell::new(SmokeState::default());
+    static STATE: RefCell<RemoteSourceState> = RefCell::new(RemoteSourceState::default());
 }
 
 fn document() -> web_sys::Document {
@@ -57,7 +56,7 @@ fn begin_request() -> Option<(RemoteApiClient, u64, web_sys::AbortSignal)> {
     })
 }
 
-fn apply_if_current(generation: u64, apply: impl FnOnce(&mut SmokeState)) -> bool {
+fn apply_if_current(generation: u64, apply: impl FnOnce(&mut RemoteSourceState)) -> bool {
     STATE.with(|state| {
         let mut state = state.borrow_mut();
         if !state.generation.is_current(generation) {
@@ -167,85 +166,6 @@ fn install_catalog() {
     callback.forget();
 }
 
-fn install_batch() {
-    let button: HtmlButtonElement = element("remote-fetch-batch");
-    let callback = Closure::<dyn FnMut()>::new(move || {
-        let Some((client, generation, signal)) = begin_request() else {
-            set_output("Connect to a server first", true);
-            return;
-        };
-        let Some(catalog) = STATE.with(|state| state.borrow().catalog.clone()) else {
-            set_output("Load a catalog first", true);
-            return;
-        };
-        let Some(stream) = catalog.streams.first() else {
-            set_output("Catalog contains no CDR streams", true);
-            return;
-        };
-        let start_ns = catalog.time_range.start_ns.get();
-        let end_ns = start_ns
-            .saturating_add(1_000_000_000)
-            .min(catalog.time_range.end_ns_exclusive.get());
-        let mut request = RemoteBatchRequest {
-            recording_id: catalog.recording_id.clone(),
-            revision: catalog.recording_revision.clone(),
-            stream_ids: vec![stream.id],
-            start_ns,
-            end_ns,
-            max_bytes: None,
-            max_messages: Some(1),
-            cursor: None,
-        };
-        set_output("Fetching up to two batch pages…", false);
-        spawn_local(async move {
-            let started = Date::now();
-            let mut pages = 0usize;
-            let mut bytes = 0usize;
-            let mut messages = 0usize;
-            let mut first_time = None;
-            let mut last_time = None;
-            let mut complete = false;
-            let result = async {
-                while pages < 2 && !complete {
-                    let page = client.fetch_batch_page(&request, Some(&signal)).await?;
-                    let decoded = BatchDecoder::new(&page.body)
-                        .and_then(BatchDecoder::collect)
-                        .map_err(|error| super::RemoteClientError::new(error.to_string()))?;
-                    first_time =
-                        first_time.or_else(|| decoded.first().map(|item| item.log_time_ns));
-                    last_time = decoded.last().map(|item| item.log_time_ns).or(last_time);
-                    pages += 1;
-                    bytes = bytes.saturating_add(page.body.len());
-                    messages = messages.saturating_add(decoded.len());
-                    complete = page.complete;
-                    request.cursor = page.next_cursor;
-                }
-                Ok::<_, super::RemoteClientError>(())
-            }
-            .await;
-            if !apply_if_current(generation, |_| {}) {
-                return;
-            }
-            match result {
-                Ok(()) => set_output(
-                    &format!(
-                        "{}\n\nBatch smoke\npages: {pages}\nmessages: {messages}\nbytes: {bytes}\ncomplete: {complete}\nnext cursor: {}\nfirst time: {}\nlast time: {}\nlatency: {:.1} ms",
-                        format_catalog(&catalog),
-                        request.cursor.is_some(),
-                        first_time.map_or_else(|| "none".into(), |value| value.to_string()),
-                        last_time.map_or_else(|| "none".into(), |value| value.to_string()),
-                        Date::now() - started,
-                    ),
-                    false,
-                ),
-                Err(error) => set_output(&error.to_string(), true),
-            }
-        });
-    });
-    button.set_onclick(Some(callback.as_ref().unchecked_ref()));
-    callback.forget();
-}
-
 fn install_open_playback() {
     let button: HtmlButtonElement = element("remote-open-playback");
     let callback = Closure::<dyn FnMut()>::new(move || {
@@ -294,7 +214,6 @@ fn format_catalog(catalog: &CatalogResponse) -> String {
 pub(crate) fn install() {
     install_connect();
     install_catalog();
-    install_batch();
     install_open_playback();
     let select: HtmlSelectElement = element("remote-recording");
     let callback = Closure::<dyn FnMut(Event)>::new(move |_| {

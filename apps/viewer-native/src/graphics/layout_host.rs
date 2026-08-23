@@ -1,4 +1,4 @@
-use crate::panels::{PanelFrameContext, PanelOutput, PanelRuntimeStore};
+use crate::panels::{PanelCompositionInput, PanelOutput, PanelRuntimeStore};
 use viewer_layout::{LayoutDocument, LayoutNode, SplitDirection};
 
 pub(crate) const SPLIT_GAP: f32 = 4.0;
@@ -92,7 +92,7 @@ pub(crate) fn show_layout_host(
     ui: &mut egui::Ui,
     document: &LayoutDocument,
     panels: &mut PanelRuntimeStore,
-    context: PanelFrameContext<'_>,
+    context: PanelCompositionInput<'_>,
 ) -> PanelOutput {
     let rect = ui.available_rect_before_wrap();
     let output = show_node(ui, &document.root, panels, context, rect, "root");
@@ -104,7 +104,7 @@ fn show_node(
     ui: &mut egui::Ui,
     node: &LayoutNode,
     panels: &mut PanelRuntimeStore,
-    context: PanelFrameContext<'_>,
+    context: PanelCompositionInput<'_>,
     rect: egui::Rect,
     path: &str,
 ) -> PanelOutput {
@@ -175,7 +175,7 @@ fn show_node(
 mod tests {
     use super::*;
     use crate::{
-        panels::{PanelFrameContext, PanelResourceView, PreviewDataView, SceneDataView},
+        panels::{PanelCompositionInput, PanelResourceView, PreviewDataView, SceneDataView},
         signal_query::SignalQueryView,
         workspace::NativeWorkspace,
     };
@@ -260,7 +260,7 @@ mod tests {
                 ui,
                 &layout,
                 &mut workspace.panels,
-                PanelFrameContext {
+                PanelCompositionInput {
                     playback: Some(PlaybackView {
                         start: ArrivalTime(0),
                         end: ArrivalTime(10),

@@ -1,9 +1,9 @@
 use crate::{ArrivalTime, McapOpenError, MeasurementTime, decode_odometry};
-use mcap::MessageStream;
+use mcap::{MessageStream, Summary};
 use serde::{Deserialize, Serialize};
 
 const NANOS_PER_SECOND: f64 = 1_000_000_000.0;
-const ODOMETRY_PROGRESS_INTERVAL: usize = 4_096;
+const ODOMETRY_PROGRESS_INTERVAL: usize = 65_536;
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -31,98 +31,16 @@ pub struct SignalSample {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct LoadedSignal {
-    /// Full-resolution samples used for current-value lookup.
-    pub samples: Vec<SignalSample>,
     /// Bounded, display-oriented series. Playback never rebuilds this value.
     pub display: PlotSeries,
+    /// Number of finite exact inputs reduced into `display`; no exact sample vector is retained.
+    pub input_sample_count: u64,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct LoadedOdometrySignals {
     pub speed: Option<LoadedSignal>,
     pub yaw_rate: Option<LoadedSignal>,
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub enum PlotMode {
-    #[default]
-    Overview,
-    Follow {
-        history_seconds: f64,
-        lookahead_seconds: f64,
-    },
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct PlotViewport {
-    pub start_seconds: f64,
-    pub end_seconds: f64,
-}
-
-impl PlotViewport {
-    pub fn new(start_seconds: f64, end_seconds: f64) -> Self {
-        Self {
-            start_seconds,
-            end_seconds: end_seconds.max(start_seconds + f64::EPSILON),
-        }
-    }
-
-    pub fn width(self) -> f64 {
-        self.end_seconds - self.start_seconds
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct PlotPanelState {
-    pub mode: PlotMode,
-    pub viewport: PlotViewport,
-    pub selected_signals: Vec<SignalId>,
-}
-
-impl PlotPanelState {
-    pub fn overview(start_seconds: f64, end_seconds: f64) -> Self {
-        Self::overview_for(SignalId::Speed, start_seconds, end_seconds)
-    }
-
-    pub fn overview_for(signal_id: SignalId, start_seconds: f64, end_seconds: f64) -> Self {
-        Self {
-            mode: PlotMode::Overview,
-            viewport: PlotViewport::new(start_seconds, end_seconds),
-            selected_signals: vec![signal_id],
-        }
-    }
-
-    pub fn follow(&mut self, playhead: f64) {
-        self.mode = PlotMode::Follow {
-            history_seconds: 8.0,
-            lookahead_seconds: 2.0,
-        };
-        self.viewport = followed_viewport(playhead, 8.0, 2.0);
-    }
-
-    pub fn overview_with_viewport(&mut self, viewport: PlotViewport) {
-        self.mode = PlotMode::Overview;
-        self.viewport = viewport;
-    }
-
-    /// Shifts only while playing and only after the playhead crosses a follow boundary.
-    pub fn update_follow(&mut self, playhead: f64, playing: bool) -> bool {
-        if !playing {
-            return false;
-        }
-        let PlotMode::Follow {
-            history_seconds,
-            lookahead_seconds,
-        } = self.mode
-        else {
-            return false;
-        };
-        if !should_shift_viewport(&self.viewport, playhead) {
-            return false;
-        }
-        self.viewport = followed_viewport(playhead, history_seconds, lookahead_seconds);
-        true
-    }
 }
 
 pub fn cursor_seconds(cursor: ArrivalTime, origin: ArrivalTime) -> f64 {
@@ -137,70 +55,6 @@ pub fn arrival_time_from_plot_x(origin: ArrivalTime, x_seconds: f64) -> ArrivalT
     };
     let offset = offset.clamp(i64::MIN as f64, i64::MAX as f64) as i64;
     ArrivalTime(origin.0.saturating_add(offset))
-}
-
-pub fn sample_at_or_before(samples: &[SignalSample], cursor: ArrivalTime) -> Option<&SignalSample> {
-    let index = samples.partition_point(|sample| sample.arrival_time <= cursor);
-    index.checked_sub(1).and_then(|index| samples.get(index))
-}
-
-pub fn should_shift_viewport(viewport: &PlotViewport, playhead: f64) -> bool {
-    let threshold = viewport.start_seconds + viewport.width() * 0.8;
-    playhead < viewport.start_seconds || playhead > threshold
-}
-
-pub fn followed_viewport(
-    playhead: f64,
-    history_seconds: f64,
-    lookahead_seconds: f64,
-) -> PlotViewport {
-    PlotViewport::new(
-        playhead - history_seconds.max(0.0),
-        playhead + lookahead_seconds.max(0.0),
-    )
-}
-
-/// Reduces ordered samples to a min/max envelope while retaining temporal order.
-pub fn downsample_min_max(samples: &[SignalSample], max_points: usize) -> Vec<SignalSample> {
-    if samples.len() <= max_points {
-        return samples.to_vec();
-    }
-    if max_points == 0 {
-        return Vec::new();
-    }
-    if max_points == 1 {
-        return vec![samples[0]];
-    }
-
-    let bucket_count = max_points / 2;
-    let mut output = Vec::with_capacity(bucket_count * 2);
-    for bucket in 0..bucket_count {
-        let start = bucket * samples.len() / bucket_count;
-        let end = ((bucket + 1) * samples.len() / bucket_count).min(samples.len());
-        let slice = &samples[start..end];
-        let min_index = slice
-            .iter()
-            .enumerate()
-            .min_by(|(_, left), (_, right)| left.value.total_cmp(&right.value))
-            .map(|(index, _)| index)
-            .expect("a min/max bucket is never empty");
-        let max_index = slice
-            .iter()
-            .enumerate()
-            .max_by(|(_, left), (_, right)| left.value.total_cmp(&right.value))
-            .map(|(index, _)| index)
-            .expect("a min/max bucket is never empty");
-        if min_index <= max_index {
-            output.push(slice[min_index]);
-            if min_index != max_index {
-                output.push(slice[max_index]);
-            }
-        } else {
-            output.push(slice[max_index]);
-            output.push(slice[min_index]);
-        }
-    }
-    output
 }
 
 /// Scans the configured Odometry topic in an MCAP and builds the speed signal.
@@ -256,8 +110,14 @@ pub fn load_odometry_signals_for_topic_with_progress(
     odometry_topic: &str,
     mut on_progress: impl FnMut(LoadedOdometrySignals),
 ) -> Result<LoadedOdometrySignals, McapOpenError> {
-    let mut speed_samples = Vec::new();
-    let mut yaw_rate_samples = Vec::new();
+    let end_exclusive = Summary::read(backing)?
+        .and_then(|summary| summary.stats)
+        .and_then(|stats| stats.message_end_time.checked_add(1))
+        .and_then(|time| i64::try_from(time).ok())
+        .map(ArrivalTime)
+        .unwrap_or(ArrivalTime(origin.0.saturating_add(1)));
+    let mut speed = SignalOverviewReducer::new(origin, end_exclusive, max_display_points);
+    let mut yaw_rate = SignalOverviewReducer::new(origin, end_exclusive, max_display_points);
     let mut odometry_count = 0_usize;
     for message in MessageStream::new(backing)? {
         let message = message?;
@@ -277,83 +137,138 @@ pub fn load_odometry_signals_for_topic_with_progress(
             continue;
         };
         let [vx, vy, _] = odometry.linear_velocity;
-        let speed = vx.hypot(vy);
-        let yaw_rate = odometry.angular_velocity[2];
+        let speed_value = vx.hypot(vy);
+        let yaw_rate_value = odometry.angular_velocity[2];
         let sample = |value| SignalSample {
             measurement_time: Some(odometry.measurement_time),
             arrival_time: ArrivalTime(arrival_ns),
             value,
         };
-        if speed.is_finite() {
-            speed_samples.push(sample(speed));
+        if speed_value.is_finite() {
+            speed.push(sample(speed_value));
         }
-        if yaw_rate.is_finite() {
-            yaw_rate_samples.push(sample(yaw_rate));
+        if yaw_rate_value.is_finite() {
+            yaw_rate.push(sample(yaw_rate_value));
         }
         odometry_count = odometry_count.saturating_add(1);
         if odometry_count == 1 || odometry_count.is_multiple_of(ODOMETRY_PROGRESS_INTERVAL) {
-            on_progress(snapshot_odometry_signals(
-                &speed_samples,
-                &yaw_rate_samples,
-                origin,
-                max_display_points,
-            ));
+            on_progress(snapshot_odometry_signals(&speed, &yaw_rate));
         }
     }
     Ok(LoadedOdometrySignals {
-        speed: finish_signal(speed_samples, origin, max_display_points, SignalId::Speed),
-        yaw_rate: finish_signal(
-            yaw_rate_samples,
-            origin,
-            max_display_points,
-            SignalId::YawRate,
-        ),
+        speed: speed.finish(SignalId::Speed),
+        yaw_rate: yaw_rate.finish(SignalId::YawRate),
     })
 }
 
 fn snapshot_odometry_signals(
-    speed_samples: &[SignalSample],
-    yaw_rate_samples: &[SignalSample],
-    origin: ArrivalTime,
-    max_display_points: usize,
+    speed: &SignalOverviewReducer,
+    yaw_rate: &SignalOverviewReducer,
 ) -> LoadedOdometrySignals {
     LoadedOdometrySignals {
-        speed: finish_signal(
-            speed_samples.to_vec(),
-            origin,
-            max_display_points,
-            SignalId::Speed,
-        ),
-        yaw_rate: finish_signal(
-            yaw_rate_samples.to_vec(),
-            origin,
-            max_display_points,
-            SignalId::YawRate,
-        ),
+        speed: speed.finish(SignalId::Speed),
+        yaw_rate: yaw_rate.finish(SignalId::YawRate),
     }
 }
 
-fn finish_signal(
-    mut samples: Vec<SignalSample>,
+#[derive(Clone, Copy, Debug)]
+struct SignalExtrema {
+    min: SignalSample,
+    max: SignalSample,
+}
+
+/// Fixed-size time-bucket reducer for recording-wide Plot overview data.
+///
+/// Its working set is `O(max_points)` regardless of recording duration or message count.
+pub struct SignalOverviewReducer {
     origin: ArrivalTime,
-    max_display_points: usize,
-    signal_id: SignalId,
-) -> Option<LoadedSignal> {
-    if samples.is_empty() {
-        return None;
+    end_exclusive: ArrivalTime,
+    max_points: usize,
+    buckets: Vec<Option<SignalExtrema>>,
+    input_sample_count: u64,
+}
+
+impl SignalOverviewReducer {
+    pub fn new(origin: ArrivalTime, end_exclusive: ArrivalTime, max_points: usize) -> Self {
+        let bucket_count = match max_points {
+            0 => 0,
+            1 => 1,
+            value => value / 2,
+        };
+        Self {
+            origin,
+            end_exclusive: ArrivalTime(end_exclusive.0.max(origin.0.saturating_add(1))),
+            max_points,
+            buckets: vec![None; bucket_count],
+            input_sample_count: 0,
+        }
     }
-    samples.sort_by_key(|sample| sample.arrival_time);
-    let display_samples = downsample_min_max(&samples, max_display_points);
-    let display = PlotSeries {
-        signal_id,
-        origin,
-        x_seconds: display_samples
+
+    pub fn push(&mut self, sample: SignalSample) {
+        if !sample.value.is_finite() || self.buckets.is_empty() {
+            return;
+        }
+        self.input_sample_count = self.input_sample_count.saturating_add(1);
+        let duration = self.end_exclusive.0.saturating_sub(self.origin.0).max(1) as i128;
+        let offset = sample.arrival_time.0.saturating_sub(self.origin.0).max(0) as i128;
+        let scaled = offset.saturating_mul(self.buckets.len() as i128) / duration;
+        let bucket = usize::try_from(scaled)
+            .unwrap_or(usize::MAX)
+            .min(self.buckets.len() - 1);
+        match &mut self.buckets[bucket] {
+            Some(extrema) => {
+                if sample.value < extrema.min.value {
+                    extrema.min = sample;
+                }
+                if sample.value > extrema.max.value {
+                    extrema.max = sample;
+                }
+            }
+            slot @ None => {
+                *slot = Some(SignalExtrema {
+                    min: sample,
+                    max: sample,
+                });
+            }
+        }
+    }
+
+    pub fn retained_points(&self) -> usize {
+        self.buckets
             .iter()
-            .map(|sample| cursor_seconds(sample.arrival_time, origin))
-            .collect(),
-        values: display_samples.iter().map(|sample| sample.value).collect(),
-    };
-    Some(LoadedSignal { samples, display })
+            .flatten()
+            .map(|extrema| usize::from(self.max_points > 1 && extrema.min != extrema.max) + 1)
+            .sum()
+    }
+
+    pub fn finish(&self, signal_id: SignalId) -> Option<LoadedSignal> {
+        if self.input_sample_count == 0 {
+            return None;
+        }
+        let mut display_samples = Vec::with_capacity(self.retained_points());
+        for extrema in self.buckets.iter().flatten() {
+            if self.max_points == 1 || extrema.min == extrema.max {
+                display_samples.push(extrema.min);
+            } else if extrema.min.arrival_time <= extrema.max.arrival_time {
+                display_samples.extend([extrema.min, extrema.max]);
+            } else {
+                display_samples.extend([extrema.max, extrema.min]);
+            }
+        }
+        debug_assert!(display_samples.len() <= self.max_points);
+        Some(LoadedSignal {
+            display: PlotSeries {
+                signal_id,
+                origin: self.origin,
+                x_seconds: display_samples
+                    .iter()
+                    .map(|sample| cursor_seconds(sample.arrival_time, self.origin))
+                    .collect(),
+                values: display_samples.iter().map(|sample| sample.value).collect(),
+            },
+            input_sample_count: self.input_sample_count,
+        })
+    }
 }
 
 #[cfg(test)]
@@ -455,48 +370,23 @@ mod tests {
     }
 
     #[test]
-    fn current_value_uses_full_resolution_arrival_samples() {
-        let samples = vec![sample(10, 1.0), sample(20, 2.0), sample(30, 3.0)];
-        assert!(sample_at_or_before(&samples, ArrivalTime(9)).is_none());
-        assert_eq!(
-            sample_at_or_before(&samples, ArrivalTime(25)).map(|sample| sample.value),
-            Some(2.0)
-        );
-    }
-
-    #[test]
-    fn envelope_keeps_each_bucket_extrema_in_time_order() {
-        let samples = vec![
-            sample(0, 3.0),
-            sample(1, -2.0),
-            sample(2, 7.0),
-            sample(3, 4.0),
-            sample(4, 9.0),
-            sample(5, 1.0),
-            sample(6, 8.0),
-            sample(7, 2.0),
-        ];
-        let envelope = downsample_min_max(&samples, 4);
-        assert_eq!(envelope.len(), 4);
-        assert_eq!(
-            envelope
-                .iter()
-                .map(|sample| (sample.arrival_time.0, sample.value))
-                .collect::<Vec<_>>(),
-            vec![(1, -2.0), (2, 7.0), (4, 9.0), (5, 1.0)]
-        );
-    }
-
-    #[test]
-    fn follow_shifts_at_boundary_but_not_while_paused() {
-        let mut panel = PlotPanelState::overview(0.0, 100.0);
-        panel.follow(20.0);
-        assert_eq!(panel.viewport, PlotViewport::new(12.0, 22.0));
-        assert!(!panel.update_follow(21.0, false));
-        assert!(!panel.update_follow(19.9, true));
-        assert!(panel.update_follow(20.1, true));
-        assert!((panel.viewport.start_seconds - 12.1).abs() < 1e-12);
-        assert!((panel.viewport.end_seconds - 22.1).abs() < 1e-12);
+    fn streaming_overview_keeps_bucket_extrema_in_time_order() {
+        let mut reducer = SignalOverviewReducer::new(ArrivalTime(0), ArrivalTime(8), 4);
+        for (arrival, value) in [
+            (0, 3.0),
+            (1, -2.0),
+            (2, 7.0),
+            (3, 4.0),
+            (4, 9.0),
+            (5, 1.0),
+            (6, 8.0),
+            (7, 2.0),
+        ] {
+            reducer.push(sample(arrival, value));
+        }
+        let display = reducer.finish(SignalId::Speed).unwrap().display;
+        assert_eq!(display.x_seconds, vec![1e-9, 2e-9, 4e-9, 5e-9]);
+        assert_eq!(display.values, vec![-2.0, 7.0, 9.0, 1.0]);
     }
 
     #[test]
@@ -509,14 +399,8 @@ mod tests {
         let loaded = load_speed_signal(&bytes, origin, 4, "/odom")
             .unwrap()
             .expect("speed signal");
-        assert_eq!(loaded.samples.len(), 2);
-        assert_eq!(loaded.samples[0].arrival_time, ArrivalTime(1_500_000_000));
-        assert_eq!(
-            loaded.samples[0].measurement_time,
-            Some(MeasurementTime(10_000_000_000))
-        );
-        assert_eq!(loaded.samples[0].value, 5.0);
-        assert_eq!(loaded.samples[1].value, 13.0);
+        assert_eq!(loaded.input_sample_count, 2);
+        assert_eq!(loaded.display.values, vec![5.0, 13.0]);
         assert_eq!(loaded.display.x_seconds, vec![0.5, 1.5]);
     }
 
@@ -531,13 +415,21 @@ mod tests {
             .unwrap()
             .expect("yaw-rate signal");
         assert_eq!(loaded.display.signal_id, SignalId::YawRate);
-        assert_eq!(
-            loaded
-                .samples
-                .iter()
-                .map(|sample| sample.value)
-                .collect::<Vec<_>>(),
-            vec![0.25, -0.5]
-        );
+        assert_eq!(loaded.input_sample_count, 2);
+        assert_eq!(loaded.display.values, vec![0.25, -0.5]);
+    }
+
+    #[test]
+    fn overview_reducer_memory_is_bounded_independently_of_input_count() {
+        let max_points = 400;
+        let mut reducer =
+            SignalOverviewReducer::new(ArrivalTime(0), ArrivalTime(1_000_001), max_points);
+        for arrival in 0..1_000_000 {
+            reducer.push(sample(arrival, (arrival % 997) as f64));
+        }
+        let loaded = reducer.finish(SignalId::Speed).unwrap();
+        assert_eq!(loaded.input_sample_count, 1_000_000);
+        assert!(reducer.retained_points() <= max_points);
+        assert!(loaded.display.values.len() <= max_points);
     }
 }

@@ -29,6 +29,10 @@ cargo run -p viewer-native -- \
 
 起動中のウィンドウへ `.mcap` ファイルをドロップして開くこともできます。カメラキャリブレーションを変更する場合は `--camera-calibration FILE` を指定してください。
 
+`standard` / `showcase` のLayout JSONは0.1では同梱された内部presetです。外部向けの保存形式や
+backward compatibilityは保証しません。`schemaVersion` / `configVersion` は同梱presetの開発時検証と
+unsupported panelの可視化に使い、外部Layoutのload/save/migration policyは公開時に別途定義します。
+
 ## ブラウザで再生
 
 ```bash

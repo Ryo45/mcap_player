@@ -17,8 +17,11 @@ type RestoreInbox = Rc<RefCell<VecDeque<(u64, Result<Vec<RawMessage>, DataLoadEr
 
 #[derive(Debug)]
 pub(crate) struct RemoteRestoreLoader {
+    #[cfg(target_arch = "wasm32")]
     client: RemoteApiClient,
+    #[cfg(target_arch = "wasm32")]
     recording_id: String,
+    #[cfg(target_arch = "wasm32")]
     revision: String,
     generation: u64,
     loading: bool,
@@ -29,9 +32,14 @@ pub(crate) struct RemoteRestoreLoader {
 
 impl RemoteRestoreLoader {
     pub(crate) fn new(client: RemoteApiClient, recording_id: String, revision: String) -> Self {
+        #[cfg(not(target_arch = "wasm32"))]
+        let _ = (client, recording_id, revision);
         Self {
+            #[cfg(target_arch = "wasm32")]
             client,
+            #[cfg(target_arch = "wasm32")]
             recording_id,
+            #[cfg(target_arch = "wasm32")]
             revision,
             generation: 0,
             loading: false,
@@ -178,9 +186,13 @@ struct FetchResult {
 }
 
 pub(crate) struct RemoteWindowLoader {
+    #[cfg(target_arch = "wasm32")]
     client: RemoteApiClient,
+    #[cfg(target_arch = "wasm32")]
     recording_id: String,
+    #[cfg(target_arch = "wasm32")]
     revision: String,
+    #[cfg(target_arch = "wasm32")]
     selected_streams: Vec<u32>,
     generation: u64,
     state: WindowLoadState,
@@ -200,10 +212,16 @@ impl RemoteWindowLoader {
         if selected_streams.is_empty() {
             return Err(DataLoadError::new("remote stream selection is empty"));
         }
+        #[cfg(not(target_arch = "wasm32"))]
+        let _ = (client, recording_id, revision, selected_streams);
         Ok(Self {
+            #[cfg(target_arch = "wasm32")]
             client,
+            #[cfg(target_arch = "wasm32")]
             recording_id,
+            #[cfg(target_arch = "wasm32")]
             revision,
+            #[cfg(target_arch = "wasm32")]
             selected_streams,
             generation: 0,
             state: WindowLoadState::Idle,
@@ -345,19 +363,6 @@ impl RemoteWindowLoader {
         };
         self.inbox.borrow_mut().push_back(FetchResult {
             generation,
-            range,
-            result: Ok(loaded),
-        });
-        Ok(())
-    }
-
-    #[cfg(test)]
-    pub(crate) fn inject_stale(&mut self, loaded: LoadedWindow) -> Result<(), DataLoadError> {
-        let WindowLoadState::Loading { generation, range } = self.state else {
-            return Err(DataLoadError::new("test loader is not loading"));
-        };
-        self.inbox.borrow_mut().push_back(FetchResult {
-            generation: generation.wrapping_sub(1),
             range,
             result: Ok(loaded),
         });
@@ -597,6 +602,18 @@ mod tests {
             first_body[44..].as_ptr(),
             "RawMessage must retain a Bytes slice rather than copying payload bytes"
         );
+    }
+
+    #[test]
+    fn restore_page_keeps_payload_slices_and_requires_a_complete_batch() {
+        let complete = page(&[(7, 12, b"payload")], true);
+        let backing = complete.body.clone();
+        let messages = decode_restore_page(complete).unwrap();
+        assert_eq!(messages.len(), 1);
+        assert_eq!(messages[0].stream_id, StreamId(7));
+        assert_eq!(messages[0].arrival_time, ArrivalTime(12));
+        assert_eq!(messages[0].payload.as_ptr(), backing[44..].as_ptr());
+        assert!(decode_restore_page(page(&[(7, 12, b"payload")], false)).is_err());
     }
 
     #[test]

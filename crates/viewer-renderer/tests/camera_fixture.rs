@@ -39,7 +39,7 @@ fn fixture_has_30_decodable_frames_and_distinct_time_domains() {
         &bindings(),
     )
     .unwrap();
-    source.select_streams(plan.selected_stream_ids());
+    source.select_streams(plan.selected_stream_ids()).unwrap();
     let mut cameras = CameraController::new(&plan);
     let (_, end) = source.time_range();
     for message in source.read_until(end).unwrap() {
@@ -91,7 +91,7 @@ fn malformed_message_does_not_stop_the_next_frame() {
         &bindings(),
     )
     .unwrap();
-    source.select_streams(plan.selected_stream_ids());
+    source.select_streams(plan.selected_stream_ids()).unwrap();
     let mut cameras = CameraController::new(&plan);
     let (_, end) = source.time_range();
     let messages = source.read_until(end).unwrap();
@@ -118,7 +118,7 @@ fn seven_camera_display_policy_stays_within_the_decode_budget() {
         &bindings(),
     )
     .unwrap();
-    playback.select_streams(plan.selected_stream_ids());
+    playback.select_streams(plan.selected_stream_ids()).unwrap();
     let mut cameras = CameraController::new(&plan);
     playback.clock_mut().toggle();
     let mut arrivals = BTreeMap::new();

@@ -4,7 +4,7 @@ use std::{collections::BTreeMap, time::Duration};
 use viewer_core::OverlayStatus;
 use viewer_core::{
     BevSnapshot, CameraCalibrationSet, CameraId, DiagnosticsPresentation, PresentationMetrics,
-    SceneSnapshot, ViewerPresentation,
+    ScenePresentationState, SceneSnapshot, ViewerPresentation,
 };
 use viewer_renderer::CameraOverlayState;
 
@@ -28,7 +28,7 @@ pub(crate) struct PresentationBuildInput<'a> {
     pub(crate) path: &'a viewer_core::PathController,
     pub(crate) odometry: &'a viewer_core::OdometryController,
     pub(crate) transforms: &'a viewer_core::TransformController,
-    pub(crate) scene_controller: Option<&'a mut viewer_core::SceneController>,
+    pub(crate) scene_controller: Option<&'a viewer_core::SceneController>,
     pub(crate) diagnostics: SessionDiagnostics,
     pub(crate) focused_camera: Option<CameraId>,
     pub(crate) accumulate_points: bool,
@@ -46,6 +46,7 @@ pub(crate) struct PresentationState {
     camera_overlays: CameraOverlayState,
     calibrations: CameraCalibrationSet,
     metrics: PresentationMetrics,
+    scene: ScenePresentationState,
 }
 
 impl PresentationState {
@@ -104,9 +105,7 @@ impl PresentationState {
             cameras: cameras.state(),
             telemetry: odometry.state(),
             path: path.state(),
-            point_cloud: scene_controller
-                .as_deref()
-                .map(viewer_core::SceneController::point_cloud),
+            point_cloud: scene_controller.map(viewer_core::SceneController::point_cloud),
             camera_topics: &diagnostics.camera_topics,
             focused_camera,
             overlays: &overlay_status,
@@ -124,9 +123,10 @@ impl PresentationState {
         let dynamic_transform_count = transforms.state().dynamic_len();
         let bev = viewer_core::BevFrameBuilder::new(path.state()).build();
         let scene = scene_controller.map_or_else(SceneSnapshot::default, |controller| {
-            controller.snapshot(
+            self.scene.build(
                 path.state(),
                 odometry.state(),
+                controller.point_cloud(),
                 transforms.state(),
                 accumulate_points,
             )
@@ -165,6 +165,7 @@ impl PresentationState {
     pub(crate) fn apply_transition(&mut self, _transition: PresentationTransition) {
         self.camera_overlays.reset_source();
         self.metrics.reset();
+        self.scene.reset();
     }
 }
 
@@ -198,6 +199,7 @@ mod tests {
                 message_encoding: "cdr".into(),
                 timing: StreamTimingSummary::default(),
             }],
+            capabilities: Default::default(),
         };
         let mut requirements = PlaybackRequirements::empty();
         requirements.require_all_cameras();
@@ -218,11 +220,11 @@ mod tests {
         presentation.advance_metrics(Duration::from_secs(1));
 
         let frame = presentation.build(PresentationBuildInput {
-            cameras: workspace.camera_controller.as_ref().unwrap(),
-            path: workspace.path_controller.as_ref().unwrap(),
-            odometry: workspace.odometry_controller.as_ref().unwrap(),
-            transforms: workspace.transform_controller.as_ref().unwrap(),
-            scene_controller: workspace.scene_controller.as_mut(),
+            cameras: workspace.runtime().cameras(),
+            path: workspace.runtime().path(),
+            odometry: workspace.runtime().odometry(),
+            transforms: workspace.runtime().transforms(),
+            scene_controller: workspace.runtime().scene(),
             diagnostics: diagnostics(),
             focused_camera: Some(CameraId(0)),
             accumulate_points: true,
@@ -232,16 +234,16 @@ mod tests {
         assert_eq!(camera.overlay, OverlayStatus::Waiting);
         assert_eq!(camera.fps, 1.0);
         assert!(frame.bev.path.is_empty());
-        assert!(frame.scene.accumulate);
+        assert!(frame.scene.cloud.is_empty());
         drop(frame);
 
         presentation.apply_transition(PresentationTransition::Seeked);
         let frame = presentation.build(PresentationBuildInput {
-            cameras: workspace.camera_controller.as_ref().unwrap(),
-            path: workspace.path_controller.as_ref().unwrap(),
-            odometry: workspace.odometry_controller.as_ref().unwrap(),
-            transforms: workspace.transform_controller.as_ref().unwrap(),
-            scene_controller: workspace.scene_controller.as_mut(),
+            cameras: workspace.runtime().cameras(),
+            path: workspace.runtime().path(),
+            odometry: workspace.runtime().odometry(),
+            transforms: workspace.runtime().transforms(),
+            scene_controller: workspace.runtime().scene(),
             diagnostics: diagnostics(),
             focused_camera: Some(CameraId(0)),
             accumulate_points: true,

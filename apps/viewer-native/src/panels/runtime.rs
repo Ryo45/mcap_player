@@ -193,11 +193,8 @@ mod tests {
 
     #[test]
     fn parses_camera_and_plot_configs() {
-        let camera = create_native_panel(&node(
-            "camera",
-            "camera",
-            json!({"fit": "contain", "showThumbnails": true}),
-        ));
+        let camera =
+            create_native_panel(&node("camera", "camera", json!({"showThumbnails": true})));
         assert_eq!(camera.kind_name(), "camera");
         let plot = create_native_panel(&node("plot", "plot", json!({"signal": "vehicle-speed"})));
         assert_eq!(plot.kind_name(), "plot");

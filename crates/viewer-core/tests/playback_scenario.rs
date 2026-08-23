@@ -66,7 +66,7 @@ impl PlaybackScenario {
             &bindings(),
         )
         .unwrap();
-        playback.select_streams(plan.selected_stream_ids());
+        playback.select_streams(plan.selected_stream_ids()).unwrap();
         let mut cameras = CameraController::new(&plan);
         cameras.set_focused_camera(self.initial_focus);
         let mut observations = Vec::with_capacity(self.steps.len());
@@ -93,8 +93,9 @@ impl PlaybackScenario {
                         |_, messages| {
                             cameras.reset_for_restore();
                             for message in &messages {
-                                cameras.restore(message);
+                                cameras.restore(message).unwrap();
                             }
+                            Ok::<(), std::convert::Infallible>(())
                         },
                     )
                     .unwrap(),

@@ -8,8 +8,8 @@ mod error;
 
 pub use batch::{BATCH_CONTENT_TYPE, BATCH_VERSION, BatchDecoder, BatchEncoder, RemoteMessageRef};
 pub use catalog::{
-    CatalogCapabilities, CatalogResponse, MessageCount, RecordingDescriptor, RecordingsResponse,
-    RemoteTimeRange, StreamDescriptor, StreamSemantic, TimestampNs,
+    CatalogResponse, MessageCount, RecordingDescriptor, RecordingsResponse, RemoteTimeRange,
+    StreamDescriptor, TimestampNs,
 };
 pub use error::ProtocolError;
 

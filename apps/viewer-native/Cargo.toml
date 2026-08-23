@@ -29,7 +29,6 @@ viewer-core = { path = "../../crates/viewer-core" }
 viewer-layout = { path = "../../crates/viewer-layout" }
 viewer-preview-mcap = { path = "../../crates/viewer-preview-mcap" }
 viewer-renderer = { path = "../../crates/viewer-renderer" }
-viewer-ui = { path = "../../crates/viewer-ui" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rclrs = { version = "=0.7.0", optional = true }

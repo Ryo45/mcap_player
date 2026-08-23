@@ -28,20 +28,14 @@
     </section>
     <section><h2>BEV · <span id="bev-status">WebGPU: waiting</span></h2><canvas id="bev" width="512" height="512"></canvas></section>
   </main>
-  <details class="range-spike">
+  <details class="remote-source">
     <summary>Remote Recording Server</summary>
     <label>Server URL <input id="remote-server-url" type="url" value="http://localhost:8081"></label>
     <button id="remote-connect" type="button">Connect</button>
     <label>Recording <select id="remote-recording"></select></label>
     <button id="remote-load-catalog" type="button">Load Catalog</button>
-    <button id="remote-fetch-batch" type="button">Fetch Sample Batch</button>
     <button id="remote-open-playback" type="button">Open Remote Playback</button>
-    <pre id="remote-output">Connect to inspect batches or open forward playback.</pre>
-  </details>
-  <details class="range-spike">
-    <summary>Range Read Spike</summary>
-    <label>Inspect MCAP ranges <input id="range-spike-file" type="file" accept=".mcap"></label>
-    <pre id="range-spike-output">Choose an MCAP file. This diagnostic does not start playback.</pre>
+    <pre id="remote-output">Connect to open indexed remote playback.</pre>
   </details>
 </body>
 </html>

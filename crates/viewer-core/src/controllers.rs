@@ -1,9 +1,8 @@
 use crate::{
     BevPathFrame, BevState, CameraFrame, CameraId, CameraState, DYNAMIC_TF_HISTORY,
-    PointCloudFrame, PointCloudState, RawMessage, RestoreSemantics, SceneFrameBuilder,
-    SceneSnapshot, SessionPlan, StreamId, TelemetryFrame, TelemetryState, TransformBatch,
-    TransformState, decode_compressed_image_bytes, decode_laser_scan, decode_odometry, decode_path,
-    decode_tf_message,
+    PointCloudFrame, PointCloudState, RawMessage, RestoreSemantics, SessionPlan, StreamId,
+    TelemetryFrame, TelemetryState, TransformBatch, TransformState, decode_compressed_image_bytes,
+    decode_laser_scan, decode_odometry, decode_path, decode_tf_message,
 };
 use std::{
     collections::{BTreeMap, HashMap},
@@ -104,7 +103,7 @@ impl CameraController {
                 .pending
                 .remove(&camera_id)
                 .expect("due Camera came from the pending map");
-            self.decode_and_apply(camera_id, message);
+            let _ = self.decode_and_apply(camera_id, message);
             self.next_presentation.insert(
                 camera_id,
                 self.presentation_elapsed
@@ -117,16 +116,19 @@ impl CameraController {
     }
 
     /// Applies one exact seek predecessor immediately, bypassing playback rate scheduling.
-    pub fn restore(&mut self, message: &RawMessage) -> bool {
+    ///
+    /// Unlike forward admission, restore is strict: a routed malformed predecessor is an error
+    /// so a staging [`crate::FeatureRuntime`] can discard the whole candidate state.
+    pub fn restore(&mut self, message: &RawMessage) -> Result<bool, crate::DecodeError> {
         let Some(camera_id) = self.stream_to_camera.get(&message.stream_id).copied() else {
-            return false;
+            return Ok(false);
         };
         self.input_frames = self.input_frames.saturating_add(1);
-        self.decode_and_apply(camera_id, message.clone());
+        self.decode_and_apply(camera_id, message.clone())?;
         self.presented_frames = self.presented_frames.saturating_add(1);
         let count = self.presented_by_id.entry(camera_id).or_default();
         *count = count.saturating_add(1);
-        true
+        Ok(true)
     }
 
     pub fn reset_for_restore(&mut self) {
@@ -227,7 +229,11 @@ impl CameraController {
         }
     }
 
-    fn decode_and_apply(&mut self, camera_id: CameraId, message: RawMessage) {
+    fn decode_and_apply(
+        &mut self,
+        camera_id: CameraId,
+        message: RawMessage,
+    ) -> Result<(), crate::DecodeError> {
         match decode_compressed_image_bytes(message.payload) {
             Ok(image) => {
                 self.state.apply(CameraFrame {
@@ -238,8 +244,12 @@ impl CameraController {
                     jpeg: image.jpeg,
                 });
                 self.counters.decoded = self.counters.decoded.saturating_add(1);
+                Ok(())
             }
-            Err(_) => self.counters.errors = self.counters.errors.saturating_add(1),
+            Err(error) => {
+                self.counters.errors = self.counters.errors.saturating_add(1);
+                Err(error)
+            }
         }
     }
 }
@@ -268,6 +278,19 @@ impl PathController {
         if Some(message.stream_id) != self.stream {
             return false;
         }
+        let _ = self.decode_and_apply(message);
+        true
+    }
+
+    pub fn restore(&mut self, message: &RawMessage) -> Result<bool, crate::DecodeError> {
+        if Some(message.stream_id) != self.stream {
+            return Ok(false);
+        }
+        self.decode_and_apply(message)?;
+        Ok(true)
+    }
+
+    fn decode_and_apply(&mut self, message: &RawMessage) -> Result<(), crate::DecodeError> {
         match decode_path(&message.payload) {
             Ok(path) => {
                 self.state.apply(BevPathFrame {
@@ -281,10 +304,13 @@ impl PathController {
                         .collect(),
                 });
                 self.counters.decoded = self.counters.decoded.saturating_add(1);
+                Ok(())
             }
-            Err(_) => self.counters.errors = self.counters.errors.saturating_add(1),
+            Err(error) => {
+                self.counters.errors = self.counters.errors.saturating_add(1);
+                Err(error)
+            }
         }
-        true
     }
 
     pub fn reset_for_restore(&mut self) {
@@ -324,6 +350,19 @@ impl OdometryController {
         if Some(message.stream_id) != self.stream {
             return false;
         }
+        let _ = self.decode_and_apply(message);
+        true
+    }
+
+    pub fn restore(&mut self, message: &RawMessage) -> Result<bool, crate::DecodeError> {
+        if Some(message.stream_id) != self.stream {
+            return Ok(false);
+        }
+        self.decode_and_apply(message)?;
+        Ok(true)
+    }
+
+    fn decode_and_apply(&mut self, message: &RawMessage) -> Result<(), crate::DecodeError> {
         match decode_odometry(&message.payload) {
             Ok(odometry) => {
                 let [qx, qy, qz, qw] = odometry.orientation;
@@ -343,10 +382,13 @@ impl OdometryController {
                     yaw_rate: odometry.angular_velocity[2],
                 });
                 self.counters.decoded = self.counters.decoded.saturating_add(1);
+                Ok(())
             }
-            Err(_) => self.counters.errors = self.counters.errors.saturating_add(1),
+            Err(error) => {
+                self.counters.errors = self.counters.errors.saturating_add(1);
+                Err(error)
+            }
         }
-        true
     }
 
     pub fn reset_for_restore(&mut self) {
@@ -396,6 +438,27 @@ impl TransformController {
         } else {
             return false;
         };
+        let _ = self.decode_and_apply(message, is_static);
+        true
+    }
+
+    pub fn restore(&mut self, message: &RawMessage) -> Result<bool, crate::DecodeError> {
+        let is_static = if Some(message.stream_id) == self.static_stream {
+            true
+        } else if Some(message.stream_id) == self.dynamic_stream {
+            false
+        } else {
+            return Ok(false);
+        };
+        self.decode_and_apply(message, is_static)?;
+        Ok(true)
+    }
+
+    fn decode_and_apply(
+        &mut self,
+        message: &RawMessage,
+        is_static: bool,
+    ) -> Result<(), crate::DecodeError> {
         match decode_tf_message(&message.payload) {
             Ok(transforms) => {
                 self.state.apply(TransformBatch {
@@ -404,10 +467,13 @@ impl TransformController {
                     transforms,
                 });
                 self.counters.decoded = self.counters.decoded.saturating_add(1);
+                Ok(())
             }
-            Err(_) => self.counters.errors = self.counters.errors.saturating_add(1),
+            Err(error) => {
+                self.counters.errors = self.counters.errors.saturating_add(1);
+                Err(error)
+            }
         }
-        true
     }
 
     pub fn reset_for_restore(&mut self, _target: crate::ArrivalTime) {
@@ -427,7 +493,6 @@ impl TransformController {
 pub struct SceneController {
     stream: Option<StreamId>,
     point_cloud: PointCloudState,
-    builder: SceneFrameBuilder,
     counters: ProcessingCounters,
 }
 
@@ -440,7 +505,6 @@ impl SceneController {
         Self {
             stream: plan.point_cloud_stream().map(|stream| stream.id),
             point_cloud: PointCloudState::default(),
-            builder: SceneFrameBuilder::new(),
             counters: ProcessingCounters::default(),
         }
     }
@@ -449,6 +513,19 @@ impl SceneController {
         if Some(message.stream_id) != self.stream {
             return false;
         }
+        let _ = self.decode_and_apply(message);
+        true
+    }
+
+    pub fn restore(&mut self, message: &RawMessage) -> Result<bool, crate::DecodeError> {
+        if Some(message.stream_id) != self.stream {
+            return Ok(false);
+        }
+        self.decode_and_apply(message)?;
+        Ok(true)
+    }
+
+    fn decode_and_apply(&mut self, message: &RawMessage) -> Result<(), crate::DecodeError> {
         match decode_laser_scan(&message.payload) {
             Ok(scan) => {
                 let mut points = Vec::with_capacity(scan.ranges.len());
@@ -466,26 +543,17 @@ impl SceneController {
                     points,
                 });
                 self.counters.decoded = self.counters.decoded.saturating_add(1);
+                Ok(())
             }
-            Err(_) => self.counters.errors = self.counters.errors.saturating_add(1),
+            Err(error) => {
+                self.counters.errors = self.counters.errors.saturating_add(1);
+                Err(error)
+            }
         }
-        true
     }
 
     pub fn reset_for_restore(&mut self) {
         self.point_cloud.cold_seek();
-        self.builder.reset();
-    }
-
-    pub fn snapshot<'a>(
-        &'a mut self,
-        path: &'a BevState,
-        odometry: &'a TelemetryState,
-        transforms: &'a TransformState,
-        accumulate: bool,
-    ) -> SceneSnapshot<'a> {
-        self.builder
-            .build(path, odometry, &self.point_cloud, transforms, accumulate)
     }
 
     pub fn point_cloud(&self) -> &PointCloudState {
@@ -520,6 +588,7 @@ mod tests {
     fn camera_plan() -> SessionPlan {
         let catalog = SourceCatalog {
             time_range: None,
+            capabilities: Default::default(),
             streams: vec![StreamDescriptor {
                 id: StreamId(7),
                 topic: "/camera".into(),
@@ -610,6 +679,7 @@ mod tests {
     fn camera_restore_bypasses_playback_scheduler_for_every_selected_camera() {
         let catalog = SourceCatalog {
             time_range: None,
+            capabilities: Default::default(),
             streams: (0..3)
                 .map(|index| StreamDescriptor {
                     id: StreamId(7 + index),
@@ -636,11 +706,15 @@ mod tests {
             )
         };
         for index in 0..3 {
-            assert!(controller.restore(&RawMessage {
-                stream_id: StreamId(7 + index),
-                arrival_time: ArrivalTime(i64::from(index)),
-                payload: payload(i64::from(index)),
-            }));
+            assert!(
+                controller
+                    .restore(&RawMessage {
+                        stream_id: StreamId(7 + index),
+                        arrival_time: ArrivalTime(i64::from(index)),
+                        payload: payload(i64::from(index)),
+                    })
+                    .unwrap()
+            );
         }
 
         assert_eq!(controller.state().frames().count(), 3);
@@ -652,6 +726,7 @@ mod tests {
     fn repeated_static_transforms_restore_only_updates_valid_at_target() {
         let catalog = SourceCatalog {
             time_range: None,
+            capabilities: Default::default(),
             streams: vec![StreamDescriptor {
                 id: StreamId(9),
                 topic: "/tf_static".into(),

@@ -1,14 +1,27 @@
 use super::{
-    NativePanel, PanelDataRequirements, PanelFrameContext, PanelOutput, PlaceholderPanel,
-    SCENE_CONFIG_VERSION,
+    NativePanel, PanelDataRequirements, PanelOutput, PlaceholderPanel, SCENE_CONFIG_VERSION,
 };
 use crate::{
     graphics::views::{SceneViewInput, show_scene_view},
     interaction::ViewerAction,
     workspace::SceneViewState,
 };
+use scene_renderer::SceneCameraMode;
 use serde::{Deserialize, Serialize};
+use viewer_core::SceneDiagnostics;
 use viewer_layout::{PanelId, PanelNode};
+
+#[derive(Clone, Copy)]
+pub(crate) struct ScenePanelInput<'a> {
+    pub(crate) texture_id: egui::TextureId,
+    pub(crate) scan_points: usize,
+    pub(crate) visible_scan_points: usize,
+    pub(crate) camera_distance: f32,
+    pub(crate) camera_mode: SceneCameraMode,
+    pub(crate) diagnostics: &'a SceneDiagnostics,
+    pub(crate) static_transform_count: usize,
+    pub(crate) dynamic_transform_count: usize,
+}
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub(crate) struct ScenePanelConfig {}
@@ -43,30 +56,26 @@ impl ScenePanel {
     }
 
     pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
-        requirements.playback.require_path();
-        requirements.playback.require_odometry();
+        requirements.playback.optional_path();
+        requirements.playback.optional_odometry();
         requirements.playback.require_point_cloud();
         requirements.playback.require_transforms();
     }
 
-    pub(crate) fn show(
-        &mut self,
-        ui: &mut egui::Ui,
-        context: &PanelFrameContext<'_>,
-    ) -> PanelOutput {
+    pub(crate) fn show(&mut self, ui: &mut egui::Ui, input: ScenePanelInput<'_>) -> PanelOutput {
         ui.push_id((self.id.as_str(), self.title.as_deref()), |ui| {
             let output = show_scene_view(
                 ui,
                 SceneViewInput {
-                    texture_id: context.resources.scene_texture,
-                    scan_points: context.presentation.diagnostics.scan_points,
-                    visible_scan_points: context.scene.visible_scan_points,
-                    camera_distance: context.scene.camera_distance,
-                    camera_mode: context.scene.camera_mode,
+                    texture_id: input.texture_id,
+                    scan_points: input.scan_points,
+                    visible_scan_points: input.visible_scan_points,
+                    camera_distance: input.camera_distance,
+                    camera_mode: input.camera_mode,
                     accumulate_points: self.state.accumulate_points,
-                    diagnostics: context.scene.diagnostics,
-                    static_transform_count: context.scene.static_transform_count,
-                    dynamic_transform_count: context.scene.dynamic_transform_count,
+                    diagnostics: input.diagnostics,
+                    static_transform_count: input.static_transform_count,
+                    dynamic_transform_count: input.dynamic_transform_count,
                 },
             );
             let mut actions = Vec::new();

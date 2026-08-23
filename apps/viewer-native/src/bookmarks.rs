@@ -1,6 +1,5 @@
 use std::{
-    fs::{self, File},
-    io::{self, Write},
+    fs,
     path::{Path, PathBuf},
 };
 use viewer_core::{Bookmark, BookmarkDocument, SourceFingerprint};
@@ -52,23 +51,6 @@ impl BookmarkState {
 
     pub(crate) fn warning(&self) -> Option<&str> {
         self.warning.as_deref()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn save(&self, source_path: &Path) -> io::Result<()> {
-        let Some(document) = &self.document else {
-            return Ok(());
-        };
-        let destination = bookmark_path(source_path);
-        let temporary = destination.with_extension("json.tmp");
-        let json = document
-            .to_json_pretty()
-            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
-        let mut file = File::create(&temporary)?;
-        file.write_all(json.as_bytes())?;
-        file.flush()?;
-        file.sync_all()?;
-        fs::rename(temporary, destination)
     }
 }
 

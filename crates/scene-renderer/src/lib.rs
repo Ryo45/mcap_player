@@ -14,7 +14,6 @@ pub struct SceneFrame<'a> {
     /// ROS world-frame points: +x forward, +y left, +z up.
     /// The acquisition-time pose has already been applied.
     pub cloud: &'a [[f32; 3]],
-    pub accumulate: bool,
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -95,11 +94,9 @@ pub struct SceneRenderer {
     point_buffer: wgpu::Buffer,
     point_capacity: usize,
     point_count: u32,
-    accumulated_points: Vec<[f32; 3]>,
     size: (u32, u32),
     last_revision: Option<u64>,
     last_cloud_revision: Option<u64>,
-    last_accumulate: bool,
     camera: SceneCamera,
     camera_mode: SceneCameraMode,
     camera_dirty: bool,
@@ -256,11 +253,9 @@ impl SceneRenderer {
             point_buffer,
             point_capacity: 1,
             point_count: 0,
-            accumulated_points: Vec::new(),
             size: (width, height),
             last_revision: None,
             last_cloud_revision: None,
-            last_accumulate: false,
             camera: SceneCamera::default(),
             camera_mode: SceneCameraMode::default(),
             camera_dirty: true,
@@ -300,26 +295,16 @@ impl SceneRenderer {
             self.metrics.layer_uploads += 1;
         }
         let cloud_changed = self.last_cloud_revision != Some(frame.cloud_revision);
-        let mode_changed = self.last_accumulate != frame.accumulate;
-        if cloud_changed || mode_changed {
-            update_accumulated_cloud(
-                &mut self.accumulated_points,
-                frame,
-                cloud_changed,
-                mode_changed,
-            );
-            if self.accumulated_points.len() > self.point_capacity {
-                self.point_capacity = self.accumulated_points.len().next_power_of_two();
+        if cloud_changed {
+            let points = world_cloud(frame).collect::<Vec<_>>();
+            if points.len() > self.point_capacity {
+                self.point_capacity = points.len().next_power_of_two();
                 self.point_buffer = make_empty_point_buffer(device, self.point_capacity);
             }
-            if !self.accumulated_points.is_empty() {
-                queue.write_buffer(
-                    &self.point_buffer,
-                    0,
-                    bytemuck::cast_slice(&self.accumulated_points),
-                );
+            if !points.is_empty() {
+                queue.write_buffer(&self.point_buffer, 0, bytemuck::cast_slice(&points));
             }
-            self.point_count = u32::try_from(self.accumulated_points.len()).unwrap_or(u32::MAX);
+            self.point_count = u32::try_from(points.len()).unwrap_or(u32::MAX);
             self.metrics.point_uploads += 1;
         }
 
@@ -383,7 +368,6 @@ impl SceneRenderer {
         queue.submit([encoder.finish()]);
         self.last_revision = Some(frame.revision);
         self.last_cloud_revision = Some(frame.cloud_revision);
-        self.last_accumulate = frame.accumulate;
         self.camera_dirty = false;
         self.metrics.renders += 1;
     }
@@ -391,7 +375,6 @@ impl SceneRenderer {
     pub fn needs_render(&self, frame: SceneFrame<'_>) -> bool {
         self.last_revision != Some(frame.revision)
             || self.last_cloud_revision != Some(frame.cloud_revision)
-            || self.last_accumulate != frame.accumulate
             || self.camera_dirty
     }
 
@@ -404,14 +387,7 @@ impl SceneRenderer {
     }
 
     pub fn visible_points(&self) -> usize {
-        self.accumulated_points.len()
-    }
-
-    pub fn clear_cloud_history(&mut self) {
-        self.accumulated_points.clear();
-        self.point_count = 0;
-        self.last_cloud_revision = None;
-        self.camera_dirty = true;
+        self.point_count as usize
     }
 
     pub fn camera(&self) -> SceneCamera {
@@ -506,35 +482,6 @@ fn camera_pose(
                 ],
             )
         }
-    }
-}
-
-const MAX_ACCUMULATED_POINTS: usize = 65_536;
-
-fn update_accumulated_cloud(
-    accumulated: &mut Vec<[f32; 3]>,
-    frame: SceneFrame<'_>,
-    cloud_changed: bool,
-    mode_changed: bool,
-) {
-    if frame.cloud.is_empty() {
-        if !frame.accumulate {
-            accumulated.clear();
-        }
-        return;
-    }
-    if cloud_changed {
-        if !frame.accumulate {
-            accumulated.clear();
-        }
-        accumulated.extend(world_cloud(frame));
-    } else if mode_changed && !frame.accumulate {
-        accumulated.clear();
-        accumulated.extend(world_cloud(frame));
-    }
-    if accumulated.len() > MAX_ACCUMULATED_POINTS {
-        let excess = accumulated.len() - MAX_ACCUMULATED_POINTS;
-        accumulated.drain(..excess);
     }
 }
 
@@ -787,7 +734,6 @@ mod tests {
             ego_yaw: 0.25,
             path: &path,
             cloud: &[],
-            accumulate: false,
         });
         assert_eq!(vertices.len(), 24 + 2 + 4);
         assert!(vertices.iter().all(|vertex| {
@@ -796,84 +742,6 @@ mod tests {
                 .iter()
                 .all(|component| component.is_finite())
         }));
-    }
-
-    #[test]
-    fn accumulation_switches_between_history_and_latest() {
-        let first = [[0.0, 0.1, 1.0], [1.0, 0.1, 1.0]];
-        let second = [[0.0, 0.1, 2.0]];
-        let mut accumulated = Vec::new();
-        let first_frame = SceneFrame {
-            cloud_revision: 1,
-            cloud: &first,
-            accumulate: true,
-            ..SceneFrame::default()
-        };
-        update_accumulated_cloud(&mut accumulated, first_frame, true, true);
-        let second_frame = SceneFrame {
-            cloud_revision: 2,
-            cloud: &second,
-            accumulate: true,
-            ..SceneFrame::default()
-        };
-        update_accumulated_cloud(&mut accumulated, second_frame, true, false);
-        assert_eq!(
-            accumulated,
-            vec![[-0.1, 1.0, -0.0], [-0.1, 1.0, -1.0], [-0.1, 2.0, -0.0]]
-        );
-
-        let snapshot = accumulated.clone();
-        update_accumulated_cloud(
-            &mut accumulated,
-            SceneFrame {
-                ego_position: [100.0, -50.0],
-                ego_yaw: 2.0,
-                ..second_frame
-            },
-            false,
-            false,
-        );
-        assert_eq!(
-            accumulated, snapshot,
-            "pose-only updates must not move history"
-        );
-
-        let latest_only = SceneFrame {
-            accumulate: false,
-            ..second_frame
-        };
-        update_accumulated_cloud(&mut accumulated, latest_only, false, true);
-        assert_eq!(accumulated.len(), 1);
-    }
-
-    #[test]
-    fn empty_scan_preserves_history_only_in_accumulation_mode() {
-        let mut accumulated = vec![[1.0, 2.0, 3.0]];
-        update_accumulated_cloud(
-            &mut accumulated,
-            SceneFrame {
-                cloud_revision: 2,
-                cloud: &[],
-                accumulate: true,
-                ..SceneFrame::default()
-            },
-            true,
-            false,
-        );
-        assert_eq!(accumulated, [[1.0, 2.0, 3.0]]);
-
-        update_accumulated_cloud(
-            &mut accumulated,
-            SceneFrame {
-                cloud_revision: 3,
-                cloud: &[],
-                accumulate: false,
-                ..SceneFrame::default()
-            },
-            true,
-            true,
-        );
-        assert!(accumulated.is_empty());
     }
 
     #[test]

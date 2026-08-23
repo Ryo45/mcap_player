@@ -3,8 +3,6 @@
 //! The bounded latest mailbox is usable without ROS, which keeps normal and
 //! WASM builds free from ROS native dependencies.
 
-#![allow(dead_code)]
-
 use std::sync::Mutex;
 
 #[derive(Debug)]
@@ -270,6 +268,7 @@ mod tests {
                 timing: viewer_core::StreamTimingSummary::default(),
             }],
             time_range: None,
+            capabilities: viewer_core::SourceCapabilities::LIVE,
         };
         let mut requirements = PlaybackRequirements::empty();
         requirements.require_all_cameras();

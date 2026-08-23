@@ -1,21 +1,24 @@
 use crate::{
-    ArrivalTime, RangeQuery, RangeQueryError, RangeQueryResult, RawMessage, RecordingTimeRange,
-    SourceCatalog, StreamDescriptor, StreamId, StreamTimingSummary,
+    ArrivalTime, IndexedChunkFact, RangeQuery, RangeQueryError, RangeQueryResult, RawMessage,
+    RecordingTimeRange, SourceCapabilities, SourceCatalog, StreamDescriptor, StreamId,
+    StreamTimingSummary, ensure_indexed, history_candidate_chunks, latest_candidate_chunks,
 };
 use bytes::Bytes;
-use mcap::{MessageStream, Summary};
+use mcap::{Summary, records::op};
 use std::{
-    collections::{BTreeMap, HashMap, HashSet},
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     fmt,
+    io::Read,
 };
-
-const LINEAR_FALLBACK_LIMIT: usize = 64 * 1024 * 1024;
 
 #[derive(Debug)]
 pub enum McapOpenError {
     Mcap(mcap::McapError),
-    SummaryRequired(usize),
+    SummaryRequired,
+    ChunkIndexRequired,
     MessageIndexRequired(StreamId),
+    InvalidChunk(String),
+    UnsupportedCompression(String),
     TimestampOverflow,
 }
 
@@ -23,16 +26,20 @@ impl fmt::Display for McapOpenError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Mcap(error) => write!(f, "MCAP error: {error}"),
-            Self::SummaryRequired(size) => write!(
-                f,
-                "MCAP file without a summary is too large for linear fallback ({size} bytes)"
-            ),
+            Self::SummaryRequired => write!(f, "MCAP Summary is required for indexed playback"),
+            Self::ChunkIndexRequired => {
+                write!(f, "MCAP Chunk Index is required for indexed playback")
+            }
             Self::TimestampOverflow => write!(f, "MCAP timestamp exceeds signed nanosecond range"),
             Self::MessageIndexRequired(stream) => write!(
                 f,
                 "MCAP Message Index is required to restore stream {}",
                 stream.0
             ),
+            Self::InvalidChunk(reason) => write!(f, "invalid MCAP Chunk: {reason}"),
+            Self::UnsupportedCompression(compression) => {
+                write!(f, "unsupported MCAP Chunk compression: {compression}")
+            }
         }
     }
 }
@@ -51,23 +58,29 @@ struct CachedMessage {
     payload: Bytes,
 }
 
-pub struct McapSource<B: AsRef<[u8]>> {
-    backing: B,
-    summary: Option<Summary>,
+pub struct McapSource {
+    backing: Bytes,
+    summary: Summary,
     catalog: SourceCatalog,
     range: (ArrivalTime, ArrivalTime),
     cache: Vec<CachedMessage>,
     chunk: Option<usize>,
     position: usize,
     selected_streams: Option<HashSet<StreamId>>,
-    /// Sparse physical index: stream -> chunks that contain a Message Index for that stream.
-    /// Individual MessageIndexEntry records remain on disk and are read only for a restore.
-    message_index_chunks: HashMap<StreamId, Vec<usize>>,
+    index_facts: Vec<IndexedChunkFact>,
+}
+
+pub(crate) struct McapSourcePosition {
+    cache: Vec<CachedMessage>,
+    chunk: Option<usize>,
+    position: usize,
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct IndexedReadDiagnostics {
     pub chunks_streamed: usize,
+    /// Payload bytes copied after decompression while constructing individual RawMessages.
+    pub per_message_copied_bytes: usize,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -76,15 +89,34 @@ pub struct IndexedMessages {
     pub diagnostics: IndexedReadDiagnostics,
 }
 
-impl<B: AsRef<[u8]>> McapSource<B> {
-    pub fn new(backing: B) -> Result<Self, McapOpenError> {
+impl McapSource {
+    /// Copies an arbitrary borrowed input once into source-owned backing.
+    ///
+    /// Native mmap callers should use [`Self::from_owner`] so the file mapping itself becomes the
+    /// shared backing and this construction copy is avoided.
+    pub fn new(backing: impl AsRef<[u8]>) -> Result<Self, McapOpenError> {
+        Self::from_bytes(Bytes::copy_from_slice(backing.as_ref()))
+    }
+
+    pub fn from_owner<B>(backing: B) -> Result<Self, McapOpenError>
+    where
+        B: AsRef<[u8]> + Send + 'static,
+    {
+        Self::from_bytes(Bytes::from_owner(backing))
+    }
+
+    pub fn from_bytes(backing: Bytes) -> Result<Self, McapOpenError> {
         let bytes = backing.as_ref();
-        let summary = Summary::read(bytes)?;
-        if summary.is_none() && bytes.len() > LINEAR_FALLBACK_LIMIT {
-            return Err(McapOpenError::SummaryRequired(bytes.len()));
+        let summary = Summary::read(bytes)?.ok_or(McapOpenError::SummaryRequired)?;
+        if summary.chunk_indexes.is_empty() {
+            return Err(McapOpenError::ChunkIndexRequired);
         }
-        let mut catalog = SourceCatalog::default();
-        if let Some(value) = &summary {
+        let mut catalog = SourceCatalog {
+            capabilities: SourceCapabilities::INDEXED_RECORDING,
+            ..SourceCatalog::default()
+        };
+        {
+            let value = &summary;
             for channel in value.channels.values() {
                 catalog.streams.push(StreamDescriptor {
                     id: StreamId(u32::from(channel.id)),
@@ -104,7 +136,8 @@ impl<B: AsRef<[u8]>> McapSource<B> {
             }
             catalog.streams.sort_by_key(|stream| stream.id.0);
         }
-        let range = if let Some(value) = &summary {
+        let range = {
+            let value = &summary;
             let (start, end) = value.stats.as_ref().map_or_else(
                 || {
                     let start = value
@@ -126,26 +159,26 @@ impl<B: AsRef<[u8]>> McapSource<B> {
                 |stats| (stats.message_start_time, stats.message_end_time),
             );
             (to_arrival(start)?, to_arrival(end)?)
-        } else {
-            (ArrivalTime(0), ArrivalTime(0))
         };
         catalog.time_range = range
             .1
             .0
             .checked_add(1)
             .and_then(|end| RecordingTimeRange::new(range.0, ArrivalTime(end)));
-        let mut message_index_chunks = HashMap::<StreamId, Vec<usize>>::new();
-        if let Some(summary) = &summary {
-            for (chunk_index, chunk) in summary.chunk_indexes.iter().enumerate() {
-                for channel_id in chunk.message_index_offsets.keys() {
-                    message_index_chunks
-                        .entry(StreamId(u32::from(*channel_id)))
-                        .or_default()
-                        .push(chunk_index);
-                }
-            }
-        }
-        let mut source = Self {
+        let index_facts = summary
+            .chunk_indexes
+            .iter()
+            .map(|chunk| IndexedChunkFact {
+                start: to_arrival_lossy(chunk.message_start_time),
+                end_inclusive: to_arrival_lossy(chunk.message_end_time),
+                indexed_streams: chunk
+                    .message_index_offsets
+                    .keys()
+                    .map(|channel| StreamId(u32::from(*channel)))
+                    .collect::<BTreeSet<_>>(),
+            })
+            .collect();
+        Ok(Self {
             backing,
             summary,
             catalog,
@@ -154,20 +187,8 @@ impl<B: AsRef<[u8]>> McapSource<B> {
             chunk: None,
             position: 0,
             selected_streams: None,
-            message_index_chunks,
-        };
-        if !source.has_chunks() {
-            source.load_linear()?;
-            if let (Some(first), Some(last)) = (source.cache.first(), source.cache.last()) {
-                source.range = (first.arrival, last.arrival);
-                source.catalog.time_range = last
-                    .arrival
-                    .0
-                    .checked_add(1)
-                    .and_then(|end| RecordingTimeRange::new(first.arrival, ArrivalTime(end)));
-            }
-        }
-        Ok(source)
+            index_facts,
+        })
     }
 
     pub fn catalog(&self) -> &SourceCatalog {
@@ -177,44 +198,58 @@ impl<B: AsRef<[u8]>> McapSource<B> {
         self.range
     }
 
-    pub fn select_streams(&mut self, streams: impl IntoIterator<Item = StreamId>) {
+    pub fn select_streams(
+        &mut self,
+        streams: impl IntoIterator<Item = StreamId>,
+    ) -> Result<(), McapOpenError> {
         let selected = streams.into_iter().collect::<HashSet<_>>();
-        if self.has_chunks() {
-            self.cache.clear();
-            self.chunk = None;
-        } else {
-            // Summary-less/unchunked sources are loaded once during construction. Keep that
-            // bounded fallback buffer and prune it in place instead of clearing the only copy.
-            self.cache
-                .retain(|message| selected.contains(&message.stream_id));
+        for stream in &selected {
+            let descriptor = self
+                .catalog
+                .by_id(*stream)
+                .ok_or(mcap::McapError::BadIndex)?;
+            ensure_indexed(&self.index_facts, *stream, descriptor.timing.message_count)
+                .map_err(|error| McapOpenError::MessageIndexRequired(error.stream))?;
         }
+        self.cache.clear();
+        self.chunk = None;
         self.selected_streams = Some(selected);
         self.position = 0;
-    }
-
-    pub fn seek(&mut self, cursor: ArrivalTime) -> Result<(), McapOpenError> {
-        if self.has_chunks() {
-            let summary = self.summary.as_ref().expect("chunk summary checked");
-            let partition = summary
-                .chunk_indexes
-                .partition_point(|index| to_arrival_lossy(index.message_end_time) < cursor);
-            let selected = partition.min(summary.chunk_indexes.len() - 1);
-            let cache = self.read_chunk(selected)?;
-            let position = cache.partition_point(|message| message.arrival < cursor);
-            self.cache = cache;
-            self.chunk = Some(selected);
-            self.position = position;
-        } else {
-            self.load_linear()?;
-            self.position = self
-                .cache
-                .partition_point(|message| message.arrival < cursor);
-        }
         Ok(())
     }
 
+    pub fn seek(&mut self, cursor: ArrivalTime) -> Result<(), McapOpenError> {
+        let position = self.prepare_seek(cursor)?;
+        self.commit_seek(position);
+        Ok(())
+    }
+
+    pub(crate) fn prepare_seek(
+        &self,
+        cursor: ArrivalTime,
+    ) -> Result<McapSourcePosition, McapOpenError> {
+        let partition = self
+            .summary
+            .chunk_indexes
+            .partition_point(|index| to_arrival_lossy(index.message_end_time) < cursor);
+        let selected = partition.min(self.summary.chunk_indexes.len() - 1);
+        let cache = self.read_chunk(selected)?;
+        let position = cache.partition_point(|message| message.arrival < cursor);
+        Ok(McapSourcePosition {
+            cache,
+            chunk: Some(selected),
+            position,
+        })
+    }
+
+    pub(crate) fn commit_seek(&mut self, position: McapSourcePosition) {
+        self.cache = position.cache;
+        self.chunk = position.chunk;
+        self.position = position.position;
+    }
+
     pub fn read_until(&mut self, cursor: ArrivalTime) -> Result<Vec<RawMessage>, McapOpenError> {
-        if self.has_chunks() && self.chunk.is_none() {
+        if self.chunk.is_none() {
             self.load_chunk(0)?;
         }
         let mut output = vec![];
@@ -233,10 +268,7 @@ impl<B: AsRef<[u8]>> McapSource<B> {
             let Some(next) = self.chunk.map(|value| value + 1) else {
                 return Ok(output);
             };
-            let count = self
-                .summary
-                .as_ref()
-                .map_or(0, |summary| summary.chunk_indexes.len());
+            let count = self.summary.chunk_indexes.len();
             if next >= count {
                 return Ok(output);
             }
@@ -267,8 +299,8 @@ impl<B: AsRef<[u8]>> McapSource<B> {
             )));
         }
 
-        let mut source = McapSource::new(self.backing.as_ref())?;
-        source.select_streams(query.streams.iter().copied());
+        let mut source = McapSource::from_bytes(self.backing.clone())?;
+        source.select_streams(query.streams.iter().copied())?;
         source.seek(query.range.start)?;
         let mut messages = Vec::new();
         let mut payload_bytes = 0_usize;
@@ -310,10 +342,7 @@ impl<B: AsRef<[u8]>> McapSource<B> {
                     complete: true,
                 });
             };
-            let count = source
-                .summary
-                .as_ref()
-                .map_or(0, |summary| summary.chunk_indexes.len());
+            let count = source.summary.chunk_indexes.len();
             if next >= count {
                 return Ok(RangeQueryResult {
                     messages,
@@ -341,22 +370,19 @@ impl<B: AsRef<[u8]>> McapSource<B> {
         let mut candidates = BTreeMap::<usize, Vec<(StreamId, u64)>>::new();
 
         for stream in streams.iter().copied() {
-            let Some(chunks) = self.message_index_chunks.get(&stream) else {
-                if self
-                    .catalog
-                    .by_id(stream)
-                    .and_then(|descriptor| descriptor.timing.message_count)
-                    == Some(0)
-                {
-                    continue;
-                }
-                return Err(McapOpenError::MessageIndexRequired(stream));
-            };
-            for chunk_index in chunks.iter().copied().rev() {
+            let count = self
+                .catalog
+                .by_id(stream)
+                .and_then(|descriptor| descriptor.timing.message_count);
+            for chunk_index in latest_candidate_chunks(
+                &self.index_facts,
+                stream,
+                count,
+                ArrivalTime(i64::try_from(target).unwrap_or(i64::MAX)),
+            )
+            .map_err(|error| McapOpenError::MessageIndexRequired(error.stream))?
+            {
                 let chunk = &summary.chunk_indexes[chunk_index];
-                if chunk.message_start_time > target {
-                    continue;
-                }
                 let indexes = if let Some(indexes) = index_cache.get(&chunk_index) {
                     indexes
                 } else {
@@ -382,21 +408,18 @@ impl<B: AsRef<[u8]>> McapSource<B> {
                 candidates
                     .entry(chunk_index)
                     .or_default()
-                    .push((stream, entry.log_time));
+                    .push((stream, entry.offset));
                 break;
             }
         }
 
         let mut selected = HashMap::<StreamId, RawMessage>::new();
         for (chunk_index, wanted) in &candidates {
-            let chunk = &summary.chunk_indexes[*chunk_index];
-            for message in summary.stream_chunk(self.backing.as_ref(), chunk)? {
-                let message = message?;
-                let stream = StreamId(u32::from(message.channel.id));
-                if wanted.iter().any(|(wanted_stream, time)| {
-                    *wanted_stream == stream && *time == message.log_time
+            for message in self.parse_chunk(*chunk_index)? {
+                if wanted.iter().any(|(wanted_stream, offset)| {
+                    *wanted_stream == message.message.stream_id && *offset == message.offset
                 }) {
-                    selected.insert(stream, raw_message(message)?);
+                    selected.insert(message.message.stream_id, message.message);
                 }
             }
         }
@@ -406,6 +429,7 @@ impl<B: AsRef<[u8]>> McapSource<B> {
             messages,
             diagnostics: IndexedReadDiagnostics {
                 chunks_streamed: candidates.len(),
+                per_message_copied_bytes: 0,
             },
         })
     }
@@ -416,38 +440,28 @@ impl<B: AsRef<[u8]>> McapSource<B> {
         streams: &[StreamId],
         range: crate::DataWindowTimeRange,
     ) -> Result<IndexedMessages, McapOpenError> {
-        let summary = self.indexed_summary(streams)?;
+        self.indexed_summary(streams)?;
         let mut chunks = HashSet::<usize>::new();
         for stream in streams.iter().copied() {
-            let Some(indexes) = self.message_index_chunks.get(&stream) else {
-                if self
-                    .catalog
-                    .by_id(stream)
-                    .and_then(|value| value.timing.message_count)
-                    == Some(0)
-                {
-                    continue;
-                }
-                return Err(McapOpenError::MessageIndexRequired(stream));
-            };
-            chunks.extend(indexes.iter().copied().filter(|index| {
-                let chunk = &summary.chunk_indexes[*index];
-                to_arrival_lossy(chunk.message_end_time) >= range.start
-                    && to_arrival_lossy(chunk.message_start_time) < range.end_exclusive
-            }));
+            let count = self
+                .catalog
+                .by_id(stream)
+                .and_then(|value| value.timing.message_count);
+            chunks.extend(
+                history_candidate_chunks(&self.index_facts, stream, count, range)
+                    .map_err(|error| McapOpenError::MessageIndexRequired(error.stream))?,
+            );
         }
         let mut chunks = chunks.into_iter().collect::<Vec<_>>();
         chunks.sort_unstable();
         let selected = streams.iter().copied().collect::<HashSet<_>>();
         let mut messages = Vec::new();
         for chunk_index in &chunks {
-            let chunk = &summary.chunk_indexes[*chunk_index];
-            for message in summary.stream_chunk(self.backing.as_ref(), chunk)? {
-                let message = message?;
-                let stream = StreamId(u32::from(message.channel.id));
-                let arrival = to_arrival(message.log_time)?;
-                if selected.contains(&stream) && range.contains(arrival) {
-                    messages.push(raw_message(message)?);
+            for message in self.parse_chunk(*chunk_index)? {
+                if selected.contains(&message.message.stream_id)
+                    && range.contains(message.message.arrival_time)
+                {
+                    messages.push(message.message);
                 }
             }
         }
@@ -456,6 +470,7 @@ impl<B: AsRef<[u8]>> McapSource<B> {
             messages,
             diagnostics: IndexedReadDiagnostics {
                 chunks_streamed: chunks.len(),
+                per_message_copied_bytes: 0,
             },
         })
     }
@@ -481,12 +496,7 @@ impl<B: AsRef<[u8]>> McapSource<B> {
                 return Err(McapOpenError::Mcap(mcap::McapError::BadIndex));
             }
         }
-        self.summary.as_ref().ok_or_else(|| {
-            streams.first().copied().map_or(
-                McapOpenError::Mcap(mcap::McapError::BadIndex),
-                McapOpenError::MessageIndexRequired,
-            )
-        })
+        Ok(&self.summary)
     }
 
     fn load_chunk(&mut self, index: usize) -> Result<(), McapOpenError> {
@@ -498,18 +508,9 @@ impl<B: AsRef<[u8]>> McapSource<B> {
     }
 
     fn read_chunk(&self, index: usize) -> Result<Vec<CachedMessage>, McapOpenError> {
-        let summary = self
-            .summary
-            .as_ref()
-            .expect("chunk loading requires a summary");
-        let chunk = summary
-            .chunk_indexes
-            .get(index)
-            .ok_or(mcap::McapError::BadIndex)?;
-        let mut cache = vec![];
-        for message in summary.stream_chunk(self.backing.as_ref(), chunk)? {
-            let message = message?;
-            let stream_id = StreamId(u32::from(message.channel.id));
+        let mut cache = Vec::new();
+        for message in self.parse_chunk(index)? {
+            let stream_id = message.message.stream_id;
             if self
                 .selected_streams
                 .as_ref()
@@ -518,73 +519,172 @@ impl<B: AsRef<[u8]>> McapSource<B> {
                 continue;
             }
             cache.push(CachedMessage {
-                arrival: to_arrival(message.log_time)?,
+                arrival: message.message.arrival_time,
                 stream_id,
-                payload: Bytes::from(message.data.into_owned()),
+                payload: message.message.payload,
             });
         }
         cache.sort_by_key(|message| (message.arrival, message.stream_id.0));
         Ok(cache)
     }
 
-    fn load_linear(&mut self) -> Result<(), McapOpenError> {
-        if !self.cache.is_empty() {
-            return Ok(());
+    fn parse_chunk(&self, index: usize) -> Result<Vec<ParsedChunkMessage>, McapOpenError> {
+        let chunk = self
+            .summary
+            .chunk_indexes
+            .get(index)
+            .ok_or(mcap::McapError::BadIndex)?;
+        let compressed_offset = usize::try_from(chunk.compressed_data_offset()?)
+            .map_err(|_| McapOpenError::InvalidChunk("data offset is too large".into()))?;
+        let compressed_size = usize::try_from(chunk.compressed_size)
+            .map_err(|_| McapOpenError::InvalidChunk("compressed size is too large".into()))?;
+        let compressed_end = compressed_offset
+            .checked_add(compressed_size)
+            .ok_or_else(|| McapOpenError::InvalidChunk("data range overflow".into()))?;
+        if compressed_end > self.backing.len() {
+            return Err(McapOpenError::InvalidChunk(
+                "compressed data range exceeds source backing".into(),
+            ));
         }
-        let mut cache = vec![];
-        for message in MessageStream::new(self.backing.as_ref())? {
-            let message = message?;
-            let stream_id = StreamId(u32::from(message.channel.id));
-            if !self
-                .catalog
-                .streams
-                .iter()
-                .any(|stream| stream.id == StreamId(u32::from(message.channel.id)))
-            {
-                self.catalog.streams.push(StreamDescriptor {
-                    id: StreamId(u32::from(message.channel.id)),
-                    topic: message.channel.topic.clone(),
-                    schema: message
-                        .channel
-                        .schema
-                        .as_ref()
-                        .map(|schema| schema.name.clone())
-                        .unwrap_or_default(),
-                    message_encoding: message.channel.message_encoding.clone(),
-                    timing: StreamTimingSummary::default(),
-                });
-            }
-            if self
-                .selected_streams
-                .as_ref()
-                .is_some_and(|streams| !streams.contains(&stream_id))
-            {
-                continue;
-            }
-            cache.push(CachedMessage {
-                arrival: to_arrival(message.log_time)?,
-                stream_id,
-                payload: Bytes::from(message.data.into_owned()),
-            });
+        let compressed = self.backing.slice(compressed_offset..compressed_end);
+        let expected_size = usize::try_from(chunk.uncompressed_size)
+            .map_err(|_| McapOpenError::InvalidChunk("uncompressed size is too large".into()))?;
+        let backing = decode_chunk_backing(&chunk.compression, compressed, expected_size)?;
+        let uncompressed_crc = self.chunk_uncompressed_crc(chunk)?;
+        if uncompressed_crc != 0 && crc32fast::hash(&backing) != uncompressed_crc {
+            return Err(McapOpenError::InvalidChunk(
+                "uncompressed CRC does not match Chunk header".into(),
+            ));
         }
-        cache.sort_by_key(|message| (message.arrival, message.stream_id.0));
-        self.cache = cache;
-        let mut counts = std::collections::HashMap::<StreamId, u64>::new();
-        for message in &self.cache {
-            let count = counts.entry(message.stream_id).or_default();
-            *count = count.saturating_add(1);
-        }
-        for stream in &mut self.catalog.streams {
-            stream.timing.message_count = counts.get(&stream.id).copied();
-        }
-        Ok(())
+        parse_chunk_backing(backing)
     }
 
-    fn has_chunks(&self) -> bool {
-        self.summary
-            .as_ref()
-            .is_some_and(|summary| !summary.chunk_indexes.is_empty())
+    fn chunk_uncompressed_crc(
+        &self,
+        chunk: &mcap::records::ChunkIndex,
+    ) -> Result<u32, McapOpenError> {
+        let offset = usize::try_from(chunk.chunk_start_offset)
+            .map_err(|_| McapOpenError::InvalidChunk("Chunk record offset is too large".into()))?;
+        let header_end = offset
+            .checked_add(9)
+            .ok_or_else(|| McapOpenError::InvalidChunk("Chunk record header overflow".into()))?;
+        if header_end > self.backing.len() || self.backing[offset] != op::CHUNK {
+            return Err(McapOpenError::InvalidChunk(
+                "Chunk Index does not point to a Chunk record".into(),
+            ));
+        }
+        let body_length = usize::try_from(u64::from_le_bytes(
+            self.backing[offset + 1..header_end]
+                .try_into()
+                .expect("Chunk record length has eight bytes"),
+        ))
+        .map_err(|_| McapOpenError::InvalidChunk("Chunk record is too large".into()))?;
+        let body_end = header_end
+            .checked_add(body_length)
+            .ok_or_else(|| McapOpenError::InvalidChunk("Chunk record overflow".into()))?;
+        if body_end > self.backing.len() {
+            return Err(McapOpenError::InvalidChunk("truncated Chunk record".into()));
+        }
+        let record = mcap::parse_record(op::CHUNK, &self.backing[header_end..body_end])?;
+        let mcap::records::Record::Chunk { header, .. } = record else {
+            return Err(McapOpenError::InvalidChunk(
+                "Chunk opcode parsed as another record".into(),
+            ));
+        };
+        Ok(header.uncompressed_crc)
     }
+}
+
+struct ParsedChunkMessage {
+    offset: u64,
+    message: RawMessage,
+}
+
+fn decode_chunk_backing(
+    compression: &str,
+    compressed: Bytes,
+    expected_size: usize,
+) -> Result<Bytes, McapOpenError> {
+    let decompressed = match compression {
+        "" => {
+            if compressed.len() != expected_size {
+                return Err(McapOpenError::InvalidChunk(
+                    "uncompressed data size does not match Chunk Index".into(),
+                ));
+            }
+            return Ok(compressed);
+        }
+        #[cfg(feature = "mcap-zstd")]
+        "zstd" => zstd::bulk::decompress(&compressed, expected_size)
+            .map_err(|error| McapOpenError::InvalidChunk(error.to_string()))?,
+        #[cfg(feature = "mcap-lz4")]
+        "lz4" => {
+            let mut output = Vec::with_capacity(expected_size);
+            lz4::Decoder::new(std::io::Cursor::new(compressed))
+                .map_err(|error| McapOpenError::InvalidChunk(error.to_string()))?
+                .read_to_end(&mut output)
+                .map_err(|error| McapOpenError::InvalidChunk(error.to_string()))?;
+            output
+        }
+        value => return Err(McapOpenError::UnsupportedCompression(value.into())),
+    };
+    if decompressed.len() != expected_size {
+        return Err(McapOpenError::InvalidChunk(
+            "decompressed data size does not match Chunk Index".into(),
+        ));
+    }
+    Ok(Bytes::from(decompressed))
+}
+
+fn parse_chunk_backing(backing: Bytes) -> Result<Vec<ParsedChunkMessage>, McapOpenError> {
+    let mut offset = 0_usize;
+    let mut messages = Vec::new();
+    while offset < backing.len() {
+        let record_offset = u64::try_from(offset)
+            .map_err(|_| McapOpenError::InvalidChunk("record offset overflow".into()))?;
+        let header_end = offset
+            .checked_add(9)
+            .ok_or_else(|| McapOpenError::InvalidChunk("record header overflow".into()))?;
+        if header_end > backing.len() {
+            return Err(McapOpenError::InvalidChunk(
+                "truncated record header".into(),
+            ));
+        }
+        let opcode = backing[offset];
+        let body_length = usize::try_from(u64::from_le_bytes(
+            backing[offset + 1..header_end]
+                .try_into()
+                .expect("record length has eight bytes"),
+        ))
+        .map_err(|_| McapOpenError::InvalidChunk("record body is too large".into()))?;
+        let body_end = header_end
+            .checked_add(body_length)
+            .ok_or_else(|| McapOpenError::InvalidChunk("record body overflow".into()))?;
+        if body_end > backing.len() {
+            return Err(McapOpenError::InvalidChunk("truncated record body".into()));
+        }
+        if opcode == op::MESSAGE {
+            let record = mcap::parse_record(opcode, &backing[header_end..body_end])?;
+            let mcap::records::Record::Message { header, data } = record else {
+                return Err(McapOpenError::InvalidChunk(
+                    "message opcode parsed as another record".into(),
+                ));
+            };
+            let payload_start = body_end
+                .checked_sub(data.len())
+                .ok_or_else(|| McapOpenError::InvalidChunk("payload range underflow".into()))?;
+            messages.push(ParsedChunkMessage {
+                offset: record_offset,
+                message: RawMessage {
+                    stream_id: StreamId(u32::from(header.channel_id)),
+                    arrival_time: to_arrival(header.log_time)?,
+                    payload: backing.slice(payload_start..body_end),
+                },
+            });
+        }
+        offset = body_end;
+    }
+    Ok(messages)
 }
 
 fn to_arrival(value: u64) -> Result<ArrivalTime, McapOpenError> {
@@ -596,18 +696,10 @@ fn to_arrival_lossy(value: u64) -> ArrivalTime {
     ArrivalTime(i64::try_from(value).unwrap_or(i64::MAX))
 }
 
-fn raw_message(message: mcap::Message<'_>) -> Result<RawMessage, McapOpenError> {
-    Ok(RawMessage {
-        stream_id: StreamId(u32::from(message.channel.id)),
-        arrival_time: to_arrival(message.log_time)?,
-        payload: Bytes::from(message.data.into_owned()),
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mcap::{WriteOptions, Writer, records::MessageHeader};
+    use mcap::{Compression, WriteOptions, Writer, records::MessageHeader};
     use std::{collections::BTreeMap, io::Cursor};
 
     fn indexed_fixture(chunk_size: u64, emit_message_indexes: bool) -> Vec<u8> {
@@ -643,6 +735,42 @@ mod tests {
                             publish_time: time,
                         },
                         &[marker],
+                    )
+                    .unwrap();
+            }
+            writer.finish().unwrap();
+        }
+        bytes.into_inner()
+    }
+
+    fn payload_fixture(compression: Option<Compression>) -> Vec<u8> {
+        let mut bytes = Cursor::new(Vec::new());
+        {
+            let mut writer = Writer::with_options(
+                &mut bytes,
+                WriteOptions::new()
+                    .use_chunks(true)
+                    .compression(compression)
+                    .chunk_size(Some(1_000_000))
+                    .emit_message_indexes(true),
+            )
+            .unwrap();
+            let schema = writer
+                .add_schema("example/msg/Value", "ros2msg", b"uint8 value\n")
+                .unwrap();
+            let channel = writer
+                .add_channel(schema, "/camera", "cdr", &BTreeMap::new())
+                .unwrap();
+            for sequence in 0..3 {
+                writer
+                    .write_to_known_channel(
+                        &MessageHeader {
+                            channel_id: channel,
+                            sequence,
+                            log_time: u64::from(sequence),
+                            publish_time: u64::from(sequence),
+                        },
+                        &[sequence as u8; 128],
                     )
                     .unwrap();
             }
@@ -711,12 +839,17 @@ mod tests {
     #[test]
     fn multi_stream_latest_before_streams_a_shared_chunk_once() {
         let source = McapSource::new(indexed_fixture(1_000_000, true)).unwrap();
+        assert_eq!(
+            source.catalog().capabilities,
+            SourceCapabilities::INDEXED_RECORDING
+        );
         let a = source.catalog().by_topic("/a").unwrap().id;
         let b = source.catalog().by_topic("/b").unwrap().id;
         let result = source
             .latest_before(&[a, b], ArrivalTime(85_000_000_000))
             .unwrap();
         assert_eq!(result.diagnostics.chunks_streamed, 1);
+        assert_eq!(result.diagnostics.per_message_copied_bytes, 0);
         assert_eq!(
             result
                 .messages
@@ -728,6 +861,70 @@ mod tests {
                 (b, ArrivalTime(80_000_000_000), 4),
             ]
         );
+    }
+
+    #[test]
+    fn native_uncompressed_raw_messages_slice_the_source_owner_without_payload_copies() {
+        let owner = Bytes::from(payload_fixture(None));
+        let source_start = owner.as_ptr() as usize;
+        let source_end = source_start + owner.len();
+        let mut source = McapSource::from_bytes(owner).unwrap();
+        let camera = source.catalog().by_topic("/camera").unwrap().id;
+        source.select_streams([camera]).unwrap();
+        let messages = source.read_until(source.time_range().1).unwrap();
+
+        assert_eq!(messages.len(), 3);
+        for message in &messages {
+            let start = message.payload.as_ptr() as usize;
+            let end = start + message.payload.len();
+            assert!(source_start <= start && end <= source_end);
+        }
+    }
+
+    #[test]
+    fn native_zstd_messages_share_one_decompressed_chunk_backing() {
+        let mut source = McapSource::from_owner(indexed_fixture(1_000_000, true)).unwrap();
+        let streams = ["/a", "/b"].map(|topic| source.catalog().by_topic(topic).unwrap().id);
+        source.select_streams(streams).unwrap();
+        let messages = source.read_until(source.time_range().1).unwrap();
+        let chunk_size =
+            usize::try_from(source.summary.chunk_indexes[0].uncompressed_size).unwrap();
+        let first = messages
+            .iter()
+            .map(|message| message.payload.as_ptr() as usize)
+            .min()
+            .unwrap();
+        let last = messages
+            .iter()
+            .map(|message| message.payload.as_ptr() as usize + message.payload.len())
+            .max()
+            .unwrap();
+
+        assert!(messages.len() > 1);
+        assert!(last - first <= chunk_size);
+    }
+
+    #[test]
+    fn native_lz4_messages_share_one_decompressed_chunk_backing() {
+        let mut source = McapSource::from_owner(payload_fixture(Some(Compression::Lz4))).unwrap();
+        let camera = source.catalog().by_topic("/camera").unwrap().id;
+        source.select_streams([camera]).unwrap();
+        let messages = source.read_until(source.time_range().1).unwrap();
+        let chunk_size =
+            usize::try_from(source.summary.chunk_indexes[0].uncompressed_size).unwrap();
+        let first = messages
+            .iter()
+            .map(|message| message.payload.as_ptr() as usize)
+            .min()
+            .unwrap();
+        let last = messages
+            .iter()
+            .map(|message| message.payload.as_ptr() as usize + message.payload.len())
+            .max()
+            .unwrap();
+
+        assert_eq!(messages.len(), 3);
+        assert!(last - first <= chunk_size);
     }
 
     #[test]
@@ -805,8 +1002,12 @@ mod tests {
 
     #[test]
     fn restore_reports_missing_message_indexes_instead_of_scanning() {
-        let source = McapSource::new(indexed_fixture(128, false)).unwrap();
+        let mut source = McapSource::new(indexed_fixture(128, false)).unwrap();
         let stream = source.catalog().by_topic("/a").unwrap().id;
+        assert!(matches!(
+            source.select_streams([stream]),
+            Err(McapOpenError::MessageIndexRequired(found)) if found == stream
+        ));
         assert!(matches!(
             source.latest_before(&[stream], ArrivalTime(1_000_000_000)),
             Err(McapOpenError::MessageIndexRequired(found)) if found == stream
@@ -814,7 +1015,7 @@ mod tests {
     }
 
     #[test]
-    fn reads_summary_bearing_mcap_without_chunks_linearly() {
+    fn rejects_summary_bearing_mcap_without_chunk_indexes_at_open() {
         let mut bytes = Cursor::new(Vec::new());
         {
             let options = WriteOptions::new().use_chunks(false);
@@ -850,41 +1051,9 @@ mod tests {
             writer.finish().unwrap();
         }
 
-        let mut source = McapSource::new(bytes.into_inner()).unwrap();
-        assert_eq!(source.time_range(), (ArrivalTime(20), ArrivalTime(21)));
-        let stream = source.catalog().by_topic("/value").unwrap().id;
-        let query = RangeQuery {
-            streams: vec![stream],
-            range: crate::DataWindowTimeRange::new(ArrivalTime(20), ArrivalTime(21)).unwrap(),
-            limits: crate::QueryLimits::new(1, 3).unwrap(),
-        };
-        let result = source.query_range(&query).unwrap();
-        assert!(result.complete);
-        assert_eq!(result.payload_bytes, 3);
-        assert_eq!(result.messages[0].payload, vec![1, 2, 3]);
-
-        let message_limited = source
-            .query_range(&RangeQuery {
-                streams: vec![stream],
-                range: crate::DataWindowTimeRange::new(ArrivalTime(20), ArrivalTime(22)).unwrap(),
-                limits: crate::QueryLimits::new(1, 16).unwrap(),
-            })
-            .unwrap();
-        assert!(!message_limited.complete);
-        assert_eq!(message_limited.messages.len(), 1);
-
-        let too_small = source
-            .query_range(&RangeQuery {
-                limits: crate::QueryLimits::new(1, 2).unwrap(),
-                ..query
-            })
-            .unwrap();
-        assert!(!too_small.complete);
-        assert!(too_small.messages.is_empty());
-
-        // The independent bounded query must not move sequential playback state.
-        let messages = source.read_until(ArrivalTime(20)).unwrap();
-        assert_eq!(messages.len(), 1);
-        assert_eq!(messages[0].payload, vec![1, 2, 3]);
+        assert!(matches!(
+            McapSource::new(bytes.into_inner()),
+            Err(McapOpenError::ChunkIndexRequired)
+        ));
     }
 }

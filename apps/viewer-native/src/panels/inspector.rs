@@ -1,10 +1,14 @@
 use super::{
-    INSPECTOR_CONFIG_VERSION, NativePanel, PanelDataRequirements, PanelFrameContext, PanelOutput,
-    PlaceholderPanel,
+    INSPECTOR_CONFIG_VERSION, NativePanel, PanelDataRequirements, PanelOutput, PlaceholderPanel,
 };
-use crate::inspection::InspectorRequirement;
+use crate::inspection::{InspectorRequirement, TopicInspection};
 use serde::{Deserialize, Serialize};
 use viewer_layout::{PanelId, PanelNode};
+
+#[derive(Clone, Copy)]
+pub(crate) struct InspectorPanelInput<'a> {
+    pub(crate) inspections: &'a [TopicInspection],
+}
 
 fn default_max_messages() -> usize {
     16
@@ -67,12 +71,12 @@ impl InspectorPanel {
     pub(crate) fn show(
         &mut self,
         ui: &mut egui::Ui,
-        context: &PanelFrameContext<'_>,
+        input: InspectorPanelInput<'_>,
     ) -> PanelOutput {
         ui.push_id((self.id.as_str(), self.title.as_deref()), |ui| {
             ui.heading(self.title.as_deref().unwrap_or("Message Inspector"));
             ui.label(&self.config.topic);
-            let Some(inspection) = context
+            let Some(inspection) = input
                 .inspections
                 .iter()
                 .find(|inspection| inspection.topic == self.config.topic)
@@ -80,6 +84,13 @@ impl InspectorPanel {
                 ui.label("Inspection unavailable");
                 return;
             };
+            if inspection.loading {
+                ui.horizontal(|ui| {
+                    ui.spinner();
+                    ui.label("Loading bounded inspection…");
+                });
+                return;
+            }
             if let Some(error) = &inspection.error {
                 ui.colored_label(ui.visuals().error_fg_color, error);
                 return;
