@@ -1,7 +1,9 @@
 use crate::data_plane::{DataLoadError, LoadedWindow, WindowLoadDiagnostics};
 use bytes::Bytes;
 use mcap::records::{ChunkIndex, Record, op};
-use std::collections::{BTreeMap, BTreeSet, HashMap, VecDeque};
+#[cfg(target_arch = "wasm32")]
+use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeSet, VecDeque};
 use viewer_core::{ArrivalTime, DataWindowTimeRange, RawMessage, SerializedWindow, StreamId};
 
 #[cfg(target_arch = "wasm32")]
@@ -563,18 +565,34 @@ async fn load_browser_restore(
 
     let target = u64::try_from(plan.target.0)
         .map_err(|_| DataLoadError::new("negative browser restore target"))?;
+    let index_facts = summary
+        .chunk_indexes
+        .iter()
+        .map(|chunk| viewer_core::IndexedChunkFact {
+            start: ArrivalTime(i64::try_from(chunk.message_start_time).unwrap_or(i64::MAX)),
+            end_inclusive: ArrivalTime(i64::try_from(chunk.message_end_time).unwrap_or(i64::MAX)),
+            indexed_streams: chunk
+                .message_index_offsets
+                .keys()
+                .map(|channel| StreamId(u32::from(*channel)))
+                .collect(),
+        })
+        .collect::<Vec<_>>();
     let mut needs = BTreeMap::<usize, ChunkNeed>::new();
     for stream in &plan.latest_before {
         let channel = u16::try_from(stream.0)
             .map_err(|_| DataLoadError::new("local stream ID exceeds MCAP channel ID"))?;
         let mut found = None;
-        for (chunk_index, chunk) in summary.chunk_indexes.iter().enumerate().rev() {
-            let Some(&offset) = chunk.message_index_offsets.get(&channel) else {
-                continue;
-            };
-            if chunk.message_start_time > target {
-                continue;
-            }
+        let count = summary
+            .stats
+            .as_ref()
+            .and_then(|stats| stats.channel_message_counts.get(&channel).copied());
+        for chunk_index in
+            viewer_core::latest_candidate_chunks(&index_facts, *stream, count, plan.target)
+                .map_err(|error| DataLoadError::new(error.to_string()))?
+        {
+            let chunk = &summary.chunk_indexes[chunk_index];
+            let offset = chunk.message_index_offsets[&channel];
             let entries = read_message_index(file, file_size, offset).await?;
             let position = entries.partition_point(|entry| entry.log_time <= target);
             if let Some(entry) = position.checked_sub(1).and_then(|index| entries.get(index)) {
@@ -583,21 +601,6 @@ async fn load_browser_restore(
             }
         }
         let Some((chunk, time, offset)) = found else {
-            if summary
-                .stats
-                .as_ref()
-                .and_then(|stats| stats.channel_message_counts.get(&channel).copied())
-                != Some(0)
-                && !summary
-                    .chunk_indexes
-                    .iter()
-                    .any(|chunk| chunk.message_index_offsets.contains_key(&channel))
-            {
-                return Err(DataLoadError::new(format!(
-                    "MCAP Message Index is required to restore stream {}",
-                    stream.0
-                )));
-            }
             continue;
         };
         needs
@@ -610,35 +613,37 @@ async fn load_browser_restore(
         for stream in &read.streams {
             let channel = u16::try_from(stream.0)
                 .map_err(|_| DataLoadError::new("local stream ID exceeds MCAP channel ID"))?;
-            ensure_indexed(summary, channel, *stream)?;
-            for (chunk_index, chunk) in summary.chunk_indexes.iter().enumerate() {
-                if chunk.message_index_offsets.contains_key(&channel)
-                    && i64::try_from(chunk.message_end_time).unwrap_or(i64::MAX)
-                        >= read.range.start.0
-                    && i64::try_from(chunk.message_start_time).unwrap_or(i64::MAX)
-                        < read.range.end_exclusive.0
-                {
-                    needs
-                        .entry(chunk_index)
-                        .or_default()
-                        .history
-                        .insert(channel, read.range.start.0);
-                }
+            let count = summary
+                .stats
+                .as_ref()
+                .and_then(|stats| stats.channel_message_counts.get(&channel).copied());
+            for chunk_index in
+                viewer_core::history_candidate_chunks(&index_facts, *stream, count, read.range)
+                    .map_err(|error| DataLoadError::new(error.to_string()))?
+            {
+                needs
+                    .entry(chunk_index)
+                    .or_default()
+                    .history
+                    .insert(channel, read.range.start.0);
             }
         }
     }
     for stream in &plan.persistent {
         let channel = u16::try_from(stream.0)
             .map_err(|_| DataLoadError::new("local stream ID exceeds MCAP channel ID"))?;
-        ensure_indexed(summary, channel, *stream)?;
-        for (chunk_index, chunk) in summary.chunk_indexes.iter().enumerate() {
-            if chunk.message_index_offsets.contains_key(&channel) {
-                needs
-                    .entry(chunk_index)
-                    .or_default()
-                    .persistent
-                    .insert(channel);
-            }
+        let count = summary
+            .stats
+            .as_ref()
+            .and_then(|stats| stats.channel_message_counts.get(&channel).copied());
+        for chunk_index in viewer_core::persistent_candidate_chunks(&index_facts, *stream, count)
+            .map_err(|error| DataLoadError::new(error.to_string()))?
+        {
+            needs
+                .entry(chunk_index)
+                .or_default()
+                .persistent
+                .insert(channel);
         }
     }
 
@@ -733,31 +738,6 @@ async fn read_message_index(
     {
         Record::MessageIndex(index) => Ok(index.records),
         _ => Err(DataLoadError::new("Message Index parsed as another record")),
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-fn ensure_indexed(
-    summary: &mcap::Summary,
-    channel: u16,
-    stream: StreamId,
-) -> Result<(), DataLoadError> {
-    if summary
-        .chunk_indexes
-        .iter()
-        .any(|chunk| chunk.message_index_offsets.contains_key(&channel))
-        || summary
-            .stats
-            .as_ref()
-            .and_then(|stats| stats.channel_message_counts.get(&channel).copied())
-            == Some(0)
-    {
-        Ok(())
-    } else {
-        Err(DataLoadError::new(format!(
-            "MCAP Message Index is required to restore stream {}",
-            stream.0
-        )))
     }
 }
 

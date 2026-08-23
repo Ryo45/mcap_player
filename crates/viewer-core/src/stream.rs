@@ -4,7 +4,7 @@ use crate::ArrivalTime;
 ///
 /// This is a source-local runtime token, not a persistent or global identity. Equal numeric
 /// values from different recordings or Local/Remote sources need not describe the same stream.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct StreamId(pub u32);
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -49,6 +49,39 @@ pub struct SourceCatalog {
     /// Recording-wide MCAP log-time range. Push/live sources may not have one.
     pub time_range: Option<RecordingTimeRange>,
     pub streams: Vec<StreamDescriptor>,
+    pub capabilities: SourceCapabilities,
+}
+
+/// Product-visible operations supported by an opened source.
+///
+/// This is a closed declaration, not a generic source trait. Exact seek and both restore modes
+/// are deliberately distinct so an adapter cannot defer an indexed-restore limitation until the
+/// first timeline interaction.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct SourceCapabilities {
+    pub catalog: bool,
+    pub forward_playback: bool,
+    pub exact_seek: bool,
+    pub history_restore: bool,
+    pub persistent_restore: bool,
+}
+
+impl SourceCapabilities {
+    pub const INDEXED_RECORDING: Self = Self {
+        catalog: true,
+        forward_playback: true,
+        exact_seek: true,
+        history_restore: true,
+        persistent_restore: true,
+    };
+
+    pub const LIVE: Self = Self {
+        catalog: true,
+        forward_playback: true,
+        exact_seek: false,
+        history_restore: false,
+        persistent_restore: false,
+    };
 }
 
 impl SourceCatalog {

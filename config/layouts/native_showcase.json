@@ -19,7 +19,6 @@
                 "configVersion": 1,
                 "title": "LEFT CAMERA",
                 "config": {
-                  "fit": "contain",
                   "showThumbnails": false,
                   "cameraTopic": "/camera/front_left/image/compressed",
                   "showOverlay": false
@@ -35,7 +34,6 @@
                 "configVersion": 1,
                 "title": "FRONT CAMERA + PATH",
                 "config": {
-                  "fit": "contain",
                   "showThumbnails": false,
                   "cameraTopic": "/camera/front/image/compressed",
                   "showOverlay": true,
@@ -52,7 +50,6 @@
                 "configVersion": 1,
                 "title": "RIGHT CAMERA",
                 "config": {
-                  "fit": "contain",
                   "showThumbnails": false,
                   "cameraTopic": "/camera/front_right/image/compressed",
                   "showOverlay": false

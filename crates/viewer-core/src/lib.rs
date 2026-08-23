@@ -8,7 +8,9 @@ mod cdr;
 mod clock;
 mod controllers;
 pub mod data_window;
+mod feature_runtime;
 mod frame_builder;
+mod indexed_plan;
 mod mcap_source;
 mod performance;
 mod playback;
@@ -50,19 +52,24 @@ pub use data_window::{
     DataWindowError, FetchDemand, FetchIntent, FetchPlanner, FetchProfile, MemoryWindowStore,
     SerializedWindow, TimeRange as DataWindowTimeRange,
 };
+pub use feature_runtime::{FeatureRestoreError, FeatureRestoreErrorKind, FeatureRuntime};
 pub use frame_builder::{
-    BevFrameBuilder, BevSnapshot, SceneDiagnostics, SceneFrameBuilder, SceneSnapshot, SceneTfError,
+    BevFrameBuilder, BevSnapshot, SceneDiagnostics, ScenePresentationState, SceneSnapshot,
+    SceneTfError,
+};
+pub use indexed_plan::{
+    IndexedChunkFact, IndexedPlanError, ensure_indexed, history_candidate_chunks,
+    latest_candidate_chunks, persistent_candidate_chunks,
 };
 pub use mcap_source::{IndexedMessages, IndexedReadDiagnostics, McapOpenError, McapSource};
 pub use performance::{
     PlaybackPerformance, PresentationMetrics, PresentationSnapshot, StageTiming,
 };
-pub use playback::{McapPlayback, McapPlaybackError, PlaybackEffect};
+pub use playback::{McapPlayback, McapPlaybackError, McapSeekError, PlaybackEffect};
 pub use plot::{
-    LoadedOdometrySignals, LoadedSignal, PlotMode, PlotPanelState, PlotSeries, PlotViewport,
-    SignalId, SignalSample, arrival_time_from_plot_x, cursor_seconds, downsample_min_max,
-    followed_viewport, load_odometry_signals, load_odometry_signals_for_topic_with_progress,
-    load_speed_signal, load_yaw_rate_signal, sample_at_or_before, should_shift_viewport,
+    LoadedOdometrySignals, LoadedSignal, PlotSeries, SignalId, SignalOverviewReducer, SignalSample,
+    arrival_time_from_plot_x, cursor_seconds, load_odometry_signals,
+    load_odometry_signals_for_topic_with_progress, load_speed_signal, load_yaw_rate_signal,
 };
 pub use point_cloud::{PointCloudFrame, PointCloudState};
 pub use presentation::{
@@ -86,7 +93,8 @@ pub use source_identity::{
     MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity, mcap_summary_fingerprint,
 };
 pub use stream::{
-    RecordingTimeRange, SourceCatalog, StreamDescriptor, StreamId, StreamTimingSummary,
+    RecordingTimeRange, SourceCapabilities, SourceCatalog, StreamDescriptor, StreamId,
+    StreamTimingSummary,
 };
 pub use telemetry::{TelemetryFrame, TelemetryState};
 pub use time::{ArrivalTime, MeasurementTime};

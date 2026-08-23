@@ -2,13 +2,13 @@ use super::{Graphics, RenderInput, layout_host::show_layout_host, views::CameraT
 use crate::{
     interaction::ViewerAction,
     panels::{
-        PanelFrameContext, PanelRenderRequests, PanelResourceView, PanelRuntimeStore,
+        PanelCompositionInput, PanelRenderRequests, PanelResourceView, PanelRuntimeStore,
         PreviewDataView, SceneDataView,
     },
+    ui_components::{playback_controls, source_status},
     workspace::ViewerInteractionState,
 };
 use viewer_layout::LayoutDocument;
-use viewer_ui::{playback_controls, source_status};
 use winit::window::Window;
 
 pub(super) struct UiOutput {
@@ -106,7 +106,7 @@ impl Graphics {
                     ui,
                     layout,
                     panels,
-                    PanelFrameContext {
+                    PanelCompositionInput {
                         playback,
                         presentation,
                         camera_overlays: render_input.camera_overlays,

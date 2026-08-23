@@ -56,7 +56,9 @@ impl App {
                 {
                     log::warn!("Plot unavailable: {error}");
                 }
-                session.load_inspections(&requirements.inspections);
+                if let Err(error) = session.request_inspections(&requirements.inspections) {
+                    log::warn!("Inspector unavailable: {error}");
+                }
                 self.args.mcap = path.to_owned();
                 self.session = Some(session);
                 match fingerprint_source(path) {
@@ -137,7 +139,14 @@ impl App {
                 .latest_by_arrival()
                 .map(|frame| frame.arrival_time),
         );
-        let signals = session.signal_query_view();
+        let current_odometry = self
+            .workspace
+            .interaction
+            .preview_time
+            .is_none()
+            .then(|| self.workspace.odometry().state().latest())
+            .flatten();
+        let signals = session.signal_query_view(current_odometry);
         let workspace_warning = self.workspace.startup_warning();
         let error = self.diagnostics.message(&[
             workspace_warning.as_deref(),
@@ -148,32 +157,17 @@ impl App {
         let focused_camera = self.workspace.focused_camera();
         let accumulate_points = self.workspace.accumulate_points();
         let (render_result, render_elapsed) = {
-            let cameras = self
+            let runtime = self
                 .workspace
-                .camera_controller
+                .runtime
                 .as_ref()
-                .expect("workspace Camera controller");
-            let path = self
-                .workspace
-                .path_controller
-                .as_ref()
-                .expect("workspace Path controller");
-            let odometry = self
-                .workspace
-                .odometry_controller
-                .as_ref()
-                .expect("workspace Odometry controller");
-            let transforms = self
-                .workspace
-                .transform_controller
-                .as_ref()
-                .expect("workspace Transform controller");
+                .expect("workspace is configured for an open session");
             let presentation = self.presentation_state.build(PresentationBuildInput {
-                cameras,
-                path,
-                odometry,
-                transforms,
-                scene_controller: self.workspace.scene_controller.as_mut(),
+                cameras: runtime.cameras(),
+                path: runtime.path(),
+                odometry: runtime.odometry(),
+                transforms: runtime.transforms(),
+                scene_controller: runtime.scene(),
                 diagnostics,
                 focused_camera,
                 accumulate_points,
@@ -270,16 +264,15 @@ impl App {
                         diagnostics.set_playback_error(command_error.to_string());
                     }
                 },
-                WorkspaceEffect::FocusedCameraChanged(camera_id) => {
-                    let _ = camera_id;
-                }
                 WorkspaceEffect::BeginPreview(time) => {
                     let playing = session
                         .playback_view()
                         .is_some_and(|playback| playback.playing);
                     if preview.drag.begin(playing)
                         && let Err(command_error) = session
-                            .apply_playback_command(viewer_core::PlaybackCommand::Toggle, |_, _| {})
+                            .apply_playback_command(viewer_core::PlaybackCommand::Toggle, |_, _| {
+                                Ok(())
+                            })
                     {
                         diagnostics.set_playback_error(command_error.to_string());
                     }
@@ -299,7 +292,9 @@ impl App {
                     }
                     if preview.drag.finish()
                         && let Err(command_error) = session
-                            .apply_playback_command(viewer_core::PlaybackCommand::Toggle, |_, _| {})
+                            .apply_playback_command(viewer_core::PlaybackCommand::Toggle, |_, _| {
+                                Ok(())
+                            })
                     {
                         diagnostics.set_playback_error(command_error.to_string());
                     }
@@ -373,7 +368,9 @@ impl ApplicationHandler for App {
                     self.workspace.bindings(),
                 );
                 self.workspace.configure_session(session.plan());
-                session.load_inspections(&requirements.inspections);
+                if let Err(error) = session.request_inspections(&requirements.inspections) {
+                    log::warn!("Inspector unavailable: {error}");
+                }
                 self.preview.clear();
                 self.bookmarks = BookmarkState::default();
                 Self::apply_presentation_transition(
@@ -436,10 +433,6 @@ mod tests {
     fn standard_test_requirements() -> PlaybackRequirements {
         let mut requirements = PlaybackRequirements::empty();
         requirements.require_all_cameras();
-        requirements.require_path();
-        requirements.require_odometry();
-        requirements.require_point_cloud();
-        requirements.require_transforms();
         requirements
     }
 
@@ -453,6 +446,13 @@ mod tests {
             NativeWorkspace::default().bindings(),
         )
         .unwrap()
+    }
+
+    fn configured_workspace(session: &ViewerSession) -> NativeWorkspace {
+        let mut workspace = NativeWorkspace::default();
+        workspace.configure_session(session.plan());
+        workspace.reset_for_source(session.default_focused_camera());
+        workspace
     }
 
     #[test]
@@ -500,7 +500,7 @@ mod tests {
         let mut session = session();
         let playback = session.playback_view().unwrap();
         let target = ArrivalTime((playback.start.0 + playback.end.0) / 2);
-        let mut workspace = NativeWorkspace::default();
+        let mut workspace = configured_workspace(&session);
         let mut preview = PreviewCoordinator::default();
         let mut diagnostics = AppDiagnostics::default();
         let effect = App::apply_actions(
@@ -570,46 +570,13 @@ mod tests {
     }
 
     #[test]
-    fn exact_inspection_does_not_mutate_playback_or_workspace_state() {
-        let mut session = session();
-        let mut workspace = NativeWorkspace::default();
-        workspace.configure_session(session.plan());
-        workspace.reset_for_source(session.default_focused_camera());
-        session
-            .tick(Duration::ZERO, |elapsed, messages| {
-                workspace.process_messages(elapsed, messages)
-            })
-            .unwrap();
-        let committed = session.playback_view().unwrap().cursor;
-        let camera = workspace
-            .cameras()
-            .state()
-            .latest_for(session.default_focused_camera().unwrap())
-            .cloned();
-
-        let inspected = session
-            .inspect_topic("/camera/front/image/compressed", 1)
-            .unwrap();
-
-        assert_eq!(inspected.len(), 1);
-        assert_eq!(session.playback_view().unwrap().cursor, committed);
-        assert_eq!(
-            workspace
-                .cameras()
-                .state()
-                .latest_for(session.default_focused_camera().unwrap()),
-            camera.as_ref()
-        );
-    }
-
-    #[test]
     fn preview_drag_pauses_without_seek_and_release_seeks_once_then_resumes() {
         let mut session = session();
         let playback = session.playback_view().unwrap();
         let original = playback.cursor;
         let first = ArrivalTime((playback.start.0 * 2 + playback.end.0) / 3);
         let final_target = ArrivalTime((playback.start.0 + playback.end.0 * 2) / 3);
-        let mut workspace = NativeWorkspace::default();
+        let mut workspace = configured_workspace(&session);
         let mut preview = PreviewCoordinator::default();
         let mut diagnostics = AppDiagnostics::default();
 

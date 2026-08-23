@@ -1,8 +1,8 @@
 use std::{fs, path::PathBuf, time::Duration};
 use viewer_core::{
     CameraCalibrationSet, CameraController, McapPlayback, McapSource, OdometryController,
-    PathController, PlaybackRequirements, RestorePlanner, SceneController, SessionPlan,
-    TransformController, WorkspaceBindings,
+    PathController, PlaybackRequirements, RestorePlanner, SceneController, ScenePresentationState,
+    SessionPlan, TransformController, WorkspaceBindings,
 };
 
 fn bindings() -> WorkspaceBindings {
@@ -41,7 +41,7 @@ fn every_scan_resolves_to_world_at_its_measurement_time() {
         &bindings(),
     )
     .unwrap();
-    source.select_streams(plan.selected_stream_ids());
+    source.select_streams(plan.selected_stream_ids()).unwrap();
     let mut transforms = TransformController::new(&plan);
     let mut scene = SceneController::new(&plan);
     let (_, end) = source.time_range();
@@ -94,7 +94,7 @@ fn seven_camera_fixture_routes_exact_messages_to_concrete_controllers() {
         &bindings(),
     )
     .unwrap();
-    playback.select_streams(plan.selected_stream_ids());
+    playback.select_streams(plan.selected_stream_ids()).unwrap();
     let mut cameras = CameraController::new(&plan);
     let mut path = PathController::new(&plan);
     let mut odometry = OdometryController::new(&plan);
@@ -183,7 +183,14 @@ fn seven_camera_fixture_routes_exact_messages_to_concrete_controllers() {
 
     let raw_scan = scene.point_cloud().latest().expect("fixture scan");
     assert_eq!(raw_scan.frame_id, "base_scan");
-    let snapshot = scene.snapshot(path.state(), odometry.state(), transforms.state(), true);
+    let mut scene_presentation = ScenePresentationState::new();
+    let snapshot = scene_presentation.build(
+        path.state(),
+        odometry.state(),
+        scene.point_cloud(),
+        transforms.state(),
+        true,
+    );
     assert!(!snapshot.cloud.is_empty());
     assert_eq!(
         snapshot.diagnostics.last_tf_route.as_deref(),
@@ -207,7 +214,9 @@ fn indexed_restore_matches_sequential_feature_values() {
         &bindings(),
     )
     .unwrap();
-    sequential_source.select_streams(plan.selected_stream_ids());
+    sequential_source
+        .select_streams(plan.selected_stream_ids())
+        .unwrap();
     let target = viewer_core::ArrivalTime(sequential_source.time_range().0.0 + 3_000_000_000);
 
     let mut sequential_cameras = CameraController::new(&plan);
@@ -218,7 +227,7 @@ fn indexed_restore_matches_sequential_feature_values() {
     for message in sequential_source.read_until(target).unwrap() {
         // Camera seek semantics are exact latest-before rather than reproduction of the
         // presentation-rate scheduler, so build the canonical per-Camera latest value directly.
-        sequential_cameras.restore(&message);
+        sequential_cameras.restore(&message).unwrap();
         sequential_path.process(&message);
         sequential_odometry.process(&message);
         sequential_transforms.process(&message);
@@ -234,7 +243,7 @@ fn indexed_restore_matches_sequential_feature_values() {
     let mut restored_transforms = TransformController::new(&plan);
     let mut restored_scene = SceneController::new(&plan);
     let mut playback = McapPlayback::new(bytes.as_slice()).unwrap();
-    playback.select_streams(plan.selected_stream_ids());
+    playback.select_streams(plan.selected_stream_ids()).unwrap();
     let persistent = restore_plan.persistent.clone();
     playback.bootstrap_persistent(&persistent).unwrap();
     playback
@@ -245,12 +254,13 @@ fn indexed_restore_matches_sequential_feature_values() {
             restored_transforms.reset_for_restore(restore_target);
             restored_scene.reset_for_restore();
             for message in &messages {
-                restored_cameras.restore(message);
+                restored_cameras.restore(message).unwrap();
                 restored_path.process(message);
                 restored_odometry.process(message);
                 restored_transforms.process(message);
                 restored_scene.process(message);
             }
+            Ok::<(), std::convert::Infallible>(())
         })
         .unwrap();
 

@@ -4,7 +4,9 @@ mod bookmarks;
 mod diagnostics;
 mod graphics;
 mod inspection;
+mod inspector_loader;
 mod interaction;
+#[cfg(any(test, feature = "ros2-live"))]
 mod live;
 mod panels;
 mod plot_loader;
@@ -12,6 +14,7 @@ mod presentation;
 mod preview;
 mod session;
 mod signal_query;
+mod ui_components;
 mod workspace;
 
 use anyhow::Result;

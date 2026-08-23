@@ -8,13 +8,16 @@ mod scene;
 mod status;
 
 pub(crate) use bev::BevPanel;
-pub(crate) use camera::CameraPanel;
-pub(crate) use inspector::InspectorPanel;
+pub(crate) use camera::{CameraPanel, CameraPanelInput};
+pub(crate) use inspector::{InspectorPanel, InspectorPanelInput};
 pub(crate) use placeholder::PlaceholderPanel;
-pub(crate) use plot::PlotPanel;
+pub(crate) use plot::{
+    PlotMode, PlotPanel, PlotPanelInput, PlotPanelState, PlotViewState, PlotViewport,
+    PreviewPlotCache, SignalPlotCache,
+};
 pub(crate) use runtime::PanelRuntimeStore;
-pub(crate) use scene::ScenePanel;
-pub(crate) use status::StatusPanel;
+pub(crate) use scene::{ScenePanel, ScenePanelInput};
+pub(crate) use status::{StatusPanel, StatusPanelInput};
 
 use crate::{
     graphics::views::{CameraTextureView, SceneViewOutput},
@@ -49,15 +52,87 @@ impl NativePanel {
     pub(crate) fn show(
         &mut self,
         ui: &mut egui::Ui,
-        context: &PanelFrameContext<'_>,
+        input: &PanelCompositionInput<'_>,
     ) -> PanelOutput {
         match self {
-            Self::Camera(panel) => panel.show(ui, context),
-            Self::Bev(panel) => panel.show(ui, context),
-            Self::Plot(panel) => panel.show(ui, context),
-            Self::Inspector(panel) => panel.show(ui, context),
-            Self::Scene(panel) => panel.show(ui, context),
-            Self::Status(panel) => panel.show(ui, context),
+            Self::Camera(panel) => panel.show(
+                ui,
+                CameraPanelInput {
+                    cameras: &input.presentation.cameras,
+                    textures: input.resources.camera_textures,
+                    preview_textures: input.resources.preview_camera_textures,
+                    preview_active: input.preview.active,
+                    overlays: input.camera_overlays,
+                },
+            ),
+            Self::Bev(panel) => panel.show(
+                ui,
+                bev::BevPanelInput {
+                    texture_id: input.resources.bev_texture,
+                    path_points: input.presentation.diagnostics.path_points,
+                },
+            ),
+            Self::Plot(panel) => {
+                let signal_id = panel.signal_id();
+                let signal = input.signals.get(signal_id);
+                panel.show(
+                    ui,
+                    PlotPanelInput {
+                        playback: input.playback,
+                        signal: signal.signal,
+                        current: signal.current,
+                        loading: signal.loading,
+                        error: signal.error,
+                        display_time: input
+                            .playback
+                            .map(|playback| input.interaction.display_time(playback)),
+                        preview_signal: match signal_id {
+                            SignalId::Speed => input.preview.speed_overview,
+                            SignalId::YawRate => None,
+                        },
+                        bookmarks: input.preview.bookmarks,
+                    },
+                )
+            }
+            Self::Inspector(panel) => panel.show(
+                ui,
+                InspectorPanelInput {
+                    inspections: input.inspections,
+                },
+            ),
+            Self::Scene(panel) => panel.show(
+                ui,
+                ScenePanelInput {
+                    texture_id: input.resources.scene_texture,
+                    scan_points: input.presentation.diagnostics.scan_points,
+                    visible_scan_points: input.scene.visible_scan_points,
+                    camera_distance: input.scene.camera_distance,
+                    camera_mode: input.scene.camera_mode,
+                    diagnostics: input.scene.diagnostics,
+                    static_transform_count: input.scene.static_transform_count,
+                    dynamic_transform_count: input.scene.dynamic_transform_count,
+                },
+            ),
+            Self::Status(panel) => {
+                let display_time = input
+                    .playback
+                    .map(|playback| input.interaction.display_time(playback));
+                let speed = display_time.and_then(|time| {
+                    input
+                        .signals
+                        .get(SignalId::Speed)
+                        .current
+                        .filter(|sample| sample.arrival_time <= time)
+                });
+                panel.show(
+                    ui,
+                    StatusPanelInput {
+                        playback: input.playback,
+                        main_camera: input.presentation.focused_camera(),
+                        speed,
+                    },
+                )
+            }
             Self::Placeholder(panel) => panel.show(ui),
         }
     }
@@ -172,7 +247,7 @@ pub(crate) struct SceneDataView<'a> {
 }
 
 #[derive(Clone, Copy)]
-pub(crate) struct PanelFrameContext<'a> {
+pub(crate) struct PanelCompositionInput<'a> {
     pub(crate) playback: Option<PlaybackView>,
     pub(crate) presentation: &'a ViewerPresentation,
     pub(crate) camera_overlays: &'a viewer_renderer::CameraOverlayState,

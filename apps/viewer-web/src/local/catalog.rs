@@ -1,7 +1,7 @@
 use std::{error::Error, fmt};
 use viewer_core::{
-    ArrivalTime, RecordingTimeRange, SessionPlan, SourceCatalog, StreamDescriptor, StreamId,
-    StreamTimingSummary,
+    ArrivalTime, RecordingTimeRange, SessionPlan, SourceCapabilities, SourceCatalog,
+    StreamDescriptor, StreamId, StreamTimingSummary,
 };
 
 #[derive(Clone, Debug)]
@@ -87,6 +87,7 @@ impl LocalCatalog {
                 end_exclusive,
             }),
             streams,
+            capabilities: SourceCapabilities::INDEXED_RECORDING,
         };
         let plan = SessionPlan::build(
             &core,
@@ -95,6 +96,28 @@ impl LocalCatalog {
             &crate::playback::web_workspace_bindings(),
         )
         .map_err(|error| LocalCatalogError::new(error.to_string()))?;
+        let index_facts = summary
+            .chunk_indexes
+            .iter()
+            .map(|chunk| viewer_core::IndexedChunkFact {
+                start: ArrivalTime(i64::try_from(chunk.message_start_time).unwrap_or(i64::MAX)),
+                end_inclusive: ArrivalTime(
+                    i64::try_from(chunk.message_end_time).unwrap_or(i64::MAX),
+                ),
+                indexed_streams: chunk
+                    .message_index_offsets
+                    .keys()
+                    .map(|channel| StreamId(u32::from(*channel)))
+                    .collect(),
+            })
+            .collect::<Vec<_>>();
+        for stream in plan.selected_stream_ids() {
+            let descriptor = core
+                .by_id(stream)
+                .expect("SessionPlan stream is in catalog");
+            viewer_core::ensure_indexed(&index_facts, stream, descriptor.timing.message_count)
+                .map_err(|error| LocalCatalogError::new(error.to_string()))?;
+        }
         let selected_topics = plan.selected_topics();
 
         Ok(Self {

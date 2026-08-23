@@ -4,9 +4,17 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[features]
+default = ["mcap-lz4", "mcap-zstd"]
+mcap-lz4 = ["dep:lz4", "mcap/lz4"]
+mcap-zstd = ["dep:zstd", "mcap/zstd"]
+
 [dependencies]
 bytes.workspace = true
+crc32fast.workspace = true
+lz4 = { workspace = true, optional = true }
 mcap.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 web-time.workspace = true
+zstd = { workspace = true, optional = true }

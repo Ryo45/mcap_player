@@ -1,12 +1,13 @@
 use crate::{
     interaction::ViewerAction,
-    workspace::{PlotViewState, PreviewPlotCache, SignalPlotCache},
+    panels::{
+        PlotMode, PlotPanelState, PlotViewState, PlotViewport, PreviewPlotCache, SignalPlotCache,
+    },
 };
 use egui_plot::{Line, Plot, PlotPoints, VLine};
 use viewer_core::{
-    ArrivalTime, Bookmark, LoadedSignal, PlaybackCommand, PlaybackView, PlotMode, PlotPanelState,
-    PlotViewport, SignalId, SignalOverview, arrival_time_from_plot_x, cursor_seconds,
-    sample_at_or_before,
+    ArrivalTime, Bookmark, LoadedSignal, PlaybackCommand, PlaybackView, SignalId, SignalOverview,
+    SignalSample, arrival_time_from_plot_x, cursor_seconds,
 };
 
 #[derive(Clone, Copy)]
@@ -46,6 +47,7 @@ fn signal_presentation(signal_id: SignalId) -> SignalPresentation {
 pub(crate) struct PlotViewInput<'a> {
     pub(crate) signal_id: SignalId,
     pub(crate) signal: Option<&'a LoadedSignal>,
+    pub(crate) current: Option<SignalSample>,
     pub(crate) loading: bool,
     pub(crate) error: Option<&'a str>,
     pub(crate) playback: PlaybackView,
@@ -69,11 +71,11 @@ pub(crate) fn show_plot_view(
     let presentation = signal_presentation(input.signal_id);
     ui.horizontal(|ui| {
         ui.heading(presentation.heading);
-        if let Some(signal) = input.signal {
-            let current = sample_at_or_before(&signal.samples, input.display_time);
+        if input.signal.is_some() || input.current.is_some() {
             ui.separator();
             ui.monospace(
-                current
+                input
+                    .current
                     .map(|sample| (presentation.format_current)(sample.value))
                     .unwrap_or_else(|| "waiting for first sample".to_owned()),
             );
@@ -81,7 +83,7 @@ pub(crate) fn show_plot_view(
         if input.loading {
             ui.separator();
             ui.spinner();
-            ui.small("indexing full series");
+            ui.small("building bounded overview");
         }
     });
 
@@ -112,11 +114,7 @@ pub(crate) fn show_plot_view(
     );
     let playhead = cursor_seconds(input.display_time, origin);
     let panel = state.panel.get_or_insert_with(|| {
-        PlotPanelState::overview_for(
-            input.signal_id,
-            overview.start_seconds,
-            overview.end_seconds,
-        )
+        PlotPanelState::overview(overview.start_seconds, overview.end_seconds)
     });
     panel.update_follow(playhead, input.playback.playing);
 
@@ -178,19 +176,16 @@ pub(crate) fn show_plot_view(
         let signal = input
             .signal
             .expect("exact signal required outside preview overview");
-        let last_arrival = signal.samples.last().map(|sample| sample.arrival_time);
         let cache_matches = state.cache.as_ref().is_some_and(|cache| {
             cache.origin == origin
                 && cache.display_len == signal.display.x_seconds.len()
-                && cache.sample_len == signal.samples.len()
-                && cache.last_arrival == last_arrival
+                && cache.input_sample_count == signal.input_sample_count
         });
         if !cache_matches {
             state.cache = Some(SignalPlotCache {
                 origin,
                 display_len: signal.display.x_seconds.len(),
-                sample_len: signal.samples.len(),
-                last_arrival,
+                input_sample_count: signal.input_sample_count,
                 points: signal
                     .display
                     .x_seconds

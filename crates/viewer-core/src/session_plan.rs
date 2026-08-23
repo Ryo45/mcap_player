@@ -1,6 +1,6 @@
 use crate::{
-    CameraController, CameraId, OdometryController, PathController, RestoreInput, SceneController,
-    SourceCatalog, StreamDescriptor, StreamId, TransformController,
+    CameraController, CameraId, OdometryController, PathController, RestoreInput, RestoreSemantics,
+    SceneController, SourceCatalog, StreamDescriptor, StreamId, TransformController,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeSet, fmt};
@@ -19,11 +19,20 @@ const TF_MESSAGE_SCHEMA: &str = "tf2_msgs/msg/TFMessage";
 pub struct PlaybackRequirements {
     all_cameras: bool,
     camera_topics: BTreeSet<String>,
-    path: bool,
-    odometry: bool,
-    point_cloud: bool,
-    dynamic_transforms: bool,
-    static_transforms: bool,
+    path: RequirementLevel,
+    odometry: RequirementLevel,
+    point_cloud: RequirementLevel,
+    dynamic_transforms: RequirementLevel,
+    static_transforms: RequirementLevel,
+    transforms_required: bool,
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
+enum RequirementLevel {
+    #[default]
+    Disabled,
+    Optional,
+    Required,
 }
 
 impl PlaybackRequirements {
@@ -31,11 +40,12 @@ impl PlaybackRequirements {
         Self {
             all_cameras: false,
             camera_topics: BTreeSet::new(),
-            path: false,
-            odometry: false,
-            point_cloud: false,
-            dynamic_transforms: false,
-            static_transforms: false,
+            path: RequirementLevel::Disabled,
+            odometry: RequirementLevel::Disabled,
+            point_cloud: RequirementLevel::Disabled,
+            dynamic_transforms: RequirementLevel::Disabled,
+            static_transforms: RequirementLevel::Disabled,
+            transforms_required: false,
         }
     }
 
@@ -48,20 +58,34 @@ impl PlaybackRequirements {
     }
 
     pub fn require_path(&mut self) {
-        self.path = true;
+        self.path = RequirementLevel::Required;
     }
 
     pub fn require_odometry(&mut self) {
-        self.odometry = true;
+        self.odometry = RequirementLevel::Required;
     }
 
     pub fn require_point_cloud(&mut self) {
-        self.point_cloud = true;
+        self.point_cloud = RequirementLevel::Required;
     }
 
     pub fn require_transforms(&mut self) {
-        self.dynamic_transforms = true;
-        self.static_transforms = true;
+        self.dynamic_transforms = self.dynamic_transforms.max(RequirementLevel::Optional);
+        self.static_transforms = self.static_transforms.max(RequirementLevel::Optional);
+        self.transforms_required = true;
+    }
+
+    pub fn optional_path(&mut self) {
+        self.path = self.path.max(RequirementLevel::Optional);
+    }
+
+    pub fn optional_odometry(&mut self) {
+        self.odometry = self.odometry.max(RequirementLevel::Optional);
+    }
+
+    pub fn optional_transforms(&mut self) {
+        self.dynamic_transforms = self.dynamic_transforms.max(RequirementLevel::Optional);
+        self.static_transforms = self.static_transforms.max(RequirementLevel::Optional);
     }
 }
 
@@ -119,6 +143,13 @@ impl SessionPlan {
                 requirements.all_cameras || requirements.camera_topics.contains(&stream.topic)
             })
             .collect::<Vec<_>>();
+        for topic in &requirements.camera_topics {
+            if !selected_cameras.iter().any(|stream| &stream.topic == topic) {
+                return Err(SessionPlanError(format!(
+                    "required Camera topic {topic} is not a CDR CompressedImage stream"
+                )));
+            }
+        }
         let priority_is_required =
             requirements.all_cameras || requirements.camera_topics.contains(priority_camera_topic);
         if priority_is_required
@@ -151,30 +182,80 @@ impl SessionPlan {
             })
             .collect::<Result<Vec<_>, SessionPlanError>>()?;
 
-        Ok(Self {
+        let dynamic_tf_stream = resolve_requirement(
+            catalog,
+            &bindings.dynamic_tf_topic,
+            TF_MESSAGE_SCHEMA,
+            "dynamic TF",
+            requirements.dynamic_transforms,
+        )?;
+        let static_tf_stream = resolve_requirement(
+            catalog,
+            &bindings.static_tf_topic,
+            TF_MESSAGE_SCHEMA,
+            "static TF",
+            requirements.static_transforms,
+        )?;
+        if requirements.transforms_required
+            && dynamic_tf_stream.is_none()
+            && static_tf_stream.is_none()
+        {
+            return Err(SessionPlanError(format!(
+                "required Transform input is unavailable on {} or {}",
+                bindings.dynamic_tf_topic, bindings.static_tf_topic
+            )));
+        }
+
+        let plan = Self {
             camera_routes: selected_cameras,
-            path_stream: requirements
-                .path
-                .then(|| select_stream(catalog, &bindings.path_topic, PATH_SCHEMA))
-                .flatten(),
-            odometry_stream: requirements
-                .odometry
-                .then(|| select_stream(catalog, &bindings.odometry_topic, ODOMETRY_SCHEMA))
-                .flatten(),
-            point_cloud_stream: requirements
-                .point_cloud
-                .then(|| select_stream(catalog, &bindings.point_cloud_topic, LASER_SCAN_SCHEMA))
-                .flatten(),
-            dynamic_tf_stream: requirements
-                .dynamic_transforms
-                .then(|| select_stream(catalog, &bindings.dynamic_tf_topic, TF_MESSAGE_SCHEMA))
-                .flatten(),
-            static_tf_stream: requirements
-                .static_transforms
-                .then(|| select_stream(catalog, &bindings.static_tf_topic, TF_MESSAGE_SCHEMA))
-                .flatten(),
+            path_stream: resolve_requirement(
+                catalog,
+                &bindings.path_topic,
+                PATH_SCHEMA,
+                "Path",
+                requirements.path,
+            )?,
+            odometry_stream: resolve_requirement(
+                catalog,
+                &bindings.odometry_topic,
+                ODOMETRY_SCHEMA,
+                "Odometry",
+                requirements.odometry,
+            )?,
+            point_cloud_stream: resolve_requirement(
+                catalog,
+                &bindings.point_cloud_topic,
+                LASER_SCAN_SCHEMA,
+                "PointCloud",
+                requirements.point_cloud,
+            )?,
+            dynamic_tf_stream,
+            static_tf_stream,
             primary_camera,
-        })
+        };
+        if catalog.time_range.is_some() {
+            let capabilities = catalog.capabilities;
+            if !capabilities.catalog || !capabilities.forward_playback || !capabilities.exact_seek {
+                return Err(SessionPlanError(
+                    "recording source does not provide Catalog, ForwardPlayback and ExactSeek"
+                        .into(),
+                ));
+            }
+            for input in plan.restore_inputs() {
+                let supported = match input.semantics {
+                    RestoreSemantics::LatestBefore => capabilities.exact_seek,
+                    RestoreSemantics::History { .. } => capabilities.history_restore,
+                    RestoreSemantics::Persistent => capabilities.persistent_restore,
+                };
+                if !supported {
+                    return Err(SessionPlanError(format!(
+                        "recording source cannot satisfy {:?} restore for stream {}",
+                        input.semantics, input.stream_id.0
+                    )));
+                }
+            }
+        }
+        Ok(plan)
     }
 
     pub fn camera_routes(&self) -> &[CameraRoute] {
@@ -299,6 +380,24 @@ fn select_stream(
         .cloned()
 }
 
+fn resolve_requirement(
+    catalog: &SourceCatalog,
+    topic: &str,
+    expected_schema: &str,
+    feature: &str,
+    level: RequirementLevel,
+) -> Result<Option<StreamDescriptor>, SessionPlanError> {
+    let selected = select_stream(catalog, topic, expected_schema);
+    if level == RequirementLevel::Required && selected.is_none() {
+        return Err(SessionPlanError(format!(
+            "required {feature} topic {topic} is not an expected CDR stream ({expected_schema})"
+        )));
+    }
+    Ok((level != RequirementLevel::Disabled)
+        .then_some(selected)
+        .flatten())
+}
+
 fn accepts(stream: &StreamDescriptor, expected_schema: &str) -> bool {
     stream.message_encoding == "cdr" && stream.schema == expected_schema
 }
@@ -317,7 +416,7 @@ impl std::error::Error for SessionPlanError {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{StreamId, StreamTimingSummary};
+    use crate::{ArrivalTime, RecordingTimeRange, StreamId, StreamTimingSummary};
 
     fn descriptor(id: u32, topic: &str, schema: &str) -> StreamDescriptor {
         StreamDescriptor {
@@ -352,6 +451,7 @@ mod tests {
     fn catalog() -> SourceCatalog {
         SourceCatalog {
             time_range: None,
+            capabilities: Default::default(),
             streams: vec![
                 descriptor(9, "/camera/rear/image/compressed", COMPRESSED_IMAGE_SCHEMA),
                 descriptor(20, "/planning/path", PATH_SCHEMA),
@@ -448,6 +548,52 @@ mod tests {
             "scheduler priority must not add an unrequested Camera stream"
         );
         assert_eq!(plan.primary_camera(), None);
+    }
+
+    #[test]
+    fn required_and_optional_feature_inputs_have_distinct_missing_semantics() {
+        let mut missing = catalog();
+        missing
+            .streams
+            .retain(|stream| stream.topic != "/planning/path");
+
+        let mut required = PlaybackRequirements::empty();
+        required.require_path();
+        let error = SessionPlan::build(&missing, "/unused", &required, &bindings()).unwrap_err();
+        assert!(error.to_string().contains("required Path topic"));
+
+        let mut optional = PlaybackRequirements::empty();
+        optional.optional_path();
+        let plan = SessionPlan::build(&missing, "/unused", &optional, &bindings()).unwrap();
+        assert!(plan.path_stream().is_none());
+    }
+
+    #[test]
+    fn recording_capabilities_are_validated_during_session_planning() {
+        let mut source = catalog();
+        source.time_range = RecordingTimeRange::new(ArrivalTime(0), ArrivalTime(100));
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_camera_topic("/camera/front/image/compressed");
+
+        let error = SessionPlan::build(
+            &source,
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings(),
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("ExactSeek"));
+
+        source.capabilities = crate::SourceCapabilities::INDEXED_RECORDING;
+        assert!(
+            SessionPlan::build(
+                &source,
+                "/camera/front/image/compressed",
+                &requirements,
+                &bindings(),
+            )
+            .is_ok()
+        );
     }
 
     #[test]

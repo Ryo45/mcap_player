@@ -8,10 +8,10 @@ use mcap::{
     Summary,
     sans_io::{SummaryReadEvent, SummaryReader, SummaryReaderOptions},
 };
-use viewer_core::McapSummaryIdentity;
+use viewer_core::{ArrivalTime, IndexedChunkFact, McapSummaryIdentity, StreamId};
 use viewer_remote_protocol::{
     CatalogResponse, MessageCount, RecordingDescriptor, RemoteTimeRange, StreamDescriptor,
-    StreamSemantic, TimestampNs,
+    TimestampNs,
 };
 
 use crate::{
@@ -133,12 +133,6 @@ impl Recording {
             streams.push(StreamDescriptor {
                 id,
                 topic: channel.topic.clone(),
-                semantic: if schema_name == "sensor_msgs/msg/CompressedImage" {
-                    StreamSemantic::Camera
-                } else {
-                    StreamSemantic::RosMessage
-                },
-                representation: "ros2-cdr".into(),
                 schema_name,
                 schema_encoding,
                 message_encoding: channel.message_encoding.clone(),
@@ -148,6 +142,20 @@ impl Recording {
                     .copied()
                     .map(MessageCount::new),
             });
+        }
+        let index_facts = indexed_chunk_facts(&summary, &channel_to_stream);
+        for stream in &streams {
+            viewer_core::ensure_indexed(
+                &index_facts,
+                StreamId(stream.id),
+                stream.message_count.map(MessageCount::get),
+            )
+            .map_err(|error| {
+                ServerError::unprocessable(
+                    "restore_index_unavailable",
+                    format!("recording cannot provide indexed restore: {error}"),
+                )
+            })?;
         }
 
         let catalog = CatalogResponse::new(
@@ -197,6 +205,10 @@ impl Recording {
         }
     }
 
+    pub(crate) fn indexed_chunk_facts(&self) -> Vec<IndexedChunkFact> {
+        indexed_chunk_facts(&self.summary, &self.channel_to_stream)
+    }
+
     pub(crate) fn topics_for_streams(
         &self,
         stream_ids: &BTreeSet<u32>,
@@ -214,6 +226,26 @@ impl Recording {
             })
             .collect()
     }
+}
+
+fn indexed_chunk_facts(
+    summary: &Summary,
+    channel_to_stream: &BTreeMap<u16, u32>,
+) -> Vec<IndexedChunkFact> {
+    summary
+        .chunk_indexes
+        .iter()
+        .map(|chunk| IndexedChunkFact {
+            start: ArrivalTime(i64::try_from(chunk.message_start_time).unwrap_or(i64::MAX)),
+            end_inclusive: ArrivalTime(i64::try_from(chunk.message_end_time).unwrap_or(i64::MAX)),
+            indexed_streams: chunk
+                .message_index_offsets
+                .keys()
+                .filter_map(|channel| channel_to_stream.get(channel).copied())
+                .map(StreamId)
+                .collect(),
+        })
+        .collect()
 }
 
 fn read_summary(
@@ -352,8 +384,8 @@ path = "{}"
                 .all(|stream| stream.message_encoding == "cdr")
         );
         assert!(first.catalog.streams.iter().any(|stream| {
-            stream.semantic == StreamSemantic::Camera
-                && stream.schema_name == "sensor_msgs/msg/CompressedImage"
+            stream.schema_name == "sensor_msgs/msg/CompressedImage"
+                && stream.message_encoding == "cdr"
         }));
         assert!(
             first

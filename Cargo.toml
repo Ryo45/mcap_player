@@ -8,7 +8,6 @@ members = [
     "crates/viewer-renderer",
     "crates/bev-renderer",
     "crates/scene-renderer",
-    "crates/viewer-ui",
     "apps/viewer-native",
     "apps/viewer-web",
     "apps/recording-server",
@@ -23,7 +22,6 @@ default-members = [
     "crates/viewer-renderer",
     "crates/bev-renderer",
     "crates/scene-renderer",
-    "crates/viewer-ui",
     "apps/viewer-native",
     "apps/viewer-web",
     "apps/recording-server",
@@ -39,7 +37,9 @@ anyhow = "1.0"
 axum = "0.8"
 base64 = "0.22"
 bytes = "1.10"
+crc32fast = "1.5"
 zstd = "0.13"
+lz4 = "1.28.1"
 bytemuck = { version = "1.24", features = ["derive"] }
 egui = "0.33.2"
 egui_plot = "0.34.1"

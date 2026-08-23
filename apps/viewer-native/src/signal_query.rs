@@ -1,9 +1,10 @@
-use viewer_core::{LoadedSignal, SignalId};
+use viewer_core::{LoadedSignal, SignalId, SignalSample, TelemetryFrame};
 
 /// One signal's current Session-owned query result, borrowed for a single UI frame.
 #[derive(Clone, Copy, Debug, Default)]
 pub(crate) struct SignalDataView<'a> {
     pub(crate) signal: Option<&'a LoadedSignal>,
+    pub(crate) current: Option<SignalSample>,
     pub(crate) loading: bool,
     pub(crate) error: Option<&'a str>,
 }
@@ -38,26 +39,36 @@ impl<'a> SignalQueryView<'a> {
     pub(crate) fn first_error(self) -> Option<&'a str> {
         self.speed.error.or(self.yaw_rate.error)
     }
+
+    pub(crate) fn with_current_odometry(mut self, frame: Option<&TelemetryFrame>) -> Self {
+        let Some(frame) = frame else {
+            return self;
+        };
+        let sample = |value| SignalSample {
+            measurement_time: Some(frame.measurement_time),
+            arrival_time: frame.arrival_time,
+            value,
+        };
+        self.speed.current = Some(sample(frame.speed));
+        self.yaw_rate.current = Some(sample(frame.yaw_rate));
+        self
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use viewer_core::{ArrivalTime, PlotSeries, SignalSample};
+    use viewer_core::{ArrivalTime, PlotSeries};
 
     fn signal(signal_id: SignalId, value: f64) -> LoadedSignal {
         LoadedSignal {
-            samples: vec![SignalSample {
-                measurement_time: None,
-                arrival_time: ArrivalTime(10),
-                value,
-            }],
             display: PlotSeries {
                 signal_id,
                 origin: ArrivalTime(0),
                 x_seconds: vec![0.0],
                 values: vec![value],
             },
+            input_sample_count: 1,
         }
     }
 
@@ -68,11 +79,13 @@ mod tests {
         let view = SignalQueryView::new(
             SignalDataView {
                 signal: Some(&speed),
+                current: None,
                 loading: true,
                 error: None,
             },
             SignalDataView {
                 signal: Some(&yaw_rate),
+                current: None,
                 loading: false,
                 error: Some("yaw query failed"),
             },

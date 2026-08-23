@@ -5,7 +5,7 @@ use memmap2::Mmap;
 use std::{
     fs::File,
     path::PathBuf,
-    sync::mpsc::{Receiver, Sender, TryRecvError},
+    sync::mpsc::{Receiver, SyncSender, TryRecvError},
     time::Instant,
 };
 use viewer_core::{ArrivalTime, LoadedOdometrySignals, LoadedSignal, SignalId};
@@ -13,7 +13,7 @@ use viewer_core::{ArrivalTime, LoadedOdometrySignals, LoadedSignal, SignalId};
 pub(crate) struct PlotLoader {
     generation: u64,
     state: PlotLoadState,
-    result_sender: Sender<PlotLoadResult>,
+    result_sender: SyncSender<PlotLoadResult>,
     result_receiver: Receiver<PlotLoadResult>,
 }
 
@@ -42,7 +42,9 @@ struct PlotLoadResult {
 
 impl Default for PlotLoader {
     fn default() -> Self {
-        let (result_sender, result_receiver) = std::sync::mpsc::channel();
+        // One coalescing progress slot prevents a fast multi-hour scan from queueing an
+        // unbounded number of bounded snapshots behind a slow UI thread.
+        let (result_sender, result_receiver) = std::sync::mpsc::sync_channel(1);
         Self {
             generation: 0,
             state: PlotLoadState::Idle,
@@ -73,7 +75,7 @@ impl PlotLoader {
                     request.max_points,
                     &request.odometry_topic,
                     |signals| {
-                        let _ = sender.send(PlotLoadResult {
+                        let _ = sender.try_send(PlotLoadResult {
                             generation,
                             result: Ok(signals),
                             elapsed_ms: started.elapsed().as_secs_f64() * 1_000.0,
@@ -137,6 +139,7 @@ impl PlotLoader {
     pub(crate) fn query_view(&self) -> SignalQueryView<'_> {
         let data = |signal_id| SignalDataView {
             signal: self.signal(signal_id),
+            current: None,
             loading: self.is_loading(),
             error: self.error(),
         };
@@ -237,11 +240,6 @@ mod tests {
             .join("../../tests/fixtures/camera-jpeg/camera_front_3s.mcap")
     }
 
-    fn multimodal_fixture() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap")
-    }
-
     fn missing_fixture() -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("missing-plot-fixture.mcap")
     }
@@ -263,6 +261,12 @@ mod tests {
             max_points: 4_000,
             odometry_topic: "/odom".into(),
         }
+    }
+
+    fn camera_requirements() -> viewer_core::PlaybackRequirements {
+        let mut requirements = viewer_core::PlaybackRequirements::empty();
+        requirements.require_all_cameras();
+        requirements
     }
 
     fn align_cdr(output: &mut Vec<u8>, alignment: usize) {
@@ -421,13 +425,12 @@ mod tests {
             .unwrap();
         loader.poll_until_settled_for_test();
         let signal = loader.signal(SignalId::Speed).expect("speed signal");
-        assert_eq!(signal.samples.len(), 2);
-        assert_eq!(signal.samples[0].value, 3.0);
-        assert_eq!(signal.samples[1].value, 5.0);
+        assert_eq!(signal.input_sample_count, 2);
+        assert_eq!(signal.display.values, vec![3.0, 5.0]);
         let yaw_rate = loader
             .signal(SignalId::YawRate)
             .expect("yaw-rate signal from the same scan");
-        assert_eq!(yaw_rate.samples.len(), 2);
+        assert_eq!(yaw_rate.input_sample_count, 2);
         std::fs::remove_file(path).unwrap();
     }
 
@@ -493,16 +496,14 @@ mod tests {
             speed_view
                 .signal
                 .expect("partial speed signal")
-                .samples
-                .len(),
+                .input_sample_count,
             2
         );
         assert_eq!(
             loader
                 .signal(SignalId::YawRate)
                 .expect("partial yaw-rate signal")
-                .samples
-                .len(),
+                .input_sample_count,
             2
         );
     }
@@ -513,7 +514,7 @@ mod tests {
         let mut session = ViewerSession::open(
             &camera_fixture(),
             "/camera/front/image/compressed".to_owned(),
-            &workspace.data_requirements().playback,
+            &camera_requirements(),
             workspace.bindings(),
         )
         .unwrap();
@@ -534,7 +535,7 @@ mod tests {
         let mut session = ViewerSession::open(
             &camera_fixture(),
             "/camera/front/image/compressed".to_owned(),
-            &workspace.data_requirements().playback,
+            &camera_requirements(),
             workspace.bindings(),
         )
         .unwrap();
@@ -546,29 +547,5 @@ mod tests {
 
         assert!(loader.is_loading());
         assert!(session.playback_view().unwrap().cursor > start);
-    }
-
-    #[test]
-    fn session_inspector_reads_bounded_exact_messages_without_moving_playback() {
-        let workspace = crate::workspace::NativeWorkspace::default();
-        let session = ViewerSession::open(
-            &multimodal_fixture(),
-            "/camera/front/image/compressed".to_owned(),
-            &workspace.data_requirements().playback,
-            workspace.bindings(),
-        )
-        .unwrap();
-        let cursor = session.playback_view().unwrap().cursor;
-
-        let messages = session.inspect_topic("/odom", 3).unwrap();
-
-        assert_eq!(messages.len(), 3);
-        assert!(
-            messages
-                .windows(2)
-                .all(|pair| { pair[0].arrival_time <= pair[1].arrival_time })
-        );
-        assert!(messages.iter().all(|message| message.payload_bytes > 0));
-        assert_eq!(session.playback_view().unwrap().cursor, cursor);
     }
 }

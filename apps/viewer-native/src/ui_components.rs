@@ -1,14 +1,13 @@
-//! Shared egui presentation model and playback controls.
-
-pub use viewer_core::ViewerPresentation;
-use viewer_core::{ArrivalTime, CameraStatus, PlaybackCommand, PlaybackSpeed, PlaybackView};
+use viewer_core::{
+    ArrivalTime, CameraStatus, PlaybackCommand, PlaybackSpeed, PlaybackView, ViewerPresentation,
+};
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct PlaybackUiResponse {
-    pub commands: Vec<PlaybackCommand>,
+pub(crate) struct PlaybackUiResponse {
+    pub(crate) commands: Vec<PlaybackCommand>,
 }
 
-pub fn playback_controls(ui: &mut egui::Ui, view: PlaybackView) -> PlaybackUiResponse {
+pub(crate) fn playback_controls(ui: &mut egui::Ui, view: PlaybackView) -> PlaybackUiResponse {
     let mut response = PlaybackUiResponse::default();
     ui.horizontal(|ui| {
         let label = if view.playing { "Pause" } else { "Play" };
@@ -50,7 +49,7 @@ pub fn playback_controls(ui: &mut egui::Ui, view: PlaybackView) -> PlaybackUiRes
     response
 }
 
-pub fn source_status(ui: &mut egui::Ui, model: &ViewerPresentation) {
+pub(crate) fn source_status(ui: &mut egui::Ui, model: &ViewerPresentation) {
     let diagnostics = &model.diagnostics;
     ui.heading("JPEG Camera");
     ui.label(format!("Source: {}", diagnostics.source));

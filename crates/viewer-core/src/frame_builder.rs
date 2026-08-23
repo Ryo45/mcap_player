@@ -47,21 +47,24 @@ pub struct SceneSnapshot<'a> {
     pub ego_yaw: f32,
     pub path: &'a [[f32; 2]],
     pub cloud: &'a [[f32; 3]],
-    pub accumulate: bool,
     pub diagnostics: SceneDiagnostics,
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct SceneFrameBuilder {
+pub struct ScenePresentationState {
     source_revision: Option<u64>,
     transform_revision: u64,
     target_frame: String,
-    output_revision: u64,
-    cloud: Vec<[f32; 3]>,
+    transformed_cloud: Vec<[f32; 3]>,
+    visible_revision: u64,
+    visible_cloud: Vec<[f32; 3]>,
+    accumulate: bool,
     diagnostics: SceneDiagnostics,
 }
 
-impl SceneFrameBuilder {
+const MAX_VISIBLE_SCENE_POINTS: usize = 65_536;
+
+impl ScenePresentationState {
     pub fn new() -> Self {
         Self::default()
     }
@@ -90,12 +93,12 @@ impl SceneFrameBuilder {
             self.source_revision != Some(point_cloud_revision) || self.target_frame != target_frame;
         let retry_missing_tf = self.diagnostics.current_tf_error.is_some()
             && self.transform_revision != transform_revision;
-        if source_changed || retry_missing_tf {
+        let transformed_changed = source_changed || retry_missing_tf;
+        if transformed_changed {
             self.source_revision = Some(point_cloud_revision);
             self.transform_revision = transform_revision;
             self.target_frame.clear();
             self.target_frame.push_str(target_frame);
-            self.output_revision = self.output_revision.wrapping_add(1);
             if let Some(frame) = point_cloud.latest() {
                 let source_frame = frame.frame_id.clone();
                 match transforms.transform_points_at(
@@ -105,13 +108,13 @@ impl SceneFrameBuilder {
                     &frame.points,
                 ) {
                     Some(points) => {
-                        self.cloud = points;
+                        self.transformed_cloud = points;
                         self.diagnostics.last_tf_route =
                             Some(format!("{source_frame} → {target_frame}"));
                         self.diagnostics.current_tf_error = None;
                     }
                     None => {
-                        self.cloud.clear();
+                        self.transformed_cloud.clear();
                         if source_changed {
                             self.diagnostics.tf_misses =
                                 self.diagnostics.tf_misses.saturating_add(1);
@@ -123,23 +126,58 @@ impl SceneFrameBuilder {
                     }
                 }
             } else {
-                self.cloud.clear();
+                self.transformed_cloud.clear();
                 self.diagnostics.current_tf_error = None;
             }
         }
 
+        self.update_visible_cloud(transformed_changed, accumulate);
+
         let telemetry_revision = telemetry.map_or(0, |frame| frame.arrival_time.0 as u64);
         SceneSnapshot {
             revision: path.revision().rotate_left(17) ^ telemetry_revision,
-            cloud_revision: self.output_revision,
+            cloud_revision: self.visible_revision,
             ego_position: telemetry.map_or([0.0, 0.0], |frame| {
                 [frame.position_x as f32, frame.position_y as f32]
             }),
             ego_yaw: telemetry.map_or(0.0, |frame| frame.yaw_radians as f32),
             path: path.latest().map_or(&[], |frame| frame.points.as_slice()),
-            cloud: &self.cloud,
-            accumulate,
+            cloud: &self.visible_cloud,
             diagnostics: self.diagnostics.clone(),
+        }
+    }
+
+    fn update_visible_cloud(&mut self, transformed_changed: bool, accumulate: bool) {
+        let mode_changed = self.accumulate != accumulate;
+        let mut visible_changed = false;
+        if transformed_changed {
+            if self.transformed_cloud.is_empty() {
+                if !accumulate && !self.visible_cloud.is_empty() {
+                    self.visible_cloud.clear();
+                    visible_changed = true;
+                }
+            } else {
+                if !accumulate {
+                    self.visible_cloud.clear();
+                }
+                self.visible_cloud
+                    .extend_from_slice(&self.transformed_cloud);
+                visible_changed = true;
+            }
+        } else if mode_changed && !accumulate {
+            self.visible_cloud.clear();
+            self.visible_cloud
+                .extend_from_slice(&self.transformed_cloud);
+            visible_changed = true;
+        }
+        if self.visible_cloud.len() > MAX_VISIBLE_SCENE_POINTS {
+            let excess = self.visible_cloud.len() - MAX_VISIBLE_SCENE_POINTS;
+            self.visible_cloud.drain(..excess);
+            visible_changed = true;
+        }
+        self.accumulate = accumulate;
+        if visible_changed {
+            self.visible_revision = self.visible_revision.wrapping_add(1);
         }
     }
 }
@@ -202,14 +240,13 @@ mod tests {
 
         let bev = BevFrameBuilder::new(&path).build();
         assert_eq!(bev.path, [[0.0, 1.0]]);
-        let mut builder = SceneFrameBuilder::new();
+        let mut builder = ScenePresentationState::new();
         let transforms = TransformState::default();
         let scene = builder.build(&path, &odometry, &point_cloud, &transforms, true);
         assert_eq!(scene.ego_position, [4.0, 5.0]);
         assert_eq!(scene.ego_yaw, 0.25);
         assert_eq!(scene.path, bev.path);
         assert_eq!(scene.cloud, [[1.0, 2.0, 3.0]]);
-        assert!(scene.accumulate);
     }
 
     #[test]
@@ -223,7 +260,7 @@ mod tests {
             frame_id: "scan".into(),
             points: vec![[1.0, 0.0, 0.0]],
         });
-        let mut builder = SceneFrameBuilder::new();
+        let mut builder = ScenePresentationState::new();
         let path = BevState::default();
         let mut odometry = TelemetryState::default();
         let first = builder.build(&path, &odometry, &point_cloud, &transforms, true);
@@ -254,7 +291,7 @@ mod tests {
             frame_id: "scan".into(),
             points: vec![[1.0, 0.0, 0.0]],
         });
-        let mut builder = SceneFrameBuilder::new();
+        let mut builder = ScenePresentationState::new();
         let mut transforms = TransformState::default();
         let missing = builder.build(&path, &odometry, &point_cloud, &transforms, false);
         assert!(missing.cloud.is_empty());
@@ -265,5 +302,78 @@ mod tests {
         assert_eq!(recovered.cloud, [[3.0, 0.0, 0.0]]);
         assert_eq!(recovered.diagnostics.tf_misses, 1);
         assert!(recovered.diagnostics.current_tf_error.is_none());
+    }
+
+    #[test]
+    fn presentation_owns_bounded_accumulation_and_latest_only_mode() {
+        let path = BevState::default();
+        let odometry = TelemetryState::default();
+        let transforms = TransformState::default();
+        let mut point_cloud = PointCloudState::default();
+        let mut presentation = ScenePresentationState::new();
+
+        point_cloud.apply(PointCloudFrame {
+            measurement_time: MeasurementTime(1),
+            arrival_time: ArrivalTime(1),
+            frame_id: "odom".into(),
+            points: vec![[1.0, 0.0, 0.0], [2.0, 0.0, 0.0]],
+        });
+        assert_eq!(
+            presentation
+                .build(&path, &odometry, &point_cloud, &transforms, true)
+                .cloud
+                .len(),
+            2
+        );
+
+        point_cloud.apply(PointCloudFrame {
+            measurement_time: MeasurementTime(2),
+            arrival_time: ArrivalTime(2),
+            frame_id: "odom".into(),
+            points: vec![[3.0, 0.0, 0.0]],
+        });
+        let accumulated = presentation.build(&path, &odometry, &point_cloud, &transforms, true);
+        assert_eq!(accumulated.cloud.len(), 3);
+        let revision = accumulated.cloud_revision;
+
+        let unchanged = presentation.build(&path, &odometry, &point_cloud, &transforms, true);
+        assert_eq!(unchanged.cloud.len(), 3);
+        assert_eq!(unchanged.cloud_revision, revision);
+
+        let latest = presentation.build(&path, &odometry, &point_cloud, &transforms, false);
+        assert_eq!(latest.cloud, [[3.0, 0.0, 0.0]]);
+        presentation.reset();
+        assert!(
+            presentation
+                .build(
+                    &path,
+                    &odometry,
+                    &PointCloudState::default(),
+                    &transforms,
+                    true
+                )
+                .cloud
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn presentation_history_never_exceeds_the_fixed_point_budget() {
+        let path = BevState::default();
+        let odometry = TelemetryState::default();
+        let transforms = TransformState::default();
+        let mut point_cloud = PointCloudState::default();
+        point_cloud.apply(PointCloudFrame {
+            measurement_time: MeasurementTime(1),
+            arrival_time: ArrivalTime(1),
+            frame_id: "odom".into(),
+            points: (0..MAX_VISIBLE_SCENE_POINTS + 17)
+                .map(|index| [index as f32, 0.0, 0.0])
+                .collect(),
+        });
+        let mut presentation = ScenePresentationState::new();
+        let snapshot = presentation.build(&path, &odometry, &point_cloud, &transforms, true);
+        assert_eq!(snapshot.cloud.len(), MAX_VISIBLE_SCENE_POINTS);
+        assert_eq!(snapshot.cloud[0][0], 17.0);
     }
 }

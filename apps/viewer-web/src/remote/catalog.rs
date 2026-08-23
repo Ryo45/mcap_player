@@ -1,6 +1,6 @@
 use std::{error::Error, fmt};
 use viewer_core::{
-    ArrivalTime, RecordingTimeRange, SessionPlan, SourceCatalog,
+    ArrivalTime, RecordingTimeRange, SessionPlan, SourceCapabilities, SourceCatalog,
     StreamDescriptor as CoreStreamDescriptor, StreamId, StreamTimingSummary,
 };
 use viewer_remote_protocol::{CatalogResponse, StreamDescriptor};
@@ -41,7 +41,7 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
     let supported = remote
         .streams
         .iter()
-        .filter(|stream| stream.representation == "ros2-cdr" && stream.message_encoding == "cdr")
+        .filter(|stream| stream.message_encoding == "cdr")
         .collect::<Vec<_>>();
     let camera = supported
         .iter()
@@ -62,6 +62,7 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
             end_exclusive,
         }),
         streams,
+        capabilities: SourceCapabilities::INDEXED_RECORDING,
     };
     let plan = SessionPlan::build(
         &core,
@@ -107,23 +108,15 @@ fn to_arrival(value: u64) -> Result<ArrivalTime, RemoteCatalogError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use viewer_remote_protocol::{
-        CatalogResponse, RemoteTimeRange, StreamDescriptor, StreamSemantic, TimestampNs,
-    };
+    use viewer_remote_protocol::{CatalogResponse, RemoteTimeRange, StreamDescriptor, TimestampNs};
 
-    fn stream(id: u32, topic: &str, schema: &str, representation: &str) -> StreamDescriptor {
+    fn stream(id: u32, topic: &str, schema: &str, message_encoding: &str) -> StreamDescriptor {
         StreamDescriptor {
             id,
             topic: topic.into(),
-            semantic: if schema == "sensor_msgs/msg/CompressedImage" {
-                StreamSemantic::Camera
-            } else {
-                StreamSemantic::RosMessage
-            },
-            representation: representation.into(),
             schema_name: schema.into(),
             schema_encoding: "ros2msg".into(),
-            message_encoding: "cdr".into(),
+            message_encoding: message_encoding.into(),
             message_count: Some(viewer_remote_protocol::MessageCount::new(10)),
         }
     }
@@ -137,16 +130,11 @@ mod tests {
                 end_ns_exclusive: TimestampNs::new(200),
             },
             vec![
-                stream(7, "/camera", "sensor_msgs/msg/CompressedImage", "ros2-cdr"),
-                stream(
-                    8,
-                    "/camera/rear",
-                    "sensor_msgs/msg/CompressedImage",
-                    "ros2-cdr",
-                ),
-                stream(3, "/odom", "nav_msgs/msg/Odometry", "ros2-cdr"),
-                stream(4, "/extra", "example/msg/Extra", "ros2-cdr"),
-                stream(9, "/future", "example/msg/Future", "viewer.future.v1"),
+                stream(7, "/camera", "sensor_msgs/msg/CompressedImage", "cdr"),
+                stream(8, "/camera/rear", "sensor_msgs/msg/CompressedImage", "cdr"),
+                stream(3, "/odom", "nav_msgs/msg/Odometry", "cdr"),
+                stream(4, "/extra", "example/msg/Extra", "cdr"),
+                stream(9, "/future", "example/msg/Future", "future"),
             ],
         )
     }

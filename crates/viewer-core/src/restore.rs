@@ -130,6 +130,7 @@ mod tests {
                 start: ArrivalTime(1_000_000_000),
                 end_exclusive: ArrivalTime(31_000_000_000),
             }),
+            capabilities: Default::default(),
             streams: vec![StreamDescriptor {
                 id: StreamId(7),
                 topic: "/camera".into(),

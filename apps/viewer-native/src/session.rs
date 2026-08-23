@@ -1,8 +1,11 @@
-use crate::inspection::{InspectedMessage, InspectorRequirement, TopicInspection};
 #[cfg(feature = "ros2-live")]
 use crate::live;
 use crate::plot_loader::PlotLoader;
 use crate::signal_query::SignalQueryView;
+use crate::{
+    inspection::{InspectorRequirement, TopicInspection},
+    inspector_loader::{InspectorLoader, InspectorRequest},
+};
 #[cfg(feature = "ros2-live")]
 use anyhow::bail;
 use anyhow::{Context, Result};
@@ -13,9 +16,9 @@ use std::{
     time::Duration,
 };
 use viewer_core::{
-    ArrivalTime, CameraId, McapPlayback, PlaybackCommand, PlaybackEffect, PlaybackPerformance,
-    PlaybackRequirements, PlaybackView, ProcessingCounters, RawMessage, RestoreSemantics,
-    SessionPlan, StageTiming, WorkspaceBindings,
+    ArrivalTime, CameraId, FeatureRestoreError, McapPlayback, PlaybackCommand, PlaybackEffect,
+    PlaybackPerformance, PlaybackRequirements, PlaybackView, ProcessingCounters, RawMessage,
+    RestoreSemantics, SessionPlan, StageTiming, WorkspaceBindings,
 };
 #[cfg(feature = "ros2-live")]
 use viewer_core::{SourceCatalog, StreamDescriptor};
@@ -31,7 +34,7 @@ pub(crate) struct ViewerSession {
     source_name: String,
     recording_path: Option<PathBuf>,
     plot_loader: PlotLoader,
-    inspections: Vec<TopicInspection>,
+    inspector_loader: InspectorLoader,
 }
 
 pub(crate) struct PlotSignalRequest {
@@ -42,7 +45,7 @@ pub(crate) struct PlotSignalRequest {
 }
 
 enum SessionSource {
-    Mcap(Box<McapPlayback<Mmap>>),
+    Mcap(Box<McapPlayback>),
     #[cfg(feature = "ros2-live")]
     Ros {
         handle: live::RosLiveHandle,
@@ -68,9 +71,9 @@ impl ViewerSession {
         // SAFETY: the mapping is read-only and owns an independent reference to the file pages.
         let mapping =
             unsafe { Mmap::map(&file) }.with_context(|| format!("map {}", path.display()))?;
-        let mut playback = McapPlayback::new(mapping)?;
+        let mut playback = McapPlayback::from_owner(mapping)?;
         let plan = SessionPlan::build(playback.catalog(), &topic, requirements, bindings)?;
-        playback.select_streams(plan.selected_stream_ids());
+        playback.select_streams(plan.selected_stream_ids())?;
         let persistent = plan
             .restore_inputs()
             .into_iter()
@@ -86,7 +89,7 @@ impl ViewerSession {
             source_name: path.display().to_string(),
             recording_path: Some(path.to_owned()),
             plot_loader: PlotLoader::default(),
-            inspections: Vec::new(),
+            inspector_loader: InspectorLoader::default(),
         })
     }
 
@@ -107,6 +110,7 @@ impl ViewerSession {
         let catalog = SourceCatalog {
             time_range: None,
             streams: vec![descriptor],
+            capabilities: viewer_core::SourceCapabilities::LIVE,
         };
         let plan = SessionPlan::build(&catalog, &topic, requirements, bindings)
             .expect("the live Camera descriptor matches its configured primary topic");
@@ -122,7 +126,7 @@ impl ViewerSession {
             ),
             recording_path: None,
             plot_loader: PlotLoader::default(),
-            inspections: Vec::new(),
+            inspector_loader: InspectorLoader::default(),
         }
     }
 
@@ -149,76 +153,38 @@ impl ViewerSession {
 
     pub(crate) fn poll_queries(&mut self) {
         self.plot_loader.poll();
+        self.inspector_loader.poll();
     }
 
-    pub(crate) fn signal_query_view(&self) -> SignalQueryView<'_> {
-        self.plot_loader.query_view()
-    }
-
-    pub(crate) fn inspect_topic(
+    pub(crate) fn signal_query_view(
         &self,
-        topic: &str,
-        max_messages: usize,
-    ) -> Result<Vec<InspectedMessage>> {
-        if max_messages == 0 {
-            return Ok(Vec::new());
-        }
-        #[cfg(not(feature = "ros2-live"))]
-        let SessionSource::Mcap(playback) = &self.source;
-        #[cfg(feature = "ros2-live")]
-        let playback = match &self.source {
-            SessionSource::Mcap(playback) => playback,
-            SessionSource::Ros { .. } => {
-                anyhow::bail!("message inspection is unavailable for this source")
-            }
-        };
-        let stream = playback
-            .catalog()
-            .by_topic(topic)
-            .with_context(|| format!("recording has no topic {topic}"))?;
-        let recording = playback
-            .catalog()
-            .time_range
-            .context("recording has no indexed time range")?;
-        let range =
-            viewer_core::DataWindowTimeRange::new(recording.start, recording.end_exclusive)?;
-        let result = playback.query_range(&viewer_core::RangeQuery {
-            streams: vec![stream.id],
-            range,
-            limits: viewer_core::QueryLimits::new(max_messages, 16 * 1024 * 1024)?,
-        })?;
-        Ok(result
-            .messages
-            .into_iter()
-            .map(|message| InspectedMessage {
-                arrival_time: message.arrival_time,
-                payload_bytes: message.payload.len(),
-            })
-            .collect())
+        current_odometry: Option<&viewer_core::TelemetryFrame>,
+    ) -> SignalQueryView<'_> {
+        self.plot_loader
+            .query_view()
+            .with_current_odometry(current_odometry)
     }
 
-    pub(crate) fn load_inspections(&mut self, requirements: &[InspectorRequirement]) {
-        self.inspections = requirements
-            .iter()
-            .map(|requirement| {
-                match self.inspect_topic(&requirement.topic, requirement.max_messages) {
-                    Ok(messages) => TopicInspection {
-                        topic: requirement.topic.clone(),
-                        messages,
-                        error: None,
-                    },
-                    Err(error) => TopicInspection {
-                        topic: requirement.topic.clone(),
-                        messages: Vec::new(),
-                        error: Some(error.to_string()),
-                    },
-                }
-            })
-            .collect();
+    pub(crate) fn request_inspections(
+        &mut self,
+        requirements: &[InspectorRequirement],
+    ) -> Result<()> {
+        let Some(path) = self.recording_path.clone() else {
+            self.inspector_loader.clear();
+            return Ok(());
+        };
+        if requirements.is_empty() {
+            self.inspector_loader.clear();
+            return Ok(());
+        }
+        self.inspector_loader.start(InspectorRequest {
+            path,
+            requirements: requirements.to_vec(),
+        })
     }
 
     pub(crate) fn inspections(&self) -> &[TopicInspection] {
-        &self.inspections
+        self.inspector_loader.inspections()
     }
 
     pub(crate) fn tick(
@@ -262,7 +228,7 @@ impl ViewerSession {
     pub(crate) fn apply_playback_command(
         &mut self,
         command: PlaybackCommand,
-        restore: impl FnOnce(ArrivalTime, Vec<RawMessage>),
+        restore: impl FnOnce(ArrivalTime, Vec<RawMessage>) -> Result<(), FeatureRestoreError>,
     ) -> Result<PlaybackEffect> {
         match &mut self.source {
             SessionSource::Mcap(playback) => match command {

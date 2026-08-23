@@ -29,20 +29,55 @@ impl From<McapOpenError> for McapPlaybackError {
     }
 }
 
+#[derive(Debug)]
+pub enum McapSeekError<E> {
+    Source(McapOpenError),
+    Restore(E),
+}
+
+impl<E> From<McapOpenError> for McapSeekError<E> {
+    fn from(error: McapOpenError) -> Self {
+        Self::Source(error)
+    }
+}
+
+impl<E: fmt::Display> fmt::Display for McapSeekError<E> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Source(error) => error.fmt(formatter),
+            Self::Restore(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl<E: std::error::Error + 'static> std::error::Error for McapSeekError<E> {}
+
 /// Native sequential MCAP transport.
 ///
 /// This type owns physical source traversal and the playback clock, but no decoded semantic
 /// state. The caller routes the returned exact messages to its concrete feature controllers.
-pub struct McapPlayback<B: AsRef<[u8]>> {
-    source: McapSource<B>,
+pub struct McapPlayback {
+    source: McapSource,
     clock: PlaybackClock,
     source_read: StageTiming,
     persistent_archive: Vec<RawMessage>,
 }
 
-impl<B: AsRef<[u8]>> McapPlayback<B> {
-    pub fn new(backing: B) -> Result<Self, McapPlaybackError> {
+impl McapPlayback {
+    pub fn new(backing: impl AsRef<[u8]>) -> Result<Self, McapPlaybackError> {
         let source = McapSource::new(backing)?;
+        Self::from_source(source)
+    }
+
+    pub fn from_owner<B>(backing: B) -> Result<Self, McapPlaybackError>
+    where
+        B: AsRef<[u8]> + Send + 'static,
+    {
+        let source = McapSource::from_owner(backing)?;
+        Self::from_source(source)
+    }
+
+    fn from_source(source: McapSource) -> Result<Self, McapPlaybackError> {
         let (start, end) = source.time_range();
         Ok(Self {
             source,
@@ -56,8 +91,11 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
         self.source.catalog()
     }
 
-    pub fn select_streams(&mut self, streams: impl IntoIterator<Item = StreamId>) {
-        self.source.select_streams(streams);
+    pub fn select_streams(
+        &mut self,
+        streams: impl IntoIterator<Item = StreamId>,
+    ) -> Result<(), McapOpenError> {
+        self.source.select_streams(streams)
     }
 
     pub fn query_range(&self, query: &RangeQuery) -> Result<RangeQueryResult, RangeQueryError> {
@@ -96,11 +134,11 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
     /// Every physical read and the forward-source reposition complete before the caller replaces
     /// visible controller state. The exact target message is part of restoration and is skipped by
     /// subsequent forward delivery.
-    pub fn seek_with(
+    pub fn seek_with<E>(
         &mut self,
         plan: &RestorePlan,
-        restore: impl FnOnce(crate::ArrivalTime, Vec<RawMessage>),
-    ) -> Result<(), McapOpenError> {
+        restore: impl FnOnce(crate::ArrivalTime, Vec<RawMessage>) -> Result<(), E>,
+    ) -> Result<(), McapSeekError<E>> {
         let mut messages = self
             .source
             .latest_before(&plan.latest_before, plan.target)?
@@ -128,8 +166,9 @@ impl<B: AsRef<[u8]>> McapPlayback<B> {
         messages.sort_by_key(|message| (message.arrival_time, message.stream_id.0));
 
         let after_target = crate::ArrivalTime(plan.target.0.saturating_add(1));
-        self.source.seek(after_target)?;
-        restore(plan.target, messages);
+        let source_position = self.source.prepare_seek(after_target)?;
+        restore(plan.target, messages).map_err(McapSeekError::Restore)?;
+        self.source.commit_seek(source_position);
         self.clock.seek(plan.target);
         Ok(())
     }
@@ -233,10 +272,43 @@ mod tests {
 
         assert!(
             playback
-                .seek_with(&restore_plan, |_, _| restored = true)
+                .seek_with(&restore_plan, |_, _| {
+                    restored = true;
+                    Ok::<(), std::convert::Infallible>(())
+                })
                 .is_err()
         );
         assert_eq!(playback.clock().cursor(), committed);
         assert!(!restored);
+    }
+
+    #[test]
+    fn restore_application_failure_preserves_source_position_and_cursor() {
+        let bytes = fixture("camera_front_3s.mcap");
+        let mut playback = McapPlayback::new(bytes).unwrap();
+        let committed = playback.clock().cursor();
+        let target = ArrivalTime((playback.clock().start().0 + playback.clock().end().0) / 2);
+        let plan = RestorePlan {
+            target,
+            latest_before: Vec::new(),
+            histories: Vec::new(),
+            persistent: Vec::new(),
+        };
+
+        let result = playback.seek_with(&plan, |_, _| {
+            Err(std::io::Error::other("candidate decode failed"))
+        });
+        assert!(matches!(result, Err(McapSeekError::Restore(_))));
+        assert_eq!(playback.clock().cursor(), committed);
+
+        let mut replayed = Vec::new();
+        playback
+            .tick(Duration::ZERO, |_, messages| replayed = messages)
+            .unwrap();
+        assert!(
+            replayed
+                .iter()
+                .all(|message| message.arrival_time <= committed)
+        );
     }
 }

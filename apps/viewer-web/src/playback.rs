@@ -1,5 +1,3 @@
-#![cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
-
 #[cfg(target_arch = "wasm32")]
 use crate::local::{BrowserMcapRecording, BrowserMcapRestoreLoader};
 use crate::{
@@ -8,12 +6,14 @@ use crate::{
 };
 use std::{error::Error, fmt, time::Duration};
 use viewer_core::{
-    ArrivalTime, CameraController, CameraId, FetchIntent, OdometryController, PathController,
-    PlaybackClock, PlaybackCommand, PlaybackEffect, PlaybackLoadState, PlaybackPerformance,
-    PlaybackRequirements, ProcessingCounters, RawMessage, RestorePlanner, SessionPlan,
-    SourceCatalog, StageTiming, TransformController, WorkspaceBindings,
+    ArrivalTime, CameraController, FeatureRuntime, FetchIntent, PlaybackClock, PlaybackCommand,
+    PlaybackEffect, PlaybackLoadState, PlaybackRequirements, ProcessingCounters, RawMessage,
+    RestorePlanner, SessionPlan, SourceCatalog, TransformController, WorkspaceBindings,
 };
-use web_time::Instant;
+#[cfg(any(test, target_arch = "wasm32"))]
+use viewer_core::{CameraId, OdometryController, PathController};
+#[cfg(target_arch = "wasm32")]
+use viewer_core::{PlaybackPerformance, StageTiming};
 
 const WEB_WORKSPACE_BINDINGS: &str = include_str!("../../../config/workspace_bindings.json");
 
@@ -22,6 +22,7 @@ pub(crate) fn web_workspace_bindings() -> WorkspaceBindings {
         .expect("bundled Web workspace bindings must be valid")
 }
 
+#[cfg(target_arch = "wasm32")]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum PlaybackSourceKind {
     LocalFile,
@@ -90,20 +91,16 @@ impl Error for WebPlaybackError {}
 /// Browser playback shared by local File.slice and Recording Server sources.
 pub(crate) struct WebPlayback {
     clock: PlaybackClock,
-    cameras: CameraController,
-    path: PathController,
-    odometry: OdometryController,
-    transforms: TransformController,
+    runtime: FeatureRuntime,
     catalog: SourceCatalog,
     restore_inputs: Vec<viewer_core::RestoreInput>,
-    unknown_streams: u64,
-    processing_time: StageTiming,
     data: RecordingDataPlane<WebWindowLoader>,
     restore: WebRestoreLoader,
     persistent_archive: Option<Vec<RawMessage>>,
     load_state: PlaybackLoadState,
     pending_seek: Option<PendingSeek>,
     buffer_underrun_active: bool,
+    #[cfg(target_arch = "wasm32")]
     source_kind: PlaybackSourceKind,
 }
 
@@ -129,7 +126,6 @@ impl WebPlayback {
             catalog.core,
             WebWindowLoader::Remote(loader),
             WebRestoreLoader::Remote(restore),
-            PlaybackSourceKind::Remote,
         )
     }
 
@@ -145,7 +141,6 @@ impl WebPlayback {
             catalog.core,
             WebWindowLoader::LocalFile(loader),
             WebRestoreLoader::LocalFile(restore),
-            PlaybackSourceKind::LocalFile,
         )
     }
 
@@ -154,7 +149,6 @@ impl WebPlayback {
         catalog: SourceCatalog,
         loader: WebWindowLoader,
         restore: WebRestoreLoader,
-        source_kind: PlaybackSourceKind,
     ) -> Result<Self, WebPlaybackError> {
         let recording = catalog
             .time_range
@@ -162,29 +156,27 @@ impl WebPlayback {
         let start = recording.start;
         let end_exclusive = recording.end_exclusive;
         let end = ArrivalTime(end_exclusive.0 - 1);
-        let cameras = CameraController::new(&plan);
-        let path = PathController::new(&plan);
-        let odometry = OdometryController::new(&plan);
-        let transforms = TransformController::new(&plan);
+        let runtime = FeatureRuntime::new(&plan, false);
         let restore_inputs = plan.restore_inputs();
+        #[cfg(target_arch = "wasm32")]
+        let source_kind = match &loader {
+            WebWindowLoader::Remote(_) => PlaybackSourceKind::Remote,
+            WebWindowLoader::LocalFile(_) => PlaybackSourceKind::LocalFile,
+        };
         let data = RecordingDataPlane::new(loader, start, end_exclusive)
             .map_err(|error| WebPlaybackError::new(error.to_string()))?;
         Ok(Self {
             clock: PlaybackClock::new(start, end),
-            cameras,
-            path,
-            odometry,
-            transforms,
+            runtime,
             catalog,
             restore_inputs,
-            unknown_streams: 0,
-            processing_time: StageTiming::default(),
             data,
             restore,
             persistent_archive: None,
             load_state: PlaybackLoadState::Ready,
             pending_seek: None,
             buffer_underrun_active: false,
+            #[cfg(target_arch = "wasm32")]
             source_kind,
         })
     }
@@ -236,6 +228,7 @@ impl WebPlayback {
                 return Err(error);
             }
         };
+        let mut candidate_archive = self.persistent_archive.clone();
         if seek.bootstraps_persistent {
             let persistent = seek
                 .persistent_streams
@@ -251,9 +244,9 @@ impl WebPlayback {
                     true
                 }
             });
-            self.persistent_archive = Some(archive);
+            candidate_archive = Some(archive);
         }
-        if let Some(archive) = &self.persistent_archive {
+        if let Some(archive) = &candidate_archive {
             messages.extend(
                 archive
                     .iter()
@@ -265,11 +258,21 @@ impl WebPlayback {
             );
         }
         messages.sort_by_key(|message| (message.arrival_time, message.stream_id.0));
+        let candidate_runtime = match self.runtime.stage_restore(target, &messages) {
+            Ok(runtime) => runtime,
+            Err(error) => {
+                self.pending_seek = None;
+                self.load_state = PlaybackLoadState::Failed {
+                    message: error.to_string(),
+                };
+                return Err(WebPlaybackError::new(error.to_string()));
+            }
+        };
         self.data
             .begin_seek(target)
             .map_err(|error| WebPlaybackError::new(error.to_string()))?;
-        self.reset_for_restore(target);
-        self.process_restore_messages(messages);
+        self.runtime.commit_restore(candidate_runtime);
+        self.persistent_archive = candidate_archive;
         self.clock.seek(target);
         self.pending_seek = None;
         self.buffer_underrun_active = false;
@@ -303,7 +306,7 @@ impl WebPlayback {
         }
 
         let messages = self.data.messages_through(self.clock.cursor(), requested);
-        self.process_messages(elapsed, messages);
+        self.runtime.process_messages(elapsed, &messages);
         self.clock.commit_cursor(requested);
         self.buffer_underrun_active = false;
         self.load_state = PlaybackLoadState::Ready;
@@ -360,57 +363,52 @@ impl WebPlayback {
     }
 
     pub(crate) fn cameras(&self) -> &CameraController {
-        &self.cameras
+        self.runtime.cameras()
     }
 
+    #[cfg(target_arch = "wasm32")]
     pub(crate) fn path(&self) -> &PathController {
-        &self.path
+        self.runtime.path()
     }
 
+    #[cfg(target_arch = "wasm32")]
     pub(crate) fn odometry(&self) -> &OdometryController {
-        &self.odometry
+        self.runtime.odometry()
     }
 
     pub(crate) fn transforms(&self) -> &TransformController {
-        &self.transforms
+        self.runtime.transforms()
     }
 
+    #[cfg(target_arch = "wasm32")]
     pub(crate) fn camera_topics(&self) -> &[(CameraId, String)] {
-        self.cameras.topics()
+        self.runtime.cameras().topics()
     }
 
+    #[cfg(target_arch = "wasm32")]
     pub(crate) fn set_focused_camera(&mut self, camera: Option<CameraId>) {
-        self.cameras.set_focused_camera(camera);
+        self.runtime.set_scheduling_priority(camera);
     }
 
     pub(crate) fn counters(&self) -> ProcessingCounters {
-        let mut counters = ProcessingCounters {
-            unknown_streams: self.unknown_streams,
-            ..ProcessingCounters::default()
-        };
-        counters.merge(self.cameras.counters());
-        counters.merge(self.path.counters());
-        counters.merge(self.odometry.counters());
-        counters.merge(self.transforms.counters());
-        counters
+        self.runtime.counters()
     }
 
+    #[cfg(target_arch = "wasm32")]
     pub(crate) fn performance(&self) -> PlaybackPerformance {
-        PlaybackPerformance::from_controllers(
-            StageTiming::default(),
-            self.processing_time,
-            &self.cameras,
-        )
+        self.runtime.playback_performance(StageTiming::default())
     }
 
     pub(crate) fn load_state(&self) -> PlaybackLoadState {
         self.load_state.clone()
     }
 
+    #[cfg(target_arch = "wasm32")]
     pub(crate) fn display_cursor(&self) -> ArrivalTime {
         self.clock.cursor()
     }
 
+    #[cfg(target_arch = "wasm32")]
     pub(crate) fn source_label(&self) -> &'static str {
         match self.source_kind {
             PlaybackSourceKind::LocalFile => "Browser file",
@@ -422,50 +420,14 @@ impl WebPlayback {
         self.data
             .diagnostics(self.clock.cursor(), self.clock.speed())
     }
-
-    fn process_messages(&mut self, elapsed: Duration, messages: Vec<RawMessage>) {
-        let started = Instant::now();
-        for message in &messages {
-            let matched = self.cameras.admit(message)
-                | self.path.process(message)
-                | self.odometry.process(message)
-                | self.transforms.process(message);
-            if !matched {
-                self.unknown_streams = self.unknown_streams.saturating_add(1);
-            }
-        }
-        self.cameras.advance(elapsed);
-        self.processing_time.record(started.elapsed());
-    }
-
-    fn reset_for_restore(&mut self, target: ArrivalTime) {
-        self.cameras.reset_for_restore();
-        self.path.reset_for_restore();
-        self.odometry.reset_for_restore();
-        self.transforms.reset_for_restore(target);
-    }
-
-    fn process_restore_messages(&mut self, messages: Vec<RawMessage>) {
-        let started = Instant::now();
-        for message in &messages {
-            let matched = self.cameras.restore(message)
-                | self.path.process(message)
-                | self.odometry.process(message)
-                | self.transforms.process(message);
-            if !matched {
-                self.unknown_streams = self.unknown_streams.saturating_add(1);
-            }
-        }
-        self.processing_time.record(started.elapsed());
-    }
 }
 
 pub(crate) fn web_playback_requirements() -> PlaybackRequirements {
     let mut requirements = PlaybackRequirements::empty();
     requirements.require_all_cameras();
-    requirements.require_path();
-    requirements.require_odometry();
-    requirements.require_transforms();
+    requirements.optional_path();
+    requirements.optional_odometry();
+    requirements.optional_transforms();
     requirements
 }
 
@@ -480,7 +442,7 @@ mod tests {
     };
     use viewer_remote_protocol::{
         BatchEncoder, CatalogResponse, RemoteMessageRef, RemoteTimeRange, StreamDescriptor,
-        StreamSemantic, TimestampNs,
+        TimestampNs,
     };
 
     fn remote_catalog_until(end_ns_exclusive: u64) -> RemoteCatalog {
@@ -494,8 +456,6 @@ mod tests {
             vec![StreamDescriptor {
                 id: 1,
                 topic: "/camera".into(),
-                semantic: StreamSemantic::Camera,
-                representation: "ros2-cdr".into(),
                 schema_name: "sensor_msgs/msg/CompressedImage".into(),
                 schema_encoding: "ros2msg".into(),
                 message_encoding: "cdr".into(),
@@ -521,8 +481,6 @@ mod tests {
                 StreamDescriptor {
                     id: 1,
                     topic: "/camera".into(),
-                    semantic: StreamSemantic::Camera,
-                    representation: "ros2-cdr".into(),
                     schema_name: "sensor_msgs/msg/CompressedImage".into(),
                     schema_encoding: "ros2msg".into(),
                     message_encoding: "cdr".into(),
@@ -531,8 +489,6 @@ mod tests {
                 StreamDescriptor {
                     id: 2,
                     topic: "/tf_static".into(),
-                    semantic: StreamSemantic::RosMessage,
-                    representation: "ros2-cdr".into(),
                     schema_name: "tf2_msgs/msg/TFMessage".into(),
                     schema_encoding: "ros2msg".into(),
                     message_encoding: "cdr".into(),
@@ -878,7 +834,9 @@ mod tests {
     fn failed_restore_keeps_the_old_cursor_and_visible_controller_state() {
         let client = RemoteApiClient::new("http://localhost").unwrap();
         let mut playback = WebPlayback::from_remote(client, remote_catalog()).unwrap();
-        playback.process_messages(Duration::ZERO, vec![camera_message(1_000_000_000)]);
+        playback
+            .runtime
+            .process_messages(Duration::ZERO, &[camera_message(1_000_000_000)]);
         let committed = playback.clock().cursor();
 
         playback
@@ -900,6 +858,37 @@ mod tests {
                 .arrival_time,
             ArrivalTime(1_000_000_000)
         );
+    }
+
+    #[test]
+    fn malformed_restore_application_keeps_cursor_runtime_and_archive_uncommitted() {
+        let client = RemoteApiClient::new("http://localhost").unwrap();
+        let mut playback = WebPlayback::from_remote(client, remote_catalog()).unwrap();
+        playback
+            .runtime
+            .process_messages(Duration::ZERO, &[camera_message(1_000_000_000)]);
+        let committed = playback.clock().cursor();
+        let before = playback.cameras().state().latest_for(CameraId(0)).cloned();
+        let counters = playback.counters();
+        assert!(playback.persistent_archive.is_none());
+
+        playback
+            .apply_command(PlaybackCommand::Seek(ArrivalTime(2_000_000_000)))
+            .unwrap();
+        playback.restore.remote_mut().inject(vec![RawMessage {
+            stream_id: StreamId(1),
+            arrival_time: ArrivalTime(1_900_000_000),
+            payload: Bytes::from_static(&[0xff]),
+        }]);
+
+        assert!(playback.tick(Duration::ZERO).is_err());
+        assert_eq!(playback.clock().cursor(), committed);
+        assert_eq!(
+            playback.cameras().state().latest_for(CameraId(0)),
+            before.as_ref()
+        );
+        assert_eq!(playback.counters(), counters);
+        assert!(playback.persistent_archive.is_none());
     }
 
     #[test]

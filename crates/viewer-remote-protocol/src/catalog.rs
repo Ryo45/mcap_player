@@ -109,31 +109,15 @@ pub struct RemoteTimeRange {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum StreamSemantic {
-    Camera,
-    RosMessage,
-}
-
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StreamDescriptor {
     pub id: u32,
     pub topic: String,
-    pub semantic: StreamSemantic,
-    pub representation: String,
     pub schema_name: String,
     pub schema_encoding: String,
     pub message_encoding: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub message_count: Option<MessageCount>,
-}
-
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CatalogCapabilities {
-    pub continuation: bool,
-    pub preview: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -146,7 +130,6 @@ pub struct CatalogResponse {
     pub range_semantics: String,
     pub time_range: RemoteTimeRange,
     pub streams: Vec<StreamDescriptor>,
-    pub capabilities: CatalogCapabilities,
 }
 
 impl CatalogResponse {
@@ -164,10 +147,6 @@ impl CatalogResponse {
             range_semantics: "start-inclusive-end-exclusive".into(),
             time_range,
             streams,
-            capabilities: CatalogCapabilities {
-                continuation: true,
-                preview: false,
-            },
         }
     }
 }
@@ -228,8 +207,6 @@ mod tests {
             vec![StreamDescriptor {
                 id: 1,
                 topic: "/camera".into(),
-                semantic: StreamSemantic::Camera,
-                representation: "ros2-cdr".into(),
                 schema_name: "sensor_msgs/msg/CompressedImage".into(),
                 schema_encoding: "ros2msg".into(),
                 message_encoding: "cdr".into(),
