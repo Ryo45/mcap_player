@@ -1,101 +1,66 @@
 //! Platform-neutral recording access, playback planning, and feature-controller contracts.
+//!
+//! Internal modules follow the data flow instead of exposing one flat implementation namespace:
+//!
+//! - `message`: time primitives and concrete ROS CDR codecs;
+//! - `recording`: catalogs, requirements, indexed plans, serialized records, and MCAP access;
+//! - `playback`: clocks, bounded windows, native playback orchestration, and stage timing;
+//! - `feature`: concrete continuous state, reducers, and transactional runtime ownership;
+//! - `derived`: bounded Plot/Preview products and bookmark artifacts;
+//! - `presentation`: CPU-visible presentation state and frontend-facing snapshots.
+//!
+//! Public consumers continue to use the explicit root exports below. The internal modules stay
+//! private so their layout describes ownership without becoming a second supported API surface.
 
-mod bev;
-mod bookmark;
-mod camera;
-mod camera_projection;
-mod cdr;
-mod clock;
-mod controllers;
-pub mod data_window;
-mod feature_runtime;
-mod frame_builder;
-mod indexed_plan;
-mod mcap_source;
-mod performance;
+mod derived;
+mod feature;
+mod message;
 mod playback;
-mod plot;
-mod point_cloud;
 mod presentation;
-mod preview;
-mod range_query;
-mod raw_message;
-mod restore;
-mod session_plan;
-mod source_identity;
-mod stream;
-mod telemetry;
-mod time;
-mod transform;
+mod recording;
 
-pub use bev::{BevPathFrame, BevState};
-pub use bookmark::{
+pub use derived::{
     Bookmark, BookmarkDocument, BookmarkId, BookmarkValidationError,
-    CURRENT_BOOKMARK_SCHEMA_VERSION, PreviewBuildInfo, SourceFingerprint,
-};
-pub use camera::{CameraFrame, CameraId, CameraState, CameraStatus};
-pub use camera_projection::{
-    CalibrationError, CameraCalibration, CameraCalibrationSet, ProjectedPlan, ProjectionError,
-};
-pub use cdr::{
-    CompressedImage, DecodeError, DecodedCompressedImage, LaserScan, Odometry, PathMessage,
-    TransformStamped, decode_compressed_image, decode_compressed_image_bytes, decode_laser_scan,
-    decode_odometry, decode_path, decode_tf_message, encode_compressed_image_cdr,
-    encode_tf_message_cdr,
-};
-pub use clock::{PlaybackClock, PlaybackCommand, PlaybackLoadState, PlaybackSpeed, PlaybackView};
-pub use controllers::{
-    CameraController, OdometryController, PathController, ProcessingCounters, SceneController,
-    TransformController,
-};
-pub use data_window::{
-    DataWindowError, FetchDemand, FetchIntent, FetchPlanner, FetchProfile, MemoryWindowStore,
-    SerializedWindow, TimeRange as DataWindowTimeRange,
-};
-pub use feature_runtime::{FeatureRestoreError, FeatureRestoreErrorKind, FeatureRuntime};
-pub use frame_builder::{
-    BevFrameBuilder, BevSnapshot, SceneDiagnostics, ScenePresentationState, SceneSnapshot,
-    SceneTfError,
-};
-pub use indexed_plan::{
-    IndexedChunkFact, IndexedPlanError, ensure_indexed, history_candidate_chunks,
-    latest_candidate_chunks, persistent_candidate_chunks,
-};
-pub use mcap_source::{IndexedMessages, IndexedReadDiagnostics, McapOpenError, McapSource};
-pub use performance::{
-    PlaybackPerformance, PresentationMetrics, PresentationSnapshot, StageTiming,
-};
-pub use playback::{McapPlayback, McapPlaybackError, McapSeekError, PlaybackEffect};
-pub use plot::{
-    LoadedOdometrySignals, LoadedSignal, PlotSeries, SignalId, SignalOverviewReducer, SignalSample,
-    arrival_time_from_plot_x, cursor_seconds, load_odometry_signals,
-    load_odometry_signals_for_topic_with_progress, load_speed_signal, load_yaw_rate_signal,
-};
-pub use point_cloud::{PointCloudFrame, PointCloudState};
-pub use presentation::{
-    CameraPresentation, DiagnosticsPresentation, OverlayStatus, TelemetryPresentation,
-    ViewerPresentation, ViewerPresentationInput,
-};
-pub use preview::{
-    CURRENT_PREVIEW_SCHEMA_VERSION, CameraPreviewFrame, DataFidelity, PreviewBudget,
+    CURRENT_BOOKMARK_SCHEMA_VERSION, CURRENT_PREVIEW_SCHEMA_VERSION, CameraPreviewFrame,
+    DataFidelity, LoadedOdometrySignals, LoadedSignal, PlotSeries, PreviewBudget, PreviewBuildInfo,
     PreviewImageEncoding, PreviewRequest, PreviewSnapshot, PreviewValidationError, SignalBucket,
-    SignalFidelity, SignalOverview, TimeRange, TimedPosition2, merge_signal_buckets,
+    SignalFidelity, SignalId, SignalOverview, SignalOverviewReducer, SignalSample,
+    SourceFingerprint, TimeRange, TimedPosition2, arrival_time_from_plot_x, cursor_seconds,
+    load_odometry_signals, load_odometry_signals_for_topic_with_progress, load_speed_signal,
+    load_yaw_rate_signal, mcap_summary_fingerprint, merge_signal_buckets,
 };
-pub use range_query::{QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult};
-pub use raw_message::RawMessage;
-pub use restore::{
-    RestoreInput, RestorePlan, RestorePlanError, RestorePlanner, RestoreRead, RestoreSemantics,
+pub use feature::{
+    BevPathFrame, BevState, CameraController, CameraFrame, CameraId, CameraState, CameraStatus,
+    DYNAMIC_TF_HISTORY, FeatureRestoreError, FeatureRestoreErrorKind, FeatureRuntime,
+    OdometryController, PathController, PlaybackPerformance, PointCloudFrame, PointCloudState,
+    ProcessingCounters, SceneController, TelemetryFrame, TelemetryState, TransformBatch,
+    TransformController, TransformState,
 };
-pub use session_plan::{
-    CameraRoute, PlaybackRequirements, SessionPlan, SessionPlanError, WorkspaceBindings,
+pub use message::{
+    ArrivalTime, CompressedImage, DecodeError, DecodedCompressedImage, LaserScan, MeasurementTime,
+    Odometry, PathMessage, TransformStamped, decode_compressed_image,
+    decode_compressed_image_bytes, decode_laser_scan, decode_odometry, decode_path,
+    decode_tf_message, encode_compressed_image_cdr, encode_tf_message_cdr,
 };
-pub use source_identity::{
-    MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity, mcap_summary_fingerprint,
+pub use playback::{
+    DataWindowError, DataWindowTimeRange, FetchDemand, FetchIntent, FetchPlanner, FetchProfile,
+    McapPlayback, McapPlaybackError, McapSeekError, MemoryWindowStore, PlaybackClock,
+    PlaybackCommand, PlaybackEffect, PlaybackLoadState, PlaybackSpeed, PlaybackView,
+    SerializedWindow, StageTiming,
 };
-pub use stream::{
-    RecordingTimeRange, SourceCapabilities, SourceCatalog, StreamDescriptor, StreamId,
-    StreamTimingSummary,
+pub use presentation::{
+    BevFrameBuilder, BevSnapshot, CalibrationError, CameraCalibration, CameraCalibrationSet,
+    CameraPresentation, DiagnosticsPresentation, OverlayStatus, PresentationMetrics,
+    PresentationSnapshot, ProjectedPlan, ProjectionError, SceneDiagnostics, ScenePresentationState,
+    SceneSnapshot, SceneTfError, TelemetryPresentation, ViewerPresentation,
+    ViewerPresentationInput,
 };
-pub use telemetry::{TelemetryFrame, TelemetryState};
-pub use time::{ArrivalTime, MeasurementTime};
-pub use transform::{DYNAMIC_TF_HISTORY, TransformBatch, TransformState};
+pub use recording::{
+    CameraRoute, IndexedChunkFact, IndexedMessages, IndexedPlanError, IndexedReadDiagnostics,
+    MCAP_SUMMARY_IDENTITY_ALGORITHM, McapOpenError, McapSource, McapSummaryIdentity,
+    PlaybackRequirements, QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult, RawMessage,
+    RecordingTimeRange, RestoreInput, RestorePlan, RestorePlanError, RestorePlanner, RestoreRead,
+    RestoreSemantics, SessionPlan, SessionPlanError, SourceCapabilities, SourceCatalog,
+    StreamDescriptor, StreamId, StreamTimingSummary, WorkspaceBindings, ensure_indexed,
+    history_candidate_chunks, latest_candidate_chunks, persistent_candidate_chunks,
+};

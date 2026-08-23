@@ -1,9 +1,20 @@
 mod camera;
 mod diagnostics;
+mod metrics;
+mod projection;
+mod scene;
 mod telemetry;
 
 pub use camera::{CameraPresentation, OverlayStatus};
 pub use diagnostics::DiagnosticsPresentation;
+pub use metrics::{PresentationMetrics, PresentationSnapshot};
+pub use projection::{
+    CalibrationError, CameraCalibration, CameraCalibrationSet, ProjectedPlan, ProjectionError,
+};
+pub use scene::{
+    BevFrameBuilder, BevSnapshot, SceneDiagnostics, ScenePresentationState, SceneSnapshot,
+    SceneTfError,
+};
 pub use telemetry::TelemetryPresentation;
 
 use crate::{BevState, CameraId, CameraState, PointCloudState, TelemetryState};
