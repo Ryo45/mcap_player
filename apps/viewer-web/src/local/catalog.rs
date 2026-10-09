@@ -60,10 +60,19 @@ impl LocalCatalog {
             return Err(LocalCatalogError::new("MCAP indexed time range is empty"));
         }
 
+        let schema_definitions = summary
+            .schemas
+            .iter()
+            .map(|(id, schema)| (*id, viewer_core::SchemaDefinition::from_mcap(schema)))
+            .collect::<std::collections::BTreeMap<_, _>>();
         let mut streams = summary
             .channels
             .values()
             .map(|channel| StreamDescriptor {
+                schema_definition: channel
+                    .schema
+                    .as_ref()
+                    .and_then(|schema| schema_definitions.get(&schema.id).cloned()),
                 id: StreamId(u32::from(channel.id)),
                 topic: channel.topic.clone(),
                 schema: channel
@@ -192,5 +201,31 @@ mod tests {
             catalog.plan.selected_topics(),
             "loader selection comes only from the shared SessionPlan"
         );
+    }
+}
+
+#[cfg(test)]
+mod schema_parity_tests {
+    use super::*;
+    #[test]
+    fn local_and_native_preserve_original_schema_bytes_without_playback_reads() {
+        let bytes = std::fs::read(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap"),
+        )
+        .unwrap();
+        let summary = mcap::Summary::read(&bytes).unwrap().unwrap();
+        let native = viewer_core::McapSource::new(bytes).unwrap();
+        let local = LocalCatalog::from_summary(&summary, "/camera/front/image/compressed").unwrap();
+        assert_eq!(native.catalog().streams, local.core.streams);
+        for stream in &local.core.streams {
+            let schema = summary.channels[&(stream.id.0 as u16)]
+                .schema
+                .as_ref()
+                .unwrap();
+            let definition = stream.schema_definition.as_ref().unwrap();
+            assert_eq!(definition.encoding, schema.encoding);
+            assert_eq!(definition.data.as_ref(), schema.data.as_ref());
+        }
     }
 }

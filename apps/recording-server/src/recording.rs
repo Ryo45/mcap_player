@@ -92,13 +92,8 @@ impl Recording {
         }
         .revision();
 
-        let mut cdr_channels: Vec<_> = summary
-            .channels
-            .values()
-            .filter(|channel| channel.message_encoding == "cdr")
-            .cloned()
-            .collect();
-        cdr_channels.sort_by_key(|channel| {
+        let mut channels: Vec<_> = summary.channels.values().cloned().collect();
+        channels.sort_by_key(|channel| {
             (
                 channel.topic.clone(),
                 channel
@@ -111,10 +106,10 @@ impl Recording {
             )
         });
 
-        let mut streams = Vec::with_capacity(cdr_channels.len());
+        let mut streams = Vec::with_capacity(channels.len());
         let mut channel_to_stream = BTreeMap::new();
         let mut stream_to_channel = BTreeMap::new();
-        for (index, channel) in cdr_channels.into_iter().enumerate() {
+        for (index, channel) in channels.into_iter().enumerate() {
             let id = u32::try_from(index + 1).map_err(|_| {
                 ServerError::unprocessable("too_many_streams", "recording has too many streams")
             })?;
@@ -131,6 +126,7 @@ impl Recording {
             channel_to_stream.insert(channel.id, id);
             stream_to_channel.insert(id, channel.id);
             streams.push(StreamDescriptor {
+                schema_data: channel.schema.as_ref().map(|schema| schema.data.to_vec()),
                 id,
                 topic: channel.topic.clone(),
                 schema_name,
@@ -368,7 +364,7 @@ path = "{}"
     }
 
     #[test]
-    fn catalog_uses_bounded_ranges_and_assigns_deterministic_cdr_streams() {
+    fn catalog_uses_bounded_ranges_and_assigns_deterministic_streams() {
         let (config, limits) = fixture();
         let first = Recording::open(&config, &limits).unwrap();
         let second = Recording::open(&config, &limits).unwrap();
@@ -376,13 +372,14 @@ path = "{}"
         assert!(first.catalog_reads.calls > 0);
         assert_eq!(first.revision, second.revision);
         assert_eq!(first.catalog.streams, second.catalog.streams);
-        assert!(
-            first
-                .catalog
-                .streams
-                .iter()
-                .all(|stream| stream.message_encoding == "cdr")
-        );
+        assert_eq!(first.catalog.streams.len(), first.summary.channels.len());
+        for stream in &first.catalog.streams {
+            let channel = &first.summary.channels[&first.stream_to_channel[&stream.id]];
+            assert_eq!(
+                stream.schema_data.as_deref(),
+                channel.schema.as_ref().map(|s| s.data.as_ref())
+            );
+        }
         assert!(first.catalog.streams.iter().any(|stream| {
             stream.schema_name == "sensor_msgs/msg/CompressedImage"
                 && stream.message_encoding == "cdr"

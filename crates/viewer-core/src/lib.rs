@@ -60,7 +60,12 @@ pub use recording::{
     MCAP_SUMMARY_IDENTITY_ALGORITHM, McapOpenError, McapSource, McapSummaryIdentity,
     PlaybackRequirements, QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult, RawMessage,
     RecordingTimeRange, RestoreInput, RestorePlan, RestorePlanError, RestorePlanner, RestoreRead,
-    RestoreSemantics, SessionPlan, SessionPlanError, SourceCapabilities, SourceCatalog,
-    StreamDescriptor, StreamId, StreamTimingSummary, WorkspaceBindings, ensure_indexed,
-    history_candidate_chunks, latest_candidate_chunks, persistent_candidate_chunks,
+    RestoreSemantics, SchemaDefinition, SessionPlan, SessionPlanError, SourceCapabilities,
+    SourceCatalog, StreamDescriptor, StreamId, StreamTimingSummary, WorkspaceBindings,
+    ensure_indexed, history_candidate_chunks, latest_candidate_chunks, persistent_candidate_chunks,
 };
+
+pub use message::{NumericField, NumericFieldExtractor, RosMessageSchema};
+
+pub use derived::{NumericPlotDetail, NumericPlotOverview, NumericSample, NumericSeriesRequest};
+pub use recording::{TopicTree, TopicTreeEntry};

@@ -11,7 +11,7 @@ SourceCatalog
   -> workspace PlaybackRequirements
   -> SessionPlan
   -> Recording or Live RawMessage delivery
-  -> concrete feature controllers
+  -> FeatureRuntime (admission/coalescing/materialization in concrete controllers)
   -> read-only presentation inputs
   -> panels
 ```
@@ -21,7 +21,7 @@ SourceCatalog
 controllers next to its `RecordingDataPlane`. Panels receive narrow read-only inputs and never own
 an MCAP reader, HTTP client, loader, or playback session.
 
-Full-resolution Plot signals remain a specialized session query and Preview remains a derived
-sidecar path. Neither is inserted into continuous controller state merely to make it globally
+Bounded Plot overviews and occasional exact detail/current values remain separate session queries.
+Preview remains a derived sidecar path. Neither is inserted into continuous controller state merely to make it globally
 available. New panel-specific message support should normally add a decoder/controller and a
 requirement, not a universal state variant.

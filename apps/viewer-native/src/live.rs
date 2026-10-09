@@ -149,6 +149,8 @@ mod ros {
             copied_bytes.fetch_add(payload.len() as u64, Ordering::Relaxed);
             received.fetch_add(1, Ordering::Relaxed);
             mailbox.push(RawMessage {
+                publish_time_ns: None,
+                sequence: None,
                 stream_id: StreamId(1),
                 arrival_time: ArrivalTime(arrival),
                 payload: payload.into(),
@@ -247,6 +249,8 @@ mod tests {
         let mailbox = LatestMailbox::default();
         for (arrival, marker) in [(100, 1), (200, 2)] {
             mailbox.push(RawMessage {
+                publish_time_ns: None,
+                sequence: None,
                 stream_id,
                 arrival_time: ArrivalTime(arrival),
                 payload: encode_compressed_image_cdr(&CompressedImage {
@@ -261,6 +265,7 @@ mod tests {
         }
         let catalog = SourceCatalog {
             streams: vec![StreamDescriptor {
+                schema_definition: None,
                 id: stream_id,
                 topic: "/camera/live/image/compressed".into(),
                 schema: "sensor_msgs/msg/CompressedImage".into(),

@@ -294,3 +294,28 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+mod selection_tests {
+    use super::*;
+    #[test]
+    fn builtin_plot_only_requires_a_query() {
+        let node = PanelNode {
+            id: PanelId::new("speed").unwrap(),
+            panel_type: "plot".into(),
+            config_version: 1,
+            title: None,
+            config: serde_json::json!({"signal":"vehicle-speed"}),
+        };
+        let mut requirements = PanelDataRequirements::default();
+        create_native_panel(&node).contribute_data_requirements(&mut requirements);
+        assert_eq!(
+            requirements.playback,
+            viewer_core::PlaybackRequirements::empty()
+        );
+        assert_eq!(
+            requirements.signals,
+            std::collections::BTreeSet::from([viewer_core::SignalId::Speed])
+        );
+    }
+}

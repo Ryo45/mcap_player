@@ -159,6 +159,8 @@ fn decode_restore_page(page: RemoteBatchPage) -> Result<Vec<RawMessage>, DataLoa
                 .payload_range_in(&page.body)
                 .ok_or_else(|| DataLoadError::new("restore payload is outside its batch body"))?;
             Ok(RawMessage {
+                publish_time_ns: Some(message.publish_time_ns),
+                sequence: Some(message.sequence),
                 stream_id: StreamId(message.stream_id),
                 arrival_time,
                 payload: page.body.slice(payload_range),
@@ -469,6 +471,8 @@ impl WindowAssembler {
                 .ok_or_else(|| DataLoadError::new("decoded payload is outside its batch body"))?;
             self.previous_key = Some(key);
             self.messages.push(RawMessage {
+                publish_time_ns: Some(message.publish_time_ns),
+                sequence: Some(message.sequence),
                 stream_id: StreamId(message.stream_id),
                 arrival_time: viewer_core::ArrivalTime(arrival),
                 payload: page.body.slice(payload_range),

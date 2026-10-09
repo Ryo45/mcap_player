@@ -232,6 +232,8 @@ fn parse_chunk_backing(
                     .checked_sub(data.len())
                     .ok_or_else(|| DataLoadError::new("MCAP message payload range underflow"))?;
                 messages.push(RawMessage {
+                    publish_time_ns: Some(header.publish_time),
+                    sequence: Some(header.sequence),
                     stream_id: StreamId(u32::from(header.channel_id)),
                     arrival_time,
                     payload: backing.slice(payload_start..body_end),

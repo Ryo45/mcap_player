@@ -178,6 +178,7 @@ fn write_mcap(streams: &[StreamDescriptor], messages: &[RawMessage]) -> Vec<u8> 
 
 fn camera_stream(id: u32, topic: &str) -> StreamDescriptor {
     StreamDescriptor {
+        schema_definition: None,
         id: StreamId(id),
         topic: topic.into(),
         schema: "sensor_msgs/msg/CompressedImage".into(),
@@ -189,6 +190,8 @@ fn camera_stream(id: u32, topic: &str) -> StreamDescriptor {
 fn camera_message(stream_id: StreamId, arrival_time: i64, marker: u8) -> RawMessage {
     let measurement_time = arrival_time - 10_000_000;
     RawMessage {
+        publish_time_ns: None,
+        sequence: None,
         stream_id,
         arrival_time: ArrivalTime(arrival_time),
         payload: encode_compressed_image_cdr(&CompressedImage {

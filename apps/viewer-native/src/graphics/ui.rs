@@ -100,7 +100,20 @@ impl Graphics {
             egui::SidePanel::left("source-status")
                 .resizable(true)
                 .default_width(260.0)
-                .show(context, |ui| source_status(ui, presentation));
+                .show(context, |ui| {
+                    source_status(ui, presentation);
+                    actions.extend(crate::panels::show_topics(
+                        ui,
+                        render_input.topic_tree,
+                        render_input.numeric_series,
+                    ));
+                });
+            actions.extend(crate::panels::show_field_plots(
+                context,
+                render_input.topic_tree,
+                render_input.numeric_series,
+                playback,
+            ));
             egui::CentralPanel::default().show(context, |ui| {
                 let output = show_layout_host(
                     ui,

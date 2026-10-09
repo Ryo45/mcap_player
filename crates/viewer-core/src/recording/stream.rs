@@ -14,6 +14,8 @@ pub struct StreamDescriptor {
     pub id: StreamId,
     pub topic: String,
     pub schema: String,
+    /// Original source schema, shared between routes and metadata consumers.
+    pub schema_definition: Option<std::sync::Arc<SchemaDefinition>>,
     pub message_encoding: String,
     /// Number of messages observed for this stream in the complete recording.
     ///
@@ -93,5 +95,21 @@ impl SourceCatalog {
 
     pub fn by_topic(&self, topic: &str) -> Option<&StreamDescriptor> {
         self.streams.iter().find(|stream| stream.topic == topic)
+    }
+}
+
+/// MCAP Schema facts. Bytes remain canonical even for unsupported encodings.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SchemaDefinition {
+    pub encoding: String,
+    pub data: bytes::Bytes,
+}
+
+impl SchemaDefinition {
+    pub fn from_mcap(schema: &mcap::Schema<'_>) -> std::sync::Arc<Self> {
+        std::sync::Arc::new(Self {
+            encoding: schema.encoding.clone(),
+            data: bytes::Bytes::copy_from_slice(&schema.data),
+        })
     }
 }

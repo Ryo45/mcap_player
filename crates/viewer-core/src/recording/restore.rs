@@ -134,6 +134,7 @@ mod tests {
             }),
             capabilities: Default::default(),
             streams: vec![StreamDescriptor {
+                schema_definition: None,
                 id: StreamId(7),
                 topic: "/camera".into(),
                 schema: "sensor_msgs/msg/CompressedImage".into(),

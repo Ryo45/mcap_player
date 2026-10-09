@@ -34,6 +34,9 @@ pub(crate) struct ViewerSession {
     source_name: String,
     recording_path: Option<PathBuf>,
     plot_loader: PlotLoader,
+    odometry_topic: String,
+    topic_tree: viewer_core::TopicTree,
+    numeric_plots: crate::numeric_plot_loader::NumericPlotLoader,
     inspector_loader: InspectorLoader,
 }
 
@@ -82,13 +85,17 @@ impl ViewerSession {
             .collect::<Vec<_>>();
         playback.bootstrap_persistent(&persistent)?;
         playback.clock_mut().toggle();
+        let topic_tree = viewer_core::TopicTree::from_catalog(playback.catalog());
         Ok(Self {
+            topic_tree,
             source: SessionSource::Mcap(Box::new(playback)),
             plan,
             topic,
             source_name: path.display().to_string(),
             recording_path: Some(path.to_owned()),
             plot_loader: PlotLoader::default(),
+            odometry_topic: bindings.odometry_topic.clone(),
+            numeric_plots: Default::default(),
             inspector_loader: InspectorLoader::default(),
         })
     }
@@ -101,6 +108,7 @@ impl ViewerSession {
         bindings: &WorkspaceBindings,
     ) -> Self {
         let descriptor = StreamDescriptor {
+            schema_definition: None,
             id: viewer_core::StreamId(1),
             topic: topic.clone(),
             schema: "sensor_msgs/msg/CompressedImage".into(),
@@ -115,6 +123,7 @@ impl ViewerSession {
         let plan = SessionPlan::build(&catalog, &topic, requirements, bindings)
             .expect("the live Camera descriptor matches its configured primary topic");
         Self {
+            topic_tree: viewer_core::TopicTree::from_catalog(&catalog),
             source: SessionSource::Ros {
                 handle: live::RosLiveHandle::start(topic.clone(), reliable),
             },
@@ -126,8 +135,47 @@ impl ViewerSession {
             ),
             recording_path: None,
             plot_loader: PlotLoader::default(),
+            odometry_topic: bindings.odometry_topic.clone(),
+            numeric_plots: Default::default(),
             inspector_loader: InspectorLoader::default(),
         }
+    }
+
+    pub(crate) fn topic_tree(&self) -> &viewer_core::TopicTree {
+        &self.topic_tree
+    }
+    pub(crate) fn numeric_series(&self) -> &[crate::numeric_plot_loader::NumericSeriesState] {
+        &self.numeric_plots.series
+    }
+    pub(crate) fn add_numeric_series(&mut self, stream: viewer_core::StreamId, field_path: String) {
+        let Some(playback) = self.playback_view() else {
+            return;
+        };
+        let Some(entry) = self
+            .topic_tree
+            .entries
+            .iter()
+            .find(|e| e.stream_id == stream)
+        else {
+            return;
+        };
+        if !entry.numeric_fields.iter().any(|f| f.path == field_path) {
+            return;
+        }
+        let Some(range) = playback.end.0.checked_add(1).and_then(|end| {
+            viewer_core::DataWindowTimeRange::new(playback.start, ArrivalTime(end)).ok()
+        }) else {
+            return;
+        };
+        self.numeric_plots.add(viewer_core::NumericSeriesRequest {
+            stream_id: stream,
+            field_path,
+            range,
+            max_points: 4000,
+        });
+    }
+    pub(crate) fn remove_numeric_series(&mut self, stream: viewer_core::StreamId, path: &str) {
+        self.numeric_plots.remove(stream, path);
     }
 
     pub(crate) fn plan(&self) -> &SessionPlan {
@@ -139,7 +187,7 @@ impl ViewerSession {
             path: self.recording_path.clone()?,
             origin: self.playback_view()?.start,
             max_points,
-            odometry_topic: self.plan.odometry_stream()?.topic.clone(),
+            odometry_topic: self.odometry_topic.clone(),
         })
     }
 
@@ -152,6 +200,7 @@ impl ViewerSession {
     }
 
     pub(crate) fn poll_queries(&mut self) {
+        self.numeric_plots.poll(self.recording_path.as_ref());
         self.plot_loader.poll();
         self.inspector_loader.poll();
     }
@@ -306,5 +355,75 @@ impl ViewerSession {
             counters,
             playback_performance,
         }
+    }
+}
+
+#[cfg(test)]
+mod numeric_demand_tests {
+    use super::*;
+    #[test]
+    fn adding_and_removing_field_plots_preserves_fixed_selection_and_cursor() {
+        let mut output = std::io::Cursor::new(vec![]);
+        {
+            let mut writer = mcap::Writer::new(&mut output).unwrap();
+            let schema = writer
+                .add_schema("demo/msg/Scalar", "ros2msg", b"float64 value\n")
+                .unwrap();
+            let channel = writer
+                .add_channel(schema, "/scalar", "cdr", &std::collections::BTreeMap::new())
+                .unwrap();
+            for sequence in 0..2 {
+                writer
+                    .write_to_known_channel(
+                        &mcap::records::MessageHeader {
+                            channel_id: channel,
+                            sequence,
+                            log_time: 100 + sequence as u64,
+                            publish_time: 99 + sequence as u64,
+                        },
+                        &[0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 240, 63],
+                    )
+                    .unwrap();
+            }
+            writer.finish().unwrap();
+        }
+        let path = std::env::temp_dir().join(format!(
+            "mcap-player-numeric-demand-{}.mcap",
+            std::process::id()
+        ));
+        std::fs::write(&path, output.into_inner()).unwrap();
+        let bindings = WorkspaceBindings {
+            path_topic: "/path".into(),
+            odometry_topic: "/custom/odom".into(),
+            point_cloud_topic: "/scan".into(),
+            dynamic_tf_topic: "/tf".into(),
+            static_tf_topic: "/tf_static".into(),
+        };
+        let mut session = ViewerSession::open(
+            &path,
+            "/camera".into(),
+            &PlaybackRequirements::empty(),
+            &bindings,
+        )
+        .unwrap();
+        let selected = session.plan().selected_stream_ids();
+        let cursor = session.playback_view().unwrap().cursor;
+        let stream = session.topic_tree().entries[0].stream_id;
+        session.add_numeric_series(stream, "value".into());
+        assert_eq!(session.numeric_series().len(), 1);
+        assert_eq!(session.plan().selected_stream_ids(), selected);
+        assert!(selected.is_empty());
+        assert_eq!(session.playback_view().unwrap().cursor, cursor);
+        // Builtin query configuration is also available independently of continuous Odometry.
+        assert_eq!(
+            session.plot_signal_request(100).unwrap().odometry_topic,
+            "/custom/odom"
+        );
+        session.remove_numeric_series(stream, "value");
+        assert!(session.numeric_series().is_empty());
+        assert_eq!(session.plan().selected_stream_ids(), selected);
+        assert_eq!(session.playback_view().unwrap().cursor, cursor);
+        drop(session);
+        std::fs::remove_file(path).unwrap();
     }
 }

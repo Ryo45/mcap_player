@@ -10,8 +10,10 @@ use mcap::{Summary, records::op};
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     fmt,
-    io::Read,
 };
+
+#[cfg(feature = "mcap-lz4")]
+use std::io::Read;
 
 #[derive(Debug)]
 pub enum McapOpenError {
@@ -22,6 +24,7 @@ pub enum McapOpenError {
     InvalidChunk(String),
     UnsupportedCompression(String),
     TimestampOverflow,
+    QueryCancelled,
 }
 
 impl fmt::Display for McapOpenError {
@@ -32,6 +35,7 @@ impl fmt::Display for McapOpenError {
             Self::ChunkIndexRequired => {
                 write!(f, "MCAP Chunk Index is required for indexed playback")
             }
+            Self::QueryCancelled => write!(f, "numeric query cancelled"),
             Self::TimestampOverflow => write!(f, "MCAP timestamp exceeds signed nanosecond range"),
             Self::MessageIndexRequired(stream) => write!(
                 f,
@@ -55,6 +59,8 @@ impl From<mcap::McapError> for McapOpenError {
 
 #[derive(Clone)]
 struct CachedMessage {
+    publish_time_ns: Option<u64>,
+    sequence: Option<u32>,
     arrival: ArrivalTime,
     stream_id: StreamId,
     payload: Bytes,
@@ -113,6 +119,11 @@ impl McapSource {
         if summary.chunk_indexes.is_empty() {
             return Err(McapOpenError::ChunkIndexRequired);
         }
+        let schema_definitions = summary
+            .schemas
+            .iter()
+            .map(|(id, schema)| (*id, crate::SchemaDefinition::from_mcap(schema)))
+            .collect::<std::collections::BTreeMap<_, _>>();
         let mut catalog = SourceCatalog {
             capabilities: SourceCapabilities::INDEXED_RECORDING,
             ..SourceCatalog::default()
@@ -121,6 +132,10 @@ impl McapSource {
             let value = &summary;
             for channel in value.channels.values() {
                 catalog.streams.push(StreamDescriptor {
+                    schema_definition: channel
+                        .schema
+                        .as_ref()
+                        .and_then(|schema| schema_definitions.get(&schema.id).cloned()),
                     id: StreamId(u32::from(channel.id)),
                     topic: channel.topic.clone(),
                     schema: channel
@@ -261,6 +276,8 @@ impl McapSource {
                     return Ok(output);
                 }
                 output.push(RawMessage {
+                    publish_time_ns: message.publish_time_ns,
+                    sequence: message.sequence,
                     stream_id: message.stream_id,
                     arrival_time: message.arrival,
                     payload: message.payload.clone(),
@@ -276,6 +293,40 @@ impl McapSource {
             }
             self.load_chunk(next)?;
         }
+    }
+
+    /// Concrete streaming I/O for numeric reduction, independent of playback selection/cursor.
+    pub(crate) fn visit_stream_range(
+        &self,
+        stream: StreamId,
+        range: crate::DataWindowTimeRange,
+        mut visit: impl FnMut(&RawMessage) -> bool,
+    ) -> Result<(), McapOpenError> {
+        let descriptor = self
+            .catalog
+            .by_id(stream)
+            .ok_or(mcap::McapError::BadIndex)?;
+        ensure_indexed(&self.index_facts, stream, descriptor.timing.message_count)
+            .map_err(|error| McapOpenError::MessageIndexRequired(error.stream))?;
+        // Inspect index facts before touching compressed payloads. No unrelated chunk scan.
+        for (index, fact) in self.index_facts.iter().enumerate() {
+            if !fact.indexed_streams.contains(&stream)
+                || fact.end_inclusive < range.start
+                || fact.start >= range.end_exclusive
+            {
+                continue;
+            }
+            for parsed in self.parse_chunk(index)? {
+                let message = parsed.message;
+                if message.stream_id != stream || !range.contains(message.arrival_time) {
+                    continue;
+                }
+                if !visit(&message) {
+                    return Err(McapOpenError::QueryCancelled);
+                }
+            }
+        }
+        Ok(())
     }
 
     /// Executes a bounded exact-message query without mutating this source's playback cursor.
@@ -330,6 +381,8 @@ impl McapSource {
                     });
                 }
                 messages.push(RawMessage {
+                    publish_time_ns: message.publish_time_ns,
+                    sequence: message.sequence,
                     stream_id: message.stream_id,
                     arrival_time: message.arrival,
                     payload: message.payload.clone(),
@@ -521,6 +574,8 @@ impl McapSource {
                 continue;
             }
             cache.push(CachedMessage {
+                publish_time_ns: message.message.publish_time_ns,
+                sequence: message.message.sequence,
                 arrival: message.message.arrival_time,
                 stream_id,
                 payload: message.message.payload,
@@ -607,18 +662,21 @@ fn decode_chunk_backing(
     compressed: Bytes,
     expected_size: usize,
 ) -> Result<Bytes, McapOpenError> {
-    let decompressed = match compression {
+    match compression {
         "" => {
             if compressed.len() != expected_size {
                 return Err(McapOpenError::InvalidChunk(
                     "uncompressed data size does not match Chunk Index".into(),
                 ));
             }
-            return Ok(compressed);
+            Ok(compressed)
         }
         #[cfg(feature = "mcap-zstd")]
-        "zstd" => zstd::bulk::decompress(&compressed, expected_size)
-            .map_err(|error| McapOpenError::InvalidChunk(error.to_string()))?,
+        "zstd" => checked_decompressed_backing(
+            zstd::bulk::decompress(&compressed, expected_size)
+                .map_err(|error| McapOpenError::InvalidChunk(error.to_string()))?,
+            expected_size,
+        ),
         #[cfg(feature = "mcap-lz4")]
         "lz4" => {
             let mut output = Vec::with_capacity(expected_size);
@@ -626,10 +684,17 @@ fn decode_chunk_backing(
                 .map_err(|error| McapOpenError::InvalidChunk(error.to_string()))?
                 .read_to_end(&mut output)
                 .map_err(|error| McapOpenError::InvalidChunk(error.to_string()))?;
-            output
+            checked_decompressed_backing(output, expected_size)
         }
-        value => return Err(McapOpenError::UnsupportedCompression(value.into())),
-    };
+        value => Err(McapOpenError::UnsupportedCompression(value.into())),
+    }
+}
+
+#[cfg(any(feature = "mcap-zstd", feature = "mcap-lz4"))]
+fn checked_decompressed_backing(
+    decompressed: Vec<u8>,
+    expected_size: usize,
+) -> Result<Bytes, McapOpenError> {
     if decompressed.len() != expected_size {
         return Err(McapOpenError::InvalidChunk(
             "decompressed data size does not match Chunk Index".into(),
@@ -678,6 +743,8 @@ fn parse_chunk_backing(backing: Bytes) -> Result<Vec<ParsedChunkMessage>, McapOp
             messages.push(ParsedChunkMessage {
                 offset: record_offset,
                 message: RawMessage {
+                    publish_time_ns: Some(header.publish_time),
+                    sequence: Some(header.sequence),
                     stream_id: StreamId(u32::from(header.channel_id)),
                     arrival_time: to_arrival(header.log_time)?,
                     payload: backing.slice(payload_start..body_end),

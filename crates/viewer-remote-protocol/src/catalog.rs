@@ -115,6 +115,9 @@ pub struct StreamDescriptor {
     pub topic: String,
     pub schema_name: String,
     pub schema_encoding: String,
+    /// Original schema bytes. JSON byte array preserves every schema encoding.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub schema_data: Option<Vec<u8>>,
     pub message_encoding: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub message_count: Option<MessageCount>,
@@ -205,6 +208,7 @@ mod tests {
                 end_ns_exclusive: TimestampNs::new(2),
             },
             vec![StreamDescriptor {
+                schema_data: Some(vec![0, 1, 127, 255]),
                 id: 1,
                 topic: "/camera".into(),
                 schema_name: "sensor_msgs/msg/CompressedImage".into(),
