@@ -29,4 +29,11 @@ pub use stream::{
 };
 
 mod topic_tree;
-pub use topic_tree::{TopicTree, TopicTreeEntry};
+pub use topic_tree::{SchemaExplorationError, TopicTree, TopicTreeEntry};
+
+mod backing;
+
+#[cfg(not(target_arch = "wasm32"))]
+mod file_messages;
+#[cfg(not(target_arch = "wasm32"))]
+pub use file_messages::FileMessageStream;

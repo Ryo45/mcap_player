@@ -6,7 +6,7 @@ pub(crate) struct SignalDataView<'a> {
     pub(crate) signal: Option<&'a LoadedSignal>,
     pub(crate) current: Option<SignalSample>,
     pub(crate) loading: bool,
-    pub(crate) error: Option<&'a str>,
+    pub(crate) error: Option<&'a crate::query_error::QueryLoadError>,
 }
 
 /// Narrow, read-only view of exact Signal query results exposed by `ViewerSession`.
@@ -36,7 +36,7 @@ impl<'a> SignalQueryView<'a> {
         }
     }
 
-    pub(crate) fn first_error(self) -> Option<&'a str> {
+    pub(crate) fn first_error(self) -> Option<&'a crate::query_error::QueryLoadError> {
         self.speed.error.or(self.yaw_rate.error)
     }
 
@@ -76,6 +76,7 @@ mod tests {
     fn gets_speed_and_yaw_rate_with_independent_snapshot_state() {
         let speed = signal(SignalId::Speed, 3.0);
         let yaw_rate = signal(SignalId::YawRate, 0.2);
+        let failure = crate::query_error::QueryLoadError::MissingTopic("yaw query failed".into());
         let view = SignalQueryView::new(
             SignalDataView {
                 signal: Some(&speed),
@@ -87,7 +88,7 @@ mod tests {
                 signal: Some(&yaw_rate),
                 current: None,
                 loading: false,
-                error: Some("yaw query failed"),
+                error: Some(&failure),
             },
         );
 
@@ -99,7 +100,10 @@ mod tests {
         let yaw_view = view.get(SignalId::YawRate);
         assert_eq!(yaw_view.signal, Some(&yaw_rate));
         assert!(!yaw_view.loading);
-        assert_eq!(yaw_view.error, Some("yaw query failed"));
-        assert_eq!(view.first_error(), Some("yaw query failed"));
+        assert_eq!(
+            yaw_view.error.unwrap().to_string(),
+            "recording has no topic yaw query failed"
+        );
+        assert!(view.first_error().is_some());
     }
 }

@@ -12,11 +12,11 @@ pub(crate) struct InspectedMessage {
     pub(crate) payload_bytes: usize,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug)]
 pub(crate) struct TopicInspection {
     pub(crate) topic: String,
     pub(crate) messages: Vec<InspectedMessage>,
-    pub(crate) error: Option<String>,
+    pub(crate) error: Option<std::sync::Arc<crate::query_error::QueryLoadError>>,
     pub(crate) loading: bool,
 }
 
@@ -39,7 +39,10 @@ impl TopicInspection {
         }
     }
 
-    pub(crate) fn failed(topic: String, error: String) -> Self {
+    pub(crate) fn failed(
+        topic: String,
+        error: std::sync::Arc<crate::query_error::QueryLoadError>,
+    ) -> Self {
         Self {
             topic,
             messages: Vec::new(),

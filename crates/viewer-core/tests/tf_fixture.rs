@@ -33,7 +33,7 @@ fn fixture() -> Vec<u8> {
 
 #[test]
 fn every_scan_resolves_to_world_at_its_measurement_time() {
-    let mut source = McapSource::new(fixture()).unwrap();
+    let mut source = McapSource::copy_from_slice((fixture()).as_ref()).unwrap();
     let plan = SessionPlan::build(
         source.catalog(),
         "/camera/front/image/compressed",
@@ -44,10 +44,10 @@ fn every_scan_resolves_to_world_at_its_measurement_time() {
     source.select_streams(plan.selected_stream_ids()).unwrap();
     let mut transforms = TransformController::new(&plan);
     let mut scene = SceneController::new(&plan);
-    let (_, end) = source.time_range();
+    let end = source.time_range().end_inclusive();
     let mut scan_count = 0;
 
-    for message in source.read_until(end).unwrap() {
+    for message in source.read_through(end).unwrap() {
         transforms.process(&message);
         if scene.process(&message) {
             let scan = scene.point_cloud().latest().expect("decoded scan");
@@ -86,7 +86,7 @@ fn every_scan_resolves_to_world_at_its_measurement_time() {
 #[test]
 fn seven_camera_fixture_routes_exact_messages_to_concrete_controllers() {
     let bytes = fixture();
-    let mut playback = McapPlayback::new(bytes).unwrap();
+    let mut playback = McapPlayback::copy_from_slice((bytes).as_ref()).unwrap();
     let plan = SessionPlan::build(
         playback.catalog(),
         "/camera/front/image/compressed",
@@ -206,7 +206,7 @@ fn seven_camera_fixture_routes_exact_messages_to_concrete_controllers() {
 #[test]
 fn indexed_restore_matches_sequential_feature_values() {
     let bytes = fixture();
-    let mut sequential_source = McapSource::new(bytes.as_slice()).unwrap();
+    let mut sequential_source = McapSource::copy_from_slice(bytes.as_slice()).unwrap();
     let plan = SessionPlan::build(
         sequential_source.catalog(),
         "/camera/front/image/compressed",
@@ -217,14 +217,14 @@ fn indexed_restore_matches_sequential_feature_values() {
     sequential_source
         .select_streams(plan.selected_stream_ids())
         .unwrap();
-    let target = viewer_core::ArrivalTime(sequential_source.time_range().0.0 + 3_000_000_000);
+    let target = viewer_core::ArrivalTime(sequential_source.time_range().start.0 + 3_000_000_000);
 
     let mut sequential_cameras = CameraController::new(&plan);
     let mut sequential_path = PathController::new(&plan);
     let mut sequential_odometry = OdometryController::new(&plan);
     let mut sequential_transforms = TransformController::new(&plan);
     let mut sequential_scene = SceneController::new(&plan);
-    for message in sequential_source.read_until(target).unwrap() {
+    for message in sequential_source.read_through(target).unwrap() {
         // Camera seek semantics are exact latest-before rather than reproduction of the
         // presentation-rate scheduler, so build the canonical per-Camera latest value directly.
         sequential_cameras.restore(&message).unwrap();
@@ -242,7 +242,7 @@ fn indexed_restore_matches_sequential_feature_values() {
     let mut restored_odometry = OdometryController::new(&plan);
     let mut restored_transforms = TransformController::new(&plan);
     let mut restored_scene = SceneController::new(&plan);
-    let mut playback = McapPlayback::new(bytes.as_slice()).unwrap();
+    let mut playback = McapPlayback::copy_from_slice(bytes.as_slice()).unwrap();
     playback.select_streams(plan.selected_stream_ids()).unwrap();
     let persistent = restore_plan.persistent.clone();
     playback.bootstrap_persistent(&persistent).unwrap();

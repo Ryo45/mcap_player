@@ -1,10 +1,11 @@
+use crate::query_error::QueryLoadError;
 use crate::session::PlotSignalRequest;
 use crate::signal_query::{SignalDataView, SignalQueryView};
-use anyhow::{Context, Result};
-use memmap2::Mmap;
+use anyhow::Result;
+#[cfg(test)]
+use std::path::PathBuf;
+use std::sync::Arc;
 use std::{
-    fs::File,
-    path::PathBuf,
     sync::mpsc::{Receiver, SyncSender, TryRecvError},
     time::Instant,
 };
@@ -29,13 +30,13 @@ enum PlotLoadState {
     },
     Failed {
         generation: u64,
-        error: String,
+        error: Arc<QueryLoadError>,
     },
 }
 
 struct PlotLoadResult {
     generation: u64,
-    result: std::result::Result<LoadedOdometrySignals, String>,
+    result: std::result::Result<LoadedOdometrySignals, Arc<QueryLoadError>>,
     elapsed_ms: f64,
     complete: bool,
 }
@@ -69,8 +70,8 @@ impl PlotLoader {
             .name("plot-loader".to_owned())
             .spawn(move || {
                 let started = Instant::now();
-                let result = load_signals_from_path(
-                    &request.path,
+                let result = load_signals_from_source(
+                    &request.source,
                     request.origin,
                     request.max_points,
                     &request.odometry_topic,
@@ -83,7 +84,7 @@ impl PlotLoader {
                         });
                     },
                 )
-                .map_err(|error| error.to_string());
+                .map_err(Arc::new);
                 let _ = sender.send(PlotLoadResult {
                     generation,
                     result,
@@ -100,12 +101,15 @@ impl PlotLoader {
                 Ok(())
             }
             Err(error) => {
-                let error = format!("start plot-loading worker: {error}");
+                let error = Arc::new(QueryLoadError::StartWorker {
+                    worker: "plot",
+                    source: error,
+                });
                 self.state = PlotLoadState::Failed {
                     generation,
                     error: error.clone(),
                 };
-                Err(anyhow::Error::msg(error))
+                Err(anyhow::Error::new(error))
             }
         }
     }
@@ -153,7 +157,7 @@ impl PlotLoader {
         )
     }
 
-    pub(crate) fn error(&self) -> Option<&str> {
+    pub(crate) fn error(&self) -> Option<&QueryLoadError> {
         match &self.state {
             PlotLoadState::Failed { generation, error } if *generation == self.generation => {
                 Some(error)
@@ -200,25 +204,14 @@ impl PlotLoader {
     }
 }
 
-fn load_signals_from_path(
-    path: &PathBuf,
+fn load_signals_from_source(
+    source: &viewer_core::McapSource,
     origin: ArrivalTime,
     max_points: usize,
     odometry_topic: &str,
     on_progress: impl FnMut(LoadedOdometrySignals),
-) -> Result<LoadedOdometrySignals> {
-    let file = File::open(path).with_context(|| format!("open {} for plot", path.display()))?;
-    // SAFETY: this worker owns the read-only mapping for its entire scan.
-    let mapping =
-        unsafe { Mmap::map(&file) }.with_context(|| format!("map {} for plot", path.display()))?;
-    viewer_core::load_odometry_signals_for_topic_with_progress(
-        &mapping,
-        origin,
-        max_points,
-        odometry_topic,
-        on_progress,
-    )
-    .map_err(anyhow::Error::from)
+) -> std::result::Result<LoadedOdometrySignals, QueryLoadError> {
+    Ok(source.load_odometry_overview(origin, max_points, odometry_topic, on_progress)?)
 }
 
 #[cfg(test)]
@@ -255,10 +248,24 @@ mod tests {
     }
 
     fn request(path: PathBuf, origin: ArrivalTime) -> PlotSignalRequest {
+        let source = if path.exists() {
+            viewer_core::McapSource::open_file(&path).unwrap()
+        } else {
+            let fixture = speed_fixture();
+            let source = viewer_core::McapSource::open_file(&fixture).unwrap();
+            std::fs::OpenOptions::new()
+                .write(true)
+                .open(&fixture)
+                .unwrap()
+                .set_len(0)
+                .unwrap();
+            std::fs::remove_file(fixture).unwrap();
+            source
+        };
         PlotSignalRequest {
-            path,
+            source,
             origin,
-            max_points: 4_000,
+            max_points: 100,
             odometry_topic: "/odom".into(),
         }
     }
@@ -318,7 +325,7 @@ mod tests {
         let mut bytes = Cursor::new(Vec::new());
         {
             let mut writer =
-                Writer::with_options(&mut bytes, WriteOptions::new().use_chunks(false)).unwrap();
+                Writer::with_options(&mut bytes, WriteOptions::new().compression(None)).unwrap();
             let schema = writer
                 .add_schema("nav_msgs/msg/Odometry", "ros2msg", b"")
                 .unwrap();
@@ -399,7 +406,11 @@ mod tests {
         loader.poll_until_settled_for_test();
         assert!(!loader.is_loading());
         assert!(loader.signal(SignalId::Speed).is_none());
-        assert!(loader.error().is_some_and(|error| error.contains("open")));
+        assert!(
+            loader
+                .error()
+                .is_some_and(|error| error.to_string().contains("changed"))
+        );
     }
 
     #[test]
@@ -443,7 +454,9 @@ mod tests {
         let current_generation = loader.generation;
         loader.apply_result(PlotLoadResult {
             generation: current_generation.wrapping_sub(1),
-            result: Err("stale failure".to_owned()),
+            result: Err(Arc::new(QueryLoadError::MissingTopic(
+                "stale failure".into(),
+            ))),
             elapsed_ms: 0.0,
             complete: true,
         });
@@ -451,15 +464,21 @@ mod tests {
         assert!(loader.error().is_none());
         loader.apply_result(PlotLoadResult {
             generation: current_generation,
-            result: Err("current failure".to_owned()),
+            result: Err(Arc::new(QueryLoadError::MissingTopic(
+                "current failure".into(),
+            ))),
             elapsed_ms: 0.0,
             complete: true,
         });
-        assert_eq!(loader.error(), Some("current failure"));
+        assert!(
+            matches!(loader.error(),Some(QueryLoadError::MissingTopic(topic)) if topic=="current failure")
+        );
         for signal_id in [SignalId::Speed, SignalId::YawRate] {
             let view = loader.query_view().get(signal_id);
             assert!(!view.loading);
-            assert_eq!(view.error, Some("current failure"));
+            assert!(
+                matches!(view.error,Some(QueryLoadError::MissingTopic(topic)) if topic=="current failure")
+            );
         }
     }
 

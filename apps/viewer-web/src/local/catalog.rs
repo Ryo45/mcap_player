@@ -12,21 +12,51 @@ pub(crate) struct LocalCatalog {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct LocalCatalogError(String);
-
-impl LocalCatalogError {
-    fn new(message: impl Into<String>) -> Self {
-        Self(message.into())
-    }
+pub(crate) enum LocalCatalogError {
+    Plan(viewer_core::SessionPlanError),
+    Index(viewer_core::IndexedPlanError),
+    MissingChunkIndex,
+    MissingTimeRange,
+    EndTimeOverflow,
+    EmptyTimeRange,
+    TimestampOverflow(u64),
 }
-
 impl fmt::Display for LocalCatalogError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.0)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::MissingChunkIndex => {
+                write!(f, "browser lazy playback requires MCAP Chunk Index records")
+            }
+            Self::MissingTimeRange => write!(f, "MCAP contains no indexed time range"),
+            Self::EndTimeOverflow => write!(f, "MCAP end time cannot be made exclusive"),
+            Self::EmptyTimeRange => write!(f, "MCAP indexed time range is empty"),
+            Self::TimestampOverflow(value) => {
+                write!(f, "MCAP timestamp {value} exceeds signed nanoseconds")
+            }
+            Self::Plan(error) => error.fmt(f),
+            Self::Index(error) => error.fmt(f),
+        }
     }
 }
-
-impl Error for LocalCatalogError {}
+impl Error for LocalCatalogError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Plan(error) => Some(error),
+            Self::Index(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+impl From<viewer_core::SessionPlanError> for LocalCatalogError {
+    fn from(error: viewer_core::SessionPlanError) -> Self {
+        Self::Plan(error)
+    }
+}
+impl From<viewer_core::IndexedPlanError> for LocalCatalogError {
+    fn from(error: viewer_core::IndexedPlanError) -> Self {
+        Self::Index(error)
+    }
+}
 
 impl LocalCatalog {
     pub(crate) fn from_summary(
@@ -34,30 +64,28 @@ impl LocalCatalog {
         primary_camera_topic: &str,
     ) -> Result<Self, LocalCatalogError> {
         if summary.chunk_indexes.is_empty() {
-            return Err(LocalCatalogError::new(
-                "browser lazy playback requires MCAP Chunk Index records",
-            ));
+            return Err(LocalCatalogError::MissingChunkIndex);
         }
         let start = summary
             .chunk_indexes
             .iter()
             .map(|chunk| chunk.message_start_time)
             .min()
-            .ok_or_else(|| LocalCatalogError::new("MCAP contains no indexed time range"))?;
+            .ok_or(LocalCatalogError::MissingTimeRange)?;
         let end = summary
             .chunk_indexes
             .iter()
             .map(|chunk| chunk.message_end_time)
             .max()
-            .ok_or_else(|| LocalCatalogError::new("MCAP contains no indexed time range"))?;
+            .ok_or(LocalCatalogError::MissingTimeRange)?;
         let end_exclusive = end
             .checked_add(1)
-            .ok_or_else(|| LocalCatalogError::new("MCAP end time cannot be made exclusive"))?;
+            .ok_or(LocalCatalogError::EndTimeOverflow)?;
 
         let start = to_arrival(start)?;
         let end_exclusive = to_arrival(end_exclusive)?;
         if start >= end_exclusive {
-            return Err(LocalCatalogError::new("MCAP indexed time range is empty"));
+            return Err(LocalCatalogError::EmptyTimeRange);
         }
 
         let schema_definitions = summary
@@ -104,7 +132,7 @@ impl LocalCatalog {
             &crate::playback::web_playback_requirements(),
             &crate::playback::web_workspace_bindings(),
         )
-        .map_err(|error| LocalCatalogError::new(error.to_string()))?;
+        .map_err(LocalCatalogError::from)?;
         let index_facts = summary
             .chunk_indexes
             .iter()
@@ -125,7 +153,7 @@ impl LocalCatalog {
                 .by_id(stream)
                 .expect("SessionPlan stream is in catalog");
             viewer_core::ensure_indexed(&index_facts, stream, descriptor.timing.message_count)
-                .map_err(|error| LocalCatalogError::new(error.to_string()))?;
+                .map_err(LocalCatalogError::from)?;
         }
         let selected_topics = plan.selected_topics();
 
@@ -140,7 +168,7 @@ impl LocalCatalog {
 fn to_arrival(value: u64) -> Result<ArrivalTime, LocalCatalogError> {
     i64::try_from(value)
         .map(ArrivalTime)
-        .map_err(|_| LocalCatalogError::new("MCAP timestamp exceeds signed nanoseconds"))
+        .map_err(|_| LocalCatalogError::TimestampOverflow(value))
 }
 
 #[cfg(test)]
@@ -215,7 +243,7 @@ mod schema_parity_tests {
         )
         .unwrap();
         let summary = mcap::Summary::read(&bytes).unwrap().unwrap();
-        let native = viewer_core::McapSource::new(bytes).unwrap();
+        let native = viewer_core::McapSource::copy_from_slice((bytes).as_ref()).unwrap();
         let local = LocalCatalog::from_summary(&summary, "/camera/front/image/compressed").unwrap();
         assert_eq!(native.catalog().streams, local.core.streams);
         for stream in &local.core.streams {

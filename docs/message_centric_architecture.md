@@ -59,7 +59,7 @@ or pure decoder, and a view without extending a universal semantic enum.
 
 ## Sequential playback
 
-Playback and random inspection are separate workloads. Native uses indexed reads over its mmap.
+Playback and random inspection are separate workloads. Native uses bounded positional reads over its open file handle.
 Web Local and Remote share `RecordingDataPlane` while retaining distinct loaders:
 
 ```text
@@ -78,6 +78,43 @@ buffering or seeking, the previously committed controller state remains visible.
 ROS Live is intentionally a push path rather than an artificial recording source. Its camera
 mailbox feeds the same `RawMessage -> CameraController` boundary. Camera coalescing is not promoted
 to a universal drop policy because ordered streams such as TF have different semantics.
+
+## Safe Native file access
+
+`McapSource::open_file` reads Summary and Message Index records by range, and owns only metadata
+plus bounded chunk buffers. It never maps the mutable recording into a Rust slice. Immutable
+in-memory input uses `from_bytes`; `copy_from_slice` explicitly advertises its full-input copy.
+`read_through(T)` is inclusive, and `time_range()` returns `RecordingTimeRange { start,
+end_exclusive }` with an explicit `end_inclusive()` conversion for the playback clock.
+
+Native playback, numeric/builtin Plot and Inspector readers share the same open file handle and
+metadata through `fork_reader`; they do not reopen the pathname for each query. Path replacement
+therefore cannot silently redirect a running query to another recording. Cached payloads are
+`Bytes` slices of heap-owned read/decompression buffers and remain valid after file truncation or
+modification. `viewer-core` forbids unsafe code; file-backed mmap and its dependency have been
+removed from application/tools input paths.
+
+Reads check source length/mtime before and after copying. Observable changes return `SourceChanged`
+or an I/O error; these checks are **best-effort consistency checks, not proof of file immutability**.
+Concurrent writes cannot cause invalid Rust references even when a same-size change is not detected
+by metadata. The Native reader bounds each physical record and uncompressed chunk to 256 MiB.
+Summary/index metadata scales with source metadata; full-resolution messages never remain resident
+for the recording duration. Message Index records for one candidate chunk share one bounded range
+read. Offline tools use a bounded sequential `FileMessageStream` that also supports unchunked data.
+
+Forward reads stage position/chunk changes and publish them only after all required reads succeed;
+a failed multi-chunk read does not consume messages behind the old visible cursor. Empty-selection
+playback/seek reads no message chunks. The seek transaction below retains the same guarantees.
+
+## Structured failures
+
+Planning/window errors have domain variants such as `MissingRequiredStream`, `UnsupportedRestore`,
+`NonContiguousWindow`, `MessageOutsideWindow` and `InvalidRange`. Source, range, numeric query, Web
+transport/playback and Native query-worker errors retain their underlying Rust errors through
+`Error::source()`. Schema exploration errors likewise remain typed. Browser exceptions retain their
+original JS values at the FFI boundary. Views and UI diagnostics format errors for display; internal
+layer conversions do not replace I/O, MCAP, JSON or decoder errors with their formatted messages.
+Contextual invalid-record descriptions remain leaf details under explicit error categories.
 
 ## Seek restoration
 

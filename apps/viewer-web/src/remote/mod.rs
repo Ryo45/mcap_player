@@ -5,11 +5,11 @@ mod loader;
 mod source_control;
 
 pub(crate) use catalog::{RemoteCatalog, adapt_catalog};
-pub(crate) use client::RemoteApiClient;
 #[cfg(test)]
 pub(crate) use client::RemoteBatchPage;
 #[cfg(target_arch = "wasm32")]
 pub(crate) use client::RequestGeneration;
+pub(crate) use client::{RemoteApiClient, RemoteClientError};
 pub(crate) use loader::RemoteRestoreLoader;
 pub(crate) use loader::RemoteWindowLoader;
 #[cfg(test)]

@@ -89,6 +89,17 @@ continuous playbackのstream selectionは変わりません。ROS 2 CDR + ros2ms
 field Plot UIは現在Nativeのみです。現在の設計と対応範囲は
 [message-centric architecture](docs/message_centric_architecture.md)を参照してください。
 
+## Native recording I/O
+
+NativeのMCAP読み込みはbounded positional readを使います。元ファイルの変更・truncateでも、
+読み込み済みpayloadのRust参照は無効化されません。検知した変更はエラーとして扱います。
+詳細とAPIの時間境界は[現在のarchitecture](docs/message_centric_architecture.md)を参照してください。
+
+## 開発環境
+
+[Docker開発コンテナ](docs/development_container.md)にRust 1.91.1・clang・WASM・trunk・ROS 2 Jazzyをまとめています。
+`docker compose build dev`で準備し、`docker compose run --rm dev mcap-dev-check`で検証できます。
+
 ## 開発時のチェック
 
 ```bash

@@ -34,7 +34,15 @@ impl fmt::Display for PreviewMcapError {
     }
 }
 
-impl Error for PreviewMcapError {}
+impl Error for PreviewMcapError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Mcap(error) => Some(error),
+            Self::Json(error) => Some(error),
+            _ => None,
+        }
+    }
+}
 
 impl From<mcap::McapError> for PreviewMcapError {
     fn from(value: mcap::McapError) -> Self {

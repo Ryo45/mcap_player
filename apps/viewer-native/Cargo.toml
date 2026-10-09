@@ -17,7 +17,6 @@ egui-wgpu.workspace = true
 egui-winit.workspace = true
 env_logger.workspace = true
 log.workspace = true
-memmap2.workspace = true
 mcap = { workspace = true, features = ["lz4", "zstd"] }
 pollster.workspace = true
 scene-renderer = { path = "../../crates/scene-renderer" }

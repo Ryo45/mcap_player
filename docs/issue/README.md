@@ -70,12 +70,12 @@ transitionでresetします。restore failure時はtransitionしないためCPU 
 
 ## 実装後のresource contract
 
-- Native RawMessage: mmapまたは一回だけ展開したChunk backingの`Bytes::slice`。message単位payload copyは0。
+- Native RawMessage: positional readまたは一回だけ展開したChunk backingの`Bytes::slice`。message単位payload copyは0。
 - Plot overview: 各signal `O(max_display_points)`、exact full history常駐なし。currentはOdometry controller由来。
 - Scene visible CPU history: 65,536点上限。rendererはGPU resource/revision同期のみ。
 - recording source: Summary + Chunk Index必須。selected non-empty streamはMessage Index必須。
 - platform planning: `IndexedChunkFact`からlatest/history/persistent candidate Chunkを共通決定し、I/Oだけを
-  mmap/File.slice/Recording Server IndexedReaderへ分ける。
+  positional read/File.slice/Recording Server IndexedReaderへ分ける。
 
 ## 維持する境界
 

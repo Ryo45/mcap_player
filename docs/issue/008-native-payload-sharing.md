@@ -1,3 +1,6 @@
+現在のfile accessはmmapではなくbounded positional readです。以下は当時の背景であり、現行契約は
+[message-centric architecture](../message_centric_architecture.md)を参照してください。
+
 # Native McapSourceでRawMessage payload backingを共有する
 
 - Priority: P0

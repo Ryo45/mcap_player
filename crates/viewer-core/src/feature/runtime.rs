@@ -32,7 +32,7 @@ pub struct FeatureRuntime {
 pub enum FeatureRestoreErrorKind {
     Decode {
         feature: &'static str,
-        reason: String,
+        source: crate::DecodeError,
     },
     Unrouted,
 }
@@ -47,9 +47,9 @@ pub struct FeatureRestoreError {
 impl fmt::Display for FeatureRestoreError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.kind {
-            FeatureRestoreErrorKind::Decode { feature, reason } => write!(
+            FeatureRestoreErrorKind::Decode { feature, source } => write!(
                 formatter,
-                "restore decode failed for {feature} stream {} at {} ns: {reason}",
+                "restore decode failed for {feature} stream {} at {} ns: {source}",
                 self.stream_id.0, self.arrival_time.0
             ),
             FeatureRestoreErrorKind::Unrouted => write!(
@@ -61,7 +61,14 @@ impl fmt::Display for FeatureRestoreError {
     }
 }
 
-impl Error for FeatureRestoreError {}
+impl Error for FeatureRestoreError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match &self.kind {
+            FeatureRestoreErrorKind::Decode { source, .. } => Some(source),
+            _ => None,
+        }
+    }
+}
 
 impl FeatureRuntime {
     pub fn new(plan: &SessionPlan, enable_scene: bool) -> Self {
@@ -218,7 +225,7 @@ fn restore_one(
         arrival_time: message.arrival_time,
         kind: FeatureRestoreErrorKind::Decode {
             feature,
-            reason: error.to_string(),
+            source: error,
         },
     })
 }
@@ -296,7 +303,7 @@ mod tests {
     }
 
     fn populated_runtime() -> (SessionPlan, Vec<RawMessage>, FeatureRuntime) {
-        let mut source = crate::McapSource::new(fixture()).unwrap();
+        let mut source = crate::McapSource::copy_from_slice((fixture()).as_ref()).unwrap();
         let catalog: SourceCatalog = source.catalog().clone();
         let plan = SessionPlan::build(
             &catalog,
@@ -306,8 +313,8 @@ mod tests {
         )
         .unwrap();
         source.select_streams(plan.selected_stream_ids()).unwrap();
-        let (_, end) = source.time_range();
-        let messages = source.read_until(end).unwrap();
+        let end = source.time_range().end_inclusive();
+        let messages = source.read_through(end).unwrap();
         let mut runtime = FeatureRuntime::new(&plan, true);
         runtime.process_messages(Duration::from_secs(10), &messages);
         (plan, messages, runtime)
@@ -395,7 +402,7 @@ mod sharing_tests {
                 .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap"),
         )
         .unwrap();
-        let mut source = crate::McapSource::new(bytes).unwrap();
+        let mut source = crate::McapSource::copy_from_slice((bytes).as_ref()).unwrap();
         let mut requirements = crate::PlaybackRequirements::empty();
         requirements.require_camera_topic("/camera/front/image/compressed");
         requirements.require_transforms();
@@ -415,7 +422,9 @@ mod sharing_tests {
         )
         .unwrap();
         source.select_streams(plan.selected_stream_ids()).unwrap();
-        let messages = source.read_until(source.time_range().1).unwrap();
+        let messages = source
+            .read_through(source.time_range().end_inclusive())
+            .unwrap();
         let mut runtime = FeatureRuntime::new(&plan, true);
         runtime.process_messages(Duration::from_secs(10), &messages);
         let counts = runtime.counters();

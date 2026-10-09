@@ -2484,7 +2484,6 @@ dependencies = [
  "anyhow",
  "image",
  "mcap",
- "memmap2",
  "serde_json",
  "viewer-core",
  "viewer-preview-mcap",
@@ -2674,7 +2673,6 @@ dependencies = [
  "anyhow",
  "image",
  "mcap",
- "memmap2",
  "viewer-core",
 ]
 
@@ -3496,7 +3494,6 @@ dependencies = [
  "env_logger",
  "log",
  "mcap",
- "memmap2",
  "pollster",
  "rclrs",
  "scene-renderer",

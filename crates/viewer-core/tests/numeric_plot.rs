@@ -181,7 +181,7 @@ fn scalar_types_arrays_and_constants_follow_wire_layout() {
 }
 #[test]
 fn query_products_are_bounded_and_independent_of_playback_and_metadata() {
-    let mut source = McapSource::new(recording(10_000)).unwrap();
+    let mut source = McapSource::copy_from_slice((recording(10_000)).as_ref()).unwrap();
     let stream = source.catalog().by_topic("/numeric").unwrap().id;
     let bindings = WorkspaceBindings {
         path_topic: "/path".into(),
@@ -207,7 +207,7 @@ fn query_products_are_bounded_and_independent_of_playback_and_metadata() {
         max_points: 31,
     };
     source.select_streams([stream]).unwrap();
-    let first = source.read_until(ArrivalTime(101)).unwrap();
+    let first = source.read_through(ArrivalTime(101)).unwrap();
     assert_eq!(first.len(), 2);
     assert_eq!(first[0].publish_time_ns, Some(90));
     assert_eq!(first[0].sequence, Some(0));
@@ -246,7 +246,7 @@ fn query_products_are_bounded_and_independent_of_playback_and_metadata() {
             .query_numeric_overview_cancellable(&request, || true)
             .is_err()
     );
-    assert_eq!(source.read_until(ArrivalTime(102)).unwrap().len(), 1);
+    assert_eq!(source.read_through(ArrivalTime(102)).unwrap().len(), 1);
     assert_eq!(plan.selected_stream_ids(), selected);
     assert!(selected.is_empty());
 }
@@ -311,9 +311,9 @@ fn overview_does_not_touch_unrelated_chunks() {
     // Corrupt an unrelated record header; touching this chunk must now fail.
     let offset = chunk.compressed_data_offset().unwrap() as usize;
     bytes[offset + 1..offset + 9].copy_from_slice(&u64::MAX.to_le_bytes());
-    let mut source = McapSource::new(bytes).unwrap();
+    let mut source = McapSource::copy_from_slice((bytes).as_ref()).unwrap();
     source.select_streams([]).unwrap();
-    assert!(source.read_until(ArrivalTime(101)).unwrap().is_empty());
+    assert!(source.read_through(ArrivalTime(101)).unwrap().is_empty());
     source.seek(ArrivalTime(101)).unwrap();
     let mut request = NumericSeriesRequest {
         stream_id: StreamId(channel as u32),
@@ -324,12 +324,10 @@ fn overview_does_not_touch_unrelated_chunks() {
     let result = source.query_numeric_overview(&request).unwrap();
     assert_eq!(result.samples[0].value, 1.0);
     request.stream_id = StreamId(unrelated as u32);
-    assert_eq!(
-        source
-            .query_numeric_overview_cancellable(&request, || true)
-            .unwrap_err(),
-        "numeric query cancelled"
-    );
+    assert!(matches!(
+        source.query_numeric_overview_cancellable(&request, || true),
+        Err(NumericPlotError::Source(McapOpenError::QueryCancelled))
+    ));
     assert!(source.query_numeric_overview(&request).is_err());
 }
 #[test]
@@ -395,7 +393,7 @@ fn empty_and_constant_only_ros_messages_consume_the_dummy_wire_member() {
 fn multiple_selected_fields_share_one_chunk_read_and_keep_separate_budgets() {
     let backing = recording(1000);
     let summary = mcap::Summary::read(&backing).unwrap().unwrap();
-    let source = McapSource::new(backing).unwrap();
+    let source = McapSource::copy_from_slice((backing).as_ref()).unwrap();
     let request = NumericSeriesRequest {
         stream_id: source.catalog().by_topic("/numeric").unwrap().id,
         field_path: "vector.x".into(),

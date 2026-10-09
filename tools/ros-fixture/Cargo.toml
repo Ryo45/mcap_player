@@ -8,5 +8,4 @@ license.workspace = true
 anyhow.workspace = true
 image.workspace = true
 mcap = { workspace = true, features = ["lz4", "zstd"] }
-memmap2.workspace = true
 viewer-core = { path = "../../crates/viewer-core" }

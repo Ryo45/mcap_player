@@ -104,26 +104,120 @@ pub(crate) struct RemoteBatchPage {
     pub recording_revision: String,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct RemoteClientError {
-    message: String,
+#[derive(Clone, Debug)]
+pub(crate) enum RemoteClientError {
+    EmptyUrl,
+    #[cfg(target_arch = "wasm32")]
+    NotText,
+    MissingHeader(&'static str),
+    UnexpectedContentType(String),
+    RevisionMismatch {
+        expected: String,
+        actual: String,
+    },
+    InvalidCompleteHeader(Option<String>),
+    UnexpectedCursor,
+    MissingCursor,
+    InvalidMessageCount(std::sync::Arc<std::num::ParseIntError>),
+    MessageCountMismatch {
+        header: usize,
+        actual: usize,
+    },
+    #[cfg(target_arch = "wasm32")]
+    IncompleteRestore,
+    UnsupportedSchemaVersion {
+        actual: u32,
+        expected: u32,
+    },
+    Protocol(viewer_remote_protocol::ProtocolError),
+    Json(std::sync::Arc<serde_json::Error>),
+    #[cfg(target_arch = "wasm32")]
+    Http {
+        status: u16,
+        code: Option<String>,
+        message: String,
+    },
+    #[cfg(target_arch = "wasm32")]
+    Browser(std::rc::Rc<wasm_bindgen::JsValue>),
+    #[cfg(target_arch = "wasm32")]
+    MissingBrowserWindow,
 }
-
-impl RemoteClientError {
-    pub(crate) fn new(message: impl Into<String>) -> Self {
-        Self {
-            message: message.into(),
+impl fmt::Display for RemoteClientError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::EmptyUrl => write!(f, "remote server URL is empty"),
+            #[cfg(target_arch = "wasm32")]
+            Self::NotText => write!(f, "HTTP response was not text"),
+            Self::MissingHeader(name) => write!(f, "batch response has no {name}"),
+            Self::UnexpectedContentType(value) => {
+                write!(f, "unexpected batch Content-Type: {value}")
+            }
+            Self::RevisionMismatch { expected, actual } => write!(
+                f,
+                "batch recording revision mismatch: expected {expected}, got {actual}"
+            ),
+            Self::InvalidCompleteHeader(value) => {
+                write!(f, "invalid batch complete header: {value:?}")
+            }
+            Self::UnexpectedCursor => write!(
+                f,
+                "complete batch unexpectedly contains a continuation cursor"
+            ),
+            Self::MissingCursor => write!(f, "incomplete batch has no continuation cursor"),
+            Self::InvalidMessageCount(error) => {
+                write!(f, "invalid batch message count header: {error}")
+            }
+            Self::MessageCountMismatch { header, actual } => write!(
+                f,
+                "batch body and message count header disagree: header {header}, body {actual}"
+            ),
+            #[cfg(target_arch = "wasm32")]
+            Self::IncompleteRestore => write!(f, "restore response must be complete"),
+            Self::UnsupportedSchemaVersion { actual, expected } => write!(
+                f,
+                "unsupported remote schema version: {actual}, expected {expected}"
+            ),
+            Self::Protocol(error) => error.fmt(f),
+            Self::Json(error) => write!(f, "invalid JSON response: {error}"),
+            #[cfg(target_arch = "wasm32")]
+            Self::Http {
+                status,
+                code,
+                message,
+            } => {
+                write!(f, "remote HTTP {status}: ")?;
+                if let Some(code) = code {
+                    write!(f, "{code}: ")?;
+                }
+                f.write_str(message)
+            }
+            #[cfg(target_arch = "wasm32")]
+            Self::Browser(value) => write!(f, "browser API error: {value:?}"),
+            #[cfg(target_arch = "wasm32")]
+            Self::MissingBrowserWindow => write!(f, "window is unavailable"),
         }
     }
 }
-
-impl fmt::Display for RemoteClientError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.message)
+impl Error for RemoteClientError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Protocol(error) => Some(error),
+            Self::Json(error) => Some(error.as_ref()),
+            Self::InvalidMessageCount(error) => Some(error.as_ref()),
+            _ => None,
+        }
     }
 }
-
-impl Error for RemoteClientError {}
+impl From<viewer_remote_protocol::ProtocolError> for RemoteClientError {
+    fn from(error: viewer_remote_protocol::ProtocolError) -> Self {
+        Self::Protocol(error)
+    }
+}
+impl From<serde_json::Error> for RemoteClientError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(std::sync::Arc::new(error))
+    }
+}
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(crate) struct RequestGeneration(u64);
@@ -148,7 +242,7 @@ impl RemoteApiClient {
     pub(crate) fn new(base_url: impl Into<String>) -> Result<Self, RemoteClientError> {
         let base_url = base_url.into().trim_end_matches('/').to_owned();
         if base_url.is_empty() {
-            return Err(RemoteClientError::new("remote server URL is empty"));
+            return Err(RemoteClientError::EmptyUrl);
         }
         Ok(Self { base_url })
     }
@@ -247,9 +341,7 @@ impl RemoteApiClient {
         let body = Bytes::from(Uint8Array::new(&buffer).to_vec());
         let page = validate_batch_response(metadata, body, &request.revision)?;
         if !page.complete {
-            return Err(RemoteClientError::new(
-                "restore response must be complete and unpaginated",
-            ));
+            return Err(RemoteClientError::IncompleteRestore);
         }
         Ok(page)
     }
@@ -266,9 +358,8 @@ impl RemoteApiClient {
             .await
             .map_err(js_error)?
             .as_string()
-            .ok_or_else(|| RemoteClientError::new("HTTP response was not text"))?;
-        serde_json::from_str(&text)
-            .map_err(|error| RemoteClientError::new(format!("invalid JSON response: {error}")))
+            .ok_or_else(|| RemoteClientError::NotText)?;
+        serde_json::from_str(&text).map_err(RemoteClientError::from)
     }
 }
 
@@ -288,46 +379,48 @@ fn validate_batch_response(
 ) -> Result<RemoteBatchPage, RemoteClientError> {
     let content_type = metadata
         .content_type
-        .ok_or_else(|| RemoteClientError::new("batch response has no Content-Type"))?;
+        .ok_or(RemoteClientError::MissingHeader("Content-Type"))?;
     if content_type != BATCH_CONTENT_TYPE {
-        return Err(RemoteClientError::new(format!(
-            "unexpected batch Content-Type: {content_type}"
-        )));
+        return Err(RemoteClientError::UnexpectedContentType(content_type));
     }
     let recording_revision = metadata
         .recording_revision
-        .ok_or_else(|| RemoteClientError::new("batch response has no recording revision"))?;
+        .ok_or(RemoteClientError::MissingHeader("recording revision"))?;
     if recording_revision != expected_revision {
-        return Err(RemoteClientError::new("batch recording revision mismatch"));
+        return Err(RemoteClientError::RevisionMismatch {
+            expected: expected_revision.into(),
+            actual: recording_revision.clone(),
+        });
     }
     let complete = match metadata.complete.as_deref() {
         Some("true") => true,
         Some("false") => false,
-        _ => return Err(RemoteClientError::new("invalid batch complete header")),
+        _ => {
+            return Err(RemoteClientError::InvalidCompleteHeader(
+                metadata.complete.clone(),
+            ));
+        }
     };
     let next_cursor = metadata.next_cursor.filter(|cursor| !cursor.is_empty());
     if complete && next_cursor.is_some() {
-        return Err(RemoteClientError::new(
-            "complete batch unexpectedly contains a continuation cursor",
-        ));
+        return Err(RemoteClientError::UnexpectedCursor);
     }
     if !complete && next_cursor.is_none() {
-        return Err(RemoteClientError::new(
-            "incomplete batch has no continuation cursor",
-        ));
+        return Err(RemoteClientError::MissingCursor);
     }
     let message_count = metadata
         .message_count
-        .ok_or_else(|| RemoteClientError::new("batch response has no message count"))?
+        .ok_or(RemoteClientError::MissingHeader("message count"))?
         .parse::<usize>()
-        .map_err(|_| RemoteClientError::new("invalid batch message count header"))?;
+        .map_err(|error| RemoteClientError::InvalidMessageCount(std::sync::Arc::new(error)))?;
     let decoded = BatchDecoder::new(&body)
         .and_then(BatchDecoder::collect)
-        .map_err(|error| RemoteClientError::new(error.to_string()))?;
+        .map_err(RemoteClientError::from)?;
     if decoded.len() != message_count {
-        return Err(RemoteClientError::new(
-            "batch body and message count header disagree",
-        ));
+        return Err(RemoteClientError::MessageCountMismatch {
+            header: message_count,
+            actual: decoded.len(),
+        });
     }
     Ok(RemoteBatchPage {
         body,
@@ -341,9 +434,10 @@ fn validate_batch_response(
 #[cfg(any(test, target_arch = "wasm32"))]
 fn validate_schema(schema_version: u32) -> Result<(), RemoteClientError> {
     if schema_version != REMOTE_PROTOCOL_SCHEMA_VERSION {
-        return Err(RemoteClientError::new(format!(
-            "unsupported remote schema version: {schema_version}"
-        )));
+        return Err(RemoteClientError::UnsupportedSchemaVersion {
+            actual: schema_version,
+            expected: REMOTE_PROTOCOL_SCHEMA_VERSION,
+        });
     }
     Ok(())
 }
@@ -372,7 +466,7 @@ async fn fetch(url: &str, abort: Option<&AbortSignal>) -> Result<Response, Remot
     let request = Request::new_with_str_and_init(url, &init).map_err(js_error)?;
     JsFuture::from(
         web_sys::window()
-            .ok_or_else(|| RemoteClientError::new("window is unavailable"))?
+            .ok_or_else(|| RemoteClientError::MissingBrowserWindow)?
             .fetch_with_request(&request),
     )
     .await
@@ -392,17 +486,21 @@ async fn ensure_success(response: &Response) -> Result<(), RemoteClientError> {
         .map_err(js_error)?
         .as_string()
         .unwrap_or_default();
-    let detail = serde_json::from_str::<viewer_remote_protocol::RemoteErrorResponse>(&body)
-        .map(|error| format!("{}: {}", error.code, error.message))
-        .unwrap_or_else(|_| body);
-    Err(RemoteClientError::new(format!(
-        "remote HTTP {status}: {detail}"
-    )))
+    let (code, message) =
+        match serde_json::from_str::<viewer_remote_protocol::RemoteErrorResponse>(&body) {
+            Ok(error) => (Some(error.code), error.message),
+            Err(_) => (None, body),
+        };
+    Err(RemoteClientError::Http {
+        status,
+        code,
+        message,
+    })
 }
 
 #[cfg(target_arch = "wasm32")]
 fn js_error(value: wasm_bindgen::JsValue) -> RemoteClientError {
-    RemoteClientError::new(format!("browser API error: {value:?}"))
+    RemoteClientError::Browser(std::rc::Rc::new(value))
 }
 
 #[cfg(test)]

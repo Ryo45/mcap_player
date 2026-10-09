@@ -5,7 +5,7 @@ use crate::{
     graphics::{Graphics, RenderInput},
     interaction::ViewerAction,
     presentation::{PresentationBuildInput, PresentationState, PresentationTransition},
-    preview::{PreviewCoordinator, fingerprint_source},
+    preview::PreviewCoordinator,
     session::ViewerSession,
     workspace::{NativeWorkspace, WorkspaceEffect},
 };
@@ -63,8 +63,9 @@ impl App {
                     log::warn!("Inspector unavailable: {error}");
                 }
                 self.args.mcap = path.to_owned();
+                let fingerprint = session.source_fingerprint();
                 self.session = Some(session);
-                match fingerprint_source(path) {
+                match fingerprint {
                     Ok(fingerprint) => {
                         self.preview.load_for_source(path, &fingerprint);
                         self.bookmarks.load_for_source(path, &fingerprint);
@@ -151,9 +152,10 @@ impl App {
             .flatten();
         let signals = session.signal_query_view(current_odometry);
         let workspace_warning = self.workspace.startup_warning();
+        let signal_error = signals.first_error().map(ToString::to_string);
         let error = self.diagnostics.message(&[
             workspace_warning.as_deref(),
-            signals.first_error(),
+            signal_error.as_deref(),
             self.preview.warning(),
             self.bookmarks.warning(),
         ]);
@@ -544,7 +546,7 @@ mod tests {
         let target = ArrivalTime((playback.start.0 + playback.end.0) / 2);
 
         let bytes = std::fs::read(&path).unwrap();
-        let source = viewer_core::McapSource::new(bytes).unwrap();
+        let source = viewer_core::McapSource::copy_from_slice((bytes).as_ref()).unwrap();
         let stream = source
             .catalog()
             .by_topic("/camera/front/image/compressed")

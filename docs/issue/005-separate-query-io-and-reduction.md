@@ -30,7 +30,7 @@ I/Oとdeterministic reductionの分離はこの目的の手段です。
    - 必要になった時だけbounded Exact Range Queryで取得する独立拡張点とする。
    - 今回generic QueryManagerやfull-history cacheは作らない。
 4. Query I/O
-   - worker/file/mmap/generation/progressはNative adapterが所有する。
+   - worker/file range read/generation/progressはNative adapterが所有する。
    - reducerはordered decoded Odometryとrecording range/max pointsだけを受ける。
 
 ## 契約テスト
@@ -47,7 +47,7 @@ I/Oとdeterministic reductionの分離はこの目的の手段です。
 - reducer working set: `O(max_display_points)` per signal
 - published overview: `O(max_display_points)` per signal
 - full-resolution exact history: `O(1)`（常駐しない）
-- MCAP mapping: OS-backed source I/Oであり、decoded sample heapへ展開しない
+- MCAP input: bounded positional source readsであり、decoded sample heapへ展開しない
 
 ## 完了条件
 
@@ -63,7 +63,7 @@ I/Oとdeterministic reductionの分離はこの目的の手段です。
 - progress publicationはbounded reducer snapshotだけをcloneし、過去全sampleの累積cloneを削除した。
   配送もcapacity 1のchannelで途中結果をcoalesceし、slow UI時のsnapshot backlogを防ぐ。
 - current valueはFeatureRuntimeのOdometry current stateから供給し、preview中はexact currentを供給しない。
-- query worker/mmap/generation cancellationはNative adapter、deterministic reductionはviewer-coreに分離した。
+- query worker/range read/generation cancellationはNative adapter、deterministic reductionはviewer-coreに分離した。
 - overview生成のsource scan I/Oはrecording message数に比例するが、decoded heap working setは
   `O(max_display_points)`、full-resolution exact常駐は`O(1)`である。
 - visible-range exact detailは既存Exact Range Queryを使う独立した将来拡張点として残し、generic managerは

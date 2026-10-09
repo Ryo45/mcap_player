@@ -12,9 +12,10 @@ pub struct TimeRange {
 impl TimeRange {
     pub fn new(start: ArrivalTime, end_exclusive: ArrivalTime) -> Result<Self, DataWindowError> {
         if start >= end_exclusive {
-            return Err(DataWindowError::new(
-                "data window start must precede endExclusive",
-            ));
+            return Err(DataWindowError::InvalidRange {
+                start,
+                end_exclusive,
+            });
         }
         Ok(Self {
             start,
@@ -46,8 +47,8 @@ impl SerializedWindow {
         let logical_payload_bytes = messages.iter().try_fold(0_usize, |total, message| {
             total.checked_add(message.payload.len())
         });
-        let logical_payload_bytes = logical_payload_bytes
-            .ok_or_else(|| DataWindowError::new("logical payload byte count overflow"))?;
+        let logical_payload_bytes =
+            logical_payload_bytes.ok_or(DataWindowError::PayloadBytesOverflow)?;
         let window = Self {
             range,
             messages,
@@ -62,16 +63,17 @@ impl SerializedWindow {
         let mut previous = None;
         for message in &self.messages {
             if !self.range.contains(message.arrival_time) {
-                return Err(DataWindowError::new(format!(
-                    "message time {} is outside data window [{}, {})",
-                    message.arrival_time.0, self.range.start.0, self.range.end_exclusive.0
-                )));
+                return Err(DataWindowError::MessageOutsideWindow {
+                    time: message.arrival_time,
+                    range: self.range,
+                });
             }
             let key = (message.arrival_time, message.stream_id.0);
             if previous.is_some_and(|previous| key < previous) {
-                return Err(DataWindowError::new(
-                    "data window messages must be ordered by time and stream",
-                ));
+                return Err(DataWindowError::MessagesOutOfOrder {
+                    previous: previous.expect("checked predecessor"),
+                    actual: key,
+                });
             }
             previous = Some(key);
         }
@@ -111,15 +113,13 @@ impl FetchProfile {
         max_resident_bytes: usize,
     ) -> Result<Self, DataWindowError> {
         if window_size.is_zero() {
-            return Err(DataWindowError::new("fetch window size must be positive"));
+            return Err(DataWindowError::InvalidFetchWindowSize);
         }
         if realtime_target_ahead.is_zero() {
-            return Err(DataWindowError::new("fetch target ahead must be positive"));
+            return Err(DataWindowError::InvalidTargetAhead);
         }
         if max_resident_bytes == 0 {
-            return Err(DataWindowError::new(
-                "fetch profile resident budget must be positive",
-            ));
+            return Err(DataWindowError::InvalidResidentBudget);
         }
         Ok(Self {
             window_size,
@@ -215,9 +215,7 @@ pub struct MemoryWindowStore {
 impl MemoryWindowStore {
     pub fn new(start: ArrivalTime, max_bytes: usize) -> Result<Self, DataWindowError> {
         if max_bytes == 0 {
-            return Err(DataWindowError::new(
-                "memory window store budget must be positive",
-            ));
+            return Err(DataWindowError::InvalidResidentBudget);
         }
         Ok(Self {
             windows: VecDeque::new(),
@@ -232,19 +230,19 @@ impl MemoryWindowStore {
     pub fn insert(&mut self, window: SerializedWindow) -> Result<(), DataWindowError> {
         window.validate()?;
         if window.range.start != self.complete_until {
-            return Err(DataWindowError::new(format!(
-                "data window starts at {}, expected {}",
-                window.range.start.0, self.complete_until.0
-            )));
+            return Err(DataWindowError::NonContiguousWindow {
+                actual_start: window.range.start,
+                expected_start: self.complete_until,
+            });
         }
         let resident_bytes = self
             .resident_bytes
             .checked_add(window.resident_bytes)
-            .ok_or_else(|| DataWindowError::new("resident byte count overflow"))?;
+            .ok_or(DataWindowError::ResidentBytesOverflow)?;
         let logical_payload_bytes = self
             .logical_payload_bytes
             .checked_add(window.logical_payload_bytes)
-            .ok_or_else(|| DataWindowError::new("logical payload byte count overflow"))?;
+            .ok_or(DataWindowError::PayloadBytesOverflow)?;
         self.resident_bytes = resident_bytes;
         self.logical_payload_bytes = logical_payload_bytes;
         self.complete_until = window.range.end_exclusive;
@@ -380,20 +378,57 @@ impl MemoryWindowStore {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DataWindowError(String);
-
-impl DataWindowError {
-    fn new(message: impl Into<String>) -> Self {
-        Self(message.into())
-    }
+pub enum DataWindowError {
+    InvalidRange {
+        start: ArrivalTime,
+        end_exclusive: ArrivalTime,
+    },
+    PayloadBytesOverflow,
+    ResidentBytesOverflow,
+    MessageOutsideWindow {
+        time: ArrivalTime,
+        range: TimeRange,
+    },
+    MessagesOutOfOrder {
+        previous: (ArrivalTime, u32),
+        actual: (ArrivalTime, u32),
+    },
+    InvalidFetchWindowSize,
+    InvalidTargetAhead,
+    InvalidResidentBudget,
+    NonContiguousWindow {
+        actual_start: ArrivalTime,
+        expected_start: ArrivalTime,
+    },
 }
-
 impl fmt::Display for DataWindowError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.0)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::InvalidRange { .. } => write!(f, "data window start must precede endExclusive"),
+            Self::PayloadBytesOverflow => write!(f, "logical payload byte count overflow"),
+            Self::ResidentBytesOverflow => write!(f, "resident byte count overflow"),
+            Self::MessageOutsideWindow { time, range } => write!(
+                f,
+                "message time {} is outside data window [{}, {})",
+                time.0, range.start.0, range.end_exclusive.0
+            ),
+            Self::MessagesOutOfOrder { .. } => {
+                write!(f, "data window messages must be ordered by time and stream")
+            }
+            Self::InvalidFetchWindowSize => write!(f, "fetch window size must be positive"),
+            Self::InvalidTargetAhead => write!(f, "fetch target ahead must be positive"),
+            Self::InvalidResidentBudget => write!(f, "resident budget must be positive"),
+            Self::NonContiguousWindow {
+                actual_start,
+                expected_start,
+            } => write!(
+                f,
+                "data window starts at {}, expected {}",
+                actual_start.0, expected_start.0
+            ),
+        }
     }
 }
-
 impl Error for DataWindowError {}
 
 fn duration_ns(duration: Duration) -> i64 {

@@ -23,7 +23,11 @@ impl fmt::Display for McapPlaybackError {
     }
 }
 
-impl std::error::Error for McapPlaybackError {}
+impl std::error::Error for McapPlaybackError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(&self.0)
+    }
+}
 
 impl From<McapOpenError> for McapPlaybackError {
     fn from(value: McapOpenError) -> Self {
@@ -52,7 +56,14 @@ impl<E: fmt::Display> fmt::Display for McapSeekError<E> {
     }
 }
 
-impl<E: std::error::Error + 'static> std::error::Error for McapSeekError<E> {}
+impl<E: std::error::Error + 'static> std::error::Error for McapSeekError<E> {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Source(error) => Some(error),
+            Self::Restore(error) => Some(error),
+        }
+    }
+}
 
 /// Native sequential MCAP transport.
 ///
@@ -66,24 +77,27 @@ pub struct McapPlayback {
 }
 
 impl McapPlayback {
-    pub fn new(backing: impl AsRef<[u8]>) -> Result<Self, McapPlaybackError> {
-        let source = McapSource::new(backing)?;
-        Self::from_source(source)
+    pub fn copy_from_slice(backing: &[u8]) -> Result<Self, McapPlaybackError> {
+        Self::from_source(McapSource::copy_from_slice(backing)?)
     }
-
-    pub fn from_owner<B>(backing: B) -> Result<Self, McapPlaybackError>
-    where
-        B: AsRef<[u8]> + Send + 'static,
-    {
-        let source = McapSource::from_owner(backing)?;
-        Self::from_source(source)
+    pub fn from_bytes(backing: bytes::Bytes) -> Result<Self, McapPlaybackError> {
+        Self::from_source(McapSource::from_bytes(backing)?)
     }
-
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn open_file(path: &std::path::Path) -> Result<Self, McapPlaybackError> {
+        Self::from_source(McapSource::open_file(path)?)
+    }
+    pub fn recording_source(&self) -> &McapSource {
+        &self.source
+    }
+    pub fn query_source(&self) -> McapSource {
+        self.source.fork_reader()
+    }
     fn from_source(source: McapSource) -> Result<Self, McapPlaybackError> {
-        let (start, end) = source.time_range();
+        let range = source.time_range();
         Ok(Self {
             source,
-            clock: PlaybackClock::new(start, end),
+            clock: PlaybackClock::new(range.start, range.end_inclusive()),
             source_read: StageTiming::default(),
             persistent_archive: Vec::new(),
         })
@@ -124,7 +138,7 @@ impl McapPlayback {
     ) -> Result<(), McapOpenError> {
         let candidate = self.clock.cursor_after(elapsed);
         let read_started = Instant::now();
-        let messages = self.source.read_until(candidate)?;
+        let messages = self.source.read_through(candidate)?;
         self.source_read.record(read_started.elapsed());
         process(elapsed, messages);
         self.clock.commit_cursor(candidate);
@@ -217,7 +231,7 @@ mod tests {
     #[test]
     fn read_failure_does_not_commit_the_candidate_cursor() {
         let (bytes, _) = corrupt_last_chunk(fixture("camera_7_5s.mcap"));
-        let mut playback = McapPlayback::new(bytes.as_slice()).unwrap();
+        let mut playback = McapPlayback::copy_from_slice(bytes.as_slice()).unwrap();
         playback.clock_mut().toggle();
         let committed = playback.clock().cursor();
         let mut processed = false;
@@ -234,7 +248,7 @@ mod tests {
     #[test]
     fn successful_processing_precedes_cursor_commit() {
         let bytes = fixture("camera_front_3s.mcap");
-        let mut playback = McapPlayback::new(bytes.as_slice()).unwrap();
+        let mut playback = McapPlayback::copy_from_slice(bytes.as_slice()).unwrap();
         playback.clock_mut().toggle();
         let committed = playback.clock().cursor();
         let requested = playback.clock().cursor_after(Duration::from_millis(100));
@@ -250,7 +264,7 @@ mod tests {
     #[test]
     fn failed_restore_read_never_calls_restore_or_commits_cursor() {
         let (bytes, corrupt_target) = corrupt_last_chunk(fixture("camera_7_5s.mcap"));
-        let mut playback = McapPlayback::new(bytes.as_slice()).unwrap();
+        let mut playback = McapPlayback::copy_from_slice(bytes.as_slice()).unwrap();
         let committed = playback.clock().cursor();
         let mut restored = false;
         let restore_plan = RestorePlan {
@@ -287,7 +301,7 @@ mod tests {
     #[test]
     fn restore_application_failure_preserves_source_position_and_cursor() {
         let bytes = fixture("camera_front_3s.mcap");
-        let mut playback = McapPlayback::new(bytes).unwrap();
+        let mut playback = McapPlayback::copy_from_slice((bytes).as_ref()).unwrap();
         let committed = playback.clock().cursor();
         let target = ArrivalTime((playback.clock().start().0 + playback.clock().end().0) / 2);
         let plan = RestorePlan {

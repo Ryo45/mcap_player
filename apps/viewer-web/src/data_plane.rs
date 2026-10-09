@@ -38,22 +38,96 @@ pub(crate) struct LoadedWindow {
     pub diagnostics: WindowLoadDiagnostics,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct DataLoadError(String);
-
+#[derive(Clone, Debug)]
+pub(crate) enum DataLoadError {
+    Window(viewer_core::DataWindowError),
+    Mcap(std::sync::Arc<mcap::McapError>),
+    Indexed(viewer_core::IndexedPlanError),
+    Protocol(viewer_remote_protocol::ProtocolError),
+    Io(std::sync::Arc<std::io::Error>),
+    Remote(crate::remote::RemoteClientError),
+    #[cfg(target_arch = "wasm32")]
+    LocalCatalog(crate::local::LocalCatalogError),
+    #[cfg(target_arch = "wasm32")]
+    Browser(std::rc::Rc<wasm_bindgen::JsValue>),
+    InvalidData(String),
+}
 impl DataLoadError {
-    pub(crate) fn new(message: impl Into<String>) -> Self {
-        Self(message.into())
+    pub(crate) fn invalid_record(message: impl Into<String>) -> Self {
+        Self::InvalidData(message.into())
     }
 }
-
 impl fmt::Display for DataLoadError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.0)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            #[cfg(target_arch = "wasm32")]
+            Self::LocalCatalog(error) => error.fmt(f),
+            #[cfg(target_arch = "wasm32")]
+            Self::Browser(value) => write!(f, "Browser File API error: {value:?}"),
+            Self::InvalidData(reason) => f.write_str(reason),
+            Self::Window(error) => error.fmt(f),
+            Self::Mcap(error) => error.fmt(f),
+            Self::Indexed(error) => error.fmt(f),
+            Self::Protocol(error) => error.fmt(f),
+            Self::Io(error) => error.fmt(f),
+            Self::Remote(error) => error.fmt(f),
+        }
+    }
+}
+impl Error for DataLoadError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            #[cfg(target_arch = "wasm32")]
+            Self::LocalCatalog(error) => Some(error),
+            #[cfg(target_arch = "wasm32")]
+            Self::Browser(_) => None,
+            Self::InvalidData(_) => None,
+            Self::Window(error) => Some(error),
+            Self::Mcap(error) => Some(error.as_ref()),
+            Self::Indexed(error) => Some(error),
+            Self::Protocol(error) => Some(error),
+            Self::Io(error) => Some(error.as_ref()),
+            Self::Remote(error) => Some(error),
+        }
+    }
+}
+impl From<viewer_core::DataWindowError> for DataLoadError {
+    fn from(error: viewer_core::DataWindowError) -> Self {
+        Self::Window(error)
+    }
+}
+impl From<mcap::McapError> for DataLoadError {
+    fn from(error: mcap::McapError) -> Self {
+        Self::Mcap(std::sync::Arc::new(error))
+    }
+}
+impl From<viewer_core::IndexedPlanError> for DataLoadError {
+    fn from(error: viewer_core::IndexedPlanError) -> Self {
+        Self::Indexed(error)
+    }
+}
+impl From<viewer_remote_protocol::ProtocolError> for DataLoadError {
+    fn from(error: viewer_remote_protocol::ProtocolError) -> Self {
+        Self::Protocol(error)
+    }
+}
+impl From<std::io::Error> for DataLoadError {
+    fn from(error: std::io::Error) -> Self {
+        Self::Io(std::sync::Arc::new(error))
+    }
+}
+impl From<crate::remote::RemoteClientError> for DataLoadError {
+    fn from(error: crate::remote::RemoteClientError) -> Self {
+        Self::Remote(error)
     }
 }
 
-impl Error for DataLoadError {}
+#[cfg(target_arch = "wasm32")]
+impl From<crate::local::LocalCatalogError> for DataLoadError {
+    fn from(error: crate::local::LocalCatalogError) -> Self {
+        Self::LocalCatalog(error)
+    }
+}
 
 /// Poll-based boundary implemented by browser and remote recording loaders.
 pub(crate) trait WindowLoader {
@@ -144,22 +218,54 @@ pub(crate) struct RecordingDataPlaneDiagnostics {
     pub eviction_count: u64,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct DataPlaneError(String);
-
-impl DataPlaneError {
-    fn new(message: impl Into<String>) -> Self {
-        Self(message.into())
-    }
+#[derive(Clone, Debug)]
+pub(crate) enum DataPlaneError {
+    Window(viewer_core::DataWindowError),
+    Load(DataLoadError),
+    EmptyRecordingRange,
+    SeekOutsideRecording {
+        target: ArrivalTime,
+        start: ArrivalTime,
+        end_exclusive: ArrivalTime,
+    },
 }
-
 impl fmt::Display for DataPlaneError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.0)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::EmptyRecordingRange => write!(f, "recording data range is empty"),
+            Self::SeekOutsideRecording {
+                target,
+                start,
+                end_exclusive,
+            } => write!(
+                f,
+                "seek target {} is outside recording [{}, {})",
+                target.0, start.0, end_exclusive.0
+            ),
+            Self::Window(error) => error.fmt(f),
+            Self::Load(error) => error.fmt(f),
+        }
     }
 }
-
-impl Error for DataPlaneError {}
+impl Error for DataPlaneError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Window(error) => Some(error),
+            Self::Load(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+impl From<viewer_core::DataWindowError> for DataPlaneError {
+    fn from(error: viewer_core::DataWindowError) -> Self {
+        Self::Window(error)
+    }
+}
+impl From<DataLoadError> for DataPlaneError {
+    fn from(error: DataLoadError) -> Self {
+        Self::Load(error)
+    }
+}
 
 pub(crate) struct RecordingDataPlane<L> {
     planner: FetchPlanner,
@@ -188,12 +294,12 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
         profile: FetchProfile,
     ) -> Result<Self, DataPlaneError> {
         if start >= end_exclusive {
-            return Err(DataPlaneError::new("recording data range is empty"));
+            return Err(DataPlaneError::EmptyRecordingRange);
         }
         Ok(Self {
             planner: FetchPlanner::new(profile),
             store: MemoryWindowStore::new(start, profile.max_resident_bytes())
-                .map_err(|error| DataPlaneError::new(error.to_string()))?,
+                .map_err(DataPlaneError::from)?,
             loader,
             start,
             end_exclusive,
@@ -213,13 +319,13 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
         let loaded = match result {
             Ok(loaded) => loaded,
             Err(error) => {
-                let error = DataPlaneError::new(error.to_string());
+                let error = DataPlaneError::from(error);
                 self.failed = Some(error.clone());
                 return Err(error);
             }
         };
         if let Err(error) = self.store.insert(loaded.window) {
-            let error = DataPlaneError::new(error.to_string());
+            let error = DataPlaneError::from(error);
             self.failed = Some(error.clone());
             return Err(error);
         }
@@ -252,7 +358,7 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
             return Ok(());
         };
         if let Err(error) = self.loader.request(range) {
-            let error = DataPlaneError::new(error.to_string());
+            let error = DataPlaneError::from(error);
             self.failed = Some(error.clone());
             return Err(error);
         }
@@ -265,10 +371,11 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
 
     pub(crate) fn begin_seek(&mut self, target: ArrivalTime) -> Result<(), DataPlaneError> {
         if target < self.start || target >= self.end_exclusive {
-            return Err(DataPlaneError::new(format!(
-                "seek target {} is outside recording [{}, {})",
-                target.0, self.start.0, self.end_exclusive.0
-            )));
+            return Err(DataPlaneError::SeekOutsideRecording {
+                target,
+                start: self.start,
+                end_exclusive: self.end_exclusive,
+            });
         }
         self.loader.cancel();
         self.store.reset(target);
@@ -373,7 +480,7 @@ mod tests {
         fn request(&mut self, range: DataWindowTimeRange) -> Result<(), DataLoadError> {
             let mut shared = self.shared.borrow_mut();
             if shared.requested.is_some() {
-                return Err(DataLoadError::new("test loader is not idle"));
+                return Err(DataLoadError::invalid_record("test loader is not idle"));
             }
             shared.requested = Some(range);
             self.metrics.load_requests += 1;
@@ -545,7 +652,7 @@ mod tests {
         shared
             .borrow_mut()
             .results
-            .push_back(Err(DataLoadError::new("stale or failed load")));
+            .push_back(Err(DataLoadError::invalid_record("stale or failed load")));
 
         assert!(data.poll(ArrivalTime(0)).is_err());
         assert_eq!(data.resident_bytes(), 0);
@@ -631,5 +738,44 @@ mod tests {
         let diagnostics = data.diagnostics(ArrivalTime(0), PlaybackSpeed::Double);
         assert_eq!(diagnostics.target_ahead, Duration::from_secs(4));
         assert_eq!(diagnostics.actual_buffer_ahead, Duration::from_secs(3));
+    }
+}
+
+#[cfg(test)]
+mod error_chain_tests {
+    use super::*;
+    #[test]
+    fn transport_and_playback_layers_preserve_window_error_type_and_bounds() {
+        let cause = viewer_core::DataWindowError::NonContiguousWindow {
+            actual_start: ArrivalTime(20),
+            expected_start: ArrivalTime(10),
+        };
+        let error = crate::playback::WebPlaybackError::from(DataPlaneError::from(cause));
+        let window = error
+            .source()
+            .unwrap()
+            .source()
+            .unwrap()
+            .downcast_ref::<viewer_core::DataWindowError>()
+            .unwrap();
+        assert!(matches!(
+            window,
+            viewer_core::DataWindowError::NonContiguousWindow {
+                actual_start: ArrivalTime(20),
+                expected_start: ArrivalTime(10)
+            }
+        ));
+        let io = DataLoadError::from(std::io::Error::new(
+            std::io::ErrorKind::UnexpectedEof,
+            "short source read",
+        ));
+        assert_eq!(
+            io.source()
+                .unwrap()
+                .downcast_ref::<std::io::Error>()
+                .unwrap()
+                .kind(),
+            std::io::ErrorKind::UnexpectedEof
+        );
     }
 }

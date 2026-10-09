@@ -1,0 +1,27 @@
+services:
+  dev:
+    image: mcap-player-dev:rust-1.91.1-jazzy
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        DEV_UID: ${MCAP_DEV_UID:-1000}
+        DEV_GID: ${MCAP_DEV_GID:-1000}
+    init: true
+    stdin_open: true
+    tty: true
+    working_dir: /workspace/mcap_player
+    volumes:
+      - .:/workspace/mcap_player
+      - cargo-registry:/home/dev/.cargo/registry
+      - cargo-git:/home/dev/.cargo/git
+      - cargo-target:/home/dev/target
+      - tools-cache:/home/dev/.cache
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8081:8081"
+volumes:
+  cargo-registry:
+  cargo-git:
+  cargo-target:
+  tools-cache:

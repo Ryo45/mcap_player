@@ -147,9 +147,11 @@ impl SessionPlan {
             .collect::<Vec<_>>();
         for topic in &requirements.camera_topics {
             if !selected_cameras.iter().any(|stream| &stream.topic == topic) {
-                return Err(SessionPlanError(format!(
-                    "required Camera topic {topic} is not a CDR CompressedImage stream"
-                )));
+                return Err(SessionPlanError::MissingRequiredStream {
+                    feature: "Camera",
+                    topic: topic.clone(),
+                    expected_schema: COMPRESSED_IMAGE_SCHEMA,
+                });
             }
         }
         let priority_is_required =
@@ -159,9 +161,9 @@ impl SessionPlan {
                 .iter()
                 .any(|stream| stream.topic == priority_camera_topic)
         {
-            return Err(SessionPlanError(format!(
-                "priority Camera topic {priority_camera_topic} is not a selected CDR CompressedImage stream"
-            )));
+            return Err(SessionPlanError::MissingPriorityCamera {
+                topic: priority_camera_topic.into(),
+            });
         }
         if let Some(priority_index) = selected_cameras
             .iter()
@@ -177,9 +179,9 @@ impl SessionPlan {
             .into_iter()
             .enumerate()
             .map(|(index, stream)| {
-                let camera_id = u16::try_from(index).map(CameraId).map_err(|_| {
-                    SessionPlanError("source contains too many selected Camera streams".into())
-                })?;
+                let camera_id = u16::try_from(index)
+                    .map(CameraId)
+                    .map_err(|_| SessionPlanError::TooManyCameraStreams)?;
                 Ok(CameraRoute { stream, camera_id })
             })
             .collect::<Result<Vec<_>, SessionPlanError>>()?;
@@ -202,10 +204,10 @@ impl SessionPlan {
             && dynamic_tf_stream.is_none()
             && static_tf_stream.is_none()
         {
-            return Err(SessionPlanError(format!(
-                "required Transform input is unavailable on {} or {}",
-                bindings.dynamic_tf_topic, bindings.static_tf_topic
-            )));
+            return Err(SessionPlanError::MissingTransforms {
+                dynamic_topic: bindings.dynamic_tf_topic.clone(),
+                static_topic: bindings.static_tf_topic.clone(),
+            });
         }
 
         let plan = Self {
@@ -238,10 +240,9 @@ impl SessionPlan {
         if catalog.time_range.is_some() {
             let capabilities = catalog.capabilities;
             if !capabilities.catalog || !capabilities.forward_playback || !capabilities.exact_seek {
-                return Err(SessionPlanError(
-                    "recording source does not provide Catalog, ForwardPlayback and ExactSeek"
-                        .into(),
-                ));
+                return Err(SessionPlanError::MissingPlaybackCapabilities {
+                    provided: capabilities,
+                });
             }
             for input in plan.restore_inputs() {
                 let supported = match input.semantics {
@@ -250,10 +251,10 @@ impl SessionPlan {
                     RestoreSemantics::Persistent => capabilities.persistent_restore,
                 };
                 if !supported {
-                    return Err(SessionPlanError(format!(
-                        "recording source cannot satisfy {:?} restore for stream {}",
-                        input.semantics, input.stream_id.0
-                    )));
+                    return Err(SessionPlanError::UnsupportedRestore {
+                        stream: input.stream_id,
+                        semantics: input.semantics,
+                    });
                 }
             }
         }
@@ -385,15 +386,17 @@ fn select_stream(
 fn resolve_requirement(
     catalog: &SourceCatalog,
     topic: &str,
-    expected_schema: &str,
-    feature: &str,
+    expected_schema: &'static str,
+    feature: &'static str,
     level: RequirementLevel,
 ) -> Result<Option<StreamDescriptor>, SessionPlanError> {
     let selected = select_stream(catalog, topic, expected_schema);
     if level == RequirementLevel::Required && selected.is_none() {
-        return Err(SessionPlanError(format!(
-            "required {feature} topic {topic} is not an expected CDR stream ({expected_schema})"
-        )));
+        return Err(SessionPlanError::MissingRequiredStream {
+            feature,
+            topic: topic.into(),
+            expected_schema,
+        });
     }
     Ok((level != RequirementLevel::Disabled)
         .then_some(selected)
@@ -405,14 +408,65 @@ fn accepts(stream: &StreamDescriptor, expected_schema: &str) -> bool {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct SessionPlanError(String);
-
+pub enum SessionPlanError {
+    MissingRequiredStream {
+        feature: &'static str,
+        topic: String,
+        expected_schema: &'static str,
+    },
+    MissingPriorityCamera {
+        topic: String,
+    },
+    MissingTransforms {
+        dynamic_topic: String,
+        static_topic: String,
+    },
+    TooManyCameraStreams,
+    MissingPlaybackCapabilities {
+        provided: crate::SourceCapabilities,
+    },
+    UnsupportedRestore {
+        stream: StreamId,
+        semantics: RestoreSemantics,
+    },
+}
 impl fmt::Display for SessionPlanError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.0)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::MissingRequiredStream {
+                feature,
+                topic,
+                expected_schema,
+            } => write!(
+                f,
+                "required {feature} topic {topic} is not an expected CDR stream ({expected_schema})"
+            ),
+            Self::MissingPriorityCamera { topic } => write!(
+                f,
+                "priority Camera topic {topic} is not a selected CDR CompressedImage stream"
+            ),
+            Self::MissingTransforms {
+                dynamic_topic,
+                static_topic,
+            } => write!(
+                f,
+                "required Transform input is unavailable on {dynamic_topic} or {static_topic}"
+            ),
+            Self::TooManyCameraStreams => {
+                write!(f, "source contains too many selected Camera streams")
+            }
+            Self::MissingPlaybackCapabilities { .. } => write!(
+                f,
+                "recording source does not provide Catalog, ForwardPlayback and ExactSeek"
+            ),
+            Self::UnsupportedRestore { stream, semantics } => write!(
+                f,
+                "recording source cannot satisfy {semantics:?} restore for stream {}",
+                stream.0
+            ),
+        }
     }
 }
-
 impl std::error::Error for SessionPlanError {}
 
 #[cfg(test)]

@@ -1,24 +1,26 @@
 //! One cancellable selected-field query worker per session, with bounded UI products.
+use crate::query_error::QueryLoadError;
 use std::{
-    path::PathBuf,
     sync::{
         Arc,
         atomic::{AtomicBool, Ordering},
     },
     thread::JoinHandle,
 };
+#[cfg(test)]
+use viewer_core::NumericPlotError;
 use viewer_core::{
     McapSource, NumericPlotOverview, NumericPlotOverviewBatch, NumericSeriesRequest,
 };
 
 pub(crate) struct NumericSeriesState {
     pub request: NumericSeriesRequest,
-    pub result: Option<Result<NumericPlotOverview, String>>,
+    pub result: Option<Result<NumericPlotOverview, Arc<QueryLoadError>>>,
 }
 struct Worker {
     requests: Vec<NumericSeriesRequest>,
     cancel: Arc<AtomicBool>,
-    handle: JoinHandle<Result<NumericPlotOverviewBatch, String>>,
+    handle: JoinHandle<Result<NumericPlotOverviewBatch, Arc<QueryLoadError>>>,
 }
 #[derive(Default)]
 pub(crate) struct NumericPlotLoader {
@@ -66,7 +68,7 @@ impl NumericPlotLoader {
             self.worker = Some(worker);
         }
     }
-    pub fn poll(&mut self, path: Option<&PathBuf>) {
+    pub fn poll(&mut self, source: Option<&McapSource>) {
         if self
             .worker
             .as_ref()
@@ -74,10 +76,11 @@ impl NumericPlotLoader {
         {
             let worker = self.worker.take().unwrap();
             let cancelled = worker.cancel.load(Ordering::Relaxed);
-            let result = worker
-                .handle
-                .join()
-                .unwrap_or_else(|_| Err("numeric plot worker failed".into()));
+            let result = worker.handle.join().unwrap_or_else(|_| {
+                Err(Arc::new(QueryLoadError::WorkerPanicked {
+                    worker: "numeric plot",
+                }))
+            });
             if !cancelled {
                 let results = match result {
                     Ok(batch) => batch.series.into_iter().map(Ok).collect::<Vec<_>>(),
@@ -93,7 +96,7 @@ impl NumericPlotLoader {
         if self.worker.is_some() {
             return;
         }
-        let Some(path) = path.cloned() else {
+        let Some(source) = source else {
             return;
         };
         let Some(first) = self.series.iter().find(|s| s.result.is_none()) else {
@@ -110,19 +113,17 @@ impl NumericPlotLoader {
             .map(|s| s.request.clone())
             .collect::<Vec<_>>();
         let job = requests.clone();
+        let source = source.fork_reader();
         let cancel = Arc::new(AtomicBool::new(false));
         let job_cancel = cancel.clone();
         match std::thread::Builder::new()
             .name("numeric-plot".into())
             .spawn(move || {
-                let file = std::fs::File::open(path).map_err(|e| e.to_string())?;
-                // SAFETY: recording mapping is read-only, with the same file immutability contract
-                // as the session's playback source.
-                let mapping = unsafe { memmap2::Mmap::map(&file) }.map_err(|e| e.to_string())?;
-                let source = McapSource::from_owner(mapping).map_err(|e| e.to_string())?;
-                source.query_numeric_overviews_cancellable(&job, || {
-                    job_cancel.load(Ordering::Relaxed)
-                })
+                source
+                    .query_numeric_overviews_cancellable(&job, || {
+                        job_cancel.load(Ordering::Relaxed)
+                    })
+                    .map_err(|error| Arc::new(QueryLoadError::Numeric(error)))
             }) {
             Ok(handle) => {
                 self.worker = Some(Worker {
@@ -132,12 +133,16 @@ impl NumericPlotLoader {
                 })
             }
             Err(error) => {
+                let error = Arc::new(QueryLoadError::StartWorker {
+                    worker: "numeric plot",
+                    source: error,
+                });
                 for series in self
                     .series
                     .iter_mut()
                     .filter(|s| requests.contains(&s.request))
                 {
-                    series.result = Some(Err(error.to_string()));
+                    series.result = Some(Err(error.clone()));
                 }
             }
         }
@@ -193,7 +198,9 @@ mod tests {
             receive
                 .recv_timeout(std::time::Duration::from_secs(5))
                 .unwrap();
-            Err("stale result".into())
+            Err(Arc::new(QueryLoadError::Numeric(
+                NumericPlotError::UnknownStream(StreamId(1)),
+            )))
         });
         loader.worker = Some(Worker {
             requests: vec![request(1)],
@@ -252,7 +259,7 @@ mod source_replacement_tests {
             next.add(request.clone());
             next.take_worker_from(&mut previous);
             assert!(previous.worker.is_none());
-            next.poll(Some(&PathBuf::from("must-not-be-opened")));
+            next.poll(None);
             assert!(next.worker.is_some());
             assert!(next.series[0].result.is_none());
             previous = next;
@@ -286,7 +293,9 @@ mod regroup_tests {
             receive
                 .recv_timeout(std::time::Duration::from_secs(5))
                 .unwrap();
-            Err("old scan".into())
+            Err(Arc::new(QueryLoadError::Numeric(
+                NumericPlotError::UnknownStream(StreamId(1)),
+            )))
         });
         let mut loader = NumericPlotLoader::default();
         loader.add(request.clone());

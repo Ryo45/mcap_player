@@ -43,6 +43,10 @@ impl RecordingTimeRange {
         })
     }
 
+    pub fn end_inclusive(self) -> ArrivalTime {
+        ArrivalTime(self.end_exclusive.0 - 1)
+    }
+
     pub fn duration_ns(self) -> u64 {
         self.end_exclusive.0.saturating_sub(self.start.0) as u64
     }
