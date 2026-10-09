@@ -106,6 +106,7 @@ impl NativePanel {
                 ui,
                 InspectorPanelInput {
                     inspections: input.inspections,
+                    cursor: input.playback.map(|view| view.cursor),
                 },
             ),
             Self::Scene(panel) => panel.show(
@@ -149,9 +150,9 @@ impl NativePanel {
         match self {
             Self::Camera(panel) => panel.state.focused_camera = focused_camera,
             Self::Plot(panel) => panel.reset_for_source(),
+            Self::Inspector(panel) => panel.reset_for_source(),
             Self::Explore
             | Self::Bev(_)
-            | Self::Inspector(_)
             | Self::Scene(_)
             | Self::Status(_)
             | Self::Placeholder(_) => {}

@@ -16,7 +16,14 @@ pub(crate) fn show_topics(
             for entry in &tree.entries {
                 ui.push_id(entry.stream_id.0, |ui| {
                     ui.collapsing(&entry.topic, |ui| {
-                        ui.small(&entry.schema_name);
+                        ui.horizontal(|ui| {
+                            ui.small(&entry.schema_name);
+                            if ui.small_button("Inspect at cursor").clicked() {
+                                actions.push(ViewerAction::SelectInspectorTopic(Some(
+                                    entry.topic.clone(),
+                                )));
+                            }
+                        });
                         if let Some(definition) = &entry.schema_definition {
                             ui.collapsing("Schema definition", |ui| {
                                 ui.small(&definition.encoding);

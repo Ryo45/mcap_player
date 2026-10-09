@@ -141,6 +141,13 @@ The `explore` preset contains one stateless Explore panel. It contributes no pla
 or Inspector requirement, allowing catalog/schema browsing and dynamic field plots on scalar-only
 recordings. Standard/showcase continue to validate their explicitly required continuous inputs.
 
+Inspector panels configure `{"topic": "/topic"}` and query latest-before at the committed cursor.
+Topic Tree selection opens a dynamic Generic Inspector window with the same query/view path.
+Inspector field expansion/page navigation is presentation state in the panel/runtime store; decoded
+models are session query products. No Inspector configuration contributes playback requirements.
+See [architecture](message_centric_architecture.md) for cache, payload/page limits and unsupported
+schema encodings.
+
 ## Deliberate limitations
 
 There is no split dragging, tabs, layout editing, file import/export, user

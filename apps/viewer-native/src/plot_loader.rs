@@ -454,9 +454,9 @@ mod tests {
         let current_generation = loader.generation;
         loader.apply_result(PlotLoadResult {
             generation: current_generation.wrapping_sub(1),
-            result: Err(Arc::new(QueryLoadError::MissingTopic(
-                "stale failure".into(),
-            ))),
+            result: Err(Arc::new(QueryLoadError::WorkerPanicked {
+                worker: "stale failure",
+            })),
             elapsed_ms: 0.0,
             complete: true,
         });
@@ -464,21 +464,27 @@ mod tests {
         assert!(loader.error().is_none());
         loader.apply_result(PlotLoadResult {
             generation: current_generation,
-            result: Err(Arc::new(QueryLoadError::MissingTopic(
-                "current failure".into(),
-            ))),
+            result: Err(Arc::new(QueryLoadError::WorkerPanicked {
+                worker: "current failure",
+            })),
             elapsed_ms: 0.0,
             complete: true,
         });
-        assert!(
-            matches!(loader.error(),Some(QueryLoadError::MissingTopic(topic)) if topic=="current failure")
-        );
+        assert!(matches!(
+            loader.error(),
+            Some(QueryLoadError::WorkerPanicked {
+                worker: "current failure"
+            })
+        ));
         for signal_id in [SignalId::Speed, SignalId::YawRate] {
             let view = loader.query_view().get(signal_id);
             assert!(!view.loading);
-            assert!(
-                matches!(view.error,Some(QueryLoadError::MissingTopic(topic)) if topic=="current failure")
-            );
+            assert!(matches!(
+                view.error,
+                Some(QueryLoadError::WorkerPanicked {
+                    worker: "current failure"
+                })
+            ));
         }
     }
 

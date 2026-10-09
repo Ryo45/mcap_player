@@ -114,6 +114,12 @@ impl Graphics {
                 render_input.numeric_series,
                 playback,
             ));
+            actions.extend(panels.show_topic_inspector(
+                context,
+                render_input.inspector_topic,
+                render_input.inspections,
+                playback.map(|view| view.cursor),
+            ));
             egui::CentralPanel::default().show(context, |ui| {
                 let output = show_layout_host(
                     ui,

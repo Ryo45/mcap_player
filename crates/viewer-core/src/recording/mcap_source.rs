@@ -3,7 +3,7 @@
 use crate::{
     ArrivalTime, IndexedChunkFact, RangeQuery, RangeQueryError, RangeQueryResult, RawMessage,
     RecordingTimeRange, SourceCapabilities, SourceCatalog, StreamDescriptor, StreamId,
-    StreamTimingSummary, ensure_indexed, history_candidate_chunks, latest_candidate_chunks,
+    StreamTimingSummary, ensure_indexed, history_candidate_chunks,
 };
 use bytes::Bytes;
 use mcap::{Summary, records::op};
@@ -70,7 +70,7 @@ impl fmt::Display for McapOpenError {
                 f,
                 "source record of {requested} bytes exceeds {maximum} byte limit"
             ),
-            Self::QueryCancelled => write!(f, "numeric query cancelled"),
+            Self::QueryCancelled => write!(f, "recording query cancelled"),
             Self::TimestampOverflow => write!(f, "MCAP timestamp exceeds signed nanosecond range"),
             Self::Decompression { format, source } => write!(f, "{format} decompression: {source}"),
             Self::MessageIndexRequired(error) => write!(
@@ -122,6 +122,7 @@ pub struct McapSource {
     position: usize,
     selected_streams: Option<HashSet<StreamId>>,
     index_facts: std::sync::Arc<[IndexedChunkFact]>,
+    stream_chunks: std::sync::Arc<HashMap<StreamId, StreamChunks>>,
 }
 
 pub(crate) struct McapSourcePosition {
@@ -241,6 +242,25 @@ impl McapSource {
                     .collect::<BTreeSet<_>>(),
             })
             .collect();
+        let mut stream_chunks = HashMap::<StreamId, StreamChunks>::new();
+        for (chunk, fact) in index_facts.iter().enumerate() {
+            for stream in &fact.indexed_streams {
+                stream_chunks.entry(*stream).or_default().chunks.push(chunk);
+            }
+        }
+        for index in stream_chunks.values_mut() {
+            index
+                .chunks
+                .sort_by_key(|chunk| (index_facts[*chunk].start, *chunk));
+            let mut max = ArrivalTime(i64::MIN);
+            let mut max_chunk = 0;
+            for chunk in &index.chunks {
+                max = max.max(index_facts[*chunk].end_inclusive);
+                index.prefix_max_end.push(max);
+                max_chunk = max_chunk.max(*chunk);
+                index.prefix_max_chunk.push(max_chunk);
+            }
+        }
         Ok(Self {
             backing,
             summary: std::sync::Arc::new(summary),
@@ -251,6 +271,7 @@ impl McapSource {
             position: 0,
             selected_streams: None,
             index_facts: std::sync::Arc::from(index_facts),
+            stream_chunks: std::sync::Arc::new(stream_chunks),
         })
     }
 
@@ -266,6 +287,7 @@ impl McapSource {
             position: 0,
             selected_streams: None,
             index_facts: self.index_facts.clone(),
+            stream_chunks: self.stream_chunks.clone(),
         }
     }
     pub fn summary(&self) -> &Summary {
@@ -538,49 +560,18 @@ impl McapSource {
         streams: &[StreamId],
         target: ArrivalTime,
     ) -> Result<IndexedMessages, McapOpenError> {
-        let summary = self.indexed_summary(streams)?;
+        self.indexed_summary(streams)?;
         let target = u64::try_from(target.0).map_err(|_| McapOpenError::TimestampOverflow)?;
-        let mut index_cache =
-            HashMap::<usize, HashMap<u16, Vec<mcap::records::MessageIndexEntry>>>::new();
+        let mut index_cache = HashMap::new();
         let mut candidates = BTreeMap::<usize, Vec<(StreamId, u64)>>::new();
-
         for stream in streams.iter().copied() {
-            let count = self
-                .catalog
-                .by_id(stream)
-                .and_then(|descriptor| descriptor.timing.message_count);
-            for chunk_index in latest_candidate_chunks(
-                &self.index_facts,
-                stream,
-                count,
-                ArrivalTime(i64::try_from(target).unwrap_or(i64::MAX)),
-            )
-            .map_err(McapOpenError::MessageIndexRequired)?
+            if let Some(position) =
+                self.latest_position(stream, target, &mut index_cache, true, &mut 0)?
             {
-                let chunk = &summary.chunk_indexes[chunk_index];
-                let indexes = if let Some(indexes) = index_cache.get(&chunk_index) {
-                    indexes
-                } else {
-                    let parsed = self.read_message_indexes(chunk)?;
-                    index_cache.insert(chunk_index, parsed);
-                    index_cache
-                        .get(&chunk_index)
-                        .expect("inserted Message Index cache entry")
-                };
-                let channel_id = u16::try_from(stream.0).map_err(|_| mcap::McapError::BadIndex)?;
-                let Some(entries) = indexes.get(&channel_id) else {
-                    continue;
-                };
-                let position = entries.partition_point(|entry| entry.log_time <= target);
-                let Some(entry) = position.checked_sub(1).and_then(|index| entries.get(index))
-                else {
-                    continue;
-                };
                 candidates
-                    .entry(chunk_index)
+                    .entry(position.chunk)
                     .or_default()
-                    .push((stream, entry.offset));
-                break;
+                    .push((stream, position.record_offset));
             }
         }
 
@@ -656,6 +647,71 @@ impl McapSource {
         )
     }
 
+    fn latest_position(
+        &self,
+        stream: StreamId,
+        target: u64,
+        index_cache: &mut HashMap<usize, HashMap<u16, Vec<mcap::records::MessageIndexEntry>>>,
+        retain_restore_indexes: bool,
+        index_reads: &mut u64,
+    ) -> Result<Option<IndexedMessagePosition>, McapOpenError> {
+        self.indexed_summary(&[stream])?;
+        let count = self
+            .catalog
+            .by_id(stream)
+            .and_then(|s| s.timing.message_count);
+        let Some(sparse) = self.stream_chunks.get(&stream) else {
+            return if count == Some(0) {
+                Ok(None)
+            } else {
+                Err(McapOpenError::MessageIndexRequired(
+                    crate::IndexedPlanError { stream },
+                ))
+            };
+        };
+        let target_time =
+            ArrivalTime(i64::try_from(target).map_err(|_| McapOpenError::TimestampOverflow)?);
+        let end = sparse
+            .chunks
+            .partition_point(|chunk| self.index_facts[*chunk].start <= target_time);
+        let mut best = None::<(u64, IndexedMessagePosition)>;
+        for cursor in (0..end).rev() {
+            if best.as_ref().is_some_and(|(time, position)| {
+                sparse.prefix_max_end[cursor].0 < *time as i64
+                    || (sparse.prefix_max_end[cursor].0 == *time as i64
+                        && sparse.prefix_max_chunk[cursor] < position.chunk)
+            }) {
+                break;
+            }
+            let chunk = sparse.chunks[cursor];
+            if !index_cache.contains_key(&chunk) {
+                if !retain_restore_indexes {
+                    index_cache.clear();
+                }
+                let parsed = self.read_message_indexes(&self.summary.chunk_indexes[chunk])?;
+                index_cache.insert(chunk, parsed);
+                *index_reads = index_reads.saturating_add(1);
+            }
+            let channel = u16::try_from(stream.0).map_err(|_| mcap::McapError::BadIndex)?;
+            if let Some(entries) = index_cache[&chunk].get(&channel) {
+                let index = entries.partition_point(|entry| entry.log_time <= target);
+                if let Some(entry) = index.checked_sub(1).and_then(|i| entries.get(i)) {
+                    let position = IndexedMessagePosition {
+                        chunk,
+                        record_offset: entry.offset,
+                    };
+                    if best.as_ref().is_none_or(|(time, old)| {
+                        (entry.log_time, position.chunk, position.record_offset)
+                            > (*time, old.chunk, old.record_offset)
+                    }) {
+                        best = Some((entry.log_time, position));
+                    }
+                }
+            }
+        }
+        Ok(best.map(|(_, position)| position))
+    }
+
     fn read_message_indexes(
         &self,
         chunk: &mcap::records::ChunkIndex,
@@ -698,7 +754,9 @@ impl McapSource {
             if index.channel_id != *channel {
                 return Err(mcap::McapError::BadIndex.into());
             }
-            indexes.insert(*channel, index.records);
+            let mut records = index.records;
+            records.sort_by_key(|entry| (entry.log_time, entry.offset));
+            indexes.insert(*channel, records);
         }
         Ok(indexes)
     }
@@ -812,6 +870,104 @@ impl McapSource {
             return Err(mcap::McapError::BadIndex.into());
         }
         Ok(u32::from_le_bytes(bytes[33..37].try_into().unwrap()))
+    }
+}
+
+#[derive(Default)]
+struct StreamChunks {
+    chunks: Vec<usize>,
+    prefix_max_end: Vec<ArrivalTime>,
+    prefix_max_chunk: Vec<usize>,
+}
+
+/// Source-local exact record identity, for query view reuse. Not a persistent/global message ID.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct IndexedMessagePosition {
+    pub chunk: usize,
+    pub record_offset: u64,
+}
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct LatestQueryDiagnostics {
+    pub index_reads: u64,
+    pub chunks_read: u64,
+}
+/// Concrete cursor query accelerator: at most one Message Index span and one serialized chunk.
+/// Decoded Inspector view models are owned by the caller, never by this physical cache.
+pub struct LatestMessageReader {
+    source: McapSource,
+    indexes: HashMap<usize, HashMap<u16, Vec<mcap::records::MessageIndexEntry>>>,
+    chunk: Option<(usize, Vec<ParsedChunkMessage>)>,
+    diagnostics: LatestQueryDiagnostics,
+}
+impl LatestMessageReader {
+    pub fn new(source: McapSource) -> Self {
+        Self {
+            source,
+            indexes: HashMap::new(),
+            chunk: None,
+            diagnostics: LatestQueryDiagnostics::default(),
+        }
+    }
+    pub fn catalog(&self) -> &SourceCatalog {
+        self.source.catalog()
+    }
+    pub fn diagnostics(&self) -> LatestQueryDiagnostics {
+        self.diagnostics
+    }
+    pub fn read_at(
+        &mut self,
+        stream: StreamId,
+        target: ArrivalTime,
+    ) -> Result<Option<(IndexedMessagePosition, RawMessage)>, McapOpenError> {
+        self.read_at_cancellable(stream, target, || false)
+    }
+    pub fn read_at_cancellable(
+        &mut self,
+        stream: StreamId,
+        target: ArrivalTime,
+        mut cancelled: impl FnMut() -> bool,
+    ) -> Result<Option<(IndexedMessagePosition, RawMessage)>, McapOpenError> {
+        if cancelled() {
+            return Err(McapOpenError::QueryCancelled);
+        }
+        self.source.backing.validate()?;
+        if target < self.source.range.start {
+            return Ok(None);
+        }
+        let target = u64::try_from(target.0).map_err(|_| McapOpenError::TimestampOverflow)?;
+        let Some(position) = self.source.latest_position(
+            stream,
+            target,
+            &mut self.indexes,
+            false,
+            &mut self.diagnostics.index_reads,
+        )?
+        else {
+            return Ok(None);
+        };
+        if self
+            .chunk
+            .as_ref()
+            .is_none_or(|(chunk, _)| *chunk != position.chunk)
+        {
+            self.chunk = None;
+            let parsed = self
+                .source
+                .parse_chunk_cancellable(position.chunk, &mut cancelled)?;
+            self.chunk = Some((position.chunk, parsed));
+            self.diagnostics.chunks_read = self.diagnostics.chunks_read.saturating_add(1);
+        }
+        let messages = &self.chunk.as_ref().expect("loaded chunk").1;
+        let index = messages.partition_point(|m| m.offset < position.record_offset);
+        let message = messages
+            .get(index)
+            .filter(|m| {
+                m.offset == position.record_offset
+                    && m.message.stream_id == stream
+                    && m.message.arrival_time.0 as u64 <= target
+            })
+            .ok_or(mcap::McapError::BadIndex)?;
+        Ok(Some((position, message.message.clone())))
     }
 }
 

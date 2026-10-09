@@ -10,23 +10,23 @@ pub struct NumericField {
 }
 
 #[derive(Clone, Debug)]
-enum WireType {
+pub(crate) enum WireType {
     Scalar(String),
     String,
     Message(String),
     Array(Box<WireType>, Option<usize>),
 }
 #[derive(Clone, Debug)]
-struct Field {
-    name: String,
-    kind: WireType,
+pub(crate) struct Field {
+    pub(crate) name: String,
+    pub(crate) kind: WireType,
 }
 
 /// Parsed source metadata. Only ros2msg is supported by this vertical slice.
 #[derive(Clone, Debug)]
 pub struct RosMessageSchema {
-    root: String,
-    definitions: BTreeMap<String, Vec<Field>>,
+    pub(crate) root: String,
+    pub(crate) definitions: BTreeMap<String, Vec<Field>>,
 }
 
 fn unsupported(reason: impl Into<String>) -> DecodeError {
@@ -39,7 +39,7 @@ fn canonical(name: &str) -> String {
         name.into()
     }
 }
-fn scalar_size(name: &str) -> Option<usize> {
+pub(crate) fn scalar_size(name: &str) -> Option<usize> {
     match name {
         "bool" | "byte" | "char" | "int8" | "uint8" => Some(1),
         "int16" | "uint16" => Some(2),

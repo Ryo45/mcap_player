@@ -4,7 +4,6 @@ pub(crate) enum QueryLoadError {
     Source(viewer_core::McapOpenError),
     Numeric(viewer_core::NumericPlotError),
     Inspection(viewer_core::RangeQueryError),
-    MissingTopic(String),
     StartWorker {
         worker: &'static str,
         source: std::io::Error,
@@ -19,7 +18,6 @@ impl std::fmt::Display for QueryLoadError {
             Self::Source(error) => write!(f, "recording query: {error}"),
             Self::Numeric(error) => error.fmt(f),
             Self::Inspection(error) => error.fmt(f),
-            Self::MissingTopic(topic) => write!(f, "recording has no topic {topic}"),
             Self::StartWorker { worker, source } => write!(f, "start {worker} worker: {source}"),
             Self::WorkerPanicked { worker } => write!(f, "{worker} worker panicked"),
         }

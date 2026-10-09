@@ -4,6 +4,7 @@ use viewer_layout::PanelId;
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum ViewerAction {
     Playback(PlaybackCommand),
+    SelectInspectorTopic(Option<String>),
     AddNumericSeries {
         stream: viewer_core::StreamId,
         field_path: String,

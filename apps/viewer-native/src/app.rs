@@ -48,7 +48,7 @@ impl App {
         ) {
             Ok(mut session) => {
                 if let Some(previous) = &mut self.session {
-                    session.take_numeric_worker_from(previous);
+                    session.take_query_workers_from(previous);
                 }
                 self.diagnostics.reset_for_source();
                 self.workspace.configure_session(session.plan());
@@ -187,6 +187,7 @@ impl App {
                     playback,
                     signals,
                     inspections: session.inspections(),
+                    inspector_topic: session.selected_inspector_topic(),
                     topic_tree: session.topic_tree(),
                     numeric_series: session.numeric_series(),
                     preview: self.preview.snapshot(),
@@ -261,6 +262,9 @@ impl App {
         let mut playback_effect = PlaybackEffect::None;
         for action in actions {
             match workspace.apply_action(action) {
+                WorkspaceEffect::SelectInspectorTopic(topic) => {
+                    session.select_inspector_topic(topic)
+                }
                 WorkspaceEffect::AddNumericSeries(stream, path) => {
                     session.add_numeric_series(stream, path)
                 }

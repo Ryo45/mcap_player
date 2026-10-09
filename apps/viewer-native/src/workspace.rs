@@ -63,6 +63,7 @@ pub(crate) struct ViewerInteractionState {
 pub(crate) enum WorkspaceEffect {
     None,
     Playback(PlaybackCommand),
+    SelectInspectorTopic(Option<String>),
     AddNumericSeries(viewer_core::StreamId, String),
     RemoveNumericSeries(viewer_core::StreamId, String),
     BeginPreview(ArrivalTime),
@@ -193,6 +194,9 @@ impl NativeWorkspace {
 
     pub(crate) fn apply_action(&mut self, action: ViewerAction) -> WorkspaceEffect {
         match action {
+            ViewerAction::SelectInspectorTopic(topic) => {
+                WorkspaceEffect::SelectInspectorTopic(topic)
+            }
             ViewerAction::AddNumericSeries { stream, field_path } => {
                 WorkspaceEffect::AddNumericSeries(stream, field_path)
             }

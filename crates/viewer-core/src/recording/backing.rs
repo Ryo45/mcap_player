@@ -16,6 +16,13 @@ pub(super) enum Backing {
     File(std::sync::Arc<FileRanges>),
 }
 impl Backing {
+    pub fn validate(&self) -> Result<(), McapOpenError> {
+        match self {
+            Self::Bytes(_) => Ok(()),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::File(file) => file.check(),
+        }
+    }
     pub fn len(&self) -> u64 {
         match self {
             Self::Bytes(bytes) => bytes.len() as u64,

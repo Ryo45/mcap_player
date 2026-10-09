@@ -13,7 +13,10 @@ pub use indexed_plan::{
     IndexedChunkFact, IndexedPlanError, ensure_indexed, history_candidate_chunks,
     latest_candidate_chunks, persistent_candidate_chunks,
 };
-pub use mcap_source::{IndexedMessages, IndexedReadDiagnostics, McapOpenError, McapSource};
+pub use mcap_source::{
+    IndexedMessagePosition, IndexedMessages, IndexedReadDiagnostics, LatestMessageReader,
+    LatestQueryDiagnostics, McapOpenError, McapSource,
+};
 pub use range_query::{QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult};
 pub use raw_message::RawMessage;
 pub use restore::{

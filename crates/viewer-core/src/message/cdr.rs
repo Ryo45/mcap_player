@@ -1,6 +1,6 @@
 //! Concrete CDR codecs for the ROS messages consumed by viewer features.
 
-mod common;
+pub(crate) mod common;
 mod image;
 mod laser_scan;
 mod odometry;
@@ -21,4 +21,4 @@ pub use transform::{TransformStamped, decode_tf_message, encode_tf_message_cdr};
 mod tests;
 
 pub use numeric::{NumericField, NumericFieldExtractor, RosMessageSchema};
-mod numeric;
+pub(crate) mod numeric;
