@@ -7,16 +7,18 @@ use std::{
     },
     thread::JoinHandle,
 };
-use viewer_core::{McapSource, NumericPlotOverview, NumericSeriesRequest};
+use viewer_core::{
+    McapSource, NumericPlotOverview, NumericPlotOverviewBatch, NumericSeriesRequest,
+};
 
 pub(crate) struct NumericSeriesState {
     pub request: NumericSeriesRequest,
     pub result: Option<Result<NumericPlotOverview, String>>,
 }
 struct Worker {
-    request: NumericSeriesRequest,
+    requests: Vec<NumericSeriesRequest>,
     cancel: Arc<AtomicBool>,
-    handle: JoinHandle<Result<NumericPlotOverview, String>>,
+    handle: JoinHandle<Result<NumericPlotOverviewBatch, String>>,
 }
 #[derive(Default)]
 pub(crate) struct NumericPlotLoader {
@@ -26,6 +28,15 @@ pub(crate) struct NumericPlotLoader {
 impl NumericPlotLoader {
     pub fn add(&mut self, request: NumericSeriesRequest) {
         if self.series.len() < 8 && !self.series.iter().any(|s| s.request == request) {
+            if let Some(worker) = &self.worker
+                && worker
+                    .requests
+                    .iter()
+                    .any(|r| r.stream_id == request.stream_id && r.range == request.range)
+            {
+                // Restart a still-loading group so newly selected fields share its full scan.
+                worker.cancel.store(true, Ordering::Relaxed);
+            }
             self.series.push(NumericSeriesState {
                 request,
                 result: None,
@@ -36,10 +47,23 @@ impl NumericPlotLoader {
         self.series
             .retain(|s| s.request.stream_id != stream || s.request.field_path != path);
         if let Some(worker) = &self.worker
-            && worker.request.stream_id == stream
-            && worker.request.field_path == path
+            && worker
+                .requests
+                .iter()
+                .any(|r| r.stream_id == stream && r.field_path == path)
         {
             worker.cancel.store(true, Ordering::Relaxed);
+        }
+    }
+    /// Keep one worker across source replacement without blocking the UI on a chunk decode.
+    pub fn take_worker_from(&mut self, previous: &mut Self) {
+        if let Some(worker) = previous.worker.take() {
+            worker.cancel.store(true, Ordering::Relaxed);
+            assert!(
+                self.worker.is_none(),
+                "new source has not started numeric queries"
+            );
+            self.worker = Some(worker);
         }
     }
     pub fn poll(&mut self, path: Option<&PathBuf>) {
@@ -54,10 +78,16 @@ impl NumericPlotLoader {
                 .handle
                 .join()
                 .unwrap_or_else(|_| Err("numeric plot worker failed".into()));
-            if !cancelled
-                && let Some(series) = self.series.iter_mut().find(|s| s.request == worker.request)
-            {
-                series.result = Some(result);
+            if !cancelled {
+                let results = match result {
+                    Ok(batch) => batch.series.into_iter().map(Ok).collect::<Vec<_>>(),
+                    Err(error) => worker.requests.iter().map(|_| Err(error.clone())).collect(),
+                };
+                for (request, result) in worker.requests.into_iter().zip(results) {
+                    if let Some(series) = self.series.iter_mut().find(|s| s.request == request) {
+                        series.result = Some(result);
+                    }
+                }
             }
         }
         if self.worker.is_some() {
@@ -66,11 +96,20 @@ impl NumericPlotLoader {
         let Some(path) = path.cloned() else {
             return;
         };
-        let Some(series) = self.series.iter_mut().find(|s| s.result.is_none()) else {
+        let Some(first) = self.series.iter().find(|s| s.result.is_none()) else {
             return;
         };
-        let request = series.request.clone();
-        let job = request.clone();
+        let requests = self
+            .series
+            .iter()
+            .filter(|s| {
+                s.result.is_none()
+                    && s.request.stream_id == first.request.stream_id
+                    && s.request.range == first.request.range
+            })
+            .map(|s| s.request.clone())
+            .collect::<Vec<_>>();
+        let job = requests.clone();
         let cancel = Arc::new(AtomicBool::new(false));
         let job_cancel = cancel.clone();
         match std::thread::Builder::new()
@@ -81,24 +120,35 @@ impl NumericPlotLoader {
                 // as the session's playback source.
                 let mapping = unsafe { memmap2::Mmap::map(&file) }.map_err(|e| e.to_string())?;
                 let source = McapSource::from_owner(mapping).map_err(|e| e.to_string())?;
-                source
-                    .query_numeric_overview_cancellable(&job, || job_cancel.load(Ordering::Relaxed))
+                source.query_numeric_overviews_cancellable(&job, || {
+                    job_cancel.load(Ordering::Relaxed)
+                })
             }) {
             Ok(handle) => {
                 self.worker = Some(Worker {
-                    request,
+                    requests,
                     cancel,
                     handle,
                 })
             }
-            Err(error) => series.result = Some(Err(error.to_string())),
+            Err(error) => {
+                for series in self
+                    .series
+                    .iter_mut()
+                    .filter(|s| requests.contains(&s.request))
+                {
+                    series.result = Some(Err(error.to_string()));
+                }
+            }
         }
     }
 }
 impl Drop for NumericPlotLoader {
     fn drop(&mut self) {
-        if let Some(worker) = &self.worker {
+        if let Some(worker) = self.worker.take() {
             worker.cancel.store(true, Ordering::Relaxed);
+            // Shutdown/direct session disposal waits for the one in-flight decode; no detached work.
+            let _ = worker.handle.join();
         }
     }
 }
@@ -140,11 +190,13 @@ mod tests {
         let cancel = Arc::new(AtomicBool::new(false));
         let (send, receive) = std::sync::mpsc::channel();
         let handle = std::thread::spawn(move || {
-            receive.recv().unwrap();
+            receive
+                .recv_timeout(std::time::Duration::from_secs(5))
+                .unwrap();
             Err("stale result".into())
         });
         loader.worker = Some(Worker {
-            request: request(1),
+            requests: vec![request(1)],
             cancel: cancel.clone(),
             handle,
         });
@@ -158,5 +210,102 @@ mod tests {
         loader.poll(None);
         assert!(loader.worker.is_none());
         assert!(loader.series[0].result.is_none());
+    }
+}
+
+#[cfg(test)]
+mod source_replacement_tests {
+    use super::*;
+    use viewer_core::{ArrivalTime, DataWindowTimeRange, StreamId};
+    #[test]
+    fn source_replacement_retains_one_cancelled_worker_and_discards_old_results() {
+        let request = NumericSeriesRequest {
+            stream_id: StreamId(1),
+            field_path: "value".into(),
+            range: DataWindowTimeRange::new(ArrivalTime(0), ArrivalTime(10)).unwrap(),
+            max_points: 10,
+        };
+        let cancel = Arc::new(AtomicBool::new(false));
+        let (send, receive) = std::sync::mpsc::channel();
+        let handle = std::thread::spawn(move || {
+            receive
+                .recv_timeout(std::time::Duration::from_secs(5))
+                .unwrap();
+            Ok(NumericPlotOverviewBatch {
+                series: vec![NumericPlotOverview {
+                    samples: vec![],
+                    input_sample_count: 42,
+                    decode_errors: 0,
+                }],
+                chunks_read: 1,
+            })
+        });
+        let mut previous = NumericPlotLoader::default();
+        previous.add(request.clone());
+        previous.worker = Some(Worker {
+            requests: vec![request.clone()],
+            cancel: cancel.clone(),
+            handle,
+        });
+        for _ in 0..5 {
+            let mut next = NumericPlotLoader::default();
+            next.add(request.clone());
+            next.take_worker_from(&mut previous);
+            assert!(previous.worker.is_none());
+            next.poll(Some(&PathBuf::from("must-not-be-opened")));
+            assert!(next.worker.is_some());
+            assert!(next.series[0].result.is_none());
+            previous = next;
+        }
+        assert!(cancel.load(Ordering::Relaxed));
+        send.send(()).unwrap();
+        while !previous.worker.as_ref().unwrap().handle.is_finished() {
+            std::thread::yield_now();
+        }
+        previous.poll(None);
+        assert!(previous.worker.is_none());
+        assert!(previous.series[0].result.is_none());
+    }
+}
+
+#[cfg(test)]
+mod regroup_tests {
+    use super::*;
+    use viewer_core::{ArrivalTime, DataWindowTimeRange, StreamId};
+    #[test]
+    fn new_field_cancels_inflight_group_and_retains_all_pending_demands() {
+        let request = NumericSeriesRequest {
+            stream_id: StreamId(1),
+            field_path: "x".into(),
+            range: DataWindowTimeRange::new(ArrivalTime(0), ArrivalTime(10)).unwrap(),
+            max_points: 10,
+        };
+        let cancel = Arc::new(AtomicBool::new(false));
+        let (send, receive) = std::sync::mpsc::channel();
+        let handle = std::thread::spawn(move || {
+            receive
+                .recv_timeout(std::time::Duration::from_secs(5))
+                .unwrap();
+            Err("old scan".into())
+        });
+        let mut loader = NumericPlotLoader::default();
+        loader.add(request.clone());
+        loader.worker = Some(Worker {
+            requests: vec![request.clone()],
+            cancel: cancel.clone(),
+            handle,
+        });
+        let mut second = request;
+        second.field_path = "y".into();
+        loader.add(second);
+        assert!(cancel.load(Ordering::Relaxed));
+        assert_eq!(loader.series.len(), 2);
+        send.send(()).unwrap();
+        while !loader.worker.as_ref().unwrap().handle.is_finished() {
+            std::thread::yield_now();
+        }
+        loader.poll(None);
+        assert!(loader.worker.is_none());
+        assert!(loader.series.iter().all(|s| s.result.is_none()));
     }
 }

@@ -454,14 +454,14 @@ mod tests {
                 end_ns_exclusive: TimestampNs::new(end_ns_exclusive),
             },
             vec![StreamDescriptor {
-                schema_data: None,
+                schema_id: None,
                 id: 1,
                 topic: "/camera".into(),
                 schema_name: "sensor_msgs/msg/CompressedImage".into(),
-                schema_encoding: "ros2msg".into(),
                 message_encoding: "cdr".into(),
                 message_count: Some(viewer_remote_protocol::MessageCount::new(30)),
             }],
+            Vec::new(),
         );
         crate::remote::adapt_catalog(&catalog).unwrap()
     }
@@ -480,24 +480,23 @@ mod tests {
             },
             vec![
                 StreamDescriptor {
-                    schema_data: None,
+                    schema_id: None,
                     id: 1,
                     topic: "/camera".into(),
                     schema_name: "sensor_msgs/msg/CompressedImage".into(),
-                    schema_encoding: "ros2msg".into(),
                     message_encoding: "cdr".into(),
                     message_count: Some(viewer_remote_protocol::MessageCount::new(30)),
                 },
                 StreamDescriptor {
-                    schema_data: None,
+                    schema_id: None,
                     id: 2,
                     topic: "/tf_static".into(),
                     schema_name: "tf2_msgs/msg/TFMessage".into(),
-                    schema_encoding: "ros2msg".into(),
                     message_encoding: "cdr".into(),
                     message_count: Some(viewer_remote_protocol::MessageCount::new(2)),
                 },
             ],
+            Vec::new(),
         );
         crate::remote::adapt_catalog(&catalog).unwrap()
     }

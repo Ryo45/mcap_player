@@ -9,11 +9,11 @@ mod error;
 pub use batch::{BATCH_CONTENT_TYPE, BATCH_VERSION, BatchDecoder, BatchEncoder, RemoteMessageRef};
 pub use catalog::{
     CatalogResponse, MessageCount, RecordingDescriptor, RecordingsResponse, RemoteTimeRange,
-    StreamDescriptor, TimestampNs,
+    SchemaDescriptor, StreamDescriptor, TimestampNs,
 };
 pub use error::ProtocolError;
 
-pub const REMOTE_PROTOCOL_SCHEMA_VERSION: u32 = 1;
+pub const REMOTE_PROTOCOL_SCHEMA_VERSION: u32 = 2;
 pub const RECORDING_REVISION_HEADER: &str = "x-av-recording-revision";
 pub const BATCH_COMPLETE_HEADER: &str = "x-av-batch-complete";
 pub const NEXT_CURSOR_HEADER: &str = "x-av-next-cursor";

@@ -81,7 +81,9 @@ cargo run -p viewer-native --features ros2-live -- \
 ## Topic Tree / numeric field Plot
 
 Nativeの左側「Topics」はcatalog/schema metadataだけで構築します。topicを開き、numeric fieldの
-「+」から任意fieldのbounded overview Plotを追加できます（最大8本、各4,000点）。追加・削除で
+「+」から任意fieldのbounded overview Plotを追加できます（最大8本、各4,000点）。Cameraなどを
+含まないrecordingは`cargo run -p viewer-native -- --mcap PATH --layout explore`で開けます。同じstreamの
+loading中fieldはまとめて読み、source切替後もnumeric workerは同時に1つです。追加・削除で
 continuous playbackのstream selectionは変わりません。ROS 2 CDR + ros2msgのnested numeric scalarに
 対応し、元schema definitionも表示します。Web Local/Remoteにも同じschema bytesを保持しますが、
 field Plot UIは現在Nativeのみです。現在の設計と対応範囲は

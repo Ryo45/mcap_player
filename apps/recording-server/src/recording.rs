@@ -118,19 +118,13 @@ impl Recording {
                 .as_ref()
                 .map(|schema| schema.name.clone())
                 .unwrap_or_default();
-            let schema_encoding = channel
-                .schema
-                .as_ref()
-                .map(|schema| schema.encoding.clone())
-                .unwrap_or_default();
             channel_to_stream.insert(channel.id, id);
             stream_to_channel.insert(id, channel.id);
             streams.push(StreamDescriptor {
-                schema_data: channel.schema.as_ref().map(|schema| schema.data.to_vec()),
+                schema_id: channel.schema.as_ref().map(|schema| schema.id),
                 id,
                 topic: channel.topic.clone(),
                 schema_name,
-                schema_encoding,
                 message_encoding: channel.message_encoding.clone(),
                 message_count: stats
                     .channel_message_counts
@@ -140,7 +134,7 @@ impl Recording {
             });
         }
         let index_facts = indexed_chunk_facts(&summary, &channel_to_stream);
-        for stream in &streams {
+        for stream in streams.iter().filter(|s| s.message_encoding == "cdr") {
             viewer_core::ensure_indexed(
                 &index_facts,
                 StreamId(stream.id),
@@ -154,6 +148,16 @@ impl Recording {
             })?;
         }
 
+        let mut schemas = summary
+            .schemas
+            .values()
+            .map(|schema| viewer_remote_protocol::SchemaDescriptor {
+                id: schema.id,
+                encoding: schema.encoding.clone(),
+                data: std::sync::Arc::from(schema.data.as_ref()),
+            })
+            .collect::<Vec<_>>();
+        schemas.sort_by_key(|schema| schema.id);
         let catalog = CatalogResponse::new(
             config.id.clone(),
             revision.clone(),
@@ -162,6 +166,7 @@ impl Recording {
                 end_ns_exclusive: TimestampNs::new(end_ns_exclusive),
             },
             streams,
+            schemas,
         );
         tracing::info!(
             recording_id = %config.id,
@@ -371,12 +376,22 @@ path = "{}"
         assert!(first.catalog_reads.bytes < first.reader.file_size());
         assert!(first.catalog_reads.calls > 0);
         assert_eq!(first.revision, second.revision);
-        assert_eq!(first.catalog.streams, second.catalog.streams);
+        assert_eq!(first.catalog, second.catalog);
         assert_eq!(first.catalog.streams.len(), first.summary.channels.len());
+        assert_eq!(first.catalog.schemas.len(), first.summary.schemas.len());
+        let cloned = first.catalog.clone();
+        for (original, copy) in first.catalog.schemas.iter().zip(&cloned.schemas) {
+            assert!(std::sync::Arc::ptr_eq(&original.data, &copy.data));
+        }
         for stream in &first.catalog.streams {
             let channel = &first.summary.channels[&first.stream_to_channel[&stream.id]];
             assert_eq!(
-                stream.schema_data.as_deref(),
+                first
+                    .catalog
+                    .schemas
+                    .iter()
+                    .find(|s| Some(s.id) == stream.schema_id)
+                    .map(|s| s.data.as_ref()),
                 channel.schema.as_ref().map(|s| s.data.as_ref())
             );
         }
@@ -396,6 +411,117 @@ path = "{}"
             first.catalog.time_range.end_ns_exclusive.get(),
             first.summary.stats.as_ref().unwrap().message_end_time + 1
         );
+    }
+
+    #[test]
+    fn unindexed_json_metadata_does_not_prevent_indexed_camera_restore() {
+        let mut output = std::io::Cursor::new(Vec::new());
+        {
+            let options = mcap::WriteOptions::new()
+                .compression(None)
+                .calculate_summary_section_crc(false)
+                .calculate_data_section_crc(false);
+            let mut writer = mcap::Writer::with_options(&mut output, options).unwrap();
+            let schema = writer
+                .add_schema(
+                    "sensor_msgs/msg/CompressedImage",
+                    "ros2msg",
+                    b"std_msgs/Header header\nstring format\nuint8[] data\n===\nMSG: std_msgs/Header\nbuiltin_interfaces/Time stamp\nstring frame_id\n===\nMSG: builtin_interfaces/Time\nint32 sec\nuint32 nanosec\n",
+                )
+                .unwrap();
+            let camera = writer
+                .add_channel(schema, "/camera", "cdr", &BTreeMap::new())
+                .unwrap();
+            let json = writer
+                .add_channel(0, "/metadata", "json", &BTreeMap::new())
+                .unwrap();
+            let image = viewer_core::encode_compressed_image_cdr(&viewer_core::CompressedImage {
+                measurement_time: viewer_core::MeasurementTime(90),
+                frame_id: "camera".into(),
+                format: "jpeg".into(),
+                jpeg: vec![0xff, 0xd8, 0xff, 0xd9],
+            })
+            .unwrap();
+            for sequence in 0..2 {
+                writer
+                    .write_to_known_channel(
+                        &mcap::records::MessageHeader {
+                            channel_id: camera,
+                            sequence,
+                            log_time: 100 + sequence as u64,
+                            publish_time: 99 + sequence as u64,
+                        },
+                        &image,
+                    )
+                    .unwrap();
+            }
+            writer.flush().unwrap();
+            // Reserve a top-level record with exactly the unchunked Message body layout.
+            let mut body = Vec::new();
+            body.extend(json.to_le_bytes());
+            body.extend(0u32.to_le_bytes());
+            body.extend(101u64.to_le_bytes());
+            body.extend(100u64.to_le_bytes());
+            body.extend(b"{}");
+            writer
+                .write_private_record(0x80, &body, Default::default())
+                .unwrap();
+            writer.finish().unwrap();
+        }
+        let mut bytes = output.into_inner();
+        let mut offset = 8;
+        while offset < bytes.len() - 8 {
+            let length =
+                u64::from_le_bytes(bytes[offset + 1..offset + 9].try_into().unwrap()) as usize;
+            if bytes[offset] == 0x80 {
+                bytes[offset] = mcap::records::op::MESSAGE;
+            }
+            if bytes[offset] == mcap::records::op::STATISTICS {
+                // The partial channel-count map intentionally leaves JSON's count unknown.
+                bytes[offset + 9..offset + 17].copy_from_slice(&3u64.to_le_bytes());
+            }
+            offset += 9 + length;
+        }
+        assert_eq!(mcap::MessageStream::new(&bytes).unwrap().count(), 3);
+        let (mut config, limits) = fixture();
+        config.path =
+            std::env::temp_dir().join(format!("mcap-unindexed-json-{}.mcap", std::process::id()));
+        std::fs::write(&config.path, bytes).unwrap();
+        let recording = Recording::open(&config, &limits).unwrap();
+        let json = recording
+            .catalog
+            .streams
+            .iter()
+            .find(|s| s.topic == "/metadata")
+            .unwrap();
+        assert_eq!(json.message_encoding, "json");
+        let camera = recording
+            .catalog
+            .streams
+            .iter()
+            .find(|s| s.topic == "/camera")
+            .unwrap();
+        let request = crate::restore_service::RestoreRequest {
+            revision: recording.revision.clone(),
+            latest_streams: vec![camera.id],
+            history_streams: vec![],
+            persistent_streams: vec![],
+            history_start_ns: 0,
+            target_ns: 101,
+        };
+        let batch =
+            crate::restore_service::read_restore(recording.clone(), request, limits, 1).unwrap();
+        assert_eq!(batch.message_count, 1);
+        assert_eq!(
+            viewer_remote_protocol::BatchDecoder::new(&batch.body)
+                .unwrap()
+                .collect()
+                .unwrap()[0]
+                .log_time_ns,
+            101
+        );
+        drop(recording);
+        std::fs::remove_file(config.path).unwrap();
     }
 
     #[test]

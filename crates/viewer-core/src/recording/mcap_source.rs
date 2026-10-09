@@ -245,6 +245,17 @@ impl McapSource {
         &self,
         cursor: ArrivalTime,
     ) -> Result<McapSourcePosition, McapOpenError> {
+        if self
+            .selected_streams
+            .as_ref()
+            .is_some_and(HashSet::is_empty)
+        {
+            return Ok(McapSourcePosition {
+                cache: Vec::new(),
+                chunk: None,
+                position: 0,
+            });
+        }
         let partition = self
             .summary
             .chunk_indexes
@@ -266,6 +277,14 @@ impl McapSource {
     }
 
     pub fn read_until(&mut self, cursor: ArrivalTime) -> Result<Vec<RawMessage>, McapOpenError> {
+        // Metadata-only workspaces advance their timeline without touching any message chunks.
+        if self
+            .selected_streams
+            .as_ref()
+            .is_some_and(HashSet::is_empty)
+        {
+            return Ok(Vec::new());
+        }
         if self.chunk.is_none() {
             self.load_chunk(0)?;
         }
@@ -300,33 +319,41 @@ impl McapSource {
         &self,
         stream: StreamId,
         range: crate::DataWindowTimeRange,
-        mut visit: impl FnMut(&RawMessage) -> bool,
-    ) -> Result<(), McapOpenError> {
+        mut cancelled: impl FnMut() -> bool,
+        mut visit: impl FnMut(&RawMessage),
+    ) -> Result<usize, McapOpenError> {
         let descriptor = self
             .catalog
             .by_id(stream)
             .ok_or(mcap::McapError::BadIndex)?;
         ensure_indexed(&self.index_facts, stream, descriptor.timing.message_count)
             .map_err(|error| McapOpenError::MessageIndexRequired(error.stream))?;
+        let mut chunks_read = 0;
         // Inspect index facts before touching compressed payloads. No unrelated chunk scan.
         for (index, fact) in self.index_facts.iter().enumerate() {
+            if cancelled() {
+                return Err(McapOpenError::QueryCancelled);
+            }
             if !fact.indexed_streams.contains(&stream)
                 || fact.end_inclusive < range.start
                 || fact.start >= range.end_exclusive
             {
                 continue;
             }
-            for parsed in self.parse_chunk(index)? {
+            let parsed_chunk = self.parse_chunk_cancellable(index, &mut cancelled)?;
+            chunks_read += 1;
+            for parsed in parsed_chunk {
                 let message = parsed.message;
                 if message.stream_id != stream || !range.contains(message.arrival_time) {
                     continue;
                 }
-                if !visit(&message) {
+                if cancelled() {
                     return Err(McapOpenError::QueryCancelled);
                 }
+                visit(&message);
             }
         }
-        Ok(())
+        Ok(chunks_read)
     }
 
     /// Executes a bounded exact-message query without mutating this source's playback cursor.
@@ -586,6 +613,17 @@ impl McapSource {
     }
 
     fn parse_chunk(&self, index: usize) -> Result<Vec<ParsedChunkMessage>, McapOpenError> {
+        self.parse_chunk_cancellable(index, &mut || false)
+    }
+
+    fn parse_chunk_cancellable(
+        &self,
+        index: usize,
+        cancelled: &mut impl FnMut() -> bool,
+    ) -> Result<Vec<ParsedChunkMessage>, McapOpenError> {
+        if cancelled() {
+            return Err(McapOpenError::QueryCancelled);
+        }
         let chunk = self
             .summary
             .chunk_indexes
@@ -607,13 +645,16 @@ impl McapSource {
         let expected_size = usize::try_from(chunk.uncompressed_size)
             .map_err(|_| McapOpenError::InvalidChunk("uncompressed size is too large".into()))?;
         let backing = decode_chunk_backing(&chunk.compression, compressed, expected_size)?;
+        if cancelled() {
+            return Err(McapOpenError::QueryCancelled);
+        }
         let uncompressed_crc = self.chunk_uncompressed_crc(chunk)?;
         if uncompressed_crc != 0 && crc32fast::hash(&backing) != uncompressed_crc {
             return Err(McapOpenError::InvalidChunk(
                 "uncompressed CRC does not match Chunk header".into(),
             ));
         }
-        parse_chunk_backing(backing)
+        parse_chunk_backing(backing, cancelled)
     }
 
     fn chunk_uncompressed_crc(
@@ -703,10 +744,16 @@ fn checked_decompressed_backing(
     Ok(Bytes::from(decompressed))
 }
 
-fn parse_chunk_backing(backing: Bytes) -> Result<Vec<ParsedChunkMessage>, McapOpenError> {
+fn parse_chunk_backing(
+    backing: Bytes,
+    cancelled: &mut impl FnMut() -> bool,
+) -> Result<Vec<ParsedChunkMessage>, McapOpenError> {
     let mut offset = 0_usize;
     let mut messages = Vec::new();
     while offset < backing.len() {
+        if cancelled() {
+            return Err(McapOpenError::QueryCancelled);
+        }
         let record_offset = u64::try_from(offset)
             .map_err(|_| McapOpenError::InvalidChunk("record offset overflow".into()))?;
         let header_end = offset

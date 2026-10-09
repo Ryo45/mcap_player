@@ -79,8 +79,11 @@ Catalog time is MCAP log time with start-inclusive/end-exclusive semantics. Nano
 decimal JSON strings, avoiding JavaScript number precision loss. All channels, including unsupported
 message encodings, are exposed for metadata exploration. Channels are sorted by topic, schema name, message encoding, and original
 channel ID, then assigned logical stream IDs starting at one. Catalog streams contain recording
-facts only: logical ID, topic, schema name/encoding, original schema definition bytes (`schemaData`
-as a JSON byte array), message encoding, and optional message count.
+facts only: logical ID, topic, schema name, optional source `schemaId`, message encoding, and optional
+message count. Catalog protocol version 2 includes a separate `schemas` table containing one ID,
+encoding and original definition byte array per MCAP schema. Shared schemas are transmitted once;
+catalog clones share their immutable bytes. Non-CDR metadata streams need no indexed restore
+capability at startup; the CDR stream validation remains strict.
 Cameraなどのviewer feature分類はclientがschema factsから行います。
 
 The revision is:

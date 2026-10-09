@@ -46,12 +46,12 @@ impl Args {
                     layout = parse_layout(
                         &values
                             .next()
-                            .context("--layout needs standard or showcase")?,
+                            .context("--layout needs standard, showcase or explore")?,
                     )?
                 }
                 "--help" | "-h" => {
                     println!(
-                        "viewer-native [--mcap PATH] [--camera-topic TOPIC] [--camera-calibration JSON] [--layout standard|showcase] [--live [--reliable]]\n\nFiles can also be dropped onto the window."
+                        "viewer-native [--mcap PATH] [--camera-topic TOPIC] [--camera-calibration JSON] [--layout standard|showcase|explore] [--live [--reliable]]\n\nFiles can also be dropped onto the window."
                     );
                     std::process::exit(0);
                 }
@@ -89,7 +89,8 @@ fn parse_layout(value: &str) -> Result<WorkspaceLayout> {
     match value {
         "standard" => Ok(WorkspaceLayout::Standard),
         "showcase" => Ok(WorkspaceLayout::Showcase),
-        value => bail!("unsupported layout {value:?}; expected standard or showcase"),
+        "explore" => Ok(WorkspaceLayout::Explore),
+        value => bail!("unsupported layout {value:?}; expected standard, showcase or explore"),
     }
 }
 
@@ -98,9 +99,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn layout_config_accepts_only_the_two_bundled_views() {
+    fn layout_config_accepts_the_bundled_views() {
         assert_eq!(parse_layout("standard").unwrap(), WorkspaceLayout::Standard);
         assert_eq!(parse_layout("showcase").unwrap(), WorkspaceLayout::Showcase);
+        assert_eq!(parse_layout("explore").unwrap(), WorkspaceLayout::Explore);
         assert!(parse_layout("dashboard").is_err());
     }
 }
