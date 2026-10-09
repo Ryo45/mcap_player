@@ -67,5 +67,8 @@ pub use recording::{
 
 pub use message::{NumericField, NumericFieldExtractor, RosMessageSchema};
 
-pub use derived::{NumericPlotDetail, NumericPlotOverview, NumericSample, NumericSeriesRequest};
+pub use derived::{
+    NumericPlotDetail, NumericPlotOverview, NumericPlotOverviewBatch, NumericSample,
+    NumericSeriesRequest,
+};
 pub use recording::{TopicTree, TopicTreeEntry};

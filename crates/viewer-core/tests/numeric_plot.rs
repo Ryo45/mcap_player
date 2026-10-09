@@ -313,6 +313,8 @@ fn overview_does_not_touch_unrelated_chunks() {
     bytes[offset + 1..offset + 9].copy_from_slice(&u64::MAX.to_le_bytes());
     let mut source = McapSource::new(bytes).unwrap();
     source.select_streams([]).unwrap();
+    assert!(source.read_until(ArrivalTime(101)).unwrap().is_empty());
+    source.seek(ArrivalTime(101)).unwrap();
     let mut request = NumericSeriesRequest {
         stream_id: StreamId(channel as u32),
         field_path: "value".into(),
@@ -322,6 +324,12 @@ fn overview_does_not_touch_unrelated_chunks() {
     let result = source.query_numeric_overview(&request).unwrap();
     assert_eq!(result.samples[0].value, 1.0);
     request.stream_id = StreamId(unrelated as u32);
+    assert_eq!(
+        source
+            .query_numeric_overview_cancellable(&request, || true)
+            .unwrap_err(),
+        "numeric query cancelled"
+    );
     assert!(source.query_numeric_overview(&request).is_err());
 }
 #[test]
@@ -343,4 +351,67 @@ fn nested_sequences_skip_without_building_values_and_reject_excessive_lengths() 
     assert_eq!(extractor.extract(&payload).unwrap(), 42.0);
     payload[4..8].copy_from_slice(&u32::MAX.to_le_bytes());
     assert!(extractor.extract(&payload).is_err());
+}
+
+#[test]
+fn empty_and_constant_only_ros_messages_consume_the_dummy_wire_member() {
+    for body in ["", "uint8 CONST=9\n"] {
+        let schema = RosMessageSchema::parse(
+            "demo/msg/A",
+            &definition(&format!(
+                "std_msgs/Empty marker\nuint8 value\n===\nMSG: std_msgs/Empty\n{body}"
+            )),
+        )
+        .unwrap();
+        // ROS 2 rosidl inserts uint8 structure_needs_at_least_one_member=0.
+        let bytes = [0, 1, 0, 0, 0, 42];
+        assert_eq!(
+            schema
+                .compile_numeric("value")
+                .unwrap()
+                .extract(&bytes)
+                .unwrap(),
+            42.0
+        );
+        assert_eq!(schema.numeric_fields().unwrap().len(), 1);
+        let schema = RosMessageSchema::parse(
+            "demo/msg/A",
+            &definition(&format!(
+                "std_msgs/Empty[] markers\nuint8 value\n===\nMSG: std_msgs/Empty\n{body}"
+            )),
+        )
+        .unwrap();
+        assert_eq!(
+            schema
+                .compile_numeric("value")
+                .unwrap()
+                .extract(&[0, 1, 0, 0, 2, 0, 0, 0, 0, 0, 42])
+                .unwrap(),
+            42.0
+        );
+    }
+}
+#[test]
+fn multiple_selected_fields_share_one_chunk_read_and_keep_separate_budgets() {
+    let backing = recording(1000);
+    let summary = mcap::Summary::read(&backing).unwrap().unwrap();
+    let source = McapSource::new(backing).unwrap();
+    let request = NumericSeriesRequest {
+        stream_id: source.catalog().by_topic("/numeric").unwrap().id,
+        field_path: "vector.x".into(),
+        range: DataWindowTimeRange::new(ArrivalTime(100), ArrivalTime(1100)).unwrap(),
+        max_points: 15,
+    };
+    let mut second = request.clone();
+    second.field_path = "vector.small".into();
+    second.max_points = 6;
+    let batch = source
+        .query_numeric_overviews_cancellable(&[request, second], || false)
+        .unwrap();
+    assert_eq!(batch.chunks_read, summary.chunk_indexes.len());
+    assert_eq!(batch.series[0].input_sample_count, 1000);
+    assert_eq!(batch.series[1].input_sample_count, 1000);
+    assert!(batch.series[0].samples.len() <= 15);
+    assert!(batch.series[1].samples.len() <= 6);
+    assert!(batch.series[1].samples.iter().all(|s| s.value == -17.0));
 }

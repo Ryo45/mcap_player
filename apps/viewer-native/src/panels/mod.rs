@@ -41,6 +41,7 @@ pub(crate) const SCENE_CONFIG_VERSION: u32 = 1;
 pub(crate) const STATUS_CONFIG_VERSION: u32 = 1;
 
 pub(crate) enum NativePanel {
+    Explore,
     Camera(CameraPanel),
     Bev(BevPanel),
     Plot(PlotPanel),
@@ -57,6 +58,11 @@ impl NativePanel {
         input: &PanelCompositionInput<'_>,
     ) -> PanelOutput {
         match self {
+            Self::Explore => {
+                ui.heading("Explore recording");
+                ui.label("Open a topic under Topics and select a numeric field to add a plot.");
+                PanelOutput::default()
+            }
             Self::Camera(panel) => panel.show(
                 ui,
                 CameraPanelInput {
@@ -143,7 +149,8 @@ impl NativePanel {
         match self {
             Self::Camera(panel) => panel.state.focused_camera = focused_camera,
             Self::Plot(panel) => panel.reset_for_source(),
-            Self::Bev(_)
+            Self::Explore
+            | Self::Bev(_)
             | Self::Inspector(_)
             | Self::Scene(_)
             | Self::Status(_)
@@ -181,7 +188,7 @@ impl NativePanel {
             Self::Plot(panel) => panel.contribute_data_requirements(requirements),
             Self::Inspector(panel) => panel.contribute_data_requirements(requirements),
             Self::Status(panel) => panel.contribute_data_requirements(requirements),
-            Self::Placeholder(_) => {}
+            Self::Explore | Self::Placeholder(_) => {}
         }
     }
 
@@ -195,6 +202,7 @@ impl NativePanel {
     #[cfg(test)]
     pub(crate) fn kind_name(&self) -> &'static str {
         match self {
+            Self::Explore => "explore",
             Self::Camera(_) => "camera",
             Self::Bev(_) => "bev",
             Self::Plot(_) => "plot",

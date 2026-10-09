@@ -95,7 +95,7 @@ Column
 
 ## Native panels and placeholders
 
-The concrete enum variants are Camera, BEV, builtin Plot, Inspector, Scene, Status, and Placeholder. Camera
+The concrete enum variants are Camera, BEV, builtin Plot, Inspector, Scene, Status, Explore, and Placeholder. Camera
 and Plot may have multiple runtime instances. The current GPU implementation
 supports at most one BEV and one Scene; later valid instances become placeholders.
 
@@ -136,6 +136,10 @@ contribute continuous playback requirements. Builtin Plot panels likewise reques
 requiring continuous Odometry. See [current architecture](message_centric_architecture.md) for the
 selected-field query flow and its limits. Field Plot demands currently live for one source session
 and are not persisted in layout JSON.
+
+The `explore` preset contains one stateless Explore panel. It contributes no playback, builtin Plot
+or Inspector requirement, allowing catalog/schema browsing and dynamic field plots on scalar-only
+recordings. Standard/showcase continue to validate their explicitly required continuous inputs.
 
 ## Deliberate limitations
 

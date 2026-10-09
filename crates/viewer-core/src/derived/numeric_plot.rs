@@ -1,7 +1,7 @@
 //! Selected-field Plot queries. These products never enter FeatureRuntime.
 use crate::{
     ArrivalTime, DataWindowTimeRange, DecodeError, McapSource, NumericFieldExtractor, QueryLimits,
-    RangeQuery, RawMessage, SignalOverviewReducer, SignalSample, StreamId,
+    RangeQuery, RawMessage, RosMessageSchema, SignalOverviewReducer, SignalSample, StreamId,
 };
 
 /// Runtime Plot demand, independent of the workspace's fixed SessionPlan.
@@ -17,6 +17,11 @@ pub struct NumericPlotOverview {
     pub samples: Vec<SignalSample>,
     pub input_sample_count: u64,
     pub decode_errors: u64,
+}
+#[derive(Clone, Debug, PartialEq)]
+pub struct NumericPlotOverviewBatch {
+    pub series: Vec<NumericPlotOverview>,
+    pub chunks_read: usize,
 }
 #[derive(Clone, Debug, PartialEq)]
 pub struct NumericSample {
@@ -68,38 +73,76 @@ impl McapSource {
         request: &NumericSeriesRequest,
         mut cancelled: impl FnMut() -> bool,
     ) -> Result<NumericPlotOverview, String> {
-        if !(1..=65_536).contains(&request.max_points) {
-            return Err("point budget must be 1..=65536".into());
+        Ok(self
+            .query_numeric_overviews_cancellable(std::slice::from_ref(request), &mut cancelled)?
+            .series
+            .remove(0))
+    }
+
+    /// At most eight selected fields on one stream/range share each physical chunk read.
+    pub fn query_numeric_overviews_cancellable(
+        &self,
+        requests: &[NumericSeriesRequest],
+        mut cancelled: impl FnMut() -> bool,
+    ) -> Result<NumericPlotOverviewBatch, String> {
+        if cancelled() {
+            return Err(crate::McapOpenError::QueryCancelled.to_string());
         }
-        if request.range.start >= request.range.end_exclusive {
-            return Err("numeric query range must be non-empty".into());
+        let first = requests.first().ok_or("numeric batch requires fields")?;
+        if requests.len() > 8 || first.range.start >= first.range.end_exclusive {
+            return Err("numeric batch requires 1..=8 fields and a non-empty range".into());
         }
-        let extractor = self.numeric_extractor(request.stream_id, &request.field_path)?;
-        let mut reducer = SignalOverviewReducer::new(
-            request.range.start,
-            request.range.end_exclusive,
-            request.max_points,
-        );
-        let mut decode_errors = 0;
-        self.visit_stream_range(request.stream_id, request.range, |message| {
-            if cancelled() {
-                return false;
+        let stream = self
+            .catalog()
+            .by_id(first.stream_id)
+            .ok_or("unknown numeric stream")?;
+        let schema = RosMessageSchema::for_stream(stream).map_err(|e| e.to_string())?;
+        let mut fields = Vec::new();
+        for request in requests {
+            if request.stream_id != first.stream_id
+                || request.range != first.range
+                || !(1..=65_536).contains(&request.max_points)
+            {
+                return Err(
+                    "numeric batch requires one stream/range and point budgets 1..=65536".into(),
+                );
             }
-            match extractor.extract(&message.payload) {
-                Ok(value) => reducer.push(SignalSample {
-                    measurement_time: None,
-                    arrival_time: message.arrival_time,
-                    value,
-                }),
-                Err(_) => decode_errors += 1,
-            }
-            true
-        })
-        .map_err(|e| e.to_string())?;
-        Ok(NumericPlotOverview {
-            samples: reducer.samples(),
-            input_sample_count: reducer.input_sample_count(),
-            decode_errors,
+            fields.push((
+                schema
+                    .compile_numeric(&request.field_path)
+                    .map_err(|e| e.to_string())?,
+                SignalOverviewReducer::new(
+                    request.range.start,
+                    request.range.end_exclusive,
+                    request.max_points,
+                ),
+                0u64,
+            ));
+        }
+        let chunks_read = self
+            .visit_stream_range(first.stream_id, first.range, cancelled, |message| {
+                for (extractor, reducer, decode_errors) in &mut fields {
+                    match extractor.extract(&message.payload) {
+                        Ok(value) => reducer.push(SignalSample {
+                            measurement_time: None,
+                            arrival_time: message.arrival_time,
+                            value,
+                        }),
+                        Err(_) => *decode_errors += 1,
+                    }
+                }
+            })
+            .map_err(|e| e.to_string())?;
+        Ok(NumericPlotOverviewBatch {
+            chunks_read,
+            series: fields
+                .into_iter()
+                .map(|(_, reducer, decode_errors)| NumericPlotOverview {
+                    samples: reducer.samples(),
+                    input_sample_count: reducer.input_sample_count(),
+                    decode_errors,
+                })
+                .collect(),
         })
     }
     /// Exact bounded visible-range detail, using the existing serialized query limits.

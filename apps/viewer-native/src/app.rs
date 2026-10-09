@@ -47,6 +47,9 @@ impl App {
             self.workspace.bindings(),
         ) {
             Ok(mut session) => {
+                if let Some(previous) = &mut self.session {
+                    session.take_numeric_worker_from(previous);
+                }
                 self.diagnostics.reset_for_source();
                 self.workspace.configure_session(session.plan());
                 let scheduler_camera = Self::scheduler_camera_for(&self.workspace, &session);

@@ -52,11 +52,32 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
         })?;
     let primary_camera_topic = camera.topic.clone();
 
+    let mut definitions = std::collections::BTreeMap::new();
+    for schema in &remote.schemas {
+        let definition = std::sync::Arc::new(viewer_core::SchemaDefinition {
+            encoding: schema.encoding.clone(),
+            data: bytes::Bytes::from_owner(schema.data.clone()),
+        });
+        if definitions.insert(schema.id, definition).is_some() {
+            return Err(RemoteCatalogError("duplicate remote schema ID".into()));
+        }
+    }
     let streams = remote
         .streams
         .iter()
-        .map(to_core_descriptor)
-        .collect::<Vec<_>>();
+        .map(|stream| {
+            let definition = match stream.schema_id {
+                Some(id) => Some(
+                    definitions
+                        .get(&id)
+                        .ok_or_else(|| RemoteCatalogError(format!("unknown schema ID {id}")))?
+                        .clone(),
+                ),
+                None => None,
+            };
+            Ok(to_core_descriptor(stream, definition))
+        })
+        .collect::<Result<Vec<_>, RemoteCatalogError>>()?;
     let core = SourceCatalog {
         time_range: Some(RecordingTimeRange {
             start,
@@ -88,14 +109,12 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
     })
 }
 
-fn to_core_descriptor(stream: &StreamDescriptor) -> CoreStreamDescriptor {
+fn to_core_descriptor(
+    stream: &StreamDescriptor,
+    definition: Option<std::sync::Arc<viewer_core::SchemaDefinition>>,
+) -> CoreStreamDescriptor {
     CoreStreamDescriptor {
-        schema_definition: stream.schema_data.as_ref().map(|data| {
-            std::sync::Arc::new(viewer_core::SchemaDefinition {
-                encoding: stream.schema_encoding.clone(),
-                data: bytes::Bytes::copy_from_slice(data),
-            })
-        }),
+        schema_definition: definition,
         id: StreamId(stream.id),
         topic: stream.topic.clone(),
         schema: stream.schema_name.clone(),
@@ -119,11 +138,10 @@ mod tests {
 
     fn stream(id: u32, topic: &str, schema: &str, message_encoding: &str) -> StreamDescriptor {
         StreamDescriptor {
-            schema_data: None,
+            schema_id: None,
             id,
             topic: topic.into(),
             schema_name: schema.into(),
-            schema_encoding: "ros2msg".into(),
             message_encoding: message_encoding.into(),
             message_count: Some(viewer_remote_protocol::MessageCount::new(10)),
         }
@@ -144,6 +162,7 @@ mod tests {
                 stream(4, "/extra", "example/msg/Extra", "cdr"),
                 stream(9, "/future", "example/msg/Future", "future"),
             ],
+            Vec::new(),
         )
     }
 
@@ -198,8 +217,7 @@ mod schema_parity_tests {
                 id: s.id.0,
                 topic: s.topic.clone(),
                 schema_name: s.schema.clone(),
-                schema_encoding: s.schema_definition.as_ref().unwrap().encoding.clone(),
-                schema_data: Some(s.schema_definition.as_ref().unwrap().data.to_vec()),
+                schema_id: Some(s.id.0 as u16),
                 message_encoding: s.message_encoding.clone(),
                 message_count: s
                     .timing
@@ -211,8 +229,7 @@ mod schema_parity_tests {
             id: 999,
             topic: "/opaque".into(),
             schema_name: "Any".into(),
-            schema_encoding: "binary".into(),
-            schema_data: Some(vec![0, 255]),
+            schema_id: Some(999),
             message_encoding: "custom".into(),
             message_count: None,
         });
@@ -226,6 +243,21 @@ mod schema_parity_tests {
                 ),
             },
             streams,
+            native
+                .catalog()
+                .streams
+                .iter()
+                .map(|s| viewer_remote_protocol::SchemaDescriptor {
+                    id: s.id.0 as u16,
+                    encoding: s.schema_definition.as_ref().unwrap().encoding.clone(),
+                    data: std::sync::Arc::from(s.schema_definition.as_ref().unwrap().data.as_ref()),
+                })
+                .chain(std::iter::once(viewer_remote_protocol::SchemaDescriptor {
+                    id: 999,
+                    encoding: "binary".into(),
+                    data: std::sync::Arc::from([0, 255]),
+                }))
+                .collect(),
         );
         let json = serde_json::to_string(&remote).unwrap();
         let remote = adapt_catalog(&serde_json::from_str(&json).unwrap()).unwrap();
@@ -242,5 +274,59 @@ mod schema_parity_tests {
         let tree = viewer_core::TopicTree::from_catalog(&remote.core);
         assert!(tree.entries.iter().any(|e| e.stream_id == StreamId(999)));
         assert_eq!(remote.plan.selected_stream_ids(), selected);
+    }
+}
+
+#[cfg(test)]
+mod sharing_tests {
+    use super::*;
+    #[test]
+    fn all_streams_share_one_schema_allocation_and_invalid_references_fail() {
+        let data: std::sync::Arc<[u8]> = std::sync::Arc::from(vec![42; 65536]);
+        let mut response = CatalogResponse::new(
+            "test".into(),
+            "rev".into(),
+            viewer_remote_protocol::RemoteTimeRange {
+                start_ns: viewer_remote_protocol::TimestampNs::new(0),
+                end_ns_exclusive: viewer_remote_protocol::TimestampNs::new(10),
+            },
+            (1..=256)
+                .map(|id| StreamDescriptor {
+                    id,
+                    topic: format!("/camera/{id}"),
+                    schema_name: "sensor_msgs/msg/CompressedImage".into(),
+                    schema_id: Some(1),
+                    message_encoding: "cdr".into(),
+                    message_count: Some(viewer_remote_protocol::MessageCount::new(0)),
+                })
+                .collect(),
+            vec![viewer_remote_protocol::SchemaDescriptor {
+                id: 1,
+                encoding: "ros2msg".into(),
+                data,
+            }],
+        );
+        let copy = response.clone();
+        assert!(std::sync::Arc::ptr_eq(
+            &copy.schemas[0].data,
+            &response.schemas[0].data
+        ));
+        let json = serde_json::to_string(&response).unwrap();
+        assert_eq!(json.matches("\"data\":").count(), 1);
+        assert!(json.len() < 65536 * 5 + 256 * 256);
+        let adapted = adapt_catalog(&response).unwrap();
+        let first = adapted.core.streams[0].schema_definition.as_ref().unwrap();
+        assert_eq!(first.data.as_ptr(), response.schemas[0].data.as_ptr());
+        for stream in &adapted.core.streams {
+            assert!(std::sync::Arc::ptr_eq(
+                first,
+                stream.schema_definition.as_ref().unwrap()
+            ));
+        }
+        response.streams[0].schema_id = Some(999);
+        assert!(adapt_catalog(&response).is_err());
+        response.streams[0].schema_id = Some(1);
+        response.schemas.push(response.schemas[0].clone());
+        assert!(adapt_catalog(&response).is_err());
     }
 }

@@ -42,7 +42,8 @@ impl PanelRuntimeStore {
                     panel = NativePanel::Placeholder(PlaceholderPanel::duplicate_singleton(node));
                 }
                 NativePanel::Scene(_) => has_scene = true,
-                NativePanel::Camera(_)
+                NativePanel::Explore
+                | NativePanel::Camera(_)
                 | NativePanel::Plot(_)
                 | NativePanel::Inspector(_)
                 | NativePanel::Status(_)
@@ -135,6 +136,9 @@ impl PanelRuntimeStore {
 
 pub(crate) fn create_native_panel(node: &PanelNode) -> NativePanel {
     match node.panel_type.as_str() {
+        "explore" if node.config_version == 1 && node.config == serde_json::json!({}) => {
+            NativePanel::Explore
+        }
         "camera" => CameraPanel::create(node),
         "bev" => BevPanel::create(node),
         "plot" => PlotPanel::create(node),

@@ -141,6 +141,11 @@ impl ViewerSession {
         }
     }
 
+    pub(crate) fn take_numeric_worker_from(&mut self, previous: &mut Self) {
+        self.numeric_plots
+            .take_worker_from(&mut previous.numeric_plots);
+    }
+
     pub(crate) fn topic_tree(&self) -> &viewer_core::TopicTree {
         &self.topic_tree
     }
@@ -399,13 +404,16 @@ mod numeric_demand_tests {
             dynamic_tf_topic: "/tf".into(),
             static_tf_topic: "/tf_static".into(),
         };
-        let mut session = ViewerSession::open(
-            &path,
-            "/camera".into(),
-            &PlaybackRequirements::empty(),
-            &bindings,
-        )
-        .unwrap();
+        let explorer = crate::workspace::NativeWorkspace::load_bundled_or_fallback(
+            crate::workspace::WorkspaceLayout::Explore,
+        );
+        assert!(explorer.startup_warning().is_none());
+        let requirements = explorer.data_requirements();
+        assert_eq!(requirements.playback, PlaybackRequirements::empty());
+        assert!(requirements.signals.is_empty());
+        let mut session =
+            ViewerSession::open(&path, "/camera".into(), &requirements.playback, &bindings)
+                .unwrap();
         let selected = session.plan().selected_stream_ids();
         let cursor = session.playback_view().unwrap().cursor;
         let stream = session.topic_tree().entries[0].stream_id;

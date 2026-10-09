@@ -49,6 +49,18 @@ fn scalar_size(name: &str) -> Option<usize> {
     }
 }
 impl RosMessageSchema {
+    pub fn for_stream(stream: &StreamDescriptor) -> Result<Self, DecodeError> {
+        if stream.message_encoding != "cdr" {
+            return Err(unsupported("requires CDR messages"));
+        }
+        Self::parse(
+            &stream.schema,
+            stream
+                .schema_definition
+                .as_deref()
+                .ok_or_else(|| unsupported("source has no schema definition"))?,
+        )
+    }
     pub fn parse(name: &str, definition: &SchemaDefinition) -> Result<Self, DecodeError> {
         if definition.encoding != "ros2msg" || definition.data.len() > 1024 * 1024 {
             return Err(unsupported("requires ros2msg schema up to 1 MiB"));
@@ -257,6 +269,10 @@ impl Skip {
                 reader.take(length)?;
             }
             Self::Message(fields) => {
+                // rosidl inserts a uint8 wire member into empty (including constant-only) messages.
+                if fields.is_empty() {
+                    reader.take(1)?;
+                }
                 for field in fields {
                     field.apply(reader, budget)?;
                 }
@@ -292,17 +308,7 @@ pub struct NumericFieldExtractor {
 }
 impl NumericFieldExtractor {
     pub fn for_stream(stream: &StreamDescriptor, path: &str) -> Result<Self, DecodeError> {
-        if stream.message_encoding != "cdr" {
-            return Err(unsupported("requires CDR messages"));
-        }
-        RosMessageSchema::parse(
-            &stream.schema,
-            stream
-                .schema_definition
-                .as_deref()
-                .ok_or_else(|| unsupported("source has no schema definition"))?,
-        )?
-        .compile_numeric(path)
+        RosMessageSchema::for_stream(stream)?.compile_numeric(path)
     }
     pub fn extract(&self, payload: &[u8]) -> Result<f64, DecodeError> {
         // Plain XCDR1 only. Parameter-list and XCDR2 require different layouts.

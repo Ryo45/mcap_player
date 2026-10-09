@@ -23,5 +23,6 @@ pub use source_fingerprint::mcap_summary_fingerprint;
 
 mod numeric_plot;
 pub use numeric_plot::{
-    NumericPlotDetail, NumericPlotOverview, NumericSample, NumericSeriesRequest,
+    NumericPlotDetail, NumericPlotOverview, NumericPlotOverviewBatch, NumericSample,
+    NumericSeriesRequest,
 };

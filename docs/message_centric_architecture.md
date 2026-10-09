@@ -23,7 +23,9 @@ Native indexed source / Web RecordingDataPlane / ROS live push
 `SourceCatalog` contains source facts only: recording time range, topic, schema, encoding, stable
 session-local `StreamId`, original schema encoding/definition bytes, and an optional recording-wide
 message count. Native and Browser Local share one `Arc<SchemaDefinition>` per MCAP schema across
-stream descriptors. Remote catalog JSON preserves the same bytes as `schemaData`; unsupported
+stream descriptors. Remote catalog JSON stores each schema once in `schemas` (ID, encoding, bytes), and streams
+reference it through `schemaId`. Catalog clones share byte backing; the Web adapter shares one
+`Arc<SchemaDefinition>` per referenced schema without copying its bytes. Unsupported
 message/schema encodings remain visible in the catalog. It does not assign Camera,
 TF, Scene, or UI meaning. `SessionPlan` resolves the current workspace's closed
 `PlaybackRequirements` and `WorkspaceBindings` once when a session opens. The workspace owns the
@@ -134,7 +136,8 @@ SourceCatalog -> TopicTree (metadata only)
 
 The extractor supports plain little/big endian ROS 2 XCDR1, `ros2msg` dependency definitions, nested
 messages, primitive numeric scalars, and skipping strings, fixed arrays and sequences before a
-selected scalar. It stops at that scalar: it neither copies strings/arrays nor creates a universal
+selected scalar, including the uint8 wire member inserted by ROS 2 for empty/constant-only messages.
+It stops at that scalar: it neither copies strings/arrays nor creates a universal
 ROS value tree. Schema depth, definition size, field expansion and variable-message traversal have
 explicit bounds. Arrays/sequence elements as selected paths, wstring, ros2idl, parameter-list CDR
 and XCDR2 are not implemented. Plot numbers are `f64`, so large 64-bit integers can lose display
@@ -150,9 +153,22 @@ Three concrete access patterns are separate:
   Index records. It does not approximate current values from overview buckets.
 
 Native currently renders full-recording overview field plots, with at most eight series of 4,000
-points each and one cancellable worker per session. Detail/current APIs exist in core but are not
+points each. Pending fields for the same stream/range share one schema parse and one read of each
+indexed chunk. Adding a field to a running group cancels and regroups it; completed series remain
+available. One numeric worker is retained across source replacement: its cancellation is requested
+and the next source waits asynchronously for it to finish before starting another numeric job.
+Cancellation is checked before chunk reads/decompression and during record parsing; a codec call
+already in progress finishes before cancellation can take effect. Shutdown joins the worker.
+Detail/current APIs exist in core but are not
 yet scheduled by this UI. Web Local/Remote preserve identical metadata and raw-message semantics;
 interactive field Plot UI and query transport adapters remain future work.
+
+Native `--layout explore` opens recordings without Camera/Odometry/TF playback requirements or
+persistent bootstrap. Empty-selection playback and seek touch no message chunks, including while
+advancing the timeline. Its Topic Tree is usable for scalar-only recordings. Standard/showcase retain
+their own strict continuous requirements. Remote metadata retains non-CDR streams even when those
+streams have no Message Index; server startup validates indexed restore for CDR streams only, and
+requested indexed operations still report unsupported streams explicitly.
 
 `NumericPlotOverview` is a bounded query product and the boundary for a future source-fingerprinted
 artifact keyed by stream, schema, field, time range and extraction/reduction version. The current

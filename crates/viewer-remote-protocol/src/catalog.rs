@@ -114,13 +114,19 @@ pub struct StreamDescriptor {
     pub id: u32,
     pub topic: String,
     pub schema_name: String,
-    pub schema_encoding: String,
-    /// Original schema bytes. JSON byte array preserves every schema encoding.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub schema_data: Option<Vec<u8>>,
+    pub schema_id: Option<u16>,
     pub message_encoding: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub message_count: Option<MessageCount>,
+}
+
+/// One source schema's bytes, shared by all referring streams and catalog clones.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SchemaDescriptor {
+    pub id: u16,
+    pub encoding: String,
+    pub data: std::sync::Arc<[u8]>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -133,6 +139,7 @@ pub struct CatalogResponse {
     pub range_semantics: String,
     pub time_range: RemoteTimeRange,
     pub streams: Vec<StreamDescriptor>,
+    pub schemas: Vec<SchemaDescriptor>,
 }
 
 impl CatalogResponse {
@@ -141,6 +148,7 @@ impl CatalogResponse {
         recording_revision: String,
         time_range: RemoteTimeRange,
         streams: Vec<StreamDescriptor>,
+        schemas: Vec<SchemaDescriptor>,
     ) -> Self {
         Self {
             schema_version: REMOTE_PROTOCOL_SCHEMA_VERSION,
@@ -150,6 +158,7 @@ impl CatalogResponse {
             range_semantics: "start-inclusive-end-exclusive".into(),
             time_range,
             streams,
+            schemas,
         }
     }
 }
@@ -208,13 +217,17 @@ mod tests {
                 end_ns_exclusive: TimestampNs::new(2),
             },
             vec![StreamDescriptor {
-                schema_data: Some(vec![0, 1, 127, 255]),
+                schema_id: Some(1),
                 id: 1,
                 topic: "/camera".into(),
                 schema_name: "sensor_msgs/msg/CompressedImage".into(),
-                schema_encoding: "ros2msg".into(),
                 message_encoding: "cdr".into(),
                 message_count: Some(MessageCount::new(42)),
+            }],
+            vec![SchemaDescriptor {
+                id: 1,
+                encoding: "ros2msg".into(),
+                data: std::sync::Arc::from([0, 1, 127, 255]),
             }],
         );
         let json = serde_json::to_string(&catalog).unwrap();

@@ -23,6 +23,7 @@ pub(crate) enum WorkspaceLayout {
     #[default]
     Standard,
     Showcase,
+    Explore,
 }
 
 impl WorkspaceLayout {
@@ -30,6 +31,7 @@ impl WorkspaceLayout {
         match self {
             Self::Standard => BUNDLED_DEFAULT_LAYOUT,
             Self::Showcase => BUNDLED_SHOWCASE_LAYOUT,
+            Self::Explore => include_str!("../../../config/layouts/native_explore.json"),
         }
     }
 }
