@@ -10,6 +10,7 @@ use viewer_layout::{LayoutDocument, LayoutNode, PanelId, PanelNode};
 
 pub(crate) struct PanelRuntimeStore {
     panels: BTreeMap<PanelId, NativePanel>,
+    topic_inspector: super::inspector::InspectorTreeState,
 }
 
 pub(crate) struct PanelRuntimeBuildResult {
@@ -57,11 +58,31 @@ impl PanelRuntimeStore {
             }
         });
         PanelRuntimeBuildResult {
-            store: Self { panels },
+            store: Self {
+                panels,
+                topic_inspector: Default::default(),
+            },
             warnings,
         }
     }
 
+    pub(crate) fn show_topic_inspector(
+        &mut self,
+        context: &egui::Context,
+        topic: Option<&str>,
+        inspections: &[crate::inspection::TopicInspection],
+        cursor: Option<viewer_core::ArrivalTime>,
+    ) -> Vec<crate::interaction::ViewerAction> {
+        super::inspector::show_topic_inspector(
+            context,
+            topic,
+            super::InspectorPanelInput {
+                inspections,
+                cursor,
+            },
+            &mut self.topic_inspector,
+        )
+    }
     pub(crate) fn get_mut(&mut self, id: &PanelId) -> Option<&mut NativePanel> {
         self.panels.get_mut(id)
     }
@@ -75,6 +96,7 @@ impl PanelRuntimeStore {
     }
 
     pub(crate) fn reset_for_source(&mut self, focused_camera: Option<CameraId>) {
+        self.topic_inspector = Default::default();
         for panel in self.panels.values_mut() {
             panel.reset_for_source(focused_camera);
         }
@@ -205,7 +227,7 @@ mod tests {
         let inspector = create_native_panel(&node(
             "inspector",
             "inspector",
-            json!({"topic": "/diagnostics", "maxMessages": 8}),
+            json!({"topic": "/diagnostics"}),
         ));
         assert_eq!(inspector.kind_name(), "inspector");
         let status = create_native_panel(&node("status", "status", json!({})));
@@ -287,13 +309,12 @@ mod tests {
         let result = PanelRuntimeStore::from_layout(&layout(vec![node(
             "inspector",
             "inspector",
-            json!({"topic": "/diagnostics", "maxMessages": 8}),
+            json!({"topic": "/diagnostics"}),
         )]));
         assert_eq!(
             result.store.data_requirements().inspections,
             vec![crate::inspection::InspectorRequirement {
                 topic: "/diagnostics".into(),
-                max_messages: 8,
             }]
         );
     }

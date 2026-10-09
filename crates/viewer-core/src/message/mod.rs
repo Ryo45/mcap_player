@@ -1,6 +1,6 @@
 //! Canonical serialized messages, time types, and concrete ROS CDR codecs.
 
-mod cdr;
+pub(crate) mod cdr;
 mod time;
 
 pub use cdr::{

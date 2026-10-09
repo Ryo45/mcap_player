@@ -78,6 +78,16 @@ cargo run -p viewer-native --features ros2-live -- \
 - カメラ内部パラメータ: `config/camera_calibration.json`
 - 未対応: Raw `sensor_msgs/msg/Image`、H.264、ブラウザでの live 入力
 
+## Generic Inspector
+
+Nativeの「Topics」でtopicを開き、**Inspect at cursor**を選ぶと、再生cursor `T`でのlatest message
+`<= T`を表示します。log time／publish time／sequence／ROS header stampと、schemaに従ったfield treeを
+閲覧できます。nested messageは折りたたみ、配列／sequenceは64要素ずつページ表示します。
+対象topicの選択でplayback selectionは増えません。messageとindex/chunkを再利用するため、近接した
+cursor移動でwhole-log scanや同じchunkの再展開を繰り返しません。
+ROS 2 plain CDR＋完全なros2msg dependency定義に対応し、未対応schemaはmetadataと理由を表示します。
+payload上限16 MiB、最大8 topicです。詳細は[architecture](docs/message_centric_architecture.md)を参照してください。
+
 ## Topic Tree / numeric field Plot
 
 Nativeの左側「Topics」はcatalog/schema metadataだけで構築します。topicを開き、numeric fieldの

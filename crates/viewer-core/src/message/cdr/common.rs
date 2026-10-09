@@ -33,7 +33,7 @@ enum Endian {
     Big,
 }
 
-pub(super) struct Reader<'a> {
+pub(crate) struct Reader<'a> {
     bytes: &'a [u8],
     position: usize,
     base: usize,
@@ -41,7 +41,7 @@ pub(super) struct Reader<'a> {
 }
 
 impl<'a> Reader<'a> {
-    pub(super) fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
+    pub(crate) fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
         if bytes.len() < 4 {
             return Err(DecodeError::Truncated);
         }
@@ -58,7 +58,7 @@ impl<'a> Reader<'a> {
         })
     }
 
-    pub(super) fn align(&mut self, alignment: usize) -> Result<(), DecodeError> {
+    pub(crate) fn align(&mut self, alignment: usize) -> Result<(), DecodeError> {
         let relative = self.position - self.base;
         let padding = (alignment - relative % alignment) % alignment;
         self.position = self
@@ -71,7 +71,7 @@ impl<'a> Reader<'a> {
         Ok(())
     }
 
-    pub(super) fn scalar_bits(&mut self, size: usize) -> Result<u64, DecodeError> {
+    pub(crate) fn scalar_bits(&mut self, size: usize) -> Result<u64, DecodeError> {
         self.align(size)?;
         let raw = self.take(size)?;
         let mut bytes = [0; 8];
@@ -87,11 +87,11 @@ impl<'a> Reader<'a> {
         })
     }
 
-    pub(super) fn position(&self) -> usize {
+    pub(crate) fn position(&self) -> usize {
         self.position
     }
 
-    pub(super) fn take(&mut self, length: usize) -> Result<&'a [u8], DecodeError> {
+    pub(crate) fn take(&mut self, length: usize) -> Result<&'a [u8], DecodeError> {
         let end = self
             .position
             .checked_add(length)
@@ -104,7 +104,7 @@ impl<'a> Reader<'a> {
         Ok(result)
     }
 
-    pub(super) fn u32(&mut self) -> Result<u32, DecodeError> {
+    pub(crate) fn u32(&mut self) -> Result<u32, DecodeError> {
         self.align(4)?;
         let raw: [u8; 4] = self
             .take(4)?
@@ -116,7 +116,7 @@ impl<'a> Reader<'a> {
         })
     }
 
-    pub(super) fn i32(&mut self) -> Result<i32, DecodeError> {
+    pub(crate) fn i32(&mut self) -> Result<i32, DecodeError> {
         Ok(self.u32()? as i32)
     }
 
@@ -132,15 +132,15 @@ impl<'a> Reader<'a> {
         })
     }
 
-    pub(super) fn f64(&mut self) -> Result<f64, DecodeError> {
+    pub(crate) fn f64(&mut self) -> Result<f64, DecodeError> {
         Ok(f64::from_bits(self.u64()?))
     }
 
-    pub(super) fn f32(&mut self) -> Result<f32, DecodeError> {
+    pub(crate) fn f32(&mut self) -> Result<f32, DecodeError> {
         Ok(f32::from_bits(self.u32()?))
     }
 
-    pub(super) fn length(&mut self) -> Result<usize, DecodeError> {
+    pub(crate) fn length(&mut self) -> Result<usize, DecodeError> {
         let length = usize::try_from(self.u32()?).map_err(|_| DecodeError::InvalidLength)?;
         if length > MAX_FIELD_BYTES {
             return Err(DecodeError::InvalidLength);
@@ -148,7 +148,7 @@ impl<'a> Reader<'a> {
         Ok(length)
     }
 
-    pub(super) fn sequence_length(
+    pub(crate) fn sequence_length(
         &mut self,
         minimum_element_bytes: usize,
     ) -> Result<usize, DecodeError> {
@@ -160,7 +160,7 @@ impl<'a> Reader<'a> {
         Ok(length)
     }
 
-    pub(super) fn string(&mut self) -> Result<String, DecodeError> {
+    pub(crate) fn string(&mut self) -> Result<String, DecodeError> {
         let length = self.length()?;
         if length == 0 {
             return Err(DecodeError::InvalidLength);
@@ -175,7 +175,7 @@ impl<'a> Reader<'a> {
     }
 }
 
-pub(super) fn align_output(output: &mut Vec<u8>, alignment: usize) {
+pub(crate) fn align_output(output: &mut Vec<u8>, alignment: usize) {
     let relative = output.len() - 4;
     output.resize(
         output.len() + (alignment - relative % alignment) % alignment,
@@ -183,12 +183,12 @@ pub(super) fn align_output(output: &mut Vec<u8>, alignment: usize) {
     );
 }
 
-pub(super) fn push_u32(output: &mut Vec<u8>, value: u32) {
+pub(crate) fn push_u32(output: &mut Vec<u8>, value: u32) {
     align_output(output, 4);
     output.extend_from_slice(&value.to_le_bytes());
 }
 
-pub(super) fn push_string(output: &mut Vec<u8>, value: &str) -> Result<(), DecodeError> {
+pub(crate) fn push_string(output: &mut Vec<u8>, value: &str) -> Result<(), DecodeError> {
     let length = value
         .len()
         .checked_add(1)
@@ -202,7 +202,7 @@ pub(super) fn push_string(output: &mut Vec<u8>, value: &str) -> Result<(), Decod
     Ok(())
 }
 
-pub(super) fn push_f64(output: &mut Vec<u8>, value: f64) {
+pub(crate) fn push_f64(output: &mut Vec<u8>, value: f64) {
     align_output(output, 8);
     output.extend_from_slice(&value.to_le_bytes());
 }

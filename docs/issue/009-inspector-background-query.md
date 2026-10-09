@@ -1,3 +1,7 @@
+> この文書は最初のbounded range-preview Inspectorの履歴です。現在は専用workerでcursorの
+> indexed latest-beforeを取得し、Generic Inspector view modelを表示します。`maxMessages`設定は廃止。
+> 現行契約は[architecture](../message_centric_architecture.md#generic-cursor-inspector)を参照してください。
+
 # Inspector queryをsource-open pathから外す
 
 - Priority: P2

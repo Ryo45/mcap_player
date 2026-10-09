@@ -4,7 +4,7 @@ use crate::plot_loader::PlotLoader;
 use crate::signal_query::SignalQueryView;
 use crate::{
     inspection::{InspectorRequirement, TopicInspection},
-    inspector_loader::{InspectorLoader, InspectorRequest},
+    inspector_loader::InspectorLoader,
 };
 use anyhow::{Context, Result};
 use std::{path::Path, time::Duration};
@@ -128,9 +128,11 @@ impl ViewerSession {
         }
     }
 
-    pub(crate) fn take_numeric_worker_from(&mut self, previous: &mut Self) {
+    pub(crate) fn take_query_workers_from(&mut self, previous: &mut Self) {
         self.numeric_plots
             .take_worker_from(&mut previous.numeric_plots);
+        self.inspector_loader
+            .take_worker_from(&mut previous.inspector_loader);
     }
 
     pub(crate) fn topic_tree(&self) -> &viewer_core::TopicTree {
@@ -214,7 +216,12 @@ impl ViewerSession {
         };
         self.numeric_plots.poll(source);
         self.plot_loader.poll();
-        self.inspector_loader.poll();
+        let target = match &self.source {
+            SessionSource::Mcap(playback) => Some(playback.clock().view().cursor),
+            #[cfg(feature = "ros2-live")]
+            SessionSource::Ros { .. } => None,
+        };
+        self.inspector_loader.poll(source, target);
     }
 
     pub(crate) fn signal_query_view(
@@ -230,21 +237,21 @@ impl ViewerSession {
         &mut self,
         requirements: &[InspectorRequirement],
     ) -> Result<()> {
-        let Some(source) = self
-            .recording_source()
-            .map(viewer_core::McapSource::fork_reader)
-        else {
-            self.inspector_loader.clear();
-            return Ok(());
-        };
-        if requirements.is_empty() {
-            self.inspector_loader.clear();
-            return Ok(());
+        self.inspector_loader.configure(requirements);
+        Ok(())
+    }
+    pub(crate) fn select_inspector_topic(&mut self, topic: Option<String>) {
+        if topic.as_ref().is_none_or(|topic| {
+            self.topic_tree
+                .entries
+                .iter()
+                .any(|entry| &entry.topic == topic)
+        }) {
+            self.inspector_loader.select_topic(topic);
         }
-        self.inspector_loader.start(InspectorRequest {
-            source,
-            requirements: requirements.to_vec(),
-        })
+    }
+    pub(crate) fn selected_inspector_topic(&self) -> Option<&str> {
+        self.inspector_loader.selected_topic()
     }
 
     pub(crate) fn inspections(&self) -> &[TopicInspection] {
@@ -427,6 +434,20 @@ mod numeric_demand_tests {
         let selected = session.plan().selected_stream_ids();
         let cursor = session.playback_view().unwrap().cursor;
         let stream = session.topic_tree().entries[0].stream_id;
+        session.select_inspector_topic(Some("/scalar".into()));
+        let deadline = std::time::Instant::now() + Duration::from_secs(3);
+        loop {
+            session.poll_queries();
+            if session.inspections().first().is_some_and(|i| !i.loading) {
+                break;
+            }
+            assert!(std::time::Instant::now() < deadline);
+            std::thread::yield_now();
+        }
+        assert_eq!(session.inspections()[0].metadata.unwrap().log_time, cursor);
+        assert!(session.inspections()[0].message.is_some());
+        assert_eq!(session.plan().selected_stream_ids(), selected);
+        assert_eq!(session.playback_view().unwrap().cursor, cursor);
         session.add_numeric_series(stream, "value".into());
         assert_eq!(session.numeric_series().len(), 1);
         assert_eq!(session.plan().selected_stream_ids(), selected);

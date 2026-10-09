@@ -58,7 +58,8 @@ pub use presentation::{
     ViewerPresentationInput,
 };
 pub use recording::{
-    CameraRoute, IndexedChunkFact, IndexedMessages, IndexedPlanError, IndexedReadDiagnostics,
+    CameraRoute, IndexedChunkFact, IndexedMessagePosition, IndexedMessages, IndexedPlanError,
+    IndexedReadDiagnostics, LatestMessageReader, LatestQueryDiagnostics,
     MCAP_SUMMARY_IDENTITY_ALGORITHM, McapOpenError, McapSource, McapSummaryIdentity,
     PlaybackRequirements, QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult, RawMessage,
     RecordingTimeRange, RestoreInput, RestorePlan, RestorePlanError, RestorePlanner, RestoreRead,
@@ -77,3 +78,10 @@ pub use recording::{SchemaExplorationError, TopicTree, TopicTreeEntry};
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use recording::FileMessageStream;
+
+mod inspection;
+pub use inspection::{
+    INSPECTOR_MAX_PAYLOAD_BYTES, INSPECTOR_PAGE_FIELDS, InspectorContainer, InspectorDecodeError,
+    InspectorField, InspectorHeaderStamp, InspectorMessage, InspectorPage, InspectorPageCursor,
+    InspectorScalar, InspectorSchema, InspectorValue,
+};

@@ -145,13 +145,63 @@ finally commits the cursor. Any read, decompression, index, or generation failur
 cursor and controller values visible. Restore describes practical feature state at `T`; it does not
 promise reconstruction of unrelated messages that no selected controller consumes.
 
-## Bounded inspection
+## Generic cursor Inspector
 
-Occasional inspection uses `RangeQuery` with an exact `[start,end)` range plus hard message-count
-and payload-byte limits. It returns original serialized messages, clones only `Bytes` handles, and
-does not mutate the playback source cursor or controller state. Native Inspector uses this path with
-a 16 MiB payload cap. Plot extraction remains a separate numeric query, and Preview remains a
-source-identified derived artifact; neither is folded into playback or inspection.
+Native's Topic Tree offers **Inspect at cursor** for every topic, including schemas/encodings that
+cannot yet be decoded. Selection creates session-owned query demand; it does not add continuous
+streams, change the playback cursor or mutate FeatureRuntime. Fixed Inspector panels use the same
+path and now configure only `topic` (the earlier `maxMessages` range-preview setting is removed).
+
+At committed playback cursor `T`, the worker queries the exact latest MCAP message with log time
+`<= T`. For topics containing multiple source channels it chooses the latest across those channels,
+using deterministic stream/source ordering for ties and decoding with the chosen channel's schema.
+The UI displays log time, original publish time/sequence (including zero), typed ROS header stamp
+and the field tree. Header stamp is never substituted for the log-time query timeline. No predecessor
+is an explicit empty result; missing index/schema/unsupported encoding is an explicit error with
+original message metadata retained when available.
+
+```text
+Topic Tree / Inspector panel -> topic + committed cursor demand
+  -> one coalescing Inspector worker -> LatestMessageReader
+  -> sparse chunk lookup + Message Index predecessor
+  -> original RawMessage -> InspectorSchema / InspectorMessage (query-only view model)
+  -> bounded field pages -> Inspector UI
+```
+
+The existing latest-before primitive and `LatestMessageReader` share indexed position resolution.
+Per-stream chunk references, sorted by start time with prefix maximum end times, are built once at
+source open. Cursor queries binary-search those sparse references; they do not scan the recording
+or all chunk facts on every frame. Overlapping chunk time ranges choose the actual latest entry.
+The cursor reader caches **one Message Index span and one serialized/decompressed chunk**, never a
+recording-wide message history or decoded ROS store. Adjacent cursor changes within that chunk do
+not repeat index reads/decompression. Record identity reuses an Inspector view while its message
+remains the same. Source changes keep one worker, reset its physical/view caches and reject stale
+results. The bounded mailbox coalesces pending cursor requests. A moving cursor shows the last
+completed query's target explicitly with an updating indicator; a future message is hidden after
+a backward seek until its query completes. Paused unchanged cursors issue no new work.
+
+`InspectorMessage` lives in viewer-core's dedicated `inspection` module. It is not a canonical
+message/domain object, never enters FeatureRuntime, and is not used by Generic Plot. Its schema
+layout reuses the existing ros2msg AST and CDR reader. It supports plain XCDR1 (both endian modes),
+numeric/bool/string scalars, fixed arrays, sequences, nested and empty messages. Strings display
+at most 512 characters. Containers retain schema+byte offsets, not all decoded children: expansion
+creates at most 64 fields/elements per page; sequential pages carry a next offset for variable-size
+elements. A final variable-size container need not be traversed to display its length. Preceding
+variable-size fields sometimes require bounded CDR traversal to locate a later field; traversal and
+schema-depth budgets report an error rather than doing unbounded work. XCDR2/parameter-list CDR,
+wstring/ros2idl and incomplete dependency definitions currently report unsupported-schema errors.
+
+The worker permits eight topics and at most 16 MiB of compact Inspector-owned payload per result.
+Compaction is intentional on this cold query path so tiny messages do not pin eight large chunks.
+Up to two view generations may overlap during UI handoff; unchanged views share Arc ownership.
+The physical cache remains bounded by the Native 256 MiB record/chunk limit plus descriptor/index
+overhead. Each UI view retains at most 32 expanded pages / 2,048 fields, with bounded navigation
+history. Large messages above the payload budget show metadata and a clear limit error.
+
+`RangeQuery` still provides exact `[start,end)` serialized queries with message/byte caps for other
+on-demand workloads. Plot and Preview keep their own specialized query/artifact paths. Inspector
+UI is Native; the view model is WASM-compatible but browser cursor-query UI/transport integration
+is not implemented by this change.
 
 ## Metadata exploration and selected-field Plot
 
