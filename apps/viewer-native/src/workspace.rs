@@ -61,6 +61,8 @@ pub(crate) struct ViewerInteractionState {
 pub(crate) enum WorkspaceEffect {
     None,
     Playback(PlaybackCommand),
+    AddNumericSeries(viewer_core::StreamId, String),
+    RemoveNumericSeries(viewer_core::StreamId, String),
     BeginPreview(ArrivalTime),
     UpdatePreview(Option<ArrivalTime>),
     CommitPreview(ArrivalTime),
@@ -189,6 +191,12 @@ impl NativeWorkspace {
 
     pub(crate) fn apply_action(&mut self, action: ViewerAction) -> WorkspaceEffect {
         match action {
+            ViewerAction::AddNumericSeries { stream, field_path } => {
+                WorkspaceEffect::AddNumericSeries(stream, field_path)
+            }
+            ViewerAction::RemoveNumericSeries { stream, field_path } => {
+                WorkspaceEffect::RemoveNumericSeries(stream, field_path)
+            }
             ViewerAction::Playback(command) => WorkspaceEffect::Playback(command),
             ViewerAction::SetFocusedCamera {
                 panel_id,
@@ -290,6 +298,7 @@ mod tests {
             time_range: None,
             streams: (0..camera_count)
                 .map(|index| StreamDescriptor {
+                    schema_definition: None,
                     id: StreamId(index + 1),
                     topic: if index == 0 {
                         "/camera/front/image/compressed".into()
@@ -328,7 +337,7 @@ mod tests {
         let mut expected_playback = viewer_core::PlaybackRequirements::empty();
         expected_playback.require_all_cameras();
         expected_playback.require_path();
-        expected_playback.require_odometry();
+        expected_playback.optional_odometry();
         expected_playback.require_point_cloud();
         expected_playback.require_transforms();
         assert_eq!(

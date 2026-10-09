@@ -20,7 +20,7 @@ impl fmt::Display for DecodeError {
             Self::InvalidLength => write!(f, "invalid or excessive CDR field length"),
             Self::InvalidUtf8 => write!(f, "CDR string is not UTF-8"),
             Self::InvalidTimestamp => write!(f, "invalid ROS timestamp"),
-            Self::UnsupportedFormat(value) => write!(f, "unsupported image format: {value}"),
+            Self::UnsupportedFormat(value) => write!(f, "unsupported format: {value}"),
         }
     }
 }
@@ -58,7 +58,7 @@ impl<'a> Reader<'a> {
         })
     }
 
-    fn align(&mut self, alignment: usize) -> Result<(), DecodeError> {
+    pub(super) fn align(&mut self, alignment: usize) -> Result<(), DecodeError> {
         let relative = self.position - self.base;
         let padding = (alignment - relative % alignment) % alignment;
         self.position = self
@@ -69,6 +69,22 @@ impl<'a> Reader<'a> {
             return Err(DecodeError::Truncated);
         }
         Ok(())
+    }
+
+    pub(super) fn scalar_bits(&mut self, size: usize) -> Result<u64, DecodeError> {
+        self.align(size)?;
+        let raw = self.take(size)?;
+        let mut bytes = [0; 8];
+        Ok(match self.endian {
+            Endian::Little => {
+                bytes[..size].copy_from_slice(raw);
+                u64::from_le_bytes(bytes)
+            }
+            Endian::Big => {
+                bytes[8 - size..].copy_from_slice(raw);
+                u64::from_be_bytes(bytes)
+            }
+        })
     }
 
     pub(super) fn position(&self) -> usize {

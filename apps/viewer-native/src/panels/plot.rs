@@ -190,7 +190,6 @@ impl PlotPanel {
 
     pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
         requirements.signals.insert(self.config.signal.signal_id());
-        requirements.playback.require_odometry();
     }
 
     pub(crate) fn show(&mut self, ui: &mut egui::Ui, input: PlotPanelInput<'_>) -> PanelOutput {

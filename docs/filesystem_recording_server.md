@@ -76,10 +76,11 @@ their complete expected-small archive so a Browser session can cache it once and
 updates valid at its target. Restore remains separate from the paginated exact range API.
 
 Catalog time is MCAP log time with start-inclusive/end-exclusive semantics. Nanosecond values are
-decimal JSON strings, avoiding JavaScript number precision loss. Only `message_encoding == "cdr"`
-channels are exposed. Channels are sorted by topic, schema name, message encoding, and original
+decimal JSON strings, avoiding JavaScript number precision loss. All channels, including unsupported
+message encodings, are exposed for metadata exploration. Channels are sorted by topic, schema name, message encoding, and original
 channel ID, then assigned logical stream IDs starting at one. Catalog streams contain recording
-facts only: logical ID, topic, schema name/encoding, message encoding, and optional message count.
+facts only: logical ID, topic, schema name/encoding, original schema definition bytes (`schemaData`
+as a JSON byte array), message encoding, and optional message count.
 Cameraなどのviewer feature分類はclientがschema factsから行います。
 
 The revision is:

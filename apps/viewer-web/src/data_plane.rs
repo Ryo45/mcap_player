@@ -447,6 +447,8 @@ mod tests {
 
     fn message(time: i64, payload: Bytes) -> RawMessage {
         RawMessage {
+            publish_time_ns: None,
+            sequence: None,
             stream_id: StreamId(1),
             arrival_time: ArrivalTime(time),
             payload,

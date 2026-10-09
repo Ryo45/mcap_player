@@ -193,6 +193,7 @@ mod tests {
         let catalog = SourceCatalog {
             time_range: None,
             streams: vec![StreamDescriptor {
+                schema_definition: None,
                 id: StreamId(1),
                 topic: "/camera/front/image/compressed".into(),
                 schema: "sensor_msgs/msg/CompressedImage".into(),

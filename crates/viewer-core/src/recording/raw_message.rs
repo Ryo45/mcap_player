@@ -8,5 +8,8 @@ use bytes::Bytes;
 pub struct RawMessage {
     pub stream_id: StreamId,
     pub arrival_time: ArrivalTime,
+    /// MCAP publish time; independent of log time and ROS header stamp. Live may omit it.
+    pub publish_time_ns: Option<u64>,
+    pub sequence: Option<u32>,
     pub payload: Bytes,
 }

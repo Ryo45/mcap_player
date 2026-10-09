@@ -422,6 +422,7 @@ mod tests {
 
     fn descriptor(id: u32, topic: &str, schema: &str) -> StreamDescriptor {
         StreamDescriptor {
+            schema_definition: None,
             id: StreamId(id),
             topic: topic.into(),
             schema: schema.into(),

@@ -78,6 +78,15 @@ cargo run -p viewer-native --features ros2-live -- \
 - カメラ内部パラメータ: `config/camera_calibration.json`
 - 未対応: Raw `sensor_msgs/msg/Image`、H.264、ブラウザでの live 入力
 
+## Topic Tree / numeric field Plot
+
+Nativeの左側「Topics」はcatalog/schema metadataだけで構築します。topicを開き、numeric fieldの
+「+」から任意fieldのbounded overview Plotを追加できます（最大8本、各4,000点）。追加・削除で
+continuous playbackのstream selectionは変わりません。ROS 2 CDR + ros2msgのnested numeric scalarに
+対応し、元schema definitionも表示します。Web Local/Remoteにも同じschema bytesを保持しますが、
+field Plot UIは現在Nativeのみです。現在の設計と対応範囲は
+[message-centric architecture](docs/message_centric_architecture.md)を参照してください。
+
 ## 開発時のチェック
 
 ```bash

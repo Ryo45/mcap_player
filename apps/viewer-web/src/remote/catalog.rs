@@ -52,8 +52,9 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
         })?;
     let primary_camera_topic = camera.topic.clone();
 
-    let streams = supported
-        .into_iter()
+    let streams = remote
+        .streams
+        .iter()
         .map(to_core_descriptor)
         .collect::<Vec<_>>();
     let core = SourceCatalog {
@@ -89,6 +90,12 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
 
 fn to_core_descriptor(stream: &StreamDescriptor) -> CoreStreamDescriptor {
     CoreStreamDescriptor {
+        schema_definition: stream.schema_data.as_ref().map(|data| {
+            std::sync::Arc::new(viewer_core::SchemaDefinition {
+                encoding: stream.schema_encoding.clone(),
+                data: bytes::Bytes::copy_from_slice(data),
+            })
+        }),
         id: StreamId(stream.id),
         topic: stream.topic.clone(),
         schema: stream.schema_name.clone(),
@@ -112,6 +119,7 @@ mod tests {
 
     fn stream(id: u32, topic: &str, schema: &str, message_encoding: &str) -> StreamDescriptor {
         StreamDescriptor {
+            schema_data: None,
             id,
             topic: topic.into(),
             schema_name: schema.into(),
@@ -140,7 +148,7 @@ mod tests {
     }
 
     #[test]
-    fn adapts_supported_streams_and_selects_camera_and_odometry() {
+    fn retains_all_metadata_and_selects_camera_and_odometry() {
         let adapted = adapt_catalog(&catalog()).unwrap();
         assert_eq!(
             adapted.core.time_range,
@@ -151,7 +159,8 @@ mod tests {
         );
         assert_eq!(adapted.plan.primary_camera_topic(), Some("/camera"));
         assert_eq!(adapted.selected_streams, vec![3, 7, 8]);
-        assert_eq!(adapted.core.streams.len(), 4);
+        assert_eq!(adapted.core.streams.len(), 5);
+        assert!(adapted.core.by_topic("/future").is_some());
         assert!(adapted.core.by_topic("/extra").is_some());
     }
 
@@ -166,5 +175,72 @@ mod tests {
         let mut value = catalog();
         value.time_range.start_ns = TimestampNs::new(i64::MAX as u64 + 1);
         assert!(adapt_catalog(&value).is_err());
+    }
+}
+
+#[cfg(test)]
+mod schema_parity_tests {
+    use super::*;
+    #[test]
+    fn remote_json_preserves_all_source_schemas_including_non_cdr_topics() {
+        let bytes = std::fs::read(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap"),
+        )
+        .unwrap();
+        let native = viewer_core::McapSource::new(bytes).unwrap();
+        let range = native.catalog().time_range.unwrap();
+        let mut streams = native
+            .catalog()
+            .streams
+            .iter()
+            .map(|s| StreamDescriptor {
+                id: s.id.0,
+                topic: s.topic.clone(),
+                schema_name: s.schema.clone(),
+                schema_encoding: s.schema_definition.as_ref().unwrap().encoding.clone(),
+                schema_data: Some(s.schema_definition.as_ref().unwrap().data.to_vec()),
+                message_encoding: s.message_encoding.clone(),
+                message_count: s
+                    .timing
+                    .message_count
+                    .map(viewer_remote_protocol::MessageCount::new),
+            })
+            .collect::<Vec<_>>();
+        streams.push(StreamDescriptor {
+            id: 999,
+            topic: "/opaque".into(),
+            schema_name: "Any".into(),
+            schema_encoding: "binary".into(),
+            schema_data: Some(vec![0, 255]),
+            message_encoding: "custom".into(),
+            message_count: None,
+        });
+        let remote = CatalogResponse::new(
+            "test".into(),
+            "rev".into(),
+            viewer_remote_protocol::RemoteTimeRange {
+                start_ns: viewer_remote_protocol::TimestampNs::new(range.start.0 as u64),
+                end_ns_exclusive: viewer_remote_protocol::TimestampNs::new(
+                    range.end_exclusive.0 as u64,
+                ),
+            },
+            streams,
+        );
+        let json = serde_json::to_string(&remote).unwrap();
+        let remote = adapt_catalog(&serde_json::from_str(&json).unwrap()).unwrap();
+        for stream in &native.catalog().streams {
+            assert_eq!(remote.core.by_id(stream.id), Some(stream));
+        }
+        let opaque = remote.core.by_id(StreamId(999)).unwrap();
+        assert_eq!(
+            opaque.schema_definition.as_ref().unwrap().data.as_ref(),
+            &[0, 255]
+        );
+        assert!(!remote.plan.selected_stream_ids().contains(&StreamId(999)));
+        let selected = remote.plan.selected_stream_ids();
+        let tree = viewer_core::TopicTree::from_catalog(&remote.core);
+        assert!(tree.entries.iter().any(|e| e.stream_id == StreamId(999)));
+        assert_eq!(remote.plan.selected_stream_ids(), selected);
     }
 }

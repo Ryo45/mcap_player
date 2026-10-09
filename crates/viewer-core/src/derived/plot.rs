@@ -243,10 +243,12 @@ impl SignalOverviewReducer {
             .sum()
     }
 
-    pub fn finish(&self, signal_id: SignalId) -> Option<LoadedSignal> {
-        if self.input_sample_count == 0 {
-            return None;
-        }
+    pub fn input_sample_count(&self) -> u64 {
+        self.input_sample_count
+    }
+
+    /// Bounded numeric product independent of builtin signal identity.
+    pub fn samples(&self) -> Vec<SignalSample> {
         let mut display_samples = Vec::with_capacity(self.retained_points());
         for extrema in self.buckets.iter().flatten() {
             if self.max_points == 1 || extrema.min == extrema.max {
@@ -258,6 +260,14 @@ impl SignalOverviewReducer {
             }
         }
         debug_assert!(display_samples.len() <= self.max_points);
+        display_samples
+    }
+
+    pub fn finish(&self, signal_id: SignalId) -> Option<LoadedSignal> {
+        if self.input_sample_count == 0 {
+            return None;
+        }
+        let display_samples = self.samples();
         Some(LoadedSignal {
             display: PlotSeries {
                 signal_id,

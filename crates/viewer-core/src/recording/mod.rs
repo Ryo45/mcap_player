@@ -24,6 +24,9 @@ pub use session_plan::{
 };
 pub use source_identity::{MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity};
 pub use stream::{
-    RecordingTimeRange, SourceCapabilities, SourceCatalog, StreamDescriptor, StreamId,
-    StreamTimingSummary,
+    RecordingTimeRange, SchemaDefinition, SourceCapabilities, SourceCatalog, StreamDescriptor,
+    StreamId, StreamTimingSummary,
 };
+
+mod topic_tree;
+pub use topic_tree::{TopicTree, TopicTreeEntry};

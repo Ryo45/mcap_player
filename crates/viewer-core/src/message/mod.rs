@@ -10,3 +10,5 @@ pub use cdr::{
     encode_tf_message_cdr,
 };
 pub use time::{ArrivalTime, MeasurementTime};
+
+pub use cdr::{NumericField, NumericFieldExtractor, RosMessageSchema};

@@ -182,6 +182,8 @@ impl App {
                     playback,
                     signals,
                     inspections: session.inspections(),
+                    topic_tree: session.topic_tree(),
+                    numeric_series: session.numeric_series(),
                     preview: self.preview.snapshot(),
                     preview_speed: self.preview.speed_overview(),
                     bookmarks: self.bookmarks.bookmarks(),
@@ -254,6 +256,12 @@ impl App {
         let mut playback_effect = PlaybackEffect::None;
         for action in actions {
             match workspace.apply_action(action) {
+                WorkspaceEffect::AddNumericSeries(stream, path) => {
+                    session.add_numeric_series(stream, path)
+                }
+                WorkspaceEffect::RemoveNumericSeries(stream, path) => {
+                    session.remove_numeric_series(stream, &path)
+                }
                 WorkspaceEffect::Playback(command) => match session
                     .apply_playback_command(command, |target, messages| {
                         workspace.restore_messages(target, messages)

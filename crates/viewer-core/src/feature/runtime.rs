@@ -8,7 +8,12 @@ use crate::{
 use std::{error::Error, fmt, time::Duration};
 use web_time::Instant;
 
-/// Concrete owner and transactional reducer for continuous feature state.
+/// Shared continuous materialization boundary: route/admit serialized inputs, coalesce where
+/// allowed, decode accepted inputs once, then let consumers borrow concrete feature state.
+///
+/// Camera stores shared compressed-image materialization here; platform CameraBaseImageTracker
+/// shares JPEG pixel decode across views while renderers retain GPU ownership. TF history and
+/// point-cloud materialization likewise belong to this runtime rather than individual panels.
 ///
 /// Plot, Preview and Exact Range Query deliberately remain outside this type. Platform-specific
 /// source I/O, clocks and buffering also remain with the application adapters.
@@ -310,6 +315,8 @@ mod tests {
 
     fn malformed(stream_id: StreamId, arrival_time: ArrivalTime) -> RawMessage {
         RawMessage {
+            publish_time_ns: None,
+            sequence: None,
             stream_id,
             arrival_time,
             payload: Bytes::from_static(&[0xff]),
@@ -375,5 +382,75 @@ mod tests {
         native.process_messages(Duration::from_millis(250), &messages);
         web.process_messages(Duration::from_millis(250), &messages);
         assert_eq!(snapshot(&native), snapshot(&web));
+    }
+}
+
+#[cfg(test)]
+mod sharing_tests {
+    use super::*;
+    #[test]
+    fn continuous_materialization_is_shared_across_consumers() {
+        let bytes = std::fs::read(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap"),
+        )
+        .unwrap();
+        let mut source = crate::McapSource::new(bytes).unwrap();
+        let mut requirements = crate::PlaybackRequirements::empty();
+        requirements.require_camera_topic("/camera/front/image/compressed");
+        requirements.require_transforms();
+        requirements.require_point_cloud();
+        let bindings = crate::WorkspaceBindings {
+            path_topic: "/planning/path".into(),
+            odometry_topic: "/odom".into(),
+            point_cloud_topic: "/scan".into(),
+            dynamic_tf_topic: "/tf".into(),
+            static_tf_topic: "/tf_static".into(),
+        };
+        let plan = SessionPlan::build(
+            source.catalog(),
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings,
+        )
+        .unwrap();
+        source.select_streams(plan.selected_stream_ids()).unwrap();
+        let messages = source.read_until(source.time_range().1).unwrap();
+        let mut runtime = FeatureRuntime::new(&plan, true);
+        runtime.process_messages(Duration::from_secs(10), &messages);
+        let counts = runtime.counters();
+        assert_eq!(runtime.cameras().counters().decoded, 1);
+        assert_eq!(
+            runtime.transforms().counters().decoded,
+            messages
+                .iter()
+                .filter(
+                    |m| Some(m.stream_id) == plan.dynamic_tf_stream().map(|s| s.id)
+                        || Some(m.stream_id) == plan.static_tf_stream().map(|s| s.id)
+                )
+                .count() as u64
+        );
+        assert_eq!(
+            runtime.scene().unwrap().counters().decoded,
+            messages
+                .iter()
+                .filter(|m| Some(m.stream_id) == plan.point_cloud_stream().map(|s| s.id))
+                .count() as u64
+        );
+        for _ in 0..10 {
+            // Camera panels/overlays, Scene and diagnostics borrow the very same feature states.
+            let first = runtime.cameras().state().latest_for(CameraId(0)).unwrap();
+            let second = runtime.cameras().state().latest_for(CameraId(0)).unwrap();
+            assert_eq!(first.jpeg.as_ptr(), second.jpeg.as_ptr());
+            assert!(std::ptr::eq(
+                runtime.transforms().state(),
+                runtime.transforms().state()
+            ));
+            assert!(std::ptr::eq(
+                runtime.scene().unwrap().point_cloud(),
+                runtime.scene().unwrap().point_cloud()
+            ));
+        }
+        assert_eq!(runtime.counters(), counts);
     }
 }

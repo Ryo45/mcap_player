@@ -454,6 +454,7 @@ mod tests {
                 end_ns_exclusive: TimestampNs::new(end_ns_exclusive),
             },
             vec![StreamDescriptor {
+                schema_data: None,
                 id: 1,
                 topic: "/camera".into(),
                 schema_name: "sensor_msgs/msg/CompressedImage".into(),
@@ -479,6 +480,7 @@ mod tests {
             },
             vec![
                 StreamDescriptor {
+                    schema_data: None,
                     id: 1,
                     topic: "/camera".into(),
                     schema_name: "sensor_msgs/msg/CompressedImage".into(),
@@ -487,6 +489,7 @@ mod tests {
                     message_count: Some(viewer_remote_protocol::MessageCount::new(30)),
                 },
                 StreamDescriptor {
+                    schema_data: None,
                     id: 2,
                     topic: "/tf_static".into(),
                     schema_name: "tf2_msgs/msg/TFMessage".into(),
@@ -501,6 +504,8 @@ mod tests {
 
     fn camera_message(time: i64) -> RawMessage {
         RawMessage {
+            publish_time_ns: None,
+            sequence: None,
             stream_id: StreamId(1),
             arrival_time: viewer_core::ArrivalTime(time),
             payload: Bytes::from(
@@ -517,6 +522,8 @@ mod tests {
 
     fn static_tf_message(time: i64, x: f64) -> RawMessage {
         RawMessage {
+            publish_time_ns: None,
+            sequence: None,
             stream_id: StreamId(2),
             arrival_time: ArrivalTime(time),
             payload: Bytes::from(
@@ -876,6 +883,8 @@ mod tests {
             .apply_command(PlaybackCommand::Seek(ArrivalTime(2_000_000_000)))
             .unwrap();
         playback.restore.remote_mut().inject(vec![RawMessage {
+            publish_time_ns: None,
+            sequence: None,
             stream_id: StreamId(1),
             arrival_time: ArrivalTime(1_900_000_000),
             payload: Bytes::from_static(&[0xff]),
@@ -985,13 +994,13 @@ mod tests {
             .collect::<Vec<_>>();
 
         let mut encoder = BatchEncoder::new();
-        for (sequence, message) in local.window.messages.iter().enumerate() {
+        for message in &local.window.messages {
             encoder
                 .push(RemoteMessageRef {
                     stream_id: message.stream_id.0,
-                    sequence: sequence as u32,
+                    sequence: message.sequence.unwrap(),
                     log_time_ns: message.arrival_time.0 as u64,
-                    publish_time_ns: message.arrival_time.0 as u64,
+                    publish_time_ns: message.publish_time_ns.unwrap(),
                     payload: &message.payload,
                 })
                 .unwrap();

@@ -19,3 +19,6 @@ pub use transform::{TransformStamped, decode_tf_message, encode_tf_message_cdr};
 
 #[cfg(test)]
 mod tests;
+
+pub use numeric::{NumericField, NumericFieldExtractor, RosMessageSchema};
+mod numeric;

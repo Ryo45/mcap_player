@@ -6,6 +6,8 @@ mod plot;
 mod runtime;
 mod scene;
 mod status;
+mod topic_tree;
+pub(crate) use topic_tree::{show_field_plots, show_topics};
 
 pub(crate) use bev::BevPanel;
 pub(crate) use camera::{CameraPanel, CameraPanelInput};

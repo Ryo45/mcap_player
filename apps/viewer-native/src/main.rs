@@ -8,6 +8,7 @@ mod inspector_loader;
 mod interaction;
 #[cfg(any(test, feature = "ros2-live"))]
 mod live;
+mod numeric_plot_loader;
 mod panels;
 mod plot_loader;
 mod presentation;

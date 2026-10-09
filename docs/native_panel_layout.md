@@ -95,7 +95,7 @@ Column
 
 ## Native panels and placeholders
 
-The concrete enum variants are Camera, BEV, Plot, Scene, and Placeholder. Camera
+The concrete enum variants are Camera, BEV, builtin Plot, Inspector, Scene, Status, and Placeholder. Camera
 and Plot may have multiple runtime instances. The current GPU implementation
 supports at most one BEV and one Scene; later valid instances become placeholders.
 
@@ -129,6 +129,13 @@ LayoutDocument
 The host does not load MCAP data, mutate playback, parse panel configs, create GPU
 resources, or start queries. Camera textures remain shared by `CameraId`; BEV and
 Scene sizes and camera input continue through their existing renderers.
+
+Topic Tree and dynamic numeric field Plot views receive only catalog-derived tree entries and
+bounded session query snapshots. Their add/remove actions update session query demand; they do not
+contribute continuous playback requirements. Builtin Plot panels likewise request signals without
+requiring continuous Odometry. See [current architecture](message_centric_architecture.md) for the
+selected-field query flow and its limits. Field Plot demands currently live for one source session
+and are not persisted in layout JSON.
 
 ## Deliberate limitations
 
