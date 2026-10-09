@@ -4,6 +4,75 @@ use crate::{
     RangeQuery, RawMessage, RosMessageSchema, SignalOverviewReducer, SignalSample, StreamId,
 };
 
+#[derive(Debug)]
+pub enum NumericPlotError {
+    UnknownStream(StreamId),
+    EmptyBatch,
+    InvalidBatchSize {
+        actual: usize,
+    },
+    InvalidRange(DataWindowTimeRange),
+    InvalidPointBudget {
+        points: usize,
+    },
+    MixedStreamOrRange,
+    Decode {
+        stream: StreamId,
+        path: String,
+        source: DecodeError,
+    },
+    Source(crate::McapOpenError),
+    RangeQuery(crate::RangeQueryError),
+}
+impl std::fmt::Display for NumericPlotError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownStream(stream) => write!(f, "unknown numeric stream {}", stream.0),
+            Self::EmptyBatch => write!(f, "numeric batch requires fields"),
+            Self::InvalidBatchSize { actual } => write!(
+                f,
+                "numeric batch requires at most eight fields, got {actual}"
+            ),
+            Self::InvalidRange(range) => write!(
+                f,
+                "numeric query range must be non-empty: {}..{}",
+                range.start.0, range.end_exclusive.0
+            ),
+            Self::InvalidPointBudget { points } => {
+                write!(f, "numeric point budget must be 1..=65536, got {points}")
+            }
+            Self::MixedStreamOrRange => write!(f, "numeric batch requires one stream/range"),
+            Self::Decode {
+                stream,
+                path,
+                source,
+            } => write!(f, "numeric field {path} on stream {}: {source}", stream.0),
+            Self::Source(error) => error.fmt(f),
+            Self::RangeQuery(error) => error.fmt(f),
+        }
+    }
+}
+impl std::error::Error for NumericPlotError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Decode { source, .. } => Some(source),
+            Self::Source(error) => Some(error),
+            Self::RangeQuery(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+impl From<crate::McapOpenError> for NumericPlotError {
+    fn from(error: crate::McapOpenError) -> Self {
+        Self::Source(error)
+    }
+}
+impl From<crate::RangeQueryError> for NumericPlotError {
+    fn from(error: crate::RangeQueryError) -> Self {
+        Self::RangeQuery(error)
+    }
+}
+
 /// Runtime Plot demand, independent of the workspace's fixed SessionPlan.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct NumericSeriesRequest {
@@ -52,19 +121,25 @@ impl McapSource {
         &self,
         stream: StreamId,
         path: &str,
-    ) -> Result<NumericFieldExtractor, String> {
-        let stream = self
+    ) -> Result<NumericFieldExtractor, NumericPlotError> {
+        let descriptor = self
             .catalog()
             .by_id(stream)
-            .ok_or("unknown numeric stream")?;
-        NumericFieldExtractor::for_stream(stream, path).map_err(|e| e.to_string())
+            .ok_or(NumericPlotError::UnknownStream(stream))?;
+        NumericFieldExtractor::for_stream(descriptor, path).map_err(|source| {
+            NumericPlotError::Decode {
+                stream,
+                path: path.into(),
+                source,
+            }
+        })
     }
     /// Streaming indexed read of only the requested stream/range. Bounded by point budget plus
     /// one source chunk. A future source-fingerprinted overview artifact can supply this product.
     pub fn query_numeric_overview(
         &self,
         request: &NumericSeriesRequest,
-    ) -> Result<NumericPlotOverview, String> {
+    ) -> Result<NumericPlotOverview, NumericPlotError> {
         self.query_numeric_overview_cancellable(request, || false)
     }
     /// Cancellation belongs to the requesting worker; it never changes playback state.
@@ -72,7 +147,7 @@ impl McapSource {
         &self,
         request: &NumericSeriesRequest,
         mut cancelled: impl FnMut() -> bool,
-    ) -> Result<NumericPlotOverview, String> {
+    ) -> Result<NumericPlotOverview, NumericPlotError> {
         Ok(self
             .query_numeric_overviews_cancellable(std::slice::from_ref(request), &mut cancelled)?
             .series
@@ -84,33 +159,47 @@ impl McapSource {
         &self,
         requests: &[NumericSeriesRequest],
         mut cancelled: impl FnMut() -> bool,
-    ) -> Result<NumericPlotOverviewBatch, String> {
+    ) -> Result<NumericPlotOverviewBatch, NumericPlotError> {
         if cancelled() {
-            return Err(crate::McapOpenError::QueryCancelled.to_string());
+            return Err(crate::McapOpenError::QueryCancelled.into());
         }
-        let first = requests.first().ok_or("numeric batch requires fields")?;
-        if requests.len() > 8 || first.range.start >= first.range.end_exclusive {
-            return Err("numeric batch requires 1..=8 fields and a non-empty range".into());
+        let first = requests.first().ok_or(NumericPlotError::EmptyBatch)?;
+        if requests.len() > 8 {
+            return Err(NumericPlotError::InvalidBatchSize {
+                actual: requests.len(),
+            });
+        }
+        if first.range.start >= first.range.end_exclusive {
+            return Err(NumericPlotError::InvalidRange(first.range));
         }
         let stream = self
             .catalog()
             .by_id(first.stream_id)
-            .ok_or("unknown numeric stream")?;
-        let schema = RosMessageSchema::for_stream(stream).map_err(|e| e.to_string())?;
+            .ok_or(NumericPlotError::UnknownStream(first.stream_id))?;
+        let schema =
+            RosMessageSchema::for_stream(stream).map_err(|source| NumericPlotError::Decode {
+                stream: stream.id,
+                path: first.field_path.clone(),
+                source,
+            })?;
         let mut fields = Vec::new();
         for request in requests {
-            if request.stream_id != first.stream_id
-                || request.range != first.range
-                || !(1..=65_536).contains(&request.max_points)
-            {
-                return Err(
-                    "numeric batch requires one stream/range and point budgets 1..=65536".into(),
-                );
+            if request.stream_id != first.stream_id || request.range != first.range {
+                return Err(NumericPlotError::MixedStreamOrRange);
+            }
+            if !(1..=65_536).contains(&request.max_points) {
+                return Err(NumericPlotError::InvalidPointBudget {
+                    points: request.max_points,
+                });
             }
             fields.push((
                 schema
                     .compile_numeric(&request.field_path)
-                    .map_err(|e| e.to_string())?,
+                    .map_err(|source| NumericPlotError::Decode {
+                        stream: request.stream_id,
+                        path: request.field_path.clone(),
+                        source,
+                    })?,
                 SignalOverviewReducer::new(
                     request.range.start,
                     request.range.end_exclusive,
@@ -132,7 +221,7 @@ impl McapSource {
                     }
                 }
             })
-            .map_err(|e| e.to_string())?;
+            .map_err(NumericPlotError::from)?;
         Ok(NumericPlotOverviewBatch {
             chunks_read,
             series: fields
@@ -150,9 +239,9 @@ impl McapSource {
         &self,
         request: &NumericSeriesRequest,
         limits: QueryLimits,
-    ) -> Result<NumericPlotDetail, String> {
+    ) -> Result<NumericPlotDetail, NumericPlotError> {
         if request.range.start >= request.range.end_exclusive {
-            return Err("numeric query range must be non-empty".into());
+            return Err(NumericPlotError::InvalidRange(request.range));
         }
         let extractor = self.numeric_extractor(request.stream_id, &request.field_path)?;
         let raw = self
@@ -161,7 +250,7 @@ impl McapSource {
                 range: request.range,
                 limits,
             })
-            .map_err(|e| e.to_string())?;
+            .map_err(NumericPlotError::from)?;
         let mut decode_errors = 0;
         let samples = raw
             .messages
@@ -186,14 +275,20 @@ impl McapSource {
         stream: StreamId,
         path: &str,
         cursor: ArrivalTime,
-    ) -> Result<Option<NumericSample>, String> {
+    ) -> Result<Option<NumericSample>, NumericPlotError> {
         let extractor = self.numeric_extractor(stream, path)?;
         let raw = self
             .latest_before(&[stream], cursor)
-            .map_err(|e| e.to_string())?;
+            .map_err(NumericPlotError::from)?;
         raw.messages
             .first()
-            .map(|message| sample(&extractor, message).map_err(|e| e.to_string()))
+            .map(|message| {
+                sample(&extractor, message).map_err(|source| NumericPlotError::Decode {
+                    stream,
+                    path: path.into(),
+                    source,
+                })
+            })
             .transpose()
     }
 }

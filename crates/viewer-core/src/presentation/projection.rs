@@ -32,9 +32,9 @@ struct CalibrationFile {
     cameras: Vec<CameraCalibration>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum CalibrationError {
-    InvalidJson(String),
+    InvalidJson(std::sync::Arc<serde_json::Error>),
     UnsupportedVersion(u32),
     InvalidCamera(String),
     DuplicateFrame(String),
@@ -65,7 +65,14 @@ impl fmt::Display for CalibrationError {
     }
 }
 
-impl std::error::Error for CalibrationError {}
+impl std::error::Error for CalibrationError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::InvalidJson(error) => Some(error.as_ref()),
+            _ => None,
+        }
+    }
+}
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ProjectionError {
@@ -96,7 +103,7 @@ pub struct ProjectedPlan {
 impl CameraCalibrationSet {
     pub fn from_json(json: &str) -> Result<Self, CalibrationError> {
         let file: CalibrationFile = serde_json::from_str(json)
-            .map_err(|error| CalibrationError::InvalidJson(error.to_string()))?;
+            .map_err(|error| CalibrationError::InvalidJson(std::sync::Arc::new(error)))?;
         if file.version != 1 {
             return Err(CalibrationError::UnsupportedVersion(file.version));
         }

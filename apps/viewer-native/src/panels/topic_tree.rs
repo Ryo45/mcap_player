@@ -28,7 +28,7 @@ pub(crate) fn show_topics(
                             });
                         }
                         if let Some(error) = &entry.schema_error {
-                            ui.small(error);
+                            ui.small(error.to_string());
                         }
                         for field in &entry.numeric_fields {
                             let selected = series.iter().any(|s| {
@@ -94,7 +94,10 @@ pub(crate) fn show_field_plots(
                                     ui.spinner();
                                 }
                                 Some(Err(error)) => {
-                                    ui.colored_label(ui.visuals().error_fg_color, error);
+                                    ui.colored_label(
+                                        ui.visuals().error_fg_color,
+                                        error.to_string(),
+                                    );
                                 }
                                 Some(Ok(overview)) => {
                                     ui.small(format!(

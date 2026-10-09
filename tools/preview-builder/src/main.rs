@@ -1,7 +1,6 @@
 use anyhow::{Context, Result, anyhow, bail};
 use image::{DynamicImage, codecs::jpeg::JpegEncoder};
-use mcap::{MessageStream, Summary};
-use memmap2::Mmap;
+use mcap::Summary;
 use std::{
     collections::BTreeMap,
     env,
@@ -15,7 +14,7 @@ use viewer_core::{
     SignalBucket, SignalFidelity, SignalId, SignalOverview, TimedPosition2,
     decode_compressed_image, decode_odometry,
 };
-use viewer_preview_mcap::{PreviewMcapWriter, source_fingerprint};
+use viewer_preview_mcap::PreviewMcapWriter;
 
 const WORKSPACE_BINDINGS: &str = include_str!("../../../config/workspace_bindings.json");
 
@@ -68,15 +67,9 @@ fn main() -> Result<()> {
         );
     }
     let started = Instant::now();
-    let input_file =
-        File::open(&options.input).with_context(|| format!("open {}", options.input.display()))?;
-    // SAFETY: this read-only mapping lives no longer than the opened file, and this process never
-    // writes the input path. Mutating an input MCAP concurrently with generation is unsupported.
-    let mapped = unsafe { Mmap::map(&input_file) }
-        .with_context(|| format!("memory-map {}", options.input.display()))?;
-    let fingerprint = source_fingerprint(&mapped)?;
-    let summary =
-        Summary::read(&mapped)?.ok_or_else(|| anyhow!("input MCAP must contain a summary"))?;
+    let messages = viewer_core::FileMessageStream::open(&options.input)?;
+    let (summary, identity) = messages.read_metadata()?;
+    let fingerprint = viewer_core::mcap_summary_fingerprint(identity)?;
     let camera_ids = camera_channel_ids(&summary, &options.primary_camera_topic);
     let mut report = Report {
         detected_cameras: camera_ids.len(),
@@ -95,7 +88,7 @@ fn main() -> Result<()> {
     let mut speed = None;
     let mut last_trajectory_time = None;
 
-    for message in MessageStream::new(&mapped)? {
+    for message in messages {
         let message = message?;
         report.input_messages += 1;
         let arrival =
@@ -186,7 +179,7 @@ fn main() -> Result<()> {
     }
     writer.finish()?;
 
-    println!("Input file size: {} bytes", mapped.len());
+    println!("Input file size: {} bytes", identity.file_size);
     println!(
         "Source fingerprint: {}:{}",
         fingerprint.algorithm(),

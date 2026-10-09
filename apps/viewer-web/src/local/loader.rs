@@ -57,9 +57,9 @@ impl OwnedWindowCollector {
         range: DataWindowTimeRange,
     ) -> Result<Self, DataLoadError> {
         let start = u64::try_from(range.start.0)
-            .map_err(|_| DataLoadError::new("negative browser MCAP window start"))?;
+            .map_err(|_| DataLoadError::invalid_record("negative browser MCAP window start"))?;
         let end = u64::try_from(range.end_exclusive.0)
-            .map_err(|_| DataLoadError::new("negative browser MCAP window end"))?;
+            .map_err(|_| DataLoadError::invalid_record("negative browser MCAP window end"))?;
         let selected_channels = summary
             .channels
             .iter()
@@ -104,19 +104,23 @@ impl OwnedWindowCollector {
         compressed: Bytes,
     ) -> Result<(), DataLoadError> {
         if compressed.len() != request.length {
-            return Err(DataLoadError::new("browser MCAP chunk range is truncated"));
+            return Err(DataLoadError::invalid_record(
+                "browser MCAP chunk range is truncated",
+            ));
         }
         let (backing, decompressed_bytes) = decode_chunk_backing(request, compressed)?;
         self.decompressed_bytes = self
             .decompressed_bytes
             .checked_add(decompressed_bytes)
-            .ok_or_else(|| DataLoadError::new("decompressed byte count overflow"))?;
+            .ok_or_else(|| DataLoadError::invalid_record("decompressed byte count overflow"))?;
         let parsed = parse_chunk_backing(backing, &self.selected_channels, self.range)?;
         if !parsed.messages.is_empty() {
             self.resident_bytes = self
                 .resident_bytes
                 .checked_add(parsed.backing.len())
-                .ok_or_else(|| DataLoadError::new("local resident byte count overflow"))?;
+                .ok_or_else(|| {
+                    DataLoadError::invalid_record("local resident byte count overflow")
+                })?;
         }
         self.messages.extend(parsed.messages);
         Ok(())
@@ -131,7 +135,7 @@ impl OwnedWindowCollector {
         diagnostics.decompressed_bytes = self.decompressed_bytes;
         diagnostics.per_message_copied_bytes = 0;
         let window = SerializedWindow::new(self.range, self.messages, self.resident_bytes)
-            .map_err(|error| DataLoadError::new(error.to_string()))?;
+            .map_err(DataLoadError::from)?;
         Ok(LoadedWindow {
             window,
             diagnostics,
@@ -146,20 +150,24 @@ fn decode_chunk_backing(
     match request.compression.as_str() {
         "" => {
             if compressed.len() != request.uncompressed_size {
-                return Err(DataLoadError::new("uncompressed MCAP chunk size mismatch"));
+                return Err(DataLoadError::invalid_record(
+                    "uncompressed MCAP chunk size mismatch",
+                ));
             }
             Ok((compressed, 0))
         }
         "zstd" => {
             let decompressed = zstd::bulk::decompress(&compressed, request.uncompressed_size)
-                .map_err(|error| DataLoadError::new(error.to_string()))?;
+                .map_err(DataLoadError::from)?;
             if decompressed.len() != request.uncompressed_size {
-                return Err(DataLoadError::new("decompressed MCAP chunk size mismatch"));
+                return Err(DataLoadError::invalid_record(
+                    "decompressed MCAP chunk size mismatch",
+                ));
             }
             let decompressed_bytes = decompressed.len();
             Ok((Bytes::from(decompressed), decompressed_bytes))
         }
-        compression => Err(DataLoadError::new(format!(
+        compression => Err(DataLoadError::invalid_record(format!(
             "unsupported browser MCAP compression: {compression}"
         ))),
     }
@@ -169,12 +177,12 @@ fn chunk_request(index: &ChunkIndex) -> Result<ChunkReadRequest, DataLoadError> 
     Ok(ChunkReadRequest {
         offset: index
             .compressed_data_offset()
-            .map_err(|error| DataLoadError::new(error.to_string()))?,
+            .map_err(DataLoadError::from)?,
         length: usize::try_from(index.compressed_size)
-            .map_err(|_| DataLoadError::new("compressed MCAP chunk is too large"))?,
+            .map_err(|_| DataLoadError::invalid_record("compressed MCAP chunk is too large"))?,
         compression: index.compression.clone(),
         uncompressed_size: usize::try_from(index.uncompressed_size)
-            .map_err(|_| DataLoadError::new("uncompressed MCAP chunk is too large"))?,
+            .map_err(|_| DataLoadError::invalid_record("uncompressed MCAP chunk is too large"))?,
     })
 }
 
@@ -194,43 +202,47 @@ fn parse_chunk_backing(
     let mut message_offsets = Vec::new();
     while offset < backing.len() {
         let record_offset = u64::try_from(offset)
-            .map_err(|_| DataLoadError::new("MCAP Chunk record offset overflow"))?;
+            .map_err(|_| DataLoadError::invalid_record("MCAP Chunk record offset overflow"))?;
         let header_end = offset
             .checked_add(9)
-            .ok_or_else(|| DataLoadError::new("MCAP record header overflow"))?;
+            .ok_or_else(|| DataLoadError::invalid_record("MCAP record header overflow"))?;
         if header_end > backing.len() {
-            return Err(DataLoadError::new("truncated MCAP record header in chunk"));
+            return Err(DataLoadError::invalid_record(
+                "truncated MCAP record header in chunk",
+            ));
         }
         let opcode = backing[offset];
         let length_bytes: [u8; 8] = backing[offset + 1..header_end]
             .try_into()
             .expect("record length slice has eight bytes");
         let body_length = usize::try_from(u64::from_le_bytes(length_bytes))
-            .map_err(|_| DataLoadError::new("MCAP record body is too large"))?;
+            .map_err(|_| DataLoadError::invalid_record("MCAP record body is too large"))?;
         let body_end = header_end
             .checked_add(body_length)
-            .ok_or_else(|| DataLoadError::new("MCAP record body overflow"))?;
+            .ok_or_else(|| DataLoadError::invalid_record("MCAP record body overflow"))?;
         if body_end > backing.len() {
-            return Err(DataLoadError::new("truncated MCAP record body in chunk"));
+            return Err(DataLoadError::invalid_record(
+                "truncated MCAP record body in chunk",
+            ));
         }
         if opcode == op::MESSAGE {
             let record = mcap::parse_record(opcode, &backing[header_end..body_end])
-                .map_err(|error| DataLoadError::new(error.to_string()))?;
+                .map_err(DataLoadError::from)?;
             let Record::Message { header, data } = record else {
-                return Err(DataLoadError::new(
+                return Err(DataLoadError::invalid_record(
                     "MCAP message opcode parsed as another record",
                 ));
             };
             let arrival = i64::try_from(header.log_time).map_err(|_| {
-                DataLoadError::new("browser MCAP timestamp exceeds signed nanoseconds")
+                DataLoadError::invalid_record("browser MCAP timestamp exceeds signed nanoseconds")
             })?;
             let arrival_time = ArrivalTime(arrival);
             if range.contains(arrival_time)
                 && (selected_channels.is_empty() || selected_channels.contains(&header.channel_id))
             {
-                let payload_start = body_end
-                    .checked_sub(data.len())
-                    .ok_or_else(|| DataLoadError::new("MCAP message payload range underflow"))?;
+                let payload_start = body_end.checked_sub(data.len()).ok_or_else(|| {
+                    DataLoadError::invalid_record("MCAP message payload range underflow")
+                })?;
                 messages.push(RawMessage {
                     publish_time_ns: Some(header.publish_time),
                     sequence: Some(header.sequence),
@@ -252,18 +264,18 @@ fn parse_chunk_backing(
 
 fn validate_range(file_size: u64, offset: u64, length: usize) -> Result<ByteRange, DataLoadError> {
     if file_size == 0 {
-        return Err(DataLoadError::new("MCAP file is empty"));
+        return Err(DataLoadError::invalid_record("MCAP file is empty"));
     }
     if file_size > JS_MAX_SAFE_INTEGER {
-        return Err(DataLoadError::new(
+        return Err(DataLoadError::invalid_record(
             "MCAP file size exceeds JavaScript's safe integer range",
         ));
     }
     let end = offset
         .checked_add(length as u64)
-        .ok_or_else(|| DataLoadError::new("MCAP range end overflow"))?;
+        .ok_or_else(|| DataLoadError::invalid_record("MCAP range end overflow"))?;
     if offset > JS_MAX_SAFE_INTEGER || end > JS_MAX_SAFE_INTEGER || end > file_size {
-        return Err(DataLoadError::new(format!(
+        return Err(DataLoadError::invalid_record(format!(
             "MCAP range {offset}..{end} exceeds file size {file_size}"
         )));
     }
@@ -285,7 +297,7 @@ pub(crate) fn collect_window_from_bytes_for_test(
         let chunk = &bytes[range.offset as usize..range.end() as usize];
         source_bytes = source_bytes
             .checked_add(chunk.len())
-            .ok_or_else(|| DataLoadError::new("test source byte count overflow"))?;
+            .ok_or_else(|| DataLoadError::invalid_record("test source byte count overflow"))?;
         source_reads = source_reads.saturating_add(1);
         collector.insert_chunk(&request, Bytes::copy_from_slice(chunk))?;
     }
@@ -363,7 +375,9 @@ impl BrowserMcapWindowLoader {
 impl WindowLoader for BrowserMcapWindowLoader {
     fn request(&mut self, range: DataWindowTimeRange) -> Result<(), DataLoadError> {
         if !matches!(self.state, LocalLoadState::Idle) {
-            return Err(DataLoadError::new("browser MCAP window loader is not idle"));
+            return Err(DataLoadError::invalid_record(
+                "browser MCAP window loader is not idle",
+            ));
         }
         self.generation = self.generation.wrapping_add(1);
         let generation = self.generation;
@@ -530,8 +544,8 @@ pub(crate) async fn open_browser_mcap(
     let started = Date::now();
     let (summary, reads, bytes) = read_browser_summary(&file, file_size).await?;
     let latency_ms = Date::now() - started;
-    let catalog = LocalCatalog::from_summary(&summary, primary_camera_topic)
-        .map_err(|error| DataLoadError::new(error.to_string()))?;
+    let catalog =
+        LocalCatalog::from_summary(&summary, primary_camera_topic).map_err(DataLoadError::from)?;
     let selected_topics = catalog.selected_topics.clone();
     let summary = Rc::new(summary);
     let loader = BrowserMcapWindowLoader::new(
@@ -566,7 +580,7 @@ async fn load_browser_restore(
     }
 
     let target = u64::try_from(plan.target.0)
-        .map_err(|_| DataLoadError::new("negative browser restore target"))?;
+        .map_err(|_| DataLoadError::invalid_record("negative browser restore target"))?;
     let index_facts = summary
         .chunk_indexes
         .iter()
@@ -582,8 +596,9 @@ async fn load_browser_restore(
         .collect::<Vec<_>>();
     let mut needs = BTreeMap::<usize, ChunkNeed>::new();
     for stream in &plan.latest_before {
-        let channel = u16::try_from(stream.0)
-            .map_err(|_| DataLoadError::new("local stream ID exceeds MCAP channel ID"))?;
+        let channel = u16::try_from(stream.0).map_err(|_| {
+            DataLoadError::invalid_record("local stream ID exceeds MCAP channel ID")
+        })?;
         let mut found = None;
         let count = summary
             .stats
@@ -591,7 +606,7 @@ async fn load_browser_restore(
             .and_then(|stats| stats.channel_message_counts.get(&channel).copied());
         for chunk_index in
             viewer_core::latest_candidate_chunks(&index_facts, *stream, count, plan.target)
-                .map_err(|error| DataLoadError::new(error.to_string()))?
+                .map_err(DataLoadError::from)?
         {
             let chunk = &summary.chunk_indexes[chunk_index];
             let offset = chunk.message_index_offsets[&channel];
@@ -613,15 +628,16 @@ async fn load_browser_restore(
     }
     for read in &plan.histories {
         for stream in &read.streams {
-            let channel = u16::try_from(stream.0)
-                .map_err(|_| DataLoadError::new("local stream ID exceeds MCAP channel ID"))?;
+            let channel = u16::try_from(stream.0).map_err(|_| {
+                DataLoadError::invalid_record("local stream ID exceeds MCAP channel ID")
+            })?;
             let count = summary
                 .stats
                 .as_ref()
                 .and_then(|stats| stats.channel_message_counts.get(&channel).copied());
             for chunk_index in
                 viewer_core::history_candidate_chunks(&index_facts, *stream, count, read.range)
-                    .map_err(|error| DataLoadError::new(error.to_string()))?
+                    .map_err(DataLoadError::from)?
             {
                 needs
                     .entry(chunk_index)
@@ -632,14 +648,15 @@ async fn load_browser_restore(
         }
     }
     for stream in &plan.persistent {
-        let channel = u16::try_from(stream.0)
-            .map_err(|_| DataLoadError::new("local stream ID exceeds MCAP channel ID"))?;
+        let channel = u16::try_from(stream.0).map_err(|_| {
+            DataLoadError::invalid_record("local stream ID exceeds MCAP channel ID")
+        })?;
         let count = summary
             .stats
             .as_ref()
             .and_then(|stats| stats.channel_message_counts.get(&channel).copied());
         for chunk_index in viewer_core::persistent_candidate_chunks(&index_facts, *stream, count)
-            .map_err(|error| DataLoadError::new(error.to_string()))?
+            .map_err(DataLoadError::from)?
         {
             needs
                 .entry(chunk_index)
@@ -675,26 +692,26 @@ async fn load_browser_restore(
             .max()
             .unwrap_or(target)
             .checked_add(1)
-            .ok_or_else(|| DataLoadError::new("browser MCAP end time overflow"))?;
+            .ok_or_else(|| DataLoadError::invalid_record("browser MCAP end time overflow"))?;
         let parsed = parse_chunk_backing(
             backing,
             &channels,
             DataWindowTimeRange::new(
                 ArrivalTime(i64::try_from(recording_start).unwrap_or(0)),
-                ArrivalTime(
-                    i64::try_from(recording_end_exclusive)
-                        .map_err(|_| DataLoadError::new("browser MCAP end time overflow"))?,
-                ),
+                ArrivalTime(i64::try_from(recording_end_exclusive).map_err(|_| {
+                    DataLoadError::invalid_record("browser MCAP end time overflow")
+                })?),
             )
-            .map_err(|error| DataLoadError::new(error.to_string()))?,
+            .map_err(DataLoadError::from)?,
         )?;
         for (message, record_offset) in parsed
             .messages
             .into_iter()
             .zip(parsed.message_offsets.into_iter())
         {
-            let channel = u16::try_from(message.stream_id.0)
-                .map_err(|_| DataLoadError::new("local stream ID exceeds MCAP channel ID"))?;
+            let channel = u16::try_from(message.stream_id.0).map_err(|_| {
+                DataLoadError::invalid_record("local stream ID exceeds MCAP channel ID")
+            })?;
             let selected = need.exact.iter().any(|(wanted, time, offset)| {
                 *wanted == channel
                     && i64::try_from(*time).ok() == Some(message.arrival_time.0)
@@ -719,7 +736,7 @@ async fn read_message_index(
 ) -> Result<Vec<mcap::records::MessageIndexEntry>, DataLoadError> {
     let header = read_file_range(file, file_size, validate_range(file_size, offset, 9)?).await?;
     if header[0] != op::MESSAGE_INDEX {
-        return Err(DataLoadError::new(
+        return Err(DataLoadError::invalid_record(
             "Message Index offset points to another record",
         ));
     }
@@ -728,18 +745,18 @@ async fn read_message_index(
             .try_into()
             .expect("record header has eight length bytes"),
     ))
-    .map_err(|_| DataLoadError::new("Message Index record is too large"))?;
+    .map_err(|_| DataLoadError::invalid_record("Message Index record is too large"))?;
     let body = read_file_range(
         file,
         file_size,
         validate_range(file_size, offset.saturating_add(9), length)?,
     )
     .await?;
-    match mcap::parse_record(op::MESSAGE_INDEX, &body)
-        .map_err(|error| DataLoadError::new(error.to_string()))?
-    {
+    match mcap::parse_record(op::MESSAGE_INDEX, &body).map_err(DataLoadError::from)? {
         Record::MessageIndex(index) => Ok(index.records),
-        _ => Err(DataLoadError::new("Message Index parsed as another record")),
+        _ => Err(DataLoadError::invalid_record(
+            "Message Index parsed as another record",
+        )),
     }
 }
 
@@ -762,7 +779,7 @@ async fn load_browser_window(
         source_reads = source_reads.saturating_add(1);
         source_bytes = source_bytes
             .checked_add(bytes.len())
-            .ok_or_else(|| DataLoadError::new("local source byte count overflow"))?;
+            .ok_or_else(|| DataLoadError::invalid_record("local source byte count overflow"))?;
         let processing_started = Date::now();
         collector.insert_chunk(&request, bytes)?;
         processing_ms += Date::now() - processing_started;
@@ -790,7 +807,7 @@ async fn read_browser_summary(
     let mut reads = 0_u64;
     let mut bytes_read = 0_u64;
     while let Some(event) = reader.next_event() {
-        match event.map_err(|error| DataLoadError::new(error.to_string()))? {
+        match event.map_err(DataLoadError::from)? {
             SummaryReadEvent::SeekRequest(seek) => {
                 position = resolve_seek(file_size, position, seek)?;
                 seek_count = seek_count.saturating_add(1);
@@ -808,9 +825,9 @@ async fn read_browser_summary(
                 let bytes = read_file_range(file, file_size, range).await?;
                 reader.insert(bytes.len()).copy_from_slice(&bytes);
                 reader.notify_read(bytes.len());
-                position = position
-                    .checked_add(bytes.len() as u64)
-                    .ok_or_else(|| DataLoadError::new("SummaryReader position overflow"))?;
+                position = position.checked_add(bytes.len() as u64).ok_or_else(|| {
+                    DataLoadError::invalid_record("SummaryReader position overflow")
+                })?;
                 reads = reads.saturating_add(1);
                 bytes_read = bytes_read.saturating_add(bytes.len() as u64);
             }
@@ -818,7 +835,7 @@ async fn read_browser_summary(
     }
     let summary = reader
         .finish()
-        .ok_or_else(|| DataLoadError::new("MCAP has no Summary section"))?;
+        .ok_or_else(|| DataLoadError::invalid_record("MCAP has no Summary section"))?;
     Ok((summary, reads, bytes_read))
 }
 
@@ -833,7 +850,7 @@ async fn read_file_range(
         return Ok(Bytes::new());
     }
     if range.length > u32::MAX as usize {
-        return Err(DataLoadError::new(
+        return Err(DataLoadError::invalid_record(
             "MCAP range exceeds Uint8Array addressable length",
         ));
     }
@@ -845,7 +862,7 @@ async fn read_file_range(
         .map_err(js_error)?;
     let bytes = Uint8Array::new(&buffer);
     if bytes.length() as usize != range.length {
-        return Err(DataLoadError::new(format!(
+        return Err(DataLoadError::invalid_record(format!(
             "short MCAP range read: requested {}, received {}",
             range.length,
             bytes.length()
@@ -858,7 +875,7 @@ async fn read_file_range(
 fn browser_file_size(file: &File) -> Result<u64, DataLoadError> {
     let size = file.size();
     if !size.is_finite() || size < 0.0 || size.fract() != 0.0 {
-        return Err(DataLoadError::new(format!(
+        return Err(DataLoadError::invalid_record(format!(
             "browser returned invalid File.size: {size}"
         )));
     }
@@ -875,20 +892,17 @@ fn resolve_seek(file_size: u64, current: u64, seek: SeekFrom) -> Result<u64, Dat
         SeekFrom::End(offset) => i128::from(file_size) + i128::from(offset),
     };
     if position < 0 || position > i128::from(file_size) {
-        return Err(DataLoadError::new(
+        return Err(DataLoadError::invalid_record(
             "SummaryReader seek is outside the MCAP file",
         ));
     }
-    u64::try_from(position).map_err(|_| DataLoadError::new("SummaryReader seek overflow"))
+    u64::try_from(position)
+        .map_err(|_| DataLoadError::invalid_record("SummaryReader seek overflow"))
 }
 
 #[cfg(target_arch = "wasm32")]
 fn js_error(error: wasm_bindgen::JsValue) -> DataLoadError {
-    DataLoadError::new(
-        error
-            .as_string()
-            .unwrap_or_else(|| format!("Browser File API error: {error:?}")),
-    )
+    DataLoadError::Browser(std::rc::Rc::new(error))
 }
 
 #[cfg(test)]

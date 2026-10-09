@@ -9,7 +9,7 @@ pub struct TopicTreeEntry {
     pub schema_definition: Option<std::sync::Arc<crate::SchemaDefinition>>,
     pub numeric_fields: Vec<NumericField>,
     /// Unsupported or absent schema is visible; the topic remains inspectable.
-    pub schema_error: Option<String>,
+    pub schema_error: Option<SchemaExplorationError>,
 }
 #[derive(Clone, Debug, Default)]
 pub struct TopicTree {
@@ -24,11 +24,11 @@ impl TopicTree {
                 let fields = stream
                     .schema_definition
                     .as_deref()
-                    .ok_or_else(|| "source has no schema definition".to_string())
+                    .ok_or(SchemaExplorationError::MissingDefinition)
                     .and_then(|definition| {
                         RosMessageSchema::parse(&stream.schema, definition)
                             .and_then(|schema| schema.numeric_fields())
-                            .map_err(|e| e.to_string())
+                            .map_err(SchemaExplorationError::Decode)
                     });
                 let (numeric_fields, schema_error) = match fields {
                     Ok(fields) => (fields, None),
@@ -46,5 +46,27 @@ impl TopicTree {
             .collect::<Vec<_>>();
         entries.sort_by(|a, b| (&a.topic, a.stream_id).cmp(&(&b.topic, b.stream_id)));
         Self { entries }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum SchemaExplorationError {
+    MissingDefinition,
+    Decode(crate::DecodeError),
+}
+impl std::fmt::Display for SchemaExplorationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::MissingDefinition => write!(f, "source has no schema definition"),
+            Self::Decode(error) => error.fmt(f),
+        }
+    }
+}
+impl std::error::Error for SchemaExplorationError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Decode(error) => Some(error),
+            _ => None,
+        }
     }
 }

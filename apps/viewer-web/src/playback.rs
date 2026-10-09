@@ -49,7 +49,7 @@ impl WebRestoreLoader {
             #[cfg(target_arch = "wasm32")]
             Self::LocalFile(loader) => loader.request(plan),
         }
-        .map_err(|error| WebPlaybackError::new(error.to_string()))
+        .map_err(WebPlaybackError::from)
     }
 
     fn poll(&mut self) -> Option<Result<Vec<RawMessage>, WebPlaybackError>> {
@@ -58,7 +58,7 @@ impl WebRestoreLoader {
             #[cfg(target_arch = "wasm32")]
             Self::LocalFile(loader) => loader.poll(),
         }
-        .map(|result| result.map_err(|error| WebPlaybackError::new(error.to_string())))
+        .map(|result| result.map_err(WebPlaybackError::from))
     }
 
     #[cfg(test)]
@@ -71,22 +71,64 @@ impl WebRestoreLoader {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct WebPlaybackError(String);
-
-impl WebPlaybackError {
-    fn new(message: impl Into<String>) -> Self {
-        Self(message.into())
-    }
+#[derive(Clone, Debug)]
+pub(crate) enum WebPlaybackError {
+    Plan(viewer_core::SessionPlanError),
+    RestorePlan(viewer_core::RestorePlanError),
+    Restore(std::sync::Arc<viewer_core::FeatureRestoreError>),
+    Load(crate::data_plane::DataLoadError),
+    Plane(crate::data_plane::DataPlaneError),
+    MissingTimeRange,
 }
-
 impl fmt::Display for WebPlaybackError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.0)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::MissingTimeRange => write!(f, "recording catalog has no time range"),
+            Self::Plan(error) => error.fmt(f),
+            Self::RestorePlan(error) => error.fmt(f),
+            Self::Restore(error) => error.fmt(f),
+            Self::Load(error) => error.fmt(f),
+            Self::Plane(error) => error.fmt(f),
+        }
     }
 }
-
-impl Error for WebPlaybackError {}
+impl Error for WebPlaybackError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::MissingTimeRange => None,
+            Self::Plan(error) => Some(error),
+            Self::RestorePlan(error) => Some(error),
+            Self::Restore(error) => Some(error.as_ref()),
+            Self::Load(error) => Some(error),
+            Self::Plane(error) => Some(error),
+        }
+    }
+}
+impl From<viewer_core::SessionPlanError> for WebPlaybackError {
+    fn from(error: viewer_core::SessionPlanError) -> Self {
+        Self::Plan(error)
+    }
+}
+impl From<viewer_core::RestorePlanError> for WebPlaybackError {
+    fn from(error: viewer_core::RestorePlanError) -> Self {
+        Self::RestorePlan(error)
+    }
+}
+impl From<viewer_core::FeatureRestoreError> for WebPlaybackError {
+    fn from(error: viewer_core::FeatureRestoreError) -> Self {
+        Self::Restore(std::sync::Arc::new(error))
+    }
+}
+impl From<crate::data_plane::DataLoadError> for WebPlaybackError {
+    fn from(error: crate::data_plane::DataLoadError) -> Self {
+        Self::Load(error)
+    }
+}
+impl From<crate::data_plane::DataPlaneError> for WebPlaybackError {
+    fn from(error: crate::data_plane::DataPlaneError) -> Self {
+        Self::Plane(error)
+    }
+}
 
 /// Browser playback shared by local File.slice and Recording Server sources.
 pub(crate) struct WebPlayback {
@@ -120,7 +162,7 @@ impl WebPlayback {
             catalog.revision,
             catalog.selected_streams,
         )
-        .map_err(|error| WebPlaybackError::new(error.to_string()))?;
+        .map_err(WebPlaybackError::from)?;
         Self::new(
             catalog.plan,
             catalog.core,
@@ -152,7 +194,7 @@ impl WebPlayback {
     ) -> Result<Self, WebPlaybackError> {
         let recording = catalog
             .time_range
-            .ok_or_else(|| WebPlaybackError::new("recording catalog has no time range"))?;
+            .ok_or(WebPlaybackError::MissingTimeRange)?;
         let start = recording.start;
         let end_exclusive = recording.end_exclusive;
         let end = ArrivalTime(end_exclusive.0 - 1);
@@ -164,7 +206,7 @@ impl WebPlayback {
             WebWindowLoader::LocalFile(_) => PlaybackSourceKind::LocalFile,
         };
         let data = RecordingDataPlane::new(loader, start, end_exclusive)
-            .map_err(|error| WebPlaybackError::new(error.to_string()))?;
+            .map_err(WebPlaybackError::from)?;
         Ok(Self {
             clock: PlaybackClock::new(start, end),
             runtime,
@@ -189,7 +231,7 @@ impl WebPlayback {
             self.load_state = PlaybackLoadState::Failed {
                 message: error.to_string(),
             };
-            return Err(WebPlaybackError::new(error.to_string()));
+            return Err(WebPlaybackError::from(error));
         }
         let requested = self.clock.cursor_after(elapsed);
         let committed = self.clock.cursor();
@@ -201,14 +243,14 @@ impl WebPlayback {
         };
         self.data
             .ensure_available_through(committed, requested, speed, intent)
-            .map_err(|error| WebPlaybackError::new(error.to_string()))?;
+            .map_err(WebPlaybackError::from)?;
         if !self.commit_candidate(elapsed, requested) {
             return Ok(PlaybackEffect::None);
         }
 
         self.data
             .ensure_available_through(requested, requested, speed, intent)
-            .map_err(|error| WebPlaybackError::new(error.to_string()))?;
+            .map_err(WebPlaybackError::from)?;
         Ok(PlaybackEffect::None)
     }
 
@@ -265,12 +307,12 @@ impl WebPlayback {
                 self.load_state = PlaybackLoadState::Failed {
                     message: error.to_string(),
                 };
-                return Err(WebPlaybackError::new(error.to_string()));
+                return Err(WebPlaybackError::from(error));
             }
         };
         self.data
             .begin_seek(target)
-            .map_err(|error| WebPlaybackError::new(error.to_string()))?;
+            .map_err(WebPlaybackError::from)?;
         self.runtime.commit_restore(candidate_runtime);
         self.persistent_archive = candidate_archive;
         self.clock.seek(target);
@@ -286,7 +328,7 @@ impl WebPlayback {
                     self.clock.speed(),
                     FetchIntent::PlaybackAhead,
                 )
-                .map_err(|error| WebPlaybackError::new(error.to_string()))?;
+                .map_err(WebPlaybackError::from)?;
         }
         Ok(PlaybackEffect::Seeked)
     }
@@ -337,7 +379,7 @@ impl WebPlayback {
                 }
                 let mut restore = RestorePlanner::new(&self.catalog)
                     .plan(target, self.restore_inputs.iter().copied())
-                    .map_err(|error| WebPlaybackError::new(error.to_string()))?;
+                    .map_err(WebPlaybackError::from)?;
                 let persistent_streams = restore.persistent.clone();
                 let bootstraps_persistent =
                     !persistent_streams.is_empty() && self.persistent_archive.is_none();

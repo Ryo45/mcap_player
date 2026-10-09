@@ -29,7 +29,7 @@ fn bindings() -> WorkspaceBindings {
 
 #[test]
 fn fixture_has_30_decodable_frames_and_distinct_time_domains() {
-    let mut source = McapSource::new(fixture()).unwrap();
+    let mut source = McapSource::copy_from_slice((fixture()).as_ref()).unwrap();
     let mut requirements = PlaybackRequirements::empty();
     requirements.require_camera_topic("/camera/front/image/compressed");
     let plan = SessionPlan::build(
@@ -41,8 +41,8 @@ fn fixture_has_30_decodable_frames_and_distinct_time_domains() {
     .unwrap();
     source.select_streams(plan.selected_stream_ids()).unwrap();
     let mut cameras = CameraController::new(&plan);
-    let (_, end) = source.time_range();
-    for message in source.read_until(end).unwrap() {
+    let end = source.time_range().end_inclusive();
+    for message in source.read_through(end).unwrap() {
         assert!(cameras.admit(&message));
         cameras.advance(Duration::from_millis(100));
         let frame = cameras.state().latest_by_arrival().unwrap();
@@ -59,12 +59,12 @@ fn fixture_has_30_decodable_frames_and_distinct_time_domains() {
 
 #[test]
 fn cold_seek_returns_only_cursor_or_newer_frames() {
-    let mut source = McapSource::new(fixture()).unwrap();
-    let (start, _) = source.time_range();
+    let mut source = McapSource::copy_from_slice((fixture()).as_ref()).unwrap();
+    let start = source.time_range().start;
     let cursor = ArrivalTime(start.0 + 1_500_000_000);
     source.seek(cursor).unwrap();
     let messages = source
-        .read_until(ArrivalTime(cursor.0 + 200_000_000))
+        .read_through(ArrivalTime(cursor.0 + 200_000_000))
         .unwrap();
     assert!(!messages.is_empty());
     assert!(
@@ -81,7 +81,7 @@ fn cold_seek_returns_only_cursor_or_newer_frames() {
 
 #[test]
 fn malformed_message_does_not_stop_the_next_frame() {
-    let mut source = McapSource::new(fixture()).unwrap();
+    let mut source = McapSource::copy_from_slice((fixture()).as_ref()).unwrap();
     let mut requirements = PlaybackRequirements::empty();
     requirements.require_camera_topic("/camera/front/image/compressed");
     let plan = SessionPlan::build(
@@ -93,8 +93,8 @@ fn malformed_message_does_not_stop_the_next_frame() {
     .unwrap();
     source.select_streams(plan.selected_stream_ids()).unwrap();
     let mut cameras = CameraController::new(&plan);
-    let (_, end) = source.time_range();
-    let messages = source.read_until(end).unwrap();
+    let end = source.time_range().end_inclusive();
+    let messages = source.read_through(end).unwrap();
     let mut bad = messages[0].clone();
     bad.payload.truncate(7);
     cameras.admit(&bad);
@@ -108,7 +108,7 @@ fn malformed_message_does_not_stop_the_next_frame() {
 #[test]
 #[ignore = "manual release-mode performance diagnostic"]
 fn seven_camera_display_policy_stays_within_the_decode_budget() {
-    let mut playback = McapPlayback::new(seven_camera_fixture()).unwrap();
+    let mut playback = McapPlayback::copy_from_slice((seven_camera_fixture()).as_ref()).unwrap();
     let mut requirements = PlaybackRequirements::empty();
     requirements.require_all_cameras();
     let plan = SessionPlan::build(

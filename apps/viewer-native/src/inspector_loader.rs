@@ -1,20 +1,29 @@
 use crate::inspection::{InspectedMessage, InspectorRequirement, TopicInspection};
-use anyhow::{Context, Result};
-use memmap2::Mmap;
-use std::{
-    fs::File,
-    path::{Path, PathBuf},
-    sync::{
-        Arc,
-        atomic::{AtomicU64, Ordering},
-        mpsc::{Receiver, SyncSender, TryRecvError},
-    },
+use crate::query_error::QueryLoadError;
+use anyhow::Result;
+use std::sync::{
+    Arc,
+    atomic::{AtomicU64, Ordering},
+    mpsc::{Receiver, SyncSender, TryRecvError},
 };
+
+#[cfg(test)]
+fn load_inspections_from_path(
+    path: &Path,
+    requirements: &[InspectorRequirement],
+    is_current: impl Fn() -> bool,
+) -> std::result::Result<Vec<TopicInspection>, QueryLoadError> {
+    let source = viewer_core::McapSource::open_file(path)?;
+    load_inspections_from_source(&source, requirements, is_current)
+}
+
+#[cfg(test)]
+use std::path::{Path, PathBuf};
 
 const INSPECTOR_PAYLOAD_BUDGET: usize = 16 * 1024 * 1024;
 
 pub(crate) struct InspectorRequest {
-    pub(crate) path: PathBuf,
+    pub(crate) source: viewer_core::McapSource,
     pub(crate) requirements: Vec<InspectorRequirement>,
 }
 
@@ -39,7 +48,7 @@ enum InspectorLoadState {
 
 struct InspectorLoadResult {
     generation: u64,
-    result: std::result::Result<Vec<TopicInspection>, String>,
+    result: std::result::Result<Vec<TopicInspection>, Arc<QueryLoadError>>,
     requirements: Vec<InspectorRequirement>,
 }
 
@@ -77,10 +86,10 @@ impl InspectorLoader {
             .name("inspector-loader".to_owned())
             .spawn(move || {
                 let result =
-                    load_inspections_from_path(&request.path, &worker_requirements, || {
+                    load_inspections_from_source(&request.source, &worker_requirements, || {
                         active_generation.load(Ordering::Acquire) == generation
                     })
-                    .map_err(|error| error.to_string());
+                    .map_err(Arc::new);
                 if active_generation.load(Ordering::Acquire) == generation {
                     let _ = sender.send(InspectorLoadResult {
                         generation,
@@ -98,12 +107,15 @@ impl InspectorLoader {
                 Ok(())
             }
             Err(error) => {
-                let message = format!("start inspector worker: {error}");
+                let error = Arc::new(QueryLoadError::StartWorker {
+                    worker: "inspector",
+                    source: error,
+                });
                 self.state = InspectorLoadState::Ready {
                     generation,
-                    inspections: failed_inspections(&requirements, &message),
+                    inspections: failed_inspections(&requirements, error.clone()),
                 };
-                Err(anyhow::Error::msg(message))
+                Err(anyhow::Error::new(error))
             }
         }
     }
@@ -146,7 +158,7 @@ impl InspectorLoader {
         }
         let inspections = match result.result {
             Ok(inspections) => inspections,
-            Err(error) => failed_inspections(&result.requirements, &error),
+            Err(error) => failed_inspections(&result.requirements, error),
         };
         self.state = InspectorLoadState::Ready {
             generation: result.generation,
@@ -165,29 +177,24 @@ impl Drop for InspectorLoader {
     }
 }
 
-fn failed_inspections(requirements: &[InspectorRequirement], error: &str) -> Vec<TopicInspection> {
+fn failed_inspections(
+    requirements: &[InspectorRequirement],
+    error: Arc<QueryLoadError>,
+) -> Vec<TopicInspection> {
     requirements
         .iter()
-        .map(|requirement| TopicInspection::failed(requirement.topic.clone(), error.to_owned()))
+        .map(|requirement| TopicInspection::failed(requirement.topic.clone(), error.clone()))
         .collect()
 }
 
-fn load_inspections_from_path(
-    path: &Path,
+fn load_inspections_from_source(
+    source: &viewer_core::McapSource,
     requirements: &[InspectorRequirement],
     is_current: impl Fn() -> bool,
-) -> Result<Vec<TopicInspection>> {
-    let file =
-        File::open(path).with_context(|| format!("open {} for inspection", path.display()))?;
-    // SAFETY: this worker owns the read-only mapping for the duration of every bounded query.
-    let mapping = unsafe { Mmap::map(&file) }
-        .with_context(|| format!("map {} for inspection", path.display()))?;
-    let source = viewer_core::McapSource::from_owner(mapping)?;
-    let recording = source
-        .catalog()
-        .time_range
-        .context("recording has no indexed time range")?;
-    let range = viewer_core::DataWindowTimeRange::new(recording.start, recording.end_exclusive)?;
+) -> std::result::Result<Vec<TopicInspection>, QueryLoadError> {
+    let recording = source.time_range();
+    let range = viewer_core::DataWindowTimeRange::new(recording.start, recording.end_exclusive)
+        .expect("validated recording range");
     let mut inspections = Vec::with_capacity(requirements.len());
     for requirement in requirements {
         if !is_current() {
@@ -196,7 +203,7 @@ fn load_inspections_from_path(
         let result = source
             .catalog()
             .by_topic(&requirement.topic)
-            .with_context(|| format!("recording has no topic {}", requirement.topic))
+            .ok_or_else(|| QueryLoadError::MissingTopic(requirement.topic.clone()))
             .and_then(|stream| {
                 let limits = viewer_core::QueryLimits::new(
                     requirement.max_messages,
@@ -208,7 +215,7 @@ fn load_inspections_from_path(
                         range,
                         limits,
                     })
-                    .map_err(anyhow::Error::from)
+                    .map_err(QueryLoadError::from)
             });
         inspections.push(match result {
             Ok(result) => TopicInspection::ready(
@@ -222,7 +229,7 @@ fn load_inspections_from_path(
                     })
                     .collect(),
             ),
-            Err(error) => TopicInspection::failed(requirement.topic.clone(), error.to_string()),
+            Err(error) => TopicInspection::failed(requirement.topic.clone(), Arc::new(error)),
         });
     }
     Ok(inspections)
@@ -276,7 +283,7 @@ mod tests {
         let mut loader = InspectorLoader::default();
         loader
             .start(InspectorRequest {
-                path: fixture(),
+                source: viewer_core::McapSource::open_file(&fixture()).unwrap(),
                 requirements: vec![requirement()],
             })
             .unwrap();
@@ -292,7 +299,7 @@ mod tests {
         let mut loader = InspectorLoader::default();
         loader
             .start(InspectorRequest {
-                path: fixture(),
+                source: viewer_core::McapSource::open_file(&fixture()).unwrap(),
                 requirements: vec![requirement()],
             })
             .unwrap();
@@ -300,7 +307,9 @@ mod tests {
         loader.clear();
         loader.apply_result(InspectorLoadResult {
             generation: stale,
-            result: Err("stale failure".to_owned()),
+            result: Err(Arc::new(QueryLoadError::MissingTopic(
+                "stale failure".into(),
+            ))),
             requirements: vec![requirement()],
         });
         assert!(loader.inspections().is_empty());
@@ -322,7 +331,7 @@ mod tests {
         let mut loader = InspectorLoader::default();
         loader
             .start(InspectorRequest {
-                path: fixture(),
+                source: viewer_core::McapSource::open_file(&fixture()).unwrap(),
                 requirements: vec![requirement()],
             })
             .unwrap();

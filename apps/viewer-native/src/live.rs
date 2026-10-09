@@ -61,7 +61,7 @@ mod ros {
         mailbox: Arc<LatestMailbox<RawMessage>>,
         copied_bytes: Arc<AtomicU64>,
         received: Arc<AtomicU64>,
-        error: Arc<Mutex<Option<String>>>,
+        error: Arc<Mutex<Option<Arc<RosRunError>>>>,
     }
 
     impl RosLiveHandle {
@@ -85,7 +85,8 @@ mod ros {
                         thread_received,
                     );
                     if let Err(value) = result {
-                        *thread_error.lock().expect("ROS error state poisoned") = Some(value);
+                        *thread_error.lock().expect("ROS error state poisoned") =
+                            Some(Arc::new(value));
                     }
                 })
                 .expect("spawn ROS executor thread");
@@ -109,8 +110,21 @@ mod ros {
         pub fn received(&self) -> u64 {
             self.received.load(Ordering::Relaxed)
         }
-        pub fn error(&self) -> Option<String> {
+        pub fn error(&self) -> Option<Arc<RosRunError>> {
             self.error.lock().expect("ROS error state poisoned").clone()
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct RosRunError(anyhow::Error);
+    impl std::fmt::Display for RosRunError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+    impl std::error::Error for RosRunError {
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+            Some(self.0.as_ref())
         }
     }
 
@@ -120,12 +134,20 @@ mod ros {
         mailbox: Arc<LatestMailbox<RawMessage>>,
         copied_bytes: Arc<AtomicU64>,
         received: Arc<AtomicU64>,
-    ) -> Result<(), String> {
-        let context = Context::default_from_env().map_err(|error| error.to_string())?;
+    ) -> Result<(), RosRunError> {
+        run_executor_inner(topic, reliable, mailbox, copied_bytes, received).map_err(RosRunError)
+    }
+
+    fn run_executor_inner(
+        topic: String,
+        reliable: bool,
+        mailbox: Arc<LatestMailbox<RawMessage>>,
+        copied_bytes: Arc<AtomicU64>,
+        received: Arc<AtomicU64>,
+    ) -> anyhow::Result<()> {
+        let context = Context::default_from_env()?;
         let mut executor = context.create_basic_executor();
-        let node = executor
-            .create_node("mcap_player_camera_viewer")
-            .map_err(|error| error.to_string())?;
+        let node = executor.create_node("mcap_player_camera_viewer")?;
         let mut options = SubscriptionOptions::new(&topic);
         options.qos = QOS_PROFILE_SENSOR_DATA;
         if reliable {
@@ -156,45 +178,64 @@ mod ros {
                 payload: payload.into(),
             });
         };
-        let _subscription = node
-            .create_dynamic_subscription(
-                "sensor_msgs/msg/CompressedImage"
-                    .try_into()
-                    .map_err(|error: rclrs::DynamicMessageError| error.to_string())?,
-                options,
-                callback,
-            )
-            .map_err(|error| error.to_string())?;
+        let _subscription = node.create_dynamic_subscription(
+            "sensor_msgs/msg/CompressedImage"
+                .try_into()
+                .map_err(anyhow::Error::from)?,
+            options,
+            callback,
+        )?;
         executor
             .spin(SpinOptions::default())
             .first_error()
-            .map_err(|error| error.to_string())
+            .map_err(anyhow::Error::from)
     }
 
-    fn extract_compressed_image(message: &DynamicMessage) -> Result<CompressedImage, String> {
+    #[derive(Debug)]
+    enum DynamicImageError {
+        InvalidField(&'static str),
+        InvalidNanoseconds(u32),
+        TimestampOverflow,
+    }
+    impl std::fmt::Display for DynamicImageError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Self::InvalidField(name) => write!(f, "{name} has the wrong type"),
+                Self::InvalidNanoseconds(value) => {
+                    write!(f, "header timestamp has invalid nanoseconds: {value}")
+                }
+                Self::TimestampOverflow => write!(f, "header timestamp overflow"),
+            }
+        }
+    }
+    impl std::error::Error for DynamicImageError {}
+
+    fn extract_compressed_image(
+        message: &DynamicMessage,
+    ) -> Result<CompressedImage, DynamicImageError> {
         let header = simple_message(message.get("header"), "header")?;
         let stamp = simple_message(header.get("stamp"), "header.stamp")?;
         let seconds = match stamp.get("sec") {
             Some(Value::Simple(SimpleValue::Int32(value))) => *value,
-            _ => return Err("header.stamp.sec has the wrong type".into()),
+            _ => return Err(DynamicImageError::InvalidField("header.stamp.sec")),
         };
         let nanoseconds = match stamp.get("nanosec") {
             Some(Value::Simple(SimpleValue::Uint32(value))) => *value,
-            _ => return Err("header.stamp.nanosec has the wrong type".into()),
+            _ => return Err(DynamicImageError::InvalidField("header.stamp.nanosec")),
         };
         if nanoseconds >= 1_000_000_000 {
-            return Err("header timestamp has invalid nanoseconds".into());
+            return Err(DynamicImageError::InvalidNanoseconds(nanoseconds));
         }
         let measurement = i64::from(seconds)
             .checked_mul(1_000_000_000)
             .and_then(|value| value.checked_add(i64::from(nanoseconds)))
-            .ok_or_else(|| "header timestamp overflow".to_owned())?;
+            .ok_or(DynamicImageError::TimestampOverflow)?;
         let frame_id = simple_string(header.get("frame_id"), "header.frame_id")?;
         let format = simple_string(message.get("format"), "format")?;
         let jpeg = match message.get("data") {
             Some(Value::Sequence(SequenceValue::Uint8Sequence(value))) => value.to_vec(),
             Some(Value::Sequence(SequenceValue::OctetSequence(value))) => value.to_vec(),
-            _ => return Err("data has the wrong type".into()),
+            _ => return Err(DynamicImageError::InvalidField("data")),
         };
         Ok(CompressedImage {
             measurement_time: MeasurementTime(measurement),
@@ -206,18 +247,21 @@ mod ros {
 
     fn simple_message<'a>(
         value: Option<Value<'a>>,
-        name: &str,
-    ) -> Result<rclrs::DynamicMessageView<'a>, String> {
+        name: &'static str,
+    ) -> Result<rclrs::DynamicMessageView<'a>, DynamicImageError> {
         match value {
             Some(Value::Simple(SimpleValue::Message(value))) => Ok(value),
-            _ => Err(format!("{name} has the wrong type")),
+            _ => Err(DynamicImageError::InvalidField(name)),
         }
     }
 
-    fn simple_string(value: Option<Value<'_>>, name: &str) -> Result<String, String> {
+    fn simple_string(
+        value: Option<Value<'_>>,
+        name: &'static str,
+    ) -> Result<String, DynamicImageError> {
         match value {
             Some(Value::Simple(SimpleValue::String(value))) => Ok(value.to_string()),
-            _ => Err(format!("{name} has the wrong type")),
+            _ => Err(DynamicImageError::InvalidField(name)),
         }
     }
 }

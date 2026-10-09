@@ -283,6 +283,49 @@ impl SignalOverviewReducer {
     }
 }
 
+impl crate::McapSource {
+    pub fn load_odometry_overview(
+        &self,
+        origin: ArrivalTime,
+        max_points: usize,
+        topic: &str,
+        mut on_progress: impl FnMut(LoadedOdometrySignals),
+    ) -> Result<LoadedOdometrySignals, McapOpenError> {
+        let Some(stream) = self.catalog().streams.iter().find(|s| {
+            s.topic == topic && s.schema == "nav_msgs/msg/Odometry" && s.message_encoding == "cdr"
+        }) else {
+            return Ok(LoadedOdometrySignals::default());
+        };
+        let range = self.time_range();
+        let mut speed = SignalOverviewReducer::new(origin, range.end_exclusive, max_points);
+        let mut yaw = SignalOverviewReducer::new(origin, range.end_exclusive, max_points);
+        let mut count = 0usize;
+        self.visit_stream_range(
+            stream.id,
+            crate::DataWindowTimeRange::new(range.start, range.end_exclusive)
+                .expect("validated recording range"),
+            || false,
+            |message| {
+                if let Ok(odometry) = decode_odometry(&message.payload) {
+                    let [vx, vy, _] = odometry.linear_velocity;
+                    let sample = |value| SignalSample {
+                        measurement_time: Some(odometry.measurement_time),
+                        arrival_time: message.arrival_time,
+                        value,
+                    };
+                    speed.push(sample(vx.hypot(vy)));
+                    yaw.push(sample(odometry.angular_velocity[2]));
+                    count += 1;
+                    if count == 1 || count.is_multiple_of(ODOMETRY_PROGRESS_INTERVAL) {
+                        on_progress(snapshot_odometry_signals(&speed, &yaw));
+                    }
+                }
+            },
+        )?;
+        Ok(snapshot_odometry_signals(&speed, &yaw))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

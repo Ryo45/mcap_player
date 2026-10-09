@@ -49,7 +49,7 @@ pub(crate) struct PlotViewInput<'a> {
     pub(crate) signal: Option<&'a LoadedSignal>,
     pub(crate) current: Option<SignalSample>,
     pub(crate) loading: bool,
-    pub(crate) error: Option<&'a str>,
+    pub(crate) error: Option<&'a crate::query_error::QueryLoadError>,
     pub(crate) playback: PlaybackView,
     pub(crate) display_time: ArrivalTime,
     pub(crate) preview_signal: Option<&'a SignalOverview>,

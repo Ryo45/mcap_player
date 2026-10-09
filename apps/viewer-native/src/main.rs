@@ -13,6 +13,7 @@ mod panels;
 mod plot_loader;
 mod presentation;
 mod preview;
+mod query_error;
 mod session;
 mod signal_query;
 mod ui_components;

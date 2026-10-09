@@ -6,15 +6,8 @@ use crate::{
     inspection::{InspectorRequirement, TopicInspection},
     inspector_loader::{InspectorLoader, InspectorRequest},
 };
-#[cfg(feature = "ros2-live")]
-use anyhow::bail;
 use anyhow::{Context, Result};
-use memmap2::Mmap;
-use std::{
-    fs::File,
-    path::{Path, PathBuf},
-    time::Duration,
-};
+use std::{path::Path, time::Duration};
 use viewer_core::{
     ArrivalTime, CameraId, FeatureRestoreError, McapPlayback, PlaybackCommand, PlaybackEffect,
     PlaybackPerformance, PlaybackRequirements, PlaybackView, ProcessingCounters, RawMessage,
@@ -32,7 +25,6 @@ pub(crate) struct ViewerSession {
     plan: SessionPlan,
     topic: String,
     source_name: String,
-    recording_path: Option<PathBuf>,
     plot_loader: PlotLoader,
     odometry_topic: String,
     topic_tree: viewer_core::TopicTree,
@@ -41,7 +33,7 @@ pub(crate) struct ViewerSession {
 }
 
 pub(crate) struct PlotSignalRequest {
-    pub(crate) path: PathBuf,
+    pub(crate) source: viewer_core::McapSource,
     pub(crate) origin: ArrivalTime,
     pub(crate) max_points: usize,
     pub(crate) odometry_topic: String,
@@ -70,11 +62,8 @@ impl ViewerSession {
         requirements: &PlaybackRequirements,
         bindings: &WorkspaceBindings,
     ) -> Result<Self> {
-        let file = File::open(path).with_context(|| format!("open {}", path.display()))?;
-        // SAFETY: the mapping is read-only and owns an independent reference to the file pages.
-        let mapping =
-            unsafe { Mmap::map(&file) }.with_context(|| format!("map {}", path.display()))?;
-        let mut playback = McapPlayback::from_owner(mapping)?;
+        let mut playback =
+            McapPlayback::open_file(path).with_context(|| format!("open {}", path.display()))?;
         let plan = SessionPlan::build(playback.catalog(), &topic, requirements, bindings)?;
         playback.select_streams(plan.selected_stream_ids())?;
         let persistent = plan
@@ -92,7 +81,6 @@ impl ViewerSession {
             plan,
             topic,
             source_name: path.display().to_string(),
-            recording_path: Some(path.to_owned()),
             plot_loader: PlotLoader::default(),
             odometry_topic: bindings.odometry_topic.clone(),
             numeric_plots: Default::default(),
@@ -133,7 +121,6 @@ impl ViewerSession {
                 "ROS 2 live ({})",
                 if reliable { "reliable" } else { "best effort" }
             ),
-            recording_path: None,
             plot_loader: PlotLoader::default(),
             odometry_topic: bindings.odometry_topic.clone(),
             numeric_plots: Default::default(),
@@ -183,13 +170,28 @@ impl ViewerSession {
         self.numeric_plots.remove(stream, path);
     }
 
+    fn recording_source(&self) -> Option<&viewer_core::McapSource> {
+        match &self.source {
+            SessionSource::Mcap(playback) => Some(playback.recording_source()),
+            #[cfg(feature = "ros2-live")]
+            SessionSource::Ros { .. } => None,
+        }
+    }
+    pub(crate) fn source_fingerprint(&self) -> anyhow::Result<viewer_core::SourceFingerprint> {
+        let source = self
+            .recording_source()
+            .context("live sources have no recording fingerprint")?;
+        Ok(viewer_core::mcap_summary_fingerprint(
+            source.summary_identity()?,
+        )?)
+    }
     pub(crate) fn plan(&self) -> &SessionPlan {
         &self.plan
     }
 
     pub(crate) fn plot_signal_request(&self, max_points: usize) -> Option<PlotSignalRequest> {
         Some(PlotSignalRequest {
-            path: self.recording_path.clone()?,
+            source: self.recording_source()?.fork_reader(),
             origin: self.playback_view()?.start,
             max_points,
             odometry_topic: self.odometry_topic.clone(),
@@ -205,7 +207,12 @@ impl ViewerSession {
     }
 
     pub(crate) fn poll_queries(&mut self) {
-        self.numeric_plots.poll(self.recording_path.as_ref());
+        let source = match &self.source {
+            SessionSource::Mcap(playback) => Some(playback.recording_source()),
+            #[cfg(feature = "ros2-live")]
+            SessionSource::Ros { .. } => None,
+        };
+        self.numeric_plots.poll(source);
         self.plot_loader.poll();
         self.inspector_loader.poll();
     }
@@ -223,7 +230,10 @@ impl ViewerSession {
         &mut self,
         requirements: &[InspectorRequirement],
     ) -> Result<()> {
-        let Some(path) = self.recording_path.clone() else {
+        let Some(source) = self
+            .recording_source()
+            .map(viewer_core::McapSource::fork_reader)
+        else {
             self.inspector_loader.clear();
             return Ok(());
         };
@@ -232,7 +242,7 @@ impl ViewerSession {
             return Ok(());
         }
         self.inspector_loader.start(InspectorRequest {
-            path,
+            source,
             requirements: requirements.to_vec(),
         })
     }
@@ -251,7 +261,7 @@ impl ViewerSession {
             #[cfg(feature = "ros2-live")]
             SessionSource::Ros { handle } => {
                 if let Some(error) = handle.error() {
-                    bail!("ROS executor: {error}");
+                    return Err(anyhow::Error::new(error)).context("ROS executor");
                 }
                 process(elapsed, handle.take().into_iter().collect());
             }

@@ -1,10 +1,9 @@
 use crate::interaction::PreviewDragState;
-use memmap2::Mmap;
-use std::{fs, fs::File, path::Path};
+use std::{fs, path::Path};
 use viewer_core::{
     ArrivalTime, PreviewBudget, PreviewRequest, PreviewSnapshot, SignalId, SourceFingerprint,
 };
-use viewer_preview_mcap::{PreviewArtifact, read_preview_mcap, source_fingerprint};
+use viewer_preview_mcap::{PreviewArtifact, read_preview_mcap};
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub(crate) enum PreviewStatus {
@@ -111,13 +110,4 @@ impl PreviewCoordinator {
             PreviewStatus::Unavailable | PreviewStatus::Ready => None,
         }
     }
-}
-
-pub(crate) fn fingerprint_source(path: &Path) -> Result<SourceFingerprint, String> {
-    let file = File::open(path).map_err(|error| format!("open source for fingerprint: {error}"))?;
-    // SAFETY: this is a read-only mapping held only while calculating summary identity. The viewer
-    // never mutates an opened source file; concurrent external mutation is unsupported.
-    let mapped = unsafe { Mmap::map(&file) }
-        .map_err(|error| format!("memory-map source for fingerprint: {error}"))?;
-    source_fingerprint(&mapped).map_err(|error| error.to_string())
 }

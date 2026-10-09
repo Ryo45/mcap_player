@@ -1,0 +1,182 @@
+//! Owned immutable bytes or bounded positional reads. File mutation cannot invalidate Rust slices.
+use crate::McapOpenError;
+use bytes::Bytes;
+use mcap::Summary;
+#[cfg(not(target_arch = "wasm32"))]
+use mcap::sans_io::{SummaryReadEvent, SummaryReader, SummaryReaderOptions};
+#[cfg(not(target_arch = "wasm32"))]
+use std::io::{self, SeekFrom};
+
+pub const MAX_SOURCE_RECORD_BYTES: usize = 256 * 1024 * 1024;
+
+#[derive(Clone)]
+pub(super) enum Backing {
+    Bytes(Bytes),
+    #[cfg(not(target_arch = "wasm32"))]
+    File(std::sync::Arc<FileRanges>),
+}
+impl Backing {
+    pub fn len(&self) -> u64 {
+        match self {
+            Self::Bytes(bytes) => bytes.len() as u64,
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::File(file) => file.metadata.len(),
+        }
+    }
+    pub fn read(&self, offset: u64, length: usize) -> Result<Bytes, McapOpenError> {
+        if length > MAX_SOURCE_RECORD_BYTES {
+            return Err(McapOpenError::ReadLimit {
+                requested: length,
+                maximum: MAX_SOURCE_RECORD_BYTES,
+            });
+        }
+        let end = offset
+            .checked_add(length as u64)
+            .ok_or(McapOpenError::ReadOverflow)?;
+        if end > self.len() {
+            return Err(McapOpenError::ReadOutOfBounds {
+                offset,
+                length,
+                file_size: self.len(),
+            });
+        }
+        match self {
+            Self::Bytes(bytes) => Ok(bytes.slice(offset as usize..end as usize)),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::File(file) => file.read(offset, length),
+        }
+    }
+    pub fn summary(&self) -> Result<Summary, McapOpenError> {
+        match self {
+            Self::Bytes(bytes) => Summary::read(bytes)?.ok_or(McapOpenError::SummaryRequired),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::File(_) => self.summary_from_ranges(),
+        }
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    fn summary_from_ranges(&self) -> Result<Summary, McapOpenError> {
+        let mut reader = SummaryReader::new_with_options(
+            SummaryReaderOptions::default()
+                .with_file_size(self.len())
+                .with_record_length_limit(MAX_SOURCE_RECORD_BYTES),
+        );
+        let mut position = 0u64;
+        while let Some(event) = reader.next_event() {
+            match event? {
+                SummaryReadEvent::SeekRequest(seek) => {
+                    position = match seek {
+                        SeekFrom::Start(value) => Some(value),
+                        SeekFrom::Current(delta) => position.checked_add_signed(delta),
+                        SeekFrom::End(delta) => self.len().checked_add_signed(delta),
+                    }
+                    .ok_or(McapOpenError::ReadOverflow)?;
+                    if position > self.len() {
+                        return Err(McapOpenError::ReadOutOfBounds {
+                            offset: position,
+                            length: 0,
+                            file_size: self.len(),
+                        });
+                    }
+                    reader.notify_seeked(position);
+                }
+                SummaryReadEvent::ReadRequest(length) => {
+                    let data = self.read(position, length)?;
+                    reader.insert(length).copy_from_slice(&data);
+                    reader.notify_read(length);
+                    position = position
+                        .checked_add(length as u64)
+                        .ok_or(McapOpenError::ReadOverflow)?;
+                }
+            }
+        }
+        reader.finish().ok_or(McapOpenError::SummaryRequired)
+    }
+    pub fn summary_crc(&self) -> Result<u32, McapOpenError> {
+        let offset = self
+            .len()
+            .checked_sub(37)
+            .ok_or(McapOpenError::ReadOverflow)?;
+        let tail = self.read(offset, 37)?;
+        let mut bytes = mcap::MAGIC.to_vec();
+        bytes.extend_from_slice(&tail);
+        Ok(mcap::read::footer(&bytes)?.summary_crc)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub(super) struct FileRanges {
+    file: std::fs::File,
+    metadata: std::fs::Metadata,
+    #[cfg(not(any(unix, windows)))]
+    cursor: std::sync::Mutex<()>,
+}
+#[cfg(not(target_arch = "wasm32"))]
+impl FileRanges {
+    pub fn open(path: &std::path::Path) -> Result<Self, McapOpenError> {
+        let file = std::fs::File::open(path).map_err(McapOpenError::Io)?;
+        let metadata = file.metadata().map_err(McapOpenError::Io)?;
+        if !metadata.is_file() {
+            return Err(McapOpenError::NotRegularFile);
+        }
+        Ok(Self {
+            file,
+            metadata,
+            #[cfg(not(any(unix, windows)))]
+            cursor: std::sync::Mutex::new(()),
+        })
+    }
+    fn check(&self) -> Result<(), McapOpenError> {
+        let actual = self.file.metadata().map_err(McapOpenError::Io)?;
+        if actual.len() != self.metadata.len()
+            || actual.modified().ok() != self.metadata.modified().ok()
+        {
+            return Err(McapOpenError::SourceChanged);
+        }
+        Ok(())
+    }
+    fn read(&self, offset: u64, length: usize) -> Result<Bytes, McapOpenError> {
+        self.check()?;
+        let mut bytes = vec![0; length];
+        #[cfg(not(any(unix, windows)))]
+        let _guard = self
+            .cursor
+            .lock()
+            .map_err(|_| McapOpenError::ReadLockPoisoned)?;
+        let mut done = 0;
+        while done < length {
+            let position = offset
+                .checked_add(done as u64)
+                .ok_or(McapOpenError::ReadOverflow)?;
+            #[cfg(unix)]
+            let result = {
+                use std::os::unix::fs::FileExt;
+                self.file.read_at(&mut bytes[done..], position)
+            };
+            #[cfg(windows)]
+            let result = {
+                use std::os::windows::fs::FileExt;
+                self.file.seek_read(&mut bytes[done..], position)
+            };
+            #[cfg(not(any(unix, windows)))]
+            let result = {
+                use std::io::{Read, Seek};
+                let mut file = &self.file;
+                file.seek(SeekFrom::Start(position))
+                    .and_then(|_| file.read(&mut bytes[done..]))
+            };
+            match result {
+                Ok(0) => {
+                    return Err(McapOpenError::Io(io::Error::new(
+                        io::ErrorKind::UnexpectedEof,
+                        "short positional read",
+                    )));
+                }
+                Ok(count) => done += count,
+                Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+                Err(error) => return Err(McapOpenError::Io(error)),
+            }
+        }
+        self.check()?;
+        Ok(Bytes::from(bytes))
+    }
+}

@@ -57,8 +57,9 @@ impl RemoteRestoreLoader {
         #[cfg(target_arch = "wasm32")]
         {
             let generation = self.generation;
-            let controller = AbortController::new()
-                .map_err(|error| DataLoadError::new(format!("AbortController: {error:?}")))?;
+            let controller = AbortController::new().map_err(|error| {
+                DataLoadError::invalid_record(format!("AbortController: {error:?}"))
+            })?;
             let signal = controller.signal();
             self.abort = Some(controller);
             let client = self.client.clone();
@@ -67,7 +68,7 @@ impl RemoteRestoreLoader {
                 recording_id: self.recording_id.clone(),
                 revision: self.revision.clone(),
                 target_ns: u64::try_from(plan.target.0)
-                    .map_err(|_| DataLoadError::new("negative restore target"))?,
+                    .map_err(|_| DataLoadError::invalid_record("negative restore target"))?,
                 latest_streams: plan.latest_before.iter().map(|stream| stream.0).collect(),
                 history_streams: plan
                     .histories
@@ -81,14 +82,14 @@ impl RemoteRestoreLoader {
                     .min()
                     .map(u64::try_from)
                     .transpose()
-                    .map_err(|_| DataLoadError::new("negative restore history start"))?,
+                    .map_err(|_| DataLoadError::invalid_record("negative restore history start"))?,
                 persistent_streams: plan.persistent.iter().map(|stream| stream.0).collect(),
             };
             spawn_local(async move {
                 let result = client
                     .fetch_restore(&request, Some(&signal))
                     .await
-                    .map_err(|error| DataLoadError::new(error.to_string()))
+                    .map_err(DataLoadError::from)
                     .and_then(decode_restore_page);
                 inbox.borrow_mut().push_back((generation, result));
             });
@@ -136,28 +137,31 @@ impl RemoteRestoreLoader {
 
     #[cfg(test)]
     pub(crate) fn inject_error(&mut self, message: &str) {
-        self.inbox
-            .borrow_mut()
-            .push_back((self.generation, Err(DataLoadError::new(message.to_owned()))));
+        self.inbox.borrow_mut().push_back((
+            self.generation,
+            Err(DataLoadError::invalid_record(message.to_owned())),
+        ));
     }
 }
 
 fn decode_restore_page(page: RemoteBatchPage) -> Result<Vec<RawMessage>, DataLoadError> {
     if !page.complete {
-        return Err(DataLoadError::new("restore batch is incomplete"));
+        return Err(DataLoadError::invalid_record("restore batch is incomplete"));
     }
     let decoded = BatchDecoder::new(&page.body)
         .and_then(BatchDecoder::collect)
-        .map_err(|error| DataLoadError::new(error.to_string()))?;
+        .map_err(DataLoadError::from)?;
     decoded
         .into_iter()
         .map(|message| {
             let arrival_time = i64::try_from(message.log_time_ns)
                 .map(viewer_core::ArrivalTime)
-                .map_err(|_| DataLoadError::new("remote timestamp exceeds signed nanoseconds"))?;
-            let payload_range = message
-                .payload_range_in(&page.body)
-                .ok_or_else(|| DataLoadError::new("restore payload is outside its batch body"))?;
+                .map_err(|_| {
+                    DataLoadError::invalid_record("remote timestamp exceeds signed nanoseconds")
+                })?;
+            let payload_range = message.payload_range_in(&page.body).ok_or_else(|| {
+                DataLoadError::invalid_record("restore payload is outside its batch body")
+            })?;
             Ok(RawMessage {
                 publish_time_ns: Some(message.publish_time_ns),
                 sequence: Some(message.sequence),
@@ -212,7 +216,9 @@ impl RemoteWindowLoader {
         selected_streams: Vec<u32>,
     ) -> Result<Self, DataLoadError> {
         if selected_streams.is_empty() {
-            return Err(DataLoadError::new("remote stream selection is empty"));
+            return Err(DataLoadError::invalid_record(
+                "remote stream selection is empty",
+            ));
         }
         #[cfg(not(target_arch = "wasm32"))]
         let _ = (client, recording_id, revision, selected_streams);
@@ -236,7 +242,9 @@ impl RemoteWindowLoader {
 
     pub(crate) fn start(&mut self, range: DataWindowTimeRange) -> Result<(), DataLoadError> {
         if !matches!(self.state, WindowLoadState::Idle) {
-            return Err(DataLoadError::new("remote window loader is not idle"));
+            return Err(DataLoadError::invalid_record(
+                "remote window loader is not idle",
+            ));
         }
         self.generation = self.generation.wrapping_add(1);
         let generation = self.generation;
@@ -246,8 +254,9 @@ impl RemoteWindowLoader {
         #[cfg(target_arch = "wasm32")]
         {
             let controller = AbortController::new().map_err(|error| {
-                let error =
-                    DataLoadError::new(format!("could not create AbortController: {error:?}"));
+                let error = DataLoadError::invalid_record(format!(
+                    "could not create AbortController: {error:?}"
+                ));
                 self.state = WindowLoadState::Failed(error.clone());
                 error
             })?;
@@ -361,7 +370,7 @@ impl RemoteWindowLoader {
     #[cfg(test)]
     pub(crate) fn inject_loaded(&mut self, loaded: LoadedWindow) -> Result<(), DataLoadError> {
         let WindowLoadState::Loading { generation, range } = self.state else {
-            return Err(DataLoadError::new("test loader is not loading"));
+            return Err(DataLoadError::invalid_record("test loader is not loading"));
         };
         self.inbox.borrow_mut().push_back(FetchResult {
             generation,
@@ -445,30 +454,31 @@ impl WindowAssembler {
 
     fn push_page(&mut self, page: RemoteBatchPage) -> Result<bool, DataLoadError> {
         if self.complete {
-            return Err(DataLoadError::new(
+            return Err(DataLoadError::invalid_record(
                 "remote window received a page after completion",
             ));
         }
         let decoded = BatchDecoder::new(&page.body)
             .and_then(BatchDecoder::collect)
-            .map_err(|error| DataLoadError::new(error.to_string()))?;
+            .map_err(DataLoadError::from)?;
         let retained_page_bytes = if decoded.is_empty() {
             0
         } else {
             page.body.len()
         };
         for message in decoded {
-            let arrival = i64::try_from(message.log_time_ns)
-                .map_err(|_| DataLoadError::new("remote timestamp exceeds signed nanoseconds"))?;
+            let arrival = i64::try_from(message.log_time_ns).map_err(|_| {
+                DataLoadError::invalid_record("remote timestamp exceeds signed nanoseconds")
+            })?;
             let key = (arrival, message.stream_id);
             if self.previous_key.is_some_and(|previous| key < previous) {
-                return Err(DataLoadError::new(
+                return Err(DataLoadError::invalid_record(
                     "remote window messages are not time ordered",
                 ));
             }
-            let payload_range = message
-                .payload_range_in(&page.body)
-                .ok_or_else(|| DataLoadError::new("decoded payload is outside its batch body"))?;
+            let payload_range = message.payload_range_in(&page.body).ok_or_else(|| {
+                DataLoadError::invalid_record("decoded payload is outside its batch body")
+            })?;
             self.previous_key = Some(key);
             self.messages.push(RawMessage {
                 publish_time_ns: Some(message.publish_time_ns),
@@ -482,23 +492,23 @@ impl WindowAssembler {
         self.source_bytes = self
             .source_bytes
             .checked_add(page.body.len())
-            .ok_or_else(|| DataLoadError::new("remote source byte count overflow"))?;
+            .ok_or_else(|| DataLoadError::invalid_record("remote source byte count overflow"))?;
         self.resident_bytes = self
             .resident_bytes
             .checked_add(retained_page_bytes)
-            .ok_or_else(|| DataLoadError::new("remote resident byte count overflow"))?;
+            .ok_or_else(|| DataLoadError::invalid_record("remote resident byte count overflow"))?;
         self.complete = page.complete;
         Ok(self.complete)
     }
 
     fn finish(self, latency_ms: f64) -> Result<LoadedWindow, DataLoadError> {
         if !self.complete {
-            return Err(DataLoadError::new(
+            return Err(DataLoadError::invalid_record(
                 "remote window cannot be published before continuation completes",
             ));
         }
         let window = SerializedWindow::new(self.range, self.messages, self.resident_bytes)
-            .map_err(|error| DataLoadError::new(error.to_string()))?;
+            .map_err(DataLoadError::from)?;
         Ok(LoadedWindow {
             window,
             diagnostics: WindowLoadDiagnostics {
@@ -523,9 +533,9 @@ async fn fetch_complete_window(
     signal: &web_sys::AbortSignal,
 ) -> Result<LoadedWindow, DataLoadError> {
     let start_ns = u64::try_from(range.start.0)
-        .map_err(|_| DataLoadError::new("negative remote window start"))?;
+        .map_err(|_| DataLoadError::invalid_record("negative remote window start"))?;
     let end_ns = u64::try_from(range.end_exclusive.0)
-        .map_err(|_| DataLoadError::new("negative remote window end"))?;
+        .map_err(|_| DataLoadError::invalid_record("negative remote window end"))?;
     let started = Date::now();
     let mut assembler = WindowAssembler::new(range);
     let mut cursor = None;
@@ -545,7 +555,7 @@ async fn fetch_complete_window(
                 Some(signal),
             )
             .await
-            .map_err(|error| DataLoadError::new(error.to_string()))?;
+            .map_err(DataLoadError::from)?;
         cursor = page.next_cursor.clone();
         if assembler.push_page(page)? {
             return assembler.finish(Date::now() - started);

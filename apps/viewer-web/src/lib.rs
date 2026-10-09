@@ -308,10 +308,10 @@ mod browser {
             let generation = begin_source_change();
             spawn_local(async move {
                 set_status("Reading MCAP Summary…", false);
-                let result = open_browser_mcap(file, TOPIC).await.and_then(|recording| {
-                    WebPlayback::from_local(recording)
-                        .map_err(|error| crate::data_plane::DataLoadError::new(error.to_string()))
-                });
+                let result = match open_browser_mcap(file, TOPIC).await {
+                    Ok(recording) => WebPlayback::from_local(recording),
+                    Err(error) => Err(crate::playback::WebPlaybackError::from(error)),
+                };
                 if !source_is_current(generation) {
                     return;
                 }

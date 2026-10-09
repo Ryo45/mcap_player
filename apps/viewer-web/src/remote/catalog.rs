@@ -15,28 +15,51 @@ pub(crate) struct RemoteCatalog {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct RemoteCatalogError(String);
-
+pub(crate) enum RemoteCatalogError {
+    UnsupportedTimeSemantics,
+    EmptyTimeRange,
+    MissingCamera,
+    DuplicateSchemaId(u16),
+    UnknownSchemaId(u16),
+    TimestampOverflow(u64),
+    Plan(viewer_core::SessionPlanError),
+}
 impl fmt::Display for RemoteCatalogError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.0)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::UnsupportedTimeSemantics => {
+                write!(f, "unsupported remote time or range semantics")
+            }
+            Self::EmptyTimeRange => write!(f, "remote time range is empty"),
+            Self::MissingCamera => write!(f, "remote catalog has no supported camera stream"),
+            Self::DuplicateSchemaId(id) => write!(f, "duplicate remote schema ID {id}"),
+            Self::UnknownSchemaId(id) => write!(f, "unknown schema ID {id}"),
+            Self::TimestampOverflow(value) => {
+                write!(f, "remote timestamp {value} exceeds signed nanoseconds")
+            }
+            Self::Plan(error) => error.fmt(f),
+        }
     }
 }
-
-impl Error for RemoteCatalogError {}
+impl Error for RemoteCatalogError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Plan(error) => Some(error),
+            _ => None,
+        }
+    }
+}
 
 pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, RemoteCatalogError> {
     if remote.time_basis != "mcap-log-time"
         || remote.range_semantics != "start-inclusive-end-exclusive"
     {
-        return Err(RemoteCatalogError(
-            "unsupported remote time or range semantics".into(),
-        ));
+        return Err(RemoteCatalogError::UnsupportedTimeSemantics);
     }
     let start = to_arrival(remote.time_range.start_ns.get())?;
     let end_exclusive = to_arrival(remote.time_range.end_ns_exclusive.get())?;
     if start >= end_exclusive {
-        return Err(RemoteCatalogError("remote time range is empty".into()));
+        return Err(RemoteCatalogError::EmptyTimeRange);
     }
     let supported = remote
         .streams
@@ -47,9 +70,7 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
         .iter()
         .copied()
         .find(|stream| stream.schema_name == "sensor_msgs/msg/CompressedImage")
-        .ok_or_else(|| {
-            RemoteCatalogError("remote catalog has no supported camera stream".into())
-        })?;
+        .ok_or(RemoteCatalogError::MissingCamera)?;
     let primary_camera_topic = camera.topic.clone();
 
     let mut definitions = std::collections::BTreeMap::new();
@@ -59,7 +80,7 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
             data: bytes::Bytes::from_owner(schema.data.clone()),
         });
         if definitions.insert(schema.id, definition).is_some() {
-            return Err(RemoteCatalogError("duplicate remote schema ID".into()));
+            return Err(RemoteCatalogError::DuplicateSchemaId(schema.id));
         }
     }
     let streams = remote
@@ -70,7 +91,7 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
                 Some(id) => Some(
                     definitions
                         .get(&id)
-                        .ok_or_else(|| RemoteCatalogError(format!("unknown schema ID {id}")))?
+                        .ok_or(RemoteCatalogError::UnknownSchemaId(id))?
                         .clone(),
                 ),
                 None => None,
@@ -92,7 +113,7 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
         &crate::playback::web_playback_requirements(),
         &crate::playback::web_workspace_bindings(),
     )
-    .map_err(|error| RemoteCatalogError(error.to_string()))?;
+    .map_err(RemoteCatalogError::Plan)?;
     let mut selected = plan
         .selected_stream_ids()
         .into_iter()
@@ -128,7 +149,7 @@ fn to_core_descriptor(
 fn to_arrival(value: u64) -> Result<ArrivalTime, RemoteCatalogError> {
     i64::try_from(value)
         .map(ArrivalTime)
-        .map_err(|_| RemoteCatalogError("remote timestamp exceeds signed nanoseconds".into()))
+        .map_err(|_| RemoteCatalogError::TimestampOverflow(value))
 }
 
 #[cfg(test)]
@@ -207,7 +228,7 @@ mod schema_parity_tests {
                 .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap"),
         )
         .unwrap();
-        let native = viewer_core::McapSource::new(bytes).unwrap();
+        let native = viewer_core::McapSource::copy_from_slice((bytes).as_ref()).unwrap();
         let range = native.catalog().time_range.unwrap();
         let mut streams = native
             .catalog()

@@ -56,7 +56,7 @@ struct PlaybackOutcome {
 impl PlaybackScenario {
     fn run(self) -> PlaybackOutcome {
         let backing = write_mcap(&self.streams, &self.messages);
-        let mut playback = McapPlayback::new(backing).unwrap();
+        let mut playback = McapPlayback::copy_from_slice((backing).as_ref()).unwrap();
         let mut requirements = PlaybackRequirements::empty();
         requirements.require_all_cameras();
         let plan = SessionPlan::build(

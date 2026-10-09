@@ -92,7 +92,7 @@ impl InspectorPanel {
                 return;
             }
             if let Some(error) = &inspection.error {
-                ui.colored_label(ui.visuals().error_fg_color, error);
+                ui.colored_label(ui.visuals().error_fg_color, error.to_string());
                 return;
             }
             if inspection.messages.is_empty() {

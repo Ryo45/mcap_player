@@ -34,14 +34,27 @@ pub struct RestorePlan {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct RestorePlanError(String);
-
+pub enum RestorePlanError {
+    MissingTimeRange,
+    TargetOutsideRecording {
+        target: ArrivalTime,
+        range: crate::RecordingTimeRange,
+    },
+    TargetOverflow,
+}
 impl fmt::Display for RestorePlanError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.0)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::MissingTimeRange => write!(f, "restore planning requires a recording time range"),
+            Self::TargetOutsideRecording { target, range } => write!(
+                f,
+                "restore target {} is outside recording [{}, {})",
+                target.0, range.start.0, range.end_exclusive.0
+            ),
+            Self::TargetOverflow => write!(f, "restore target cannot be made inclusive"),
+        }
     }
 }
-
 impl std::error::Error for RestorePlanError {}
 
 pub struct RestorePlanner<'a> {
@@ -58,20 +71,21 @@ impl<'a> RestorePlanner<'a> {
         target: ArrivalTime,
         inputs: impl IntoIterator<Item = RestoreInput>,
     ) -> Result<RestorePlan, RestorePlanError> {
-        let recording = self.catalog.time_range.ok_or_else(|| {
-            RestorePlanError("restore planning requires a recording time range".into())
-        })?;
+        let recording = self
+            .catalog
+            .time_range
+            .ok_or(RestorePlanError::MissingTimeRange)?;
         if target < recording.start || target >= recording.end_exclusive {
-            return Err(RestorePlanError(format!(
-                "restore target {} is outside recording [{}, {})",
-                target.0, recording.start.0, recording.end_exclusive.0
-            )));
+            return Err(RestorePlanError::TargetOutsideRecording {
+                target,
+                range: recording,
+            });
         }
         let end_exclusive = ArrivalTime(
             target
                 .0
                 .checked_add(1)
-                .ok_or_else(|| RestorePlanError("restore target cannot be made inclusive".into()))?
+                .ok_or(RestorePlanError::TargetOverflow)?
                 .min(recording.end_exclusive.0),
         );
         let mut latest_before = Vec::new();

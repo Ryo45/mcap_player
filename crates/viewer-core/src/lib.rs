@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Platform-neutral recording access, playback planning, and feature-controller contracts.
 //!
 //! Internal modules follow the data flow instead of exposing one flat implementation namespace:
@@ -68,7 +70,10 @@ pub use recording::{
 pub use message::{NumericField, NumericFieldExtractor, RosMessageSchema};
 
 pub use derived::{
-    NumericPlotDetail, NumericPlotOverview, NumericPlotOverviewBatch, NumericSample,
-    NumericSeriesRequest,
+    NumericPlotDetail, NumericPlotError, NumericPlotOverview, NumericPlotOverviewBatch,
+    NumericSample, NumericSeriesRequest,
 };
-pub use recording::{TopicTree, TopicTreeEntry};
+pub use recording::{SchemaExplorationError, TopicTree, TopicTreeEntry};
+
+#[cfg(not(target_arch = "wasm32"))]
+pub use recording::FileMessageStream;

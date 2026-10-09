@@ -4,8 +4,7 @@ use image::{
     codecs::jpeg::JpegEncoder,
     imageops::{FilterType, resize},
 };
-use mcap::{MessageStream, Summary, WriteOptions, Writer, records::MessageHeader};
-use memmap2::MmapOptions;
+use mcap::{WriteOptions, Writer, records::MessageHeader};
 use std::{
     collections::BTreeMap,
     fs,
@@ -133,12 +132,8 @@ fn usage() -> anyhow::Error {
 }
 
 fn inspect_camera_transform(input: &Path) -> Result<()> {
-    let input_file = fs::File::open(input).with_context(|| format!("open {}", input.display()))?;
-    // SAFETY: inspection keeps the file open and does not mutate it while the map is live.
-    let mapped = unsafe { MmapOptions::new().map(&input_file) }
-        .with_context(|| format!("map {}", input.display()))?;
     let mut transforms = TransformState::default();
-    for message in MessageStream::new(&mapped)? {
+    for message in viewer_core::FileMessageStream::open(input)? {
         let message = message?;
         if message.channel.topic == TF_STATIC_TOPIC {
             transforms.apply(TransformBatch {
@@ -278,10 +273,6 @@ fn convert_raw_camera(
         fs::create_dir_all(parent)?;
     }
 
-    let input_file = fs::File::open(input).with_context(|| format!("open {}", input.display()))?;
-    // SAFETY: the converter keeps the input file open and never mutates it while the map is live.
-    let mapped = unsafe { MmapOptions::new().map(&input_file) }
-        .with_context(|| format!("map {}", input.display()))?;
     let temp_output = output.with_extension("mcap.part");
     ensure!(
         !temp_output.exists(),
@@ -291,7 +282,7 @@ fn convert_raw_camera(
     let output_file = fs::File::create(&temp_output)
         .with_context(|| format!("create {}", temp_output.display()))?;
 
-    let result = convert_stream(&mapped, BufWriter::new(output_file), duration_seconds);
+    let result = convert_stream(input, BufWriter::new(output_file), duration_seconds);
     match result {
         Ok(stats) => {
             fs::rename(&temp_output, output).with_context(|| {
@@ -311,7 +302,7 @@ fn convert_raw_camera(
 }
 
 fn convert_stream(
-    input: &[u8],
+    input: &Path,
     output: BufWriter<fs::File>,
     duration_seconds: f64,
 ) -> Result<ConversionStats> {
@@ -374,7 +365,7 @@ fn convert_stream(
     let mut tf_static_messages = 0_u32;
     let mut camera_static_written = false;
     let mut input_shape = None;
-    for message in MessageStream::new(input).context("read MCAP records")? {
+    for message in viewer_core::FileMessageStream::open(input).context("read MCAP records")? {
         let message = message.context("read MCAP message")?;
         if first_arrival.is_none() {
             if message.channel.topic == TF_STATIC_TOPIC {
@@ -934,13 +925,8 @@ struct VerificationStats {
 }
 
 fn verify_jpeg_mcap(input: &Path) -> Result<VerificationStats> {
-    let input_file = fs::File::open(input).with_context(|| format!("open {}", input.display()))?;
-    // SAFETY: verification keeps the file open and does not mutate it while the map is live.
-    let mapped = unsafe { MmapOptions::new().map(&input_file) }
-        .with_context(|| format!("map {}", input.display()))?;
-    let summary = Summary::read(&mapped)
-        .context("read MCAP summary")?
-        .context("MCAP has no summary")?;
+    let messages = viewer_core::FileMessageStream::open(input)?;
+    let (summary, _) = messages.read_metadata()?;
     let expected_counts = CAMERA_SPECS
         .iter()
         .map(|(topic, _)| {
@@ -973,7 +959,7 @@ fn verify_jpeg_mcap(input: &Path) -> Result<VerificationStats> {
     let mut tf_messages = 0_u64;
     let mut tf_static_messages = 0_u64;
     let mut transforms = TransformState::default();
-    for message in MessageStream::new(&mapped)? {
+    for message in messages {
         let message = message?;
         if message.channel.topic == PATH_TOPIC {
             let path = decode_path(&message.data)?;
