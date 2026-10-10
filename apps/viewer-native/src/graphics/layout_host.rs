@@ -250,52 +250,65 @@ mod tests {
 
     #[test]
     fn bundled_layout_invokes_all_panels_and_aggregates_render_requests() {
-        egui::__run_test_ui(|ui| {
-            let mut workspace = NativeWorkspace::default();
-            let layout = workspace.layout.clone();
-            let presentation = ViewerPresentation::default();
-            let diagnostics = SceneDiagnostics::default();
-            let interaction = workspace.interaction.clone();
-            let output = show_layout_host(
-                ui,
-                &layout,
-                &mut workspace.panels,
-                PanelCompositionInput {
-                    playback: Some(PlaybackView {
-                        start: ArrivalTime(0),
-                        end: ArrivalTime(10),
-                        cursor: ArrivalTime(2),
-                        playing: false,
-                        speed: PlaybackSpeed::Normal,
-                    }),
-                    presentation: &presentation,
-                    camera_overlays: &viewer_renderer::CameraOverlayState::default(),
-                    interaction: &interaction,
-                    signals: SignalQueryView::empty(),
-                    preview: PreviewDataView {
-                        active: false,
-                        speed_overview: None,
-                        bookmarks: &[],
+        use crate::workspace::WorkspaceLayout;
+        for (preset, recording) in [
+            (WorkspaceLayout::Standard, true),
+            (WorkspaceLayout::Monitor, true),
+            (WorkspaceLayout::Monitor, false),
+        ] {
+            egui::__run_test_ui(|ui| {
+                let mut workspace = NativeWorkspace::load_bundled_or_fallback(preset);
+                let layout = workspace.layout.clone();
+                let presentation = ViewerPresentation::default();
+                let diagnostics = SceneDiagnostics::default();
+                let interaction = workspace.interaction.clone();
+                let output = show_layout_host(
+                    ui,
+                    &layout,
+                    &mut workspace.panels,
+                    PanelCompositionInput {
+                        playback: recording.then_some(PlaybackView {
+                            start: ArrivalTime(0),
+                            end: ArrivalTime(10),
+                            cursor: ArrivalTime(2),
+                            playing: false,
+                            speed: PlaybackSpeed::Normal,
+                        }),
+                        presentation: &presentation,
+                        camera_overlays: &viewer_renderer::CameraOverlayState::default(),
+                        interaction: &interaction,
+                        signals: SignalQueryView::empty(),
+                        preview: PreviewDataView {
+                            active: false,
+                            speed_overview: None,
+                            bookmarks: &[],
+                        },
+                        resources: PanelResourceView {
+                            camera_textures: &[],
+                            preview_camera_textures: &[],
+                            bev_texture: egui::TextureId::Managed(1),
+                            scene_texture: egui::TextureId::Managed(2),
+                        },
+                        scene: SceneDataView {
+                            diagnostics: &diagnostics,
+                            visible_scan_points: 0,
+                            camera_distance: 10.0,
+                            camera_mode: SceneCameraMode::Chase,
+                            static_transform_count: 0,
+                            dynamic_transform_count: 0,
+                        },
+                        inspections: &[],
+                        inspector_topic: Some("/selected"),
+                        topic_tree: &viewer_core::TopicTree::default(),
+                        numeric_series: &[],
                     },
-                    resources: PanelResourceView {
-                        camera_textures: &[],
-                        preview_camera_textures: &[],
-                        bev_texture: egui::TextureId::Managed(1),
-                        scene_texture: egui::TextureId::Managed(2),
-                    },
-                    scene: SceneDataView {
-                        diagnostics: &diagnostics,
-                        visible_scan_points: 0,
-                        camera_distance: 10.0,
-                        camera_mode: SceneCameraMode::Chase,
-                        static_transform_count: 0,
-                        dynamic_transform_count: 0,
-                    },
-                    inspections: &[],
-                },
-            );
-            assert!(output.render_requests.bev_size.is_some());
-            assert!(output.render_requests.scene.is_some());
-        });
+                );
+                assert_eq!(
+                    output.render_requests.bev_size.is_some(),
+                    preset == WorkspaceLayout::Standard
+                );
+                assert!(output.render_requests.scene.is_some());
+            });
+        }
     }
 }

@@ -21,15 +21,25 @@ pub(crate) struct ScenePanelInput<'a> {
     pub(crate) diagnostics: &'a SceneDiagnostics,
     pub(crate) static_transform_count: usize,
     pub(crate) dynamic_transform_count: usize,
+    pub(crate) playback: Option<viewer_core::PlaybackView>,
+    pub(crate) telemetry: Option<&'a viewer_core::TelemetryPresentation>,
+    pub(crate) camera: Option<&'a viewer_core::CameraPresentation>,
+    pub(crate) source_error: Option<&'a str>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub(crate) struct ScenePanelConfig {}
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct ScenePanelConfig {
+    #[serde(default)]
+    show_telemetry: bool,
+    #[serde(default)]
+    optional_data: bool,
+}
 
 pub(crate) struct ScenePanel {
     id: PanelId,
     title: Option<String>,
-    _config: ScenePanelConfig,
+    config: ScenePanelConfig,
     pub(crate) state: SceneViewState,
 }
 
@@ -45,7 +55,7 @@ impl ScenePanel {
             Ok(config) => NativePanel::Scene(Self {
                 id: node.id.clone(),
                 title: node.title.clone(),
-                _config: config,
+                config,
                 state: SceneViewState::default(),
             }),
             Err(error) => NativePanel::Placeholder(PlaceholderPanel::invalid_config(
@@ -58,12 +68,20 @@ impl ScenePanel {
     pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
         requirements.playback.optional_path();
         requirements.playback.optional_odometry();
-        requirements.playback.require_point_cloud();
-        requirements.playback.require_transforms();
+        if self.config.optional_data {
+            requirements.playback.optional_point_cloud();
+            requirements.playback.optional_transforms();
+        } else {
+            requirements.playback.require_point_cloud();
+            requirements.playback.require_transforms();
+        }
     }
 
     pub(crate) fn show(&mut self, ui: &mut egui::Ui, input: ScenePanelInput<'_>) -> PanelOutput {
         ui.push_id((self.id.as_str(), self.title.as_deref()), |ui| {
+            if self.config.show_telemetry {
+                show_monitor_telemetry(ui, &input);
+            }
             let output = show_scene_view(
                 ui,
                 SceneViewInput {
@@ -95,4 +113,47 @@ impl ScenePanel {
         })
         .inner
     }
+}
+
+fn show_monitor_telemetry(ui: &mut egui::Ui, input: &ScenePanelInput<'_>) {
+    egui::Frame::group(ui.style()).show(ui, |ui| {
+        ui.horizontal_wrapped(|ui| {
+            ui.strong(input.playback.map_or("LIVE", |view| {
+                if view.playing { "PLAYING" } else { "PAUSED" }
+            }));
+            if let Some(view) = input.playback {
+                ui.monospace(format!(
+                    "{:.3} s · {}",
+                    view.cursor.0.saturating_sub(view.start.0) as f64 / 1e9,
+                    view.speed.label()
+                ));
+            }
+            ui.separator();
+            if let Some(telemetry) = input.telemetry {
+                ui.monospace(format!(
+                    "{:.2} m/s · {:.1} km/h",
+                    telemetry.speed,
+                    telemetry.speed * 3.6
+                ));
+                ui.monospace(format!(
+                    "Yaw rate {:+.1} °/s",
+                    telemetry.yaw_rate.to_degrees()
+                ));
+            } else {
+                ui.label("Odometry unavailable");
+            }
+            ui.separator();
+            if let Some(camera) = input.camera {
+                ui.label(format!(
+                    "Camera {:?} · {:.1} Hz · overlay {}",
+                    camera.status, camera.fps, camera.overlay
+                ));
+            } else {
+                ui.label("Camera unavailable");
+            }
+        });
+        if let Some(error) = input.source_error {
+            ui.colored_label(ui.visuals().error_fg_color, error);
+        }
+    });
 }

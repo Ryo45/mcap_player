@@ -78,6 +78,30 @@ cargo run -p viewer-native --features ros2-live -- \
 - カメラ内部パラメータ: `config/camera_calibration.json`
 - 未対応: Raw `sensor_msgs/msg/Image`、H.264、ブラウザでの live 入力
 
+## 監視・解析用の画面
+
+Nativeに`monitor` presetを追加しています。
+
+```sh
+cargo run -p viewer-native -- --mcap PATH --layout monitor
+# ROS 2 Jazzy環境でリアルタイム監視
+cargo run -p viewer-native --features ros2-live -- --live --layout monitor
+```
+
+- 左30%: 検索できるTopic一覧、下に選択topicのGeneric Inspector。クリックで対象を切り替えます。
+- 右70%の上半分: 点群・車両・計画軌跡を重畳した3D Scene。Chase / Free / Vehicle eyeを切り替えられます。
+- 右下半分: フロントCamera 1台＋計画軌跡overlay。
+- Scene上部: 再生状態／時刻、速度、yaw rate、Camera／overlay状態、TF診断を常時表示。
+
+左上の「Source / diagnostics」で詳細診断、Inspector下の「Schema / numeric plots」でschemaと
+field Plotにアクセスできます。通常画面の追加sidebarとInspectorウィンドウは表示しません。
+現在値はcontinuous featureの共有状態から表示し、速度overviewの全記録読み込みは行いません。
+点群・TF・Odometry・Pathは存在する場合に使用します。フロントCameraは
+`/camera/front/image/compressed`、他のtopic bindingは`config/workspace_bindings.json`を使用します。
+点群入力は現在`LaserScan`です。軌跡overlayにはPath、TF、Camera calibrationが必要で、欠落時は状態を表示します。
+Generic Inspectorは記録のcursor query専用で、Liveの任意topic値閲覧は今後の対応です。
+このpresetはNativeのみです。
+
 ## Generic Inspector
 
 Nativeの「Topics」でtopicを開き、**Inspect at cursor**を選ぶと、再生cursor `T`でのlatest message

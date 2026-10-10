@@ -97,29 +97,33 @@ impl Graphics {
                     ui.label("Live mode · timeline and playback clock disabled");
                 });
             }
-            egui::SidePanel::left("source-status")
-                .resizable(true)
-                .default_width(260.0)
-                .show(context, |ui| {
-                    source_status(ui, presentation);
-                    actions.extend(crate::panels::show_topics(
-                        ui,
-                        render_input.topic_tree,
-                        render_input.numeric_series,
-                    ));
-                });
+            if !panels.has_embedded_topics() {
+                egui::SidePanel::left("source-status")
+                    .resizable(true)
+                    .default_width(260.0)
+                    .show(context, |ui| {
+                        source_status(ui, presentation);
+                        actions.extend(crate::panels::show_topics(
+                            ui,
+                            render_input.topic_tree,
+                            render_input.numeric_series,
+                        ));
+                    });
+            }
             actions.extend(crate::panels::show_field_plots(
                 context,
                 render_input.topic_tree,
                 render_input.numeric_series,
                 playback,
             ));
-            actions.extend(panels.show_topic_inspector(
-                context,
-                render_input.inspector_topic,
-                render_input.inspections,
-                playback.map(|view| view.cursor),
-            ));
+            if !panels.has_embedded_topics() {
+                actions.extend(panels.show_topic_inspector(
+                    context,
+                    render_input.inspector_topic,
+                    render_input.inspections,
+                    playback.map(|view| view.cursor),
+                ));
+            }
             egui::CentralPanel::default().show(context, |ui| {
                 let output = show_layout_host(
                     ui,
@@ -135,6 +139,9 @@ impl Graphics {
                         resources,
                         scene,
                         inspections: render_input.inspections,
+                        inspector_topic: render_input.inspector_topic,
+                        topic_tree: render_input.topic_tree,
+                        numeric_series: render_input.numeric_series,
                     },
                 );
                 actions.extend(output.actions);

@@ -112,7 +112,7 @@ pub(crate) fn show_topic_inspector(
     }
     actions
 }
-fn show_inspection(
+pub(super) fn show_inspection(
     ui: &mut egui::Ui,
     topic: &str,
     input: InspectorPanelInput<'_>,

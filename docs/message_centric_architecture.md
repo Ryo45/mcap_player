@@ -40,6 +40,23 @@ plan. It contains no Plot or Inspector demand. Native builtin Plot panels contri
 queries; their Odometry query topic comes from workspace bindings independently of playback
 selection. A Status panel can still request continuous Odometry for its current telemetry.
 
+The Native `monitor` workspace places an embedded `topics` panel in the left 30%, and a Scene
+above one front Camera in the right 70% (equal vertical weights). The concrete Topics panel owns
+only its filter and bounded Inspector expansion pages. It borrows metadata, the Session-selected
+topic and Inspector query results; clicking a row emits the existing `SelectInspectorTopic` action.
+Its presence suppresses the auxiliary source sidebar and floating Inspector. Schema/numeric Plot
+controls share the regular Topic Tree helpers. Selection remains dynamic query demand and never
+changes `SessionPlan`.
+
+Scene's `showTelemetry` config enables a compact current-value banner from borrowed playback,
+telemetry, camera presentation and source diagnostics. It does not contribute signal overview
+demand. `optionalData` makes Scene point-cloud/TF inputs optional at plan resolution; all available
+bound inputs still use the same continuous materialization and GPU ownership as other workspaces.
+Missing inputs remain visible through diagnostics. The monitor Camera is fixed to one front topic
+with planned-path overlay enabled. Live monitoring uses the same feature views, while Generic
+Inspector remains unavailable without a recording cursor. This preset introduces no arbitrary
+decoded-message history or additional renderer instance.
+
 `FeatureRuntime` owns the continuous materialization boundary, not just controller aggregation.
 Controllers implement its concrete feature-specific admission, decode and history policies. Panels,
 Camera overlays, Scene and diagnostics borrow shared materialized state. They do not decode their
