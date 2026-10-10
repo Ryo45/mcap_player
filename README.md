@@ -2,6 +2,21 @@
 
 ROS 2 の MCAP を再生し、カメラ映像・車両状態・周辺情報をまとめて確認する Rust 製ビューアです。Native、ブラウザ、Recording Server 経由のリモート再生、ROS 2 live 入力に対応します。
 
+ロボットの「何が見えていて、どこへ進もうとしていて、そのときtopicに何が入っていたか」を
+一つの画面で追うための監視・解析ツールです。記録を再生・停止・seekしながら、映像と空間表示を
+確認し、気になるtopicの値を同じ再生位置で調べられます。
+
+![Nativeのmonitor画面。左にTopic一覧とLaserScanのInspector、右上に点群と計画軌跡の3D Scene、右下に軌跡を重畳したフロントCamera。](docs/images/monitor-workspace.png)
+
+*同梱のシミュレーション記録をNativeで再生し、`/scan`をInspectした実画面です。
+水色はLaserScan、黄色はScene上の計画軌跡、緑色はCameraへの軌跡投影です。
+画面上部には速度・再生状態・TF／Cameraの状態を表示しています。*
+
+topicを調べても、CameraやSceneの再生対象は変わりません。大きな記録は必要なtopicと範囲を読み、
+配列はページ単位で、Plotは点数を制限した概要として表示します。
+まず試すには[監視・解析用の画面](#監視解析用の画面)、撮影に使ったサンプルの準備は
+[スクリーンショットの再現手順](docs/screenshots.md)を参照してください。
+
 ## 主な機能
 
 - 複数の JPEG カメラ（`sensor_msgs/msg/CompressedImage`）を一覧・フォーカス表示
@@ -29,7 +44,7 @@ cargo run -p viewer-native -- \
 
 起動中のウィンドウへ `.mcap` ファイルをドロップして開くこともできます。カメラキャリブレーションを変更する場合は `--camera-calibration FILE` を指定してください。
 
-`standard` / `showcase` のLayout JSONは0.1では同梱された内部presetです。外部向けの保存形式や
+`standard` / `showcase` / `explore` / `monitor` のLayout JSONは0.1では同梱された内部presetです。外部向けの保存形式や
 backward compatibilityは保証しません。`schemaVersion` / `configVersion` は同梱presetの開発時検証と
 unsupported panelの可視化に使い、外部Layoutのload/save/migration policyは公開時に別途定義します。
 
@@ -81,6 +96,9 @@ cargo run -p viewer-native --features ros2-live -- \
 ## 監視・解析用の画面
 
 Nativeに`monitor` presetを追加しています。
+
+`--inspect-topic /scan`を追加すると、起動時からそのtopicをInspectorに表示します。
+Inspector対象は画面のTopic一覧で変更できます。このオプションは記録入力専用です。
 
 ```sh
 cargo run -p viewer-native -- --mcap PATH --layout monitor
