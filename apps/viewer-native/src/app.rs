@@ -62,6 +62,12 @@ impl App {
                 if let Err(error) = session.request_inspections(&requirements.inspections) {
                     log::warn!("Inspector unavailable: {error}");
                 }
+                session.select_inspector_topic(self.args.inspect_topic.clone());
+                if let Some(topic) = &self.args.inspect_topic
+                    && session.selected_inspector_topic().is_none()
+                {
+                    log::warn!("Initial Inspector topic {topic:?} is absent from this recording");
+                }
                 self.args.mcap = path.to_owned();
                 let fingerprint = session.source_fingerprint();
                 self.session = Some(session);
