@@ -1,4 +1,4 @@
-use super::common::{DecodeError, Reader};
+use super::common::{DecodeError, Reader, push_f64, push_string, push_u32};
 use crate::MeasurementTime;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -56,4 +56,43 @@ pub fn decode_odometry(bytes: &[u8]) -> Result<Odometry, DecodeError> {
         linear_velocity,
         angular_velocity,
     })
+}
+
+pub fn encode_odometry_cdr(odometry: &Odometry) -> Result<Vec<u8>, DecodeError> {
+    let seconds = i32::try_from(odometry.measurement_time.0.div_euclid(1_000_000_000))
+        .map_err(|_| DecodeError::InvalidTimestamp)?;
+    let nanoseconds = odometry.measurement_time.0.rem_euclid(1_000_000_000) as u32;
+    if odometry
+        .position
+        .into_iter()
+        .chain(odometry.orientation)
+        .chain(odometry.linear_velocity)
+        .chain(odometry.angular_velocity)
+        .any(|value| !value.is_finite())
+    {
+        return Err(DecodeError::InvalidLength);
+    }
+
+    let mut output = vec![0, 1, 0, 0];
+    push_u32(&mut output, seconds as u32);
+    push_u32(&mut output, nanoseconds);
+    push_string(&mut output, &odometry.frame_id)?;
+    push_string(&mut output, &odometry.child_frame_id)?;
+    for value in odometry.position.into_iter().chain(odometry.orientation) {
+        push_f64(&mut output, value);
+    }
+    for _ in 0..36 {
+        push_f64(&mut output, 0.0);
+    }
+    for value in odometry
+        .linear_velocity
+        .into_iter()
+        .chain(odometry.angular_velocity)
+    {
+        push_f64(&mut output, value);
+    }
+    for _ in 0..36 {
+        push_f64(&mut output, 0.0);
+    }
+    Ok(output)
 }

@@ -133,6 +133,8 @@ impl LocalCatalog {
             &crate::playback::web_workspace_bindings(),
         )
         .map_err(LocalCatalogError::from)?;
+        plan.validate_recording_capabilities(core.capabilities)
+            .map_err(LocalCatalogError::from)?;
         let index_facts = summary
             .chunk_indexes
             .iter()

@@ -63,6 +63,44 @@ fn tf_message_round_trip() {
 }
 
 #[test]
+fn live_adapter_models_round_trip_through_concrete_cdr_encoders() {
+    let path = PathMessage {
+        measurement_time: MeasurementTime(12_345_000_006),
+        frame_id: "map".into(),
+        points: vec![[1.0, -2.0], [3.5, 4.25]],
+    };
+    assert_eq!(decode_path(&encode_path_cdr(&path).unwrap()).unwrap(), path);
+
+    let odometry = Odometry {
+        measurement_time: MeasurementTime(12_345_000_006),
+        frame_id: "odom".into(),
+        child_frame_id: "base_link".into(),
+        position: [1.0, 2.0, 3.0],
+        orientation: [0.0, 0.0, 0.25, 0.968_245_836_6],
+        linear_velocity: [4.0, 0.0, 0.0],
+        angular_velocity: [0.0, 0.0, -0.2],
+    };
+    assert_eq!(
+        decode_odometry(&encode_odometry_cdr(&odometry).unwrap()).unwrap(),
+        odometry
+    );
+
+    let scan = LaserScan {
+        measurement_time: MeasurementTime(12_345_000_006),
+        frame_id: "base_scan".into(),
+        angle_min: -1.0,
+        angle_increment: 0.5,
+        range_min: 0.1,
+        range_max: 30.0,
+        ranges: vec![1.0, f32::INFINITY, 2.0],
+    };
+    assert_eq!(
+        decode_laser_scan(&encode_laser_scan_cdr(&scan).unwrap()).unwrap(),
+        scan
+    );
+}
+
+#[test]
 fn rejects_truncation_format_and_huge_lengths() {
     let valid = encode_compressed_image_cdr(&CompressedImage {
         measurement_time: MeasurementTime(0),

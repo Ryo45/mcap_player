@@ -21,8 +21,8 @@ Native indexed source / Web RecordingDataPlane / ROS live push
 ```
 
 `SourceCatalog` contains source facts only: recording time range, topic, schema, encoding, stable
-session-local `StreamId`, original schema encoding/definition bytes, and an optional recording-wide
-message count. Native and Browser Local share one `Arc<SchemaDefinition>` per MCAP schema across
+session-local `StreamId`, original schema encoding/definition bytes, an optional recording-wide
+message count, and supported source operations. Native and Browser Local share one `Arc<SchemaDefinition>` per MCAP schema across
 stream descriptors. Remote catalog JSON stores each schema once in `schemas` (ID, encoding, bytes), and streams
 reference it through `schemaId`. Catalog clones share byte backing; the Web adapter shares one
 `Arc<SchemaDefinition>` per referenced schema without copying its bytes. Unsupported
@@ -46,6 +46,12 @@ Camera overlays, Scene and diagnostics borrow shared materialized state. They do
 own Camera/TF/PointCloud copies. Camera compressed-image materialization lives here; expensive
 JPEG pixel decode is shared by the platform `CameraBaseImageTracker`, with GPU resources owned by
 renderers. No arbitrary topic history enters this boundary.
+
+Route resolution does not infer whether a source is a recording from the presence of a time range.
+Native, Browser Local, and Remote recording adapters explicitly validate Catalog,
+ForwardPlayback, ExactSeek, HistoryRestore, and PersistentRestore capabilities at open time against
+the selected plan. Push/live adapters use the same route resolution without pretending to support
+recording restore operations.
 
 Controllers own feature-specific semantics. Camera admission and focused/background scheduling
 happen before JPEG decode. Dynamic TF retains ordered bounded history; static TF keeps a small exact
@@ -77,7 +83,10 @@ buffering or seeking, the previously committed controller state remains visible.
 
 ROS Live is intentionally a push path rather than an artificial recording source. Its camera
 mailbox feeds the same `RawMessage -> CameraController` boundary. Camera coalescing is not promoted
-to a universal drop policy because ordered streams such as TF have different semantics.
+to a universal drop policy because ordered streams such as TF have different semantics. The
+concrete ROS handle owns executor-thread stop/join and the latest successfully admitted source
+arrival used for freshness diagnostics; controller presentation state is not an I/O liveness
+authority.
 
 ## Safe Native file access
 

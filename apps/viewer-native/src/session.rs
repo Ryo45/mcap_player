@@ -13,8 +13,6 @@ use viewer_core::{
     PlaybackPerformance, PlaybackRequirements, PlaybackView, ProcessingCounters, RawMessage,
     RestoreSemantics, SessionPlan, StageTiming, WorkspaceBindings,
 };
-#[cfg(feature = "ros2-live")]
-use viewer_core::{SourceCatalog, StreamDescriptor};
 
 /// The currently open Viewer data session, backed by either Recording or Live input.
 ///
@@ -65,6 +63,7 @@ impl ViewerSession {
         let mut playback =
             McapPlayback::open_file(path).with_context(|| format!("open {}", path.display()))?;
         let plan = SessionPlan::build(playback.catalog(), &topic, requirements, bindings)?;
+        plan.validate_recording_capabilities(playback.catalog().capabilities)?;
         playback.select_streams(plan.selected_stream_ids())?;
         let persistent = plan
             .restore_inputs()
@@ -94,27 +93,14 @@ impl ViewerSession {
         reliable: bool,
         requirements: &PlaybackRequirements,
         bindings: &WorkspaceBindings,
-    ) -> Self {
-        let descriptor = StreamDescriptor {
-            schema_definition: None,
-            id: viewer_core::StreamId(1),
-            topic: topic.clone(),
-            schema: "sensor_msgs/msg/CompressedImage".into(),
-            message_encoding: "cdr".into(),
-            timing: viewer_core::StreamTimingSummary::default(),
-        };
-        let catalog = SourceCatalog {
-            time_range: None,
-            streams: vec![descriptor],
-            capabilities: viewer_core::SourceCapabilities::LIVE,
-        };
-        let plan = SessionPlan::build(&catalog, &topic, requirements, bindings)
-            .expect("the live Camera descriptor matches its configured primary topic");
-        Self {
+    ) -> Result<Self> {
+        let catalog = live::live_catalog(&topic, requirements, bindings)?;
+        let plan = SessionPlan::build(&catalog, &topic, requirements, bindings)?;
+        let specs = live::selected_stream_specs(&plan);
+        let handle = live::RosLiveHandle::start(specs, reliable).map_err(anyhow::Error::msg)?;
+        Ok(Self {
             topic_tree: viewer_core::TopicTree::from_catalog(&catalog),
-            source: SessionSource::Ros {
-                handle: live::RosLiveHandle::start(topic.clone(), reliable),
-            },
+            source: SessionSource::Ros { handle },
             plan,
             topic,
             source_name: format!(
@@ -125,7 +111,7 @@ impl ViewerSession {
             odometry_topic: bindings.odometry_topic.clone(),
             numeric_plots: Default::default(),
             inspector_loader: InspectorLoader::default(),
-        }
+        })
     }
 
     pub(crate) fn take_query_workers_from(&mut self, previous: &mut Self) {
@@ -268,9 +254,9 @@ impl ViewerSession {
             #[cfg(feature = "ros2-live")]
             SessionSource::Ros { handle } => {
                 if let Some(error) = handle.error() {
-                    return Err(anyhow::Error::new(error)).context("ROS executor");
+                    return Err(anyhow::Error::msg(error));
                 }
-                process(elapsed, handle.take().into_iter().collect());
+                process(elapsed, handle.take_ready());
             }
         }
         Ok(())
@@ -336,12 +322,12 @@ impl ViewerSession {
         &self,
         counters: ProcessingCounters,
         playback_performance: Option<PlaybackPerformance>,
-        _latest_camera_arrival: Option<ArrivalTime>,
     ) -> SessionDiagnostics {
         #[cfg(feature = "ros2-live")]
         let source_name = match &self.source {
             SessionSource::Ros { handle } => {
-                let age = _latest_camera_arrival.and_then(|arrival| {
+                let live = handle.diagnostics();
+                let age = live.latest_arrival.and_then(|arrival| {
                     let now = std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
                         .ok()?;
@@ -358,12 +344,15 @@ impl ViewerSession {
                     },
                 );
                 format!(
-                    "{} · {} · received {} · coalesced {} · CDR copy {} KiB",
+                    "{} · {} · received {} · coalesced {} · overflow {} · resident {} · adapter errors {} · CDR output {} KiB",
                     self.source_name,
                     freshness,
-                    handle.received(),
-                    handle.coalesced(),
-                    handle.copied_bytes() / 1024
+                    live.received_messages,
+                    live.coalesced_messages,
+                    live.ordered_queue_overflows,
+                    live.resident_messages,
+                    live.adapter_errors,
+                    live.payload_copy_bytes / 1024
                 )
             }
             SessionSource::Mcap(_) => self.source_name.clone(),
