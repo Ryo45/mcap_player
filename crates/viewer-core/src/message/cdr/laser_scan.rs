@@ -1,4 +1,4 @@
-use super::common::{DecodeError, Reader};
+use super::common::{DecodeError, Reader, push_f32, push_string, push_u32};
 use crate::MeasurementTime;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -61,4 +61,50 @@ pub fn decode_laser_scan(bytes: &[u8]) -> Result<LaserScan, DecodeError> {
         range_max,
         ranges,
     })
+}
+
+pub fn encode_laser_scan_cdr(scan: &LaserScan) -> Result<Vec<u8>, DecodeError> {
+    let seconds = i32::try_from(scan.measurement_time.0.div_euclid(1_000_000_000))
+        .map_err(|_| DecodeError::InvalidTimestamp)?;
+    let nanoseconds = scan.measurement_time.0.rem_euclid(1_000_000_000) as u32;
+    if !scan.angle_min.is_finite()
+        || !scan.angle_increment.is_finite()
+        || scan.angle_increment == 0.0
+        || !scan.range_min.is_finite()
+        || !scan.range_max.is_finite()
+        || scan.range_min < 0.0
+        || scan.range_max < scan.range_min
+    {
+        return Err(DecodeError::InvalidLength);
+    }
+    let angle_max =
+        scan.angle_min + scan.angle_increment * scan.ranges.len().saturating_sub(1) as f32;
+    if !angle_max.is_finite() {
+        return Err(DecodeError::InvalidLength);
+    }
+
+    let mut output = vec![0, 1, 0, 0];
+    push_u32(&mut output, seconds as u32);
+    push_u32(&mut output, nanoseconds);
+    push_string(&mut output, &scan.frame_id)?;
+    for value in [
+        scan.angle_min,
+        angle_max,
+        scan.angle_increment,
+        0.0,
+        0.0,
+        scan.range_min,
+        scan.range_max,
+    ] {
+        push_f32(&mut output, value);
+    }
+    push_u32(
+        &mut output,
+        u32::try_from(scan.ranges.len()).map_err(|_| DecodeError::InvalidLength)?,
+    );
+    for value in &scan.ranges {
+        push_f32(&mut output, *value);
+    }
+    push_u32(&mut output, 0);
+    Ok(output)
 }

@@ -206,3 +206,7 @@ pub(crate) fn push_f64(output: &mut Vec<u8>, value: f64) {
     align_output(output, 8);
     output.extend_from_slice(&value.to_le_bytes());
 }
+
+pub(super) fn push_f32(output: &mut Vec<u8>, value: f32) {
+    push_u32(output, value.to_bits());
+}

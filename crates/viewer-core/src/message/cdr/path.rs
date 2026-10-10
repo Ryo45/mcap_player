@@ -1,4 +1,4 @@
-use super::common::{DecodeError, Reader};
+use super::common::{DecodeError, Reader, push_f64, push_string, push_u32};
 use crate::MeasurementTime;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -49,4 +49,30 @@ pub fn decode_path(bytes: &[u8]) -> Result<PathMessage, DecodeError> {
         frame_id,
         points,
     })
+}
+
+pub fn encode_path_cdr(path: &PathMessage) -> Result<Vec<u8>, DecodeError> {
+    let seconds = i32::try_from(path.measurement_time.0.div_euclid(1_000_000_000))
+        .map_err(|_| DecodeError::InvalidTimestamp)?;
+    let nanoseconds = path.measurement_time.0.rem_euclid(1_000_000_000) as u32;
+    let mut output = vec![0, 1, 0, 0];
+    push_u32(&mut output, seconds as u32);
+    push_u32(&mut output, nanoseconds);
+    push_string(&mut output, &path.frame_id)?;
+    push_u32(
+        &mut output,
+        u32::try_from(path.points.len()).map_err(|_| DecodeError::InvalidLength)?,
+    );
+    for [x, y] in &path.points {
+        if !x.is_finite() || !y.is_finite() {
+            return Err(DecodeError::InvalidLength);
+        }
+        push_u32(&mut output, seconds as u32);
+        push_u32(&mut output, nanoseconds);
+        push_string(&mut output, &path.frame_id)?;
+        for value in [*x, *y, 0.0, 0.0, 0.0, 0.0, 1.0] {
+            push_f64(&mut output, value);
+        }
+    }
+    Ok(output)
 }

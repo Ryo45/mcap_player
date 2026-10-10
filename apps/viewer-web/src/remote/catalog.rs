@@ -114,6 +114,8 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
         &crate::playback::web_workspace_bindings(),
     )
     .map_err(RemoteCatalogError::Plan)?;
+    plan.validate_recording_capabilities(core.capabilities)
+        .map_err(RemoteCatalogError::Plan)?;
     let mut selected = plan
         .selected_stream_ids()
         .into_iter()

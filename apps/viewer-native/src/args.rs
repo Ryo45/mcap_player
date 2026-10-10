@@ -60,21 +60,7 @@ impl Args {
                 unknown => bail!("unknown argument: {unknown}"),
             }
         }
-        #[cfg(feature = "ros2-live")]
-        let mode = if live {
-            SourceMode::Ros { reliable }
-        } else {
-            SourceMode::Mcap
-        };
-        #[cfg(not(feature = "ros2-live"))]
-        let mode = {
-            if live || reliable {
-                bail!(
-                    "--live requires `cargo run -p viewer-native --features ros2-live -- --live`"
-                );
-            }
-            SourceMode::Mcap
-        };
+        let mode = source_mode(live, reliable)?;
         Ok(Self {
             mcap,
             topic,
@@ -82,6 +68,27 @@ impl Args {
             mode,
             layout,
         })
+    }
+}
+
+fn source_mode(live: bool, reliable: bool) -> Result<SourceMode> {
+    if reliable && !live {
+        bail!("--reliable requires --live");
+    }
+    #[cfg(feature = "ros2-live")]
+    {
+        Ok(if live {
+            SourceMode::Ros { reliable }
+        } else {
+            SourceMode::Mcap
+        })
+    }
+    #[cfg(not(feature = "ros2-live"))]
+    {
+        if live {
+            bail!("--live requires `cargo run -p viewer-native --features ros2-live -- --live`");
+        }
+        Ok(SourceMode::Mcap)
     }
 }
 
@@ -104,5 +111,10 @@ mod tests {
         assert_eq!(parse_layout("showcase").unwrap(), WorkspaceLayout::Showcase);
         assert_eq!(parse_layout("explore").unwrap(), WorkspaceLayout::Explore);
         assert!(parse_layout("dashboard").is_err());
+    }
+
+    #[test]
+    fn reliability_is_not_silently_ignored_without_live_mode() {
+        assert!(source_mode(false, true).is_err());
     }
 }

@@ -134,15 +134,7 @@ impl App {
             self.workspace
                 .playback_performance(session.source_read_timing())
         });
-        let diagnostics = session.diagnostics(
-            self.workspace.counters(),
-            playback_performance,
-            self.workspace
-                .cameras()
-                .state()
-                .latest_by_arrival()
-                .map(|frame| frame.arrival_time),
-        );
+        let diagnostics = session.diagnostics(self.workspace.counters(), playback_performance);
         let current_odometry = self
             .workspace
             .interaction
@@ -378,16 +370,21 @@ impl ApplicationHandler for App {
             #[cfg(feature = "ros2-live")]
             SourceMode::Ros { reliable } => {
                 let requirements = self.workspace.data_requirements();
-                let mut session = ViewerSession::open_live(
+                let session = ViewerSession::open_live(
                     self.args.topic.clone(),
                     reliable,
                     &requirements.playback,
                     self.workspace.bindings(),
                 );
+                let session = match session {
+                    Ok(session) => session,
+                    Err(error) => {
+                        self.diagnostics.set_playback_error(error.to_string());
+                        return;
+                    }
+                };
+                self.diagnostics.reset_for_source();
                 self.workspace.configure_session(session.plan());
-                if let Err(error) = session.request_inspections(&requirements.inspections) {
-                    log::warn!("Inspector unavailable: {error}");
-                }
                 self.preview.clear();
                 self.bookmarks = BookmarkState::default();
                 Self::apply_presentation_transition(

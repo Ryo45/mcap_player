@@ -59,6 +59,15 @@ impl PlaybackRequirements {
         self.camera_topics.insert(topic.into());
     }
 
+    /// Camera topics named explicitly by fixed workspace panels.
+    ///
+    /// Source adapters may use these facts to build a closed catalog. `require_all_cameras` is
+    /// intentionally not exposed as a topic list because discovering source cameras remains an
+    /// adapter responsibility.
+    pub fn explicit_camera_topics(&self) -> impl Iterator<Item = &str> {
+        self.camera_topics.iter().map(String::as_str)
+    }
+
     pub fn require_path(&mut self) {
         self.path = RequirementLevel::Required;
     }
@@ -210,7 +219,7 @@ impl SessionPlan {
             });
         }
 
-        let plan = Self {
+        Ok(Self {
             camera_routes: selected_cameras,
             path_stream: resolve_requirement(
                 catalog,
@@ -236,29 +245,36 @@ impl SessionPlan {
             dynamic_tf_stream,
             static_tf_stream,
             primary_camera,
-        };
-        if catalog.time_range.is_some() {
-            let capabilities = catalog.capabilities;
-            if !capabilities.catalog || !capabilities.forward_playback || !capabilities.exact_seek {
-                return Err(SessionPlanError::MissingPlaybackCapabilities {
-                    provided: capabilities,
+        })
+    }
+
+    /// Validates the operations required when this plan is used for recording playback.
+    ///
+    /// Route resolution is also used by push/live sources. Recording adapters call this method
+    /// explicitly at open time so source kind is not inferred from an incidental catalog field.
+    pub fn validate_recording_capabilities(
+        &self,
+        capabilities: crate::SourceCapabilities,
+    ) -> Result<(), SessionPlanError> {
+        if !capabilities.catalog || !capabilities.forward_playback || !capabilities.exact_seek {
+            return Err(SessionPlanError::MissingPlaybackCapabilities {
+                provided: capabilities,
+            });
+        }
+        for input in self.restore_inputs() {
+            let supported = match input.semantics {
+                RestoreSemantics::LatestBefore => capabilities.exact_seek,
+                RestoreSemantics::History { .. } => capabilities.history_restore,
+                RestoreSemantics::Persistent => capabilities.persistent_restore,
+            };
+            if !supported {
+                return Err(SessionPlanError::UnsupportedRestore {
+                    stream: input.stream_id,
+                    semantics: input.semantics,
                 });
             }
-            for input in plan.restore_inputs() {
-                let supported = match input.semantics {
-                    RestoreSemantics::LatestBefore => capabilities.exact_seek,
-                    RestoreSemantics::History { .. } => capabilities.history_restore,
-                    RestoreSemantics::Persistent => capabilities.persistent_restore,
-                };
-                if !supported {
-                    return Err(SessionPlanError::UnsupportedRestore {
-                        stream: input.stream_id,
-                        semantics: input.semantics,
-                    });
-                }
-            }
         }
-        Ok(plan)
+        Ok(())
     }
 
     pub fn camera_routes(&self) -> &[CameraRoute] {
@@ -626,31 +642,27 @@ mod tests {
     }
 
     #[test]
-    fn recording_capabilities_are_validated_during_session_planning() {
+    fn recording_capabilities_are_validated_only_for_recording_open() {
         let mut source = catalog();
         source.time_range = RecordingTimeRange::new(ArrivalTime(0), ArrivalTime(100));
         let mut requirements = PlaybackRequirements::empty();
         requirements.require_camera_topic("/camera/front/image/compressed");
 
-        let error = SessionPlan::build(
+        let plan = SessionPlan::build(
             &source,
             "/camera/front/image/compressed",
             &requirements,
             &bindings(),
         )
-        .unwrap_err();
+        .unwrap();
+        let error = plan
+            .validate_recording_capabilities(source.capabilities)
+            .unwrap_err();
         assert!(error.to_string().contains("ExactSeek"));
 
         source.capabilities = crate::SourceCapabilities::INDEXED_RECORDING;
-        assert!(
-            SessionPlan::build(
-                &source,
-                "/camera/front/image/compressed",
-                &requirements,
-                &bindings(),
-            )
-            .is_ok()
-        );
+        plan.validate_recording_capabilities(source.capabilities)
+            .unwrap();
     }
 
     #[test]

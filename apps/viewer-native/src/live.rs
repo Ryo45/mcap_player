@@ -1,321 +1,304 @@
-//! ROS adapter boundary shared by a future `rclrs` callback implementation.
+//! Concrete ROS Live source planning, bounded admission, and upstream-rclrs adapter.
 //!
-//! The bounded latest mailbox is usable without ROS, which keeps normal and
-//! WASM builds free from ROS native dependencies.
+//! The source-neutral catalog/admission code is built in ordinary tests. ROS native dependencies
+//! remain behind `ros2-live`; DynamicMessage-to-CDR conversion is a temporary Phase 1 transport
+//! adapter and does not leak beyond `RawMessage`.
 
-use std::sync::Mutex;
+mod admission;
+mod catalog;
+#[cfg(feature = "ros2-live")]
+mod dynamic_cdr;
 
-#[derive(Debug)]
-pub struct LatestMailbox<T> {
-    value: Mutex<Option<T>>,
-    coalesced: Mutex<u64>,
-}
-
-impl<T> Default for LatestMailbox<T> {
-    fn default() -> Self {
-        Self {
-            value: Mutex::new(None),
-            coalesced: Mutex::new(0),
-        }
-    }
-}
-
-impl<T> LatestMailbox<T> {
-    pub fn push(&self, value: T) {
-        let mut slot = self.value.lock().expect("latest mailbox poisoned");
-        if slot.replace(value).is_some() {
-            *self.coalesced.lock().expect("counter poisoned") += 1;
-        }
-    }
-
-    pub fn take(&self) -> Option<T> {
-        self.value.lock().expect("latest mailbox poisoned").take()
-    }
-    pub fn coalesced(&self) -> u64 {
-        *self.coalesced.lock().expect("counter poisoned")
-    }
-}
+#[cfg(feature = "ros2-live")]
+pub(crate) use catalog::{live_catalog, selected_stream_specs};
 
 #[cfg(feature = "ros2-live")]
 mod ros {
-    use super::LatestMailbox;
+    use super::{
+        admission::{DEFAULT_ORDERED_QUEUE_CAPACITY, LiveAdmission, LiveDiagnostics},
+        catalog::{LiveStreamRole, LiveStreamSpec},
+        dynamic_cdr::encode_dynamic_message,
+    };
     use rclrs::{
-        Context, CreateBasicExecutor, DynamicMessage, QOS_PROFILE_SENSOR_DATA,
-        QoSReliabilityPolicy, RclrsErrorFilter, SequenceValue, SimpleValue, SpinOptions,
-        SubscriptionOptions, Value,
+        Context, CreateBasicExecutor, DynamicMessage, DynamicSubscription, ExecutorCommands,
+        QOS_PROFILE_SENSOR_DATA, QoSDurabilityPolicy, QoSHistoryPolicy, QoSReliabilityPolicy,
+        RclrsErrorFilter, SpinOptions, SubscriptionOptions,
     };
     use std::{
         sync::{
-            Arc, Mutex,
-            atomic::{AtomicU64, Ordering},
+            Arc,
+            atomic::{AtomicBool, Ordering},
         },
-        thread,
-        time::{SystemTime, UNIX_EPOCH},
+        thread::{self, JoinHandle},
+        time::{Duration, SystemTime, UNIX_EPOCH},
     };
-    use viewer_core::{
-        ArrivalTime, CompressedImage, MeasurementTime, RawMessage, StreamId,
-        encode_compressed_image_cdr,
-    };
+    use viewer_core::{ArrivalTime, RawMessage};
 
-    pub struct RosLiveHandle {
-        mailbox: Arc<LatestMailbox<RawMessage>>,
-        copied_bytes: Arc<AtomicU64>,
-        received: Arc<AtomicU64>,
-        error: Arc<Mutex<Option<Arc<RosRunError>>>>,
+    pub(crate) struct RosLiveHandle {
+        admission: Arc<LiveAdmission>,
+        commands: Arc<ExecutorCommands>,
+        stop: Arc<AtomicBool>,
+        executor_thread: Option<JoinHandle<()>>,
     }
 
     impl RosLiveHandle {
-        pub fn start(topic: String, reliable: bool) -> Self {
-            let mailbox = Arc::new(LatestMailbox::default());
-            let copied_bytes = Arc::new(AtomicU64::new(0));
-            let received = Arc::new(AtomicU64::new(0));
-            let error = Arc::new(Mutex::new(None));
-            let thread_mailbox = Arc::clone(&mailbox);
-            let thread_copied = Arc::clone(&copied_bytes);
-            let thread_received = Arc::clone(&received);
-            let thread_error = Arc::clone(&error);
-            thread::Builder::new()
+        pub(crate) fn start(specs: Vec<LiveStreamSpec>, reliable: bool) -> Result<Self, String> {
+            let admission = Arc::new(
+                LiveAdmission::new(specs.clone(), DEFAULT_ORDERED_QUEUE_CAPACITY)
+                    .map_err(|error| error.to_string())?,
+            );
+            if specs.is_empty() {
+                return Err("Live SessionPlan selected no continuous streams".into());
+            }
+            let context = Context::default_from_env()
+                .map_err(|error| format!("initialize ROS 2 context: {error}"))?;
+            let mut executor = context.create_basic_executor();
+            let commands = Arc::clone(executor.commands());
+            let node = executor
+                .create_node("mcap_player_viewer")
+                .map_err(|error| format!("create ROS 2 Live node: {error}"))?;
+            let subscriptions = create_subscriptions(&node, &specs, reliable, &admission)?;
+            let stop = Arc::new(AtomicBool::new(false));
+            let thread_admission = Arc::clone(&admission);
+            let thread_stop = Arc::clone(&stop);
+            let executor_thread = thread::Builder::new()
                 .name("viewer-ros2-executor".into())
                 .spawn(move || {
-                    let result = run_executor(
-                        topic,
-                        reliable,
-                        thread_mailbox,
-                        thread_copied,
-                        thread_received,
-                    );
-                    if let Err(value) = result {
-                        *thread_error.lock().expect("ROS error state poisoned") =
-                            Some(Arc::new(value));
+                    // Node and subscriptions must outlive every executor spin.
+                    let _node = node;
+                    let _subscriptions = subscriptions;
+                    while !thread_stop.load(Ordering::Acquire) && thread_admission.error().is_none()
+                    {
+                        if let Err(error) = executor
+                            .spin(SpinOptions::new().timeout(Duration::from_millis(50)))
+                            .timeout_ok()
+                            .first_error()
+                        {
+                            thread_admission.set_source_error(format!("ROS executor: {error}"));
+                            break;
+                        }
                     }
                 })
-                .expect("spawn ROS executor thread");
-            Self {
-                mailbox,
-                copied_bytes,
-                received,
-                error,
+                .map_err(|error| format!("spawn ROS executor thread: {error}"))?;
+            Ok(Self {
+                admission,
+                commands,
+                stop,
+                executor_thread: Some(executor_thread),
+            })
+        }
+
+        pub(crate) fn take_ready(&self) -> Vec<RawMessage> {
+            self.admission.take_ready()
+        }
+
+        pub(crate) fn diagnostics(&self) -> LiveDiagnostics {
+            self.admission.diagnostics()
+        }
+
+        pub(crate) fn error(&self) -> Option<String> {
+            self.admission.error().map(|error| error.to_string())
+        }
+    }
+
+    impl Drop for RosLiveHandle {
+        fn drop(&mut self) {
+            self.stop.store(true, Ordering::Release);
+            self.commands.halt_spinning();
+            if let Some(thread) = self.executor_thread.take() {
+                let _ = thread.join();
             }
         }
-
-        pub fn take(&self) -> Option<RawMessage> {
-            self.mailbox.take()
-        }
-        pub fn coalesced(&self) -> u64 {
-            self.mailbox.coalesced()
-        }
-        pub fn copied_bytes(&self) -> u64 {
-            self.copied_bytes.load(Ordering::Relaxed)
-        }
-        pub fn received(&self) -> u64 {
-            self.received.load(Ordering::Relaxed)
-        }
-        pub fn error(&self) -> Option<Arc<RosRunError>> {
-            self.error.lock().expect("ROS error state poisoned").clone()
-        }
     }
 
-    #[derive(Debug)]
-    pub struct RosRunError(anyhow::Error);
-    impl std::fmt::Display for RosRunError {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-    impl std::error::Error for RosRunError {
-        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-            Some(self.0.as_ref())
-        }
-    }
-
-    fn run_executor(
-        topic: String,
+    fn create_subscriptions(
+        node: &rclrs::Node,
+        specs: &[LiveStreamSpec],
         reliable: bool,
-        mailbox: Arc<LatestMailbox<RawMessage>>,
-        copied_bytes: Arc<AtomicU64>,
-        received: Arc<AtomicU64>,
-    ) -> Result<(), RosRunError> {
-        run_executor_inner(topic, reliable, mailbox, copied_bytes, received).map_err(RosRunError)
-    }
-
-    fn run_executor_inner(
-        topic: String,
-        reliable: bool,
-        mailbox: Arc<LatestMailbox<RawMessage>>,
-        copied_bytes: Arc<AtomicU64>,
-        received: Arc<AtomicU64>,
-    ) -> anyhow::Result<()> {
-        let context = Context::default_from_env()?;
-        let mut executor = context.create_basic_executor();
-        let node = executor.create_node("mcap_player_camera_viewer")?;
-        let mut options = SubscriptionOptions::new(&topic);
-        options.qos = QOS_PROFILE_SENSOR_DATA;
-        if reliable {
-            options.qos.reliability = QoSReliabilityPolicy::Reliable;
-        }
-        let callback = move |message: DynamicMessage, _info: rclrs::MessageInfo| {
-            // Arrival is captured before introspection or CDR reconstruction work.
-            let arrival = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .ok()
-                .and_then(|duration| i64::try_from(duration.as_nanos()).ok());
-            let Some(arrival) = arrival else {
-                return;
-            };
-            let Ok(image) = extract_compressed_image(&message) else {
-                return;
-            };
-            let Ok(payload) = encode_compressed_image_cdr(&image) else {
-                return;
-            };
-            copied_bytes.fetch_add(payload.len() as u64, Ordering::Relaxed);
-            received.fetch_add(1, Ordering::Relaxed);
-            mailbox.push(RawMessage {
-                publish_time_ns: None,
-                sequence: None,
-                stream_id: StreamId(1),
-                arrival_time: ArrivalTime(arrival),
-                payload: payload.into(),
-            });
-        };
-        let _subscription = node.create_dynamic_subscription(
-            "sensor_msgs/msg/CompressedImage"
+        admission: &Arc<LiveAdmission>,
+    ) -> Result<Vec<DynamicSubscription>, String> {
+        let mut subscriptions = Vec::<DynamicSubscription>::with_capacity(specs.len());
+        for spec in specs {
+            let mut options = SubscriptionOptions::new(&spec.stream.topic);
+            options.qos = qos_for(spec.role, reliable);
+            let topic_type = spec
+                .stream
+                .schema
+                .as_str()
                 .try_into()
-                .map_err(anyhow::Error::from)?,
-            options,
-            callback,
-        )?;
-        executor
-            .spin(SpinOptions::default())
-            .first_error()
-            .map_err(anyhow::Error::from)
+                .map_err(|error: rclrs::DynamicMessageError| error.to_string())?;
+            let stream_id = spec.stream.id;
+            let role = spec.role;
+            let callback_admission = Arc::clone(admission);
+            let callback = move |message: DynamicMessage, _info: rclrs::MessageInfo| {
+                // Arrival is captured before introspection and the Phase 1 CDR reconstruction.
+                let Some(arrival_time) = wall_clock_arrival() else {
+                    callback_admission.record_adapter_error();
+                    return;
+                };
+                let payload = match encode_dynamic_message(role, &message) {
+                    Ok(payload) => payload,
+                    Err(_) => {
+                        callback_admission.record_adapter_error();
+                        return;
+                    }
+                };
+                let copied_bytes = payload.len() as u64;
+                let _ = callback_admission.admit(
+                    RawMessage {
+                        publish_time_ns: None,
+                        sequence: None,
+                        stream_id,
+                        arrival_time,
+                        payload: payload.into(),
+                    },
+                    copied_bytes,
+                );
+            };
+            subscriptions.push(
+                node.create_dynamic_subscription(topic_type, options, callback)
+                    .map_err(|error| {
+                        format!(
+                            "subscribe Live stream {} ({}): {error}",
+                            spec.stream.topic, spec.stream.schema
+                        )
+                    })?,
+            );
+        }
+        Ok(subscriptions)
     }
 
-    #[derive(Debug)]
-    enum DynamicImageError {
-        InvalidField(&'static str),
-        InvalidNanoseconds(u32),
-        TimestampOverflow,
+    fn qos_for(role: LiveStreamRole, reliable: bool) -> rclrs::QoSProfile {
+        let mut qos = QOS_PROFILE_SENSOR_DATA;
+        if role == LiveStreamRole::StaticTf {
+            qos.history = QoSHistoryPolicy::KeepLast {
+                depth: u32::try_from(DEFAULT_ORDERED_QUEUE_CAPACITY)
+                    .expect("Live queue capacity fits QoS depth"),
+            };
+            qos.reliability = QoSReliabilityPolicy::Reliable;
+            qos.durability = QoSDurabilityPolicy::TransientLocal;
+        } else if reliable {
+            qos.reliability = QoSReliabilityPolicy::Reliable;
+        }
+        qos
     }
-    impl std::fmt::Display for DynamicImageError {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            match self {
-                Self::InvalidField(name) => write!(f, "{name} has the wrong type"),
-                Self::InvalidNanoseconds(value) => {
-                    write!(f, "header timestamp has invalid nanoseconds: {value}")
+
+    fn wall_clock_arrival() -> Option<ArrivalTime> {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .ok()
+            .and_then(|duration| i64::try_from(duration.as_nanos()).ok())
+            .map(ArrivalTime)
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn sensor_roles_use_sensor_qos_and_reliability_override() {
+            assert_eq!(
+                qos_for(LiveStreamRole::Camera, false),
+                QOS_PROFILE_SENSOR_DATA
+            );
+            let reliable = qos_for(LiveStreamRole::DynamicTf, true);
+            assert_eq!(reliable.reliability, QoSReliabilityPolicy::Reliable);
+            assert_eq!(reliable.durability, QoSDurabilityPolicy::Volatile);
+        }
+
+        #[test]
+        fn static_tf_requests_bounded_transient_local_history() {
+            let qos = qos_for(LiveStreamRole::StaticTf, false);
+            assert_eq!(qos.reliability, QoSReliabilityPolicy::Reliable);
+            assert_eq!(qos.durability, QoSDurabilityPolicy::TransientLocal);
+            assert_eq!(
+                qos.history,
+                QoSHistoryPolicy::KeepLast {
+                    depth: DEFAULT_ORDERED_QUEUE_CAPACITY as u32,
                 }
-                Self::TimestampOverflow => write!(f, "header timestamp overflow"),
-            }
-        }
-    }
-    impl std::error::Error for DynamicImageError {}
-
-    fn extract_compressed_image(
-        message: &DynamicMessage,
-    ) -> Result<CompressedImage, DynamicImageError> {
-        let header = simple_message(message.get("header"), "header")?;
-        let stamp = simple_message(header.get("stamp"), "header.stamp")?;
-        let seconds = match stamp.get("sec") {
-            Some(Value::Simple(SimpleValue::Int32(value))) => *value,
-            _ => return Err(DynamicImageError::InvalidField("header.stamp.sec")),
-        };
-        let nanoseconds = match stamp.get("nanosec") {
-            Some(Value::Simple(SimpleValue::Uint32(value))) => *value,
-            _ => return Err(DynamicImageError::InvalidField("header.stamp.nanosec")),
-        };
-        if nanoseconds >= 1_000_000_000 {
-            return Err(DynamicImageError::InvalidNanoseconds(nanoseconds));
-        }
-        let measurement = i64::from(seconds)
-            .checked_mul(1_000_000_000)
-            .and_then(|value| value.checked_add(i64::from(nanoseconds)))
-            .ok_or(DynamicImageError::TimestampOverflow)?;
-        let frame_id = simple_string(header.get("frame_id"), "header.frame_id")?;
-        let format = simple_string(message.get("format"), "format")?;
-        let jpeg = match message.get("data") {
-            Some(Value::Sequence(SequenceValue::Uint8Sequence(value))) => value.to_vec(),
-            Some(Value::Sequence(SequenceValue::OctetSequence(value))) => value.to_vec(),
-            _ => return Err(DynamicImageError::InvalidField("data")),
-        };
-        Ok(CompressedImage {
-            measurement_time: MeasurementTime(measurement),
-            frame_id,
-            format,
-            jpeg,
-        })
-    }
-
-    fn simple_message<'a>(
-        value: Option<Value<'a>>,
-        name: &'static str,
-    ) -> Result<rclrs::DynamicMessageView<'a>, DynamicImageError> {
-        match value {
-            Some(Value::Simple(SimpleValue::Message(value))) => Ok(value),
-            _ => Err(DynamicImageError::InvalidField(name)),
-        }
-    }
-
-    fn simple_string(
-        value: Option<Value<'_>>,
-        name: &'static str,
-    ) -> Result<String, DynamicImageError> {
-        match value {
-            Some(Value::Simple(SimpleValue::String(value))) => Ok(value.to_string()),
-            _ => Err(DynamicImageError::InvalidField(name)),
+            );
         }
     }
 }
 
 #[cfg(feature = "ros2-live")]
-pub use ros::RosLiveHandle;
+pub(crate) use ros::RosLiveHandle;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        admission::LiveAdmission,
+        catalog::{LiveStreamRole, LiveStreamSpec},
+    };
     use viewer_core::{
-        ArrivalTime, CameraController, CameraId, CompressedImage, MeasurementTime,
-        PlaybackRequirements, RawMessage, SessionPlan, SourceCatalog, StreamDescriptor, StreamId,
-        encode_compressed_image_cdr,
+        ArrivalTime, CameraController, CameraId, CompressedImage, FeatureRuntime, McapSource,
+        MeasurementTime, PathMessage, PlaybackRequirements, RawMessage, SessionPlan, SourceCatalog,
+        StreamDescriptor, StreamId, StreamTimingSummary, WorkspaceBindings,
+        encode_compressed_image_cdr, encode_path_cdr,
     };
 
-    #[test]
-    fn replaces_unconsumed_value() {
-        let mailbox = LatestMailbox::default();
-        mailbox.push(1);
-        mailbox.push(2);
-        assert_eq!(mailbox.take(), Some(2));
-        assert_eq!(mailbox.coalesced(), 1);
+    fn bindings() -> WorkspaceBindings {
+        WorkspaceBindings {
+            path_topic: "/planning/path".into(),
+            odometry_topic: "/odom".into(),
+            point_cloud_topic: "/scan".into(),
+            dynamic_tf_topic: "/tf".into(),
+            static_tf_topic: "/tf_static".into(),
+        }
+    }
+
+    fn standard_requirements() -> PlaybackRequirements {
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_all_cameras();
+        requirements.require_path();
+        requirements.require_odometry();
+        requirements.require_point_cloud();
+        requirements.require_transforms();
+        requirements
+    }
+
+    fn camera_spec() -> LiveStreamSpec {
+        LiveStreamSpec::new(
+            &StreamDescriptor {
+                schema_definition: None,
+                id: StreamId(1),
+                topic: "/camera/live/image/compressed".into(),
+                schema: LiveStreamRole::Camera.schema().into(),
+                message_encoding: "cdr".into(),
+                timing: StreamTimingSummary::default(),
+            },
+            LiveStreamRole::Camera,
+        )
     }
 
     #[test]
-    fn current_camera_live_mailbox_routes_latest_message_to_camera_controller() {
-        let stream_id = StreamId(1);
-        let mailbox = LatestMailbox::default();
+    fn current_camera_live_admission_routes_latest_message_to_camera_controller() {
+        let spec = camera_spec();
+        let stream_id = spec.stream.id;
+        let admission = LiveAdmission::new(vec![spec.clone()], 4).unwrap();
         for (arrival, marker) in [(100, 1), (200, 2)] {
-            mailbox.push(RawMessage {
-                publish_time_ns: None,
-                sequence: None,
-                stream_id,
-                arrival_time: ArrivalTime(arrival),
-                payload: encode_compressed_image_cdr(&CompressedImage {
-                    measurement_time: MeasurementTime(arrival),
-                    frame_id: "camera".into(),
-                    format: "jpeg".into(),
-                    jpeg: vec![marker],
-                })
-                .unwrap()
-                .into(),
-            });
+            admission
+                .admit(
+                    RawMessage {
+                        publish_time_ns: None,
+                        sequence: None,
+                        stream_id,
+                        arrival_time: ArrivalTime(arrival),
+                        payload: encode_compressed_image_cdr(&CompressedImage {
+                            measurement_time: MeasurementTime(arrival),
+                            frame_id: "camera".into(),
+                            format: "jpeg".into(),
+                            jpeg: vec![marker],
+                        })
+                        .unwrap()
+                        .into(),
+                    },
+                    0,
+                )
+                .unwrap();
         }
         let catalog = SourceCatalog {
-            streams: vec![StreamDescriptor {
-                schema_definition: None,
-                id: stream_id,
-                topic: "/camera/live/image/compressed".into(),
-                schema: "sensor_msgs/msg/CompressedImage".into(),
-                message_encoding: "cdr".into(),
-                timing: viewer_core::StreamTimingSummary::default(),
-            }],
+            streams: vec![spec.stream],
             time_range: None,
             capabilities: viewer_core::SourceCapabilities::LIVE,
         };
@@ -330,13 +313,260 @@ mod tests {
         .unwrap();
         let mut cameras = CameraController::new(&plan);
 
-        cameras.admit(&mailbox.take().unwrap());
+        cameras.admit(&admission.take_ready()[0]);
         cameras.advance(std::time::Duration::ZERO);
 
         let latest = cameras.state().latest_for(CameraId(0)).unwrap();
         assert_eq!(latest.arrival_time, ArrivalTime(200));
         assert_eq!(latest.jpeg.as_ref(), [2]);
-        assert_eq!(mailbox.coalesced(), 1);
+        assert_eq!(admission.diagnostics().coalesced_messages, 1);
         assert_eq!(cameras.counters().decoded, 1);
+    }
+
+    #[test]
+    fn admission_and_direct_delivery_reduce_to_the_same_feature_state() {
+        let requirements = standard_requirements();
+        let bindings = bindings();
+        let live_catalog = super::catalog::live_catalog(
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings,
+        )
+        .unwrap();
+        let plan = SessionPlan::build(
+            &live_catalog,
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings,
+        )
+        .unwrap();
+
+        let fixture = std::fs::read(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap"),
+        )
+        .unwrap();
+        let mut source = McapSource::from_bytes(fixture.into()).unwrap();
+        let recording_catalog = source.catalog().clone();
+        let selected_topics = plan.selected_topics();
+        let recording_streams = selected_topics
+            .iter()
+            .filter_map(|topic| recording_catalog.by_topic(topic).map(|stream| stream.id))
+            .collect::<Vec<_>>();
+        source.select_streams(recording_streams).unwrap();
+        let end = source.time_range().end_inclusive();
+        let remapped = source
+            .read_through(end)
+            .unwrap()
+            .into_iter()
+            .filter_map(|mut message| {
+                let topic = &recording_catalog.by_id(message.stream_id)?.topic;
+                message.stream_id = live_catalog.by_topic(topic)?.id;
+                Some(message)
+            })
+            .collect::<Vec<_>>();
+
+        let mut direct = FeatureRuntime::new(&plan, true);
+        direct.process_messages(std::time::Duration::from_secs(10), &remapped);
+        let admission =
+            LiveAdmission::new(super::catalog::selected_stream_specs(&plan), 1_024).unwrap();
+        for message in remapped {
+            admission.admit(message, 0).unwrap();
+        }
+        let mut admitted = FeatureRuntime::new(&plan, true);
+        admitted.process_messages(std::time::Duration::from_secs(10), &admission.take_ready());
+
+        assert_eq!(direct.counters().decoded, admitted.counters().decoded);
+        assert_eq!(direct.counters().errors, admitted.counters().errors);
+        assert_eq!(direct.counters().unknown_streams, 0);
+        assert_eq!(admitted.counters().unknown_streams, 0);
+        assert_eq!(
+            admission.diagnostics().coalesced_messages,
+            direct.counters().dropped
+        );
+        assert_eq!(
+            direct.cameras().state().latest_for(CameraId(0)).cloned(),
+            admitted.cameras().state().latest_for(CameraId(0)).cloned()
+        );
+        assert_eq!(
+            direct.path().state().latest(),
+            admitted.path().state().latest()
+        );
+        assert_eq!(
+            direct.odometry().state().latest(),
+            admitted.odometry().state().latest()
+        );
+        assert_eq!(
+            direct.scene().unwrap().point_cloud().latest(),
+            admitted.scene().unwrap().point_cloud().latest()
+        );
+        assert_eq!(
+            direct.transforms().state().static_len(),
+            admitted.transforms().state().static_len()
+        );
+        assert_eq!(
+            direct.transforms().state().dynamic_len(),
+            admitted.transforms().state().dynamic_len()
+        );
+    }
+
+    #[test]
+    fn malformed_semantic_message_does_not_hide_the_prior_valid_message() {
+        let requirements = standard_requirements();
+        let bindings = bindings();
+        let catalog = super::catalog::live_catalog(
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings,
+        )
+        .unwrap();
+        let plan = SessionPlan::build(
+            &catalog,
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings,
+        )
+        .unwrap();
+        let path_stream = plan.path_stream().unwrap().id;
+        let admission =
+            LiveAdmission::new(super::catalog::selected_stream_specs(&plan), 4).unwrap();
+        admission
+            .admit(
+                RawMessage {
+                    publish_time_ns: None,
+                    sequence: None,
+                    stream_id: path_stream,
+                    arrival_time: ArrivalTime(10),
+                    payload: encode_path_cdr(&PathMessage {
+                        measurement_time: MeasurementTime(10),
+                        frame_id: "map".into(),
+                        points: vec![[1.0, 2.0]],
+                    })
+                    .unwrap()
+                    .into(),
+                },
+                0,
+            )
+            .unwrap();
+        admission
+            .admit(
+                RawMessage {
+                    publish_time_ns: None,
+                    sequence: None,
+                    stream_id: path_stream,
+                    arrival_time: ArrivalTime(20),
+                    payload: vec![0xff].into(),
+                },
+                0,
+            )
+            .unwrap();
+        let mut runtime = FeatureRuntime::new(&plan, true);
+        runtime.process_messages(std::time::Duration::ZERO, &admission.take_ready());
+
+        let latest = runtime.path().state().latest().unwrap();
+        assert_eq!(latest.arrival_time, ArrivalTime(10));
+        assert_eq!(latest.points, [[-2.0, 1.0]]);
+        assert_eq!(runtime.path().counters().errors, 1);
+    }
+
+    #[cfg(feature = "ros2-live")]
+    #[test]
+    #[ignore = "requires a sourced ROS 2 installation"]
+    fn dropping_ros_handle_stops_and_joins_the_executor() {
+        drop(super::RosLiveHandle::start(vec![camera_spec()], false).unwrap());
+    }
+
+    #[cfg(feature = "ros2-live")]
+    #[test]
+    #[ignore = "requires a sourced ROS 2 Jazzy environment and ros2 bag"]
+    fn rosbag_multi_stream_dynamic_smoke_and_reopen() {
+        use std::{collections::BTreeSet, process::Command, thread, time::Instant};
+
+        let requirements = standard_requirements();
+        let bindings = bindings();
+        let catalog = super::catalog::live_catalog(
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings,
+        )
+        .unwrap();
+        let plan = SessionPlan::build(
+            &catalog,
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings,
+        )
+        .unwrap();
+        let specs = super::catalog::selected_stream_specs(&plan);
+
+        drop(super::RosLiveHandle::start(specs.clone(), false).unwrap());
+        let source = super::RosLiveHandle::start(specs.clone(), false).unwrap();
+        let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap");
+        let qos_overrides = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/fixtures/ros2-live-qos.yaml");
+        let mut player = Command::new("ros2")
+            .args([
+                "bag",
+                "play",
+                "--input",
+                fixture.to_str().unwrap(),
+                "mcap",
+                "--qos-profile-overrides-path",
+                qos_overrides.to_str().unwrap(),
+                "--delay",
+                "2",
+                "--rate",
+                "5",
+                "--disable-keyboard-controls",
+            ])
+            .spawn()
+            .unwrap();
+
+        let expected = specs
+            .iter()
+            .map(|spec| spec.stream.id)
+            .collect::<BTreeSet<_>>();
+        let deadline = Instant::now() + std::time::Duration::from_secs(12);
+        let mut seen = BTreeSet::new();
+        let mut runtime = FeatureRuntime::new(&plan, true);
+        while Instant::now() < deadline {
+            thread::sleep(std::time::Duration::from_millis(50));
+            if let Some(error) = source.error() {
+                let _ = player.kill();
+                let _ = player.wait();
+                panic!("Live source failed during replay: {error}");
+            }
+            let ready = source.take_ready();
+            seen.extend(ready.iter().map(|message| message.stream_id));
+            runtime.process_messages(std::time::Duration::from_millis(50), &ready);
+            if expected.is_subset(&seen) && player.try_wait().unwrap().is_some() {
+                break;
+            }
+        }
+        if player.try_wait().unwrap().is_none() {
+            player.kill().unwrap();
+            player.wait().unwrap();
+        }
+        let ready = source.take_ready();
+        seen.extend(ready.iter().map(|message| message.stream_id));
+        runtime.process_messages(std::time::Duration::from_millis(50), &ready);
+
+        assert_eq!(seen, expected);
+        assert!(runtime.cameras().state().latest_for(CameraId(0)).is_some());
+        assert!(runtime.path().state().latest().is_some());
+        assert!(runtime.odometry().state().latest().is_some());
+        assert!(runtime.scene().unwrap().point_cloud().latest().is_some());
+        assert!(runtime.transforms().state().static_len() > 0);
+        assert!(runtime.transforms().state().dynamic_len() > 0);
+        assert_eq!(runtime.counters().errors, 0);
+        let diagnostics = source.diagnostics();
+        assert_eq!(diagnostics.adapter_errors, 0);
+        assert!(diagnostics.payload_copy_bytes > 0);
+        assert!(diagnostics.coalesced_messages > 0);
+        assert!(
+            diagnostics.queue_high_water_mark
+                <= 1 + super::admission::DEFAULT_ORDERED_QUEUE_CAPACITY * 5
+        );
     }
 }
