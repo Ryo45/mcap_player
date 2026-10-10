@@ -24,45 +24,50 @@ pub(crate) fn show_topics(
                                 )));
                             }
                         });
-                        if let Some(definition) = &entry.schema_definition {
-                            ui.collapsing("Schema definition", |ui| {
-                                ui.small(&definition.encoding);
-                                if let Ok(text) = std::str::from_utf8(&definition.data) {
-                                    ui.monospace(text);
-                                } else {
-                                    ui.label(format!("{} schema bytes", definition.data.len()));
-                                }
-                            });
-                        }
-                        if let Some(error) = &entry.schema_error {
-                            ui.small(error.to_string());
-                        }
-                        for field in &entry.numeric_fields {
-                            let selected = series.iter().any(|s| {
-                                s.request.stream_id == entry.stream_id
-                                    && s.request.field_path == field.path
-                            });
-                            if ui
-                                .add_enabled(
-                                    !selected && series.len() < 8,
-                                    egui::Button::new(format!(
-                                        "+ {} ({})",
-                                        field.path, field.ros_type
-                                    )),
-                                )
-                                .clicked()
-                            {
-                                actions.push(ViewerAction::AddNumericSeries {
-                                    stream: entry.stream_id,
-                                    field_path: field.path.clone(),
-                                });
-                            }
-                        }
+                        show_topic_details(ui, entry, series, &mut actions);
                     });
                 });
             }
         });
     actions
+}
+
+pub(super) fn show_topic_details(
+    ui: &mut egui::Ui,
+    entry: &viewer_core::TopicTreeEntry,
+    series: &[NumericSeriesState],
+    actions: &mut Vec<ViewerAction>,
+) {
+    if let Some(definition) = &entry.schema_definition {
+        ui.collapsing("Schema definition", |ui| {
+            ui.small(&definition.encoding);
+            if let Ok(text) = std::str::from_utf8(&definition.data) {
+                ui.monospace(text);
+            } else {
+                ui.label(format!("{} schema bytes", definition.data.len()));
+            }
+        });
+    }
+    if let Some(error) = &entry.schema_error {
+        ui.small(error.to_string());
+    }
+    for field in &entry.numeric_fields {
+        let selected = series
+            .iter()
+            .any(|s| s.request.stream_id == entry.stream_id && s.request.field_path == field.path);
+        if ui
+            .add_enabled(
+                !selected && series.len() < 8,
+                egui::Button::new(format!("+ {} ({})", field.path, field.ros_type)),
+            )
+            .clicked()
+        {
+            actions.push(ViewerAction::AddNumericSeries {
+                stream: entry.stream_id,
+                field_path: field.path.clone(),
+            });
+        }
+    }
 }
 
 pub(crate) fn show_field_plots(

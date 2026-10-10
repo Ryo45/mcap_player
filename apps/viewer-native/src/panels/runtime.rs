@@ -44,6 +44,7 @@ impl PanelRuntimeStore {
                 }
                 NativePanel::Scene(_) => has_scene = true,
                 NativePanel::Explore
+                | NativePanel::Topics(_)
                 | NativePanel::Camera(_)
                 | NativePanel::Plot(_)
                 | NativePanel::Inspector(_)
@@ -100,6 +101,12 @@ impl PanelRuntimeStore {
         for panel in self.panels.values_mut() {
             panel.reset_for_source(focused_camera);
         }
+    }
+
+    pub(crate) fn has_embedded_topics(&self) -> bool {
+        self.panels
+            .values()
+            .any(|panel| matches!(panel, NativePanel::Topics(_)))
     }
 
     pub(crate) fn has_scene(&self) -> bool {
@@ -160,6 +167,9 @@ pub(crate) fn create_native_panel(node: &PanelNode) -> NativePanel {
     match node.panel_type.as_str() {
         "explore" if node.config_version == 1 && node.config == serde_json::json!({}) => {
             NativePanel::Explore
+        }
+        "topics" if node.config_version == 1 && node.config == serde_json::json!({}) => {
+            NativePanel::Topics(Default::default())
         }
         "camera" => CameraPanel::create(node),
         "bev" => BevPanel::create(node),

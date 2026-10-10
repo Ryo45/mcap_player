@@ -44,8 +44,8 @@ pub(crate) fn show_scene_view(ui: &mut egui::Ui, input: SceneViewInput<'_>) -> S
         )
     };
 
-    ui.horizontal(|ui| {
-        ui.heading(format!("3D VIEW · SCAN {} pts", input.scan_points));
+    ui.horizontal_wrapped(|ui| {
+        ui.strong(format!("3D VIEW · SCAN {} pts", input.scan_points));
         ui.separator();
         egui::ComboBox::from_id_salt("scene-camera-mode")
             .selected_text(camera_mode.label())
@@ -77,8 +77,8 @@ pub(crate) fn show_scene_view(ui: &mut egui::Ui, input: SceneViewInput<'_>) -> S
             ui.label(format!("visible {}", input.visible_scan_points));
         }
         ui.label(format!("camera {:.1} m", input.camera_distance));
-        ui.label(tf_status);
     });
+    ui.label(tf_status);
 
     let logical_size = ui.available_size().max(egui::vec2(1.0, 1.0));
     let response = ui

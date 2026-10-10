@@ -94,6 +94,10 @@ impl PlaybackRequirements {
         self.odometry = self.odometry.max(RequirementLevel::Optional);
     }
 
+    pub fn optional_point_cloud(&mut self) {
+        self.point_cloud = self.point_cloud.max(RequirementLevel::Optional);
+    }
+
     pub fn optional_transforms(&mut self) {
         self.dynamic_transforms = self.dynamic_transforms.max(RequirementLevel::Optional);
         self.static_transforms = self.static_transforms.max(RequirementLevel::Optional);
@@ -536,6 +540,50 @@ mod tests {
                 descriptor(30, "/unrelated", "example_msgs/msg/Other"),
             ],
         }
+    }
+
+    #[test]
+    fn optional_scene_inputs_select_available_streams_without_requiring_them() {
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_camera_topic("/camera/front/image/compressed");
+        requirements.optional_path();
+        requirements.optional_odometry();
+        requirements.optional_point_cloud();
+        requirements.optional_transforms();
+        let full = catalog();
+        let plan = SessionPlan::build(
+            &full,
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings(),
+        )
+        .unwrap();
+        assert_eq!(plan.selected_stream_ids().len(), 6);
+        assert!(plan.point_cloud_stream().is_some());
+        let mut camera_only = full;
+        camera_only
+            .streams
+            .retain(|stream| stream.schema == COMPRESSED_IMAGE_SCHEMA);
+        let plan = SessionPlan::build(
+            &camera_only,
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings(),
+        )
+        .unwrap();
+        assert_eq!(plan.selected_stream_ids(), vec![StreamId(7)]);
+        assert!(plan.point_cloud_stream().is_none());
+        requirements.require_point_cloud();
+        requirements.optional_point_cloud();
+        assert!(matches!(
+            SessionPlan::build(
+                &camera_only,
+                "/camera/front/image/compressed",
+                &requirements,
+                &bindings()
+            ),
+            Err(SessionPlanError::MissingRequiredStream { .. })
+        ));
     }
 
     #[test]

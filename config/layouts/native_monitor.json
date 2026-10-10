@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "root": {
+    "kind": "split", "direction": "row", "children": [
+      { "weight": 0.3, "node": {
+        "kind": "panel", "id": "monitor-topics", "panelType": "topics",
+        "configVersion": 1, "title": "Topics / Inspector", "config": {}
+      }},
+      { "weight": 0.7, "node": {
+        "kind": "split", "direction": "column", "children": [
+          { "weight": 0.5, "node": {
+            "kind": "panel", "id": "monitor-scene", "panelType": "scene-3d",
+            "configVersion": 1, "title": "Scene", "config": {
+              "showTelemetry": true, "optionalData": true
+            }
+          }},
+          { "weight": 0.5, "node": {
+            "kind": "panel", "id": "monitor-front", "panelType": "camera",
+            "configVersion": 1, "title": "Front camera / planned trajectory", "config": {
+              "cameraTopic": "/camera/front/image/compressed",
+              "showThumbnails": false, "showOverlay": true, "schedulerPriority": true
+            }
+          }}
+        ]
+      }}
+    ]
+  }
+}

@@ -24,6 +24,7 @@ pub(crate) enum WorkspaceLayout {
     Standard,
     Showcase,
     Explore,
+    Monitor,
 }
 
 impl WorkspaceLayout {
@@ -31,6 +32,7 @@ impl WorkspaceLayout {
         match self {
             Self::Standard => BUNDLED_DEFAULT_LAYOUT,
             Self::Showcase => BUNDLED_SHOWCASE_LAYOUT,
+            Self::Monitor => include_str!("../../../config/layouts/native_monitor.json"),
             Self::Explore => include_str!("../../../config/layouts/native_explore.json"),
         }
     }
@@ -354,6 +356,51 @@ mod tests {
                 inspections: Vec::new(),
             }
         );
+    }
+
+    #[test]
+    fn monitor_embeds_queries_without_overview_or_extra_camera_demand() {
+        let mut workspace = NativeWorkspace::load_bundled_or_fallback(WorkspaceLayout::Monitor);
+        assert!(workspace.startup_warning().is_none());
+        assert_eq!(workspace.panels.len(), 3);
+        assert_eq!(workspace.panels.placeholder_count(), 0);
+        assert!(workspace.panels.has_embedded_topics());
+        assert_eq!(workspace.panel("monitor-topics").kind_name(), "topics");
+        assert_eq!(workspace.panel("monitor-front").kind_name(), "camera");
+        assert_eq!(workspace.panel("monitor-scene").kind_name(), "scene-3d");
+        let mut expected = PlaybackRequirements::empty();
+        expected.require_camera_topic("/camera/front/image/compressed");
+        expected.optional_path();
+        expected.optional_odometry();
+        expected.optional_point_cloud();
+        expected.optional_transforms();
+        let before = workspace.data_requirements();
+        assert_eq!(before.playback, expected);
+        assert!(before.signals.is_empty());
+        assert!(before.inspections.is_empty());
+        assert!(
+            matches!(workspace.apply_action(ViewerAction::SelectInspectorTopic(Some("/arbitrary".into()))),
+            WorkspaceEffect::SelectInspectorTopic(Some(topic)) if topic == "/arbitrary")
+        );
+        assert_eq!(workspace.data_requirements(), before);
+        let LayoutNode::Split {
+            direction,
+            children,
+        } = &workspace.layout.root
+        else {
+            panic!("row expected");
+        };
+        assert_eq!(*direction, viewer_layout::SplitDirection::Row);
+        assert_eq!((children[0].weight, children[1].weight), (0.3, 0.7));
+        let LayoutNode::Split {
+            direction,
+            children,
+        } = &children[1].node
+        else {
+            panic!("column expected");
+        };
+        assert_eq!(*direction, viewer_layout::SplitDirection::Column);
+        assert_eq!((children[0].weight, children[1].weight), (0.5, 0.5));
     }
 
     #[test]
