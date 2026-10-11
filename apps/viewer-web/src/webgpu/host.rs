@@ -1,5 +1,6 @@
 use super::{PhysicalSize, physical_size, presenter::WebTexturePresenter};
 use bev_renderer::{BevFrame, BevRenderer};
+use scene_renderer::{SceneFrame, SceneRenderer};
 use web_sys::HtmlCanvasElement;
 
 pub(crate) struct WebGpuHost {
@@ -11,11 +12,17 @@ pub(crate) struct WebGpuHost {
     surface_config: wgpu::SurfaceConfiguration,
     canvas: HtmlCanvasElement,
     bev_renderer: BevRenderer,
+    pub(crate) scene_renderer: SceneRenderer,
     presenter: WebTexturePresenter,
+    showing_bev: bool,
     physical_size: Option<PhysicalSize>,
 }
 
 impl WebGpuHost {
+    pub(crate) fn invalidate(&mut self) {
+        self.bev_renderer.invalidate();
+        self.scene_renderer.invalidate();
+    }
     pub(crate) async fn new(canvas: HtmlCanvasElement) -> Result<Self, String> {
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: wgpu::Backends::BROWSER_WEBGPU,
@@ -78,7 +85,8 @@ impl WebGpuHost {
             view_formats: vec![],
         };
         let bev_renderer = BevRenderer::new(&device, initial.width, initial.height);
-        let presenter = WebTexturePresenter::new(&device, surface_format, bev_renderer.view());
+        let scene_renderer = SceneRenderer::new(&device, initial.width, initial.height);
+        let presenter = WebTexturePresenter::new(&device, surface_format, scene_renderer.view());
         let mut host = Self {
             _instance: instance,
             surface,
@@ -88,18 +96,21 @@ impl WebGpuHost {
             surface_config,
             canvas,
             bev_renderer,
+            scene_renderer,
             presenter,
+            showing_bev: false,
             physical_size: None,
         };
-        let synthetic = [[0.0, 0.0], [0.0, 4.0], [2.0, 7.0]];
-        host.render(BevFrame {
-            revision: u64::MAX,
-            path: &synthetic,
-        })?;
+        host.render(BevFrame::default(), SceneFrame::default(), false)?;
         Ok(host)
     }
 
-    pub(crate) fn render(&mut self, frame: BevFrame<'_>) -> Result<(), String> {
+    pub(crate) fn render(
+        &mut self,
+        bev: BevFrame<'_>,
+        scene: SceneFrame<'_>,
+        showing_bev: bool,
+    ) -> Result<(), String> {
         let Some(size) = current_physical_size(&self.canvas) else {
             return Ok(());
         };
@@ -110,17 +121,29 @@ impl WebGpuHost {
             self.surface_config.width = size.width;
             self.surface_config.height = size.height;
             self.surface.configure(&self.device, &self.surface_config);
-            if self
-                .bev_renderer
-                .resize(&self.device, size.width, size.height)
-            {
-                self.presenter
-                    .set_source(&self.device, self.bev_renderer.view());
-            }
+            self.bev_renderer
+                .resize(&self.device, size.width, size.height);
+            self.scene_renderer
+                .resize(&self.device, size.width, size.height);
             self.physical_size = Some(size);
         }
-        if resized || self.bev_renderer.needs_render(frame) {
-            self.bev_renderer.render(&self.device, &self.queue, frame);
+        if resized || self.showing_bev != showing_bev {
+            self.presenter.set_source(
+                &self.device,
+                if showing_bev {
+                    self.bev_renderer.view()
+                } else {
+                    self.scene_renderer.view()
+                },
+            );
+        }
+        self.showing_bev = showing_bev;
+        if showing_bev {
+            if resized || self.bev_renderer.needs_render(bev) {
+                self.bev_renderer.render(&self.device, &self.queue, bev);
+            }
+        } else if resized || self.scene_renderer.needs_render(scene) {
+            self.scene_renderer.render(&self.device, &self.queue, scene);
         }
         let surface_texture = match self.surface.get_current_texture() {
             Ok(texture) => texture,

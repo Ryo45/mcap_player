@@ -22,7 +22,7 @@ pub(crate) struct WindowLoaderMetrics {
     pub stale_results_discarded: u64,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct WindowLoadDiagnostics {
     pub source_reads: u64,
     pub source_bytes: usize,

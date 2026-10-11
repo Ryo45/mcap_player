@@ -31,6 +31,14 @@ pub(crate) struct RemoteRestoreLoader {
 }
 
 impl RemoteRestoreLoader {
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn fork(&self) -> Self {
+        Self::new(
+            self.client.clone(),
+            self.recording_id.clone(),
+            self.revision.clone(),
+        )
+    }
     pub(crate) fn new(client: RemoteApiClient, recording_id: String, revision: String) -> Self {
         #[cfg(not(target_arch = "wasm32"))]
         let _ = (client, recording_id, revision);
@@ -52,6 +60,13 @@ impl RemoteRestoreLoader {
     pub(crate) fn request(&mut self, plan: &viewer_core::RestorePlan) -> Result<(), DataLoadError> {
         self.cancel();
         self.loading = true;
+        if plan.latest_before.is_empty() && plan.histories.is_empty() && plan.persistent.is_empty()
+        {
+            self.inbox
+                .borrow_mut()
+                .push_back((self.generation, Ok(Vec::new())));
+            return Ok(());
+        }
         #[cfg(not(target_arch = "wasm32"))]
         let _ = plan;
         #[cfg(target_arch = "wasm32")]
@@ -144,6 +159,12 @@ impl RemoteRestoreLoader {
     }
 }
 
+impl Drop for RemoteRestoreLoader {
+    fn drop(&mut self) {
+        self.cancel();
+    }
+}
+
 fn decode_restore_page(page: RemoteBatchPage) -> Result<Vec<RawMessage>, DataLoadError> {
     if !page.complete {
         return Err(DataLoadError::invalid_record("restore batch is incomplete"));
@@ -198,7 +219,6 @@ pub(crate) struct RemoteWindowLoader {
     recording_id: String,
     #[cfg(target_arch = "wasm32")]
     revision: String,
-    #[cfg(target_arch = "wasm32")]
     selected_streams: Vec<u32>,
     generation: u64,
     state: WindowLoadState,
@@ -214,22 +234,16 @@ impl RemoteWindowLoader {
         recording_id: String,
         revision: String,
         selected_streams: Vec<u32>,
-    ) -> Result<Self, DataLoadError> {
-        if selected_streams.is_empty() {
-            return Err(DataLoadError::invalid_record(
-                "remote stream selection is empty",
-            ));
-        }
+    ) -> Self {
         #[cfg(not(target_arch = "wasm32"))]
-        let _ = (client, recording_id, revision, selected_streams);
-        Ok(Self {
+        let _ = (client, recording_id, revision);
+        Self {
             #[cfg(target_arch = "wasm32")]
             client,
             #[cfg(target_arch = "wasm32")]
             recording_id,
             #[cfg(target_arch = "wasm32")]
             revision,
-            #[cfg(target_arch = "wasm32")]
             selected_streams,
             generation: 0,
             state: WindowLoadState::Idle,
@@ -237,7 +251,7 @@ impl RemoteWindowLoader {
             metrics: WindowLoaderMetrics::default(),
             #[cfg(target_arch = "wasm32")]
             abort: None,
-        })
+        }
     }
 
     pub(crate) fn start(&mut self, range: DataWindowTimeRange) -> Result<(), DataLoadError> {
@@ -250,6 +264,19 @@ impl RemoteWindowLoader {
         let generation = self.generation;
         self.state = WindowLoadState::Loading { generation, range };
         self.metrics.load_requests = self.metrics.load_requests.saturating_add(1);
+        if self.selected_streams.is_empty() {
+            self.inbox.borrow_mut().push_back(FetchResult {
+                generation,
+                range,
+                result: SerializedWindow::new(range, Vec::new(), 0)
+                    .map_err(DataLoadError::from)
+                    .map(|window| LoadedWindow {
+                        window,
+                        diagnostics: WindowLoadDiagnostics::default(),
+                    }),
+            });
+            return Ok(());
+        }
 
         #[cfg(target_arch = "wasm32")]
         {
@@ -568,6 +595,32 @@ mod tests {
     use super::*;
     use viewer_core::ArrivalTime;
     use viewer_remote_protocol::{BatchEncoder, RemoteMessageRef};
+
+    #[test]
+    fn empty_continuous_selection_produces_complete_windows_without_http() {
+        let client = RemoteApiClient::new("http://localhost:8081").unwrap();
+        let mut loader = RemoteWindowLoader::new(client, "demo".into(), "revision".into(), vec![]);
+        loader.start(range()).unwrap();
+        assert!(loader.poll().unwrap());
+        let result = loader.take_ready().unwrap();
+        assert_eq!(result.window.range, range());
+        assert!(result.window.messages.is_empty());
+        assert_eq!(result.diagnostics.source_reads, 0);
+        let mut restore = RemoteRestoreLoader::new(
+            RemoteApiClient::new("http://localhost:8081").unwrap(),
+            "demo".into(),
+            "revision".into(),
+        );
+        restore
+            .request(&viewer_core::RestorePlan {
+                target: ArrivalTime(15),
+                latest_before: vec![],
+                histories: vec![],
+                persistent: vec![],
+            })
+            .unwrap();
+        assert!(restore.poll().unwrap().unwrap().is_empty());
+    }
 
     fn range() -> DataWindowTimeRange {
         DataWindowTimeRange::new(ArrivalTime(10), ArrivalTime(20)).unwrap()

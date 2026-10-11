@@ -378,6 +378,12 @@ impl SceneRenderer {
             || self.camera_dirty
     }
 
+    /// Source replacement or seek may reuse revisions for different content.
+    pub fn invalidate(&mut self) {
+        self.last_revision = None;
+        self.last_cloud_revision = None;
+    }
+
     pub fn view(&self) -> &wgpu::TextureView {
         &self.view
     }

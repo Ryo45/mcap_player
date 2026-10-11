@@ -18,7 +18,6 @@ pub(crate) struct RemoteCatalog {
 pub(crate) enum RemoteCatalogError {
     UnsupportedTimeSemantics,
     EmptyTimeRange,
-    MissingCamera,
     DuplicateSchemaId(u16),
     UnknownSchemaId(u16),
     TimestampOverflow(u64),
@@ -31,7 +30,6 @@ impl fmt::Display for RemoteCatalogError {
                 write!(f, "unsupported remote time or range semantics")
             }
             Self::EmptyTimeRange => write!(f, "remote time range is empty"),
-            Self::MissingCamera => write!(f, "remote catalog has no supported camera stream"),
             Self::DuplicateSchemaId(id) => write!(f, "duplicate remote schema ID {id}"),
             Self::UnknownSchemaId(id) => write!(f, "unknown schema ID {id}"),
             Self::TimestampOverflow(value) => {
@@ -61,18 +59,6 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
     if start >= end_exclusive {
         return Err(RemoteCatalogError::EmptyTimeRange);
     }
-    let supported = remote
-        .streams
-        .iter()
-        .filter(|stream| stream.message_encoding == "cdr")
-        .collect::<Vec<_>>();
-    let camera = supported
-        .iter()
-        .copied()
-        .find(|stream| stream.schema_name == "sensor_msgs/msg/CompressedImage")
-        .ok_or(RemoteCatalogError::MissingCamera)?;
-    let primary_camera_topic = camera.topic.clone();
-
     let mut definitions = std::collections::BTreeMap::new();
     for schema in &remote.schemas {
         let definition = std::sync::Arc::new(viewer_core::SchemaDefinition {
@@ -107,13 +93,8 @@ pub(crate) fn adapt_catalog(remote: &CatalogResponse) -> Result<RemoteCatalog, R
         streams,
         capabilities: SourceCapabilities::INDEXED_RECORDING,
     };
-    let plan = SessionPlan::build(
-        &core,
-        &primary_camera_topic,
-        &crate::playback::web_playback_requirements(),
-        &crate::playback::web_workspace_bindings(),
-    )
-    .map_err(RemoteCatalogError::Plan)?;
+    let plan = crate::playback::web_session_plan(&core, "/camera/front/image/compressed")
+        .map_err(RemoteCatalogError::Plan)?;
     plan.validate_recording_capabilities(core.capabilities)
         .map_err(RemoteCatalogError::Plan)?;
     let mut selected = plan
@@ -207,12 +188,14 @@ mod tests {
     }
 
     #[test]
-    fn rejects_missing_camera_and_timestamp_overflow() {
+    fn accepts_camera_less_catalog_and_rejects_timestamp_overflow() {
         let mut value = catalog();
         value
             .streams
             .retain(|stream| stream.schema_name != "sensor_msgs/msg/CompressedImage");
-        assert!(adapt_catalog(&value).is_err());
+        let adapted = adapt_catalog(&value).unwrap();
+        assert_eq!(adapted.selected_streams, [3]);
+        assert!(adapted.plan.primary_camera_topic().is_none());
 
         let mut value = catalog();
         value.time_range.start_ns = TimestampNs::new(i64::MAX as u64 + 1);
