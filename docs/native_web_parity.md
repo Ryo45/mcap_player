@@ -47,6 +47,15 @@ Local indexed queries now compare predecessors across overlapping/non-monotonic
 chunk ranges instead of returning the first match. Message Index entries need not
 be sorted. The same correction applies to Browser seek restore.
 
+Native and Browser Local share the pure Chunk decompression/record traversal and
+Message Index predecessor selection in `viewer-core`. Native uses its already
+sorted index spans for logarithmic lookup; Browser consumes unsorted entries in
+one pass. Chunk/end-time pruning and equal-time chunk/offset ties have one shared
+implementation. Source adapters retain physical reads, CRC checks where supported,
+compression acceptance, caches, cancellation and query admission budgets. Chunk
+traversal yields payload slices of the input backing and reports structured parse/
+decompression errors without allocating a shared full-chunk message collection.
+
 Local restore/Inspector work reserves at most 4,096 physical index reads and 32 MiB
 of index bytes (including record headers), 256 MiB of compressed plus uncompressed
 chunk input, and 200,000 selected messages. These are whole-query limits and can

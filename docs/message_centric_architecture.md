@@ -300,6 +300,13 @@ display reduction.
 
 ## Performance invariants
 
+MCAP Chunk decompression and record traversal, plus Message Index predecessor
+selection, are I/O-independent helpers in `viewer-core` used by Native and Browser
+Local. Source adapters own physical reads and resource/cancellation policy; the
+shared byte traversal preserves `Bytes` backing and record offsets. Sorted and
+unsorted index consumption share predecessor and tie semantics without imposing
+sorting or a cache on both adapters.
+
 - Browser Local never reads the whole MCAP into WASM memory.
 - Web loaders publish only complete logical windows; continuation pages never leak upward.
 - Playback-required windows are protected by the DataPlane retention policy.

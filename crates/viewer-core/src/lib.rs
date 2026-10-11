@@ -61,12 +61,14 @@ pub use presentation::{
 pub use recording::{
     CameraRoute, IndexedChunkFact, IndexedMessagePosition, IndexedMessages, IndexedPlanError,
     IndexedReadDiagnostics, LatestMessageReader, LatestQueryDiagnostics,
-    MCAP_SUMMARY_IDENTITY_ALGORITHM, McapOpenError, McapSource, McapSummaryIdentity,
-    PlaybackRequirements, QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult, RawMessage,
-    RecordingTimeRange, RestoreInput, RestorePlan, RestorePlanError, RestorePlanner, RestoreRead,
-    RestoreSemantics, SchemaDefinition, SessionPlan, SessionPlanError, SourceCapabilities,
-    SourceCatalog, StreamDescriptor, StreamId, StreamTimingSummary, WorkspaceBindings,
-    ensure_indexed, history_candidate_chunks, latest_candidate_chunks, persistent_candidate_chunks,
+    MCAP_SUMMARY_IDENTITY_ALGORITHM, McapChunkError, McapOpenError, McapSource,
+    McapSummaryIdentity, MessageIndexPredecessor, PlaybackRequirements, QueryLimits, RangeQuery,
+    RangeQueryError, RangeQueryResult, RawMessage, RecordingTimeRange, RestoreInput, RestorePlan,
+    RestorePlanError, RestorePlanner, RestoreRead, RestoreSemantics, SchemaDefinition, SessionPlan,
+    SessionPlanError, SourceCapabilities, SourceCatalog, StreamDescriptor, StreamId,
+    StreamTimingSummary, WorkspaceBindings, decode_mcap_chunk, ensure_indexed,
+    history_candidate_chunks, latest_candidate_chunks, persistent_candidate_chunks,
+    visit_mcap_chunk_records,
 };
 
 pub use message::{NumericField, NumericFieldExtractor, RosMessageSchema};

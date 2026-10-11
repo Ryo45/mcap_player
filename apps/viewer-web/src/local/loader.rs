@@ -1,10 +1,14 @@
 use crate::data_plane::{DataLoadError, LoadedWindow, WindowLoadDiagnostics};
 use bytes::Bytes;
-use mcap::records::{ChunkIndex, Record, op};
+use mcap::records::ChunkIndex;
+#[cfg(target_arch = "wasm32")]
+use mcap::records::{Record, op};
 #[cfg(target_arch = "wasm32")]
 use std::collections::BTreeMap;
 use std::collections::{BTreeSet, VecDeque};
-use viewer_core::{ArrivalTime, DataWindowTimeRange, RawMessage, SerializedWindow, StreamId};
+#[cfg(target_arch = "wasm32")]
+use viewer_core::StreamId;
+use viewer_core::{ArrivalTime, DataWindowTimeRange, RawMessage, SerializedWindow};
 
 #[cfg(target_arch = "wasm32")]
 use {
@@ -153,30 +157,24 @@ fn decode_chunk_backing(
     request: &ChunkReadRequest,
     compressed: Bytes,
 ) -> Result<(Bytes, usize), DataLoadError> {
-    match request.compression.as_str() {
-        "" => {
-            if compressed.len() != request.uncompressed_size {
-                return Err(DataLoadError::invalid_record(
-                    "uncompressed MCAP chunk size mismatch",
-                ));
-            }
-            Ok((compressed, 0))
-        }
-        "zstd" => {
-            let decompressed = zstd::bulk::decompress(&compressed, request.uncompressed_size)
-                .map_err(DataLoadError::from)?;
-            if decompressed.len() != request.uncompressed_size {
-                return Err(DataLoadError::invalid_record(
-                    "decompressed MCAP chunk size mismatch",
-                ));
-            }
-            let decompressed_bytes = decompressed.len();
-            Ok((Bytes::from(decompressed), decompressed_bytes))
-        }
-        compression => Err(DataLoadError::invalid_record(format!(
-            "unsupported browser MCAP compression: {compression}"
-        ))),
+    // Browser support is a source policy, independent of Cargo feature unification.
+    if !matches!(request.compression.as_str(), "" | "zstd") {
+        return Err(viewer_core::McapChunkError::UnsupportedCompression(
+            request.compression.clone(),
+        )
+        .into());
     }
+    let backing = viewer_core::decode_mcap_chunk(
+        &request.compression,
+        compressed,
+        request.uncompressed_size,
+    )?;
+    let decompressed_bytes = if request.compression.is_empty() {
+        0
+    } else {
+        backing.len()
+    };
+    Ok((backing, decompressed_bytes))
 }
 
 fn chunk_request(index: &ChunkIndex) -> Result<ChunkReadRequest, DataLoadError> {
@@ -203,69 +201,24 @@ fn parse_chunk_backing(
     backing: Bytes,
     selected_channels: &BTreeSet<u16>,
     range: DataWindowTimeRange,
-    mut admit: impl FnMut(&mcap::records::MessageHeader, u64) -> Result<bool, DataLoadError>,
+    mut admit: impl FnMut(&RawMessage, u64) -> Result<bool, DataLoadError>,
 ) -> Result<ParsedChunk, DataLoadError> {
-    let mut offset = 0_usize;
     let mut messages = Vec::new();
     #[cfg(test)]
     let mut message_offsets = Vec::new();
-    while offset < backing.len() {
-        let record_offset = u64::try_from(offset)
-            .map_err(|_| DataLoadError::invalid_record("MCAP Chunk record offset overflow"))?;
-        let header_end = offset
-            .checked_add(9)
-            .ok_or_else(|| DataLoadError::invalid_record("MCAP record header overflow"))?;
-        if header_end > backing.len() {
-            return Err(DataLoadError::invalid_record(
-                "truncated MCAP record header in chunk",
-            ));
+    viewer_core::visit_mcap_chunk_records(&backing, |record_offset, message| {
+        if let Some(message) = message
+            && range.contains(message.arrival_time)
+            && (selected_channels.is_empty()
+                || selected_channels.contains(&(message.stream_id.0 as u16)))
+            && admit(&message, record_offset)?
+        {
+            messages.push(message);
+            #[cfg(test)]
+            message_offsets.push(record_offset);
         }
-        let opcode = backing[offset];
-        let length_bytes: [u8; 8] = backing[offset + 1..header_end]
-            .try_into()
-            .expect("record length slice has eight bytes");
-        let body_length = usize::try_from(u64::from_le_bytes(length_bytes))
-            .map_err(|_| DataLoadError::invalid_record("MCAP record body is too large"))?;
-        let body_end = header_end
-            .checked_add(body_length)
-            .ok_or_else(|| DataLoadError::invalid_record("MCAP record body overflow"))?;
-        if body_end > backing.len() {
-            return Err(DataLoadError::invalid_record(
-                "truncated MCAP record body in chunk",
-            ));
-        }
-        if opcode == op::MESSAGE {
-            let record = mcap::parse_record(opcode, &backing[header_end..body_end])
-                .map_err(DataLoadError::from)?;
-            let Record::Message { header, data } = record else {
-                return Err(DataLoadError::invalid_record(
-                    "MCAP message opcode parsed as another record",
-                ));
-            };
-            let arrival = i64::try_from(header.log_time).map_err(|_| {
-                DataLoadError::invalid_record("browser MCAP timestamp exceeds signed nanoseconds")
-            })?;
-            let arrival_time = ArrivalTime(arrival);
-            if range.contains(arrival_time)
-                && (selected_channels.is_empty() || selected_channels.contains(&header.channel_id))
-                && admit(&header, record_offset)?
-            {
-                let payload_start = body_end.checked_sub(data.len()).ok_or_else(|| {
-                    DataLoadError::invalid_record("MCAP message payload range underflow")
-                })?;
-                messages.push(RawMessage {
-                    publish_time_ns: Some(header.publish_time),
-                    sequence: Some(header.sequence),
-                    stream_id: StreamId(u32::from(header.channel_id)),
-                    arrival_time,
-                    payload: backing.slice(payload_start..body_end),
-                });
-                #[cfg(test)]
-                message_offsets.push(record_offset);
-            }
-        }
-        offset = body_end;
-    }
+        Ok::<_, DataLoadError>(())
+    })?;
     Ok(ParsedChunk {
         backing,
         messages,
@@ -637,34 +590,6 @@ impl RestoreWork {
     }
 }
 
-#[cfg(any(test, target_arch = "wasm32"))]
-fn index_predecessor(
-    entries: &[mcap::records::MessageIndexEntry],
-    target: u64,
-) -> Option<(u64, u64)> {
-    entries
-        .iter()
-        .filter(|entry| entry.log_time <= target)
-        .map(|entry| (entry.log_time, entry.offset))
-        .max()
-}
-
-#[cfg(any(test, target_arch = "wasm32"))]
-fn improve_predecessor(
-    best: &mut Option<(usize, u64, u64)>,
-    chunk: usize,
-    entries: &[mcap::records::MessageIndexEntry],
-    target: u64,
-) {
-    if let Some((time, offset)) = index_predecessor(entries, target)
-        && best.is_none_or(|(best_chunk, best_time, best_offset)| {
-            (time, chunk, offset) > (best_time, best_chunk, best_offset)
-        })
-    {
-        *best = Some((chunk, time, offset));
-    }
-}
-
 #[cfg(target_arch = "wasm32")]
 pub(crate) async fn open_browser_mcap(
     file: File,
@@ -705,18 +630,18 @@ struct RestoreChunkSelection {
 
 #[cfg(any(test, target_arch = "wasm32"))]
 impl RestoreChunkSelection {
-    fn contains(
-        &self,
-        header: &mcap::records::MessageHeader,
-        offset: u64,
-        target: ArrivalTime,
-    ) -> bool {
-        self.exact
-            .contains(&(header.channel_id, header.log_time, offset))
-            || self.history.get(&header.channel_id).is_some_and(|start| {
-                i64::try_from(header.log_time).is_ok_and(|time| time >= *start && time <= target.0)
+    fn contains(&self, message: &RawMessage, offset: u64, target: ArrivalTime) -> bool {
+        let Ok(channel) = u16::try_from(message.stream_id.0) else {
+            return false;
+        };
+        let Ok(log_time) = u64::try_from(message.arrival_time.0) else {
+            return false;
+        };
+        self.exact.contains(&(channel, log_time, offset))
+            || self.history.get(&channel).is_some_and(|start| {
+                message.arrival_time.0 >= *start && message.arrival_time <= target
             })
-            || self.persistent.contains(&header.channel_id)
+            || self.persistent.contains(&channel)
     }
 }
 
@@ -776,7 +701,7 @@ async fn resolve_browser_restore_chunks(
         let channel = u16::try_from(stream.0).map_err(|_| {
             DataLoadError::invalid_record("local stream ID exceeds MCAP channel ID")
         })?;
-        let mut found = None::<(usize, u64, u64)>;
+        let mut search = viewer_core::MessageIndexPredecessor::new(target);
         let count = summary
             .stats
             .as_ref()
@@ -787,24 +712,21 @@ async fn resolve_browser_restore_chunks(
         {
             let chunk = &summary.chunk_indexes[chunk_index];
             work.check()?;
-            if found.is_some_and(|(best_chunk, best_time, _)| {
-                chunk.message_end_time < best_time
-                    || (chunk.message_end_time == best_time && chunk_index < best_chunk)
-            }) {
+            if !search.can_improve(chunk.message_end_time, chunk_index) {
                 continue;
             }
             let offset = chunk.message_index_offsets[&channel];
             let entries = read_message_index(file, file_size, channel, offset, work).await?;
-            improve_predecessor(&mut found, chunk_index, &entries, target);
+            search.consider_unsorted(chunk_index, &entries);
         }
-        let Some((chunk, time, offset)) = found else {
+        let Some((time, position)) = search.result() else {
             continue;
         };
-        needs
-            .entry(chunk)
-            .or_default()
-            .exact
-            .push((channel, time, offset));
+        needs.entry(position.chunk).or_default().exact.push((
+            channel,
+            time,
+            position.record_offset,
+        ));
     }
     for read in &plan.histories {
         for stream in &read.streams {
@@ -898,14 +820,15 @@ async fn read_browser_restore_chunk(
             ),
         )
         .map_err(DataLoadError::from)?,
-        |header, offset| {
-            if !selection.contains(header, offset, target) {
+        |message, offset| {
+            if !selection.contains(message, offset, target) {
                 return Ok(false);
             }
-            if selection
-                .exact
-                .contains(&(header.channel_id, header.log_time, offset))
-            {
+            if selection.exact.contains(&(
+                message.stream_id.0 as u16,
+                message.arrival_time.0 as u64,
+                offset,
+            )) {
                 exact_matches += 1;
             }
             work.admit_message()?;
@@ -1106,6 +1029,22 @@ fn js_error(error: wasm_bindgen::JsValue) -> DataLoadError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::local::LocalCatalog;
+    use mcap::{Compression, Summary, WriteOptions, Writer, records::MessageHeader};
+    use std::{collections::BTreeMap, io::Cursor};
+
+    #[test]
+    fn browser_compression_policy_stays_zstd_only_when_core_supports_lz4() {
+        let request = ChunkReadRequest {
+            offset: 0,
+            length: 0,
+            compression: "lz4".into(),
+            uncompressed_size: 0,
+        };
+        assert!(
+            matches!(decode_chunk_backing(&request, Bytes::new()), Err(DataLoadError::Chunk(error)) if matches!(error.as_ref(), viewer_core::McapChunkError::UnsupportedCompression(format) if format == "lz4"))
+        );
+    }
 
     #[test]
     fn indexed_query_work_stops_on_cancellation_and_reserves_before_io() {
@@ -1127,45 +1066,6 @@ mod tests {
         work.messages = 200_000;
         assert!(work.admit_message().is_err());
     }
-
-    #[test]
-    fn index_lookup_is_inclusive_and_handles_unsorted_entries_and_offset_ties() {
-        let entries = [(100, 1), (40, 3), (90, 2), (90, 7)]
-            .map(|(log_time, offset)| mcap::records::MessageIndexEntry { log_time, offset });
-        assert_eq!(index_predecessor(&entries, 90), Some((90, 7)));
-        assert_eq!(index_predecessor(&entries, 89), Some((40, 3)));
-        assert_eq!(index_predecessor(&entries, 39), None);
-    }
-
-    #[test]
-    fn overlapping_chunks_choose_the_actual_latest_with_native_chunk_and_offset_ties() {
-        let mut best = None;
-        for (chunk, entries) in [
-            (2, vec![(65, 1)]),
-            (1, vec![(55, 1)]),
-            (0, vec![(1, 1), (90, 7), (90, 9), (100, 10)]),
-        ] {
-            let entries = entries
-                .into_iter()
-                .map(|(log_time, offset)| mcap::records::MessageIndexEntry { log_time, offset })
-                .collect::<Vec<_>>();
-            improve_predecessor(&mut best, chunk, &entries, 95);
-        }
-        assert_eq!(best, Some((0, 90, 9)));
-        improve_predecessor(
-            &mut best,
-            3,
-            &[mcap::records::MessageIndexEntry {
-                log_time: 90,
-                offset: 1,
-            }],
-            95,
-        );
-        assert_eq!(best, Some((3, 90, 1)));
-    }
-    use crate::local::LocalCatalog;
-    use mcap::{Compression, Summary, WriteOptions, Writer, records::MessageHeader};
-    use std::{collections::BTreeMap, io::Cursor};
 
     fn recording(compression: Option<Compression>) -> Vec<u8> {
         let mut output = Cursor::new(Vec::new());
@@ -1336,8 +1236,8 @@ mod tests {
             backing.clone(),
             &BTreeSet::from([channel]),
             DataWindowTimeRange::new(ArrivalTime(1_000), ArrivalTime(1_031)).unwrap(),
-            |header, offset| {
-                if !selection.contains(header, offset, ArrivalTime(1_030)) {
+            |message, offset| {
+                if !selection.contains(message, offset, ArrivalTime(1_030)) {
                     return Ok(false);
                 }
                 work.admit_message()?;

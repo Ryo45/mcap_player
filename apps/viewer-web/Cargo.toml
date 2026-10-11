@@ -12,7 +12,6 @@ bev-renderer = { path = "../../crates/bev-renderer" }
 scene-renderer = { path = "../../crates/scene-renderer" }
 bytes.workspace = true
 mcap = { workspace = true, features = ["zstd"] }
-zstd.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 viewer-core = { path = "../../crates/viewer-core", default-features = false, features = ["mcap-zstd"] }
