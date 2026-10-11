@@ -1,4 +1,5 @@
 //! Concrete bounded recording queries, independent of continuous playback features.
+mod timestamp_window;
 mod topic_health;
 pub use topic_health::{TopicHealthRequirement, TopicHealthSnapshot, query_topic_health};
 

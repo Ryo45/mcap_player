@@ -15,8 +15,7 @@ pub use indexed_plan::{
 };
 pub use mcap_source::{
     IndexedMessagePosition, IndexedMessages, IndexedReadDiagnostics, LatestMessageReader,
-    LatestQueryDiagnostics, McapOpenError, McapSource, MessageTimestampReader,
-    StreamTimestampRange, TimestampQueryLimits,
+    LatestQueryDiagnostics, McapOpenError, McapSource,
 };
 pub use range_query::{QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult};
 pub use raw_message::RawMessage;
