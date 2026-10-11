@@ -1,6 +1,7 @@
 #![cfg(not(target_arch = "wasm32"))]
 use std::{collections::BTreeMap, error::Error, io::Cursor, path::PathBuf};
 use viewer_core::*;
+use viewer_mcap::*;
 struct Fixture(PathBuf);
 impl Drop for Fixture {
     fn drop(&mut self) {

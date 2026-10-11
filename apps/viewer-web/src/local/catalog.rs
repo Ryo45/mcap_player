@@ -14,7 +14,7 @@ pub(crate) struct LocalCatalog {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum LocalCatalogError {
     Plan(viewer_core::SessionPlanError),
-    Index(viewer_core::IndexedPlanError),
+    Index(viewer_mcap::IndexedPlanError),
     MissingChunkIndex,
     MissingTimeRange,
     EndTimeOverflow,
@@ -52,8 +52,8 @@ impl From<viewer_core::SessionPlanError> for LocalCatalogError {
         Self::Plan(error)
     }
 }
-impl From<viewer_core::IndexedPlanError> for LocalCatalogError {
-    fn from(error: viewer_core::IndexedPlanError) -> Self {
+impl From<viewer_mcap::IndexedPlanError> for LocalCatalogError {
+    fn from(error: viewer_mcap::IndexedPlanError) -> Self {
         Self::Index(error)
     }
 }
@@ -91,7 +91,7 @@ impl LocalCatalog {
         let schema_definitions = summary
             .schemas
             .iter()
-            .map(|(id, schema)| (*id, viewer_core::SchemaDefinition::from_mcap(schema)))
+            .map(|(id, schema)| (*id, viewer_mcap::schema_definition_from_mcap(schema)))
             .collect::<std::collections::BTreeMap<_, _>>();
         let mut streams = summary
             .channels
@@ -133,7 +133,7 @@ impl LocalCatalog {
         let index_facts = summary
             .chunk_indexes
             .iter()
-            .map(|chunk| viewer_core::IndexedChunkFact {
+            .map(|chunk| viewer_mcap::IndexedChunkFact {
                 start: ArrivalTime(i64::try_from(chunk.message_start_time).unwrap_or(i64::MAX)),
                 end_inclusive: ArrivalTime(
                     i64::try_from(chunk.message_end_time).unwrap_or(i64::MAX),
@@ -149,7 +149,7 @@ impl LocalCatalog {
             let descriptor = core
                 .by_id(stream)
                 .expect("SessionPlan stream is in catalog");
-            viewer_core::ensure_indexed(&index_facts, stream, descriptor.timing.message_count)
+            viewer_mcap::ensure_indexed(&index_facts, stream, descriptor.timing.message_count)
                 .map_err(LocalCatalogError::from)?;
         }
         let selected_topics = plan.selected_topics();
@@ -240,7 +240,7 @@ mod schema_parity_tests {
         )
         .unwrap();
         let summary = mcap::Summary::read(&bytes).unwrap().unwrap();
-        let native = viewer_core::McapSource::copy_from_slice((bytes).as_ref()).unwrap();
+        let native = viewer_mcap::McapSource::copy_from_slice((bytes).as_ref()).unwrap();
         let local = LocalCatalog::from_summary(&summary, "/camera/front/image/compressed").unwrap();
         assert_eq!(native.catalog().streams, local.core.streams);
         for stream in &local.core.streams {

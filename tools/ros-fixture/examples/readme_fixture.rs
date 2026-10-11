@@ -1,7 +1,7 @@
 //! Prepare the bundled small demo for README screenshots without changing message bytes/times.
 use anyhow::{Context, Result};
 use std::{borrow::Cow, fs::File, io::BufWriter, path::PathBuf, sync::Arc};
-use viewer_core::FileMessageStream;
+use viewer_mcap::FileMessageStream;
 
 const HEADER_DEFINITIONS: &str = "\n\
 ================================================================================\n\

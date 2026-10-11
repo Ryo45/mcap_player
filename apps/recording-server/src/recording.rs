@@ -8,7 +8,8 @@ use mcap::{
     Summary,
     sans_io::{SummaryReadEvent, SummaryReader, SummaryReaderOptions},
 };
-use viewer_core::{ArrivalTime, IndexedChunkFact, McapSummaryIdentity, StreamId};
+use viewer_core::{ArrivalTime, StreamId};
+use viewer_mcap::{IndexedChunkFact, McapSummaryIdentity};
 use viewer_remote_protocol::{
     CatalogResponse, MessageCount, RecordingDescriptor, RemoteTimeRange, StreamDescriptor,
     TimestampNs,
@@ -268,7 +269,7 @@ fn validate_indexed_restore(
 ) -> Result<(), ServerError> {
     let index_facts = indexed_chunk_facts(summary, channel_to_stream);
     for stream in streams.iter().filter(|s| s.message_encoding == "cdr") {
-        viewer_core::ensure_indexed(
+        viewer_mcap::ensure_indexed(
             &index_facts,
             StreamId(stream.id),
             stream.message_count.map(MessageCount::get),

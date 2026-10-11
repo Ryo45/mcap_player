@@ -48,7 +48,7 @@ chunk ranges instead of returning the first match. Message Index entries need no
 be sorted. The same correction applies to Browser seek restore.
 
 Native and Browser Local share the pure Chunk decompression/record traversal and
-Message Index predecessor selection in `viewer-core`. Native uses its already
+Message Index predecessor selection in `viewer-mcap`. Native uses its already
 sorted index spans for logarithmic lookup; Browser consumes unsorted entries in
 one pass. Chunk/end-time pruning and equal-time chunk/offset ties have one shared
 implementation. Source adapters retain physical reads, CRC checks where supported,

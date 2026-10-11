@@ -1,25 +1,10 @@
-//! Recording facts, requirements, indexed planning, and concrete MCAP access.
+//! Source-neutral recording facts, requirements, and restore planning.
 
-mod chunk;
-mod indexed_plan;
-mod mcap_source;
-mod range_query;
 mod raw_message;
 mod restore;
 mod session_plan;
-mod source_identity;
 mod stream;
 
-pub use chunk::{McapChunkError, decode_mcap_chunk, visit_mcap_chunk_records};
-pub use indexed_plan::{
-    IndexedChunkFact, IndexedPlanError, MessageIndexPredecessor, ensure_indexed,
-    history_candidate_chunks, latest_candidate_chunks, persistent_candidate_chunks,
-};
-pub use mcap_source::{
-    IndexedMessagePosition, IndexedMessages, IndexedReadDiagnostics, LatestMessageReader,
-    LatestQueryDiagnostics, McapOpenError, McapSource,
-};
-pub use range_query::{QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult};
 pub use raw_message::RawMessage;
 pub use restore::{
     RestoreInput, RestorePlan, RestorePlanError, RestorePlanner, RestoreRead, RestoreSemantics,
@@ -27,7 +12,7 @@ pub use restore::{
 pub use session_plan::{
     CameraRoute, PlaybackRequirements, SessionPlan, SessionPlanError, WorkspaceBindings,
 };
-pub use source_identity::{MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity};
+
 pub use stream::{
     RecordingTimeRange, SchemaDefinition, SourceCapabilities, SourceCatalog, StreamDescriptor,
     StreamId, StreamTimingSummary,
@@ -35,10 +20,3 @@ pub use stream::{
 
 mod topic_tree;
 pub use topic_tree::{SchemaExplorationError, TopicTree, TopicTreeEntry};
-
-mod backing;
-
-#[cfg(not(target_arch = "wasm32"))]
-mod file_messages;
-#[cfg(not(target_arch = "wasm32"))]
-pub use file_messages::FileMessageStream;

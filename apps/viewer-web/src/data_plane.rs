@@ -42,8 +42,8 @@ pub(crate) struct LoadedWindow {
 pub(crate) enum DataLoadError {
     Window(viewer_core::DataWindowError),
     Mcap(std::sync::Arc<mcap::McapError>),
-    Chunk(std::sync::Arc<viewer_core::McapChunkError>),
-    Indexed(viewer_core::IndexedPlanError),
+    Chunk(std::sync::Arc<viewer_mcap::McapChunkError>),
+    Indexed(viewer_mcap::IndexedPlanError),
     Protocol(viewer_remote_protocol::ProtocolError),
     Io(std::sync::Arc<std::io::Error>),
     Remote(crate::remote::RemoteClientError),
@@ -104,13 +104,13 @@ impl From<mcap::McapError> for DataLoadError {
         Self::Mcap(std::sync::Arc::new(error))
     }
 }
-impl From<viewer_core::McapChunkError> for DataLoadError {
-    fn from(error: viewer_core::McapChunkError) -> Self {
+impl From<viewer_mcap::McapChunkError> for DataLoadError {
+    fn from(error: viewer_mcap::McapChunkError) -> Self {
         Self::Chunk(std::sync::Arc::new(error))
     }
 }
-impl From<viewer_core::IndexedPlanError> for DataLoadError {
-    fn from(error: viewer_core::IndexedPlanError) -> Self {
+impl From<viewer_mcap::IndexedPlanError> for DataLoadError {
+    fn from(error: viewer_mcap::IndexedPlanError) -> Self {
         Self::Indexed(error)
     }
 }

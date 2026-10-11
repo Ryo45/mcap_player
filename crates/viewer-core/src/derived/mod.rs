@@ -3,7 +3,6 @@
 mod bookmark;
 mod plot;
 mod preview;
-mod source_fingerprint;
 
 pub use bookmark::{
     Bookmark, BookmarkDocument, BookmarkId, BookmarkValidationError,
@@ -11,18 +10,10 @@ pub use bookmark::{
 };
 pub use plot::{
     LoadedOdometrySignals, LoadedSignal, PlotSeries, SignalId, SignalOverviewReducer, SignalSample,
-    arrival_time_from_plot_x, cursor_seconds, load_odometry_signals,
-    load_odometry_signals_for_topic_with_progress, load_speed_signal, load_yaw_rate_signal,
+    arrival_time_from_plot_x, cursor_seconds,
 };
 pub use preview::{
     CURRENT_PREVIEW_SCHEMA_VERSION, CameraPreviewFrame, DataFidelity, PreviewBudget,
     PreviewImageEncoding, PreviewRequest, PreviewSnapshot, PreviewValidationError, SignalBucket,
     SignalFidelity, SignalOverview, TimeRange, TimedPosition2, merge_signal_buckets,
-};
-pub use source_fingerprint::mcap_summary_fingerprint;
-
-mod numeric_plot;
-pub use numeric_plot::{
-    NumericPlotDetail, NumericPlotError, NumericPlotOverview, NumericPlotOverviewBatch,
-    NumericSample, NumericSeriesRequest,
 };

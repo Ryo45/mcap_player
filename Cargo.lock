@@ -2486,6 +2486,7 @@ dependencies = [
  "mcap",
  "serde_json",
  "viewer-core",
+ "viewer-mcap",
  "viewer-preview-mcap",
 ]
 
@@ -2609,6 +2610,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "viewer-core",
+ "viewer-mcap",
  "viewer-preview-mcap",
  "viewer-remote-protocol",
 ]
@@ -2674,6 +2676,7 @@ dependencies = [
  "image",
  "mcap",
  "viewer-core",
+ "viewer-mcap",
 ]
 
 [[package]]
@@ -3464,13 +3467,9 @@ name = "viewer-core"
 version = "0.1.0"
 dependencies = [
  "bytes",
- "crc32fast",
- "lz4",
- "mcap",
  "serde",
  "serde_json",
  "web-time",
- "zstd",
 ]
 
 [[package]]
@@ -3479,6 +3478,19 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "viewer-mcap"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "crc32fast",
+ "lz4",
+ "mcap",
+ "viewer-core",
+ "web-time",
+ "zstd",
 ]
 
 [[package]]
@@ -3501,6 +3513,7 @@ dependencies = [
  "serde_json",
  "viewer-core",
  "viewer-layout",
+ "viewer-mcap",
  "viewer-preview-mcap",
  "viewer-renderer",
  "wgpu",
@@ -3515,6 +3528,7 @@ dependencies = [
  "serde",
  "serde_json",
  "viewer-core",
+ "viewer-mcap",
 ]
 
 [[package]]
@@ -3532,6 +3546,7 @@ version = "0.1.0"
 dependencies = [
  "image",
  "viewer-core",
+ "viewer-mcap",
  "wgpu",
 ]
 
@@ -3547,6 +3562,7 @@ dependencies = [
  "serde",
  "serde_json",
  "viewer-core",
+ "viewer-mcap",
  "viewer-remote-protocol",
  "viewer-renderer",
  "wasm-bindgen",

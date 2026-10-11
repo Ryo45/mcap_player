@@ -8,13 +8,14 @@ license.workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+viewer-mcap = { path = "../../crates/viewer-mcap", default-features = false, features = ["mcap-zstd"] }
 bev-renderer = { path = "../../crates/bev-renderer" }
 scene-renderer = { path = "../../crates/scene-renderer" }
 bytes.workspace = true
 mcap = { workspace = true, features = ["zstd"] }
 serde.workspace = true
 serde_json.workspace = true
-viewer-core = { path = "../../crates/viewer-core", default-features = false, features = ["mcap-zstd"] }
+viewer-core = { path = "../../crates/viewer-core" }
 viewer-remote-protocol = { path = "../../crates/viewer-remote-protocol" }
 viewer-renderer = { path = "../../crates/viewer-renderer" }
 web-time.workspace = true

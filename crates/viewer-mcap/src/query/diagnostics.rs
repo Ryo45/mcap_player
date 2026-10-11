@@ -227,8 +227,26 @@ fn detail_bytes(hardware: &str, values: &[DiagnosticKeyValue]) -> usize {
 
 #[cfg(test)]
 mod tests {
+    fn push_u32(output: &mut Vec<u8>, value: u32) {
+        while !(output.len() - 4).is_multiple_of(4) {
+            output.push(0);
+        }
+        output.extend_from_slice(&value.to_le_bytes());
+    }
+    fn push_string(output: &mut Vec<u8>, value: &str) -> Result<(), viewer_core::DecodeError> {
+        let length = value
+            .len()
+            .checked_add(1)
+            .ok_or(viewer_core::DecodeError::InvalidLength)?;
+        push_u32(
+            output,
+            u32::try_from(length).map_err(|_| viewer_core::DecodeError::InvalidLength)?,
+        );
+        output.extend_from_slice(value.as_bytes());
+        output.push(0);
+        Ok(())
+    }
     use super::*;
-    use crate::message::cdr::common::{push_string, push_u32};
     use mcap::{WriteOptions, Writer, records::MessageHeader};
     use std::io::Cursor;
 

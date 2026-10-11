@@ -163,7 +163,7 @@ NativeのMCAP読み込みはbounded positional readを使います。元ファ�
 cargo fmt --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
-cargo check -p viewer-core -p viewer-renderer -p bev-renderer -p scene-renderer --target wasm32-unknown-unknown
+cargo check -p viewer-core -p viewer-mcap -p viewer-renderer -p bev-renderer -p scene-renderer --target wasm32-unknown-unknown
 cd apps/viewer-web && trunk build --release
 source /opt/ros/jazzy/setup.bash
 cargo test -p viewer-native --features ros2-live

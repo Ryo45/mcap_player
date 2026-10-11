@@ -1,12 +1,12 @@
 //! I/O-independent decoding and traversal of an owned MCAP Chunk backing.
 
-use super::{RawMessage, StreamId};
 use crate::ArrivalTime;
 use bytes::Bytes;
 use mcap::records::op;
 use std::fmt;
 #[cfg(feature = "mcap-lz4")]
 use std::io::Read;
+use viewer_core::{RawMessage, StreamId};
 
 #[derive(Debug)]
 pub enum McapChunkError {

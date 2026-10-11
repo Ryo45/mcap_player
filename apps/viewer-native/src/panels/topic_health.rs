@@ -1,10 +1,9 @@
 use super::{NativePanel, PanelDataRequirements, PanelOutput, PlaceholderPanel};
 use crate::window_query_loader::TopicHealthQueryState;
 use serde::Deserialize;
-use viewer_core::{
-    ArrivalTime, DEFAULT_QUERY_WINDOW_SECONDS, MAX_QUERY_WINDOW_SECONDS, TopicHealthRequirement,
-};
+use viewer_core::ArrivalTime;
 use viewer_layout::{PanelId, PanelNode};
+use viewer_mcap::{DEFAULT_QUERY_WINDOW_SECONDS, MAX_QUERY_WINDOW_SECONDS, TopicHealthRequirement};
 
 #[derive(Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]

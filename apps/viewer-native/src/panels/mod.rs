@@ -261,8 +261,8 @@ pub(crate) struct PanelDataRequirements {
     pub(crate) playback: viewer_core::PlaybackRequirements,
     pub(crate) signals: BTreeSet<SignalId>,
     pub(crate) inspections: Vec<InspectorRequirement>,
-    pub(crate) topic_health: BTreeSet<viewer_core::TopicHealthRequirement>,
-    pub(crate) diagnostics: BTreeSet<viewer_core::DiagnosticsRequirement>,
+    pub(crate) topic_health: BTreeSet<viewer_mcap::TopicHealthRequirement>,
+    pub(crate) diagnostics: BTreeSet<viewer_mcap::DiagnosticsRequirement>,
 }
 
 impl Default for PanelDataRequirements {

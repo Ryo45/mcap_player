@@ -8,16 +8,14 @@ use std::{
     },
     thread::JoinHandle,
 };
-use viewer_core::{
-    ArrivalTime, IndexedMessagePosition, InspectorDecodeError, InspectorMessage, InspectorSchema,
-    LatestMessageReader, McapSource, StreamId,
-};
+use viewer_core::{ArrivalTime, InspectorDecodeError, InspectorMessage, InspectorSchema, StreamId};
+use viewer_mcap::{IndexedMessagePosition, LatestMessageReader, McapSource};
 const MAX_TOPICS: usize = 8;
 #[derive(Debug)]
 pub(crate) enum InspectorError {
     MissingTopic(String),
     TooManyTopics(usize),
-    Source(viewer_core::McapOpenError),
+    Source(viewer_mcap::McapOpenError),
     Decode(InspectorDecodeError),
     Start(std::io::Error),
     WorkerPanicked,
@@ -47,8 +45,8 @@ impl std::error::Error for InspectorError {
         }
     }
 }
-impl From<viewer_core::McapOpenError> for InspectorError {
-    fn from(error: viewer_core::McapOpenError) -> Self {
+impl From<viewer_mcap::McapOpenError> for InspectorError {
+    fn from(error: viewer_mcap::McapOpenError) -> Self {
         Self::Source(error)
     }
 }

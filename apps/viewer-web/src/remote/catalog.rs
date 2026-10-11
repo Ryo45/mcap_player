@@ -213,7 +213,7 @@ mod schema_parity_tests {
                 .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap"),
         )
         .unwrap();
-        let native = viewer_core::McapSource::copy_from_slice((bytes).as_ref()).unwrap();
+        let native = viewer_mcap::McapSource::copy_from_slice((bytes).as_ref()).unwrap();
         let range = native.catalog().time_range.unwrap();
         let mut streams = native
             .catalog()

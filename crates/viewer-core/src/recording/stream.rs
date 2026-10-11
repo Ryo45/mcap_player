@@ -102,18 +102,9 @@ impl SourceCatalog {
     }
 }
 
-/// MCAP Schema facts. Bytes remain canonical even for unsupported encodings.
+/// Source schema facts. Bytes remain canonical even for unsupported encodings.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SchemaDefinition {
     pub encoding: String,
     pub data: bytes::Bytes,
-}
-
-impl SchemaDefinition {
-    pub fn from_mcap(schema: &mcap::Schema<'_>) -> std::sync::Arc<Self> {
-        std::sync::Arc::new(Self {
-            encoding: schema.encoding.clone(),
-            data: bytes::Bytes::copy_from_slice(&schema.data),
-        })
-    }
 }

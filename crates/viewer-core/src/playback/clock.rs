@@ -200,3 +200,10 @@ mod tests {
         assert!(!clock.is_playing());
     }
 }
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum PlaybackEffect {
+    #[default]
+    None,
+    Seeked,
+}

@@ -105,6 +105,14 @@ concrete ROS handle owns executor-thread stop/join and the latest successfully a
 arrival used for freshness diagnostics; controller presentation state is not an I/O liveness
 authority.
 
+## MCAP crate boundary
+
+`viewer-mcap` owns MCAP I/O, byte processing, indexed queries and native recording
+transport. It depends on `viewer-core` for source-neutral contracts, codecs,
+reducers and feature state. Core has no dependency on the MCAP adapter or codecs.
+See [viewer_mcap_boundary.md](viewer_mcap_boundary.md) for the extraction scope and
+dependency checks.
+
 ## Safe Native file access
 
 `McapSource::open_file` reads Summary and Message Index records by range, and owns only metadata
@@ -117,7 +125,7 @@ Native playback, numeric/builtin Plot and Inspector readers share the same open 
 metadata through `fork_reader`; they do not reopen the pathname for each query. Path replacement
 therefore cannot silently redirect a running query to another recording. Cached payloads are
 `Bytes` slices of heap-owned read/decompression buffers and remain valid after file truncation or
-modification. `viewer-core` forbids unsafe code; file-backed mmap and its dependency have been
+modification. `viewer-mcap` forbids unsafe code; file-backed mmap and its dependency have been
 removed from application/tools input paths.
 
 Reads check source length/mtime before and after copying. Observable changes return `SourceChanged`
@@ -301,7 +309,7 @@ display reduction.
 ## Performance invariants
 
 MCAP Chunk decompression and record traversal, plus Message Index predecessor
-selection, are I/O-independent helpers in `viewer-core` used by Native and Browser
+selection, are I/O-independent helpers in `viewer-mcap` used by Native and Browser
 Local. Source adapters own physical reads and resource/cancellation policy; the
 shared byte traversal preserves `Bytes` backing and record offsets. Sorted and
 unsorted index consumption share predecessor and tie semantics without imposing

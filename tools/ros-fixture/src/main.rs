@@ -133,7 +133,7 @@ fn usage() -> anyhow::Error {
 
 fn inspect_camera_transform(input: &Path) -> Result<()> {
     let mut transforms = TransformState::default();
-    for message in viewer_core::FileMessageStream::open(input)? {
+    for message in viewer_mcap::FileMessageStream::open(input)? {
         let message = message?;
         if message.channel.topic == TF_STATIC_TOPIC {
             transforms.apply(TransformBatch {
@@ -365,7 +365,7 @@ fn convert_stream(
     let mut tf_static_messages = 0_u32;
     let mut camera_static_written = false;
     let mut input_shape = None;
-    for message in viewer_core::FileMessageStream::open(input).context("read MCAP records")? {
+    for message in viewer_mcap::FileMessageStream::open(input).context("read MCAP records")? {
         let message = message.context("read MCAP message")?;
         if first_arrival.is_none() {
             if message.channel.topic == TF_STATIC_TOPIC {
@@ -925,7 +925,7 @@ struct VerificationStats {
 }
 
 fn verify_jpeg_mcap(input: &Path) -> Result<VerificationStats> {
-    let messages = viewer_core::FileMessageStream::open(input)?;
+    let messages = viewer_mcap::FileMessageStream::open(input)?;
     let (summary, _) = messages.read_metadata()?;
     let expected_counts = CAMERA_SPECS
         .iter()

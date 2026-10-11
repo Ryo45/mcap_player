@@ -1,11 +1,9 @@
 use super::{NativePanel, PanelDataRequirements, PanelOutput, PlaceholderPanel};
 use crate::{interaction::ViewerAction, window_query_loader::DiagnosticsQueryState};
 use serde::Deserialize;
-use viewer_core::{
-    ArrivalTime, DEFAULT_QUERY_WINDOW_SECONDS, DiagnosticsRequirement, MAX_QUERY_WINDOW_SECONDS,
-    PlaybackCommand,
-};
+use viewer_core::{ArrivalTime, PlaybackCommand};
 use viewer_layout::{PanelId, PanelNode};
+use viewer_mcap::{DEFAULT_QUERY_WINDOW_SECONDS, DiagnosticsRequirement, MAX_QUERY_WINDOW_SECONDS};
 
 #[derive(Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
