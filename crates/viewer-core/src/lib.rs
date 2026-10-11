@@ -62,12 +62,11 @@ pub use recording::{
     CameraRoute, IndexedChunkFact, IndexedMessagePosition, IndexedMessages, IndexedPlanError,
     IndexedReadDiagnostics, LatestMessageReader, LatestQueryDiagnostics,
     MCAP_SUMMARY_IDENTITY_ALGORITHM, McapOpenError, McapSource, McapSummaryIdentity,
-    MessageTimestampReader, PlaybackRequirements, QueryLimits, RangeQuery, RangeQueryError,
-    RangeQueryResult, RawMessage, RecordingTimeRange, RestoreInput, RestorePlan, RestorePlanError,
-    RestorePlanner, RestoreRead, RestoreSemantics, SchemaDefinition, SessionPlan, SessionPlanError,
-    SourceCapabilities, SourceCatalog, StreamDescriptor, StreamId, StreamTimestampRange,
-    StreamTimingSummary, TimestampQueryLimits, WorkspaceBindings, ensure_indexed,
-    history_candidate_chunks, latest_candidate_chunks, persistent_candidate_chunks,
+    PlaybackRequirements, QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult, RawMessage,
+    RecordingTimeRange, RestoreInput, RestorePlan, RestorePlanError, RestorePlanner, RestoreRead,
+    RestoreSemantics, SchemaDefinition, SessionPlan, SessionPlanError, SourceCapabilities,
+    SourceCatalog, StreamDescriptor, StreamId, StreamTimingSummary, WorkspaceBindings,
+    ensure_indexed, history_candidate_chunks, latest_candidate_chunks, persistent_candidate_chunks,
 };
 
 pub use message::{NumericField, NumericFieldExtractor, RosMessageSchema};

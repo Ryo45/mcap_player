@@ -1,5 +1,6 @@
+use super::timestamp_window::{TimestampQueryLimits, collect_timestamp_window};
 use super::{DEFAULT_QUERY_WINDOW_SECONDS, WindowQueryError, cursor_window, elapsed};
-use crate::{ArrivalTime, McapSource, MessageTimestampReader, StreamId, TimestampQueryLimits};
+use crate::{ArrivalTime, McapSource, StreamId};
 use std::{collections::BTreeMap, sync::Arc, time::Duration};
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -55,14 +56,7 @@ pub fn query_topic_health(
             maximum: MAX_TOPICS,
         });
     }
-    let mut reader = MessageTimestampReader::new(
-        source.fork_reader(),
-        TimestampQueryLimits {
-            max_messages: 200_000,
-            max_index_bytes: 32 * 1024 * 1024,
-            max_index_reads: 4096,
-        },
-    );
+    source.validate_unchanged()?;
     let mut snapshots = Vec::with_capacity(topics.len());
     for (topic, streams) in topics {
         if cancelled() {
@@ -89,31 +83,52 @@ pub fn query_topic_health(
             max_gap: None,
             error: None,
         };
-        let mut arrivals = Vec::new();
         for stream in streams {
-            match reader.read_range(stream.id, range, &mut cancelled) {
-                Ok(result) => {
-                    arrivals.extend(result.arrivals);
-                    snapshot.latest_arrival = snapshot.latest_arrival.max(result.latest_arrival);
-                }
-                Err(crate::McapOpenError::QueryCancelled) => {
-                    return Err(crate::McapOpenError::QueryCancelled.into());
-                }
-                Err(error) => {
-                    snapshot.error = Some(Arc::new(error.into()));
-                    break;
-                }
+            if source.stream_chunk_timeline(stream.id).is_none()
+                && stream.timing.message_count != Some(0)
+            {
+                snapshot.error = Some(Arc::new(
+                    crate::McapOpenError::MessageIndexRequired(crate::IndexedPlanError {
+                        stream: stream.id,
+                    })
+                    .into(),
+                ));
+                break;
             }
-        }
-        if snapshot.error.is_none() {
-            arrivals.sort_unstable();
-            summarize(&mut snapshot, &arrivals, cursor);
-        } else {
-            // Never present partial timing facts as a complete topic measurement.
-            snapshot.latest_arrival = None;
         }
         snapshots.push(snapshot);
     }
+    let streams = snapshots
+        .iter()
+        .filter(|topic| topic.error.is_none())
+        .flat_map(|topic| topic.stream_ids.iter().copied())
+        .collect::<Vec<_>>();
+    let mut timestamps = collect_timestamp_window(
+        source,
+        &streams,
+        range,
+        TimestampQueryLimits::default(),
+        &mut cancelled,
+    )?;
+    for snapshot in &mut snapshots {
+        if cancelled() {
+            return Err(crate::McapOpenError::QueryCancelled.into());
+        }
+        if snapshot.error.is_some() {
+            continue;
+        }
+        let mut arrivals = Vec::new();
+        for stream in &snapshot.stream_ids {
+            let result = timestamps
+                .remove(stream)
+                .expect("selected stream has a timestamp result");
+            arrivals.extend(result.arrivals);
+            snapshot.latest_arrival = snapshot.latest_arrival.max(result.latest_arrival);
+        }
+        arrivals.sort_unstable();
+        summarize(snapshot, &arrivals, cursor);
+    }
+    source.validate_unchanged()?;
     Ok(snapshots)
 }
 
@@ -285,31 +300,5 @@ mod tests {
         assert_eq!(row.observed_rate_hz, Some(10.0));
         assert_eq!(row.max_gap, Some(Duration::from_millis(100)));
         assert_eq!(row.schema, "demo/msg/One, demo/msg/Two");
-    }
-
-    #[test]
-    fn timestamp_reads_obey_budget_and_cancellation_before_io() {
-        let source = source(&[100, 200]);
-        let stream = source.catalog().streams[0].id;
-        let range = crate::DataWindowTimeRange::new(ArrivalTime(0), ArrivalTime(201)).unwrap();
-        let mut reader = MessageTimestampReader::new(
-            source,
-            TimestampQueryLimits {
-                max_messages: 1,
-                max_index_bytes: 1024,
-                max_index_reads: 4,
-            },
-        );
-        assert!(matches!(
-            reader.read_range(stream, range, || true),
-            Err(crate::McapOpenError::QueryCancelled)
-        ));
-        assert!(matches!(
-            reader.read_range(stream, range, || false),
-            Err(crate::McapOpenError::QueryLimit {
-                resource: "timestamp samples",
-                ..
-            })
-        ));
     }
 }

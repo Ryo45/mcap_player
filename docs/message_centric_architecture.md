@@ -317,7 +317,7 @@ artifacts tied to a source fingerprint. They do not replace exact MCAP messages.
 ## Native recording health queries
 
 Topic Health and Diagnostics add session-owned recent-window query demands without
-FeatureRuntime routes. Topic Health reduces MCAP Message Index log times; Diagnostics
+FeatureRuntime routes. Topic Health uses a query-owned chunk-major Message Index traversal with one resident parsed span and reduces log times; Diagnostics
 reads selected serialized ranges and aggregates producer-reported DiagnosticArray
 statuses. They retain separate result types and panel semantics while sharing one
 concrete coalescing window-query worker. See

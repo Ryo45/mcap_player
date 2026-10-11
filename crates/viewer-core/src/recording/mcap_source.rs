@@ -17,10 +17,6 @@ use std::io::Read;
 
 #[derive(Debug)]
 pub enum McapOpenError {
-    QueryLimit {
-        resource: &'static str,
-        maximum: usize,
-    },
     Mcap(mcap::McapError),
     SummaryRequired,
     ChunkIndexRequired,
@@ -52,9 +48,6 @@ pub enum McapOpenError {
 impl fmt::Display for McapOpenError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::QueryLimit { resource, maximum } => {
-                write!(f, "query exceeds {resource} limit ({maximum})")
-            }
             Self::Mcap(error) => write!(f, "MCAP error: {error}"),
             Self::SummaryRequired => write!(f, "MCAP Summary is required for indexed playback"),
             Self::ChunkIndexRequired => {
@@ -130,6 +123,8 @@ pub struct McapSource {
     selected_streams: Option<HashSet<StreamId>>,
     index_facts: std::sync::Arc<[IndexedChunkFact]>,
     stream_chunks: std::sync::Arc<HashMap<StreamId, StreamChunks>>,
+    #[cfg(test)]
+    index_metrics: std::sync::Arc<IndexReadMetrics>,
 }
 
 pub(crate) struct McapSourcePosition {
@@ -279,6 +274,8 @@ impl McapSource {
             selected_streams: None,
             index_facts: std::sync::Arc::from(index_facts),
             stream_chunks: std::sync::Arc::new(stream_chunks),
+            #[cfg(test)]
+            index_metrics: Default::default(),
         })
     }
 
@@ -295,6 +292,8 @@ impl McapSource {
             selected_streams: None,
             index_facts: self.index_facts.clone(),
             stream_chunks: self.stream_chunks.clone(),
+            #[cfg(test)]
+            index_metrics: self.index_metrics.clone(),
         }
     }
     pub fn summary(&self) -> &Summary {
@@ -658,7 +657,7 @@ impl McapSource {
         &self,
         stream: StreamId,
         target: u64,
-        index_cache: &mut HashMap<usize, HashMap<u16, Vec<mcap::records::MessageIndexEntry>>>,
+        index_cache: &mut HashMap<usize, ChunkMessageIndexes>,
         retain_restore_indexes: bool,
         index_reads: &mut u64,
     ) -> Result<Option<IndexedMessagePosition>, McapOpenError> {
@@ -695,12 +694,12 @@ impl McapSource {
                 if !retain_restore_indexes {
                     index_cache.clear();
                 }
-                let parsed = self.read_message_indexes(&self.summary.chunk_indexes[chunk])?;
+                let parsed = self.read_chunk_message_indexes(chunk, || false)?;
                 index_cache.insert(chunk, parsed);
                 *index_reads = index_reads.saturating_add(1);
             }
             let channel = u16::try_from(stream.0).map_err(|_| mcap::McapError::BadIndex)?;
-            if let Some(entries) = index_cache[&chunk].get(&channel) {
+            if let Some(entries) = index_cache[&chunk].channels.get(&channel) {
                 let index = entries.partition_point(|entry| entry.log_time <= target);
                 if let Some(entry) = index.checked_sub(1).and_then(|i| entries.get(i)) {
                     let position = IndexedMessagePosition {
@@ -719,19 +718,36 @@ impl McapSource {
         Ok(best.map(|(_, position)| position))
     }
 
-    fn read_message_indexes(
+    /// Physical Message Index span access. No traversal, cache or query-budget policy.
+    pub(crate) fn read_chunk_message_indexes(
         &self,
-        chunk: &mcap::records::ChunkIndex,
-    ) -> Result<HashMap<u16, Vec<mcap::records::MessageIndexEntry>>, McapOpenError> {
+        chunk_index: usize,
+        mut cancelled: impl FnMut() -> bool,
+    ) -> Result<ChunkMessageIndexes, McapOpenError> {
+        if cancelled() {
+            return Err(McapOpenError::QueryCancelled);
+        }
+        let chunk = self
+            .summary
+            .chunk_indexes
+            .get(chunk_index)
+            .ok_or(mcap::McapError::BadIndex)?;
         let mut indexes = HashMap::new();
         let Some(start) = chunk.message_index_offsets.values().copied().min() else {
-            return Ok(indexes);
+            return Err(mcap::McapError::BadIndex.into());
         };
         let length =
             usize::try_from(chunk.message_index_length).map_err(|_| McapOpenError::ReadOverflow)?;
         // Message Index records are contiguous after their chunk. Read that bounded span once.
+        #[cfg(test)]
+        self.index_metrics
+            .reads
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let bytes = self.backing.read(start, length)?;
         for (channel, offset) in &chunk.message_index_offsets {
+            if cancelled() {
+                return Err(McapOpenError::QueryCancelled);
+            }
             let relative = usize::try_from(
                 offset
                     .checked_sub(start)
@@ -765,8 +781,38 @@ impl McapSource {
             records.sort_by_key(|entry| (entry.log_time, entry.offset));
             indexes.insert(*channel, records);
         }
-        Ok(indexes)
+        if cancelled() {
+            return Err(McapOpenError::QueryCancelled);
+        }
+        Ok(ChunkMessageIndexes {
+            #[cfg(test)]
+            _resident: ResidentIndexSpan::new(self.index_metrics.clone(), &indexes),
+            channels: indexes,
+        })
     }
+
+    pub(crate) fn validate_unchanged(&self) -> Result<(), McapOpenError> {
+        self.backing.validate()
+    }
+
+    /// Borrowed index topology, ordered by (chunk start time, chunk ID).
+    pub(crate) fn stream_chunk_timeline(
+        &self,
+        stream: StreamId,
+    ) -> Option<StreamChunkTimeline<'_>> {
+        self.stream_chunks
+            .get(&stream)
+            .map(|timeline| StreamChunkTimeline {
+                chunks: &timeline.chunks,
+                prefix_max_end: &timeline.prefix_max_end,
+            })
+    }
+
+    #[cfg(test)]
+    pub(crate) fn index_read_metrics(&self) -> &IndexReadMetrics {
+        &self.index_metrics
+    }
+
     fn indexed_summary(&self, streams: &[StreamId]) -> Result<&Summary, McapOpenError> {
         for stream in streams {
             if self.catalog.by_id(*stream).is_none() {
@@ -898,155 +944,63 @@ pub struct LatestQueryDiagnostics {
     pub index_reads: u64,
     pub chunks_read: u64,
 }
-/// Bounds the entire timestamp-reader lifetime, including predecessor searches.
-#[derive(Clone, Copy, Debug)]
-pub struct TimestampQueryLimits {
-    pub max_messages: usize,
-    pub max_index_bytes: usize,
-    pub max_index_reads: usize,
+pub(crate) struct StreamChunkTimeline<'a> {
+    pub(crate) chunks: &'a [usize],
+    pub(crate) prefix_max_end: &'a [ArrivalTime],
 }
 
-#[derive(Debug)]
-pub struct StreamTimestampRange {
-    pub arrivals: Vec<ArrivalTime>,
-    /// Exact latest log time before the exclusive end, even outside the requested window.
-    pub latest_arrival: Option<ArrivalTime>,
+pub(crate) struct ChunkMessageIndexes {
+    pub(crate) channels: HashMap<u16, Vec<mcap::records::MessageIndexEntry>>,
+    #[cfg(test)]
+    _resident: ResidentIndexSpan,
 }
 
-/// A bounded, metadata-only query reader. Never reads or decompresses message chunks.
-/// All streams queried through this reader share its one-span Message Index cache and budget.
-pub struct MessageTimestampReader {
-    source: McapSource,
-    limits: TimestampQueryLimits,
-    index: Option<(usize, HashMap<u16, Vec<mcap::records::MessageIndexEntry>>)>,
-    index_bytes: usize,
-    index_reads: usize,
-    messages: usize,
+#[cfg(test)]
+#[derive(Default)]
+pub(crate) struct IndexReadMetrics {
+    pub(crate) reads: std::sync::atomic::AtomicUsize,
+    pub(crate) resident_spans: std::sync::atomic::AtomicUsize,
+    pub(crate) peak_resident_spans: std::sync::atomic::AtomicUsize,
+    pub(crate) resident_entry_bytes: std::sync::atomic::AtomicUsize,
+    pub(crate) peak_resident_entry_bytes: std::sync::atomic::AtomicUsize,
 }
 
-impl MessageTimestampReader {
-    pub fn new(source: McapSource, limits: TimestampQueryLimits) -> Self {
+#[cfg(test)]
+struct ResidentIndexSpan {
+    metrics: std::sync::Arc<IndexReadMetrics>,
+    entry_bytes: usize,
+}
+#[cfg(test)]
+impl ResidentIndexSpan {
+    fn new(
+        metrics: std::sync::Arc<IndexReadMetrics>,
+        channels: &HashMap<u16, Vec<mcap::records::MessageIndexEntry>>,
+    ) -> Self {
+        use std::sync::atomic::Ordering::Relaxed;
+        let entry_bytes = channels
+            .values()
+            .map(|entries| {
+                entries.capacity() * std::mem::size_of::<mcap::records::MessageIndexEntry>()
+            })
+            .sum();
+        let spans = metrics.resident_spans.fetch_add(1, Relaxed) + 1;
+        metrics.peak_resident_spans.fetch_max(spans, Relaxed);
+        let bytes = metrics.resident_entry_bytes.fetch_add(entry_bytes, Relaxed) + entry_bytes;
+        metrics.peak_resident_entry_bytes.fetch_max(bytes, Relaxed);
         Self {
-            source,
-            limits,
-            index: None,
-            index_bytes: 0,
-            index_reads: 0,
-            messages: 0,
+            metrics,
+            entry_bytes,
         }
     }
-
-    pub fn read_range(
-        &mut self,
-        stream: StreamId,
-        range: crate::DataWindowTimeRange,
-        mut cancelled: impl FnMut() -> bool,
-    ) -> Result<StreamTimestampRange, McapOpenError> {
-        if range.start >= range.end_exclusive {
-            return Err(McapOpenError::InvalidChunk(
-                "invalid timestamp query range".into(),
-            ));
-        }
-        self.source.backing.validate()?;
-        let descriptor = self
-            .source
-            .catalog
-            .by_id(stream)
-            .ok_or(mcap::McapError::BadIndex)?;
-        let mut result = StreamTimestampRange {
-            arrivals: Vec::new(),
-            latest_arrival: None,
-        };
-        let Some(sparse) = self.source.stream_chunks.get(&stream) else {
-            return if descriptor.timing.message_count == Some(0) {
-                Ok(result)
-            } else {
-                Err(McapOpenError::MessageIndexRequired(
-                    crate::IndexedPlanError { stream },
-                ))
-            };
-        };
-        let end = sparse
-            .chunks
-            .partition_point(|chunk| self.source.index_facts[*chunk].start < range.end_exclusive);
-        let channel = u16::try_from(stream.0).map_err(|_| mcap::McapError::BadIndex)?;
-        for cursor in (0..end).rev() {
-            if cancelled() {
-                return Err(McapOpenError::QueryCancelled);
-            }
-            let sparse = &self.source.stream_chunks[&stream];
-            // Older chunks cannot contribute window samples or improve the exact predecessor.
-            if let Some(latest) = result.latest_arrival
-                && sparse.prefix_max_end[cursor] < range.start
-                && sparse.prefix_max_end[cursor] <= latest
-            {
-                break;
-            }
-            let chunk = sparse.chunks[cursor];
-            if self
-                .index
-                .as_ref()
-                .is_none_or(|(cached, _)| *cached != chunk)
-            {
-                let length =
-                    usize::try_from(self.source.summary.chunk_indexes[chunk].message_index_length)
-                        .map_err(|_| McapOpenError::ReadOverflow)?;
-                if length > self.limits.max_index_bytes.saturating_sub(self.index_bytes) {
-                    return Err(McapOpenError::QueryLimit {
-                        resource: "Message Index bytes",
-                        maximum: self.limits.max_index_bytes,
-                    });
-                }
-                if self.index_reads >= self.limits.max_index_reads {
-                    return Err(McapOpenError::QueryLimit {
-                        resource: "Message Index reads",
-                        maximum: self.limits.max_index_reads,
-                    });
-                }
-                self.index = None;
-                let indexes = self
-                    .source
-                    .read_message_indexes(&self.source.summary.chunk_indexes[chunk])?;
-                self.index = Some((chunk, indexes));
-                self.index_bytes += length;
-                self.index_reads += 1;
-            }
-            let entries = self
-                .index
-                .as_ref()
-                .unwrap()
-                .1
-                .get(&channel)
-                .ok_or(mcap::McapError::BadIndex)?;
-            for entry in entries.iter().rev() {
-                if cancelled() {
-                    return Err(McapOpenError::QueryCancelled);
-                }
-                let arrival = to_arrival(entry.log_time)?;
-                if arrival >= range.end_exclusive {
-                    continue;
-                }
-                result.latest_arrival = Some(
-                    result
-                        .latest_arrival
-                        .map_or(arrival, |old| old.max(arrival)),
-                );
-                if arrival < range.start {
-                    break;
-                }
-                if self.messages >= self.limits.max_messages {
-                    return Err(McapOpenError::QueryLimit {
-                        resource: "timestamp samples",
-                        maximum: self.limits.max_messages,
-                    });
-                }
-                result.arrivals.push(arrival);
-                self.messages += 1;
-            }
-        }
-        result.arrivals.sort_unstable();
-        self.source.backing.validate()?;
-        Ok(result)
+}
+#[cfg(test)]
+impl Drop for ResidentIndexSpan {
+    fn drop(&mut self) {
+        use std::sync::atomic::Ordering::Relaxed;
+        self.metrics.resident_spans.fetch_sub(1, Relaxed);
+        self.metrics
+            .resident_entry_bytes
+            .fetch_sub(self.entry_bytes, Relaxed);
     }
 }
 
@@ -1054,7 +1008,7 @@ impl MessageTimestampReader {
 /// Decoded Inspector view models are owned by the caller, never by this physical cache.
 pub struct LatestMessageReader {
     source: McapSource,
-    indexes: HashMap<usize, HashMap<u16, Vec<mcap::records::MessageIndexEntry>>>,
+    indexes: HashMap<usize, ChunkMessageIndexes>,
     chunk: Option<(usize, Vec<ParsedChunkMessage>)>,
     diagnostics: LatestQueryDiagnostics,
 }
@@ -1397,71 +1351,6 @@ mod tests {
             writer.finish().unwrap();
         }
         bytes.into_inner()
-    }
-
-    #[test]
-    fn timestamp_queries_share_indexes_without_reading_corrupted_message_chunks() {
-        let mut bytes = payload_fixture(None);
-        let summary = Summary::read(&bytes).unwrap().unwrap();
-        let offset = summary.chunk_indexes[0].compressed_data_offset().unwrap() as usize;
-        bytes[offset] = 0xff;
-        let source = McapSource::from_bytes(Bytes::from(bytes)).unwrap();
-        let stream = source.catalog().streams[0].id;
-        let range = crate::DataWindowTimeRange::new(ArrivalTime(0), ArrivalTime(3)).unwrap();
-        let mut reader = MessageTimestampReader::new(
-            source,
-            TimestampQueryLimits {
-                max_messages: 10,
-                max_index_reads: 1,
-                max_index_bytes: 1024,
-            },
-        );
-        let first = reader.read_range(stream, range, || false).unwrap();
-        assert_eq!(
-            first.arrivals,
-            vec![ArrivalTime(0), ArrivalTime(1), ArrivalTime(2)]
-        );
-        let second = reader.read_range(stream, range, || false).unwrap();
-        assert_eq!(second.arrivals, first.arrivals);
-        assert_eq!(reader.index_reads, 1);
-    }
-
-    #[test]
-    fn timestamp_queries_share_one_index_span_across_streams() {
-        let source = McapSource::from_bytes(Bytes::from(indexed_fixture(1_000_000, true))).unwrap();
-        let streams = source
-            .catalog()
-            .streams
-            .iter()
-            .map(|stream| stream.id)
-            .collect::<Vec<_>>();
-        let mut reader = MessageTimestampReader::new(
-            source,
-            TimestampQueryLimits {
-                max_messages: 10,
-                max_index_reads: 1,
-                max_index_bytes: 1024,
-            },
-        );
-        let range =
-            crate::DataWindowTimeRange::new(ArrivalTime(0), ArrivalTime(85_000_000_001)).unwrap();
-        assert_eq!(
-            reader
-                .read_range(streams[0], range, || false)
-                .unwrap()
-                .arrivals
-                .len(),
-            2
-        );
-        assert_eq!(
-            reader
-                .read_range(streams[1], range, || false)
-                .unwrap()
-                .arrivals
-                .len(),
-            2
-        );
-        assert_eq!(reader.index_reads, 1);
     }
 
     #[test]

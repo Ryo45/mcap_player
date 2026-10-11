@@ -30,16 +30,33 @@ is for this window, not for the entire recording. Age uses the exact latest log 
 at or before the cursor, including a predecessor older than the window. No predecessor
 is displayed as unavailable. No thresholds or OK/WARN/ERROR classification are applied.
 
-`MessageTimestampReader` reads Message Index spans without loading or decompressing
-message chunks. Queries across channels share its bounded one-span physical cache.
-This keeps the physical I/O boundary available for reuse without introducing a general
-query or subscription interface. Unindexed nonempty topics report an explicit row error;
-there is no hidden full-file scan or payload-decode fallback. Failed/partial topic reads
-never produce timing statistics.
+Topic Health uses a query-owned multi-stream timestamp traversal. The Source exposes
+borrowed chunk timelines and one physical `read_chunk_message_indexes` primitive,
+which reads/parses the contiguous Message Index span without loading message chunks.
+A frontier merges the stream timelines; each needed chunk is read once per demand,
+and its entries update all selected channels before the parsed span is released.
+Only one parsed index span is resident. The processed chunk-ID set is bounded by the
+read budget; it stores no index entries. No recording-duration decoded/index cache,
+global cache manager or generic query framework is introduced.
+
+For predecessors outside the window, the remaining chunks' maximum end time decides
+when a stream can stop. This preserves exact latest-before results with overlapping
+or non-monotonic chunk time ranges; finding the first predecessor does not prove that
+it is the latest. Multi-channel topics merge their samples and sort once for reduction.
+
+Unindexed nonempty topics report an explicit row error without a scan/decode fallback.
+Physical read/parse failures, source mutation and budget exhaustion fail the whole
+query, so a partial timing snapshot is never committed. Read attempts reserve bytes
+and reads before I/O, including failed attempts. Cancellation is checked around reads,
+between channel parses, during sample reduction and before returning results. File
+mutation checks remain best-effort length/mtime validation before/after positional
+reads, supplemented by whole-query validation before returning a snapshot.
 
 One Topic Health demand allows at most 2,048 topics, 4,096 streams, 200,000 timestamp
 samples, 32 MiB of index input, and 4,096 index reads, including predecessor searches.
 The snapshot contains reduced facts, not a retained timestamp history or payloads.
+The index-input budget bounds attempted read bytes, not total heap allocation: the
+current raw span, parsed entries and bounded sample vectors have separate allocations.
 
 ## Producer-reported diagnostics
 
@@ -96,7 +113,7 @@ subscriptions, global decoded registries or event buses.
 | Inspector | topic + cursor; one exact typed message | indexed predecessor, one-span/chunk cache and identity reuse | coalesces cursor requests; presentation excludes future messages |
 | Numeric Plot | stream + field; bounded overview/detail/current | extraction and signal-specific reduction | preserves independent series/query semantics |
 | Builtin Plot | Odometry topic + signals; overview/progress | one bounded signal scan, shared speed/yaw-rate extraction | recording-wide overview is independent of cursor |
-| Topic Health | window; reduced per-topic timing facts | index-only range + predecessor, bounded physical index sharing | refreshed window; seek invalidation |
+| Topic Health | window; reduced per-topic timing facts | chunk-major index batch + predecessor, one resident parsed span | refreshed window; seek invalidation |
 | Diagnostics | topic + window; grouped producer statuses | selected serialized range, bounded CDR decode and reduction | refreshed window; seek invalidation |
 
 The two new queries demonstrably share pending-demand, generation and worker lifecycle,
