@@ -25,6 +25,7 @@ pub(crate) enum WorkspaceLayout {
     Showcase,
     Explore,
     Monitor,
+    Health,
 }
 
 impl WorkspaceLayout {
@@ -33,6 +34,7 @@ impl WorkspaceLayout {
             Self::Standard => BUNDLED_DEFAULT_LAYOUT,
             Self::Showcase => BUNDLED_SHOWCASE_LAYOUT,
             Self::Monitor => include_str!("../../../config/layouts/native_monitor.json"),
+            Self::Health => include_str!("../../../config/layouts/native_health.json"),
             Self::Explore => include_str!("../../../config/layouts/native_explore.json"),
         }
     }
@@ -354,6 +356,8 @@ mod tests {
                 playback: expected_playback,
                 signals: BTreeSet::from([SignalId::Speed]),
                 inspections: Vec::new(),
+                topic_health: BTreeSet::new(),
+                diagnostics: BTreeSet::new(),
             }
         );
     }
@@ -428,6 +432,8 @@ mod tests {
                 playback: expected_playback,
                 signals: BTreeSet::from([SignalId::Speed, SignalId::YawRate]),
                 inspections: Vec::new(),
+                topic_health: BTreeSet::new(),
+                diagnostics: BTreeSet::new(),
             }
         );
         assert_eq!(NativeWorkspace::default().panels.len(), 4);

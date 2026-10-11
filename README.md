@@ -163,3 +163,8 @@ cd apps/viewer-web && trunk build --release
 source /opt/ros/jazzy/setup.bash
 cargo test -p viewer-native --features ros2-live
 ```
+
+Native の `--layout health` は Topic Health（MCAP log time の到着・周期の事実）と
+Diagnostics（producer が報告した DiagnosticArray の level）を別 Panel で表示します。
+デフォルトは直近10秒、Diagnostics topic は `/diagnostics` です。
+詳細と設定は [Native recording health panels](docs/native_recording_health.md) を参照してください。

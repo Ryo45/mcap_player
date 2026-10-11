@@ -48,6 +48,8 @@ impl PanelRuntimeStore {
                 | NativePanel::Camera(_)
                 | NativePanel::Plot(_)
                 | NativePanel::Inspector(_)
+                | NativePanel::Diagnostics(_)
+                | NativePanel::TopicHealth(_)
                 | NativePanel::Status(_)
                 | NativePanel::Placeholder(_) => {}
             }
@@ -177,6 +179,8 @@ pub(crate) fn create_native_panel(node: &PanelNode) -> NativePanel {
         "inspector" => InspectorPanel::create(node),
         "scene-3d" => ScenePanel::create(node),
         "status" => StatusPanel::create(node),
+        "topic-health" => super::topic_health::TopicHealthPanel::create(node),
+        "diagnostics" => super::diagnostics::DiagnosticsPanel::create(node),
         _ => NativePanel::Placeholder(PlaceholderPanel::unknown_type(node)),
     }
 }
@@ -312,6 +316,63 @@ mod tests {
             result.store.data_requirements().signals,
             std::collections::BTreeSet::from([SignalId::Speed])
         );
+    }
+
+    #[test]
+    fn health_and_diagnostics_requirements_are_deduplicated_without_playback_routes() {
+        let result = PanelRuntimeStore::from_layout(&layout(vec![
+            node("health-a", "topic-health", json!({})),
+            node("health-b", "topic-health", json!({"windowSeconds": 10})),
+            node("diag-a", "diagnostics", json!({})),
+            node(
+                "diag-b",
+                "diagnostics",
+                json!({"topic": "/diagnostics", "windowSeconds": 10}),
+            ),
+            node(
+                "diag-custom",
+                "diagnostics",
+                json!({"topic": "/system/diagnostics", "windowSeconds": 5}),
+            ),
+        ]));
+        assert_eq!(result.store.placeholder_count(), 0);
+        let requirements = result.store.data_requirements();
+        assert_eq!(
+            requirements.playback,
+            viewer_core::PlaybackRequirements::empty()
+        );
+        assert!(requirements.signals.is_empty());
+        assert!(requirements.inspections.is_empty());
+        assert_eq!(requirements.topic_health.len(), 1);
+        assert_eq!(requirements.diagnostics.len(), 2);
+        let preset = crate::workspace::NativeWorkspace::load_bundled_or_fallback(
+            crate::workspace::WorkspaceLayout::Health,
+        );
+        assert!(preset.startup_warning().is_none());
+        assert_eq!(preset.panels.placeholder_count(), 0);
+        assert_eq!(preset.panels.len(), 2);
+    }
+
+    #[test]
+    fn window_panels_reject_invalid_config_and_versions() {
+        for kind in ["topic-health", "diagnostics"] {
+            for seconds in [0, 61, u32::MAX] {
+                assert!(matches!(
+                    create_native_panel(&node("bad", kind, json!({"windowSeconds": seconds}))),
+                    NativePanel::Placeholder(_)
+                ));
+            }
+            let mut unsupported = node("bad", kind, json!({}));
+            unsupported.config_version = 2;
+            assert!(matches!(
+                create_native_panel(&unsupported),
+                NativePanel::Placeholder(_)
+            ));
+        }
+        assert!(matches!(
+            create_native_panel(&node("empty", "diagnostics", json!({"topic":" "}))),
+            NativePanel::Placeholder(_)
+        ));
     }
 
     #[test]

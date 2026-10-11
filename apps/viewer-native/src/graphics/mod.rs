@@ -27,6 +27,8 @@ pub(crate) struct RenderInput<'a> {
     pub(crate) playback: Option<PlaybackView>,
     pub(crate) signals: SignalQueryView<'a>,
     pub(crate) inspections: &'a [TopicInspection],
+    pub(crate) topic_health: &'a [crate::window_query_loader::TopicHealthQueryState],
+    pub(crate) producer_diagnostics: &'a [crate::window_query_loader::DiagnosticsQueryState],
     pub(crate) inspector_topic: Option<&'a str>,
     pub(crate) topic_tree: &'a viewer_core::TopicTree,
     pub(crate) numeric_series: &'a [crate::numeric_plot_loader::NumericSeriesState],

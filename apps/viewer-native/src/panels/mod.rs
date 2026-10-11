@@ -1,11 +1,13 @@
 mod bev;
 mod camera;
+mod diagnostics;
 mod inspector;
 mod placeholder;
 mod plot;
 mod runtime;
 mod scene;
 mod status;
+mod topic_health;
 mod topic_tree;
 mod topics;
 pub(crate) use topic_tree::{show_field_plots, show_topics};
@@ -50,6 +52,8 @@ pub(crate) enum NativePanel {
     Inspector(InspectorPanel),
     Scene(ScenePanel),
     Status(StatusPanel),
+    TopicHealth(topic_health::TopicHealthPanel),
+    Diagnostics(diagnostics::DiagnosticsPanel),
     Placeholder(PlaceholderPanel),
 }
 
@@ -161,6 +165,16 @@ impl NativePanel {
                     },
                 )
             }
+            Self::TopicHealth(panel) => panel.show(
+                ui,
+                input.topic_health,
+                input.playback.map(|view| view.cursor),
+            ),
+            Self::Diagnostics(panel) => panel.show(
+                ui,
+                input.diagnostics,
+                input.playback.map(|view| view.cursor),
+            ),
             Self::Placeholder(panel) => panel.show(ui),
         }
     }
@@ -174,6 +188,8 @@ impl NativePanel {
             Self::Explore
             | Self::Bev(_)
             | Self::Scene(_)
+            | Self::Diagnostics(_)
+            | Self::TopicHealth(_)
             | Self::Status(_)
             | Self::Placeholder(_) => {}
         }
@@ -209,6 +225,8 @@ impl NativePanel {
             Self::Plot(panel) => panel.contribute_data_requirements(requirements),
             Self::Inspector(panel) => panel.contribute_data_requirements(requirements),
             Self::Status(panel) => panel.contribute_data_requirements(requirements),
+            Self::TopicHealth(panel) => panel.contribute_data_requirements(requirements),
+            Self::Diagnostics(panel) => panel.contribute_data_requirements(requirements),
             Self::Explore | Self::Topics(_) | Self::Placeholder(_) => {}
         }
     }
@@ -231,6 +249,8 @@ impl NativePanel {
             Self::Inspector(_) => "inspector",
             Self::Scene(_) => "scene-3d",
             Self::Status(_) => "status",
+            Self::TopicHealth(_) => "topic-health",
+            Self::Diagnostics(_) => "diagnostics",
             Self::Placeholder(_) => "placeholder",
         }
     }
@@ -241,6 +261,8 @@ pub(crate) struct PanelDataRequirements {
     pub(crate) playback: viewer_core::PlaybackRequirements,
     pub(crate) signals: BTreeSet<SignalId>,
     pub(crate) inspections: Vec<InspectorRequirement>,
+    pub(crate) topic_health: BTreeSet<viewer_core::TopicHealthRequirement>,
+    pub(crate) diagnostics: BTreeSet<viewer_core::DiagnosticsRequirement>,
 }
 
 impl Default for PanelDataRequirements {
@@ -249,6 +271,8 @@ impl Default for PanelDataRequirements {
             playback: viewer_core::PlaybackRequirements::empty(),
             signals: BTreeSet::new(),
             inspections: Vec::new(),
+            topic_health: BTreeSet::new(),
+            diagnostics: BTreeSet::new(),
         }
     }
 }
@@ -289,6 +313,8 @@ pub(crate) struct PanelCompositionInput<'a> {
     pub(crate) resources: PanelResourceView<'a>,
     pub(crate) scene: SceneDataView<'a>,
     pub(crate) inspections: &'a [TopicInspection],
+    pub(crate) topic_health: &'a [crate::window_query_loader::TopicHealthQueryState],
+    pub(crate) diagnostics: &'a [crate::window_query_loader::DiagnosticsQueryState],
     pub(crate) inspector_topic: Option<&'a str>,
     pub(crate) topic_tree: &'a viewer_core::TopicTree,
     pub(crate) numeric_series: &'a [crate::numeric_plot_loader::NumericSeriesState],

@@ -154,3 +154,11 @@ There is no split dragging, tabs, layout editing, file import/export, user
 persistence, generic panel registry, plugin loading, query manager, or hidden-panel
 optimization. Layout JSON is bundled at compile time and is not read relative to
 the process working directory.
+
+## Recording health panels
+
+`--layout health` opens the two query-only panels in
+`config/layouts/native_health.json`: `topic-health` (transport/timing facts) and
+`diagnostics` (producer-reported ROS DiagnosticArray statuses). Their configs,
+query lifecycle, limits, and timing semantics are documented in
+[native_recording_health.md](native_recording_health.md).

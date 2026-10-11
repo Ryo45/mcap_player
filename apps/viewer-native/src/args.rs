@@ -56,15 +56,13 @@ impl Args {
                         PathBuf::from(values.next().context("--camera-calibration needs a path")?)
                 }
                 "--layout" => {
-                    layout = parse_layout(
-                        &values
-                            .next()
-                            .context("--layout needs standard, showcase, explore or monitor")?,
-                    )?
+                    layout = parse_layout(&values.next().context(
+                        "--layout needs standard, showcase, explore, monitor or health",
+                    )?)?
                 }
                 "--help" | "-h" => {
                     println!(
-                        "viewer-native [--mcap PATH] [--camera-topic TOPIC] [--camera-calibration JSON] [--layout standard|showcase|explore|monitor] [--inspect-topic TOPIC] [--live [--reliable]]\n\nFiles can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
+                        "viewer-native [--mcap PATH] [--camera-topic TOPIC] [--camera-calibration JSON] [--layout standard|showcase|explore|monitor|health] [--inspect-topic TOPIC] [--live [--reliable]]\n\nFiles can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
                     );
                     std::process::exit(0);
                 }
@@ -115,8 +113,11 @@ fn parse_layout(value: &str) -> Result<WorkspaceLayout> {
         "showcase" => Ok(WorkspaceLayout::Showcase),
         "explore" => Ok(WorkspaceLayout::Explore),
         "monitor" => Ok(WorkspaceLayout::Monitor),
+        "health" => Ok(WorkspaceLayout::Health),
         value => {
-            bail!("unsupported layout {value:?}; expected standard, showcase, explore or monitor")
+            bail!(
+                "unsupported layout {value:?}; expected standard, showcase, explore, monitor or health"
+            )
         }
     }
 }
@@ -142,6 +143,7 @@ mod tests {
         assert_eq!(parse_layout("showcase").unwrap(), WorkspaceLayout::Showcase);
         assert_eq!(parse_layout("explore").unwrap(), WorkspaceLayout::Explore);
         assert_eq!(parse_layout("monitor").unwrap(), WorkspaceLayout::Monitor);
+        assert_eq!(parse_layout("health").unwrap(), WorkspaceLayout::Health);
         assert!(parse_layout("dashboard").is_err());
     }
 

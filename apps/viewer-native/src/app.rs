@@ -2,7 +2,7 @@ use crate::{
     args::{Args, SourceMode},
     bookmarks::BookmarkState,
     diagnostics::AppDiagnostics,
-    graphics::{Graphics, RenderInput},
+    graphics::{Graphics, RenderInput, RenderOutput},
     interaction::ViewerAction,
     presentation::{PresentationBuildInput, PresentationState, PresentationTransition},
     preview::PreviewCoordinator,
@@ -62,6 +62,7 @@ impl App {
                 if let Err(error) = session.request_inspections(&requirements.inspections) {
                     log::warn!("Inspector unavailable: {error}");
                 }
+                session.configure_window_queries(&requirements);
                 session.select_inspector_topic(self.args.inspect_topic.clone());
                 if let Some(topic) = &self.args.inspect_topic
                     && session.selected_inspector_topic().is_none()
@@ -95,19 +96,31 @@ impl App {
     }
 
     fn redraw(&mut self, window: &Window, elapsed: Duration) -> Result<(), wgpu::SurfaceError> {
-        let Some(session) = &mut self.session else {
+        if self.session.is_none() {
             return Ok(());
-        };
+        }
+        self.advance_session(elapsed);
+        if self.graphics.is_none() {
+            return Ok(());
+        }
+        self.update_camera_presentation();
+        let output = self.render_frame(window, elapsed)?;
+        self.apply_frame_actions(output.actions);
+        Ok(())
+    }
+
+    fn advance_session(&mut self, elapsed: Duration) {
+        let session = self.session.as_mut().expect("redraw requires a session");
         if let Err(error) = session.tick(elapsed, |elapsed, messages| {
             self.workspace.process_messages(elapsed, messages);
         }) {
             self.diagnostics.set_playback_error(error.to_string());
         }
         session.poll_queries();
+    }
 
-        let Some(graphics) = &mut self.graphics else {
-            return Ok(());
-        };
+    fn update_camera_presentation(&mut self) {
+        let graphics = self.graphics.as_mut().expect("redraw requires graphics");
         let mut presentation_errors = Vec::new();
         if self.workspace.interaction.preview_time.is_some()
             && let Some(snapshot) = self.preview.snapshot()
@@ -117,7 +130,7 @@ impl App {
         }
         let mut camera_updates = Vec::new();
         let upload_result =
-            { graphics.upload_latest(self.workspace.cameras().state(), &mut camera_updates) };
+            graphics.upload_latest(self.workspace.cameras().state(), &mut camera_updates);
         if let Err(error) = upload_result {
             presentation_errors.push(error.to_string());
         }
@@ -134,20 +147,26 @@ impl App {
             self.workspace.transforms(),
             &camera_base_images,
         );
+    }
 
+    fn render_frame(
+        &mut self,
+        window: &Window,
+        elapsed: Duration,
+    ) -> Result<RenderOutput, wgpu::SurfaceError> {
+        let session = self.session.as_ref().expect("redraw requires a session");
+        let graphics = self.graphics.as_mut().expect("redraw requires graphics");
         let playback = session.playback_view();
         let playback_performance = playback.map(|_| {
             self.workspace
                 .playback_performance(session.source_read_timing())
         });
         let diagnostics = session.diagnostics(self.workspace.counters(), playback_performance);
-        let current_odometry = self
-            .workspace
-            .interaction
-            .preview_time
-            .is_none()
-            .then(|| self.workspace.odometry().state().latest())
-            .flatten();
+        let current_odometry = if self.workspace.interaction.preview_time.is_none() {
+            self.workspace.odometry().state().latest()
+        } else {
+            None
+        };
         let signals = session.signal_query_view(current_odometry);
         let workspace_warning = self.workspace.startup_warning();
         let signal_error = signals.first_error().map(ToString::to_string);
@@ -185,6 +204,8 @@ impl App {
                     playback,
                     signals,
                     inspections: session.inspections(),
+                    topic_health: session.topic_health(),
+                    producer_diagnostics: session.producer_diagnostics(),
                     inspector_topic: session.selected_inspector_topic(),
                     topic_tree: session.topic_tree(),
                     numeric_series: session.numeric_series(),
@@ -205,13 +226,18 @@ impl App {
         self.presentation_state.record_render(render_elapsed);
         self.presentation_state.advance_metrics(elapsed);
 
-        let output = render_result?;
+        render_result
+    }
+
+    fn apply_frame_actions(&mut self, actions: Vec<ViewerAction>) {
+        let session = self.session.as_mut().expect("redraw requires a session");
+        let graphics = self.graphics.as_mut().expect("redraw requires graphics");
         let playback_effect = Self::apply_actions(
             session,
             &mut self.workspace,
             &mut self.preview,
             &mut self.diagnostics,
-            output.actions,
+            actions,
         );
         if playback_effect == PlaybackEffect::Seeked {
             Self::apply_presentation_transition(
@@ -220,7 +246,6 @@ impl App {
                 PresentationTransition::Seeked,
             );
         }
-        Ok(())
     }
 
     fn apply_presentation_transition(

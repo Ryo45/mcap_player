@@ -255,6 +255,8 @@ mod tests {
             (WorkspaceLayout::Standard, true),
             (WorkspaceLayout::Monitor, true),
             (WorkspaceLayout::Monitor, false),
+            (WorkspaceLayout::Health, true),
+            (WorkspaceLayout::Health, false),
         ] {
             egui::__run_test_ui(|ui| {
                 let mut workspace = NativeWorkspace::load_bundled_or_fallback(preset);
@@ -298,6 +300,8 @@ mod tests {
                             dynamic_transform_count: 0,
                         },
                         inspections: &[],
+                        topic_health: &[],
+                        diagnostics: &[],
                         inspector_topic: Some("/selected"),
                         topic_tree: &viewer_core::TopicTree::default(),
                         numeric_series: &[],
@@ -307,7 +311,10 @@ mod tests {
                     output.render_requests.bev_size.is_some(),
                     preset == WorkspaceLayout::Standard
                 );
-                assert!(output.render_requests.scene.is_some());
+                assert_eq!(
+                    output.render_requests.scene.is_some(),
+                    preset != WorkspaceLayout::Health
+                );
             });
         }
     }

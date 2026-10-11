@@ -12,3 +12,8 @@ pub use cdr::{
 pub use time::{ArrivalTime, MeasurementTime};
 
 pub use cdr::{NumericField, NumericFieldExtractor, RosMessageSchema};
+
+pub use cdr::{
+    DiagnosticArray, DiagnosticKeyValue, DiagnosticLevel, DiagnosticStatus,
+    MAX_DIAGNOSTIC_MESSAGE_BYTES, decode_diagnostic_array,
+};

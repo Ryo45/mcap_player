@@ -62,11 +62,12 @@ pub use recording::{
     CameraRoute, IndexedChunkFact, IndexedMessagePosition, IndexedMessages, IndexedPlanError,
     IndexedReadDiagnostics, LatestMessageReader, LatestQueryDiagnostics,
     MCAP_SUMMARY_IDENTITY_ALGORITHM, McapOpenError, McapSource, McapSummaryIdentity,
-    PlaybackRequirements, QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult, RawMessage,
-    RecordingTimeRange, RestoreInput, RestorePlan, RestorePlanError, RestorePlanner, RestoreRead,
-    RestoreSemantics, SchemaDefinition, SessionPlan, SessionPlanError, SourceCapabilities,
-    SourceCatalog, StreamDescriptor, StreamId, StreamTimingSummary, WorkspaceBindings,
-    ensure_indexed, history_candidate_chunks, latest_candidate_chunks, persistent_candidate_chunks,
+    MessageTimestampReader, PlaybackRequirements, QueryLimits, RangeQuery, RangeQueryError,
+    RangeQueryResult, RawMessage, RecordingTimeRange, RestoreInput, RestorePlan, RestorePlanError,
+    RestorePlanner, RestoreRead, RestoreSemantics, SchemaDefinition, SessionPlan, SessionPlanError,
+    SourceCapabilities, SourceCatalog, StreamDescriptor, StreamId, StreamTimestampRange,
+    StreamTimingSummary, TimestampQueryLimits, WorkspaceBindings, ensure_indexed,
+    history_candidate_chunks, latest_candidate_chunks, persistent_candidate_chunks,
 };
 
 pub use message::{NumericField, NumericFieldExtractor, RosMessageSchema};
@@ -86,3 +87,16 @@ pub use inspection::{
     InspectorField, InspectorHeaderStamp, InspectorMessage, InspectorPage, InspectorPageCursor,
     InspectorScalar, InspectorSchema, InspectorValue,
 };
+
+mod query;
+pub use query::{
+    DEFAULT_QUERY_WINDOW_SECONDS, MAX_QUERY_WINDOW_SECONDS, TopicHealthRequirement,
+    TopicHealthSnapshot, WindowQueryError, query_topic_health,
+};
+
+pub use message::{
+    DiagnosticArray, DiagnosticKeyValue, DiagnosticLevel, DiagnosticStatus,
+    MAX_DIAGNOSTIC_MESSAGE_BYTES, decode_diagnostic_array,
+};
+
+pub use query::{DiagnosticEvent, DiagnosticsRequirement, DiagnosticsSnapshot, query_diagnostics};
