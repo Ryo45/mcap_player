@@ -313,3 +313,13 @@ display reduction.
 
 Preview MCAP, signal envelopes, and future feature-specific indexes are discardable derived
 artifacts tied to a source fingerprint. They do not replace exact MCAP messages.
+
+## Native recording health queries
+
+Topic Health and Diagnostics add session-owned recent-window query demands without
+FeatureRuntime routes. Topic Health reduces MCAP Message Index log times; Diagnostics
+reads selected serialized ranges and aggregates producer-reported DiagnosticArray
+statuses. They retain separate result types and panel semantics while sharing one
+concrete coalescing window-query worker. See
+[native_recording_health.md](native_recording_health.md) for boundaries, budgets,
+source replacement/seek lifecycle and comparison with Inspector and Plot queries.

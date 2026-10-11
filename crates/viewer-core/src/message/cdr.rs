@@ -22,3 +22,9 @@ mod tests;
 
 pub use numeric::{NumericField, NumericFieldExtractor, RosMessageSchema};
 pub(crate) mod numeric;
+
+mod diagnostic;
+pub use diagnostic::{
+    DiagnosticArray, DiagnosticKeyValue, DiagnosticLevel, DiagnosticStatus,
+    MAX_DIAGNOSTIC_MESSAGE_BYTES, decode_diagnostic_array,
+};

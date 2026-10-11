@@ -90,14 +90,21 @@ impl FeatureRuntime {
     pub fn process_messages(&mut self, elapsed: Duration, messages: &[RawMessage]) {
         let started = Instant::now();
         for message in messages {
-            let matched = self.cameras.admit(message)
-                | self.path.process(message)
-                | self.odometry.process(message)
-                | self.transforms.process(message)
-                | self
-                    .scene
-                    .as_mut()
-                    .is_some_and(|scene| scene.process(message));
+            // Dispatch to every controller, even after one accepts the message.
+            let camera_matched = self.cameras.admit(message);
+            let path_matched = self.path.process(message);
+            let odometry_matched = self.odometry.process(message);
+            let transform_matched = self.transforms.process(message);
+            let scene_matched = if let Some(scene) = &mut self.scene {
+                scene.process(message)
+            } else {
+                false
+            };
+            let matched = camera_matched
+                || path_matched
+                || odometry_matched
+                || transform_matched
+                || scene_matched;
             if !matched {
                 self.unknown_streams = self.unknown_streams.saturating_add(1);
             }

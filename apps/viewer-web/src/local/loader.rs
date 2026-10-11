@@ -566,19 +566,45 @@ pub(crate) async fn open_browser_mcap(
 }
 
 #[cfg(target_arch = "wasm32")]
+#[derive(Default)]
+struct RestoreChunkSelection {
+    exact: Vec<(u16, u64, u64)>,
+    history: HashMap<u16, i64>,
+    persistent: BTreeSet<u16>,
+}
+
+#[cfg(target_arch = "wasm32")]
 async fn load_browser_restore(
     file: &File,
     file_size: u64,
     summary: &mcap::Summary,
     plan: &viewer_core::RestorePlan,
 ) -> Result<Vec<RawMessage>, DataLoadError> {
-    #[derive(Default)]
-    struct ChunkNeed {
-        exact: Vec<(u16, u64, u64)>,
-        history: HashMap<u16, i64>,
-        persistent: BTreeSet<u16>,
+    let selections = resolve_browser_restore_chunks(file, file_size, summary, plan).await?;
+    let mut messages = Vec::new();
+    for (chunk_index, selection) in selections {
+        let restored = read_browser_restore_chunk(
+            file,
+            file_size,
+            summary,
+            &summary.chunk_indexes[chunk_index],
+            &selection,
+            plan.target,
+        )
+        .await?;
+        messages.extend(restored);
     }
+    messages.sort_by_key(|message| (message.arrival_time, message.stream_id.0));
+    Ok(messages)
+}
 
+#[cfg(target_arch = "wasm32")]
+async fn resolve_browser_restore_chunks(
+    file: &File,
+    file_size: u64,
+    summary: &mcap::Summary,
+    plan: &viewer_core::RestorePlan,
+) -> Result<BTreeMap<usize, RestoreChunkSelection>, DataLoadError> {
     let target = u64::try_from(plan.target.0)
         .map_err(|_| DataLoadError::invalid_record("negative browser restore target"))?;
     let index_facts = summary
@@ -594,7 +620,7 @@ async fn load_browser_restore(
                 .collect(),
         })
         .collect::<Vec<_>>();
-    let mut needs = BTreeMap::<usize, ChunkNeed>::new();
+    let mut needs = BTreeMap::<usize, RestoreChunkSelection>::new();
     for stream in &plan.latest_before {
         let channel = u16::try_from(stream.0).map_err(|_| {
             DataLoadError::invalid_record("local stream ID exceeds MCAP channel ID")
@@ -666,65 +692,84 @@ async fn load_browser_restore(
         }
     }
 
+    Ok(needs)
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn read_browser_restore_chunk(
+    file: &File,
+    file_size: u64,
+    summary: &mcap::Summary,
+    chunk: &ChunkIndex,
+    selection: &RestoreChunkSelection,
+    target: ArrivalTime,
+) -> Result<Vec<RawMessage>, DataLoadError> {
+    let request = chunk_request(chunk)?;
+    let range = validate_range(file_size, request.offset, request.length)?;
+    let compressed = read_file_range(file, file_size, range).await?;
+    let (backing, _) = decode_chunk_backing(&request, compressed)?;
+    let channels = selection
+        .exact
+        .iter()
+        .map(|(channel, _, _)| *channel)
+        .chain(selection.history.keys().copied())
+        .chain(selection.persistent.iter().copied())
+        .collect::<BTreeSet<_>>();
+    let recording_start = summary
+        .chunk_indexes
+        .iter()
+        .map(|chunk| chunk.message_start_time)
+        .min()
+        .unwrap_or(0);
+    let recording_end_exclusive = summary
+        .chunk_indexes
+        .iter()
+        .map(|chunk| chunk.message_end_time)
+        .max()
+        .unwrap_or(target.0 as u64)
+        .checked_add(1)
+        .ok_or_else(|| DataLoadError::invalid_record("browser MCAP end time overflow"))?;
+    let parsed = parse_chunk_backing(
+        backing,
+        &channels,
+        DataWindowTimeRange::new(
+            ArrivalTime(i64::try_from(recording_start).unwrap_or(0)),
+            ArrivalTime(
+                i64::try_from(recording_end_exclusive)
+                    .map_err(|_| DataLoadError::invalid_record("browser MCAP end time overflow"))?,
+            ),
+        )
+        .map_err(DataLoadError::from)?,
+    )?;
+    select_restore_messages(parsed, selection, target)
+}
+
+#[cfg(target_arch = "wasm32")]
+fn select_restore_messages(
+    parsed: ParsedChunk,
+    selection: &RestoreChunkSelection,
+    target: ArrivalTime,
+) -> Result<Vec<RawMessage>, DataLoadError> {
     let mut messages = Vec::new();
-    for (chunk_index, need) in needs {
-        let request = chunk_request(&summary.chunk_indexes[chunk_index])?;
-        let range = validate_range(file_size, request.offset, request.length)?;
-        let compressed = read_file_range(file, file_size, range).await?;
-        let (backing, _) = decode_chunk_backing(&request, compressed)?;
-        let channels = need
-            .exact
-            .iter()
-            .map(|(channel, _, _)| *channel)
-            .chain(need.history.keys().copied())
-            .chain(need.persistent.iter().copied())
-            .collect::<BTreeSet<_>>();
-        let recording_start = summary
-            .chunk_indexes
-            .iter()
-            .map(|chunk| chunk.message_start_time)
-            .min()
-            .unwrap_or(0);
-        let recording_end_exclusive = summary
-            .chunk_indexes
-            .iter()
-            .map(|chunk| chunk.message_end_time)
-            .max()
-            .unwrap_or(target)
-            .checked_add(1)
-            .ok_or_else(|| DataLoadError::invalid_record("browser MCAP end time overflow"))?;
-        let parsed = parse_chunk_backing(
-            backing,
-            &channels,
-            DataWindowTimeRange::new(
-                ArrivalTime(i64::try_from(recording_start).unwrap_or(0)),
-                ArrivalTime(i64::try_from(recording_end_exclusive).map_err(|_| {
-                    DataLoadError::invalid_record("browser MCAP end time overflow")
-                })?),
-            )
-            .map_err(DataLoadError::from)?,
-        )?;
-        for (message, record_offset) in parsed
-            .messages
-            .into_iter()
-            .zip(parsed.message_offsets.into_iter())
-        {
-            let channel = u16::try_from(message.stream_id.0).map_err(|_| {
-                DataLoadError::invalid_record("local stream ID exceeds MCAP channel ID")
-            })?;
-            let selected = need.exact.iter().any(|(wanted, time, offset)| {
-                *wanted == channel
-                    && i64::try_from(*time).ok() == Some(message.arrival_time.0)
-                    && *offset == record_offset
-            }) || need.history.get(&channel).is_some_and(|start| {
-                message.arrival_time.0 >= *start && message.arrival_time.0 <= plan.target.0
-            }) || need.persistent.contains(&channel);
-            if selected {
-                messages.push(message);
-            }
+    for (message, record_offset) in parsed
+        .messages
+        .into_iter()
+        .zip(parsed.message_offsets.into_iter())
+    {
+        let channel = u16::try_from(message.stream_id.0).map_err(|_| {
+            DataLoadError::invalid_record("local stream ID exceeds MCAP channel ID")
+        })?;
+        let selected = selection.exact.iter().any(|(wanted, time, offset)| {
+            *wanted == channel
+                && i64::try_from(*time).ok() == Some(message.arrival_time.0)
+                && *offset == record_offset
+        }) || selection.history.get(&channel).is_some_and(|start| {
+            message.arrival_time.0 >= *start && message.arrival_time.0 <= target.0
+        }) || selection.persistent.contains(&channel);
+        if selected {
+            messages.push(message);
         }
     }
-    messages.sort_by_key(|message| (message.arrival_time, message.stream_id.0));
     Ok(messages)
 }
 

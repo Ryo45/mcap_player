@@ -45,154 +45,41 @@ impl Recording {
             .map_err(|error| ServerError::internal("could not open configured recording", error))?;
         let mut reads = ReadMetrics::default();
         let summary = read_summary(&reader, limits.max_chunk_bytes, &mut reads)?;
-        if summary.chunk_indexes.is_empty() {
-            return Err(ServerError::unprocessable(
-                "missing_chunk_index",
-                "recording summary contains no Chunk Index",
-            ));
-        }
-        for chunk in &summary.chunk_indexes {
-            if !matches!(chunk.compression.as_str(), "" | "zstd") {
-                return Err(ServerError::unprocessable(
-                    "unsupported_compression",
-                    format!("unsupported MCAP compression: {}", chunk.compression),
-                ));
-            }
-            if chunk.compressed_size > limits.max_chunk_bytes as u64
-                || chunk.uncompressed_size > limits.max_chunk_bytes as u64
-            {
-                return Err(ServerError::unprocessable(
-                    "chunk_too_large",
-                    "recording contains a Chunk larger than max_chunk_bytes",
-                ));
-            }
-        }
-        let stats = summary.stats.as_ref().ok_or_else(|| {
-            ServerError::unprocessable(
-                "missing_statistics",
-                "recording summary contains no Statistics record",
-            )
-        })?;
-        let end_ns_exclusive = stats.message_end_time.checked_add(1).ok_or_else(|| {
-            ServerError::unprocessable(
-                "invalid_time_range",
-                "recording end time cannot be represented as an exclusive bound",
-            )
-        })?;
+        validate_chunks(&summary, limits)?;
+        let time_range = recording_time_range(&summary)?;
         let summary_crc = read_footer_crc(&reader, &mut reads)?;
-        let revision = McapSummaryIdentity {
-            file_size: reader.file_size(),
-            summary_crc,
-            message_start_time: stats.message_start_time,
-            message_end_time: stats.message_end_time,
-            message_count: stats.message_count,
-            schema_count: stats.schema_count,
-            channel_count: stats.channel_count,
-            chunk_count: summary.chunk_indexes.len(),
-        }
-        .revision();
-
-        let mut channels: Vec<_> = summary.channels.values().cloned().collect();
-        channels.sort_by_key(|channel| {
-            (
-                channel.topic.clone(),
-                channel
-                    .schema
-                    .as_ref()
-                    .map(|schema| schema.name.clone())
-                    .unwrap_or_default(),
-                channel.message_encoding.clone(),
-                channel.id,
-            )
-        });
-
-        let mut streams = Vec::with_capacity(channels.len());
-        let mut channel_to_stream = BTreeMap::new();
-        let mut stream_to_channel = BTreeMap::new();
-        for (index, channel) in channels.into_iter().enumerate() {
-            let id = u32::try_from(index + 1).map_err(|_| {
-                ServerError::unprocessable("too_many_streams", "recording has too many streams")
-            })?;
-            let schema_name = channel
-                .schema
-                .as_ref()
-                .map(|schema| schema.name.clone())
-                .unwrap_or_default();
-            channel_to_stream.insert(channel.id, id);
-            stream_to_channel.insert(id, channel.id);
-            streams.push(StreamDescriptor {
-                schema_id: channel.schema.as_ref().map(|schema| schema.id),
-                id,
-                topic: channel.topic.clone(),
-                schema_name,
-                message_encoding: channel.message_encoding.clone(),
-                message_count: stats
-                    .channel_message_counts
-                    .get(&channel.id)
-                    .copied()
-                    .map(MessageCount::new),
-            });
-        }
-        let index_facts = indexed_chunk_facts(&summary, &channel_to_stream);
-        for stream in streams.iter().filter(|s| s.message_encoding == "cdr") {
-            viewer_core::ensure_indexed(
-                &index_facts,
-                StreamId(stream.id),
-                stream.message_count.map(MessageCount::get),
-            )
-            .map_err(|error| {
-                ServerError::unprocessable(
-                    "restore_index_unavailable",
-                    format!("recording cannot provide indexed restore: {error}"),
-                )
-            })?;
-        }
-
-        let mut schemas = summary
-            .schemas
-            .values()
-            .map(|schema| viewer_remote_protocol::SchemaDescriptor {
-                id: schema.id,
-                encoding: schema.encoding.clone(),
-                data: std::sync::Arc::from(schema.data.as_ref()),
-            })
-            .collect::<Vec<_>>();
-        schemas.sort_by_key(|schema| schema.id);
-        let catalog = CatalogResponse::new(
-            config.id.clone(),
-            revision.clone(),
-            RemoteTimeRange {
-                start_ns: TimestampNs::new(stats.message_start_time),
-                end_ns_exclusive: TimestampNs::new(end_ns_exclusive),
-            },
-            streams,
-            schemas,
-        );
-        tracing::info!(
-            recording_id = %config.id,
-            path = %config.path.display(),
-            file_size = reader.file_size(),
-            revision = %revision,
-            start_ns = stats.message_start_time,
-            end_ns_exclusive,
-            stream_count = catalog.streams.len(),
-            chunk_count = summary.chunk_indexes.len(),
-            catalog_read_calls = reads.calls,
-            catalog_read_bytes = reads.bytes,
-            "recording catalog initialized"
-        );
-        Ok(Arc::new(Self {
+        let revision = recording_revision(&summary, reader.file_size(), summary_crc);
+        let metadata = build_catalog(config, &summary, &revision, time_range)?;
+        let recording = Arc::new(Self {
             id: config.id.clone(),
             display_name: config.display_name.clone(),
             revision,
             reader,
             summary,
-            catalog,
-            channel_to_stream,
-            stream_to_channel,
+            catalog: metadata.catalog,
+            channel_to_stream: metadata.channel_to_stream,
+            stream_to_channel: metadata.stream_to_channel,
             #[cfg(test)]
             catalog_reads: reads,
-        }))
+        });
+        recording.log_catalog_initialized(config, &reads);
+        Ok(recording)
+    }
+
+    fn log_catalog_initialized(&self, config: &RecordingConfig, reads: &ReadMetrics) {
+        tracing::info!(
+            recording_id = %self.id,
+            path = %config.path.display(),
+            file_size = self.reader.file_size(),
+            revision = %self.revision,
+            start_ns = self.catalog.time_range.start_ns.get(),
+            end_ns_exclusive = self.catalog.time_range.end_ns_exclusive.get(),
+            stream_count = self.catalog.streams.len(),
+            chunk_count = self.summary.chunk_indexes.len(),
+            catalog_read_calls = reads.calls,
+            catalog_read_bytes = reads.bytes,
+            "recording catalog initialized"
+        );
     }
 
     pub(crate) fn descriptor(&self) -> RecordingDescriptor {
@@ -227,6 +114,174 @@ impl Recording {
             })
             .collect()
     }
+}
+
+fn validate_chunks(summary: &Summary, limits: &Limits) -> Result<(), ServerError> {
+    if summary.chunk_indexes.is_empty() {
+        return Err(ServerError::unprocessable(
+            "missing_chunk_index",
+            "recording summary contains no Chunk Index",
+        ));
+    }
+    for chunk in &summary.chunk_indexes {
+        if !matches!(chunk.compression.as_str(), "" | "zstd") {
+            return Err(ServerError::unprocessable(
+                "unsupported_compression",
+                format!("unsupported MCAP compression: {}", chunk.compression),
+            ));
+        }
+        if chunk.compressed_size > limits.max_chunk_bytes as u64
+            || chunk.uncompressed_size > limits.max_chunk_bytes as u64
+        {
+            return Err(ServerError::unprocessable(
+                "chunk_too_large",
+                "recording contains a Chunk larger than max_chunk_bytes",
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn recording_time_range(summary: &Summary) -> Result<RemoteTimeRange, ServerError> {
+    let stats = summary.stats.as_ref().ok_or_else(|| {
+        ServerError::unprocessable(
+            "missing_statistics",
+            "recording summary contains no Statistics record",
+        )
+    })?;
+    let end_ns_exclusive = stats.message_end_time.checked_add(1).ok_or_else(|| {
+        ServerError::unprocessable(
+            "invalid_time_range",
+            "recording end time cannot be represented as an exclusive bound",
+        )
+    })?;
+    Ok(RemoteTimeRange {
+        start_ns: TimestampNs::new(stats.message_start_time),
+        end_ns_exclusive: TimestampNs::new(end_ns_exclusive),
+    })
+}
+
+fn recording_revision(summary: &Summary, file_size: u64, summary_crc: u32) -> String {
+    let stats = summary
+        .stats
+        .as_ref()
+        .expect("recording time range validated Statistics");
+    McapSummaryIdentity {
+        file_size,
+        summary_crc,
+        message_start_time: stats.message_start_time,
+        message_end_time: stats.message_end_time,
+        message_count: stats.message_count,
+        schema_count: stats.schema_count,
+        channel_count: stats.channel_count,
+        chunk_count: summary.chunk_indexes.len(),
+    }
+    .revision()
+}
+
+struct RecordingMetadata {
+    catalog: CatalogResponse,
+    channel_to_stream: BTreeMap<u16, u32>,
+    stream_to_channel: BTreeMap<u32, u16>,
+}
+
+fn build_catalog(
+    config: &RecordingConfig,
+    summary: &Summary,
+    revision: &str,
+    time_range: RemoteTimeRange,
+) -> Result<RecordingMetadata, ServerError> {
+    let stats = summary
+        .stats
+        .as_ref()
+        .expect("recording time range validated Statistics");
+    let mut channels: Vec<_> = summary.channels.values().cloned().collect();
+    channels.sort_by_key(|channel| {
+        (
+            channel.topic.clone(),
+            channel
+                .schema
+                .as_ref()
+                .map(|schema| schema.name.clone())
+                .unwrap_or_default(),
+            channel.message_encoding.clone(),
+            channel.id,
+        )
+    });
+
+    let mut streams = Vec::with_capacity(channels.len());
+    let mut channel_to_stream = BTreeMap::new();
+    let mut stream_to_channel = BTreeMap::new();
+    for (index, channel) in channels.into_iter().enumerate() {
+        let id = u32::try_from(index + 1).map_err(|_| {
+            ServerError::unprocessable("too_many_streams", "recording has too many streams")
+        })?;
+        let schema_name = channel
+            .schema
+            .as_ref()
+            .map(|schema| schema.name.clone())
+            .unwrap_or_default();
+        channel_to_stream.insert(channel.id, id);
+        stream_to_channel.insert(id, channel.id);
+        streams.push(StreamDescriptor {
+            schema_id: channel.schema.as_ref().map(|schema| schema.id),
+            id,
+            topic: channel.topic.clone(),
+            schema_name,
+            message_encoding: channel.message_encoding.clone(),
+            message_count: stats
+                .channel_message_counts
+                .get(&channel.id)
+                .copied()
+                .map(MessageCount::new),
+        });
+    }
+    validate_indexed_restore(summary, &channel_to_stream, &streams)?;
+    let mut schemas = summary
+        .schemas
+        .values()
+        .map(|schema| viewer_remote_protocol::SchemaDescriptor {
+            id: schema.id,
+            encoding: schema.encoding.clone(),
+            data: std::sync::Arc::from(schema.data.as_ref()),
+        })
+        .collect::<Vec<_>>();
+    schemas.sort_by_key(|schema| schema.id);
+    let catalog = CatalogResponse::new(
+        config.id.clone(),
+        revision.to_owned(),
+        time_range,
+        streams,
+        schemas,
+    );
+    Ok(RecordingMetadata {
+        catalog,
+        channel_to_stream,
+        stream_to_channel,
+    })
+}
+
+fn validate_indexed_restore(
+    summary: &Summary,
+    channel_to_stream: &BTreeMap<u16, u32>,
+    streams: &[StreamDescriptor],
+) -> Result<(), ServerError> {
+    let index_facts = indexed_chunk_facts(summary, channel_to_stream);
+    for stream in streams.iter().filter(|s| s.message_encoding == "cdr") {
+        viewer_core::ensure_indexed(
+            &index_facts,
+            StreamId(stream.id),
+            stream.message_count.map(MessageCount::get),
+        )
+        .map_err(|error| {
+            ServerError::unprocessable(
+                "restore_index_unavailable",
+                format!("recording cannot provide indexed restore: {error}"),
+            )
+        })?;
+    }
+
+    Ok(())
 }
 
 fn indexed_chunk_facts(

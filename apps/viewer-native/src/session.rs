@@ -28,6 +28,7 @@ pub(crate) struct ViewerSession {
     topic_tree: viewer_core::TopicTree,
     numeric_plots: crate::numeric_plot_loader::NumericPlotLoader,
     inspector_loader: InspectorLoader,
+    window_queries: crate::window_query_loader::WindowQueryLoader,
 }
 
 pub(crate) struct PlotSignalRequest {
@@ -84,6 +85,7 @@ impl ViewerSession {
             odometry_topic: bindings.odometry_topic.clone(),
             numeric_plots: Default::default(),
             inspector_loader: InspectorLoader::default(),
+            window_queries: Default::default(),
         })
     }
 
@@ -111,10 +113,13 @@ impl ViewerSession {
             odometry_topic: bindings.odometry_topic.clone(),
             numeric_plots: Default::default(),
             inspector_loader: InspectorLoader::default(),
+            window_queries: Default::default(),
         })
     }
 
     pub(crate) fn take_query_workers_from(&mut self, previous: &mut Self) {
+        self.window_queries
+            .take_worker_from(&mut previous.window_queries);
         self.numeric_plots
             .take_worker_from(&mut previous.numeric_plots);
         self.inspector_loader
@@ -208,6 +213,25 @@ impl ViewerSession {
             SessionSource::Ros { .. } => None,
         };
         self.inspector_loader.poll(source, target);
+        self.window_queries.poll(source, target);
+    }
+
+    pub(crate) fn configure_window_queries(
+        &mut self,
+        requirements: &crate::panels::PanelDataRequirements,
+    ) {
+        self.window_queries
+            .configure_health(&requirements.topic_health);
+        self.window_queries
+            .configure_diagnostics(&requirements.diagnostics);
+    }
+    pub(crate) fn producer_diagnostics(
+        &self,
+    ) -> &[crate::window_query_loader::DiagnosticsQueryState] {
+        self.window_queries.diagnostics()
+    }
+    pub(crate) fn topic_health(&self) -> &[crate::window_query_loader::TopicHealthQueryState] {
+        self.window_queries.health()
     }
 
     pub(crate) fn signal_query_view(
@@ -302,6 +326,7 @@ impl ViewerSession {
                     let restore_plan = viewer_core::RestorePlanner::new(playback.catalog())
                         .plan(target, self.plan.restore_inputs())?;
                     playback.seek_with(&restore_plan, restore)?;
+                    self.window_queries.invalidate();
                     Ok(PlaybackEffect::Seeked)
                 }
             },

@@ -119,10 +119,11 @@ impl CameraPanel {
     }
 
     pub(crate) fn scheduler_priority_topic(&self) -> Option<&str> {
-        self.config
-            .scheduler_priority
-            .then_some(self.config.camera_topic.as_deref())
-            .flatten()
+        if self.config.scheduler_priority {
+            self.config.camera_topic.as_deref()
+        } else {
+            None
+        }
     }
 
     pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {

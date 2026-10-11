@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "root": {
+    "kind": "split",
+    "direction": "column",
+    "children": [
+      {
+        "weight": 1,
+        "node": {
+          "kind": "panel", "id": "topic-health", "panelType": "topic-health",
+          "configVersion": 1, "title": "Topic Health", "config": { "windowSeconds": 10 }
+        }
+      },
+      {
+        "weight": 1,
+        "node": {
+          "kind": "panel", "id": "producer-diagnostics", "panelType": "diagnostics",
+          "configVersion": 1, "title": "Diagnostics", "config": { "topic": "/diagnostics", "windowSeconds": 10 }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,82 @@
+//! Concrete bounded recording queries, independent of continuous playback features.
+mod topic_health;
+pub use topic_health::{TopicHealthRequirement, TopicHealthSnapshot, query_topic_health};
+
+use crate::{ArrivalTime, DataWindowTimeRange, McapOpenError};
+use std::time::Duration;
+
+pub const DEFAULT_QUERY_WINDOW_SECONDS: u32 = 10;
+pub const MAX_QUERY_WINDOW_SECONDS: u32 = 60;
+
+#[derive(Debug)]
+pub enum WindowQueryError {
+    InvalidWindow,
+    MissingTopic(String),
+    UnsupportedDiagnosticStream(crate::StreamId),
+    Limit {
+        resource: &'static str,
+        maximum: usize,
+    },
+    Source(McapOpenError),
+}
+impl std::fmt::Display for WindowQueryError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InvalidWindow => write!(
+                f,
+                "query window must be 1..={MAX_QUERY_WINDOW_SECONDS} seconds with a representable exclusive end"
+            ),
+            Self::MissingTopic(topic) => write!(f, "recording has no topic {topic}"),
+            Self::UnsupportedDiagnosticStream(stream) => write!(
+                f,
+                "stream {} must contain CDR diagnostic_msgs/msg/DiagnosticArray",
+                stream.0
+            ),
+            Self::Limit { resource, maximum } => {
+                write!(f, "query exceeds {resource} limit ({maximum})")
+            }
+            Self::Source(error) => error.fmt(f),
+        }
+    }
+}
+impl std::error::Error for WindowQueryError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Source(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+impl From<McapOpenError> for WindowQueryError {
+    fn from(value: McapOpenError) -> Self {
+        Self::Source(value)
+    }
+}
+
+/// Query windows include the cursor: [cursor - lookback, cursor + 1 ns).
+pub(crate) fn cursor_window(
+    cursor: ArrivalTime,
+    seconds: u32,
+) -> Result<DataWindowTimeRange, WindowQueryError> {
+    if seconds == 0 || seconds > MAX_QUERY_WINDOW_SECONDS {
+        return Err(WindowQueryError::InvalidWindow);
+    }
+    let end = cursor
+        .0
+        .checked_add(1)
+        .ok_or(WindowQueryError::InvalidWindow)?;
+    DataWindowTimeRange::new(
+        ArrivalTime(cursor.0.saturating_sub(i64::from(seconds) * 1_000_000_000)),
+        ArrivalTime(end),
+    )
+    .map_err(|_| WindowQueryError::InvalidWindow)
+}
+
+fn elapsed(later: ArrivalTime, earlier: ArrivalTime) -> Duration {
+    Duration::from_nanos(later.0.abs_diff(earlier.0))
+}
+
+mod diagnostics;
+pub use diagnostics::{
+    DiagnosticEvent, DiagnosticsRequirement, DiagnosticsSnapshot, query_diagnostics,
+};

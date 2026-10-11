@@ -17,6 +17,7 @@ mod query_error;
 mod session;
 mod signal_query;
 mod ui_components;
+mod window_query_loader;
 mod workspace;
 
 use anyhow::Result;

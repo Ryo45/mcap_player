@@ -139,6 +139,8 @@ impl Graphics {
                         resources,
                         scene,
                         inspections: render_input.inspections,
+                        topic_health: render_input.topic_health,
+                        diagnostics: render_input.producer_diagnostics,
                         inspector_topic: render_input.inspector_topic,
                         topic_tree: render_input.topic_tree,
                         numeric_series: render_input.numeric_series,
