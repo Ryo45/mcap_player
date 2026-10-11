@@ -42,6 +42,7 @@ pub(crate) struct LoadedWindow {
 pub(crate) enum DataLoadError {
     Window(viewer_core::DataWindowError),
     Mcap(std::sync::Arc<mcap::McapError>),
+    Chunk(std::sync::Arc<viewer_core::McapChunkError>),
     Indexed(viewer_core::IndexedPlanError),
     Protocol(viewer_remote_protocol::ProtocolError),
     Io(std::sync::Arc<std::io::Error>),
@@ -67,6 +68,7 @@ impl fmt::Display for DataLoadError {
             Self::InvalidData(reason) => f.write_str(reason),
             Self::Window(error) => error.fmt(f),
             Self::Mcap(error) => error.fmt(f),
+            Self::Chunk(error) => error.fmt(f),
             Self::Indexed(error) => error.fmt(f),
             Self::Protocol(error) => error.fmt(f),
             Self::Io(error) => error.fmt(f),
@@ -84,6 +86,7 @@ impl Error for DataLoadError {
             Self::InvalidData(_) => None,
             Self::Window(error) => Some(error),
             Self::Mcap(error) => Some(error.as_ref()),
+            Self::Chunk(error) => Some(error.as_ref()),
             Self::Indexed(error) => Some(error),
             Self::Protocol(error) => Some(error),
             Self::Io(error) => Some(error.as_ref()),
@@ -99,6 +102,11 @@ impl From<viewer_core::DataWindowError> for DataLoadError {
 impl From<mcap::McapError> for DataLoadError {
     fn from(error: mcap::McapError) -> Self {
         Self::Mcap(std::sync::Arc::new(error))
+    }
+}
+impl From<viewer_core::McapChunkError> for DataLoadError {
+    fn from(error: viewer_core::McapChunkError) -> Self {
+        Self::Chunk(std::sync::Arc::new(error))
     }
 }
 impl From<viewer_core::IndexedPlanError> for DataLoadError {

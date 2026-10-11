@@ -1,5 +1,6 @@
 //! Recording facts, requirements, indexed planning, and concrete MCAP access.
 
+mod chunk;
 mod indexed_plan;
 mod mcap_source;
 mod range_query;
@@ -9,9 +10,10 @@ mod session_plan;
 mod source_identity;
 mod stream;
 
+pub use chunk::{McapChunkError, decode_mcap_chunk, visit_mcap_chunk_records};
 pub use indexed_plan::{
-    IndexedChunkFact, IndexedPlanError, ensure_indexed, history_candidate_chunks,
-    latest_candidate_chunks, persistent_candidate_chunks,
+    IndexedChunkFact, IndexedPlanError, MessageIndexPredecessor, ensure_indexed,
+    history_candidate_chunks, latest_candidate_chunks, persistent_candidate_chunks,
 };
 pub use mcap_source::{
     IndexedMessagePosition, IndexedMessages, IndexedReadDiagnostics, LatestMessageReader,

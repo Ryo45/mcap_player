@@ -12,9 +12,6 @@ use std::{
     fmt,
 };
 
-#[cfg(feature = "mcap-lz4")]
-use std::io::Read;
-
 #[derive(Debug)]
 pub enum McapOpenError {
     Mcap(mcap::McapError),
@@ -94,6 +91,21 @@ impl std::error::Error for McapOpenError {
             Self::Decompression { source, .. } => Some(source),
             Self::MessageIndexRequired(error) => Some(error),
             _ => None,
+        }
+    }
+}
+impl From<super::McapChunkError> for McapOpenError {
+    fn from(error: super::McapChunkError) -> Self {
+        match error {
+            super::McapChunkError::Mcap(error) => Self::Mcap(error),
+            super::McapChunkError::InvalidRecord(reason) => Self::InvalidChunk(reason.into()),
+            super::McapChunkError::TimestampOverflow => Self::TimestampOverflow,
+            super::McapChunkError::UnsupportedCompression(format) => {
+                Self::UnsupportedCompression(format)
+            }
+            super::McapChunkError::Decompression { format, source } => {
+                Self::Decompression { format, source }
+            }
         }
     }
 }
@@ -680,13 +692,12 @@ impl McapSource {
         let end = sparse
             .chunks
             .partition_point(|chunk| self.index_facts[*chunk].start <= target_time);
-        let mut best = None::<(u64, IndexedMessagePosition)>;
+        let mut search = super::MessageIndexPredecessor::new(target);
         for cursor in (0..end).rev() {
-            if best.as_ref().is_some_and(|(time, position)| {
-                sparse.prefix_max_end[cursor].0 < *time as i64
-                    || (sparse.prefix_max_end[cursor].0 == *time as i64
-                        && sparse.prefix_max_chunk[cursor] < position.chunk)
-            }) {
+            if !search.can_improve(
+                sparse.prefix_max_end[cursor].0 as u64,
+                sparse.prefix_max_chunk[cursor],
+            ) {
                 break;
             }
             let chunk = sparse.chunks[cursor];
@@ -700,22 +711,10 @@ impl McapSource {
             }
             let channel = u16::try_from(stream.0).map_err(|_| mcap::McapError::BadIndex)?;
             if let Some(entries) = index_cache[&chunk].channels.get(&channel) {
-                let index = entries.partition_point(|entry| entry.log_time <= target);
-                if let Some(entry) = index.checked_sub(1).and_then(|i| entries.get(i)) {
-                    let position = IndexedMessagePosition {
-                        chunk,
-                        record_offset: entry.offset,
-                    };
-                    if best.as_ref().is_none_or(|(time, old)| {
-                        (entry.log_time, position.chunk, position.record_offset)
-                            > (*time, old.chunk, old.record_offset)
-                    }) {
-                        best = Some((entry.log_time, position));
-                    }
-                }
+                search.consider_sorted(chunk, entries);
             }
         }
-        Ok(best.map(|(_, position)| position))
+        Ok(search.result().map(|(_, position)| position))
     }
 
     /// Physical Message Index span access. No traversal, cache or query-budget policy.
@@ -883,7 +882,7 @@ impl McapSource {
                 maximum: super::backing::MAX_SOURCE_RECORD_BYTES,
             });
         }
-        let backing = decode_chunk_backing(&chunk.compression, compressed, expected_size)?;
+        let backing = super::decode_mcap_chunk(&chunk.compression, compressed, expected_size)?;
         if cancelled() {
             return Err(McapOpenError::QueryCancelled);
         }
@@ -1089,118 +1088,20 @@ struct ParsedChunkMessage {
     message: RawMessage,
 }
 
-fn decode_chunk_backing(
-    compression: &str,
-    compressed: Bytes,
-    expected_size: usize,
-) -> Result<Bytes, McapOpenError> {
-    match compression {
-        "" => {
-            if compressed.len() != expected_size {
-                return Err(McapOpenError::InvalidChunk(
-                    "uncompressed data size does not match Chunk Index".into(),
-                ));
-            }
-            Ok(compressed)
-        }
-        #[cfg(feature = "mcap-zstd")]
-        "zstd" => checked_decompressed_backing(
-            zstd::bulk::decompress(&compressed, expected_size).map_err(|error| {
-                McapOpenError::Decompression {
-                    format: "zstd",
-                    source: error,
-                }
-            })?,
-            expected_size,
-        ),
-        #[cfg(feature = "mcap-lz4")]
-        "lz4" => {
-            let mut output = Vec::with_capacity(expected_size);
-            lz4::Decoder::new(std::io::Cursor::new(compressed))
-                .map_err(|error| McapOpenError::Decompression {
-                    format: "lz4",
-                    source: error,
-                })?
-                .read_to_end(&mut output)
-                .map_err(|error| McapOpenError::Decompression {
-                    format: "lz4",
-                    source: error,
-                })?;
-            checked_decompressed_backing(output, expected_size)
-        }
-        value => Err(McapOpenError::UnsupportedCompression(value.into())),
-    }
-}
-
-#[cfg(any(feature = "mcap-zstd", feature = "mcap-lz4"))]
-fn checked_decompressed_backing(
-    decompressed: Vec<u8>,
-    expected_size: usize,
-) -> Result<Bytes, McapOpenError> {
-    if decompressed.len() != expected_size {
-        return Err(McapOpenError::InvalidChunk(
-            "decompressed data size does not match Chunk Index".into(),
-        ));
-    }
-    Ok(Bytes::from(decompressed))
-}
-
 fn parse_chunk_backing(
     backing: Bytes,
     cancelled: &mut impl FnMut() -> bool,
 ) -> Result<Vec<ParsedChunkMessage>, McapOpenError> {
-    let mut offset = 0_usize;
     let mut messages = Vec::new();
-    while offset < backing.len() {
+    super::visit_mcap_chunk_records(&backing, |offset, message| {
         if cancelled() {
             return Err(McapOpenError::QueryCancelled);
         }
-        let record_offset = u64::try_from(offset)
-            .map_err(|_| McapOpenError::InvalidChunk("record offset overflow".into()))?;
-        let header_end = offset
-            .checked_add(9)
-            .ok_or_else(|| McapOpenError::InvalidChunk("record header overflow".into()))?;
-        if header_end > backing.len() {
-            return Err(McapOpenError::InvalidChunk(
-                "truncated record header".into(),
-            ));
+        if let Some(message) = message {
+            messages.push(ParsedChunkMessage { offset, message });
         }
-        let opcode = backing[offset];
-        let body_length = usize::try_from(u64::from_le_bytes(
-            backing[offset + 1..header_end]
-                .try_into()
-                .expect("record length has eight bytes"),
-        ))
-        .map_err(|_| McapOpenError::InvalidChunk("record body is too large".into()))?;
-        let body_end = header_end
-            .checked_add(body_length)
-            .ok_or_else(|| McapOpenError::InvalidChunk("record body overflow".into()))?;
-        if body_end > backing.len() {
-            return Err(McapOpenError::InvalidChunk("truncated record body".into()));
-        }
-        if opcode == op::MESSAGE {
-            let record = mcap::parse_record(opcode, &backing[header_end..body_end])?;
-            let mcap::records::Record::Message { header, data } = record else {
-                return Err(McapOpenError::InvalidChunk(
-                    "message opcode parsed as another record".into(),
-                ));
-            };
-            let payload_start = body_end
-                .checked_sub(data.len())
-                .ok_or_else(|| McapOpenError::InvalidChunk("payload range underflow".into()))?;
-            messages.push(ParsedChunkMessage {
-                offset: record_offset,
-                message: RawMessage {
-                    publish_time_ns: Some(header.publish_time),
-                    sequence: Some(header.sequence),
-                    stream_id: StreamId(u32::from(header.channel_id)),
-                    arrival_time: to_arrival(header.log_time)?,
-                    payload: backing.slice(payload_start..body_end),
-                },
-            });
-        }
-        offset = body_end;
-    }
+        Ok(())
+    })?;
     Ok(messages)
 }
 
