@@ -36,14 +36,17 @@ struct PendingSeek {
     bootstraps_persistent: bool,
 }
 
-enum WebRestoreLoader {
+pub(crate) enum WebRestoreLoader {
     Remote(RemoteRestoreLoader),
     #[cfg(target_arch = "wasm32")]
     LocalFile(BrowserMcapRestoreLoader),
 }
 
 impl WebRestoreLoader {
-    fn request(&mut self, plan: viewer_core::RestorePlan) -> Result<(), WebPlaybackError> {
+    pub(crate) fn request(
+        &mut self,
+        plan: viewer_core::RestorePlan,
+    ) -> Result<(), WebPlaybackError> {
         match self {
             Self::Remote(loader) => loader.request(&plan),
             #[cfg(target_arch = "wasm32")]
@@ -52,13 +55,30 @@ impl WebRestoreLoader {
         .map_err(WebPlaybackError::from)
     }
 
-    fn poll(&mut self) -> Option<Result<Vec<RawMessage>, WebPlaybackError>> {
+    pub(crate) fn poll(&mut self) -> Option<Result<Vec<RawMessage>, WebPlaybackError>> {
         match self {
             Self::Remote(loader) => loader.poll(),
             #[cfg(target_arch = "wasm32")]
             Self::LocalFile(loader) => loader.poll(),
         }
         .map(|result| result.map_err(WebPlaybackError::from))
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn fork(&self) -> Self {
+        match self {
+            Self::Remote(loader) => Self::Remote(loader.fork()),
+            Self::LocalFile(loader) => Self::LocalFile(loader.fork()),
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn cancel(&mut self) {
+        match self {
+            Self::Remote(loader) => loader.cancel(),
+            #[cfg(target_arch = "wasm32")]
+            Self::LocalFile(loader) => loader.cancel(),
+        }
     }
 
     #[cfg(test)]
@@ -161,8 +181,7 @@ impl WebPlayback {
             catalog.recording_id,
             catalog.revision,
             catalog.selected_streams,
-        )
-        .map_err(WebPlaybackError::from)?;
+        );
         Self::new(
             catalog.plan,
             catalog.core,
@@ -198,7 +217,7 @@ impl WebPlayback {
         let start = recording.start;
         let end_exclusive = recording.end_exclusive;
         let end = ArrivalTime(end_exclusive.0 - 1);
-        let runtime = FeatureRuntime::new(&plan, false);
+        let runtime = FeatureRuntime::new(&plan, true);
         let restore_inputs = plan.restore_inputs();
         #[cfg(target_arch = "wasm32")]
         let source_kind = match &loader {
@@ -409,6 +428,21 @@ impl WebPlayback {
     }
 
     #[cfg(target_arch = "wasm32")]
+    pub(crate) fn catalog(&self) -> &SourceCatalog {
+        &self.catalog
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn inspector_loader(&self) -> WebRestoreLoader {
+        self.restore.fork()
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn scene(&self) -> Option<&viewer_core::SceneController> {
+        self.runtime.scene()
+    }
+
+    #[cfg(target_arch = "wasm32")]
     pub(crate) fn path(&self) -> &PathController {
         self.runtime.path()
     }
@@ -464,13 +498,31 @@ impl WebPlayback {
     }
 }
 
-pub(crate) fn web_playback_requirements() -> PlaybackRequirements {
+pub(crate) fn web_session_plan(
+    catalog: &SourceCatalog,
+    preferred_camera: &str,
+) -> Result<SessionPlan, viewer_core::SessionPlanError> {
     let mut requirements = PlaybackRequirements::empty();
-    requirements.require_all_cameras();
+    let cameras = catalog
+        .streams
+        .iter()
+        .filter(|stream| {
+            stream.message_encoding == "cdr" && stream.schema == "sensor_msgs/msg/CompressedImage"
+        })
+        .collect::<Vec<_>>();
+    for camera in &cameras {
+        requirements.require_camera_topic(&camera.topic);
+    }
+    let priority = cameras
+        .iter()
+        .find(|camera| camera.topic == preferred_camera)
+        .or_else(|| cameras.first())
+        .map_or(preferred_camera, |camera| camera.topic.as_str());
     requirements.optional_path();
     requirements.optional_odometry();
+    requirements.optional_point_cloud();
     requirements.optional_transforms();
-    requirements
+    SessionPlan::build(catalog, priority, &requirements, &web_workspace_bindings())
 }
 
 #[cfg(test)]
@@ -510,6 +562,68 @@ mod tests {
 
     fn remote_catalog() -> RemoteCatalog {
         remote_catalog_until(3_000_000_000)
+    }
+
+    #[test]
+    fn monitor_seek_restores_selected_scan_into_the_scene_runtime() {
+        let bytes = std::fs::read(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap"),
+        )
+        .unwrap();
+        let summary = mcap::Summary::read(&bytes).unwrap().unwrap();
+        let local =
+            crate::local::LocalCatalog::from_summary(&summary, "/camera/front/image/compressed")
+                .unwrap();
+        let start = local.core.time_range.unwrap().start;
+        let target = ArrivalTime(start.0 + 2_000_000_000);
+        let loaded = crate::local::collect_window_from_bytes_for_test(
+            &summary,
+            &local.selected_topics,
+            DataWindowTimeRange::new(start, ArrivalTime(target.0 + 1)).unwrap(),
+            &bytes,
+        )
+        .unwrap();
+        let mut latest = std::collections::BTreeMap::new();
+        for message in loaded.window.messages {
+            latest.insert(message.stream_id, message);
+        }
+        let catalog = RemoteCatalog {
+            selected_streams: local
+                .plan
+                .selected_stream_ids()
+                .into_iter()
+                .map(|id| id.0)
+                .collect(),
+            plan: local.plan,
+            core: local.core,
+            recording_id: "demo".into(),
+            revision: "revision".into(),
+        };
+        let mut playback =
+            WebPlayback::from_remote(RemoteApiClient::new("http://localhost").unwrap(), catalog)
+                .unwrap();
+        playback
+            .apply_command(PlaybackCommand::Seek(target))
+            .unwrap();
+        playback
+            .restore
+            .remote_mut()
+            .inject(latest.into_values().collect());
+        assert_eq!(
+            playback.tick(Duration::ZERO).unwrap(),
+            PlaybackEffect::Seeked
+        );
+        assert_eq!(playback.clock.cursor(), target);
+        let scan = playback
+            .runtime
+            .scene()
+            .unwrap()
+            .point_cloud()
+            .latest()
+            .unwrap();
+        assert!(scan.arrival_time <= target);
+        assert!(!scan.points.is_empty());
     }
 
     fn remote_catalog_with_static_tf() -> RemoteCatalog {

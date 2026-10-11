@@ -1,5 +1,9 @@
 # Web BEV WebGPU smoke test
 
+This document records the original BEV spike. The current Web workspace also uses
+the shared `SceneRenderer` on the same surface and selects Scene or BEV in the
+right-hand view. See [native_web_parity.md](native_web_parity.md) for current behavior.
+
 ## Purpose
 
 This spike verifies that the existing shared `bev-renderer` crate can run on

@@ -2,6 +2,9 @@
 
 ## Purpose and ownership
 
+The current Web monitor workspace and the remaining Native/Web feature differences
+are documented in [native_web_parity.md](native_web_parity.md).
+
 Web forward playback uses one source-independent path:
 
 ```text

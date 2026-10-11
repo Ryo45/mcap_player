@@ -126,13 +126,8 @@ impl LocalCatalog {
             streams,
             capabilities: SourceCapabilities::INDEXED_RECORDING,
         };
-        let plan = SessionPlan::build(
-            &core,
-            primary_camera_topic,
-            &crate::playback::web_playback_requirements(),
-            &crate::playback::web_workspace_bindings(),
-        )
-        .map_err(LocalCatalogError::from)?;
+        let plan = crate::playback::web_session_plan(&core, primary_camera_topic)
+            .map_err(LocalCatalogError::from)?;
         plan.validate_recording_capabilities(core.capabilities)
             .map_err(LocalCatalogError::from)?;
         let index_facts = summary

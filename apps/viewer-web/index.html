@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MCAP Camera + BEV</title>
+  <title>MCAP Viewer</title>
   <link data-trunk rel="rust" data-cargo-no-default-features data-wasm-opt="0">
   <link data-trunk rel="css" href="style.css">
 </head>
@@ -16,17 +16,40 @@
       <option value="1" selected>1x</option><option value="2">2x</option>
     </select>
     <input id="timeline" type="range" min="0" max="1" step="0.0001" value="0" aria-label="Timeline">
-    <span id="status">Choose the bundled camera fixture</span>
+    <span id="status">Open a recording</span>
     <span id="performance">Performance: waiting</span>
     <span id="telemetry">Odometry: waiting</span>
   </header>
   <main>
+    <section class="topics-panel">
+      <h2>Topics / Messages</h2>
+      <div class="topics-content">
+        <input id="topic-filter" type="search" placeholder="Filter topics" aria-label="Filter topics">
+        <div id="topic-list" class="topic-list" aria-label="Recording topics">Open a recording to browse topics.</div>
+        <pre id="topic-info">Select a topic to see its schema and message count.</pre>
+        <button id="inspect-message" type="button" disabled>Read message at cursor</button>
+        <pre id="message-info">Select a topic to inspect its latest message at or before the cursor.</pre>
+        <div id="message-fields" class="message-fields"></div>
+      </div>
+    </section>
+    <div class="visuals">
+    <section class="scene-panel">
+      <div class="scene-toolbar">
+        <h2>3D View · <span id="bev-status">WebGPU: waiting</span></h2>
+        <select id="view-mode" aria-label="View mode"><option value="scene">3D Scene</option><option value="bev">BEV</option></select>
+        <select id="scene-camera-mode" aria-label="3D camera mode"><option value="chase">Chase</option><option value="free">Free</option><option value="eye">Vehicle eye</option></select>
+        <label><input id="accumulate-scans" type="checkbox"> Accumulate scans</label>
+        <button id="reset-scene" type="button">Reset view</button>
+      </div>
+      <div class="scene-frame"><canvas id="bev" width="512" height="512" aria-label="3D Scene or BEV view"></canvas></div>
+      <div id="scene-info">Scan / TF: waiting</div>
+    </section>
     <section class="camera-panel">
       <h2>JPEG Camera Focus · <span id="camera-focus-label">waiting</span></h2>
       <div class="camera-frame"><canvas id="camera" width="320" height="240"></canvas></div>
       <div id="camera-thumbnails" class="camera-thumbnails" aria-label="Camera thumbnails"></div>
     </section>
-    <section><h2>BEV · <span id="bev-status">WebGPU: waiting</span></h2><canvas id="bev" width="512" height="512"></canvas></section>
+    </div>
   </main>
   <details class="remote-source">
     <summary>Remote Recording Server</summary>

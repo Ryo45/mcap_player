@@ -223,6 +223,11 @@ impl BevRenderer {
         self.last_revision != Some(frame.revision)
     }
 
+    /// Source replacement or seek may reuse revisions for different content.
+    pub fn invalidate(&mut self) {
+        self.last_revision = None;
+    }
+
     pub fn size(&self) -> (u32, u32) {
         self.size
     }

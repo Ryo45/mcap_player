@@ -6,6 +6,8 @@ mod local;
 mod playback;
 #[cfg(any(test, target_arch = "wasm32"))]
 mod remote;
+#[cfg(any(test, target_arch = "wasm32"))]
+mod topics;
 
 #[cfg(any(test, target_arch = "wasm32"))]
 mod webgpu;
@@ -17,6 +19,7 @@ mod browser {
     use crate::webgpu::WebGpuHost;
     use bev_renderer::BevFrame;
     use js_sys::Date;
+    use scene_renderer::{SceneCameraMode, SceneFrame};
     use std::{
         cell::{Cell, RefCell},
         collections::{BTreeMap, BTreeSet},
@@ -47,16 +50,22 @@ mod browser {
         camera_overlays: CameraOverlayState,
         camera_topics: Vec<(CameraId, String)>,
         presentation_metrics: PresentationMetrics,
+        scene: viewer_core::ScenePresentationState,
     }
 
     impl WebViewState {
         fn reset_for_source(&mut self) {
             *self = Self::default();
+            rebuild_camera_cards(&[]);
+            clear_canvas("camera");
+            invalidate_gpu();
         }
 
         fn apply_playback_effect(&mut self, effect: viewer_core::PlaybackEffect) {
             if effect == viewer_core::PlaybackEffect::Seeked {
                 *self = Self::default();
+                clear_canvas("camera");
+                invalidate_gpu();
             }
         }
     }
@@ -66,12 +75,13 @@ mod browser {
         view: WebViewState,
         focused_camera: Option<CameraId>,
         calibrations: CameraCalibrationSet,
+        topics: crate::topics::TopicBrowser,
         previous_ms: f64,
     }
 
     enum WebGpuState {
         Initializing,
-        Ready(WebGpuHost),
+        Ready(Box<WebGpuHost>),
         Unavailable,
     }
 
@@ -83,6 +93,7 @@ mod browser {
             "../../../config/camera_calibration.json"
         )).expect("bundled camera calibration"),
         previous_ms: Date::now(),
+        topics: crate::topics::TopicBrowser::default(),
     }); }
     thread_local! { static WEBGPU: RefCell<WebGpuState> = const {
         RefCell::new(WebGpuState::Initializing)
@@ -133,8 +144,8 @@ mod browser {
         spawn_local(async move {
             match WebGpuHost::new(canvas).await {
                 Ok(host) => {
-                    WEBGPU.with(|state| *state.borrow_mut() = WebGpuState::Ready(host));
-                    set_bev_status("WebGPU: shared BevRenderer ready", false);
+                    WEBGPU.with(|state| *state.borrow_mut() = WebGpuState::Ready(Box::new(host)));
+                    set_bev_status("WebGPU ready", false);
                 }
                 Err(error) => {
                     WEBGPU.with(|state| *state.borrow_mut() = WebGpuState::Unavailable);
@@ -144,16 +155,25 @@ mod browser {
         });
     }
 
-    fn render_bev(frame: BevFrame<'_>) {
+    fn invalidate_gpu() {
+        WEBGPU.with(|state| {
+            if let WebGpuState::Ready(host) = &mut *state.borrow_mut() {
+                host.invalidate();
+            }
+        });
+    }
+
+    fn render_scene(bev: BevFrame<'_>, scene: SceneFrame<'_>) {
+        let mode: HtmlSelectElement = element("view-mode");
         let error = WEBGPU.with(|state| {
             let mut state = state.borrow_mut();
             match &mut *state {
-                WebGpuState::Ready(host) => host.render(frame).err(),
+                WebGpuState::Ready(host) => host.render(bev, scene, mode.value() == "bev").err(),
                 WebGpuState::Initializing | WebGpuState::Unavailable => None,
             }
         });
         if let Some(error) = error {
-            set_bev_status(&format!("WebGPU BEV stopped: {error}"), true);
+            set_bev_status(&format!("WebGPU stopped: {error}"), true);
             WEBGPU.with(|state| *state.borrow_mut() = WebGpuState::Unavailable);
         }
     }
@@ -256,6 +276,9 @@ mod browser {
             button.set_class_name("camera-card");
             button.set_type("button");
             button
+                .set_attribute("data-camera", &camera_id.0.to_string())
+                .expect("camera card ID");
+            button
                 .set_attribute("aria-label", &format!("Focus camera {topic}"))
                 .expect("camera card aria label");
 
@@ -280,14 +303,6 @@ mod browser {
             label.set_inner_text(topic);
             button.append_child(&label).expect("camera label append");
 
-            let selected = *camera_id;
-            let callback = Closure::<dyn FnMut(Event)>::new(move |_| {
-                APP.with(|app| app.borrow_mut().focused_camera = Some(selected));
-            });
-            button
-                .add_event_listener_with_callback("click", callback.as_ref().unchecked_ref())
-                .expect("camera card listener");
-            callback.forget();
             container
                 .append_child(&button)
                 .expect("camera card container append");
@@ -319,6 +334,7 @@ mod browser {
                     Ok(playback) => {
                         APP.with(|cell| {
                             let mut app = cell.borrow_mut();
+                            app.topics.reset(&playback);
                             app.playback = Some(playback);
                             app.view.reset_for_source();
                             app.focused_camera = None;
@@ -408,10 +424,10 @@ mod browser {
                 _ => PlaybackSpeed::Normal,
             };
             APP.with(|app| {
-                if let Some(playback) = &mut app.borrow_mut().playback {
-                    if let Err(error) = playback.apply_command(PlaybackCommand::SetSpeed(speed)) {
-                        set_status(&error.to_string(), true);
-                    }
+                if let Some(playback) = &mut app.borrow_mut().playback
+                    && let Err(error) = playback.apply_command(PlaybackCommand::SetSpeed(speed))
+                {
+                    set_status(&error.to_string(), true);
                 }
             });
         });
@@ -419,6 +435,138 @@ mod browser {
             .add_event_listener_with_callback("change", speed_callback.as_ref().unchecked_ref())
             .expect("speed listener");
         speed_callback.forget();
+    }
+
+    fn install_workspace_controls() {
+        let thumbnails: HtmlElement = element("camera-thumbnails");
+        let callback = Closure::<dyn FnMut(Event)>::new(|event: Event| {
+            let selected = event
+                .target()
+                .and_then(|target| target.dyn_into::<HtmlElement>().ok())
+                .and_then(|target| target.closest("button[data-camera]").ok().flatten())
+                .and_then(|button| button.get_attribute("data-camera"))
+                .and_then(|id| id.parse::<u16>().ok());
+            if let Some(selected) = selected {
+                APP.with(|app| app.borrow_mut().focused_camera = Some(CameraId(selected)));
+            }
+        });
+        thumbnails.set_onclick(Some(callback.as_ref().unchecked_ref()));
+        callback.forget();
+        let list: HtmlElement = element("topic-list");
+        let callback = Closure::<dyn FnMut(Event)>::new(|event: Event| {
+            let Some(topic) = event
+                .target()
+                .and_then(|target| target.dyn_into::<HtmlElement>().ok())
+                .and_then(|target| target.get_attribute("data-topic"))
+            else {
+                return;
+            };
+            APP.with(|app| {
+                let mut app = app.borrow_mut();
+                let WebApp {
+                    topics, playback, ..
+                } = &mut *app;
+                if let Some(session) = playback {
+                    topics.select(topic, session);
+                }
+            });
+        });
+        list.set_onclick(Some(callback.as_ref().unchecked_ref()));
+        callback.forget();
+        let filter: HtmlInputElement = element("topic-filter");
+        let callback = Closure::<dyn FnMut(Event)>::new(|_: Event| {
+            let filter: HtmlInputElement = element("topic-filter");
+            APP.with(|app| app.borrow_mut().topics.render_topics(&filter.value()));
+        });
+        filter.set_oninput(Some(callback.as_ref().unchecked_ref()));
+        callback.forget();
+        let inspect: HtmlButtonElement = element("inspect-message");
+        let callback = Closure::<dyn FnMut()>::new(|| {
+            APP.with(|app| {
+                let mut app = app.borrow_mut();
+                let WebApp {
+                    topics, playback, ..
+                } = &mut *app;
+                if let Some(session) = playback {
+                    topics.request(session);
+                }
+            })
+        });
+        inspect.set_onclick(Some(callback.as_ref().unchecked_ref()));
+        callback.forget();
+        let fields: HtmlElement = element("message-fields");
+        let callback = Closure::<dyn FnMut(Event)>::new(|event: Event| {
+            let Some(target) = event
+                .target()
+                .and_then(|target| target.dyn_into::<HtmlElement>().ok())
+            else {
+                return;
+            };
+            let page = target
+                .get_attribute("data-expand")
+                .map(|index| (index, false))
+                .or_else(|| target.get_attribute("data-next").map(|index| (index, true)));
+            if let Some((index, next)) = page
+                .and_then(|(index, next)| index.parse::<usize>().ok().map(|index| (index, next)))
+            {
+                APP.with(|app| app.borrow_mut().topics.show_page(index, next));
+            }
+        });
+        fields.set_onclick(Some(callback.as_ref().unchecked_ref()));
+        callback.forget();
+
+        let canvas: HtmlCanvasElement = element("bev");
+        let callback =
+            Closure::<dyn FnMut(web_sys::WheelEvent)>::new(|event: web_sys::WheelEvent| {
+                event.prevent_default();
+                WEBGPU.with(|state| {
+                    if let WebGpuState::Ready(host) = &mut *state.borrow_mut() {
+                        host.scene_renderer.zoom(-event.delta_y() as f32);
+                    }
+                });
+            });
+        canvas.set_onwheel(Some(callback.as_ref().unchecked_ref()));
+        callback.forget();
+        let callback =
+            Closure::<dyn FnMut(web_sys::MouseEvent)>::new(|event: web_sys::MouseEvent| {
+                if event.buttons() & 1 == 0 {
+                    return;
+                }
+                WEBGPU.with(|state| {
+                    if let WebGpuState::Ready(host) = &mut *state.borrow_mut() {
+                        host.scene_renderer
+                            .orbit(event.movement_x() as f32, event.movement_y() as f32);
+                    }
+                });
+            });
+        canvas.set_onmousemove(Some(callback.as_ref().unchecked_ref()));
+        callback.forget();
+        let mode: HtmlSelectElement = element("scene-camera-mode");
+        let callback = Closure::<dyn FnMut(Event)>::new(|_: Event| {
+            let mode: HtmlSelectElement = element("scene-camera-mode");
+            let mode = match mode.value().as_str() {
+                "free" => SceneCameraMode::Free,
+                "eye" => SceneCameraMode::VehicleEye,
+                _ => SceneCameraMode::Chase,
+            };
+            WEBGPU.with(|state| {
+                if let WebGpuState::Ready(host) = &mut *state.borrow_mut() {
+                    host.scene_renderer.set_camera_mode(mode);
+                }
+            });
+        });
+        mode.set_onchange(Some(callback.as_ref().unchecked_ref()));
+        callback.forget();
+        let reset: HtmlButtonElement = element("reset-scene");
+        let callback = Closure::<dyn FnMut()>::new(|| {
+            WEBGPU.with(|state| {
+                if let WebGpuState::Ready(host) = &mut *state.borrow_mut() {
+                    host.scene_renderer.reset_camera();
+                }
+            })
+        });
+        reset.set_onclick(Some(callback.as_ref().unchecked_ref()));
+        callback.forget();
     }
 
     fn advance_source_and_playback(
@@ -560,7 +708,7 @@ mod browser {
             cameras: session.cameras().state(),
             telemetry: session.odometry().state(),
             path: session.path().state(),
-            point_cloud: None,
+            point_cloud: session.scene().map(|scene| scene.point_cloud()),
             camera_topics: session.camera_topics(),
             focused_camera: selected_camera,
             overlays: &overlay_status,
@@ -582,7 +730,13 @@ mod browser {
     fn update_dom_diagnostics(presentation: &ViewerPresentation, session: &WebPlayback) {
         let focus_label: HtmlElement = element("camera-focus-label");
         focus_label.set_inner_text(&presentation.focused_camera().map_or_else(
-            || "waiting".to_owned(),
+            || {
+                if session.camera_topics().is_empty() {
+                    "No camera stream in this recording".to_owned()
+                } else {
+                    "waiting".to_owned()
+                }
+            },
             |camera| format!("{} · {}", camera.topic, camera.overlay),
         ));
         for camera in &presentation.cameras {
@@ -678,12 +832,48 @@ mod browser {
         ));
     }
 
-    fn update_bev_presentation(session: &WebPlayback) {
+    fn update_scene_presentation(session: &WebPlayback, view: &mut WebViewState) {
         let bev = BevFrameBuilder::new(session.path().state()).build();
-        render_bev(BevFrame {
-            revision: bev.revision,
-            path: bev.path,
-        });
+        let empty = viewer_core::PointCloudState::default();
+        let points = session.scene().map_or(&empty, |scene| scene.point_cloud());
+        let accumulate: HtmlInputElement = element("accumulate-scans");
+        let scene = view.scene.build(
+            session.path().state(),
+            session.odometry().state(),
+            points,
+            session.transforms().state(),
+            accumulate.checked(),
+        );
+        let info: HtmlElement = element("scene-info");
+        info.set_inner_text(&format!(
+            "Scan: {} visible points · {}",
+            scene.cloud.len(),
+            scene.diagnostics.current_tf_error.as_ref().map_or_else(
+                || scene
+                    .diagnostics
+                    .last_tf_route
+                    .clone()
+                    .unwrap_or_else(|| "TF: waiting".into()),
+                |error| format!(
+                    "TF missing: {} → {}",
+                    error.source_frame, error.target_frame
+                )
+            )
+        ));
+        render_scene(
+            BevFrame {
+                revision: bev.revision,
+                path: bev.path,
+            },
+            SceneFrame {
+                revision: scene.revision,
+                cloud_revision: scene.cloud_revision,
+                ego_position: scene.ego_position,
+                ego_yaw: scene.ego_yaw,
+                path: scene.path,
+                cloud: scene.cloud,
+            },
+        );
     }
 
     fn tick() {
@@ -699,13 +889,17 @@ mod browser {
                 view,
                 focused_camera,
                 calibrations,
+                topics,
                 previous_ms: _,
             } = &mut *app;
             let Some(session) = playback else {
-                render_bev(BevFrame {
-                    revision: u64::MAX,
-                    path: &[],
-                });
+                render_scene(
+                    BevFrame {
+                        revision: u64::MAX,
+                        path: &[],
+                    },
+                    SceneFrame::default(),
+                );
                 return;
             };
             let (selected_camera, playback_effect) =
@@ -717,6 +911,10 @@ mod browser {
                     }
                 };
             view.apply_playback_effect(playback_effect);
+            if playback_effect == viewer_core::PlaybackEffect::Seeked {
+                topics.clear_message();
+            }
+            topics.poll(session);
 
             let start = session.clock().start().0;
             let duration = (session.clock().end().0 - start).max(1);
@@ -729,7 +927,7 @@ mod browser {
             update_camera_presentation(session, view, calibrations, selected_camera);
             let presentation = build_viewer_presentation(session, view, selected_camera);
             update_dom_diagnostics(&presentation, session);
-            update_bev_presentation(session);
+            update_scene_presentation(session, view);
             view.presentation_metrics
                 .record_render(duration_since(tick_started));
             view.presentation_metrics.advance(elapsed);
@@ -744,6 +942,7 @@ mod browser {
         begin_source_change();
         APP.with(|cell| {
             let mut app = cell.borrow_mut();
+            app.topics.reset(&playback);
             app.playback = Some(playback);
             app.view.reset_for_source();
             app.focused_camera = None;
@@ -766,6 +965,7 @@ mod browser {
     pub fn start() -> Result<(), JsValue> {
         install_file_input();
         install_controls();
+        install_workspace_controls();
         crate::remote::install();
         initialize_webgpu();
         let callback = Closure::<dyn FnMut()>::new(tick);
