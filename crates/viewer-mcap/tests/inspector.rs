@@ -1,6 +1,7 @@
 use bytes::Bytes;
 use std::{collections::BTreeMap, io::Cursor, sync::Arc};
 use viewer_core::*;
+use viewer_mcap::*;
 const SCHEMA: &str = "std_msgs/Header header\nbool enabled\nuint64 identifier\nfloat32[3] vector\nuint8[] data\nstring label\ndemo/Item[] items\n===\nMSG: std_msgs/Header\nbuiltin_interfaces/Time stamp\nstring frame_id\n===\nMSG: builtin_interfaces/Time\nint32 sec\nuint32 nanosec\n===\nMSG: demo/Item\nint16 code\nstring name\n";
 fn stream(text: &str) -> StreamDescriptor {
     StreamDescriptor {

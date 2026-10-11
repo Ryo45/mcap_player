@@ -2,6 +2,10 @@
 
 ## Purpose and ownership
 
+Shared MCAP byte processing and indexed helpers live in `viewer-mcap`, which
+depends on the source-neutral `viewer-core`. See
+[viewer_mcap_boundary.md](viewer_mcap_boundary.md) for the crate boundary.
+
 The current Web monitor workspace and the remaining Native/Web feature differences
 are documented in [native_web_parity.md](native_web_parity.md).
 

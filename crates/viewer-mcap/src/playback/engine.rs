@@ -7,13 +7,6 @@ use crate::{
 use std::{fmt, time::Duration};
 use web_time::Instant;
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-pub enum PlaybackEffect {
-    #[default]
-    None,
-    Seeked,
-}
-
 #[derive(Debug)]
 pub struct McapPlaybackError(McapOpenError);
 

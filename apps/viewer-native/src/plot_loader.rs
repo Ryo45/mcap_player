@@ -205,7 +205,7 @@ impl PlotLoader {
 }
 
 fn load_signals_from_source(
-    source: &viewer_core::McapSource,
+    source: &viewer_mcap::McapSource,
     origin: ArrivalTime,
     max_points: usize,
     odometry_topic: &str,
@@ -249,10 +249,10 @@ mod tests {
 
     fn request(path: PathBuf, origin: ArrivalTime) -> PlotSignalRequest {
         let source = if path.exists() {
-            viewer_core::McapSource::open_file(&path).unwrap()
+            viewer_mcap::McapSource::open_file(&path).unwrap()
         } else {
             let fixture = speed_fixture();
-            let source = viewer_core::McapSource::open_file(&fixture).unwrap();
+            let source = viewer_mcap::McapSource::open_file(&fixture).unwrap();
             std::fs::OpenOptions::new()
                 .write(true)
                 .open(&fixture)
@@ -490,7 +490,7 @@ mod tests {
 
     #[test]
     fn partial_result_is_visible_while_full_scan_remains_loading() {
-        let signals = viewer_core::load_odometry_signals(
+        let signals = viewer_mcap::load_odometry_signals(
             &odometry_mcap(),
             ArrivalTime(1_000_000_000),
             4_000,

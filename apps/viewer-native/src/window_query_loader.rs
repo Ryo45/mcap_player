@@ -8,9 +8,8 @@ use std::{
     thread::JoinHandle,
     time::{Duration, Instant},
 };
-use viewer_core::{
-    ArrivalTime, McapSource, TopicHealthRequirement, TopicHealthSnapshot, WindowQueryError,
-};
+use viewer_core::ArrivalTime;
+use viewer_mcap::{McapSource, TopicHealthRequirement, TopicHealthSnapshot, WindowQueryError};
 
 #[derive(Debug)]
 pub(crate) enum WindowLoadError {
@@ -46,10 +45,10 @@ pub(crate) struct TopicHealthQueryState {
 }
 
 pub(crate) struct DiagnosticsQueryState {
-    pub(crate) requirement: viewer_core::DiagnosticsRequirement,
+    pub(crate) requirement: viewer_mcap::DiagnosticsRequirement,
     pub(crate) cursor: ArrivalTime,
     pub(crate) loading: bool,
-    pub(crate) snapshot: Option<Arc<viewer_core::DiagnosticsSnapshot>>,
+    pub(crate) snapshot: Option<Arc<viewer_mcap::DiagnosticsSnapshot>>,
     pub(crate) error: Option<Arc<WindowLoadError>>,
 }
 
@@ -57,7 +56,7 @@ pub(crate) struct DiagnosticsQueryState {
 struct DemandKey {
     cursor: ArrivalTime,
     health: BTreeSet<TopicHealthRequirement>,
-    diagnostics: BTreeSet<viewer_core::DiagnosticsRequirement>,
+    diagnostics: BTreeSet<viewer_mcap::DiagnosticsRequirement>,
 }
 struct Demand {
     key: DemandKey,
@@ -85,7 +84,7 @@ struct Worker {
 #[derive(Default)]
 pub(crate) struct WindowQueryLoader {
     health_requirements: BTreeSet<TopicHealthRequirement>,
-    diagnostics_requirements: BTreeSet<viewer_core::DiagnosticsRequirement>,
+    diagnostics_requirements: BTreeSet<viewer_mcap::DiagnosticsRequirement>,
     desired: Option<DemandKey>,
     health: Vec<TopicHealthQueryState>,
     diagnostics: Vec<DiagnosticsQueryState>,
@@ -112,7 +111,7 @@ impl WindowQueryLoader {
     }
     pub(crate) fn configure_diagnostics(
         &mut self,
-        requirements: &BTreeSet<viewer_core::DiagnosticsRequirement>,
+        requirements: &BTreeSet<viewer_mcap::DiagnosticsRequirement>,
     ) {
         self.diagnostics_requirements = requirements.clone();
     }
@@ -354,7 +353,7 @@ fn run_worker(shared: Arc<(Mutex<Mailbox>, Condvar)>, generation: Arc<AtomicU64>
                     maximum: 8,
                 })
             } else {
-                viewer_core::query_topic_health(source, state.requirement, state.cursor, || {
+                viewer_mcap::query_topic_health(source, state.requirement, state.cursor, || {
                     generation.load(Ordering::Acquire) != demand.generation
                 })
             };
@@ -374,7 +373,7 @@ fn run_worker(shared: Arc<(Mutex<Mailbox>, Condvar)>, generation: Arc<AtomicU64>
                     maximum: 8,
                 })
             } else {
-                viewer_core::query_diagnostics(source, &state.requirement, state.cursor, || {
+                viewer_mcap::query_diagnostics(source, &state.requirement, state.cursor, || {
                     generation.load(Ordering::Acquire) != demand.generation
                 })
             };
@@ -481,7 +480,7 @@ mod tests {
         let mut loader = WindowQueryLoader::default();
         loader.configure_health(&BTreeSet::from([TopicHealthRequirement::default()]));
         loader.configure_diagnostics(&BTreeSet::from([
-            viewer_core::DiagnosticsRequirement::default(),
+            viewer_mcap::DiagnosticsRequirement::default(),
         ]));
         loader
     }
@@ -646,7 +645,7 @@ mod tests {
     fn forward_updates_publish_completed_results_and_errors_are_isolated() {
         let source = source("timeout");
         let mut loader = configured();
-        loader.configure_diagnostics(&BTreeSet::from([viewer_core::DiagnosticsRequirement {
+        loader.configure_diagnostics(&BTreeSet::from([viewer_mcap::DiagnosticsRequirement {
             topic: "/absent".into(),
             ..Default::default()
         }]));

@@ -1,12 +1,12 @@
 #![forbid(unsafe_code)]
 
-//! Platform-neutral recording access, playback planning, and feature-controller contracts.
+//! Source-neutral recording contracts, playback planning, and feature-controller state.
 //!
 //! Internal modules follow the data flow instead of exposing one flat implementation namespace:
 //!
 //! - `message`: time primitives and concrete ROS CDR codecs;
-//! - `recording`: catalogs, requirements, indexed plans, serialized records, and MCAP access;
-//! - `playback`: clocks, bounded windows, native playback orchestration, and stage timing;
+//! - `recording`: catalogs, requirements, restore plans, and serialized records;
+//! - `playback`: clocks, bounded windows, and stage timing;
 //! - `feature`: concrete continuous state, reducers, and transactional runtime ownership;
 //! - `derived`: bounded Plot/Preview products and bookmark artifacts;
 //! - `presentation`: CPU-visible presentation state and frontend-facing snapshots.
@@ -28,8 +28,7 @@ pub use derived::{
     PreviewImageEncoding, PreviewRequest, PreviewSnapshot, PreviewValidationError, SignalBucket,
     SignalFidelity, SignalId, SignalOverview, SignalOverviewReducer, SignalSample,
     SourceFingerprint, TimeRange, TimedPosition2, arrival_time_from_plot_x, cursor_seconds,
-    load_odometry_signals, load_odometry_signals_for_topic_with_progress, load_speed_signal,
-    load_yaw_rate_signal, mcap_summary_fingerprint, merge_signal_buckets,
+    merge_signal_buckets,
 };
 pub use feature::{
     BevPathFrame, BevState, CameraController, CameraFrame, CameraId, CameraState, CameraStatus,
@@ -47,9 +46,8 @@ pub use message::{
 };
 pub use playback::{
     DataWindowError, DataWindowTimeRange, FetchDemand, FetchIntent, FetchPlanner, FetchProfile,
-    McapPlayback, McapPlaybackError, McapSeekError, MemoryWindowStore, PlaybackClock,
-    PlaybackCommand, PlaybackEffect, PlaybackLoadState, PlaybackSpeed, PlaybackView,
-    SerializedWindow, StageTiming,
+    MemoryWindowStore, PlaybackClock, PlaybackCommand, PlaybackEffect, PlaybackLoadState,
+    PlaybackSpeed, PlaybackView, SerializedWindow, StageTiming,
 };
 pub use presentation::{
     BevFrameBuilder, BevSnapshot, CalibrationError, CameraCalibration, CameraCalibrationSet,
@@ -59,28 +57,15 @@ pub use presentation::{
     ViewerPresentationInput,
 };
 pub use recording::{
-    CameraRoute, IndexedChunkFact, IndexedMessagePosition, IndexedMessages, IndexedPlanError,
-    IndexedReadDiagnostics, LatestMessageReader, LatestQueryDiagnostics,
-    MCAP_SUMMARY_IDENTITY_ALGORITHM, McapChunkError, McapOpenError, McapSource,
-    McapSummaryIdentity, MessageIndexPredecessor, PlaybackRequirements, QueryLimits, RangeQuery,
-    RangeQueryError, RangeQueryResult, RawMessage, RecordingTimeRange, RestoreInput, RestorePlan,
+    CameraRoute, PlaybackRequirements, RawMessage, RecordingTimeRange, RestoreInput, RestorePlan,
     RestorePlanError, RestorePlanner, RestoreRead, RestoreSemantics, SchemaDefinition, SessionPlan,
     SessionPlanError, SourceCapabilities, SourceCatalog, StreamDescriptor, StreamId,
-    StreamTimingSummary, WorkspaceBindings, decode_mcap_chunk, ensure_indexed,
-    history_candidate_chunks, latest_candidate_chunks, persistent_candidate_chunks,
-    visit_mcap_chunk_records,
+    StreamTimingSummary, WorkspaceBindings,
 };
 
 pub use message::{NumericField, NumericFieldExtractor, RosMessageSchema};
 
-pub use derived::{
-    NumericPlotDetail, NumericPlotError, NumericPlotOverview, NumericPlotOverviewBatch,
-    NumericSample, NumericSeriesRequest,
-};
 pub use recording::{SchemaExplorationError, TopicTree, TopicTreeEntry};
-
-#[cfg(not(target_arch = "wasm32"))]
-pub use recording::FileMessageStream;
 
 mod inspection;
 pub use inspection::{
@@ -89,15 +74,7 @@ pub use inspection::{
     InspectorScalar, InspectorSchema, InspectorValue,
 };
 
-mod query;
-pub use query::{
-    DEFAULT_QUERY_WINDOW_SECONDS, MAX_QUERY_WINDOW_SECONDS, TopicHealthRequirement,
-    TopicHealthSnapshot, WindowQueryError, query_topic_health,
-};
-
 pub use message::{
     DiagnosticArray, DiagnosticKeyValue, DiagnosticLevel, DiagnosticStatus,
     MAX_DIAGNOSTIC_MESSAGE_BYTES, decode_diagnostic_array,
 };
-
-pub use query::{DiagnosticEvent, DiagnosticsRequirement, DiagnosticsSnapshot, query_diagnostics};

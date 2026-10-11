@@ -1,9 +1,7 @@
 use crate::PreviewMcapError;
 use mcap::{Summary, read::footer};
-use viewer_core::{
-    MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity, SourceFingerprint,
-    mcap_summary_fingerprint,
-};
+use viewer_core::SourceFingerprint;
+use viewer_mcap::{MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity, mcap_summary_fingerprint};
 
 pub const SOURCE_FINGERPRINT_ALGORITHM: &str = MCAP_SUMMARY_IDENTITY_ALGORITHM;
 

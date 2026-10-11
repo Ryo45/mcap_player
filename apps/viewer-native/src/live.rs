@@ -231,11 +231,12 @@ mod tests {
         catalog::{LiveStreamRole, LiveStreamSpec},
     };
     use viewer_core::{
-        ArrivalTime, CameraController, CameraId, CompressedImage, FeatureRuntime, McapSource,
-        MeasurementTime, PathMessage, PlaybackRequirements, RawMessage, SessionPlan, SourceCatalog,
+        ArrivalTime, CameraController, CameraId, CompressedImage, FeatureRuntime, MeasurementTime,
+        PathMessage, PlaybackRequirements, RawMessage, SessionPlan, SourceCatalog,
         StreamDescriptor, StreamId, StreamTimingSummary, WorkspaceBindings,
         encode_compressed_image_cdr, encode_path_cdr,
     };
+    use viewer_mcap::McapSource;
 
     fn bindings() -> WorkspaceBindings {
         WorkspaceBindings {

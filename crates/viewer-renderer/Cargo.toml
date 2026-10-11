@@ -8,3 +8,6 @@ license.workspace = true
 image.workspace = true
 viewer-core = { path = "../viewer-core" }
 wgpu.workspace = true
+
+[dev-dependencies]
+viewer-mcap = { path = "../viewer-mcap" }

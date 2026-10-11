@@ -6,10 +6,11 @@ use std::{
 };
 use viewer_core::{
     ArrivalTime, CameraController, CameraId, CameraState, CameraStatus, CompressedImage,
-    McapPlayback, MeasurementTime, PlaybackCommand, PlaybackPerformance, PlaybackRequirements,
-    PlaybackSpeed, PlaybackView, ProcessingCounters, RawMessage, SessionPlan, StageTiming,
-    StreamDescriptor, StreamId, WorkspaceBindings, encode_compressed_image_cdr,
+    MeasurementTime, PlaybackCommand, PlaybackPerformance, PlaybackRequirements, PlaybackSpeed,
+    PlaybackView, ProcessingCounters, RawMessage, SessionPlan, StageTiming, StreamDescriptor,
+    StreamId, WorkspaceBindings, encode_compressed_image_cdr,
 };
+use viewer_mcap::McapPlayback;
 
 const CAMERA_TOPIC: &str = "/camera/front/image/compressed";
 const START: i64 = 1_000_000_000;

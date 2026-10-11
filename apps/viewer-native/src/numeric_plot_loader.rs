@@ -8,8 +8,8 @@ use std::{
     thread::JoinHandle,
 };
 #[cfg(test)]
-use viewer_core::NumericPlotError;
-use viewer_core::{
+use viewer_mcap::NumericPlotError;
+use viewer_mcap::{
     McapSource, NumericPlotOverview, NumericPlotOverviewBatch, NumericSeriesRequest,
 };
 

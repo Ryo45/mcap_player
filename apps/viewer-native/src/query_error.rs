@@ -1,9 +1,9 @@
 //! Query worker failures remain typed until the view formats them.
 #[derive(Debug)]
 pub(crate) enum QueryLoadError {
-    Source(viewer_core::McapOpenError),
-    Numeric(viewer_core::NumericPlotError),
-    Inspection(viewer_core::RangeQueryError),
+    Source(viewer_mcap::McapOpenError),
+    Numeric(viewer_mcap::NumericPlotError),
+    Inspection(viewer_mcap::RangeQueryError),
     StartWorker {
         worker: &'static str,
         source: std::io::Error,
@@ -34,18 +34,18 @@ impl std::error::Error for QueryLoadError {
         }
     }
 }
-impl From<viewer_core::McapOpenError> for QueryLoadError {
-    fn from(error: viewer_core::McapOpenError) -> Self {
+impl From<viewer_mcap::McapOpenError> for QueryLoadError {
+    fn from(error: viewer_mcap::McapOpenError) -> Self {
         Self::Source(error)
     }
 }
-impl From<viewer_core::NumericPlotError> for QueryLoadError {
-    fn from(error: viewer_core::NumericPlotError) -> Self {
+impl From<viewer_mcap::NumericPlotError> for QueryLoadError {
+    fn from(error: viewer_mcap::NumericPlotError) -> Self {
         Self::Numeric(error)
     }
 }
-impl From<viewer_core::RangeQueryError> for QueryLoadError {
-    fn from(error: viewer_core::RangeQueryError) -> Self {
+impl From<viewer_mcap::RangeQueryError> for QueryLoadError {
+    fn from(error: viewer_mcap::RangeQueryError) -> Self {
         Self::Inspection(error)
     }
 }

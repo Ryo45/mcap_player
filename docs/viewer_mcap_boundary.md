@@ -1,0 +1,62 @@
+# viewer-core / viewer-mcap boundary
+
+`viewer-mcap` isolates the existing MCAP implementation from the viewer domain.
+This extraction changes ownership and imports, not playback/query algorithms,
+resource limits, file validation, caches, scheduling or wire formats.
+
+```mermaid
+flowchart LR
+    Apps[Native / Web / Recording Server] --> Mcap[viewer-mcap]
+    Apps --> Core[viewer-core]
+    Preview[viewer-preview-mcap / offline tools] --> Mcap
+    Preview --> Core
+    Mcap --> Core
+    Renderer[viewer-renderer] --> Core
+```
+
+`viewer-core` must not depend on `viewer-mcap`, including through dev-dependencies.
+It has no `mcap`, `zstd`, `lz4` or `crc32fast` dependency. The renderer's MCAP fixture
+tests use a dev-dependency on `viewer-mcap`; rendering itself depends only on core.
+
+## Existing code moved into viewer-mcap
+
+- Chunk decompression and record traversal, Message Index planning and predecessor
+  selection, Summary identity and derived-artifact fingerprint conversion.
+- `McapSource`, file range backing, `FileMessageStream`, `LatestMessageReader`, exact
+  range queries, their source errors and read diagnostics.
+- `McapPlayback`, including the existing transactional seek and persistent archive.
+- MCAP-backed numeric/builtin Plot loading and Topic Health/Diagnostics queries.
+  Their existing request/result/error types move with the source-bound query modules.
+  Separating those query modules further is outside this extraction.
+- All MCAP fixture integration tests, including feature-runtime regressions that
+  load a recording before exercising the shared runtime.
+
+## Code remaining in viewer-core
+
+`RawMessage`, `SourceCatalog`, schema bytes and stream descriptors, source
+capabilities, `SessionPlan`, playback requirements and `RestorePlanner` remain
+source-neutral domain contracts. Clock/effects, bounded data windows, CDR codecs,
+schema-driven inspection/numeric extraction, feature runtime, presentation,
+bookmarks/preview products, Plot products and the pure `SignalOverviewReducer`
+also remain in core.
+
+The only method-to-function adjustment is `SchemaDefinition::from_mcap` becoming
+`viewer_mcap::schema_definition_from_mcap`: its allocation and byte-preservation
+behavior are unchanged. A foreign crate cannot add an inherent method to the
+core-owned schema type. No compatibility facade or reverse re-export is retained.
+
+Compression features `mcap-zstd` and `mcap-lz4` now belong to `viewer-mcap`, with
+the same default codec set. Browser Local explicitly enables only `mcap-zstd` and
+keeps its existing compression acceptance policy. Existing specialized MCAP
+readers/writers in the server and preview crate keep their direct format-library
+dependencies; this step does not redesign those implementations.
+
+## Verification
+
+Run `cargo test -p viewer-core -p viewer-mcap` before the workspace tests and
+Clippy. WASM checks should include `viewer-mcap` as well as core and the renderers,
+followed by the Web release build. Test `ros2-live` only in the sourced ROS environment.
+
+Inspect `cargo tree -p viewer-core --edges all` and Cargo metadata to verify there
+is no direct, dev, build or transitive edge from core to the MCAP crate/codecs.
+The supported direction is `viewer-mcap -> viewer-core`.

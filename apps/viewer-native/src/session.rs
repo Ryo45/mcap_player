@@ -9,10 +9,11 @@ use crate::{
 use anyhow::{Context, Result};
 use std::{path::Path, time::Duration};
 use viewer_core::{
-    ArrivalTime, CameraId, FeatureRestoreError, McapPlayback, PlaybackCommand, PlaybackEffect,
+    ArrivalTime, CameraId, FeatureRestoreError, PlaybackCommand, PlaybackEffect,
     PlaybackPerformance, PlaybackRequirements, PlaybackView, ProcessingCounters, RawMessage,
     RestoreSemantics, SessionPlan, StageTiming, WorkspaceBindings,
 };
+use viewer_mcap::McapPlayback;
 
 /// The currently open Viewer data session, backed by either Recording or Live input.
 ///
@@ -32,7 +33,7 @@ pub(crate) struct ViewerSession {
 }
 
 pub(crate) struct PlotSignalRequest {
-    pub(crate) source: viewer_core::McapSource,
+    pub(crate) source: viewer_mcap::McapSource,
     pub(crate) origin: ArrivalTime,
     pub(crate) max_points: usize,
     pub(crate) odometry_topic: String,
@@ -152,7 +153,7 @@ impl ViewerSession {
         }) else {
             return;
         };
-        self.numeric_plots.add(viewer_core::NumericSeriesRequest {
+        self.numeric_plots.add(viewer_mcap::NumericSeriesRequest {
             stream_id: stream,
             field_path,
             range,
@@ -163,7 +164,7 @@ impl ViewerSession {
         self.numeric_plots.remove(stream, path);
     }
 
-    fn recording_source(&self) -> Option<&viewer_core::McapSource> {
+    fn recording_source(&self) -> Option<&viewer_mcap::McapSource> {
         match &self.source {
             SessionSource::Mcap(playback) => Some(playback.recording_source()),
             #[cfg(feature = "ros2-live")]
@@ -174,7 +175,7 @@ impl ViewerSession {
         let source = self
             .recording_source()
             .context("live sources have no recording fingerprint")?;
-        Ok(viewer_core::mcap_summary_fingerprint(
+        Ok(viewer_mcap::mcap_summary_fingerprint(
             source.summary_identity()?,
         )?)
     }

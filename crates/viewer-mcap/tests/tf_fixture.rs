@@ -1,9 +1,10 @@
 use std::{fs, path::PathBuf, time::Duration};
 use viewer_core::{
-    CameraCalibrationSet, CameraController, McapPlayback, McapSource, OdometryController,
-    PathController, PlaybackRequirements, RestorePlanner, SceneController, ScenePresentationState,
-    SessionPlan, TransformController, WorkspaceBindings,
+    CameraCalibrationSet, CameraController, OdometryController, PathController,
+    PlaybackRequirements, RestorePlanner, SceneController, ScenePresentationState, SessionPlan,
+    TransformController, WorkspaceBindings,
 };
+use viewer_mcap::{McapPlayback, McapSource};
 
 fn bindings() -> WorkspaceBindings {
     WorkspaceBindings {

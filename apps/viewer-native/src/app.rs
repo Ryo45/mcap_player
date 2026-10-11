@@ -578,7 +578,7 @@ mod tests {
         let target = ArrivalTime((playback.start.0 + playback.end.0) / 2);
 
         let bytes = std::fs::read(&path).unwrap();
-        let source = viewer_core::McapSource::copy_from_slice((bytes).as_ref()).unwrap();
+        let source = viewer_mcap::McapSource::copy_from_slice((bytes).as_ref()).unwrap();
         let stream = source
             .catalog()
             .by_topic("/camera/front/image/compressed")

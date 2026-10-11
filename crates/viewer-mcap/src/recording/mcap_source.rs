@@ -180,7 +180,7 @@ impl McapSource {
         let schema_definitions = summary
             .schemas
             .iter()
-            .map(|(id, schema)| (*id, crate::SchemaDefinition::from_mcap(schema)))
+            .map(|(id, schema)| (*id, crate::schema_definition_from_mcap(schema)))
             .collect::<std::collections::BTreeMap<_, _>>();
         let mut catalog = SourceCatalog {
             capabilities: SourceCapabilities::INDEXED_RECORDING,

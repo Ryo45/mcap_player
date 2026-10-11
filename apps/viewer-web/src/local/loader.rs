@@ -159,12 +159,12 @@ fn decode_chunk_backing(
 ) -> Result<(Bytes, usize), DataLoadError> {
     // Browser support is a source policy, independent of Cargo feature unification.
     if !matches!(request.compression.as_str(), "" | "zstd") {
-        return Err(viewer_core::McapChunkError::UnsupportedCompression(
+        return Err(viewer_mcap::McapChunkError::UnsupportedCompression(
             request.compression.clone(),
         )
         .into());
     }
-    let backing = viewer_core::decode_mcap_chunk(
+    let backing = viewer_mcap::decode_mcap_chunk(
         &request.compression,
         compressed,
         request.uncompressed_size,
@@ -206,7 +206,7 @@ fn parse_chunk_backing(
     let mut messages = Vec::new();
     #[cfg(test)]
     let mut message_offsets = Vec::new();
-    viewer_core::visit_mcap_chunk_records(&backing, |record_offset, message| {
+    viewer_mcap::visit_mcap_chunk_records(&backing, |record_offset, message| {
         if let Some(message) = message
             && range.contains(message.arrival_time)
             && (selected_channels.is_empty()
@@ -686,7 +686,7 @@ async fn resolve_browser_restore_chunks(
     let index_facts = summary
         .chunk_indexes
         .iter()
-        .map(|chunk| viewer_core::IndexedChunkFact {
+        .map(|chunk| viewer_mcap::IndexedChunkFact {
             start: ArrivalTime(i64::try_from(chunk.message_start_time).unwrap_or(i64::MAX)),
             end_inclusive: ArrivalTime(i64::try_from(chunk.message_end_time).unwrap_or(i64::MAX)),
             indexed_streams: chunk
@@ -701,13 +701,13 @@ async fn resolve_browser_restore_chunks(
         let channel = u16::try_from(stream.0).map_err(|_| {
             DataLoadError::invalid_record("local stream ID exceeds MCAP channel ID")
         })?;
-        let mut search = viewer_core::MessageIndexPredecessor::new(target);
+        let mut search = viewer_mcap::MessageIndexPredecessor::new(target);
         let count = summary
             .stats
             .as_ref()
             .and_then(|stats| stats.channel_message_counts.get(&channel).copied());
         for chunk_index in
-            viewer_core::latest_candidate_chunks(&index_facts, *stream, count, plan.target)
+            viewer_mcap::latest_candidate_chunks(&index_facts, *stream, count, plan.target)
                 .map_err(DataLoadError::from)?
         {
             let chunk = &summary.chunk_indexes[chunk_index];
@@ -738,7 +738,7 @@ async fn resolve_browser_restore_chunks(
                 .as_ref()
                 .and_then(|stats| stats.channel_message_counts.get(&channel).copied());
             for chunk_index in
-                viewer_core::history_candidate_chunks(&index_facts, *stream, count, read.range)
+                viewer_mcap::history_candidate_chunks(&index_facts, *stream, count, read.range)
                     .map_err(DataLoadError::from)?
             {
                 needs
@@ -757,7 +757,7 @@ async fn resolve_browser_restore_chunks(
             .stats
             .as_ref()
             .and_then(|stats| stats.channel_message_counts.get(&channel).copied());
-        for chunk_index in viewer_core::persistent_candidate_chunks(&index_facts, *stream, count)
+        for chunk_index in viewer_mcap::persistent_candidate_chunks(&index_facts, *stream, count)
             .map_err(DataLoadError::from)?
         {
             needs
@@ -1042,7 +1042,7 @@ mod tests {
             uncompressed_size: 0,
         };
         assert!(
-            matches!(decode_chunk_backing(&request, Bytes::new()), Err(DataLoadError::Chunk(error)) if matches!(error.as_ref(), viewer_core::McapChunkError::UnsupportedCompression(format) if format == "lz4"))
+            matches!(decode_chunk_backing(&request, Bytes::new()), Err(DataLoadError::Chunk(error)) if matches!(error.as_ref(), viewer_mcap::McapChunkError::UnsupportedCompression(format) if format == "lz4"))
         );
     }
 

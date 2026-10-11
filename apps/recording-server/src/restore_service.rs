@@ -319,7 +319,7 @@ fn ensure_message_indexes(recording: &Recording, streams: &[u32]) -> Result<(), 
             .stats
             .as_ref()
             .and_then(|stats| stats.channel_message_counts.get(channel).copied());
-        viewer_core::ensure_indexed(&facts, viewer_core::StreamId(*stream), message_count)
+        viewer_mcap::ensure_indexed(&facts, viewer_core::StreamId(*stream), message_count)
             .map_err(|error| {
                 ServerError::unprocessable(
                     "restore_index_unavailable",

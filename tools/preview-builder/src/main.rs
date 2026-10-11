@@ -67,9 +67,9 @@ fn main() -> Result<()> {
         );
     }
     let started = Instant::now();
-    let messages = viewer_core::FileMessageStream::open(&options.input)?;
+    let messages = viewer_mcap::FileMessageStream::open(&options.input)?;
     let (summary, identity) = messages.read_metadata()?;
-    let fingerprint = viewer_core::mcap_summary_fingerprint(identity)?;
+    let fingerprint = viewer_mcap::mcap_summary_fingerprint(identity)?;
     let camera_ids = camera_channel_ids(&summary, &options.primary_camera_topic);
     let mut report = Report {
         detected_cameras: camera_ids.len(),

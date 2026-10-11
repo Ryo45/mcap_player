@@ -1,8 +1,8 @@
 use std::{collections::BTreeMap, fs, path::PathBuf, time::Duration, time::Instant};
 use viewer_core::{
-    ArrivalTime, CameraController, CameraId, McapPlayback, McapSource, PlaybackRequirements,
-    SessionPlan, WorkspaceBindings,
+    ArrivalTime, CameraController, CameraId, PlaybackRequirements, SessionPlan, WorkspaceBindings,
 };
+use viewer_mcap::{McapPlayback, McapSource};
 use viewer_renderer::decode_camera_frame;
 
 fn fixture() -> Vec<u8> {
