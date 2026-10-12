@@ -1,6 +1,7 @@
 use super::{DEFAULT_QUERY_WINDOW_SECONDS, WindowQueryError, cursor_window};
-use crate::{ArrivalTime, McapSource};
+use crate::McapSource;
 use std::cell::Cell;
+use viewer_core::ArrivalTime;
 use viewer_core::{DiagnosticAggregator, DiagnosticsSnapshot};
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]

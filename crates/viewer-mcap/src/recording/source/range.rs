@@ -1,7 +1,9 @@
 //! Exact, bounded range-query contracts and execution.
 
-use crate::{DataWindowTimeRange, McapSourceError, RawMessage, StreamId};
+use crate::McapSourceError;
+
 use std::fmt;
+use viewer_core::{DataWindowTimeRange, RawMessage, StreamId};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct QueryLimits {

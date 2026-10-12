@@ -1,7 +1,8 @@
 //! Selected-field Plot queries. These products never enter FeatureRuntime.
-use crate::{
-    ArrivalTime, DataWindowTimeRange, DecodeError, McapSource, NumericFieldExtractor, QueryLimits,
-    RangeQuery, RawMessage, RosMessageSchema, SignalOverviewReducer, SignalSample, StreamId,
+use crate::{McapSource, QueryLimits, RangeQuery};
+use viewer_core::{
+    ArrivalTime, DataWindowTimeRange, DecodeError, NumericFieldExtractor, RawMessage,
+    RosMessageSchema, SignalOverviewReducer, SignalSample, StreamId,
 };
 
 #[derive(Debug)]

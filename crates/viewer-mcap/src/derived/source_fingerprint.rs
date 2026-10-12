@@ -1,7 +1,5 @@
-use crate::{
-    MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity, SourceFingerprint,
-    SourceFingerprintValidationError,
-};
+use crate::{MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity};
+use viewer_core::{SourceFingerprint, SourceFingerprintValidationError};
 
 /// Converts physical MCAP summary facts into the identity stored by derived artifacts.
 pub fn mcap_summary_fingerprint(

@@ -1,7 +1,8 @@
 //! Query-owned multi-stream traversal over physical chunk Message Index spans.
 use super::WindowQueryError;
-use crate::{ArrivalTime, DataWindowTimeRange, McapSource, McapSourceError, StreamId};
+use crate::{McapSource, McapSourceError};
 use std::collections::{BTreeMap, BinaryHeap, HashSet};
+use viewer_core::{ArrivalTime, DataWindowTimeRange, StreamId};
 
 #[derive(Clone, Copy)]
 pub(super) struct TimestampQueryLimits {

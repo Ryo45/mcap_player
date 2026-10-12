@@ -3,8 +3,9 @@ use super::{
     McapSource, ParsedChunkMessage,
     index::{ChunkMessageIndexes, IndexedMessagePosition, LatestIndexRead},
 };
-use crate::{ArrivalTime, McapSourceError, RawMessage, SourceCatalog, StreamId};
+use crate::McapSourceError;
 use std::collections::HashMap;
+use viewer_core::{ArrivalTime, RawMessage, SourceCatalog, StreamId};
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct LatestQueryDiagnostics {
     pub index_reads: u64,

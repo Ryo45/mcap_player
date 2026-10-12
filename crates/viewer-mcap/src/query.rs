@@ -3,7 +3,9 @@ mod timestamp_window;
 mod topic_health;
 pub use topic_health::{TopicHealthRequirement, TopicHealthSnapshot, query_topic_health};
 
-use crate::{ArrivalTime, DataWindowTimeRange, McapSourceError};
+use crate::McapSourceError;
+
+use viewer_core::{ArrivalTime, DataWindowTimeRange};
 
 pub const DEFAULT_QUERY_WINDOW_SECONDS: u32 = 10;
 pub const MAX_QUERY_WINDOW_SECONDS: u32 = 60;
@@ -12,7 +14,7 @@ pub const MAX_QUERY_WINDOW_SECONDS: u32 = 60;
 pub enum WindowQueryError {
     InvalidWindow,
     MissingTopic(String),
-    UnsupportedDiagnosticStream(crate::StreamId),
+    UnsupportedDiagnosticStream(viewer_core::StreamId),
     Limit {
         resource: &'static str,
         maximum: usize,

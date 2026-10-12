@@ -1,9 +1,10 @@
 //! MCAP-backed plot loading; reduction stays in viewer-core.
-use crate::{
-    ArrivalTime, LoadedOdometrySignals, LoadedSignal, McapSourceError, SignalId,
-    SignalOverviewReducer, SignalSample, decode_odometry,
-};
+use crate::McapSourceError;
 use mcap::{MessageStream, Summary};
+use viewer_core::{
+    ArrivalTime, LoadedOdometrySignals, LoadedSignal, SignalId, SignalOverviewReducer,
+    SignalSample, decode_odometry,
+};
 const ODOMETRY_PROGRESS_INTERVAL: usize = 65_536;
 /// Scans the configured Odometry topic in an MCAP and builds the speed signal.
 ///
@@ -138,7 +139,7 @@ impl crate::McapSource {
         let mut count = 0usize;
         self.visit_stream_range(
             stream.id,
-            crate::DataWindowTimeRange::new(range.start, range.end_exclusive)
+            viewer_core::DataWindowTimeRange::new(range.start, range.end_exclusive)
                 .expect("validated recording range"),
             || false,
             |message| {

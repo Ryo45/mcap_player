@@ -1,7 +1,8 @@
 use super::timestamp_window::{TimestampQueryLimits, collect_timestamp_window};
 use super::{DEFAULT_QUERY_WINDOW_SECONDS, WindowQueryError, cursor_window};
-use crate::{ArrivalTime, McapSource, StreamId};
+use crate::McapSource;
 use std::{collections::BTreeMap, sync::Arc, time::Duration};
+use viewer_core::{ArrivalTime, StreamId};
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct TopicHealthRequirement {
