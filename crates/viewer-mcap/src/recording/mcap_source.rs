@@ -14,6 +14,10 @@ use std::{
 
 #[derive(Debug)]
 pub enum McapOpenError {
+    QueryLimit {
+        resource: &'static str,
+        maximum: usize,
+    },
     Mcap(mcap::McapError),
     SummaryRequired,
     ChunkIndexRequired,
@@ -45,6 +49,9 @@ pub enum McapOpenError {
 impl fmt::Display for McapOpenError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::QueryLimit { resource, maximum } => {
+                write!(f, "query exceeds {resource} limit ({maximum})")
+            }
             Self::Mcap(error) => write!(f, "MCAP error: {error}"),
             Self::SummaryRequired => write!(f, "MCAP Summary is required for indexed playback"),
             Self::ChunkIndexRequired => {
@@ -578,14 +585,34 @@ impl McapSource {
         streams: &[StreamId],
         target: ArrivalTime,
     ) -> Result<IndexedMessages, McapOpenError> {
+        self.latest_before_with_limits(streams, target, crate::LatestQueryLimits::default())
+    }
+
+    pub fn latest_before_with_limits(
+        &self,
+        streams: &[StreamId],
+        target: ArrivalTime,
+        limits: crate::LatestQueryLimits,
+    ) -> Result<IndexedMessages, McapOpenError> {
+        let mut budget = crate::LatestQueryBudget::new(limits);
+        budget.streams(streams.len())?;
         self.indexed_summary(streams)?;
         let target = u64::try_from(target.0).map_err(|_| McapOpenError::TimestampOverflow)?;
         let mut index_cache = HashMap::new();
         let mut candidates = BTreeMap::<usize, Vec<(StreamId, u64)>>::new();
+        let mut reads = 0;
+        let mut cancelled = || false;
         for stream in streams.iter().copied() {
-            if let Some(position) =
-                self.latest_position(stream, target, &mut index_cache, true, &mut 0)?
-            {
+            if let Some(position) = self.latest_position(
+                stream,
+                target,
+                &mut LatestIndexRead {
+                    cache: &mut index_cache,
+                    reads: &mut reads,
+                    budget: &mut budget,
+                    cancelled: &mut cancelled,
+                },
+            )? {
                 candidates
                     .entry(position.chunk)
                     .or_default()
@@ -595,6 +622,8 @@ impl McapSource {
 
         let mut selected = HashMap::<StreamId, RawMessage>::new();
         for (chunk_index, wanted) in &candidates {
+            let chunk = &self.summary.chunk_indexes[*chunk_index];
+            budget.chunk(chunk.compressed_size, chunk.uncompressed_size)?;
             for message in self.parse_chunk(*chunk_index)? {
                 if wanted.iter().any(|(wanted_stream, offset)| {
                     *wanted_stream == message.message.stream_id && *offset == message.offset
@@ -669,9 +698,7 @@ impl McapSource {
         &self,
         stream: StreamId,
         target: u64,
-        index_cache: &mut HashMap<usize, ChunkMessageIndexes>,
-        retain_restore_indexes: bool,
-        index_reads: &mut u64,
+        read: &mut LatestIndexRead<'_>,
     ) -> Result<Option<IndexedMessagePosition>, McapOpenError> {
         self.indexed_summary(&[stream])?;
         let count = self
@@ -694,6 +721,8 @@ impl McapSource {
             .partition_point(|chunk| self.index_facts[*chunk].start <= target_time);
         let mut search = super::MessageIndexPredecessor::new(target);
         for cursor in (0..end).rev() {
+            read.check()?;
+            read.budget.candidate()?;
             if !search.can_improve(
                 sparse.prefix_max_end[cursor].0 as u64,
                 sparse.prefix_max_chunk[cursor],
@@ -701,19 +730,28 @@ impl McapSource {
                 break;
             }
             let chunk = sparse.chunks[cursor];
-            if !index_cache.contains_key(&chunk) {
-                if !retain_restore_indexes {
-                    index_cache.clear();
-                }
-                let parsed = self.read_chunk_message_indexes(chunk, || false)?;
-                index_cache.insert(chunk, parsed);
-                *index_reads = index_reads.saturating_add(1);
+            if !read.cache.contains_key(&chunk) {
+                let length =
+                    usize::try_from(self.summary.chunk_indexes[chunk].message_index_length)
+                        .map_err(|_| McapOpenError::ReadOverflow)?;
+                read.budget.index(length)?;
+                // One physical accelerator span, including multi-stream restore. Release the
+                // previous parsed entries before allocating the next span.
+                read.cache.clear();
+                *read.reads = read.reads.saturating_add(1);
+                let parsed = self.read_chunk_message_indexes_bounded(
+                    chunk,
+                    &mut *read.cancelled,
+                    super::latest_query::MAX_LATEST_INDEX_BYTES,
+                )?;
+                read.cache.insert(chunk, parsed);
             }
             let channel = u16::try_from(stream.0).map_err(|_| mcap::McapError::BadIndex)?;
-            if let Some(entries) = index_cache[&chunk].channels.get(&channel) {
+            if let Some(entries) = read.cache[&chunk].channels.get(&channel) {
                 search.consider_sorted(chunk, entries);
             }
         }
+        read.check()?;
         Ok(search.result().map(|(_, position)| position))
     }
 
@@ -722,6 +760,19 @@ impl McapSource {
         &self,
         chunk_index: usize,
         mut cancelled: impl FnMut() -> bool,
+    ) -> Result<ChunkMessageIndexes, McapOpenError> {
+        self.read_chunk_message_indexes_bounded(
+            chunk_index,
+            &mut cancelled,
+            super::backing::MAX_SOURCE_RECORD_BYTES,
+        )
+    }
+
+    fn read_chunk_message_indexes_bounded(
+        &self,
+        chunk_index: usize,
+        mut cancelled: impl FnMut() -> bool,
+        maximum_entry_bytes: usize,
     ) -> Result<ChunkMessageIndexes, McapOpenError> {
         if cancelled() {
             return Err(McapOpenError::QueryCancelled);
@@ -743,6 +794,7 @@ impl McapSource {
             .reads
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let bytes = self.backing.read(start, length)?;
+        let mut entry_bytes = 0usize;
         for (channel, offset) in &chunk.message_index_offsets {
             if cancelled() {
                 return Err(McapOpenError::QueryCancelled);
@@ -768,6 +820,19 @@ impl McapSource {
             let body = bytes
                 .get(header_end..body_end)
                 .ok_or(mcap::McapError::BadIndex)?;
+            // Validate the declared vector size before the library parser allocates entries.
+            let entry_length = body.get(2..6).ok_or(mcap::McapError::BadIndex)?;
+            let entry_length = u32::from_le_bytes(entry_length.try_into().unwrap()) as usize;
+            if !entry_length.is_multiple_of(16) || entry_length > body.len().saturating_sub(6) {
+                return Err(mcap::McapError::BadIndex.into());
+            }
+            if entry_length > maximum_entry_bytes.saturating_sub(entry_bytes) {
+                return Err(McapOpenError::QueryLimit {
+                    resource: "parsed index entry bytes",
+                    maximum: maximum_entry_bytes,
+                });
+            }
+            entry_bytes += entry_length;
             let mcap::records::Record::MessageIndex(index) =
                 mcap::parse_record(op::MESSAGE_INDEX, body)?
             else {
@@ -778,7 +843,7 @@ impl McapSource {
             }
             let mut records = index.records;
             records.sort_by_key(|entry| (entry.log_time, entry.offset));
-            indexes.insert(*channel, records);
+            indexes.insert(*channel, records.into_boxed_slice());
         }
         if cancelled() {
             return Err(McapOpenError::QueryCancelled);
@@ -925,6 +990,21 @@ impl McapSource {
     }
 }
 
+struct LatestIndexRead<'a> {
+    cache: &'a mut HashMap<usize, ChunkMessageIndexes>,
+    reads: &'a mut u64,
+    budget: &'a mut crate::LatestQueryBudget,
+    cancelled: &'a mut dyn FnMut() -> bool,
+}
+impl LatestIndexRead<'_> {
+    fn check(&mut self) -> Result<(), McapOpenError> {
+        if (self.cancelled)() {
+            return Err(McapOpenError::QueryCancelled);
+        }
+        Ok(())
+    }
+}
+
 #[derive(Default)]
 struct StreamChunks {
     chunks: Vec<usize>,
@@ -949,7 +1029,7 @@ pub(crate) struct StreamChunkTimeline<'a> {
 }
 
 pub(crate) struct ChunkMessageIndexes {
-    pub(crate) channels: HashMap<u16, Vec<mcap::records::MessageIndexEntry>>,
+    pub(crate) channels: HashMap<u16, Box<[mcap::records::MessageIndexEntry]>>,
     #[cfg(test)]
     _resident: ResidentIndexSpan,
 }
@@ -973,14 +1053,12 @@ struct ResidentIndexSpan {
 impl ResidentIndexSpan {
     fn new(
         metrics: std::sync::Arc<IndexReadMetrics>,
-        channels: &HashMap<u16, Vec<mcap::records::MessageIndexEntry>>,
+        channels: &HashMap<u16, Box<[mcap::records::MessageIndexEntry]>>,
     ) -> Self {
         use std::sync::atomic::Ordering::Relaxed;
         let entry_bytes = channels
             .values()
-            .map(|entries| {
-                entries.capacity() * std::mem::size_of::<mcap::records::MessageIndexEntry>()
-            })
+            .map(|entries| entries.len() * std::mem::size_of::<mcap::records::MessageIndexEntry>())
             .sum();
         let spans = metrics.resident_spans.fetch_add(1, Relaxed) + 1;
         metrics.peak_resident_spans.fetch_max(spans, Relaxed);
@@ -1039,22 +1117,45 @@ impl LatestMessageReader {
         target: ArrivalTime,
         mut cancelled: impl FnMut() -> bool,
     ) -> Result<Option<(IndexedMessagePosition, RawMessage)>, McapOpenError> {
+        self.read_at_with_budget_cancellable(
+            stream,
+            target,
+            &mut crate::LatestQueryBudget::default(),
+            &mut cancelled,
+        )
+    }
+
+    pub fn read_at_with_budget_cancellable(
+        &mut self,
+        stream: StreamId,
+        target: ArrivalTime,
+        budget: &mut crate::LatestQueryBudget,
+        mut cancelled: impl FnMut() -> bool,
+    ) -> Result<Option<(IndexedMessagePosition, RawMessage)>, McapOpenError> {
         if cancelled() {
             return Err(McapOpenError::QueryCancelled);
         }
+        budget.streams(1)?;
         self.source.backing.validate()?;
         if target < self.source.range.start {
             return Ok(None);
         }
         let target = u64::try_from(target.0).map_err(|_| McapOpenError::TimestampOverflow)?;
-        let Some(position) = self.source.latest_position(
+        let position = self.source.latest_position(
             stream,
             target,
-            &mut self.indexes,
-            false,
-            &mut self.diagnostics.index_reads,
-        )?
-        else {
+            &mut LatestIndexRead {
+                cache: &mut self.indexes,
+                reads: &mut self.diagnostics.index_reads,
+                budget,
+                cancelled: &mut cancelled,
+            },
+        )?;
+        if cancelled() {
+            return Err(McapOpenError::QueryCancelled);
+        }
+        self.source.backing.validate()?;
+        let Some(position) = position else {
             return Ok(None);
         };
         if self
@@ -1062,6 +1163,8 @@ impl LatestMessageReader {
             .as_ref()
             .is_none_or(|(chunk, _)| *chunk != position.chunk)
         {
+            let chunk = &self.source.summary.chunk_indexes[position.chunk];
+            budget.chunk(chunk.compressed_size, chunk.uncompressed_size)?;
             self.chunk = None;
             let parsed = self
                 .source
@@ -1079,6 +1182,10 @@ impl LatestMessageReader {
                     && m.message.arrival_time.0 as u64 <= target
             })
             .ok_or(mcap::McapError::BadIndex)?;
+        if cancelled() {
+            return Err(McapOpenError::QueryCancelled);
+        }
+        self.source.backing.validate()?;
         Ok(Some((position, message.message.clone())))
     }
 }
@@ -1119,6 +1226,256 @@ mod tests {
     use super::*;
     use mcap::{Compression, WriteOptions, Writer, records::MessageHeader};
     use std::{collections::BTreeMap, io::Cursor};
+
+    fn no_predecessor_fixture(chunks: u64) -> McapSource {
+        let mut output = Cursor::new(Vec::new());
+        {
+            let mut writer = Writer::with_options(
+                &mut output,
+                WriteOptions::new().compression(None).chunk_size(None),
+            )
+            .unwrap();
+            let schema = writer
+                .add_schema("demo/msg/Sample", "ros2msg", b"uint8 value")
+                .unwrap();
+            let future = writer
+                .add_channel(schema, "/future", "cdr", &BTreeMap::new())
+                .unwrap();
+            let past = writer
+                .add_channel(schema, "/past", "cdr", &BTreeMap::new())
+                .unwrap();
+            for chunk in 0..chunks {
+                for (channel, time) in [(future, 100 + chunk), (past, 0)] {
+                    writer
+                        .write_to_known_channel(
+                            &MessageHeader {
+                                channel_id: channel,
+                                sequence: chunk as u32,
+                                log_time: time,
+                                publish_time: 0,
+                            },
+                            &[1],
+                        )
+                        .unwrap();
+                }
+                writer.flush().unwrap();
+            }
+            writer.finish().unwrap();
+        }
+        McapSource::from_bytes(output.into_inner().into()).unwrap()
+    }
+
+    #[test]
+    fn cancellation_after_first_index_read_stops_even_without_a_predecessor() {
+        use std::sync::atomic::Ordering::Relaxed;
+        let source = no_predecessor_fixture(64);
+        let stream = source.catalog().by_topic("/future").unwrap().id;
+        let metrics = source.index_metrics.clone();
+        let mut reader = LatestMessageReader::new(source);
+        assert!(matches!(
+            reader.read_at_cancellable(stream, ArrivalTime(0), || metrics.reads.load(Relaxed) > 0),
+            Err(McapOpenError::QueryCancelled)
+        ));
+        assert_eq!(metrics.reads.load(Relaxed), 1);
+        assert_eq!(metrics.resident_spans.load(Relaxed), 0);
+    }
+
+    #[test]
+    fn generation_change_during_lookup_wakes_and_joins_after_one_read() {
+        use std::sync::{
+            Arc,
+            atomic::{AtomicU64, Ordering::Relaxed},
+            mpsc,
+        };
+        let source = no_predecessor_fixture(64);
+        let stream = source.catalog().by_topic("/future").unwrap().id;
+        let metrics = source.index_metrics.clone();
+        let generation = Arc::new(AtomicU64::new(0));
+        let worker_generation = generation.clone();
+        let (entered, wait_entered) = mpsc::channel();
+        let (resume, wait_resume) = mpsc::channel();
+        let worker = std::thread::spawn(move || {
+            let mut reader = LatestMessageReader::new(source);
+            let mut announced = false;
+            let result = reader.read_at_cancellable(stream, ArrivalTime(0), || {
+                if metrics.reads.load(Relaxed) > 0 && !announced {
+                    announced = true;
+                    entered.send(()).unwrap();
+                    wait_resume.recv().unwrap();
+                }
+                worker_generation.load(Relaxed) != 0
+            });
+            (result, reader.diagnostics())
+        });
+        wait_entered
+            .recv_timeout(std::time::Duration::from_secs(3))
+            .unwrap();
+        generation.store(1, Relaxed);
+        resume.send(()).unwrap();
+        let (result, metrics) = worker.join().unwrap();
+        assert!(matches!(result, Err(McapOpenError::QueryCancelled)));
+        assert_eq!(metrics.index_reads, 1);
+    }
+
+    #[test]
+    fn latest_demand_reserves_reads_bytes_and_candidates_before_exceeding_them() {
+        use std::sync::atomic::Ordering::Relaxed;
+        for (limits, resource, expected_reads) in [
+            (
+                crate::LatestQueryLimits {
+                    max_index_reads: 1,
+                    ..Default::default()
+                },
+                "latest index reads",
+                1,
+            ),
+            (
+                crate::LatestQueryLimits {
+                    max_index_bytes: 1,
+                    ..Default::default()
+                },
+                "latest index bytes",
+                0,
+            ),
+            (
+                crate::LatestQueryLimits {
+                    max_candidates: 1,
+                    ..Default::default()
+                },
+                "latest chunk candidates",
+                1,
+            ),
+        ] {
+            let source = no_predecessor_fixture(3);
+            let stream = source.catalog().by_topic("/future").unwrap().id;
+            let metrics = source.index_metrics.clone();
+            let mut reader = LatestMessageReader::new(source);
+            let mut budget = crate::LatestQueryBudget::new(limits);
+            assert!(
+                matches!(reader.read_at_with_budget_cancellable(stream, ArrivalTime(0), &mut budget, || false), Err(McapOpenError::QueryLimit { resource: found, .. }) if found == resource)
+            );
+            assert_eq!(metrics.reads.load(Relaxed), expected_reads);
+        }
+    }
+
+    #[test]
+    fn parsed_restore_indexes_remain_one_span_as_recording_duration_grows() {
+        use std::sync::atomic::Ordering::Relaxed;
+        let mut peaks = Vec::new();
+        for chunks in [3, 128] {
+            let source = no_predecessor_fixture(chunks);
+            let stream = source.catalog().by_topic("/future").unwrap().id;
+            assert!(
+                source
+                    .latest_before(&[stream], ArrivalTime(0))
+                    .unwrap()
+                    .messages
+                    .is_empty()
+            );
+            let metrics = source.index_read_metrics();
+            assert_eq!(metrics.peak_resident_spans.load(Relaxed), 1);
+            assert_eq!(metrics.resident_spans.load(Relaxed), 0);
+            peaks.push(metrics.peak_resident_entry_bytes.load(Relaxed));
+        }
+        assert_eq!(peaks[0], peaks[1]);
+        assert!(peaks[0] <= super::super::latest_query::MAX_LATEST_INDEX_BYTES);
+    }
+
+    #[test]
+    fn fresh_budgets_reuse_cached_indexes_and_cached_results_still_check_cancellation() {
+        let source = no_predecessor_fixture(1);
+        let stream = source.catalog().by_topic("/past").unwrap().id;
+        let mut reader = LatestMessageReader::new(source);
+        for _ in 0..16 {
+            let mut budget = crate::LatestQueryBudget::new(crate::LatestQueryLimits {
+                max_streams: 1,
+                max_index_reads: 1,
+                ..Default::default()
+            });
+            assert!(
+                reader
+                    .read_at_with_budget_cancellable(stream, ArrivalTime(0), &mut budget, || false)
+                    .unwrap()
+                    .is_some()
+            );
+        }
+        assert_eq!(reader.diagnostics().index_reads, 1);
+        let mut checks = 0;
+        assert!(matches!(
+            reader.read_at_cancellable(stream, ArrivalTime(0), || {
+                checks += 1;
+                checks > 2
+            }),
+            Err(McapOpenError::QueryCancelled)
+        ));
+        let mut budget = crate::LatestQueryBudget::new(crate::LatestQueryLimits {
+            max_streams: 1,
+            ..Default::default()
+        });
+        reader
+            .read_at_with_budget_cancellable(stream, ArrivalTime(0), &mut budget, || false)
+            .unwrap();
+        assert!(matches!(
+            reader.read_at_with_budget_cancellable(stream, ArrivalTime(0), &mut budget, || false),
+            Err(McapOpenError::QueryLimit {
+                resource: "latest streams",
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn failed_index_parse_spends_the_attempt_budget_and_chunk_limits_fail_before_decode() {
+        use std::sync::atomic::Ordering::Relaxed;
+        let mut source = no_predecessor_fixture(1);
+        let stream = source.catalog().by_topic("/past").unwrap().id;
+        let summary = source.summary.clone();
+        let index = *summary.chunk_indexes[0]
+            .message_index_offsets
+            .values()
+            .min()
+            .unwrap() as usize;
+        let super::super::backing::Backing::Bytes(bytes) = &source.backing else {
+            unreachable!()
+        };
+        let mut corrupt = bytes.to_vec();
+        corrupt[index] = 0;
+        source.backing = super::super::backing::Backing::Bytes(corrupt.into());
+        let metrics = source.index_metrics.clone();
+        let mut reader = LatestMessageReader::new(source);
+        let mut budget = crate::LatestQueryBudget::new(crate::LatestQueryLimits {
+            max_index_reads: 1,
+            ..Default::default()
+        });
+        assert!(
+            reader
+                .read_at_with_budget_cancellable(stream, ArrivalTime(0), &mut budget, || false)
+                .is_err()
+        );
+        assert!(matches!(
+            reader.read_at_with_budget_cancellable(stream, ArrivalTime(0), &mut budget, || false),
+            Err(McapOpenError::QueryLimit {
+                resource: "latest index reads",
+                ..
+            })
+        ));
+        assert_eq!(metrics.reads.load(Relaxed), 1);
+        let source = no_predecessor_fixture(1);
+        let stream = source.catalog().by_topic("/past").unwrap().id;
+        let mut reader = LatestMessageReader::new(source);
+        let mut budget = crate::LatestQueryBudget::new(crate::LatestQueryLimits {
+            max_chunk_bytes: 1,
+            ..Default::default()
+        });
+        assert!(matches!(
+            reader.read_at_with_budget_cancellable(stream, ArrivalTime(0), &mut budget, || false),
+            Err(McapOpenError::QueryLimit {
+                resource: "latest chunk bytes",
+                ..
+            })
+        ));
+        assert_eq!(reader.diagnostics().chunks_read, 0);
+    }
 
     fn indexed_fixture(chunk_size: u64, emit_message_indexes: bool) -> Vec<u8> {
         let mut bytes = Cursor::new(Vec::new());
