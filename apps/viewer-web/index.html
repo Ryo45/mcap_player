@@ -27,7 +27,8 @@
         <input id="topic-filter" type="search" placeholder="Filter topics" aria-label="Filter topics">
         <div id="topic-list" class="topic-list" aria-label="Recording topics">Open a recording to browse topics.</div>
         <pre id="topic-info">Select a topic to see its schema and message count.</pre>
-        <button id="inspect-message" type="button" disabled>Read message at cursor</button>
+        <button id="inspect-message" type="button" disabled>Refresh message</button>
+        <label><input id="inspect-auto" type="checkbox" checked> Follow cursor (250 ms)</label>
         <pre id="message-info">Select a topic to inspect its latest message at or before the cursor.</pre>
         <div id="message-fields" class="message-fields"></div>
       </div>

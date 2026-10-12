@@ -1,6 +1,8 @@
 #[cfg(any(test, target_arch = "wasm32"))]
 mod data_plane;
 #[cfg(any(test, target_arch = "wasm32"))]
+mod inspector_query;
+#[cfg(any(test, target_arch = "wasm32"))]
 mod local;
 #[cfg(any(test, target_arch = "wasm32"))]
 mod playback;
@@ -493,6 +495,13 @@ mod browser {
             })
         });
         inspect.set_onclick(Some(callback.as_ref().unchecked_ref()));
+        callback.forget();
+        let automatic: HtmlInputElement = element("inspect-auto");
+        let callback = Closure::<dyn FnMut(Event)>::new(|_: Event| {
+            let automatic: HtmlInputElement = element("inspect-auto");
+            APP.with(|app| app.borrow_mut().topics.set_automatic(automatic.checked()));
+        });
+        automatic.set_onchange(Some(callback.as_ref().unchecked_ref()));
         callback.forget();
         let fields: HtmlElement = element("message-fields");
         let callback = Closure::<dyn FnMut(Event)>::new(|event: Event| {

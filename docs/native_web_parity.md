@@ -12,7 +12,7 @@ remain shared observable requirements.
 | Recording playback | Local indexed MCAP | Browser `File.slice()` and Recording Server | Native remote source UI, if needed |
 | Playback and seek | Pause, speed, exact restore | Same shared clock/controllers; async complete-window buffering and restore | Keep parity regressions as features expand |
 | Topic catalog | Topic tree, schema, counts | Filterable topic list; all channels, schemas, encodings and counts | Hierarchical tree and numeric-field selection |
-| Message Inspector | Cursor-driven background latest-before queries; lazy fields and page navigation | Explicit **Read message at cursor**; exact latest-before across topic channels; lazy CDR containers and next-page navigation | Coalescing automatic refresh, previous/first page navigation, schema definition view |
+| Message Inspector | Cursor-driven background latest-before queries; lazy fields and page navigation | Automatic cursor follow (250 ms), coalesced exact latest-before across topic channels, manual Refresh and auto on/off; lazy CDR containers and next-page navigation | Previous/first page navigation, schema definition view |
 | Monitor layout | Left Topics / Inspector, right Scene and camera | Same arrangement; smaller screens stack the panels | Resizable splits and configurable layouts |
 | Cameras | Multiple panels, shared textures, scheduler focus and trajectory overlays | Focused camera, thumbnails, scheduler focus and same overlays | Multiple independently focused camera panels |
 | BEV | Shared GPU renderer | Shared GPU renderer, selectable in the Scene region | Independent BEV panel when configurable layouts arrive |
@@ -35,7 +35,13 @@ An empty continuous selection produces complete empty windows without a Local ch
 read or Remote HTTP request.
 
 Inspector uses an independent source loader, reusing the indexed latest-before
-primitive used for restore. One explicit request can be in flight. A topic switch,
+primitive used for restore. Automatic follow is enabled by default, starts at most
+once per 250 ms, and keeps one active request plus one coalesced cursor demand.
+Forward ticks do not cancel active work. A completed snapshot remains visible with
+its query cursor while refreshing; paused cursors reuse the result. Manual Refresh
+and automatic on/off remain available. New messages reset container/page navigation.
+One compiled stream schema is reused; message identity is not inferred from timestamps.
+A topic switch,
 successful seek, or source replacement invalidates it; Remote cancellation aborts
 HTTP, and Local cancellation stops further reads after the current `File.slice()`
 completes. A failed seek preserves the previous committed inspection. The query
@@ -75,15 +81,13 @@ and camera functionality available.
 
 ## Suggested follow-up order
 
-1. Add coalesced cursor-driven Inspector refresh with one current request and one
-   pending demand, keeping Local cancellation and retained backing bounded.
-2. Bring Topic Health and Diagnostics to both Web sources. Share the domain
+1. Bring Topic Health and Diagnostics to both Web sources. Share the domain
    reduction and budget rules; introduce async physical query primitives where
    the current synchronous `McapSource` boundary prevents reuse. Do not fetch all
    recording payloads to compute timestamp facts.
-3. Add numeric-field Plot through the Topic browser, preserving overview/detail/
+2. Add numeric-field Plot through the Topic browser, preserving overview/detail/
    current semantics and independent playback selection.
-4. Add resizable/configurable layouts, then multiple camera panels and bookmark/
+3. Add resizable/configurable layouts, then multiple camera panels and bookmark/
    preview artifacts. Use `viewer-layout` for the persistent model, with a concrete
    DOM host; do not import the Native `egui` panel implementation into Web.
 

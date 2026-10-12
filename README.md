@@ -59,7 +59,8 @@ trunk serve --release
 
 表示されたページでローカルの MCAP ファイルを選択します。ファイル全体は読み込まず、再生に必要な範囲だけを取得します。
 左に Topic 一覧・メッセージ Inspector、右上に 3D Scene、右下にカメラを表示します。
-Topic を選んで「Read message at cursor」を押すと、現在の MCAP log time 以前の最新メッセージを取得します。
+Topic を選ぶと、現在の MCAP log time 以前の最新メッセージを自動取得します（最大250 ms間隔）。
+「Follow cursor」で自動追従を切り替え、「Refresh message」で手動更新できます。
 ROS 2 CDR のフィールドは完全な ros2msg dependency 定義があれば展開できます。カメラのない録画も開けます。
 3D は Chase / Free / Vehicle eye、点群蓄積に対応し、BEV 表示にも切り替えられます。
 Native / Web の対応状況と今後の開発順は[差分一覧](docs/native_web_parity.md)を参照してください。

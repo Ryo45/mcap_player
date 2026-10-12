@@ -1,4 +1,4 @@
-//! Catalog browsing and an explicit, independent latest-before message query.
+//! Catalog browsing and an independent latest-before Inspector query.
 #[cfg(target_arch = "wasm32")]
 use crate::playback::{WebPlayback, WebRestoreLoader};
 #[cfg(target_arch = "wasm32")]
@@ -99,7 +99,10 @@ mod dom {
         topics: BTreeMap<String, Vec<StreamId>>,
         pub(crate) selected: Option<String>,
         loader: Option<WebRestoreLoader>,
-        pending: Option<(String, ArrivalTime)>,
+        query: crate::inspector_query::InspectorQueryState,
+        origin: Option<web_time::Instant>,
+        schema: Option<(StreamId, Result<InspectorSchema, String>)>,
+        snapshot_info: String,
         message: Option<Rc<InspectorMessage>>,
         pages: Vec<ContainerPage>,
         fields: usize,
@@ -117,6 +120,8 @@ mod dom {
                     .push(stream.id);
             }
             self.selected = None;
+            self.query.select(None);
+            self.schema = None;
             element("topic-info")
                 .set_inner_text("Select a topic to see its schema and message count.");
             element("inspect-message")
@@ -169,47 +174,32 @@ mod dom {
                 .collect::<Vec<_>>()
                 .join("\n\n");
             element("topic-info").set_inner_text(&format!("{topic}\n\n{info}"));
+            self.query.select(Some(topic.clone()));
+            self.schema = None;
             self.selected = Some(topic);
             self.rendered = false;
-            element("message-info")
-                .set_inner_text("Read the latest message at or before the committed cursor.");
+            element("message-info").set_inner_text(
+                "Following the committed cursor. Use Refresh when automatic updates are off.",
+            );
             element("inspect-message")
                 .dyn_into::<HtmlButtonElement>()
                 .unwrap()
                 .set_disabled(false);
         }
 
+        pub(crate) fn set_automatic(&mut self, automatic: bool) {
+            self.query.set_automatic(automatic);
+        }
+
         pub(crate) fn request(&mut self, session: &WebPlayback) {
-            if self.pending.is_some() {
-                return;
-            }
-            let Some(topic) = self.selected.clone() else {
-                return;
-            };
-            let target = session.clock().cursor();
-            let result = inspection_plan(session.catalog(), &topic, target).and_then(|plan| {
-                self.loader
-                    .as_mut()
-                    .unwrap()
-                    .request(plan)
-                    .map_err(|error| error.to_string())
-            });
+            self.query.refresh(session.clock().cursor());
+        }
+
+        fn clear_fields(&mut self) {
             self.message = None;
             self.pages.clear();
             self.fields = 0;
             element("message-fields").set_inner_text("");
-            match result {
-                Ok(()) => {
-                    self.pending = Some((topic, target));
-                    element("message-info")
-                        .set_inner_text(&format!("Loading message at log time {} ns…", target.0));
-                    element("inspect-message")
-                        .dyn_into::<HtmlButtonElement>()
-                        .unwrap()
-                        .set_disabled(true);
-                }
-                Err(error) => element("message-info").set_inner_text(&error),
-            }
         }
 
         pub(crate) fn poll(&mut self, session: &WebPlayback) {
@@ -217,37 +207,111 @@ mod dom {
                 let filter: web_sys::HtmlInputElement = element("topic-filter").dyn_into().unwrap();
                 self.render_topics(&filter.value());
             }
-            let Some(result) = self.loader.as_mut().and_then(WebRestoreLoader::poll) else {
-                return;
-            };
-            let Some((topic, target)) = self.pending.take() else {
-                return;
-            };
-            element("inspect-message")
-                .dyn_into::<HtmlButtonElement>()
-                .unwrap()
-                .set_disabled(false);
-            let raw = match result
-                .map_err(|error| error.to_string())
-                .and_then(|messages| {
-                    latest_topic_message(session.catalog(), &topic, target, messages)
-                }) {
-                Ok(Some(raw)) => raw,
+            if let Some(result) = self.loader.as_mut().and_then(WebRestoreLoader::poll)
+                && let Some(request) = self.query.active().cloned()
+                && self.query.complete(&request)
+            {
+                self.publish(
+                    session,
+                    &request.topic,
+                    request.target,
+                    result.map_err(|e| e.to_string()),
+                );
+            }
+            let now = self
+                .origin
+                .get_or_insert_with(web_time::Instant::now)
+                .elapsed()
+                .as_millis() as u64;
+            if let Some(request) = self.query.next(session.clock().cursor(), now) {
+                let result = inspection_plan(session.catalog(), &request.topic, request.target)
+                    .and_then(|plan| {
+                        self.loader
+                            .as_mut()
+                            .unwrap()
+                            .request(plan)
+                            .map_err(|e| e.to_string())
+                    });
+                if let Err(error) = result {
+                    self.query.complete(&request);
+                    self.snapshot_info = error;
+                }
+            }
+            if self.selected.is_some() {
+                let loading = self.query.active().map_or(String::new(), |r| {
+                    format!("\nLoading at {} ns…", r.target.0)
+                });
+                element("message-info").set_inner_text(&format!(
+                    "{}\nCurrent cursor: {} ns{}",
+                    self.snapshot_info,
+                    session.clock().cursor().0,
+                    loading
+                ));
+            }
+        }
+
+        fn publish(
+            &mut self,
+            session: &WebPlayback,
+            topic: &str,
+            target: ArrivalTime,
+            result: Result<Vec<RawMessage>, String>,
+        ) {
+            let raw = match result.and_then(|messages| {
+                latest_topic_message(session.catalog(), topic, target, messages)
+            }) {
+                Ok(Some(raw)) if raw.arrival_time <= session.clock().cursor() => raw,
+                Ok(Some(_)) => return,
                 Ok(None) => {
-                    element("message-info")
-                        .set_inner_text(&format!("No message at or before {} ns", target.0));
+                    self.clear_fields();
+                    self.snapshot_info = format!(
+                        "Query cursor: {} ns\nNo message at or before the cursor",
+                        target.0
+                    );
                     return;
                 }
                 Err(error) => {
-                    element("message-info").set_inner_text(&error);
+                    // Retain the previous completed snapshot and its metadata while reporting failure.
+                    self.snapshot_info
+                        .push_str(&format!("\nRefresh failed: {error}"));
+                    // Keep the retained status bounded even across repeated errors.
+                    if self.snapshot_info.len() > 4096 {
+                        self.snapshot_info = error;
+                    }
                     return;
                 }
             };
-            element("message-info").set_inner_text(&format!("Query cursor: {} ns\nLog time: {} ns\nPublish time: {}\nSequence: {}\nPayload: {} bytes", target.0, raw.arrival_time.0, raw.publish_time_ns.map_or_else(|| "unavailable".into(), |time| format!("{time} ns")), raw.sequence.map_or_else(|| "unavailable".into(), |sequence| sequence.to_string()), raw.payload.len()));
-            let descriptor = session.catalog().by_id(raw.stream_id).unwrap();
-            match InspectorSchema::for_stream(descriptor)
-                .and_then(|schema| InspectorMessage::new(&schema, &raw))
+            self.clear_fields();
+            self.snapshot_info = format!(
+                "Query cursor: {} ns\nLog time: {} ns\nPublish time: {}\nSequence: {}\nPayload: {} bytes",
+                target.0,
+                raw.arrival_time.0,
+                raw.publish_time_ns
+                    .map_or_else(|| "unavailable".into(), |time| format!("{time} ns")),
+                raw.sequence
+                    .map_or_else(|| "unavailable".into(), |sequence| sequence.to_string()),
+                raw.payload.len()
+            );
+            if self
+                .schema
+                .as_ref()
+                .is_none_or(|(stream, _)| *stream != raw.stream_id)
             {
+                let descriptor = session.catalog().by_id(raw.stream_id).unwrap();
+                self.schema = Some((
+                    raw.stream_id,
+                    InspectorSchema::for_stream(descriptor).map_err(|e| e.to_string()),
+                ));
+            }
+            let decoded = self
+                .schema
+                .as_ref()
+                .unwrap()
+                .1
+                .as_ref()
+                .map_err(Clone::clone)
+                .and_then(|schema| InspectorMessage::new(schema, &raw).map_err(|e| e.to_string()));
+            match decoded {
                 Ok(message) => {
                     let root = message.root.clone();
                     self.message = Some(Rc::new(message));
@@ -258,7 +322,7 @@ mod dom {
                     });
                     self.show_page(0, false);
                 }
-                Err(error) => element("message-fields").set_inner_text(&error.to_string()),
+                Err(error) => element("message-fields").set_inner_text(&error),
             }
         }
 
@@ -266,12 +330,10 @@ mod dom {
             if let Some(loader) = &mut self.loader {
                 loader.cancel();
             }
-            self.pending = None;
-            self.message = None;
-            self.pages.clear();
-            self.fields = 0;
-            element("message-fields").set_inner_text("");
-            element("message-info").set_inner_text("Read a message at the new cursor.");
+            self.query.invalidate();
+            self.clear_fields();
+            self.snapshot_info = "Waiting for a message at the committed cursor.".into();
+            element("message-info").set_inner_text(&self.snapshot_info);
             element("inspect-message")
                 .dyn_into::<HtmlButtonElement>()
                 .unwrap()
