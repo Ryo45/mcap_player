@@ -48,7 +48,7 @@ pub(crate) struct DiagnosticsQueryState {
     pub(crate) requirement: viewer_mcap::DiagnosticsRequirement,
     pub(crate) cursor: ArrivalTime,
     pub(crate) loading: bool,
-    pub(crate) snapshot: Option<Arc<viewer_mcap::DiagnosticsSnapshot>>,
+    pub(crate) snapshot: Option<Arc<viewer_core::DiagnosticsSnapshot>>,
     pub(crate) error: Option<Arc<WindowLoadError>>,
 }
 

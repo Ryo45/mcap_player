@@ -4,7 +4,6 @@ mod topic_health;
 pub use topic_health::{TopicHealthRequirement, TopicHealthSnapshot, query_topic_health};
 
 use crate::{ArrivalTime, DataWindowTimeRange, McapOpenError};
-use std::time::Duration;
 
 pub const DEFAULT_QUERY_WINDOW_SECONDS: u32 = 10;
 pub const MAX_QUERY_WINDOW_SECONDS: u32 = 60;
@@ -73,11 +72,15 @@ pub(crate) fn cursor_window(
     .map_err(|_| WindowQueryError::InvalidWindow)
 }
 
-fn elapsed(later: ArrivalTime, earlier: ArrivalTime) -> Duration {
-    Duration::from_nanos(later.0.abs_diff(earlier.0))
-}
-
 mod diagnostics;
-pub use diagnostics::{
-    DiagnosticEvent, DiagnosticsRequirement, DiagnosticsSnapshot, query_diagnostics,
-};
+pub use diagnostics::{DiagnosticsRequirement, query_diagnostics};
+
+impl From<viewer_core::DiagnosticsReduceError> for WindowQueryError {
+    fn from(value: viewer_core::DiagnosticsReduceError) -> Self {
+        match value {
+            viewer_core::DiagnosticsReduceError::Limit { resource, maximum } => {
+                Self::Limit { resource, maximum }
+            }
+        }
+    }
+}

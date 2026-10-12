@@ -2,6 +2,22 @@
 
 調査対象HEAD: `f16cd90da2e62c8ef0481d126ef87beca9e26161`
 
+## 次の開発候補（2026-10-12 調査）
+
+以下は HEAD `5fbfac2` ＋未コミットの `viewer-mcap` 分離後の作業ツリーを調べた新しい課題です。
+既存001〜010の調査・完了記録は下にそのまま残しています。
+各 issue は課題・コード調査・解決方針・回帰確認・着手判断を専用ディレクトリにまとめています。
+
+| 推奨順 | 種別 | Issue | 状態 |
+| --- | --- | --- | --- |
+| 1 | P2 不具合修正＋リソース制御 | [011 Native 直前値検索のキャンセル・要求予算・索引保持上限](011-native-latest-query-bounds/README.md) | 対応済み |
+| 2 | P2 機能追加 | [012 Web Inspector 自動更新](012-web-inspector-auto-refresh/README.md) | 対応済み |
+| 3 | P2 リファクタリング | [013 Health／Diagnostics の純粋な集計を分離](013-recording-health-reducers/README.md) | 純粋な集計の分離は対応済み。Web UI/I/Oは別課題 |
+
+011〜013の第一段階は実装済み。各issue末尾に実装結果と検証を記録しました。
+013のWeb Health／Diagnostics UIと非同期I/Oは次の独立した機能追加です。
+共通の再生状態管理やGUI全面統合は含めていません。
+
 ## 判断基準
 
 優先度はコードの見た目ではなく、次の順で決めます。
@@ -96,3 +112,11 @@ transitionでresetします。restore failure時はtransitionしないためCPU 
 - viewer-web / viewer-remote-protocol wasm check: 成功
 - `trunk build`: 成功
 - `viewer-native --features ros2-live`: 成功
+
+## 011〜013 実装後の検証（2026-10-12）
+
+- `cargo fmt --all -- --check`、workspace Clippy（all-targets、warnings禁止）、workspace tests 成功。
+- Dockerでcore/mcap/renderersのWASM check、Web WASM Clippy、Trunk release 成功。
+- ROS 2 Jazzy環境で `viewer-native --features ros2-live` テスト成功（78 passed、既存2 ignored）。
+- ChromeでLocal/Remote InspectorとScene/BEVの通し確認成功。
+- `cargo tree -p viewer-core --edges all` でMCAP/codecs/HTTPの逆依存なし。

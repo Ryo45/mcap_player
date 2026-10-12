@@ -1,9 +1,7 @@
 use super::{DEFAULT_QUERY_WINDOW_SECONDS, WindowQueryError, cursor_window};
-use crate::{
-    ArrivalTime, DecodeError, DiagnosticKeyValue, DiagnosticLevel, McapSource,
-    decode_diagnostic_array,
-};
-use std::{cell::Cell, collections::BTreeMap};
+use crate::{ArrivalTime, McapSource};
+use std::cell::Cell;
+use viewer_core::{DiagnosticAggregator, DiagnosticsSnapshot};
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct DiagnosticsRequirement {
@@ -18,28 +16,6 @@ impl Default for DiagnosticsRequirement {
         }
     }
 }
-#[derive(Debug)]
-pub struct DiagnosticEvent {
-    pub level: DiagnosticLevel,
-    pub name: String,
-    pub message: String,
-    /// Details from the latest occurrence, deterministic by stream then source order on ties.
-    pub hardware_id: String,
-    pub values: Vec<DiagnosticKeyValue>,
-    pub count: usize,
-    pub first_seen: ArrivalTime,
-    pub last_seen: ArrivalTime,
-}
-#[derive(Debug, Default)]
-pub struct DiagnosticsSnapshot {
-    pub events: Vec<DiagnosticEvent>,
-    pub malformed_messages: usize,
-    pub first_decode_error: Option<DecodeError>,
-}
-const MAX_MESSAGES: usize = 10_000;
-const MAX_READ_BYTES: usize = 16 * 1024 * 1024;
-const MAX_EVENTS: usize = 4096;
-const MAX_EVENT_BYTES: usize = 4 * 1024 * 1024;
 const MAX_CHUNKS: usize = 4096;
 const MAX_CHUNK_BYTES: u64 = 128 * 1024 * 1024;
 
@@ -111,118 +87,11 @@ pub fn query_diagnostics(
             },
         );
         if let Some(error) = aggregation_error {
-            return Err(error);
+            return Err(error.into());
         }
         read?;
     }
-    Ok(aggregator.finish())
-}
-
-#[derive(Default)]
-struct DiagnosticAggregator {
-    snapshot: DiagnosticsSnapshot,
-    events: BTreeMap<(DiagnosticLevel, String, String), DiagnosticEvent>,
-    messages: usize,
-    input_bytes: usize,
-    retained_bytes: usize,
-}
-impl DiagnosticAggregator {
-    fn admit(&mut self, raw: &crate::RawMessage) -> Result<(), WindowQueryError> {
-        if self.messages >= MAX_MESSAGES {
-            return Err(WindowQueryError::Limit {
-                resource: "diagnostics input messages",
-                maximum: MAX_MESSAGES,
-            });
-        }
-        if raw.payload.len() > MAX_READ_BYTES.saturating_sub(self.input_bytes) {
-            return Err(WindowQueryError::Limit {
-                resource: "diagnostics input payload bytes",
-                maximum: MAX_READ_BYTES,
-            });
-        }
-        self.messages += 1;
-        self.input_bytes += raw.payload.len();
-        let array = match decode_diagnostic_array(&raw.payload) {
-            Ok(array) => array,
-            Err(error) => {
-                self.snapshot.malformed_messages += 1;
-                if self.snapshot.first_decode_error.is_none() {
-                    self.snapshot.first_decode_error = Some(error);
-                }
-                return Ok(());
-            }
-        };
-        for status in array.statuses {
-            self.aggregate(status, raw.arrival_time)?;
-        }
-        Ok(())
-    }
-    fn aggregate(
-        &mut self,
-        status: crate::DiagnosticStatus,
-        arrival: ArrivalTime,
-    ) -> Result<(), WindowQueryError> {
-        let key = (status.level, status.name.clone(), status.message.clone());
-        if let Some(event) = self.events.get_mut(&key) {
-            event.count += 1;
-            event.first_seen = event.first_seen.min(arrival);
-            if arrival >= event.last_seen {
-                self.retained_bytes = self
-                    .retained_bytes
-                    .saturating_sub(detail_bytes(&event.hardware_id, &event.values))
-                    .saturating_add(detail_bytes(&status.hardware_id, &status.values));
-                event.last_seen = arrival;
-                event.hardware_id = status.hardware_id;
-                event.values = status.values;
-            }
-        } else {
-            if self.events.len() >= MAX_EVENTS {
-                return Err(WindowQueryError::Limit {
-                    resource: "diagnostic events",
-                    maximum: MAX_EVENTS,
-                });
-            }
-            // Include strings duplicated in the aggregation key as well as result details.
-            self.retained_bytes += 2 * (status.name.len() + status.message.len())
-                + detail_bytes(&status.hardware_id, &status.values);
-            self.events.insert(
-                key,
-                DiagnosticEvent {
-                    level: status.level,
-                    name: status.name,
-                    message: status.message,
-                    hardware_id: status.hardware_id,
-                    values: status.values,
-                    count: 1,
-                    first_seen: arrival,
-                    last_seen: arrival,
-                },
-            );
-        }
-        if self.retained_bytes > MAX_EVENT_BYTES {
-            return Err(WindowQueryError::Limit {
-                resource: "diagnostic result bytes",
-                maximum: MAX_EVENT_BYTES,
-            });
-        }
-        Ok(())
-    }
-    fn finish(mut self) -> DiagnosticsSnapshot {
-        self.snapshot.events = self.events.into_values().collect();
-        self.snapshot.events.sort_by(|a, b| {
-            b.last_seen
-                .cmp(&a.last_seen)
-                .then_with(|| (a.level, &a.name, &a.message).cmp(&(b.level, &b.name, &b.message)))
-        });
-        self.snapshot
-    }
-}
-fn detail_bytes(hardware: &str, values: &[DiagnosticKeyValue]) -> usize {
-    hardware.len()
-        + values
-            .iter()
-            .map(|value| value.key.len() + value.value.len())
-            .sum::<usize>()
+    aggregator.finish().map_err(Into::into)
 }
 
 #[cfg(test)]
@@ -248,7 +117,9 @@ mod tests {
     }
     use super::*;
     use mcap::{WriteOptions, Writer, records::MessageHeader};
+    use std::collections::BTreeMap;
     use std::io::Cursor;
+    use viewer_core::DiagnosticLevel;
 
     fn diagnostic(hardware: &str) -> Vec<u8> {
         let mut bytes = vec![0, 1, 0, 0];

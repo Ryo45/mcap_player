@@ -1,5 +1,5 @@
 use super::timestamp_window::{TimestampQueryLimits, collect_timestamp_window};
-use super::{DEFAULT_QUERY_WINDOW_SECONDS, WindowQueryError, cursor_window, elapsed};
+use super::{DEFAULT_QUERY_WINDOW_SECONDS, WindowQueryError, cursor_window};
 use crate::{ArrivalTime, McapSource, StreamId};
 use std::{collections::BTreeMap, sync::Arc, time::Duration};
 
@@ -126,30 +126,15 @@ pub fn query_topic_health(
             snapshot.latest_arrival = snapshot.latest_arrival.max(result.latest_arrival);
         }
         arrivals.sort_unstable();
-        summarize(snapshot, &arrivals, cursor);
+        let facts = viewer_core::summarize_topic_timing(&arrivals, snapshot.latest_arrival, cursor);
+        snapshot.sample_count = facts.sample_count;
+        snapshot.observed_rate_hz = facts.observed_rate_hz;
+        snapshot.latest_age = facts.latest_age;
+        snapshot.recent_gap = facts.recent_gap;
+        snapshot.max_gap = facts.max_gap;
     }
     source.validate_unchanged()?;
     Ok(snapshots)
-}
-
-fn summarize(snapshot: &mut TopicHealthSnapshot, arrivals: &[ArrivalTime], cursor: ArrivalTime) {
-    snapshot.sample_count = arrivals.len() as u64;
-    snapshot.latest_age = snapshot.latest_arrival.map(|last| elapsed(cursor, last));
-    if arrivals.len() < 2 {
-        return;
-    }
-    let span = elapsed(*arrivals.last().unwrap(), arrivals[0]);
-    if !span.is_zero() {
-        snapshot.observed_rate_hz = Some((arrivals.len() - 1) as f64 / span.as_secs_f64());
-    }
-    snapshot.recent_gap = Some(elapsed(
-        arrivals[arrivals.len() - 1],
-        arrivals[arrivals.len() - 2],
-    ));
-    snapshot.max_gap = arrivals
-        .windows(2)
-        .map(|pair| elapsed(pair[1], pair[0]))
-        .max();
 }
 
 #[cfg(test)]
