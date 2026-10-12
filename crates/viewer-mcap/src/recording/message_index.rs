@@ -1,7 +1,7 @@
 //! Platform-neutral Message Index planning.
 
-use crate::{ArrivalTime, DataWindowTimeRange, StreamId};
 use std::{collections::BTreeSet, error::Error, fmt};
+use viewer_core::{ArrivalTime, DataWindowTimeRange, StreamId};
 
 /// Exact latest-before selection across chunk Message Index records.
 /// Traversal, physical reads and caching remain with the source adapter.

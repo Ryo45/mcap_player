@@ -9,14 +9,15 @@ use index::{LatestIndexRead, StreamChunks};
 pub use latest::{LatestMessageReader, LatestQueryDiagnostics};
 pub use range::{QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult};
 
-use crate::{
-    ArrivalTime, IndexedChunkFact, McapSourceError, RawMessage, RecordingTimeRange,
-    SourceCapabilities, SourceCatalog, StreamDescriptor, StreamId, StreamTimingSummary,
-    ensure_indexed, history_candidate_chunks,
-};
+use crate::{IndexedChunkFact, McapSourceError, ensure_indexed, history_candidate_chunks};
+
 use bytes::Bytes;
 use mcap::{Summary, records::op};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use viewer_core::{
+    ArrivalTime, RawMessage, RecordingTimeRange, SourceCapabilities, SourceCatalog,
+    StreamDescriptor, StreamId, StreamTimingSummary,
+};
 
 #[derive(Clone)]
 struct CachedMessage {
@@ -360,7 +361,7 @@ impl McapSource {
     pub(crate) fn visit_stream_range(
         &self,
         stream: StreamId,
-        range: crate::DataWindowTimeRange,
+        range: viewer_core::DataWindowTimeRange,
         mut cancelled: impl FnMut() -> bool,
         mut visit: impl FnMut(&RawMessage),
     ) -> Result<usize, McapSourceError> {
@@ -469,7 +470,7 @@ impl McapSource {
     pub fn indexed_range(
         &self,
         streams: &[StreamId],
-        range: crate::DataWindowTimeRange,
+        range: viewer_core::DataWindowTimeRange,
     ) -> Result<IndexedMessages, McapSourceError> {
         self.indexed_summary(streams)?;
         let mut chunks = HashSet::<usize>::new();
@@ -514,7 +515,7 @@ impl McapSource {
         let recording = self.range;
         self.indexed_range(
             streams,
-            crate::DataWindowTimeRange::new(recording.start, recording.end_exclusive)
+            viewer_core::DataWindowTimeRange::new(recording.start, recording.end_exclusive)
                 .expect("catalog recording range is ordered"),
         )
     }

@@ -57,7 +57,7 @@ thread_local! { static APP: RefCell<WebApp> = RefCell::new(WebApp {
     view: WebViewState::default(),
     focused_camera: None,
     calibrations: CameraCalibrationSet::from_json(include_str!(
-        "../../../../config/camera_calibration.json"
+        "../../../config/camera_calibration.json"
     )).expect("bundled camera calibration"),
     previous_ms: Date::now(),
     topics: crate::topics::TopicBrowser::default(),

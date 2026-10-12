@@ -1,10 +1,9 @@
 //! Native MCAP playback orchestration.
 
-use crate::{
-    McapSource, McapSourceError, PlaybackClock, RangeQuery, RangeQueryError, RangeQueryResult,
-    RawMessage, RestorePlan, SourceCatalog, StageTiming, StreamId,
-};
+use crate::{McapSource, McapSourceError, RangeQuery, RangeQueryError, RangeQueryResult};
+
 use std::{fmt, time::Duration};
+use viewer_core::{PlaybackClock, RawMessage, RestorePlan, SourceCatalog, StageTiming, StreamId};
 use web_time::Instant;
 
 #[derive(Debug)]
@@ -146,7 +145,7 @@ impl McapPlayback {
     pub fn seek_with<E>(
         &mut self,
         plan: &RestorePlan,
-        restore: impl FnOnce(crate::ArrivalTime, Vec<RawMessage>) -> Result<(), E>,
+        restore: impl FnOnce(viewer_core::ArrivalTime, Vec<RawMessage>) -> Result<(), E>,
     ) -> Result<(), McapSeekError<E>> {
         let mut messages = self
             .source
@@ -174,7 +173,7 @@ impl McapPlayback {
         );
         messages.sort_by_key(|message| (message.arrival_time, message.stream_id.0));
 
-        let after_target = crate::ArrivalTime(plan.target.0.saturating_add(1));
+        let after_target = viewer_core::ArrivalTime(plan.target.0.saturating_add(1));
         let source_position = self.source.prepare_seek(after_target)?;
         restore(plan.target, messages).map_err(McapSeekError::Restore)?;
         self.source.commit_seek(source_position);
@@ -198,8 +197,8 @@ impl McapPlayback {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ArrivalTime;
     use mcap::Summary;
+    use viewer_core::ArrivalTime;
 
     fn fixture(name: &str) -> Vec<u8> {
         std::fs::read(
@@ -263,16 +262,16 @@ mod tests {
         let restore_plan = RestorePlan {
             target: corrupt_target,
             latest_before: Vec::new(),
-            histories: vec![crate::RestoreRead {
+            histories: vec![viewer_core::RestoreRead {
                 streams: playback
                     .catalog()
                     .streams
                     .iter()
                     .map(|stream| stream.id)
                     .collect(),
-                range: crate::DataWindowTimeRange::new(
+                range: viewer_core::DataWindowTimeRange::new(
                     playback.clock().start(),
-                    crate::ArrivalTime(corrupt_target.0 + 1),
+                    viewer_core::ArrivalTime(corrupt_target.0 + 1),
                 )
                 .unwrap(),
             }],

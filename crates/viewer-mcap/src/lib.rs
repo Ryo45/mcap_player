@@ -3,9 +3,6 @@
 //! MCAP recording I/O, byte processing, indexed queries and playback transport.
 //! Viewer domain types, codecs, reducers and feature state live in `viewer-core`.
 
-// Internal modules use the domain vocabulary without re-exporting it as a facade.
-pub(crate) use viewer_core::*;
-
 mod derived;
 mod playback;
 mod query;

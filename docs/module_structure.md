@@ -18,20 +18,22 @@ a reason to split a module; ownership and independent reasons to change are.
 
 Internal modules need not be public. Explicit root exports keep the current API
 reviewable independently of file layout. Parent modules may implement their own
-composition; `mod.rs` need not be declarations only.
+composition. A parent entry uses its domain filename (`app.rs`, `recording.rs`,
+`presentation.rs`), with children in the same-named directory. Module paths and
+visibility are independent of this physical naming choice.
 
 ## Placement map
 
 | Change | Owner |
 | --- | --- |
-| Browser event wiring and committed frame order | `viewer-web/app/mod.rs` |
+| Browser event wiring and committed frame order | `viewer-web/app.rs` |
 | Browser camera canvases, thumbnails, JPEG preparation, overlays | `viewer-web/app/camera.rs` |
 | Browser source opening/replacement and its generation | `viewer-web/app/source.rs` |
 | Remote source selection UI | `viewer-web/app/source/remote.rs` |
 | Remote HTTP / Local file access | `viewer-web/remote`, `viewer-web/local` |
 | Browser Scene/BEV GPU lifecycle and interactions | `viewer-web/app/scene.rs` |
 | Browser viewer snapshot / diagnostic DOM | `viewer-web/app/presentation.rs` |
-| MCAP source metadata, forward position and chunk ownership | `viewer-mcap/recording/source/mod.rs` |
+| MCAP source metadata, forward position and chunk ownership | `viewer-mcap/recording/source.rs` |
 | Physical Message Index parsing, timelines, predecessor traversal | `viewer-mcap/recording/source/index.rs` |
 | Independent latest-before reader and bounded caches | `viewer-mcap/recording/source/latest.rs` |
 | Exact range query contract and execution | `viewer-mcap/recording/source/range.rs` |
@@ -85,3 +87,11 @@ WASM Clippy and the Trunk release build. ROS 2 Jazzy tests passed (78 passed,
 automatic/manual Inspector refresh, exact seek, nested CDR, seven camera thumbnails
 and Scene/BEV rendering. Core's dependency tree, including dev/build edges, remains
 free of MCAP and its codecs.
+
+## Imports
+
+Import external concepts directly and explicitly from their owning crate, for
+example `use viewer_core::{ArrivalTime, RawMessage, SourceCatalog};`. Do not
+forward an external crate into the local root with a wildcard re-export. This
+makes ownership and each file's dependencies visible without inspecting another
+crate's entire API. Local public surface exports remain explicit.

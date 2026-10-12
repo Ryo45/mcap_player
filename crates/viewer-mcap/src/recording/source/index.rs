@@ -1,8 +1,9 @@
 //! Physical Message Index spans, chunk timelines and exact predecessor lookup.
 use super::McapSource;
-use crate::{ArrivalTime, McapSourceError, StreamId};
+use crate::McapSourceError;
 use mcap::records::op;
 use std::collections::HashMap;
+use viewer_core::{ArrivalTime, StreamId};
 pub(super) struct LatestIndexRead<'a> {
     pub(super) cache: &'a mut HashMap<usize, ChunkMessageIndexes>,
     pub(super) reads: &'a mut u64,

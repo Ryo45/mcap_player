@@ -27,7 +27,7 @@ Message Index の探索には渡していない。索引を多数読む要求が
    は候補チャンクを走査し、物理読み取りを
    `read_chunk_message_indexes(chunk, || false)` で呼び出している。
    下位の読み取り・チャンネル解析はキャンセルに対応済みで、伝播が抜けている。
-3. [latest_before](../../../crates/viewer-mcap/src/recording/source/mod.rs)
+3. [latest_before](../../../crates/viewer-mcap/src/recording/source.rs)
    は `retain_restore_indexes = true` を渡す。ローカル `HashMap` に入った索引には
    eviction や要求全体の保持上限がない。
 4. [Inspector worker](../../../apps/viewer-native/src/inspector_loader.rs#L315)
