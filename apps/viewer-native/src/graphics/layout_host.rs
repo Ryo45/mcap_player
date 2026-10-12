@@ -176,7 +176,7 @@ mod tests {
     use super::*;
     use crate::{
         panels::{PanelCompositionInput, PanelResourceView, PreviewDataView, SceneDataView},
-        signal_query::SignalQueryView,
+        signal_view::SignalView,
         workspace::NativeWorkspace,
     };
     use scene_renderer::SceneCameraMode;
@@ -279,7 +279,7 @@ mod tests {
                         presentation: &presentation,
                         camera_overlays: &viewer_renderer::CameraOverlayState::default(),
                         interaction: &interaction,
-                        signals: SignalQueryView::empty(),
+                        signals: SignalView::empty(),
                         preview: PreviewDataView {
                             active: false,
                             speed_overview: None,

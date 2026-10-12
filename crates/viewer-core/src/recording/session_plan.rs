@@ -1,8 +1,8 @@
 //! Fixed workspace requirements resolved against recording facts.
 
 use crate::{
-    CameraController, CameraId, OdometryController, PathController, RestoreInput, RestoreSemantics,
-    SceneController, SourceCatalog, StreamDescriptor, StreamId, TransformController,
+    CameraController, CameraId, OdometryController, PathController, PointCloudController,
+    RestoreInput, RestoreSemantics, SourceCatalog, StreamDescriptor, StreamId, TransformController,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeSet, fmt};
@@ -365,7 +365,7 @@ impl SessionPlan {
             }))
             .chain(self.point_cloud_stream.iter().map(|stream| RestoreInput {
                 stream_id: stream.id,
-                semantics: SceneController::restore_semantics(),
+                semantics: PointCloudController::restore_semantics(),
             }))
             .chain(self.dynamic_tf_stream.iter().map(|stream| RestoreInput {
                 stream_id: stream.id,

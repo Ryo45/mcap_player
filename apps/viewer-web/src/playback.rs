@@ -438,8 +438,8 @@ impl WebPlayback {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn scene(&self) -> Option<&viewer_core::SceneController> {
-        self.runtime.scene()
+    pub(crate) fn point_cloud(&self) -> Option<&viewer_core::PointCloudController> {
+        self.runtime.point_cloud()
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -617,7 +617,7 @@ mod tests {
         assert_eq!(playback.clock.cursor(), target);
         let scan = playback
             .runtime
-            .scene()
+            .point_cloud()
             .unwrap()
             .point_cloud()
             .latest()
@@ -1176,7 +1176,7 @@ mod tests {
         struct ReducedFeatureState {
             cameras: Vec<(CameraId, viewer_core::CameraFrame)>,
             telemetry: Option<viewer_core::TelemetryFrame>,
-            path: Option<viewer_core::BevPathFrame>,
+            path: Option<viewer_core::PathFrame>,
             transform_counts: (usize, usize),
             counters: ProcessingCounters,
         }

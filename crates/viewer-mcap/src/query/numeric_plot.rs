@@ -21,7 +21,7 @@ pub enum NumericPlotError {
         path: String,
         source: DecodeError,
     },
-    Source(crate::McapOpenError),
+    Source(crate::McapSourceError),
     RangeQuery(crate::RangeQueryError),
 }
 impl std::fmt::Display for NumericPlotError {
@@ -62,8 +62,8 @@ impl std::error::Error for NumericPlotError {
         }
     }
 }
-impl From<crate::McapOpenError> for NumericPlotError {
-    fn from(error: crate::McapOpenError) -> Self {
+impl From<crate::McapSourceError> for NumericPlotError {
+    fn from(error: crate::McapSourceError) -> Self {
         Self::Source(error)
     }
 }
@@ -161,7 +161,7 @@ impl McapSource {
         mut cancelled: impl FnMut() -> bool,
     ) -> Result<NumericPlotOverviewBatch, NumericPlotError> {
         if cancelled() {
-            return Err(crate::McapOpenError::QueryCancelled.into());
+            return Err(crate::McapSourceError::QueryCancelled.into());
         }
         let first = requests.first().ok_or(NumericPlotError::EmptyBatch)?;
         if requests.len() > 8 {

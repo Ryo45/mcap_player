@@ -2,8 +2,8 @@
 
 use crate::{
     ArrivalTime, CameraController, CameraId, OdometryController, PathController,
-    PlaybackPerformance, ProcessingCounters, RawMessage, SceneController, SessionPlan, StageTiming,
-    StreamId, TransformController,
+    PlaybackPerformance, PointCloudController, ProcessingCounters, RawMessage, SessionPlan,
+    StageTiming, StreamId, TransformController,
 };
 use std::{error::Error, fmt, time::Duration};
 use web_time::Instant;
@@ -23,7 +23,7 @@ pub struct FeatureRuntime {
     path: PathController,
     odometry: OdometryController,
     transforms: TransformController,
-    scene: Option<SceneController>,
+    point_cloud: Option<PointCloudController>,
     unknown_streams: u64,
     processing_time: StageTiming,
 }
@@ -71,13 +71,13 @@ impl Error for FeatureRestoreError {
 }
 
 impl FeatureRuntime {
-    pub fn new(plan: &SessionPlan, enable_scene: bool) -> Self {
+    pub fn new(plan: &SessionPlan, enable_point_cloud: bool) -> Self {
         Self {
             cameras: CameraController::new(plan),
             path: PathController::new(plan),
             odometry: OdometryController::new(plan),
             transforms: TransformController::new(plan),
-            scene: enable_scene.then(|| SceneController::new(plan)),
+            point_cloud: enable_point_cloud.then(|| PointCloudController::new(plan)),
             unknown_streams: 0,
             processing_time: StageTiming::default(),
         }
@@ -95,8 +95,8 @@ impl FeatureRuntime {
             let path_matched = self.path.process(message);
             let odometry_matched = self.odometry.process(message);
             let transform_matched = self.transforms.process(message);
-            let scene_matched = if let Some(scene) = &mut self.scene {
-                scene.process(message)
+            let point_cloud_matched = if let Some(point_cloud) = &mut self.point_cloud {
+                point_cloud.process(message)
             } else {
                 false
             };
@@ -104,7 +104,7 @@ impl FeatureRuntime {
                 || path_matched
                 || odometry_matched
                 || transform_matched
-                || scene_matched;
+                || point_cloud_matched;
             if !matched {
                 self.unknown_streams = self.unknown_streams.saturating_add(1);
             }
@@ -125,8 +125,8 @@ impl FeatureRuntime {
         candidate.path.reset_for_restore();
         candidate.odometry.reset_for_restore();
         candidate.transforms.reset_for_restore(target);
-        if let Some(scene) = &mut candidate.scene {
-            scene.reset_for_restore();
+        if let Some(point_cloud) = &mut candidate.point_cloud {
+            point_cloud.reset_for_restore();
         }
 
         for message in messages {
@@ -137,8 +137,8 @@ impl FeatureRuntime {
             matched |= restore_one("Transform", message, || {
                 candidate.transforms.restore(message)
             })?;
-            if let Some(scene) = &mut candidate.scene {
-                matched |= restore_one("Scene", message, || scene.restore(message))?;
+            if let Some(point_cloud) = &mut candidate.point_cloud {
+                matched |= restore_one("Scene", message, || point_cloud.restore(message))?;
             }
             if !matched {
                 return Err(FeatureRestoreError {
@@ -182,12 +182,12 @@ impl FeatureRuntime {
         &self.transforms
     }
 
-    pub fn scene(&self) -> Option<&SceneController> {
-        self.scene.as_ref()
+    pub fn point_cloud(&self) -> Option<&PointCloudController> {
+        self.point_cloud.as_ref()
     }
 
-    pub fn scene_mut(&mut self) -> Option<&mut SceneController> {
-        self.scene.as_mut()
+    pub fn point_cloud_mut(&mut self) -> Option<&mut PointCloudController> {
+        self.point_cloud.as_mut()
     }
 
     pub fn set_scheduling_priority(&mut self, camera: Option<CameraId>) {
@@ -207,8 +207,8 @@ impl FeatureRuntime {
         counters.merge(self.path.counters());
         counters.merge(self.odometry.counters());
         counters.merge(self.transforms.counters());
-        if let Some(scene) = &self.scene {
-            counters.merge(scene.counters());
+        if let Some(point_cloud) = &self.point_cloud {
+            counters.merge(point_cloud.counters());
         }
         counters
     }

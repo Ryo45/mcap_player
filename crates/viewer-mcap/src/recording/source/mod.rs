@@ -1,126 +1,22 @@
-//! Native indexed MCAP access and bounded chunk ownership.
+//! Native indexed MCAP source: metadata and forward traversal.
+mod index;
+mod latest;
+mod range;
+#[cfg(test)]
+use index::IndexReadMetrics;
+pub use index::IndexedMessagePosition;
+use index::{LatestIndexRead, StreamChunks};
+pub use latest::{LatestMessageReader, LatestQueryDiagnostics};
+pub use range::{QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult};
 
 use crate::{
-    ArrivalTime, IndexedChunkFact, RangeQuery, RangeQueryError, RangeQueryResult, RawMessage,
-    RecordingTimeRange, SourceCapabilities, SourceCatalog, StreamDescriptor, StreamId,
-    StreamTimingSummary, ensure_indexed, history_candidate_chunks,
+    ArrivalTime, IndexedChunkFact, McapSourceError, RawMessage, RecordingTimeRange,
+    SourceCapabilities, SourceCatalog, StreamDescriptor, StreamId, StreamTimingSummary,
+    ensure_indexed, history_candidate_chunks,
 };
 use bytes::Bytes;
 use mcap::{Summary, records::op};
-use std::{
-    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
-    fmt,
-};
-
-#[derive(Debug)]
-pub enum McapOpenError {
-    QueryLimit {
-        resource: &'static str,
-        maximum: usize,
-    },
-    Mcap(mcap::McapError),
-    SummaryRequired,
-    ChunkIndexRequired,
-    MessageIndexRequired(crate::IndexedPlanError),
-    Decompression {
-        format: &'static str,
-        source: std::io::Error,
-    },
-    InvalidChunk(String),
-    UnsupportedCompression(String),
-    TimestampOverflow,
-    QueryCancelled,
-    Io(std::io::Error),
-    SourceChanged,
-    NotRegularFile,
-    ReadLockPoisoned,
-    ReadOverflow,
-    ReadOutOfBounds {
-        offset: u64,
-        length: usize,
-        file_size: u64,
-    },
-    ReadLimit {
-        requested: usize,
-        maximum: usize,
-    },
-}
-
-impl fmt::Display for McapOpenError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::QueryLimit { resource, maximum } => {
-                write!(f, "query exceeds {resource} limit ({maximum})")
-            }
-            Self::Mcap(error) => write!(f, "MCAP error: {error}"),
-            Self::SummaryRequired => write!(f, "MCAP Summary is required for indexed playback"),
-            Self::ChunkIndexRequired => {
-                write!(f, "MCAP Chunk Index is required for indexed playback")
-            }
-            Self::Io(error) => write!(f, "source I/O: {error}"),
-            Self::SourceChanged => write!(f, "recording changed after open"),
-            Self::NotRegularFile => write!(f, "recording is not a regular file"),
-            Self::ReadLockPoisoned => write!(f, "source read lock was poisoned"),
-            Self::ReadOverflow => write!(f, "source range arithmetic overflow"),
-            Self::ReadOutOfBounds {
-                offset,
-                length,
-                file_size,
-            } => write!(
-                f,
-                "source range {offset}+{length} exceeds {file_size} bytes"
-            ),
-            Self::ReadLimit { requested, maximum } => write!(
-                f,
-                "source record of {requested} bytes exceeds {maximum} byte limit"
-            ),
-            Self::QueryCancelled => write!(f, "recording query cancelled"),
-            Self::TimestampOverflow => write!(f, "MCAP timestamp exceeds signed nanosecond range"),
-            Self::Decompression { format, source } => write!(f, "{format} decompression: {source}"),
-            Self::MessageIndexRequired(error) => write!(
-                f,
-                "MCAP Message Index is required to restore stream {}",
-                error.stream.0
-            ),
-            Self::InvalidChunk(reason) => write!(f, "invalid MCAP Chunk: {reason}"),
-            Self::UnsupportedCompression(compression) => {
-                write!(f, "unsupported MCAP Chunk compression: {compression}")
-            }
-        }
-    }
-}
-
-impl std::error::Error for McapOpenError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Mcap(error) => Some(error),
-            Self::Io(error) => Some(error),
-            Self::Decompression { source, .. } => Some(source),
-            Self::MessageIndexRequired(error) => Some(error),
-            _ => None,
-        }
-    }
-}
-impl From<super::McapChunkError> for McapOpenError {
-    fn from(error: super::McapChunkError) -> Self {
-        match error {
-            super::McapChunkError::Mcap(error) => Self::Mcap(error),
-            super::McapChunkError::InvalidRecord(reason) => Self::InvalidChunk(reason.into()),
-            super::McapChunkError::TimestampOverflow => Self::TimestampOverflow,
-            super::McapChunkError::UnsupportedCompression(format) => {
-                Self::UnsupportedCompression(format)
-            }
-            super::McapChunkError::Decompression { format, source } => {
-                Self::Decompression { format, source }
-            }
-        }
-    }
-}
-impl From<mcap::McapError> for McapOpenError {
-    fn from(value: mcap::McapError) -> Self {
-        Self::Mcap(value)
-    }
-}
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 #[derive(Clone)]
 struct CachedMessage {
@@ -167,22 +63,22 @@ pub struct IndexedMessages {
 
 impl McapSource {
     /// Explicitly copies the supplied bytes once. Prefer `from_bytes` for an existing owner.
-    pub fn copy_from_slice(backing: &[u8]) -> Result<Self, McapOpenError> {
+    pub fn copy_from_slice(backing: &[u8]) -> Result<Self, McapSourceError> {
         Self::from_bytes(Bytes::copy_from_slice(backing))
     }
-    pub fn from_bytes(backing: Bytes) -> Result<Self, McapOpenError> {
+    pub fn from_bytes(backing: Bytes) -> Result<Self, McapSourceError> {
         Self::from_backing(super::backing::Backing::Bytes(backing))
     }
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn open_file(path: &std::path::Path) -> Result<Self, McapOpenError> {
+    pub fn open_file(path: &std::path::Path) -> Result<Self, McapSourceError> {
         Self::from_backing(super::backing::Backing::File(std::sync::Arc::new(
             super::backing::FileRanges::open(path)?,
         )))
     }
-    fn from_backing(backing: super::backing::Backing) -> Result<Self, McapOpenError> {
+    fn from_backing(backing: super::backing::Backing) -> Result<Self, McapSourceError> {
         let summary = backing.summary()?;
         if summary.chunk_indexes.is_empty() {
-            return Err(McapOpenError::ChunkIndexRequired);
+            return Err(McapSourceError::ChunkIndexRequired);
         }
         let schema_definitions = summary
             .schemas
@@ -246,9 +142,9 @@ impl McapSource {
             .1
             .0
             .checked_add(1)
-            .ok_or(McapOpenError::TimestampOverflow)?;
+            .ok_or(McapSourceError::TimestampOverflow)?;
         let range = RecordingTimeRange::new(range.0, ArrivalTime(end_exclusive))
-            .ok_or(McapOpenError::TimestampOverflow)?;
+            .ok_or(McapSourceError::TimestampOverflow)?;
         catalog.time_range = Some(range);
         let index_facts: Vec<_> = summary
             .chunk_indexes
@@ -318,12 +214,12 @@ impl McapSource {
     pub fn summary(&self) -> &Summary {
         &self.summary
     }
-    pub fn summary_identity(&self) -> Result<crate::McapSummaryIdentity, McapOpenError> {
+    pub fn summary_identity(&self) -> Result<crate::McapSummaryIdentity, McapSourceError> {
         let stats = self
             .summary
             .stats
             .as_ref()
-            .ok_or(McapOpenError::SummaryRequired)?;
+            .ok_or(McapSourceError::SummaryRequired)?;
         Ok(crate::McapSummaryIdentity {
             file_size: self.backing.len(),
             summary_crc: self.backing.summary_crc()?,
@@ -345,7 +241,7 @@ impl McapSource {
     pub fn select_streams(
         &mut self,
         streams: impl IntoIterator<Item = StreamId>,
-    ) -> Result<(), McapOpenError> {
+    ) -> Result<(), McapSourceError> {
         let selected = streams.into_iter().collect::<HashSet<_>>();
         for stream in &selected {
             let descriptor = self
@@ -353,7 +249,7 @@ impl McapSource {
                 .by_id(*stream)
                 .ok_or(mcap::McapError::BadIndex)?;
             ensure_indexed(&self.index_facts, *stream, descriptor.timing.message_count)
-                .map_err(McapOpenError::MessageIndexRequired)?;
+                .map_err(McapSourceError::MessageIndexRequired)?;
         }
         self.cache.clear();
         self.chunk = None;
@@ -362,7 +258,7 @@ impl McapSource {
         Ok(())
     }
 
-    pub fn seek(&mut self, cursor: ArrivalTime) -> Result<(), McapOpenError> {
+    pub fn seek(&mut self, cursor: ArrivalTime) -> Result<(), McapSourceError> {
         let position = self.prepare_seek(cursor)?;
         self.commit_seek(position);
         Ok(())
@@ -371,7 +267,7 @@ impl McapSource {
     pub(crate) fn prepare_seek(
         &self,
         cursor: ArrivalTime,
-    ) -> Result<McapSourcePosition, McapOpenError> {
+    ) -> Result<McapSourcePosition, McapSourceError> {
         if self
             .selected_streams
             .as_ref()
@@ -404,7 +300,10 @@ impl McapSource {
     }
 
     /// Inclusive delivery, committed only after every required physical read succeeds.
-    pub fn read_through(&mut self, cursor: ArrivalTime) -> Result<Vec<RawMessage>, McapOpenError> {
+    pub fn read_through(
+        &mut self,
+        cursor: ArrivalTime,
+    ) -> Result<Vec<RawMessage>, McapSourceError> {
         if self
             .selected_streams
             .as_ref()
@@ -464,18 +363,18 @@ impl McapSource {
         range: crate::DataWindowTimeRange,
         mut cancelled: impl FnMut() -> bool,
         mut visit: impl FnMut(&RawMessage),
-    ) -> Result<usize, McapOpenError> {
+    ) -> Result<usize, McapSourceError> {
         let descriptor = self
             .catalog
             .by_id(stream)
             .ok_or(mcap::McapError::BadIndex)?;
         ensure_indexed(&self.index_facts, stream, descriptor.timing.message_count)
-            .map_err(McapOpenError::MessageIndexRequired)?;
+            .map_err(McapSourceError::MessageIndexRequired)?;
         let mut chunks_read = 0;
         // Inspect index facts before touching compressed payloads. No unrelated chunk scan.
         for (index, fact) in self.index_facts.iter().enumerate() {
             if cancelled() {
-                return Err(McapOpenError::QueryCancelled);
+                return Err(McapSourceError::QueryCancelled);
             }
             if !fact.indexed_streams.contains(&stream)
                 || fact.end_inclusive < range.start
@@ -491,89 +390,12 @@ impl McapSource {
                     continue;
                 }
                 if cancelled() {
-                    return Err(McapOpenError::QueryCancelled);
+                    return Err(McapSourceError::QueryCancelled);
                 }
                 visit(&message);
             }
         }
         Ok(chunks_read)
-    }
-
-    /// Executes a bounded exact-message query without mutating this source's playback cursor.
-    pub fn query_range(&self, query: &RangeQuery) -> Result<RangeQueryResult, RangeQueryError> {
-        if query.range.start >= query.range.end_exclusive {
-            return Err(RangeQueryError::InvalidRange(query.range));
-        }
-        if query.streams.is_empty() {
-            return Err(RangeQueryError::EmptySelection);
-        }
-        if query.limits.max_messages == 0 || query.limits.max_payload_bytes == 0 {
-            return Err(RangeQueryError::ZeroLimits {
-                max_messages: query.limits.max_messages,
-                max_payload_bytes: query.limits.max_payload_bytes,
-            });
-        }
-        if let Some(unknown) = query
-            .streams
-            .iter()
-            .find(|id| self.catalog.by_id(**id).is_none())
-        {
-            return Err(RangeQueryError::UnknownStream(*unknown));
-        }
-
-        let mut source = self.fork_reader();
-        source.select_streams(query.streams.iter().copied())?;
-        source.seek(query.range.start)?;
-        let mut messages = Vec::new();
-        let mut payload_bytes = 0_usize;
-        loop {
-            while let Some(message) = source.cache.get(source.position) {
-                if message.arrival >= query.range.end_exclusive {
-                    return Ok(RangeQueryResult {
-                        messages,
-                        payload_bytes,
-                        complete: true,
-                    });
-                }
-                let next_bytes = payload_bytes
-                    .checked_add(message.payload.len())
-                    .ok_or_else(|| RangeQueryError::PayloadBytesOverflow)?;
-                if messages.len() == query.limits.max_messages
-                    || next_bytes > query.limits.max_payload_bytes
-                {
-                    return Ok(RangeQueryResult {
-                        messages,
-                        payload_bytes,
-                        complete: false,
-                    });
-                }
-                messages.push(RawMessage {
-                    publish_time_ns: message.publish_time_ns,
-                    sequence: message.sequence,
-                    stream_id: message.stream_id,
-                    arrival_time: message.arrival,
-                    payload: message.payload.clone(),
-                });
-                payload_bytes = next_bytes;
-                source.position += 1;
-            }
-            let Some(next) = source.chunk.map(|value| value + 1) else {
-                return Ok(RangeQueryResult {
-                    messages,
-                    payload_bytes,
-                    complete: true,
-                });
-            };
-            let count = source.summary.chunk_indexes.len();
-            if next >= count {
-                return Ok(RangeQueryResult {
-                    messages,
-                    payload_bytes,
-                    complete: true,
-                });
-            }
-            source.load_chunk(next)?;
-        }
     }
 
     /// Finds one exact predecessor per stream using MCAP Message Index records.
@@ -584,7 +406,7 @@ impl McapSource {
         &self,
         streams: &[StreamId],
         target: ArrivalTime,
-    ) -> Result<IndexedMessages, McapOpenError> {
+    ) -> Result<IndexedMessages, McapSourceError> {
         self.latest_before_with_limits(streams, target, crate::LatestQueryLimits::default())
     }
 
@@ -593,11 +415,11 @@ impl McapSource {
         streams: &[StreamId],
         target: ArrivalTime,
         limits: crate::LatestQueryLimits,
-    ) -> Result<IndexedMessages, McapOpenError> {
+    ) -> Result<IndexedMessages, McapSourceError> {
         let mut budget = crate::LatestQueryBudget::new(limits);
         budget.streams(streams.len())?;
         self.indexed_summary(streams)?;
-        let target = u64::try_from(target.0).map_err(|_| McapOpenError::TimestampOverflow)?;
+        let target = u64::try_from(target.0).map_err(|_| McapSourceError::TimestampOverflow)?;
         let mut index_cache = HashMap::new();
         let mut candidates = BTreeMap::<usize, Vec<(StreamId, u64)>>::new();
         let mut reads = 0;
@@ -648,7 +470,7 @@ impl McapSource {
         &self,
         streams: &[StreamId],
         range: crate::DataWindowTimeRange,
-    ) -> Result<IndexedMessages, McapOpenError> {
+    ) -> Result<IndexedMessages, McapSourceError> {
         self.indexed_summary(streams)?;
         let mut chunks = HashSet::<usize>::new();
         for stream in streams.iter().copied() {
@@ -658,7 +480,7 @@ impl McapSource {
                 .and_then(|value| value.timing.message_count);
             chunks.extend(
                 history_candidate_chunks(&self.index_facts, stream, count, range)
-                    .map_err(McapOpenError::MessageIndexRequired)?,
+                    .map_err(McapSourceError::MessageIndexRequired)?,
             );
         }
         let mut chunks = chunks.into_iter().collect::<Vec<_>>();
@@ -685,7 +507,10 @@ impl McapSource {
     }
 
     /// Bootstraps explicitly persistent streams once per session.
-    pub fn indexed_streams(&self, streams: &[StreamId]) -> Result<IndexedMessages, McapOpenError> {
+    pub fn indexed_streams(
+        &self,
+        streams: &[StreamId],
+    ) -> Result<IndexedMessages, McapSourceError> {
         let recording = self.range;
         self.indexed_range(
             streams,
@@ -694,199 +519,20 @@ impl McapSource {
         )
     }
 
-    fn latest_position(
-        &self,
-        stream: StreamId,
-        target: u64,
-        read: &mut LatestIndexRead<'_>,
-    ) -> Result<Option<IndexedMessagePosition>, McapOpenError> {
-        self.indexed_summary(&[stream])?;
-        let count = self
-            .catalog
-            .by_id(stream)
-            .and_then(|s| s.timing.message_count);
-        let Some(sparse) = self.stream_chunks.get(&stream) else {
-            return if count == Some(0) {
-                Ok(None)
-            } else {
-                Err(McapOpenError::MessageIndexRequired(
-                    crate::IndexedPlanError { stream },
-                ))
-            };
-        };
-        let target_time =
-            ArrivalTime(i64::try_from(target).map_err(|_| McapOpenError::TimestampOverflow)?);
-        let end = sparse
-            .chunks
-            .partition_point(|chunk| self.index_facts[*chunk].start <= target_time);
-        let mut search = super::MessageIndexPredecessor::new(target);
-        for cursor in (0..end).rev() {
-            read.check()?;
-            read.budget.candidate()?;
-            if !search.can_improve(
-                sparse.prefix_max_end[cursor].0 as u64,
-                sparse.prefix_max_chunk[cursor],
-            ) {
-                break;
-            }
-            let chunk = sparse.chunks[cursor];
-            if !read.cache.contains_key(&chunk) {
-                let length =
-                    usize::try_from(self.summary.chunk_indexes[chunk].message_index_length)
-                        .map_err(|_| McapOpenError::ReadOverflow)?;
-                read.budget.index(length)?;
-                // One physical accelerator span, including multi-stream restore. Release the
-                // previous parsed entries before allocating the next span.
-                read.cache.clear();
-                *read.reads = read.reads.saturating_add(1);
-                let parsed = self.read_chunk_message_indexes_bounded(
-                    chunk,
-                    &mut *read.cancelled,
-                    super::latest_query::MAX_LATEST_INDEX_BYTES,
-                )?;
-                read.cache.insert(chunk, parsed);
-            }
-            let channel = u16::try_from(stream.0).map_err(|_| mcap::McapError::BadIndex)?;
-            if let Some(entries) = read.cache[&chunk].channels.get(&channel) {
-                search.consider_sorted(chunk, entries);
-            }
-        }
-        read.check()?;
-        Ok(search.result().map(|(_, position)| position))
-    }
-
-    /// Physical Message Index span access. No traversal, cache or query-budget policy.
-    pub(crate) fn read_chunk_message_indexes(
-        &self,
-        chunk_index: usize,
-        mut cancelled: impl FnMut() -> bool,
-    ) -> Result<ChunkMessageIndexes, McapOpenError> {
-        self.read_chunk_message_indexes_bounded(
-            chunk_index,
-            &mut cancelled,
-            super::backing::MAX_SOURCE_RECORD_BYTES,
-        )
-    }
-
-    fn read_chunk_message_indexes_bounded(
-        &self,
-        chunk_index: usize,
-        mut cancelled: impl FnMut() -> bool,
-        maximum_entry_bytes: usize,
-    ) -> Result<ChunkMessageIndexes, McapOpenError> {
-        if cancelled() {
-            return Err(McapOpenError::QueryCancelled);
-        }
-        let chunk = self
-            .summary
-            .chunk_indexes
-            .get(chunk_index)
-            .ok_or(mcap::McapError::BadIndex)?;
-        let mut indexes = HashMap::new();
-        let Some(start) = chunk.message_index_offsets.values().copied().min() else {
-            return Err(mcap::McapError::BadIndex.into());
-        };
-        let length =
-            usize::try_from(chunk.message_index_length).map_err(|_| McapOpenError::ReadOverflow)?;
-        // Message Index records are contiguous after their chunk. Read that bounded span once.
-        #[cfg(test)]
-        self.index_metrics
-            .reads
-            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let bytes = self.backing.read(start, length)?;
-        let mut entry_bytes = 0usize;
-        for (channel, offset) in &chunk.message_index_offsets {
-            if cancelled() {
-                return Err(McapOpenError::QueryCancelled);
-            }
-            let relative = usize::try_from(
-                offset
-                    .checked_sub(start)
-                    .ok_or(McapOpenError::ReadOverflow)?,
-            )
-            .map_err(|_| McapOpenError::ReadOverflow)?;
-            let header_end = relative.checked_add(9).ok_or(McapOpenError::ReadOverflow)?;
-            let head = bytes
-                .get(relative..header_end)
-                .ok_or(mcap::McapError::BadIndex)?;
-            if head[0] != op::MESSAGE_INDEX {
-                return Err(mcap::McapError::BadIndex.into());
-            }
-            let length = usize::try_from(u64::from_le_bytes(head[1..9].try_into().unwrap()))
-                .map_err(|_| McapOpenError::ReadOverflow)?;
-            let body_end = header_end
-                .checked_add(length)
-                .ok_or(McapOpenError::ReadOverflow)?;
-            let body = bytes
-                .get(header_end..body_end)
-                .ok_or(mcap::McapError::BadIndex)?;
-            // Validate the declared vector size before the library parser allocates entries.
-            let entry_length = body.get(2..6).ok_or(mcap::McapError::BadIndex)?;
-            let entry_length = u32::from_le_bytes(entry_length.try_into().unwrap()) as usize;
-            if !entry_length.is_multiple_of(16) || entry_length > body.len().saturating_sub(6) {
-                return Err(mcap::McapError::BadIndex.into());
-            }
-            if entry_length > maximum_entry_bytes.saturating_sub(entry_bytes) {
-                return Err(McapOpenError::QueryLimit {
-                    resource: "parsed index entry bytes",
-                    maximum: maximum_entry_bytes,
-                });
-            }
-            entry_bytes += entry_length;
-            let mcap::records::Record::MessageIndex(index) =
-                mcap::parse_record(op::MESSAGE_INDEX, body)?
-            else {
-                return Err(mcap::McapError::BadIndex.into());
-            };
-            if index.channel_id != *channel {
-                return Err(mcap::McapError::BadIndex.into());
-            }
-            let mut records = index.records;
-            records.sort_by_key(|entry| (entry.log_time, entry.offset));
-            indexes.insert(*channel, records.into_boxed_slice());
-        }
-        if cancelled() {
-            return Err(McapOpenError::QueryCancelled);
-        }
-        Ok(ChunkMessageIndexes {
-            #[cfg(test)]
-            _resident: ResidentIndexSpan::new(self.index_metrics.clone(), &indexes),
-            channels: indexes,
-        })
-    }
-
-    pub(crate) fn validate_unchanged(&self) -> Result<(), McapOpenError> {
+    pub(crate) fn validate_unchanged(&self) -> Result<(), McapSourceError> {
         self.backing.validate()
     }
 
-    /// Borrowed index topology, ordered by (chunk start time, chunk ID).
-    pub(crate) fn stream_chunk_timeline(
-        &self,
-        stream: StreamId,
-    ) -> Option<StreamChunkTimeline<'_>> {
-        self.stream_chunks
-            .get(&stream)
-            .map(|timeline| StreamChunkTimeline {
-                chunks: &timeline.chunks,
-                prefix_max_end: &timeline.prefix_max_end,
-            })
-    }
-
-    #[cfg(test)]
-    pub(crate) fn index_read_metrics(&self) -> &IndexReadMetrics {
-        &self.index_metrics
-    }
-
-    fn indexed_summary(&self, streams: &[StreamId]) -> Result<&Summary, McapOpenError> {
+    fn indexed_summary(&self, streams: &[StreamId]) -> Result<&Summary, McapSourceError> {
         for stream in streams {
             if self.catalog.by_id(*stream).is_none() {
-                return Err(McapOpenError::Mcap(mcap::McapError::BadIndex));
+                return Err(McapSourceError::Mcap(mcap::McapError::BadIndex));
             }
         }
         Ok(&self.summary)
     }
 
-    fn load_chunk(&mut self, index: usize) -> Result<(), McapOpenError> {
+    fn load_chunk(&mut self, index: usize) -> Result<(), McapSourceError> {
         let cache = self.read_chunk(index)?;
         self.cache = cache;
         self.chunk = Some(index);
@@ -894,7 +540,7 @@ impl McapSource {
         Ok(())
     }
 
-    fn read_chunk(&self, index: usize) -> Result<Vec<CachedMessage>, McapOpenError> {
+    fn read_chunk(&self, index: usize) -> Result<Vec<CachedMessage>, McapSourceError> {
         let mut cache = Vec::new();
         for message in self.parse_chunk(index)? {
             let stream_id = message.message.stream_id;
@@ -917,7 +563,7 @@ impl McapSource {
         Ok(cache)
     }
 
-    fn parse_chunk(&self, index: usize) -> Result<Vec<ParsedChunkMessage>, McapOpenError> {
+    fn parse_chunk(&self, index: usize) -> Result<Vec<ParsedChunkMessage>, McapSourceError> {
         self.parse_chunk_cancellable(index, &mut || false)
     }
 
@@ -925,9 +571,9 @@ impl McapSource {
         &self,
         index: usize,
         cancelled: &mut impl FnMut() -> bool,
-    ) -> Result<Vec<ParsedChunkMessage>, McapOpenError> {
+    ) -> Result<Vec<ParsedChunkMessage>, McapSourceError> {
         if cancelled() {
-            return Err(McapOpenError::QueryCancelled);
+            return Err(McapSourceError::QueryCancelled);
         }
         let chunk = self
             .summary
@@ -937,22 +583,22 @@ impl McapSource {
         let uncompressed_crc = self.chunk_uncompressed_crc(chunk)?;
         let compressed = self.backing.read(
             chunk.compressed_data_offset()?,
-            usize::try_from(chunk.compressed_size).map_err(|_| McapOpenError::ReadOverflow)?,
+            usize::try_from(chunk.compressed_size).map_err(|_| McapSourceError::ReadOverflow)?,
         )?;
         let expected_size = usize::try_from(chunk.uncompressed_size)
-            .map_err(|_| McapOpenError::InvalidChunk("uncompressed size is too large".into()))?;
+            .map_err(|_| McapSourceError::InvalidChunk("uncompressed size is too large".into()))?;
         if expected_size > super::backing::MAX_SOURCE_RECORD_BYTES {
-            return Err(McapOpenError::ReadLimit {
+            return Err(McapSourceError::ReadLimit {
                 requested: expected_size,
                 maximum: super::backing::MAX_SOURCE_RECORD_BYTES,
             });
         }
         let backing = super::decode_mcap_chunk(&chunk.compression, compressed, expected_size)?;
         if cancelled() {
-            return Err(McapOpenError::QueryCancelled);
+            return Err(McapSourceError::QueryCancelled);
         }
         if uncompressed_crc != 0 && crc32fast::hash(&backing) != uncompressed_crc {
-            return Err(McapOpenError::InvalidChunk(
+            return Err(McapSourceError::InvalidChunk(
                 "uncompressed CRC does not match Chunk header".into(),
             ));
         }
@@ -962,10 +608,10 @@ impl McapSource {
     fn chunk_uncompressed_crc(
         &self,
         chunk: &mcap::records::ChunkIndex,
-    ) -> Result<u32, McapOpenError> {
+    ) -> Result<u32, McapSourceError> {
         let length = 49usize
             .checked_add(chunk.compression.len())
-            .ok_or(McapOpenError::ReadOverflow)?;
+            .ok_or(McapSourceError::ReadOverflow)?;
         let bytes = self.backing.read(chunk.chunk_start_offset, length)?;
         let u64_at = |offset| {
             u64::from_le_bytes(
@@ -990,206 +636,6 @@ impl McapSource {
     }
 }
 
-struct LatestIndexRead<'a> {
-    cache: &'a mut HashMap<usize, ChunkMessageIndexes>,
-    reads: &'a mut u64,
-    budget: &'a mut crate::LatestQueryBudget,
-    cancelled: &'a mut dyn FnMut() -> bool,
-}
-impl LatestIndexRead<'_> {
-    fn check(&mut self) -> Result<(), McapOpenError> {
-        if (self.cancelled)() {
-            return Err(McapOpenError::QueryCancelled);
-        }
-        Ok(())
-    }
-}
-
-#[derive(Default)]
-struct StreamChunks {
-    chunks: Vec<usize>,
-    prefix_max_end: Vec<ArrivalTime>,
-    prefix_max_chunk: Vec<usize>,
-}
-
-/// Source-local exact record identity, for query view reuse. Not a persistent/global message ID.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct IndexedMessagePosition {
-    pub chunk: usize,
-    pub record_offset: u64,
-}
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-pub struct LatestQueryDiagnostics {
-    pub index_reads: u64,
-    pub chunks_read: u64,
-}
-pub(crate) struct StreamChunkTimeline<'a> {
-    pub(crate) chunks: &'a [usize],
-    pub(crate) prefix_max_end: &'a [ArrivalTime],
-}
-
-pub(crate) struct ChunkMessageIndexes {
-    pub(crate) channels: HashMap<u16, Box<[mcap::records::MessageIndexEntry]>>,
-    #[cfg(test)]
-    _resident: ResidentIndexSpan,
-}
-
-#[cfg(test)]
-#[derive(Default)]
-pub(crate) struct IndexReadMetrics {
-    pub(crate) reads: std::sync::atomic::AtomicUsize,
-    pub(crate) resident_spans: std::sync::atomic::AtomicUsize,
-    pub(crate) peak_resident_spans: std::sync::atomic::AtomicUsize,
-    pub(crate) resident_entry_bytes: std::sync::atomic::AtomicUsize,
-    pub(crate) peak_resident_entry_bytes: std::sync::atomic::AtomicUsize,
-}
-
-#[cfg(test)]
-struct ResidentIndexSpan {
-    metrics: std::sync::Arc<IndexReadMetrics>,
-    entry_bytes: usize,
-}
-#[cfg(test)]
-impl ResidentIndexSpan {
-    fn new(
-        metrics: std::sync::Arc<IndexReadMetrics>,
-        channels: &HashMap<u16, Box<[mcap::records::MessageIndexEntry]>>,
-    ) -> Self {
-        use std::sync::atomic::Ordering::Relaxed;
-        let entry_bytes = channels
-            .values()
-            .map(|entries| entries.len() * std::mem::size_of::<mcap::records::MessageIndexEntry>())
-            .sum();
-        let spans = metrics.resident_spans.fetch_add(1, Relaxed) + 1;
-        metrics.peak_resident_spans.fetch_max(spans, Relaxed);
-        let bytes = metrics.resident_entry_bytes.fetch_add(entry_bytes, Relaxed) + entry_bytes;
-        metrics.peak_resident_entry_bytes.fetch_max(bytes, Relaxed);
-        Self {
-            metrics,
-            entry_bytes,
-        }
-    }
-}
-#[cfg(test)]
-impl Drop for ResidentIndexSpan {
-    fn drop(&mut self) {
-        use std::sync::atomic::Ordering::Relaxed;
-        self.metrics.resident_spans.fetch_sub(1, Relaxed);
-        self.metrics
-            .resident_entry_bytes
-            .fetch_sub(self.entry_bytes, Relaxed);
-    }
-}
-
-/// Concrete cursor query accelerator: at most one Message Index span and one serialized chunk.
-/// Decoded Inspector view models are owned by the caller, never by this physical cache.
-pub struct LatestMessageReader {
-    source: McapSource,
-    indexes: HashMap<usize, ChunkMessageIndexes>,
-    chunk: Option<(usize, Vec<ParsedChunkMessage>)>,
-    diagnostics: LatestQueryDiagnostics,
-}
-impl LatestMessageReader {
-    pub fn new(source: McapSource) -> Self {
-        Self {
-            source,
-            indexes: HashMap::new(),
-            chunk: None,
-            diagnostics: LatestQueryDiagnostics::default(),
-        }
-    }
-    pub fn catalog(&self) -> &SourceCatalog {
-        self.source.catalog()
-    }
-    pub fn diagnostics(&self) -> LatestQueryDiagnostics {
-        self.diagnostics
-    }
-    pub fn read_at(
-        &mut self,
-        stream: StreamId,
-        target: ArrivalTime,
-    ) -> Result<Option<(IndexedMessagePosition, RawMessage)>, McapOpenError> {
-        self.read_at_cancellable(stream, target, || false)
-    }
-    pub fn read_at_cancellable(
-        &mut self,
-        stream: StreamId,
-        target: ArrivalTime,
-        mut cancelled: impl FnMut() -> bool,
-    ) -> Result<Option<(IndexedMessagePosition, RawMessage)>, McapOpenError> {
-        self.read_at_with_budget_cancellable(
-            stream,
-            target,
-            &mut crate::LatestQueryBudget::default(),
-            &mut cancelled,
-        )
-    }
-
-    pub fn read_at_with_budget_cancellable(
-        &mut self,
-        stream: StreamId,
-        target: ArrivalTime,
-        budget: &mut crate::LatestQueryBudget,
-        mut cancelled: impl FnMut() -> bool,
-    ) -> Result<Option<(IndexedMessagePosition, RawMessage)>, McapOpenError> {
-        if cancelled() {
-            return Err(McapOpenError::QueryCancelled);
-        }
-        budget.streams(1)?;
-        self.source.backing.validate()?;
-        if target < self.source.range.start {
-            return Ok(None);
-        }
-        let target = u64::try_from(target.0).map_err(|_| McapOpenError::TimestampOverflow)?;
-        let position = self.source.latest_position(
-            stream,
-            target,
-            &mut LatestIndexRead {
-                cache: &mut self.indexes,
-                reads: &mut self.diagnostics.index_reads,
-                budget,
-                cancelled: &mut cancelled,
-            },
-        )?;
-        if cancelled() {
-            return Err(McapOpenError::QueryCancelled);
-        }
-        self.source.backing.validate()?;
-        let Some(position) = position else {
-            return Ok(None);
-        };
-        if self
-            .chunk
-            .as_ref()
-            .is_none_or(|(chunk, _)| *chunk != position.chunk)
-        {
-            let chunk = &self.source.summary.chunk_indexes[position.chunk];
-            budget.chunk(chunk.compressed_size, chunk.uncompressed_size)?;
-            self.chunk = None;
-            let parsed = self
-                .source
-                .parse_chunk_cancellable(position.chunk, &mut cancelled)?;
-            self.chunk = Some((position.chunk, parsed));
-            self.diagnostics.chunks_read = self.diagnostics.chunks_read.saturating_add(1);
-        }
-        let messages = &self.chunk.as_ref().expect("loaded chunk").1;
-        let index = messages.partition_point(|m| m.offset < position.record_offset);
-        let message = messages
-            .get(index)
-            .filter(|m| {
-                m.offset == position.record_offset
-                    && m.message.stream_id == stream
-                    && m.message.arrival_time.0 as u64 <= target
-            })
-            .ok_or(mcap::McapError::BadIndex)?;
-        if cancelled() {
-            return Err(McapOpenError::QueryCancelled);
-        }
-        self.source.backing.validate()?;
-        Ok(Some((position, message.message.clone())))
-    }
-}
-
 struct ParsedChunkMessage {
     offset: u64,
     message: RawMessage,
@@ -1198,11 +644,11 @@ struct ParsedChunkMessage {
 fn parse_chunk_backing(
     backing: Bytes,
     cancelled: &mut impl FnMut() -> bool,
-) -> Result<Vec<ParsedChunkMessage>, McapOpenError> {
+) -> Result<Vec<ParsedChunkMessage>, McapSourceError> {
     let mut messages = Vec::new();
     super::visit_mcap_chunk_records(&backing, |offset, message| {
         if cancelled() {
-            return Err(McapOpenError::QueryCancelled);
+            return Err(McapSourceError::QueryCancelled);
         }
         if let Some(message) = message {
             messages.push(ParsedChunkMessage { offset, message });
@@ -1212,10 +658,10 @@ fn parse_chunk_backing(
     Ok(messages)
 }
 
-fn to_arrival(value: u64) -> Result<ArrivalTime, McapOpenError> {
+fn to_arrival(value: u64) -> Result<ArrivalTime, McapSourceError> {
     i64::try_from(value)
         .map(ArrivalTime)
-        .map_err(|_| McapOpenError::TimestampOverflow)
+        .map_err(|_| McapSourceError::TimestampOverflow)
 }
 fn to_arrival_lossy(value: u64) -> ArrivalTime {
     ArrivalTime(i64::try_from(value).unwrap_or(i64::MAX))
@@ -1274,7 +720,7 @@ mod tests {
         let mut reader = LatestMessageReader::new(source);
         assert!(matches!(
             reader.read_at_cancellable(stream, ArrivalTime(0), || metrics.reads.load(Relaxed) > 0),
-            Err(McapOpenError::QueryCancelled)
+            Err(McapSourceError::QueryCancelled)
         ));
         assert_eq!(metrics.reads.load(Relaxed), 1);
         assert_eq!(metrics.resident_spans.load(Relaxed), 0);
@@ -1313,7 +759,7 @@ mod tests {
         generation.store(1, Relaxed);
         resume.send(()).unwrap();
         let (result, metrics) = worker.join().unwrap();
-        assert!(matches!(result, Err(McapOpenError::QueryCancelled)));
+        assert!(matches!(result, Err(McapSourceError::QueryCancelled)));
         assert_eq!(metrics.index_reads, 1);
     }
 
@@ -1352,7 +798,7 @@ mod tests {
             let mut reader = LatestMessageReader::new(source);
             let mut budget = crate::LatestQueryBudget::new(limits);
             assert!(
-                matches!(reader.read_at_with_budget_cancellable(stream, ArrivalTime(0), &mut budget, || false), Err(McapOpenError::QueryLimit { resource: found, .. }) if found == resource)
+                matches!(reader.read_at_with_budget_cancellable(stream, ArrivalTime(0), &mut budget, || false), Err(McapSourceError::QueryLimit { resource: found, .. }) if found == resource)
             );
             assert_eq!(metrics.reads.load(Relaxed), expected_reads);
         }
@@ -1378,7 +824,7 @@ mod tests {
             peaks.push(metrics.peak_resident_entry_bytes.load(Relaxed));
         }
         assert_eq!(peaks[0], peaks[1]);
-        assert!(peaks[0] <= super::super::latest_query::MAX_LATEST_INDEX_BYTES);
+        assert!(peaks[0] <= super::super::latest_limits::MAX_LATEST_INDEX_BYTES);
     }
 
     #[test]
@@ -1406,7 +852,7 @@ mod tests {
                 checks += 1;
                 checks > 2
             }),
-            Err(McapOpenError::QueryCancelled)
+            Err(McapSourceError::QueryCancelled)
         ));
         let mut budget = crate::LatestQueryBudget::new(crate::LatestQueryLimits {
             max_streams: 1,
@@ -1417,7 +863,7 @@ mod tests {
             .unwrap();
         assert!(matches!(
             reader.read_at_with_budget_cancellable(stream, ArrivalTime(0), &mut budget, || false),
-            Err(McapOpenError::QueryLimit {
+            Err(McapSourceError::QueryLimit {
                 resource: "latest streams",
                 ..
             })
@@ -1454,7 +900,7 @@ mod tests {
         );
         assert!(matches!(
             reader.read_at_with_budget_cancellable(stream, ArrivalTime(0), &mut budget, || false),
-            Err(McapOpenError::QueryLimit {
+            Err(McapSourceError::QueryLimit {
                 resource: "latest index reads",
                 ..
             })
@@ -1469,7 +915,7 @@ mod tests {
         });
         assert!(matches!(
             reader.read_at_with_budget_cancellable(stream, ArrivalTime(0), &mut budget, || false),
-            Err(McapOpenError::QueryLimit {
+            Err(McapSourceError::QueryLimit {
                 resource: "latest chunk bytes",
                 ..
             })
@@ -1791,11 +1237,11 @@ mod tests {
         let stream = source.catalog().by_topic("/a").unwrap().id;
         assert!(matches!(
             source.select_streams([stream]),
-            Err(McapOpenError::MessageIndexRequired(found)) if found.stream == stream
+            Err(McapSourceError::MessageIndexRequired(found)) if found.stream == stream
         ));
         assert!(matches!(
             source.latest_before(&[stream], ArrivalTime(1_000_000_000)),
-            Err(McapOpenError::MessageIndexRequired(found)) if found.stream == stream
+            Err(McapSourceError::MessageIndexRequired(found)) if found.stream == stream
         ));
     }
 
@@ -1838,7 +1284,7 @@ mod tests {
 
         assert!(matches!(
             McapSource::copy_from_slice((bytes.into_inner()).as_ref()),
-            Err(McapOpenError::ChunkIndexRequired)
+            Err(McapSourceError::ChunkIndexRequired)
         ));
     }
 }

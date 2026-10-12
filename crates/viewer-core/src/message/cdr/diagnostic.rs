@@ -1,5 +1,5 @@
 //! ROS 2 diagnostic_msgs/msg/DiagnosticArray (CDR1). Levels are producer facts.
-use super::common::{DecodeError, Reader};
+use super::wire::{DecodeError, Reader};
 use crate::MeasurementTime;
 
 pub const MAX_DIAGNOSTIC_MESSAGE_BYTES: usize = 1024 * 1024;
@@ -109,7 +109,7 @@ pub fn decode_diagnostic_array(bytes: &[u8]) -> Result<DiagnosticArray, DecodeEr
 
 #[cfg(test)]
 mod tests {
-    use super::super::common::{push_string, push_u32};
+    use super::super::wire::{push_string, push_u32};
     use super::*;
     fn payload(big_endian: bool) -> Vec<u8> {
         let mut bytes = vec![0, 1, 0, 0];

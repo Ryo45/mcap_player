@@ -1,6 +1,6 @@
 //! Bounded sequential reads for offline conversion and derived artifacts (including unchunked data).
 use super::backing::{Backing, FileRanges, MAX_SOURCE_RECORD_BYTES};
-use crate::McapOpenError;
+use crate::McapSourceError;
 use mcap::{
     Channel, Message, Schema,
     records::Record,
@@ -17,7 +17,7 @@ pub struct FileMessageStream {
     done: bool,
 }
 impl FileMessageStream {
-    pub fn open(path: &std::path::Path) -> Result<Self, McapOpenError> {
+    pub fn open(path: &std::path::Path) -> Result<Self, McapSourceError> {
         Ok(Self {
             backing: Backing::File(Arc::new(FileRanges::open(path)?)),
             reader: LinearReader::new_with_options(
@@ -34,12 +34,12 @@ impl FileMessageStream {
     /// Reads source metadata through the same file handle without requiring Chunk Index records.
     pub fn read_metadata(
         &self,
-    ) -> Result<(mcap::Summary, crate::McapSummaryIdentity), McapOpenError> {
+    ) -> Result<(mcap::Summary, crate::McapSummaryIdentity), McapSourceError> {
         let summary = self.backing.summary()?;
         let stats = summary
             .stats
             .as_ref()
-            .ok_or(McapOpenError::SummaryRequired)?;
+            .ok_or(McapSourceError::SummaryRequired)?;
         let identity = crate::McapSummaryIdentity {
             file_size: self.backing.len(),
             summary_crc: self.backing.summary_crc()?,
@@ -52,14 +52,14 @@ impl FileMessageStream {
         };
         Ok((summary, identity))
     }
-    fn next_message(&mut self) -> Result<Option<Message<'static>>, McapOpenError> {
+    fn next_message(&mut self) -> Result<Option<Message<'static>>, McapSourceError> {
         while let Some(event) = self.reader.next_event() {
             match event? {
                 LinearReadEvent::ReadRequest(hint) => {
                     let remaining = self.backing.len().saturating_sub(self.position);
                     let length = (hint.clamp(1, 65536) as u64).min(remaining) as usize;
                     if length == 0 {
-                        return Err(McapOpenError::Io(std::io::Error::new(
+                        return Err(McapSourceError::Io(std::io::Error::new(
                             std::io::ErrorKind::UnexpectedEof,
                             "truncated MCAP stream",
                         )));
@@ -146,7 +146,7 @@ impl FileMessageStream {
     }
 }
 impl Iterator for FileMessageStream {
-    type Item = Result<Message<'static>, McapOpenError>;
+    type Item = Result<Message<'static>, McapSourceError>;
     fn next(&mut self) -> Option<Self::Item> {
         if self.done {
             return None;

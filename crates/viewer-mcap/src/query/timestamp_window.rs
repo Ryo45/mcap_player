@@ -1,6 +1,6 @@
 //! Query-owned multi-stream traversal over physical chunk Message Index spans.
 use super::WindowQueryError;
-use crate::{ArrivalTime, DataWindowTimeRange, McapOpenError, McapSource, StreamId};
+use crate::{ArrivalTime, DataWindowTimeRange, McapSource, McapSourceError, StreamId};
 use std::collections::{BTreeMap, BinaryHeap, HashSet};
 
 #[derive(Clone, Copy)]
@@ -84,7 +84,7 @@ pub(super) fn collect_timestamp_window(
         return Err(WindowQueryError::InvalidWindow);
     }
     if cancelled() {
-        return Err(McapOpenError::QueryCancelled.into());
+        return Err(McapSourceError::QueryCancelled.into());
     }
     source.validate_unchanged()?;
     let mut results = BTreeMap::<StreamId, StreamTimestampRange>::new();
@@ -107,10 +107,11 @@ pub(super) fn collect_timestamp_window(
                 .catalog()
                 .by_id(stream)
                 .ok_or(mcap::McapError::BadIndex)
-                .map_err(McapOpenError::from)?;
+                .map_err(McapSourceError::from)?;
             if descriptor.timing.message_count != Some(0) {
                 return Err(
-                    McapOpenError::MessageIndexRequired(crate::IndexedPlanError { stream }).into(),
+                    McapSourceError::MessageIndexRequired(crate::IndexedPlanError { stream })
+                        .into(),
                 );
             }
         }
@@ -119,7 +120,7 @@ pub(super) fn collect_timestamp_window(
     let mut budget = TimestampQueryBudget::new(limits);
     while let Some((_, chunk_index, stream, position)) = frontier.pop() {
         if cancelled() {
-            return Err(McapOpenError::QueryCancelled.into());
+            return Err(McapSourceError::QueryCancelled.into());
         }
         let timeline = source
             .stream_chunk_timeline(stream)
@@ -153,7 +154,7 @@ pub(super) fn collect_timestamp_window(
         }
     }
     if cancelled() {
-        return Err(McapOpenError::QueryCancelled.into());
+        return Err(McapSourceError::QueryCancelled.into());
     }
     source.validate_unchanged()?;
     Ok(results)
@@ -181,15 +182,15 @@ fn read_and_reduce(
     mut cancelled: impl FnMut() -> bool,
 ) -> Result<(), WindowQueryError> {
     if cancelled() {
-        return Err(McapOpenError::QueryCancelled.into());
+        return Err(McapSourceError::QueryCancelled.into());
     }
     let length = usize::try_from(source.summary().chunk_indexes[chunk_index].message_index_length)
-        .map_err(|_| McapOpenError::ReadOverflow)?;
+        .map_err(|_| McapSourceError::ReadOverflow)?;
     budget.reserve_index(length)?;
     let indexes = source.read_chunk_message_indexes(chunk_index, &mut cancelled)?;
     for (channel, entries) in &indexes.channels {
         if cancelled() {
-            return Err(McapOpenError::QueryCancelled.into());
+            return Err(McapSourceError::QueryCancelled.into());
         }
         let Some(result) = results.get_mut(&StreamId(u32::from(*channel))) else {
             continue;
@@ -199,7 +200,7 @@ fn read_and_reduce(
         if let Some(last) = end.checked_sub(1) {
             let arrival = ArrivalTime(
                 i64::try_from(entries[last].log_time)
-                    .map_err(|_| McapOpenError::TimestampOverflow)?,
+                    .map_err(|_| McapSourceError::TimestampOverflow)?,
             );
             result.latest_arrival = result.latest_arrival.max(Some(arrival));
         }
@@ -207,11 +208,11 @@ fn read_and_reduce(
             entries[..end].partition_point(|entry| entry.log_time < range.start.0.max(0) as u64);
         for entry in &entries[start..end] {
             if cancelled() {
-                return Err(McapOpenError::QueryCancelled.into());
+                return Err(McapSourceError::QueryCancelled.into());
             }
             budget.admit_sample()?;
             result.arrivals.push(ArrivalTime(
-                i64::try_from(entry.log_time).map_err(|_| McapOpenError::TimestampOverflow)?,
+                i64::try_from(entry.log_time).map_err(|_| McapSourceError::TimestampOverflow)?,
             ));
         }
     }
@@ -488,7 +489,7 @@ mod tests {
                 TimestampQueryLimits::default(),
                 || true
             ),
-            Err(WindowQueryError::Source(McapOpenError::QueryCancelled))
+            Err(WindowQueryError::Source(McapSourceError::QueryCancelled))
         ));
         assert_eq!(source.index_read_metrics().reads.load(Relaxed), 0);
         assert!(matches!(
@@ -642,7 +643,7 @@ mod tests {
         );
         assert!(matches!(
             result,
-            Err(WindowQueryError::Source(McapOpenError::QueryCancelled))
+            Err(WindowQueryError::Source(McapSourceError::QueryCancelled))
         ));
         assert_eq!(source.index_read_metrics().reads.load(Relaxed), 1);
         assert_eq!(source.index_read_metrics().resident_spans.load(Relaxed), 0);
@@ -679,7 +680,7 @@ mod tests {
         assert!(changed);
         assert!(matches!(
             result,
-            Err(WindowQueryError::Source(McapOpenError::SourceChanged))
+            Err(WindowQueryError::Source(McapSourceError::SourceChanged))
         ));
         assert_eq!(source.index_read_metrics().resident_spans.load(Relaxed), 0);
         drop(source);

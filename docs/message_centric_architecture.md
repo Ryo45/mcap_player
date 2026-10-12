@@ -338,3 +338,11 @@ statuses. They retain separate result types and panel semantics while sharing on
 concrete coalescing window-query worker. See
 [native_recording_health.md](native_recording_health.md) for boundaries, budgets,
 source replacement/seek lifecycle and comparison with Inspector and Plot queries.
+
+## Rust module placement
+
+See [module_structure.md](module_structure.md) for current implementation owners.
+Path materialization uses `PathFrame`/`PathState` independently of its BEV/Scene
+views. `PointCloudController` owns LaserScan materialization; Scene presentation
+retains TF projection and accumulation. Shared ROS schema and artifact identity
+are source-neutral core concepts. Module moves preserve playback/query contracts.

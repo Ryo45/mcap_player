@@ -1,12 +1,12 @@
 use super::ProcessingCounters;
 use crate::{
-    BevPathFrame, BevState, RawMessage, RestoreSemantics, SessionPlan, StreamId, decode_path,
+    PathFrame, PathState, RawMessage, RestoreSemantics, SessionPlan, StreamId, decode_path,
 };
 
 #[derive(Clone)]
 pub struct PathController {
     stream: Option<StreamId>,
-    state: BevState,
+    state: PathState,
     counters: ProcessingCounters,
 }
 
@@ -18,7 +18,7 @@ impl PathController {
     pub fn new(plan: &SessionPlan) -> Self {
         Self {
             stream: plan.path_stream().map(|stream| stream.id),
-            state: BevState::default(),
+            state: PathState::default(),
             counters: ProcessingCounters::default(),
         }
     }
@@ -42,7 +42,7 @@ impl PathController {
     fn decode_and_apply(&mut self, message: &RawMessage) -> Result<(), crate::DecodeError> {
         match decode_path(&message.payload) {
             Ok(path) => {
-                self.state.apply(BevPathFrame {
+                self.state.apply(PathFrame {
                     measurement_time: path.measurement_time,
                     arrival_time: message.arrival_time,
                     frame_id: path.frame_id,
@@ -66,7 +66,7 @@ impl PathController {
         self.state.cold_seek();
     }
 
-    pub fn state(&self) -> &BevState {
+    pub fn state(&self) -> &PathState {
         &self.state
     }
 

@@ -308,7 +308,7 @@ pub(crate) struct PanelCompositionInput<'a> {
     pub(crate) presentation: &'a ViewerPresentation,
     pub(crate) camera_overlays: &'a viewer_renderer::CameraOverlayState,
     pub(crate) interaction: &'a ViewerInteractionState,
-    pub(crate) signals: crate::signal_query::SignalQueryView<'a>,
+    pub(crate) signals: crate::signal_view::SignalView<'a>,
     pub(crate) preview: PreviewDataView<'a>,
     pub(crate) resources: PanelResourceView<'a>,
     pub(crate) scene: SceneDataView<'a>,

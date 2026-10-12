@@ -1,6 +1,6 @@
 //! Bounded derived preview documents.
 
-use crate::{ArrivalTime, CameraId, MeasurementTime, SignalId};
+use crate::{ArrivalTime, CameraId, MeasurementTime, SignalId, SourceFingerprint};
 use serde::{Deserialize, Serialize};
 use std::{error::Error, fmt};
 
@@ -610,6 +610,94 @@ impl TryFrom<PreviewSnapshotWire> for PreviewSnapshot {
             value.signal_overviews,
             value.trajectory,
         )
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase", try_from = "PreviewBuildInfoWire")]
+pub struct PreviewBuildInfo {
+    schema_version: u32,
+    generator_name: String,
+    generator_version: String,
+    source: SourceFingerprint,
+}
+
+impl PreviewBuildInfo {
+    pub fn new(
+        generator_name: impl Into<String>,
+        generator_version: impl Into<String>,
+        source: SourceFingerprint,
+    ) -> Result<Self, PreviewValidationError> {
+        let info = Self {
+            schema_version: crate::CURRENT_PREVIEW_SCHEMA_VERSION,
+            generator_name: generator_name.into(),
+            generator_version: generator_version.into(),
+            source,
+        };
+        info.validate()?;
+        Ok(info)
+    }
+
+    pub fn schema_version(&self) -> u32 {
+        self.schema_version
+    }
+
+    pub fn generator_name(&self) -> &str {
+        &self.generator_name
+    }
+
+    pub fn generator_version(&self) -> &str {
+        &self.generator_version
+    }
+
+    pub fn source(&self) -> &SourceFingerprint {
+        &self.source
+    }
+
+    pub fn validate(&self) -> Result<(), PreviewValidationError> {
+        if self.schema_version != crate::CURRENT_PREVIEW_SCHEMA_VERSION {
+            return Err(PreviewValidationError::new(format!(
+                "unsupported preview schema version: {}",
+                self.schema_version
+            )));
+        }
+        if self.generator_name.trim().is_empty() {
+            return Err(PreviewValidationError::new(
+                "preview generatorName must not be empty",
+            ));
+        }
+        if self.generator_version.trim().is_empty() {
+            return Err(PreviewValidationError::new(
+                "preview generatorVersion must not be empty",
+            ));
+        }
+        self.source
+            .validate()
+            .map_err(|error| PreviewValidationError::new(error.to_string()))
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PreviewBuildInfoWire {
+    schema_version: u32,
+    generator_name: String,
+    generator_version: String,
+    source: SourceFingerprint,
+}
+
+impl TryFrom<PreviewBuildInfoWire> for PreviewBuildInfo {
+    type Error = PreviewValidationError;
+
+    fn try_from(value: PreviewBuildInfoWire) -> Result<Self, Self::Error> {
+        let info = Self {
+            schema_version: value.schema_version,
+            generator_name: value.generator_name,
+            generator_version: value.generator_version,
+            source: value.source,
+        };
+        info.validate()?;
+        Ok(info)
     }
 }
 

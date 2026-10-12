@@ -245,7 +245,7 @@ fn adjacent_cursor_queries_reuse_serialized_chunk_and_index_without_mutating_pla
     assert!(source.read_through(ArrivalTime(30)).unwrap().is_empty());
     assert!(matches!(
         reader.read_at_cancellable(StreamId(1), ArrivalTime(10), || true),
-        Err(McapOpenError::QueryCancelled)
+        Err(McapSourceError::QueryCancelled)
     ));
 }
 #[test]

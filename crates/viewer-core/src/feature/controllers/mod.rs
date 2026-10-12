@@ -4,14 +4,14 @@ mod camera;
 mod counters;
 mod odometry;
 mod path;
-mod scene;
+mod point_cloud;
 mod transform;
 
 pub use camera::CameraController;
 pub use counters::ProcessingCounters;
 pub use odometry::OdometryController;
 pub use path::PathController;
-pub use scene::SceneController;
+pub use point_cloud::PointCloudController;
 pub use transform::TransformController;
 
 #[cfg(test)]

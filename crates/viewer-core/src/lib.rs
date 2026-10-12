@@ -27,15 +27,15 @@ pub use derived::{
     DataFidelity, LoadedOdometrySignals, LoadedSignal, PlotSeries, PreviewBudget, PreviewBuildInfo,
     PreviewImageEncoding, PreviewRequest, PreviewSnapshot, PreviewValidationError, SignalBucket,
     SignalFidelity, SignalId, SignalOverview, SignalOverviewReducer, SignalSample,
-    SourceFingerprint, TimeRange, TimedPosition2, arrival_time_from_plot_x, cursor_seconds,
-    merge_signal_buckets,
+    SourceFingerprint, SourceFingerprintValidationError, TimeRange, TimedPosition2,
+    arrival_time_from_plot_x, cursor_seconds, merge_signal_buckets,
 };
 pub use feature::{
-    BevPathFrame, BevState, CameraController, CameraFrame, CameraId, CameraState, CameraStatus,
-    DYNAMIC_TF_HISTORY, FeatureRestoreError, FeatureRestoreErrorKind, FeatureRuntime,
-    OdometryController, PathController, PlaybackPerformance, PointCloudFrame, PointCloudState,
-    ProcessingCounters, SceneController, TelemetryFrame, TelemetryState, TransformBatch,
-    TransformController, TransformState,
+    CameraController, CameraFrame, CameraId, CameraState, CameraStatus, DYNAMIC_TF_HISTORY,
+    FeatureRestoreError, FeatureRestoreErrorKind, FeatureRuntime, OdometryController,
+    PathController, PathFrame, PathState, PlaybackPerformance, PointCloudController,
+    PointCloudFrame, PointCloudState, ProcessingCounters, TelemetryFrame, TelemetryState,
+    TransformBatch, TransformController, TransformState,
 };
 pub use message::{
     ArrivalTime, CompressedImage, DecodeError, DecodedCompressedImage, LaserScan, MeasurementTime,

@@ -1,4 +1,4 @@
-use super::common::{align_output, push_string, push_u32};
+use super::wire::{align_output, push_string, push_u32};
 use super::*;
 use crate::MeasurementTime;
 use bytes::Bytes;

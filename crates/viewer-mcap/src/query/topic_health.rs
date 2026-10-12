@@ -60,7 +60,7 @@ pub fn query_topic_health(
     let mut snapshots = Vec::with_capacity(topics.len());
     for (topic, streams) in topics {
         if cancelled() {
-            return Err(crate::McapOpenError::QueryCancelled.into());
+            return Err(crate::McapSourceError::QueryCancelled.into());
         }
         let mut snapshot = TopicHealthSnapshot {
             stream_ids: streams.iter().map(|s| s.id).collect(),
@@ -88,7 +88,7 @@ pub fn query_topic_health(
                 && stream.timing.message_count != Some(0)
             {
                 snapshot.error = Some(Arc::new(
-                    crate::McapOpenError::MessageIndexRequired(crate::IndexedPlanError {
+                    crate::McapSourceError::MessageIndexRequired(crate::IndexedPlanError {
                         stream: stream.id,
                     })
                     .into(),
@@ -112,7 +112,7 @@ pub fn query_topic_health(
     )?;
     for snapshot in &mut snapshots {
         if cancelled() {
-            return Err(crate::McapOpenError::QueryCancelled.into());
+            return Err(crate::McapSourceError::QueryCancelled.into());
         }
         if snapshot.error.is_some() {
             continue;

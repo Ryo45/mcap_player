@@ -15,7 +15,7 @@ const MAX_TOPICS: usize = 8;
 pub(crate) enum InspectorError {
     MissingTopic(String),
     TooManyTopics(usize),
-    Source(viewer_mcap::McapOpenError),
+    Source(viewer_mcap::McapSourceError),
     Decode(InspectorDecodeError),
     Start(std::io::Error),
     WorkerPanicked,
@@ -45,8 +45,8 @@ impl std::error::Error for InspectorError {
         }
     }
 }
-impl From<viewer_mcap::McapOpenError> for InspectorError {
-    fn from(error: viewer_mcap::McapOpenError) -> Self {
+impl From<viewer_mcap::McapSourceError> for InspectorError {
+    fn from(error: viewer_mcap::McapSourceError) -> Self {
         Self::Source(error)
     }
 }

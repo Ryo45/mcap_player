@@ -1,4 +1,4 @@
-use super::common::{DecodeError, Reader, push_string, push_u32};
+use super::wire::{DecodeError, Reader, push_string, push_u32};
 use crate::MeasurementTime;
 use bytes::Bytes;
 use std::ops::Range;

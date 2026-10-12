@@ -5,14 +5,14 @@ mod tests {
     use super::*;
     use bytes::Bytes;
     use viewer_core::{
-        BevPathFrame, CameraFrame, PlaybackRequirements, PointCloudFrame, SourceCatalog,
+        CameraFrame, PathFrame, PlaybackRequirements, PointCloudFrame, SourceCatalog,
         TelemetryFrame, WorkspaceBindings,
     };
 
     #[derive(Clone, Debug, PartialEq)]
     struct VisibleSnapshot {
         cameras: Vec<(CameraId, CameraFrame)>,
-        path: Option<BevPathFrame>,
+        path: Option<PathFrame>,
         odometry: Option<TelemetryFrame>,
         static_transforms: usize,
         dynamic_transforms: usize,
@@ -64,7 +64,7 @@ mod tests {
             dynamic_transforms: runtime.transforms().state().dynamic_len(),
             transform_revision: runtime.transforms().state().revision(),
             scene: runtime
-                .scene()
+                .point_cloud()
                 .and_then(|scene| scene.point_cloud().latest())
                 .cloned(),
             priority: runtime.scheduling_priority(),
@@ -210,7 +210,7 @@ mod sharing_tests {
                 .count() as u64
         );
         assert_eq!(
-            runtime.scene().unwrap().counters().decoded,
+            runtime.point_cloud().unwrap().counters().decoded,
             messages
                 .iter()
                 .filter(|m| Some(m.stream_id) == plan.point_cloud_stream().map(|s| s.id))
@@ -226,8 +226,8 @@ mod sharing_tests {
                 runtime.transforms().state()
             ));
             assert!(std::ptr::eq(
-                runtime.scene().unwrap().point_cloud(),
-                runtime.scene().unwrap().point_cloud()
+                runtime.point_cloud().unwrap().point_cloud(),
+                runtime.point_cloud().unwrap().point_cloud()
             ));
         }
         assert_eq!(runtime.counters(), counts);

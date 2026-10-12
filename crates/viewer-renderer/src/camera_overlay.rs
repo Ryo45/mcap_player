@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 use viewer_core::{
-    ArrivalTime, BevPathFrame, CameraCalibrationSet, CameraFrame, CameraId, OverlayStatus,
+    ArrivalTime, CameraCalibrationSet, CameraFrame, CameraId, OverlayStatus, PathFrame,
     TransformState,
 };
 
@@ -42,7 +42,7 @@ impl CameraOverlayState {
         &mut self,
         frame: &CameraFrame,
         image_size: (u32, u32),
-        path: Option<&BevPathFrame>,
+        path: Option<&PathFrame>,
         path_revision: u64,
         transforms: &TransformState,
         transform_revision: u64,
@@ -122,8 +122,8 @@ mod tests {
         }
     }
 
-    fn path(points: Vec<[f32; 2]>) -> BevPathFrame {
-        BevPathFrame {
+    fn path(points: Vec<[f32; 2]>) -> PathFrame {
+        PathFrame {
             measurement_time: MeasurementTime(10),
             arrival_time: ArrivalTime(11),
             frame_id: "base_link".to_owned(),

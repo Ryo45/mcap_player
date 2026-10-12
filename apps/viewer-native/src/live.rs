@@ -398,8 +398,8 @@ mod tests {
             admitted.odometry().state().latest()
         );
         assert_eq!(
-            direct.scene().unwrap().point_cloud().latest(),
-            admitted.scene().unwrap().point_cloud().latest()
+            direct.point_cloud().unwrap().point_cloud().latest(),
+            admitted.point_cloud().unwrap().point_cloud().latest()
         );
         assert_eq!(
             direct.transforms().state().static_len(),
@@ -557,7 +557,14 @@ mod tests {
         assert!(runtime.cameras().state().latest_for(CameraId(0)).is_some());
         assert!(runtime.path().state().latest().is_some());
         assert!(runtime.odometry().state().latest().is_some());
-        assert!(runtime.scene().unwrap().point_cloud().latest().is_some());
+        assert!(
+            runtime
+                .point_cloud()
+                .unwrap()
+                .point_cloud()
+                .latest()
+                .is_some()
+        );
         assert!(runtime.transforms().state().static_len() > 0);
         assert!(runtime.transforms().state().dynamic_len() > 0);
         assert_eq!(runtime.counters().errors, 0);

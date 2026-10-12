@@ -1,5 +1,5 @@
-use super::{RemoteApiClient, RequestGeneration, adapt_catalog};
 use crate::playback::WebPlayback;
+use crate::remote::{RemoteApiClient, RequestGeneration, adapt_catalog};
 use std::cell::RefCell;
 use viewer_remote_protocol::CatalogResponse;
 use wasm_bindgen::{JsCast, closure::Closure};
@@ -183,7 +183,7 @@ fn install_open_playback() {
             });
         match result {
             Ok(playback) => {
-                crate::browser::install_remote_playback(playback);
+                super::install_remote_playback(playback);
                 set_output("Remote playback opened. Cold seek is available.", false);
             }
             Err(error) => set_output(&error, true),
@@ -211,7 +211,7 @@ fn format_catalog(catalog: &CatalogResponse) -> String {
     )
 }
 
-pub(crate) fn install() {
+pub(super) fn install() {
     install_connect();
     install_catalog();
     install_open_playback();

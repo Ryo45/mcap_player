@@ -3,7 +3,7 @@ mod timestamp_window;
 mod topic_health;
 pub use topic_health::{TopicHealthRequirement, TopicHealthSnapshot, query_topic_health};
 
-use crate::{ArrivalTime, DataWindowTimeRange, McapOpenError};
+use crate::{ArrivalTime, DataWindowTimeRange, McapSourceError};
 
 pub const DEFAULT_QUERY_WINDOW_SECONDS: u32 = 10;
 pub const MAX_QUERY_WINDOW_SECONDS: u32 = 60;
@@ -17,7 +17,7 @@ pub enum WindowQueryError {
         resource: &'static str,
         maximum: usize,
     },
-    Source(McapOpenError),
+    Source(McapSourceError),
 }
 impl std::fmt::Display for WindowQueryError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -47,8 +47,8 @@ impl std::error::Error for WindowQueryError {
         }
     }
 }
-impl From<McapOpenError> for WindowQueryError {
-    fn from(value: McapOpenError) -> Self {
+impl From<McapSourceError> for WindowQueryError {
+    fn from(value: McapSourceError) -> Self {
         Self::Source(value)
     }
 }
@@ -84,3 +84,14 @@ impl From<viewer_core::DiagnosticsReduceError> for WindowQueryError {
         }
     }
 }
+
+mod numeric_plot;
+mod odometry_signals;
+pub use numeric_plot::{
+    NumericPlotDetail, NumericPlotError, NumericPlotOverview, NumericPlotOverviewBatch,
+    NumericSample, NumericSeriesRequest,
+};
+pub use odometry_signals::{
+    load_odometry_signals, load_odometry_signals_for_topic_with_progress, load_speed_signal,
+    load_yaw_rate_signal,
+};

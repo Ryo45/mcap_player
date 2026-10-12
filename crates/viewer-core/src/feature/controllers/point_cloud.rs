@@ -5,13 +5,13 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub struct SceneController {
+pub struct PointCloudController {
     stream: Option<StreamId>,
     point_cloud: PointCloudState,
     counters: ProcessingCounters,
 }
 
-impl SceneController {
+impl PointCloudController {
     pub const fn restore_semantics() -> RestoreSemantics {
         RestoreSemantics::LatestBefore
     }

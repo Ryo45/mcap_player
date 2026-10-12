@@ -1,5 +1,5 @@
 //! Owned immutable bytes or bounded positional reads. File mutation cannot invalidate Rust slices.
-use crate::McapOpenError;
+use crate::McapSourceError;
 use bytes::Bytes;
 use mcap::Summary;
 #[cfg(not(target_arch = "wasm32"))]
@@ -16,7 +16,7 @@ pub(super) enum Backing {
     File(std::sync::Arc<FileRanges>),
 }
 impl Backing {
-    pub fn validate(&self) -> Result<(), McapOpenError> {
+    pub fn validate(&self) -> Result<(), McapSourceError> {
         match self {
             Self::Bytes(_) => Ok(()),
             #[cfg(not(target_arch = "wasm32"))]
@@ -30,18 +30,18 @@ impl Backing {
             Self::File(file) => file.metadata.len(),
         }
     }
-    pub fn read(&self, offset: u64, length: usize) -> Result<Bytes, McapOpenError> {
+    pub fn read(&self, offset: u64, length: usize) -> Result<Bytes, McapSourceError> {
         if length > MAX_SOURCE_RECORD_BYTES {
-            return Err(McapOpenError::ReadLimit {
+            return Err(McapSourceError::ReadLimit {
                 requested: length,
                 maximum: MAX_SOURCE_RECORD_BYTES,
             });
         }
         let end = offset
             .checked_add(length as u64)
-            .ok_or(McapOpenError::ReadOverflow)?;
+            .ok_or(McapSourceError::ReadOverflow)?;
         if end > self.len() {
-            return Err(McapOpenError::ReadOutOfBounds {
+            return Err(McapSourceError::ReadOutOfBounds {
                 offset,
                 length,
                 file_size: self.len(),
@@ -53,15 +53,15 @@ impl Backing {
             Self::File(file) => file.read(offset, length),
         }
     }
-    pub fn summary(&self) -> Result<Summary, McapOpenError> {
+    pub fn summary(&self) -> Result<Summary, McapSourceError> {
         match self {
-            Self::Bytes(bytes) => Summary::read(bytes)?.ok_or(McapOpenError::SummaryRequired),
+            Self::Bytes(bytes) => Summary::read(bytes)?.ok_or(McapSourceError::SummaryRequired),
             #[cfg(not(target_arch = "wasm32"))]
             Self::File(_) => self.summary_from_ranges(),
         }
     }
     #[cfg(not(target_arch = "wasm32"))]
-    fn summary_from_ranges(&self) -> Result<Summary, McapOpenError> {
+    fn summary_from_ranges(&self) -> Result<Summary, McapSourceError> {
         let mut reader = SummaryReader::new_with_options(
             SummaryReaderOptions::default()
                 .with_file_size(self.len())
@@ -76,9 +76,9 @@ impl Backing {
                         SeekFrom::Current(delta) => position.checked_add_signed(delta),
                         SeekFrom::End(delta) => self.len().checked_add_signed(delta),
                     }
-                    .ok_or(McapOpenError::ReadOverflow)?;
+                    .ok_or(McapSourceError::ReadOverflow)?;
                     if position > self.len() {
-                        return Err(McapOpenError::ReadOutOfBounds {
+                        return Err(McapSourceError::ReadOutOfBounds {
                             offset: position,
                             length: 0,
                             file_size: self.len(),
@@ -92,17 +92,17 @@ impl Backing {
                     reader.notify_read(length);
                     position = position
                         .checked_add(length as u64)
-                        .ok_or(McapOpenError::ReadOverflow)?;
+                        .ok_or(McapSourceError::ReadOverflow)?;
                 }
             }
         }
-        reader.finish().ok_or(McapOpenError::SummaryRequired)
+        reader.finish().ok_or(McapSourceError::SummaryRequired)
     }
-    pub fn summary_crc(&self) -> Result<u32, McapOpenError> {
+    pub fn summary_crc(&self) -> Result<u32, McapSourceError> {
         let offset = self
             .len()
             .checked_sub(37)
-            .ok_or(McapOpenError::ReadOverflow)?;
+            .ok_or(McapSourceError::ReadOverflow)?;
         let tail = self.read(offset, 37)?;
         let mut bytes = mcap::MAGIC.to_vec();
         bytes.extend_from_slice(&tail);
@@ -119,11 +119,11 @@ pub(super) struct FileRanges {
 }
 #[cfg(not(target_arch = "wasm32"))]
 impl FileRanges {
-    pub fn open(path: &std::path::Path) -> Result<Self, McapOpenError> {
-        let file = std::fs::File::open(path).map_err(McapOpenError::Io)?;
-        let metadata = file.metadata().map_err(McapOpenError::Io)?;
+    pub fn open(path: &std::path::Path) -> Result<Self, McapSourceError> {
+        let file = std::fs::File::open(path).map_err(McapSourceError::Io)?;
+        let metadata = file.metadata().map_err(McapSourceError::Io)?;
         if !metadata.is_file() {
-            return Err(McapOpenError::NotRegularFile);
+            return Err(McapSourceError::NotRegularFile);
         }
         Ok(Self {
             file,
@@ -132,28 +132,28 @@ impl FileRanges {
             cursor: std::sync::Mutex::new(()),
         })
     }
-    fn check(&self) -> Result<(), McapOpenError> {
-        let actual = self.file.metadata().map_err(McapOpenError::Io)?;
+    fn check(&self) -> Result<(), McapSourceError> {
+        let actual = self.file.metadata().map_err(McapSourceError::Io)?;
         if actual.len() != self.metadata.len()
             || actual.modified().ok() != self.metadata.modified().ok()
         {
-            return Err(McapOpenError::SourceChanged);
+            return Err(McapSourceError::SourceChanged);
         }
         Ok(())
     }
-    fn read(&self, offset: u64, length: usize) -> Result<Bytes, McapOpenError> {
+    fn read(&self, offset: u64, length: usize) -> Result<Bytes, McapSourceError> {
         self.check()?;
         let mut bytes = vec![0; length];
         #[cfg(not(any(unix, windows)))]
         let _guard = self
             .cursor
             .lock()
-            .map_err(|_| McapOpenError::ReadLockPoisoned)?;
+            .map_err(|_| McapSourceError::ReadLockPoisoned)?;
         let mut done = 0;
         while done < length {
             let position = offset
                 .checked_add(done as u64)
-                .ok_or(McapOpenError::ReadOverflow)?;
+                .ok_or(McapSourceError::ReadOverflow)?;
             #[cfg(unix)]
             let result = {
                 use std::os::unix::fs::FileExt;
@@ -173,14 +173,14 @@ impl FileRanges {
             };
             match result {
                 Ok(0) => {
-                    return Err(McapOpenError::Io(io::Error::new(
+                    return Err(McapSourceError::Io(io::Error::new(
                         io::ErrorKind::UnexpectedEof,
                         "short positional read",
                     )));
                 }
                 Ok(count) => done += count,
                 Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
-                Err(error) => return Err(McapOpenError::Io(error)),
+                Err(error) => return Err(McapSourceError::Io(error)),
             }
         }
         self.check()?;

@@ -3,10 +3,12 @@
 mod bookmark;
 mod plot;
 mod preview;
+mod source_fingerprint;
+pub use source_fingerprint::{SourceFingerprint, SourceFingerprintValidationError};
 
 pub use bookmark::{
     Bookmark, BookmarkDocument, BookmarkId, BookmarkValidationError,
-    CURRENT_BOOKMARK_SCHEMA_VERSION, PreviewBuildInfo, SourceFingerprint,
+    CURRENT_BOOKMARK_SCHEMA_VERSION,
 };
 pub use plot::{
     LoadedOdometrySignals, LoadedSignal, PlotSeries, SignalId, SignalOverviewReducer, SignalSample,
@@ -14,6 +16,7 @@ pub use plot::{
 };
 pub use preview::{
     CURRENT_PREVIEW_SCHEMA_VERSION, CameraPreviewFrame, DataFidelity, PreviewBudget,
-    PreviewImageEncoding, PreviewRequest, PreviewSnapshot, PreviewValidationError, SignalBucket,
-    SignalFidelity, SignalOverview, TimeRange, TimedPosition2, merge_signal_buckets,
+    PreviewBuildInfo, PreviewImageEncoding, PreviewRequest, PreviewSnapshot,
+    PreviewValidationError, SignalBucket, SignalFidelity, SignalOverview, TimeRange,
+    TimedPosition2, merge_signal_buckets,
 };

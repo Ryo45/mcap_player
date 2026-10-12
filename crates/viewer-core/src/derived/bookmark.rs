@@ -1,6 +1,8 @@
 //! Persistent user bookmarks and their source identity.
 
-use crate::ArrivalTime;
+#[cfg(test)]
+use crate::PreviewBuildInfo;
+use crate::{ArrivalTime, SourceFingerprint};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeSet, error::Error, fmt};
 
@@ -178,64 +180,6 @@ impl TryFrom<BookmarkWire> for Bookmark {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "camelCase", try_from = "SourceFingerprintWire")]
-pub struct SourceFingerprint {
-    algorithm: String,
-    value: String,
-}
-
-impl SourceFingerprint {
-    pub fn new(
-        algorithm: impl Into<String>,
-        value: impl Into<String>,
-    ) -> Result<Self, BookmarkValidationError> {
-        let fingerprint = Self {
-            algorithm: algorithm.into(),
-            value: value.into(),
-        };
-        fingerprint.validate()?;
-        Ok(fingerprint)
-    }
-
-    pub fn algorithm(&self) -> &str {
-        &self.algorithm
-    }
-
-    pub fn value(&self) -> &str {
-        &self.value
-    }
-
-    pub fn validate(&self) -> Result<(), BookmarkValidationError> {
-        if self.algorithm.trim().is_empty() {
-            return Err(BookmarkValidationError::new(
-                "source fingerprint algorithm must not be empty",
-            ));
-        }
-        if self.value.trim().is_empty() {
-            return Err(BookmarkValidationError::new(
-                "source fingerprint value must not be empty",
-            ));
-        }
-        Ok(())
-    }
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct SourceFingerprintWire {
-    algorithm: String,
-    value: String,
-}
-
-impl TryFrom<SourceFingerprintWire> for SourceFingerprint {
-    type Error = BookmarkValidationError;
-
-    fn try_from(value: SourceFingerprintWire) -> Result<Self, Self::Error> {
-        Self::new(value.algorithm, value.value)
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", try_from = "BookmarkDocumentWire")]
 pub struct BookmarkDocument {
     schema_version: u32,
@@ -284,7 +228,9 @@ impl BookmarkDocument {
                 self.schema_version
             )));
         }
-        self.source.validate()?;
+        self.source
+            .validate()
+            .map_err(|error| BookmarkValidationError::new(error.to_string()))?;
         let mut ids = BTreeSet::new();
         for bookmark in &self.bookmarks {
             bookmark.validate()?;
@@ -319,92 +265,6 @@ impl TryFrom<BookmarkDocumentWire> for BookmarkDocument {
         };
         document.validate()?;
         Ok(document)
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "camelCase", try_from = "PreviewBuildInfoWire")]
-pub struct PreviewBuildInfo {
-    schema_version: u32,
-    generator_name: String,
-    generator_version: String,
-    source: SourceFingerprint,
-}
-
-impl PreviewBuildInfo {
-    pub fn new(
-        generator_name: impl Into<String>,
-        generator_version: impl Into<String>,
-        source: SourceFingerprint,
-    ) -> Result<Self, BookmarkValidationError> {
-        let info = Self {
-            schema_version: crate::CURRENT_PREVIEW_SCHEMA_VERSION,
-            generator_name: generator_name.into(),
-            generator_version: generator_version.into(),
-            source,
-        };
-        info.validate()?;
-        Ok(info)
-    }
-
-    pub fn schema_version(&self) -> u32 {
-        self.schema_version
-    }
-
-    pub fn generator_name(&self) -> &str {
-        &self.generator_name
-    }
-
-    pub fn generator_version(&self) -> &str {
-        &self.generator_version
-    }
-
-    pub fn source(&self) -> &SourceFingerprint {
-        &self.source
-    }
-
-    pub fn validate(&self) -> Result<(), BookmarkValidationError> {
-        if self.schema_version != crate::CURRENT_PREVIEW_SCHEMA_VERSION {
-            return Err(BookmarkValidationError::new(format!(
-                "unsupported preview schema version: {}",
-                self.schema_version
-            )));
-        }
-        if self.generator_name.trim().is_empty() {
-            return Err(BookmarkValidationError::new(
-                "preview generatorName must not be empty",
-            ));
-        }
-        if self.generator_version.trim().is_empty() {
-            return Err(BookmarkValidationError::new(
-                "preview generatorVersion must not be empty",
-            ));
-        }
-        self.source.validate()
-    }
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct PreviewBuildInfoWire {
-    schema_version: u32,
-    generator_name: String,
-    generator_version: String,
-    source: SourceFingerprint,
-}
-
-impl TryFrom<PreviewBuildInfoWire> for PreviewBuildInfo {
-    type Error = BookmarkValidationError;
-
-    fn try_from(value: PreviewBuildInfoWire) -> Result<Self, Self::Error> {
-        let info = Self {
-            schema_version: value.schema_version,
-            generator_name: value.generator_name,
-            generator_version: value.generator_version,
-            source: value.source,
-        };
-        info.validate()?;
-        Ok(info)
     }
 }
 

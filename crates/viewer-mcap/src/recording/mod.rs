@@ -1,24 +1,26 @@
 //! Concrete MCAP access and format-specific indexed planning.
 mod backing;
 mod chunk;
+mod error;
 #[cfg(not(target_arch = "wasm32"))]
 mod file_messages;
-mod indexed_plan;
-mod latest_query;
-mod mcap_source;
-mod range_query;
+mod latest_limits;
+mod message_index;
+mod source;
 mod source_identity;
 pub use chunk::{McapChunkError, decode_mcap_chunk, visit_mcap_chunk_records};
 #[cfg(not(target_arch = "wasm32"))]
 pub use file_messages::FileMessageStream;
-pub use indexed_plan::{
+pub use latest_limits::{LatestQueryBudget, LatestQueryLimits};
+pub use message_index::{
     IndexedChunkFact, IndexedPlanError, MessageIndexPredecessor, ensure_indexed,
     history_candidate_chunks, latest_candidate_chunks, persistent_candidate_chunks,
 };
-pub use latest_query::{LatestQueryBudget, LatestQueryLimits};
-pub use mcap_source::{
+pub use source::{
     IndexedMessagePosition, IndexedMessages, IndexedReadDiagnostics, LatestMessageReader,
-    LatestQueryDiagnostics, McapOpenError, McapSource,
+    LatestQueryDiagnostics, McapSource,
 };
-pub use range_query::{QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult};
+pub use source::{QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult};
 pub use source_identity::{MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity};
+
+pub use error::McapSourceError;

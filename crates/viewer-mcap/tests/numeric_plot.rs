@@ -327,7 +327,7 @@ fn overview_does_not_touch_unrelated_chunks() {
     request.stream_id = StreamId(unrelated as u32);
     assert!(matches!(
         source.query_numeric_overview_cancellable(&request, || true),
-        Err(NumericPlotError::Source(McapOpenError::QueryCancelled))
+        Err(NumericPlotError::Source(McapSourceError::QueryCancelled))
     ));
     assert!(source.query_numeric_overview(&request).is_err());
 }
