@@ -55,7 +55,7 @@ impl App {
                 let scheduler_camera = Self::scheduler_camera_for(&self.workspace, &session);
                 self.workspace.reset_for_source(scheduler_camera);
                 if !requirements.signals.is_empty()
-                    && let Err(error) = session.request_plot_signals(4_000)
+                    && let Err(error) = session.request_odometry_signals(4_000)
                 {
                     log::warn!("Plot unavailable: {error}");
                 }
@@ -167,7 +167,7 @@ impl App {
         } else {
             None
         };
-        let signals = session.signal_query_view(current_odometry);
+        let signals = session.signal_view(current_odometry);
         let workspace_warning = self.workspace.startup_warning();
         let signal_error = signals.first_error().map(ToString::to_string);
         let error = self.diagnostics.message(&[
@@ -189,7 +189,7 @@ impl App {
                 path: runtime.path(),
                 odometry: runtime.odometry(),
                 transforms: runtime.transforms(),
-                scene_controller: runtime.scene(),
+                point_cloud_controller: runtime.point_cloud(),
                 diagnostics,
                 focused_camera,
                 accumulate_points,

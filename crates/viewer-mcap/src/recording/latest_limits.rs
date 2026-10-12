@@ -1,5 +1,5 @@
 //! Work reserved for one exact latest-before demand, never for a reader lifetime.
-use super::McapOpenError;
+use super::McapSourceError;
 
 pub(crate) const MAX_LATEST_INDEX_BYTES: usize = 32 * 1024 * 1024;
 
@@ -52,14 +52,14 @@ impl LatestQueryBudget {
         amount: usize,
         maximum: usize,
         resource: &'static str,
-    ) -> Result<(), McapOpenError> {
+    ) -> Result<(), McapSourceError> {
         if amount > maximum.saturating_sub(*used) {
-            return Err(McapOpenError::QueryLimit { resource, maximum });
+            return Err(McapSourceError::QueryLimit { resource, maximum });
         }
         *used += amount;
         Ok(())
     }
-    pub(crate) fn streams(&mut self, count: usize) -> Result<(), McapOpenError> {
+    pub(crate) fn streams(&mut self, count: usize) -> Result<(), McapSourceError> {
         Self::reserve(
             &mut self.streams,
             count,
@@ -67,7 +67,7 @@ impl LatestQueryBudget {
             "latest streams",
         )
     }
-    pub(crate) fn candidate(&mut self) -> Result<(), McapOpenError> {
+    pub(crate) fn candidate(&mut self) -> Result<(), McapSourceError> {
         Self::reserve(
             &mut self.candidates,
             1,
@@ -75,15 +75,15 @@ impl LatestQueryBudget {
             "latest chunk candidates",
         )
     }
-    pub(crate) fn index(&mut self, bytes: usize) -> Result<(), McapOpenError> {
+    pub(crate) fn index(&mut self, bytes: usize) -> Result<(), McapSourceError> {
         if bytes > MAX_LATEST_INDEX_BYTES {
-            return Err(McapOpenError::QueryLimit {
+            return Err(McapSourceError::QueryLimit {
                 resource: "latest index span bytes",
                 maximum: MAX_LATEST_INDEX_BYTES,
             });
         }
         if self.index_reads >= self.limits.max_index_reads {
-            return Err(McapOpenError::QueryLimit {
+            return Err(McapSourceError::QueryLimit {
                 resource: "latest index reads",
                 maximum: self.limits.max_index_reads,
             });
@@ -101,11 +101,11 @@ impl LatestQueryBudget {
         &mut self,
         compressed: u64,
         uncompressed: u64,
-    ) -> Result<(), McapOpenError> {
+    ) -> Result<(), McapSourceError> {
         let bytes = compressed
             .checked_add(uncompressed)
             .and_then(|sum| usize::try_from(sum).ok())
-            .ok_or(McapOpenError::ReadOverflow)?;
+            .ok_or(McapSourceError::ReadOverflow)?;
         Self::reserve(
             &mut self.chunk_bytes,
             bytes,

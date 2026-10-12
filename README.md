@@ -174,3 +174,5 @@ Native の `--layout health` は Topic Health（MCAP log time の到着・周期
 Diagnostics（producer が報告した DiagnosticArray の level）を別 Panel で表示します。
 デフォルトは直近10秒、Diagnostics topic は `/diagnostics` です。
 詳細と設定は [Native recording health panels](docs/native_recording_health.md) を参照してください。
+
+Rustの責務別配置と命名方針は[module structure](docs/module_structure.md)を参照してください。

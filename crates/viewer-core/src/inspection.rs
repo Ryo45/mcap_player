@@ -1,7 +1,7 @@
 //! Inspector-only schema-driven view models. Never continuous/canonical decoded message state.
-use crate::message::cdr::{
-    common::Reader,
-    numeric::{WireType, scalar_size},
+use crate::message::{
+    cdr::wire::Reader,
+    schema::{WireType, scalar_size},
 };
 use crate::{DecodeError, MeasurementTime, RawMessage, RosMessageSchema, StreamDescriptor};
 use bytes::Bytes;

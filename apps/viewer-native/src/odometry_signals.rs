@@ -1,6 +1,6 @@
+//! Session-owned builtin Odometry signal requests, overview progress and worker lifecycle.
 use crate::query_error::QueryLoadError;
-use crate::session::PlotSignalRequest;
-use crate::signal_query::{SignalDataView, SignalQueryView};
+use crate::signal_view::{SignalDataView, SignalView};
 use anyhow::Result;
 #[cfg(test)]
 use std::path::PathBuf;
@@ -11,14 +11,21 @@ use std::{
 };
 use viewer_core::{ArrivalTime, LoadedOdometrySignals, LoadedSignal, SignalId};
 
-pub(crate) struct PlotLoader {
-    generation: u64,
-    state: PlotLoadState,
-    result_sender: SyncSender<PlotLoadResult>,
-    result_receiver: Receiver<PlotLoadResult>,
+pub(crate) struct OdometrySignalRequest {
+    pub(crate) source: viewer_mcap::McapSource,
+    pub(crate) origin: ArrivalTime,
+    pub(crate) max_points: usize,
+    pub(crate) odometry_topic: String,
 }
 
-enum PlotLoadState {
+pub(crate) struct OdometrySignalLoader {
+    generation: u64,
+    state: LoadState,
+    result_sender: SyncSender<LoadResult>,
+    result_receiver: Receiver<LoadResult>,
+}
+
+enum LoadState {
     Idle,
     Loading {
         generation: u64,
@@ -34,40 +41,40 @@ enum PlotLoadState {
     },
 }
 
-struct PlotLoadResult {
+struct LoadResult {
     generation: u64,
     result: std::result::Result<LoadedOdometrySignals, Arc<QueryLoadError>>,
     elapsed_ms: f64,
     complete: bool,
 }
 
-impl Default for PlotLoader {
+impl Default for OdometrySignalLoader {
     fn default() -> Self {
         // One coalescing progress slot prevents a fast multi-hour scan from queueing an
         // unbounded number of bounded snapshots behind a slow UI thread.
         let (result_sender, result_receiver) = std::sync::mpsc::sync_channel(1);
         Self {
             generation: 0,
-            state: PlotLoadState::Idle,
+            state: LoadState::Idle,
             result_sender,
             result_receiver,
         }
     }
 }
 
-impl PlotLoader {
+impl OdometrySignalLoader {
     pub(crate) fn clear(&mut self) {
         self.generation = self.generation.wrapping_add(1);
-        self.state = PlotLoadState::Idle;
+        self.state = LoadState::Idle;
         self.discard_pending_results();
     }
 
-    pub(crate) fn start_overview(&mut self, request: PlotSignalRequest) -> Result<()> {
+    pub(crate) fn start_overview(&mut self, request: OdometrySignalRequest) -> Result<()> {
         self.generation = self.generation.wrapping_add(1);
         let generation = self.generation;
         let sender = self.result_sender.clone();
         let worker = std::thread::Builder::new()
-            .name("plot-loader".to_owned())
+            .name("odometry-signals".to_owned())
             .spawn(move || {
                 let started = Instant::now();
                 let result = load_signals_from_source(
@@ -76,7 +83,7 @@ impl PlotLoader {
                     request.max_points,
                     &request.odometry_topic,
                     |signals| {
-                        let _ = sender.try_send(PlotLoadResult {
+                        let _ = sender.try_send(LoadResult {
                             generation,
                             result: Ok(signals),
                             elapsed_ms: started.elapsed().as_secs_f64() * 1_000.0,
@@ -85,7 +92,7 @@ impl PlotLoader {
                     },
                 )
                 .map_err(Arc::new);
-                let _ = sender.send(PlotLoadResult {
+                let _ = sender.send(LoadResult {
                     generation,
                     result,
                     elapsed_ms: started.elapsed().as_secs_f64() * 1_000.0,
@@ -94,7 +101,7 @@ impl PlotLoader {
             });
         match worker {
             Ok(_) => {
-                self.state = PlotLoadState::Loading {
+                self.state = LoadState::Loading {
                     generation,
                     signals: None,
                 };
@@ -105,7 +112,7 @@ impl PlotLoader {
                     worker: "plot",
                     source: error,
                 });
-                self.state = PlotLoadState::Failed {
+                self.state = LoadState::Failed {
                     generation,
                     error: error.clone(),
                 };
@@ -125,11 +132,11 @@ impl PlotLoader {
 
     pub(crate) fn signal(&self, signal_id: SignalId) -> Option<&LoadedSignal> {
         match &self.state {
-            PlotLoadState::Loading {
+            LoadState::Loading {
                 generation,
                 signals: Some(signals),
             }
-            | PlotLoadState::Ready {
+            | LoadState::Ready {
                 generation,
                 signals,
             } if *generation == self.generation => match signal_id {
@@ -140,58 +147,58 @@ impl PlotLoader {
         }
     }
 
-    pub(crate) fn query_view(&self) -> SignalQueryView<'_> {
+    pub(crate) fn query_view(&self) -> SignalView<'_> {
         let data = |signal_id| SignalDataView {
             signal: self.signal(signal_id),
             current: None,
             loading: self.is_loading(),
             error: self.error(),
         };
-        SignalQueryView::new(data(SignalId::Speed), data(SignalId::YawRate))
+        SignalView::new(data(SignalId::Speed), data(SignalId::YawRate))
     }
 
     pub(crate) fn is_loading(&self) -> bool {
         matches!(
             self.state,
-            PlotLoadState::Loading { generation, .. } if generation == self.generation
+            LoadState::Loading { generation, .. } if generation == self.generation
         )
     }
 
     pub(crate) fn error(&self) -> Option<&QueryLoadError> {
         match &self.state {
-            PlotLoadState::Failed { generation, error } if *generation == self.generation => {
+            LoadState::Failed { generation, error } if *generation == self.generation => {
                 Some(error)
             }
             _ => None,
         }
     }
 
-    fn apply_result(&mut self, result: PlotLoadResult) {
+    fn apply_result(&mut self, result: LoadResult) {
         if result.generation != self.generation {
             return;
         }
         match result.result {
             Ok(signals) if result.complete => {
                 log::info!("Plot query scan completed in {:.1} ms", result.elapsed_ms);
-                self.state = PlotLoadState::Ready {
+                self.state = LoadState::Ready {
                     generation: result.generation,
                     signals,
                 };
             }
             Ok(signals) => {
-                if matches!(self.state, PlotLoadState::Loading { signals: None, .. }) {
+                if matches!(self.state, LoadState::Loading { signals: None, .. }) {
                     log::info!(
                         "Plot query first samples available in {:.1} ms",
                         result.elapsed_ms
                     );
                 }
-                self.state = PlotLoadState::Loading {
+                self.state = LoadState::Loading {
                     generation: result.generation,
                     signals: Some(signals),
                 };
             }
             Err(error) => {
-                self.state = PlotLoadState::Failed {
+                self.state = LoadState::Failed {
                     generation: result.generation,
                     error,
                 };
@@ -247,7 +254,7 @@ mod tests {
         path
     }
 
-    fn request(path: PathBuf, origin: ArrivalTime) -> PlotSignalRequest {
+    fn request(path: PathBuf, origin: ArrivalTime) -> OdometrySignalRequest {
         let source = if path.exists() {
             viewer_mcap::McapSource::open_file(&path).unwrap()
         } else {
@@ -262,7 +269,7 @@ mod tests {
             std::fs::remove_file(fixture).unwrap();
             source
         };
-        PlotSignalRequest {
+        OdometrySignalRequest {
             source,
             origin,
             max_points: 100,
@@ -351,7 +358,7 @@ mod tests {
         bytes.into_inner()
     }
 
-    impl PlotLoader {
+    impl OdometrySignalLoader {
         fn poll_until_settled_for_test(&mut self) {
             let deadline = std::time::Instant::now() + Duration::from_secs(2);
             while self.is_loading() && std::time::Instant::now() < deadline {
@@ -362,7 +369,7 @@ mod tests {
         }
 
         fn hold_loading_for_test(&mut self) {
-            self.state = PlotLoadState::Loading {
+            self.state = LoadState::Loading {
                 generation: self.generation,
                 signals: None,
             };
@@ -371,7 +378,7 @@ mod tests {
 
     #[test]
     fn starts_idle_and_clear_returns_to_idle() {
-        let mut loader = PlotLoader::default();
+        let mut loader = OdometrySignalLoader::default();
         assert!(!loader.is_loading());
         assert!(loader.signal(SignalId::Speed).is_none());
         assert!(loader.error().is_none());
@@ -383,7 +390,7 @@ mod tests {
 
     #[test]
     fn live_mode_clear_does_not_start_a_worker() {
-        let mut loader = PlotLoader::default();
+        let mut loader = OdometrySignalLoader::default();
         loader
             .start_overview(request(missing_fixture(), ArrivalTime(0)))
             .unwrap();
@@ -398,7 +405,7 @@ mod tests {
 
     #[test]
     fn start_enters_loading_and_worker_failure_becomes_failed() {
-        let mut loader = PlotLoader::default();
+        let mut loader = OdometrySignalLoader::default();
         loader
             .start_overview(request(missing_fixture(), ArrivalTime(0)))
             .unwrap();
@@ -415,13 +422,13 @@ mod tests {
 
     #[test]
     fn successful_worker_result_becomes_ready_even_without_speed_samples() {
-        let mut loader = PlotLoader::default();
+        let mut loader = OdometrySignalLoader::default();
         loader
             .start_overview(request(camera_fixture(), ArrivalTime(0)))
             .unwrap();
         assert!(loader.is_loading());
         loader.poll_until_settled_for_test();
-        assert!(matches!(loader.state, PlotLoadState::Ready { .. }));
+        assert!(matches!(loader.state, LoadState::Ready { .. }));
         assert!(!loader.is_loading());
         assert!(loader.signal(SignalId::Speed).is_none());
         assert!(loader.error().is_none());
@@ -430,7 +437,7 @@ mod tests {
     #[test]
     fn loads_speed_samples_on_the_worker() {
         let path = speed_fixture();
-        let mut loader = PlotLoader::default();
+        let mut loader = OdometrySignalLoader::default();
         loader
             .start_overview(request(path.clone(), ArrivalTime(1_000_000_000)))
             .unwrap();
@@ -447,12 +454,12 @@ mod tests {
 
     #[test]
     fn stale_generation_result_is_ignored() {
-        let mut loader = PlotLoader::default();
+        let mut loader = OdometrySignalLoader::default();
         loader
             .start_overview(request(missing_fixture(), ArrivalTime(0)))
             .unwrap();
         let current_generation = loader.generation;
-        loader.apply_result(PlotLoadResult {
+        loader.apply_result(LoadResult {
             generation: current_generation.wrapping_sub(1),
             result: Err(Arc::new(QueryLoadError::WorkerPanicked {
                 worker: "stale failure",
@@ -462,7 +469,7 @@ mod tests {
         });
         assert!(loader.is_loading());
         assert!(loader.error().is_none());
-        loader.apply_result(PlotLoadResult {
+        loader.apply_result(LoadResult {
             generation: current_generation,
             result: Err(Arc::new(QueryLoadError::WorkerPanicked {
                 worker: "current failure",
@@ -497,16 +504,16 @@ mod tests {
             "/odom",
         )
         .unwrap();
-        let mut loader = PlotLoader {
+        let mut loader = OdometrySignalLoader {
             generation: 1,
-            state: PlotLoadState::Loading {
+            state: LoadState::Loading {
                 generation: 1,
                 signals: None,
             },
-            ..PlotLoader::default()
+            ..OdometrySignalLoader::default()
         };
 
-        loader.apply_result(PlotLoadResult {
+        loader.apply_result(LoadResult {
             generation: 1,
             result: Ok(signals),
             elapsed_ms: 1.0,
@@ -544,7 +551,7 @@ mod tests {
         )
         .unwrap();
         let start = session.playback_view().unwrap().cursor;
-        let mut loader = PlotLoader::default();
+        let mut loader = OdometrySignalLoader::default();
         loader
             .start_overview(request(missing_fixture(), start))
             .unwrap();
@@ -565,7 +572,7 @@ mod tests {
         )
         .unwrap();
         let start = session.playback_view().unwrap().cursor;
-        let mut loader = PlotLoader::default();
+        let mut loader = OdometrySignalLoader::default();
         loader.hold_loading_for_test();
 
         session.tick(Duration::from_millis(250), |_, _| {}).unwrap();

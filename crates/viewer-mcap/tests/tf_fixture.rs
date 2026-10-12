@@ -1,8 +1,8 @@
 use std::{fs, path::PathBuf, time::Duration};
 use viewer_core::{
     CameraCalibrationSet, CameraController, OdometryController, PathController,
-    PlaybackRequirements, RestorePlanner, SceneController, ScenePresentationState, SessionPlan,
-    TransformController, WorkspaceBindings,
+    PlaybackRequirements, PointCloudController, RestorePlanner, ScenePresentationState,
+    SessionPlan, TransformController, WorkspaceBindings,
 };
 use viewer_mcap::{McapPlayback, McapSource};
 
@@ -44,7 +44,7 @@ fn every_scan_resolves_to_world_at_its_measurement_time() {
     .unwrap();
     source.select_streams(plan.selected_stream_ids()).unwrap();
     let mut transforms = TransformController::new(&plan);
-    let mut scene = SceneController::new(&plan);
+    let mut scene = PointCloudController::new(&plan);
     let end = source.time_range().end_inclusive();
     let mut scan_count = 0;
 
@@ -100,7 +100,7 @@ fn seven_camera_fixture_routes_exact_messages_to_concrete_controllers() {
     let mut path = PathController::new(&plan);
     let mut odometry = OdometryController::new(&plan);
     let mut transforms = TransformController::new(&plan);
-    let mut scene = SceneController::new(&plan);
+    let mut scene = PointCloudController::new(&plan);
     playback.clock_mut().toggle();
     playback
         .tick(Duration::from_secs(10), |elapsed, messages| {
@@ -224,7 +224,7 @@ fn indexed_restore_matches_sequential_feature_values() {
     let mut sequential_path = PathController::new(&plan);
     let mut sequential_odometry = OdometryController::new(&plan);
     let mut sequential_transforms = TransformController::new(&plan);
-    let mut sequential_scene = SceneController::new(&plan);
+    let mut sequential_scene = PointCloudController::new(&plan);
     for message in sequential_source.read_through(target).unwrap() {
         // Camera seek semantics are exact latest-before rather than reproduction of the
         // presentation-rate scheduler, so build the canonical per-Camera latest value directly.
@@ -242,7 +242,7 @@ fn indexed_restore_matches_sequential_feature_values() {
     let mut restored_path = PathController::new(&plan);
     let mut restored_odometry = OdometryController::new(&plan);
     let mut restored_transforms = TransformController::new(&plan);
-    let mut restored_scene = SceneController::new(&plan);
+    let mut restored_scene = PointCloudController::new(&plan);
     let mut playback = McapPlayback::copy_from_slice(bytes.as_slice()).unwrap();
     playback.select_streams(plan.selected_stream_ids()).unwrap();
     let persistent = restore_plan.persistent.clone();

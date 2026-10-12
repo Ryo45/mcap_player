@@ -63,3 +63,12 @@ followed by the Web release build. Test `ros2-live` only in the sourced ROS envi
 Inspect `cargo tree -p viewer-core --edges all` and Cargo metadata to verify there
 is no direct, dev, build or transitive edge from core to the MCAP crate/codecs.
 The supported direction is `viewer-mcap -> viewer-core`.
+
+## Internal module layout
+
+The source now separates forward traversal from physical Message Index access,
+latest-before caches and exact range queries under `recording::source`. Pure index
+selection is `recording::message_index`; demand admission is `latest_limits`.
+All source-bound feature queries live under `query`; fingerprints remain derived
+products. See [module_structure.md](module_structure.md) for the placement map.
+Open, read and query failures share the current `McapSourceError` API.

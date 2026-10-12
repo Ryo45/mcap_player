@@ -1,7 +1,9 @@
 //! Canonical serialized messages, time types, and concrete ROS CDR codecs.
 
 pub(crate) mod cdr;
+pub(crate) mod schema;
 mod time;
+pub use schema::RosMessageSchema;
 
 pub use cdr::{
     CompressedImage, DecodeError, DecodedCompressedImage, LaserScan, Odometry, PathMessage,
@@ -11,7 +13,7 @@ pub use cdr::{
 };
 pub use time::{ArrivalTime, MeasurementTime};
 
-pub use cdr::{NumericField, NumericFieldExtractor, RosMessageSchema};
+pub use cdr::{NumericField, NumericFieldExtractor};
 
 pub use cdr::{
     DiagnosticArray, DiagnosticKeyValue, DiagnosticLevel, DiagnosticStatus,

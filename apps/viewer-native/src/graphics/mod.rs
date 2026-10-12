@@ -6,7 +6,7 @@ pub(crate) mod views;
 
 use crate::{
     inspection::TopicInspection, interaction::ViewerAction, panels::PanelRuntimeStore,
-    presentation::PresentationTransition, signal_query::SignalQueryView,
+    presentation::PresentationTransition, signal_view::SignalView,
     workspace::ViewerInteractionState,
 };
 use bev_renderer::{BevFrame, BevRenderer};
@@ -25,7 +25,7 @@ pub(crate) struct RenderInput<'a> {
     pub(crate) presentation: &'a ViewerPresentation,
     pub(crate) camera_overlays: &'a viewer_renderer::CameraOverlayState,
     pub(crate) playback: Option<PlaybackView>,
-    pub(crate) signals: SignalQueryView<'a>,
+    pub(crate) signals: SignalView<'a>,
     pub(crate) inspections: &'a [TopicInspection],
     pub(crate) topic_health: &'a [crate::window_query_loader::TopicHealthQueryState],
     pub(crate) producer_diagnostics: &'a [crate::window_query_loader::DiagnosticsQueryState],

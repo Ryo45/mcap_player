@@ -1,6 +1,6 @@
 //! Camera overlay projection from semantic feature state.
 
-use crate::{BevPathFrame, CameraFrame, TransformState};
+use crate::{CameraFrame, PathFrame, TransformState};
 use serde::Deserialize;
 use std::{collections::BTreeMap, fmt};
 
@@ -135,7 +135,7 @@ impl CameraCalibrationSet {
     pub fn project_plan(
         &self,
         camera: &CameraFrame,
-        path: &BevPathFrame,
+        path: &PathFrame,
         transforms: &TransformState,
         image_size: (u32, u32),
     ) -> Result<ProjectedPlan, ProjectionError> {
@@ -270,8 +270,8 @@ mod tests {
         }
     }
 
-    fn path() -> BevPathFrame {
-        BevPathFrame {
+    fn path() -> PathFrame {
+        PathFrame {
             measurement_time: MeasurementTime(10),
             arrival_time: ArrivalTime(11),
             frame_id: "base_link".into(),

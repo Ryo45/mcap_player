@@ -17,7 +17,7 @@ pub use scene::{
 };
 pub use telemetry::TelemetryPresentation;
 
-use crate::{BevState, CameraId, CameraState, PointCloudState, TelemetryState};
+use crate::{CameraId, CameraState, PathState, PointCloudState, TelemetryState};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -31,7 +31,7 @@ pub struct ViewerPresentation {
 pub struct ViewerPresentationInput<'a> {
     pub cameras: &'a CameraState,
     pub telemetry: &'a TelemetryState,
-    pub path: &'a BevState,
+    pub path: &'a PathState,
     pub point_cloud: Option<&'a PointCloudState>,
     pub camera_topics: &'a [(CameraId, String)],
     pub focused_camera: Option<CameraId>,
@@ -128,7 +128,7 @@ mod tests {
         performance.camera_fps.insert(CameraId(1), 5.0);
         let mut overlays = BTreeMap::new();
         overlays.insert(CameraId(1), OverlayStatus::Ready { visible_points: 7 });
-        let path = BevState::default();
+        let path = PathState::default();
         let topics = [
             (CameraId(0), "/front".into()),
             (CameraId(1), "/rear".into()),

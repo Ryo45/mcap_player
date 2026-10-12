@@ -9,13 +9,13 @@ mod interaction;
 #[cfg(any(test, feature = "ros2-live"))]
 mod live;
 mod numeric_plot_loader;
+mod odometry_signals;
 mod panels;
-mod plot_loader;
 mod presentation;
 mod preview;
 mod query_error;
 mod session;
-mod signal_query;
+mod signal_view;
 mod ui_components;
 mod window_query_loader;
 mod workspace;

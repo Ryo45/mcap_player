@@ -14,12 +14,12 @@ pub(crate) struct SignalDataView<'a> {
 /// The closed `SignalId` match intentionally keeps this separate from Preview, Inspection, and
 /// continuous feature presentation data.
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct SignalQueryView<'a> {
+pub(crate) struct SignalView<'a> {
     speed: SignalDataView<'a>,
     yaw_rate: SignalDataView<'a>,
 }
 
-impl<'a> SignalQueryView<'a> {
+impl<'a> SignalView<'a> {
     pub(crate) fn new(speed: SignalDataView<'a>, yaw_rate: SignalDataView<'a>) -> Self {
         Self { speed, yaw_rate }
     }
@@ -79,7 +79,7 @@ mod tests {
         let failure = crate::query_error::QueryLoadError::WorkerPanicked {
             worker: "yaw query failed",
         };
-        let view = SignalQueryView::new(
+        let view = SignalView::new(
             SignalDataView {
                 signal: Some(&speed),
                 current: None,

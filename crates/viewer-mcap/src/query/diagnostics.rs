@@ -261,7 +261,7 @@ mod tests {
                 || true
             ),
             Err(WindowQueryError::Source(
-                crate::McapOpenError::QueryCancelled
+                crate::McapSourceError::QueryCancelled
             ))
         ));
         assert!(matches!(

@@ -28,7 +28,7 @@ pub(crate) struct PresentationBuildInput<'a> {
     pub(crate) path: &'a viewer_core::PathController,
     pub(crate) odometry: &'a viewer_core::OdometryController,
     pub(crate) transforms: &'a viewer_core::TransformController,
-    pub(crate) scene_controller: Option<&'a viewer_core::SceneController>,
+    pub(crate) point_cloud_controller: Option<&'a viewer_core::PointCloudController>,
     pub(crate) diagnostics: SessionDiagnostics,
     pub(crate) focused_camera: Option<CameraId>,
     pub(crate) accumulate_points: bool,
@@ -90,7 +90,7 @@ impl PresentationState {
             path,
             odometry,
             transforms,
-            scene_controller,
+            point_cloud_controller,
             diagnostics,
             focused_camera,
             accumulate_points,
@@ -105,7 +105,7 @@ impl PresentationState {
             cameras: cameras.state(),
             telemetry: odometry.state(),
             path: path.state(),
-            point_cloud: scene_controller.map(viewer_core::SceneController::point_cloud),
+            point_cloud: point_cloud_controller.map(viewer_core::PointCloudController::point_cloud),
             camera_topics: &diagnostics.camera_topics,
             focused_camera,
             overlays: &overlay_status,
@@ -122,7 +122,7 @@ impl PresentationState {
         let static_transform_count = transforms.state().static_len();
         let dynamic_transform_count = transforms.state().dynamic_len();
         let bev = viewer_core::BevFrameBuilder::new(path.state()).build();
-        let scene = scene_controller.map_or_else(SceneSnapshot::default, |controller| {
+        let scene = point_cloud_controller.map_or_else(SceneSnapshot::default, |controller| {
             self.scene.build(
                 path.state(),
                 odometry.state(),
@@ -225,7 +225,7 @@ mod tests {
             path: workspace.runtime().path(),
             odometry: workspace.runtime().odometry(),
             transforms: workspace.runtime().transforms(),
-            scene_controller: workspace.runtime().scene(),
+            point_cloud_controller: workspace.runtime().point_cloud(),
             diagnostics: diagnostics(),
             focused_camera: Some(CameraId(0)),
             accumulate_points: true,
@@ -244,7 +244,7 @@ mod tests {
             path: workspace.runtime().path(),
             odometry: workspace.runtime().odometry(),
             transforms: workspace.runtime().transforms(),
-            scene_controller: workspace.runtime().scene(),
+            point_cloud_controller: workspace.runtime().point_cloud(),
             diagnostics: diagnostics(),
             focused_camera: Some(CameraId(0)),
             accumulate_points: true,

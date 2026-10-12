@@ -3,7 +3,7 @@
 use crate::{ArrivalTime, MeasurementTime};
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct BevPathFrame {
+pub struct PathFrame {
     pub measurement_time: MeasurementTime,
     pub arrival_time: ArrivalTime,
     pub frame_id: String,
@@ -12,13 +12,13 @@ pub struct BevPathFrame {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct BevState {
+pub struct PathState {
     revision: u64,
-    latest: Option<BevPathFrame>,
+    latest: Option<PathFrame>,
 }
 
-impl BevState {
-    pub fn apply(&mut self, frame: BevPathFrame) -> bool {
+impl PathState {
+    pub fn apply(&mut self, frame: PathFrame) -> bool {
         if self
             .latest
             .as_ref()
@@ -40,7 +40,7 @@ impl BevState {
         self.revision
     }
 
-    pub fn latest(&self) -> Option<&BevPathFrame> {
+    pub fn latest(&self) -> Option<&PathFrame> {
         self.latest.as_ref()
     }
 }
@@ -49,8 +49,8 @@ impl BevState {
 mod tests {
     use super::*;
 
-    fn frame(arrival: i64) -> BevPathFrame {
-        BevPathFrame {
+    fn frame(arrival: i64) -> PathFrame {
+        PathFrame {
             measurement_time: MeasurementTime(arrival - 1),
             arrival_time: ArrivalTime(arrival),
             frame_id: "base_link".into(),
@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn rejects_old_path_and_clears_on_seek() {
-        let mut state = BevState::default();
+        let mut state = PathState::default();
         assert!(state.apply(frame(2)));
         assert!(!state.apply(frame(1)));
         let revision = state.revision();

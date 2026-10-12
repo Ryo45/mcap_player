@@ -116,14 +116,14 @@ fn truncation_cannot_invalidate_delivered_payload_and_seek_does_not_commit() {
     });
     assert!(matches!(
         result,
-        Err(McapSeekError::Source(McapOpenError::SourceChanged))
+        Err(McapSeekError::Source(McapSourceError::SourceChanged))
     ));
     assert!(!applied);
     assert_eq!(playback.clock().view(), before);
     assert_eq!(retained.as_ref(), &[0, 1, 0, 0, 10, 0, 0, 0]);
     assert!(matches!(
         source.query_numeric_current(StreamId(1), "value", ArrivalTime(20)),
-        Err(NumericPlotError::Source(McapOpenError::SourceChanged))
+        Err(NumericPlotError::Source(McapSourceError::SourceChanged))
     ));
 }
 #[test]

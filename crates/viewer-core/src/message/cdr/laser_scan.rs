@@ -1,4 +1,4 @@
-use super::common::{DecodeError, Reader, push_f32, push_string, push_u32};
+use super::wire::{DecodeError, Reader, push_f32, push_string, push_u32};
 use crate::MeasurementTime;
 
 #[derive(Clone, Debug, PartialEq)]

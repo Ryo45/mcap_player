@@ -1,7 +1,7 @@
 #[cfg(feature = "ros2-live")]
 use crate::live;
-use crate::plot_loader::PlotLoader;
-use crate::signal_query::SignalQueryView;
+use crate::odometry_signals::{OdometrySignalLoader, OdometrySignalRequest};
+use crate::signal_view::SignalView;
 use crate::{
     inspection::{InspectorRequirement, TopicInspection},
     inspector_loader::InspectorLoader,
@@ -24,19 +24,12 @@ pub(crate) struct ViewerSession {
     plan: SessionPlan,
     topic: String,
     source_name: String,
-    plot_loader: PlotLoader,
+    odometry_signals: OdometrySignalLoader,
     odometry_topic: String,
     topic_tree: viewer_core::TopicTree,
     numeric_plots: crate::numeric_plot_loader::NumericPlotLoader,
     inspector_loader: InspectorLoader,
     window_queries: crate::window_query_loader::WindowQueryLoader,
-}
-
-pub(crate) struct PlotSignalRequest {
-    pub(crate) source: viewer_mcap::McapSource,
-    pub(crate) origin: ArrivalTime,
-    pub(crate) max_points: usize,
-    pub(crate) odometry_topic: String,
 }
 
 enum SessionSource {
@@ -82,7 +75,7 @@ impl ViewerSession {
             plan,
             topic,
             source_name: path.display().to_string(),
-            plot_loader: PlotLoader::default(),
+            odometry_signals: OdometrySignalLoader::default(),
             odometry_topic: bindings.odometry_topic.clone(),
             numeric_plots: Default::default(),
             inspector_loader: InspectorLoader::default(),
@@ -110,7 +103,7 @@ impl ViewerSession {
                 "ROS 2 live ({})",
                 if reliable { "reliable" } else { "best effort" }
             ),
-            plot_loader: PlotLoader::default(),
+            odometry_signals: OdometrySignalLoader::default(),
             odometry_topic: bindings.odometry_topic.clone(),
             numeric_plots: Default::default(),
             inspector_loader: InspectorLoader::default(),
@@ -183,8 +176,11 @@ impl ViewerSession {
         &self.plan
     }
 
-    pub(crate) fn plot_signal_request(&self, max_points: usize) -> Option<PlotSignalRequest> {
-        Some(PlotSignalRequest {
+    pub(crate) fn odometry_signal_request(
+        &self,
+        max_points: usize,
+    ) -> Option<OdometrySignalRequest> {
+        Some(OdometrySignalRequest {
             source: self.recording_source()?.fork_reader(),
             origin: self.playback_view()?.start,
             max_points,
@@ -192,12 +188,12 @@ impl ViewerSession {
         })
     }
 
-    pub(crate) fn request_plot_signals(&mut self, max_points: usize) -> Result<()> {
-        let Some(request) = self.plot_signal_request(max_points) else {
-            self.plot_loader.clear();
+    pub(crate) fn request_odometry_signals(&mut self, max_points: usize) -> Result<()> {
+        let Some(request) = self.odometry_signal_request(max_points) else {
+            self.odometry_signals.clear();
             return Ok(());
         };
-        self.plot_loader.start_overview(request)
+        self.odometry_signals.start_overview(request)
     }
 
     pub(crate) fn poll_queries(&mut self) {
@@ -207,7 +203,7 @@ impl ViewerSession {
             SessionSource::Ros { .. } => None,
         };
         self.numeric_plots.poll(source);
-        self.plot_loader.poll();
+        self.odometry_signals.poll();
         let target = match &self.source {
             SessionSource::Mcap(playback) => Some(playback.clock().view().cursor),
             #[cfg(feature = "ros2-live")]
@@ -235,11 +231,11 @@ impl ViewerSession {
         self.window_queries.health()
     }
 
-    pub(crate) fn signal_query_view(
+    pub(crate) fn signal_view(
         &self,
         current_odometry: Option<&viewer_core::TelemetryFrame>,
-    ) -> SignalQueryView<'_> {
-        self.plot_loader
+    ) -> SignalView<'_> {
+        self.odometry_signals
             .query_view()
             .with_current_odometry(current_odometry)
     }
@@ -470,7 +466,7 @@ mod numeric_demand_tests {
         assert_eq!(session.playback_view().unwrap().cursor, cursor);
         // Builtin query configuration is also available independently of continuous Odometry.
         assert_eq!(
-            session.plot_signal_request(100).unwrap().odometry_topic,
+            session.odometry_signal_request(100).unwrap().odometry_topic,
             "/custom/odom"
         );
         session.remove_numeric_series(stream, "value");

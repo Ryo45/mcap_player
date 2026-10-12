@@ -1,6 +1,6 @@
 //! CPU-owned BEV and scene presentation state.
 
-use crate::{BevState, PointCloudState, TelemetryState, TransformState};
+use crate::{PathState, PointCloudState, TelemetryState, TransformState};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct BevSnapshot<'a> {
@@ -9,11 +9,11 @@ pub struct BevSnapshot<'a> {
 }
 
 pub struct BevFrameBuilder<'a> {
-    state: &'a BevState,
+    state: &'a PathState,
 }
 
 impl<'a> BevFrameBuilder<'a> {
-    pub fn new(state: &'a BevState) -> Self {
+    pub fn new(state: &'a PathState) -> Self {
         Self { state }
     }
 
@@ -81,7 +81,7 @@ impl ScenePresentationState {
 
     pub fn build<'a>(
         &'a mut self,
-        path: &'a BevState,
+        path: &'a PathState,
         telemetry: &'a TelemetryState,
         point_cloud: &'a PointCloudState,
         transforms: &'a TransformState,
@@ -188,8 +188,8 @@ impl ScenePresentationState {
 mod tests {
     use super::*;
     use crate::{
-        ArrivalTime, BevPathFrame, MeasurementTime, PointCloudFrame, TelemetryFrame,
-        TransformBatch, TransformStamped,
+        ArrivalTime, MeasurementTime, PathFrame, PointCloudFrame, TelemetryFrame, TransformBatch,
+        TransformStamped,
     };
 
     fn telemetry(arrival_time: i64, position: [f64; 2]) -> TelemetryFrame {
@@ -223,8 +223,8 @@ mod tests {
 
     #[test]
     fn builders_select_current_feature_values() {
-        let mut path = BevState::default();
-        path.apply(BevPathFrame {
+        let mut path = PathState::default();
+        path.apply(PathFrame {
             measurement_time: MeasurementTime(1),
             arrival_time: ArrivalTime(2),
             frame_id: "base_link".into(),
@@ -263,7 +263,7 @@ mod tests {
             points: vec![[1.0, 0.0, 0.0]],
         });
         let mut builder = ScenePresentationState::new();
-        let path = BevState::default();
+        let path = PathState::default();
         let mut odometry = TelemetryState::default();
         let first = builder.build(&path, &odometry, &point_cloud, &transforms, true);
         assert_eq!(first.cloud, [[3.0, 3.0, 0.5]]);
@@ -284,7 +284,7 @@ mod tests {
 
     #[test]
     fn retries_a_missing_scan_transform_when_tf_arrives() {
-        let path = BevState::default();
+        let path = PathState::default();
         let odometry = TelemetryState::default();
         let mut point_cloud = PointCloudState::default();
         point_cloud.apply(PointCloudFrame {
@@ -308,7 +308,7 @@ mod tests {
 
     #[test]
     fn presentation_owns_bounded_accumulation_and_latest_only_mode() {
-        let path = BevState::default();
+        let path = PathState::default();
         let odometry = TelemetryState::default();
         let transforms = TransformState::default();
         let mut point_cloud = PointCloudState::default();
@@ -361,7 +361,7 @@ mod tests {
 
     #[test]
     fn presentation_history_never_exceeds_the_fixed_point_budget() {
-        let path = BevState::default();
+        let path = PathState::default();
         let odometry = TelemetryState::default();
         let transforms = TransformState::default();
         let mut point_cloud = PointCloudState::default();

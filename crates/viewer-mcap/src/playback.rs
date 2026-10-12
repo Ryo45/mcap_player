@@ -1,14 +1,14 @@
 //! Native MCAP playback orchestration.
 
 use crate::{
-    McapOpenError, McapSource, PlaybackClock, RangeQuery, RangeQueryError, RangeQueryResult,
+    McapSource, McapSourceError, PlaybackClock, RangeQuery, RangeQueryError, RangeQueryResult,
     RawMessage, RestorePlan, SourceCatalog, StageTiming, StreamId,
 };
 use std::{fmt, time::Duration};
 use web_time::Instant;
 
 #[derive(Debug)]
-pub struct McapPlaybackError(McapOpenError);
+pub struct McapPlaybackError(McapSourceError);
 
 impl fmt::Display for McapPlaybackError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -22,20 +22,20 @@ impl std::error::Error for McapPlaybackError {
     }
 }
 
-impl From<McapOpenError> for McapPlaybackError {
-    fn from(value: McapOpenError) -> Self {
+impl From<McapSourceError> for McapPlaybackError {
+    fn from(value: McapSourceError) -> Self {
         Self(value)
     }
 }
 
 #[derive(Debug)]
 pub enum McapSeekError<E> {
-    Source(McapOpenError),
+    Source(McapSourceError),
     Restore(E),
 }
 
-impl<E> From<McapOpenError> for McapSeekError<E> {
-    fn from(error: McapOpenError) -> Self {
+impl<E> From<McapSourceError> for McapSeekError<E> {
+    fn from(error: McapSourceError) -> Self {
         Self::Source(error)
     }
 }
@@ -103,7 +103,7 @@ impl McapPlayback {
     pub fn select_streams(
         &mut self,
         streams: impl IntoIterator<Item = StreamId>,
-    ) -> Result<(), McapOpenError> {
+    ) -> Result<(), McapSourceError> {
         self.source.select_streams(streams)
     }
 
@@ -113,7 +113,7 @@ impl McapPlayback {
 
     /// Loads explicitly persistent inputs once. The archive is small feature data, not a generic
     /// temporal store, and is replayed transactionally during later seeks.
-    pub fn bootstrap_persistent(&mut self, streams: &[StreamId]) -> Result<(), McapOpenError> {
+    pub fn bootstrap_persistent(&mut self, streams: &[StreamId]) -> Result<(), McapSourceError> {
         self.persistent_archive = if streams.is_empty() {
             Vec::new()
         } else {
@@ -128,7 +128,7 @@ impl McapPlayback {
         &mut self,
         elapsed: Duration,
         process: impl FnOnce(Duration, Vec<RawMessage>),
-    ) -> Result<(), McapOpenError> {
+    ) -> Result<(), McapSourceError> {
         let candidate = self.clock.cursor_after(elapsed);
         let read_started = Instant::now();
         let messages = self.source.read_through(candidate)?;

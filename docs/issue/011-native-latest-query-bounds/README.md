@@ -21,13 +21,13 @@ Message Index の探索には渡していない。索引を多数読む要求が
 
 ## 調査したこと
 
-1. [read_at_cancellable](../../../crates/viewer-mcap/src/recording/mcap_source.rs#L1036)
+1. [read_at_cancellable](../../../crates/viewer-mcap/src/recording/source/latest.rs)
    の入口では callback を確認するが、`latest_position` の引数に callback がない。
-2. [latest_position](../../../crates/viewer-mcap/src/recording/mcap_source.rs#L668)
+2. [latest_position](../../../crates/viewer-mcap/src/recording/source/index.rs)
    は候補チャンクを走査し、物理読み取りを
    `read_chunk_message_indexes(chunk, || false)` で呼び出している。
    下位の読み取り・チャンネル解析はキャンセルに対応済みで、伝播が抜けている。
-3. [latest_before](../../../crates/viewer-mcap/src/recording/mcap_source.rs#L576)
+3. [latest_before](../../../crates/viewer-mcap/src/recording/source/mod.rs)
    は `retain_restore_indexes = true` を渡す。ローカル `HashMap` に入った索引には
    eviction や要求全体の保持上限がない。
 4. [Inspector worker](../../../apps/viewer-native/src/inspector_loader.rs#L315)
@@ -99,7 +99,7 @@ Inspector の一索引 span キャッシュと混同しない。
 
 `LatestQueryBudget` を要求ごとに作り、Native Inspector の全 topic/channel で共有する。
 既定値は64 stream、16,384候補、4,096索引 reads、32 MiB索引入力、256 MiB圧縮＋展開 chunk bytes。
-予算は I/O 前に予約し、失敗した読み取りも消費する。上限超過は `McapOpenError::QueryLimit`。
+予算は I/O 前に予約し、失敗した読み取りも消費する。上限超過は `McapSourceError::QueryLimit`。
 `latest_before_with_limits` で復元側も同じ予算を指定できる。
 
 キャンセルを索引探索と解析まで伝播し、不在・キャッシュ命中を含め結果返却前にも確認する。

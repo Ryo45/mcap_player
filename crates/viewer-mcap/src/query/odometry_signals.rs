@@ -1,6 +1,6 @@
 //! MCAP-backed plot loading; reduction stays in viewer-core.
 use crate::{
-    ArrivalTime, LoadedOdometrySignals, LoadedSignal, McapOpenError, SignalId,
+    ArrivalTime, LoadedOdometrySignals, LoadedSignal, McapSourceError, SignalId,
     SignalOverviewReducer, SignalSample, decode_odometry,
 };
 use mcap::{MessageStream, Summary};
@@ -13,7 +13,7 @@ pub fn load_speed_signal(
     origin: ArrivalTime,
     max_display_points: usize,
     odometry_topic: &str,
-) -> Result<Option<LoadedSignal>, McapOpenError> {
+) -> Result<Option<LoadedSignal>, McapSourceError> {
     Ok(load_odometry_signals(backing, origin, max_display_points, odometry_topic)?.speed)
 }
 
@@ -25,7 +25,7 @@ pub fn load_yaw_rate_signal(
     origin: ArrivalTime,
     max_display_points: usize,
     odometry_topic: &str,
-) -> Result<Option<LoadedSignal>, McapOpenError> {
+) -> Result<Option<LoadedSignal>, McapSourceError> {
     Ok(load_odometry_signals(backing, origin, max_display_points, odometry_topic)?.yaw_rate)
 }
 
@@ -35,7 +35,7 @@ pub fn load_odometry_signals(
     origin: ArrivalTime,
     max_display_points: usize,
     odometry_topic: &str,
-) -> Result<LoadedOdometrySignals, McapOpenError> {
+) -> Result<LoadedOdometrySignals, McapSourceError> {
     load_odometry_signals_for_topic_with_progress(
         backing,
         origin,
@@ -57,7 +57,7 @@ pub fn load_odometry_signals_for_topic_with_progress(
     max_display_points: usize,
     odometry_topic: &str,
     mut on_progress: impl FnMut(LoadedOdometrySignals),
-) -> Result<LoadedOdometrySignals, McapOpenError> {
+) -> Result<LoadedOdometrySignals, McapSourceError> {
     let end_exclusive = Summary::read(backing)?
         .and_then(|summary| summary.stats)
         .and_then(|stats| stats.message_end_time.checked_add(1))
@@ -79,7 +79,7 @@ pub fn load_odometry_signals_for_topic_with_progress(
             continue;
         }
         let Ok(arrival_ns) = i64::try_from(message.log_time) else {
-            return Err(McapOpenError::TimestampOverflow);
+            return Err(McapSourceError::TimestampOverflow);
         };
         let Ok(odometry) = decode_odometry(&message.data) else {
             continue;
@@ -126,7 +126,7 @@ impl crate::McapSource {
         max_points: usize,
         topic: &str,
         mut on_progress: impl FnMut(LoadedOdometrySignals),
-    ) -> Result<LoadedOdometrySignals, McapOpenError> {
+    ) -> Result<LoadedOdometrySignals, McapSourceError> {
         let Some(stream) = self.catalog().streams.iter().find(|s| {
             s.topic == topic && s.schema == "nav_msgs/msg/Odometry" && s.message_encoding == "cdr"
         }) else {
