@@ -28,8 +28,8 @@ pub use query::{
 pub use recording::FileMessageStream;
 pub use recording::{
     IndexedChunkFact, IndexedMessagePosition, IndexedMessages, IndexedPlanError,
-    IndexedReadDiagnostics, LatestMessageReader, LatestQueryDiagnostics,
-    MCAP_SUMMARY_IDENTITY_ALGORITHM, McapChunkError, McapOpenError, McapSource,
+    IndexedReadDiagnostics, LatestMessageReader, LatestQueryBudget, LatestQueryDiagnostics,
+    LatestQueryLimits, MCAP_SUMMARY_IDENTITY_ALGORITHM, McapChunkError, McapOpenError, McapSource,
     McapSummaryIdentity, MessageIndexPredecessor, QueryLimits, RangeQuery, RangeQueryError,
     RangeQueryResult, decode_mcap_chunk, ensure_indexed, history_candidate_chunks,
     latest_candidate_chunks, persistent_candidate_chunks, visit_mcap_chunk_records,

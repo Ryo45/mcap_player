@@ -299,6 +299,7 @@ fn run_worker(shared: Arc<(Mutex<Mailbox>, Condvar)>, generation: Arc<AtomicU64>
         views.retain(|topic, _| demand.key.topics.contains(topic));
         let mut inspections = Vec::new();
         let mut payload_bytes = 0usize;
+        let mut budget = viewer_mcap::LatestQueryBudget::default();
         for topic in &demand.key.topics {
             if generation.load(Ordering::Acquire) != demand.generation {
                 break;
@@ -318,6 +319,7 @@ fn run_worker(shared: Arc<(Mutex<Mailbox>, Condvar)>, generation: Arc<AtomicU64>
                 topic,
                 demand.key.target,
                 viewer_core::INSPECTOR_MAX_PAYLOAD_BYTES.saturating_sub(payload_bytes),
+                &mut budget,
                 || generation.load(Ordering::Acquire) != demand.generation,
             );
             if let Some(message) = &inspection.message {
@@ -343,6 +345,7 @@ fn inspect_topic(
     topic: &str,
     target: ArrivalTime,
     remaining: usize,
+    budget: &mut viewer_mcap::LatestQueryBudget,
     mut cancelled: impl FnMut() -> bool,
 ) -> TopicInspection {
     let mut result = TopicInspection::loading(topic.into(), target);
@@ -363,7 +366,7 @@ fn inspect_topic(
         let mut selected = None;
         for stream in streams.iter().copied() {
             if let Some((position, message)) =
-                reader.read_at_cancellable(stream, target, &mut cancelled)?
+                reader.read_at_with_budget_cancellable(stream, target, budget, &mut cancelled)?
                 && selected.as_ref().is_none_or(
                     |(_, old): &(IndexedMessagePosition, viewer_core::RawMessage)| {
                         (message.arrival_time, message.stream_id)
@@ -602,6 +605,7 @@ mod topic_merge_tests {
             "/topic",
             ArrivalTime(25),
             16 * 1024 * 1024,
+            &mut viewer_mcap::LatestQueryBudget::default(),
             || false,
         );
         assert_eq!(latest.metadata.unwrap().log_time, ArrivalTime(20));
@@ -612,6 +616,7 @@ mod topic_merge_tests {
             "/topic",
             ArrivalTime(35),
             16 * 1024 * 1024,
+            &mut viewer_mcap::LatestQueryBudget::default(),
             || false,
         );
         assert_eq!(latest.metadata.unwrap().log_time, ArrivalTime(30));
@@ -621,6 +626,7 @@ mod topic_merge_tests {
             "/json",
             ArrivalTime(30),
             16 * 1024 * 1024,
+            &mut viewer_mcap::LatestQueryBudget::default(),
             || false,
         );
         assert_eq!(unknown.metadata.unwrap().sequence, Some(7));

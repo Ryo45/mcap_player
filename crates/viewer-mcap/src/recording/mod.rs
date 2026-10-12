@@ -4,6 +4,7 @@ mod chunk;
 #[cfg(not(target_arch = "wasm32"))]
 mod file_messages;
 mod indexed_plan;
+mod latest_query;
 mod mcap_source;
 mod range_query;
 mod source_identity;
@@ -14,6 +15,7 @@ pub use indexed_plan::{
     IndexedChunkFact, IndexedPlanError, MessageIndexPredecessor, ensure_indexed,
     history_candidate_chunks, latest_candidate_chunks, persistent_candidate_chunks,
 };
+pub use latest_query::{LatestQueryBudget, LatestQueryLimits};
 pub use mcap_source::{
     IndexedMessagePosition, IndexedMessages, IndexedReadDiagnostics, LatestMessageReader,
     LatestQueryDiagnostics, McapOpenError, McapSource,
