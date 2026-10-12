@@ -78,3 +78,9 @@ pub use message::{
     DiagnosticArray, DiagnosticKeyValue, DiagnosticLevel, DiagnosticStatus,
     MAX_DIAGNOSTIC_MESSAGE_BYTES, decode_diagnostic_array,
 };
+
+mod health;
+pub use health::{
+    DiagnosticAggregator, DiagnosticEvent, DiagnosticsReduceError, DiagnosticsSnapshot,
+    TopicTimingFacts, summarize_topic_timing,
+};

@@ -122,3 +122,13 @@ separate. Existing Inspector and Plot paths have different cache and progress ow
 this change does not force them into a QueryCoordinator or a generic query framework.
 Broader sharing should target a demonstrated lifecycle or physical-read duplication
 without erasing those semantics.
+
+## Shared calculation boundary
+
+The MCAP queries retain indexed I/O, candidate chunk budgets and source errors.
+They call `viewer-core::summarize_topic_timing` and `DiagnosticAggregator` for pure
+calculation. Diagnostics snapshot DTOs belong to core. Equal-time details follow
+input order (Native supplies streams in ID order, then stable source traversal);
+new backends must explicitly choose their ordering. An admission limit poisons the
+reducer and `finish` returns the same error, so partial results cannot be published
+as success. This extraction adds no Web endpoint, panel or worker.

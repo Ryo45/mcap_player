@@ -20,9 +20,9 @@ pub use derived::{
 };
 pub use playback::{McapPlayback, McapPlaybackError, McapSeekError};
 pub use query::{
-    DEFAULT_QUERY_WINDOW_SECONDS, DiagnosticEvent, DiagnosticsRequirement, DiagnosticsSnapshot,
-    MAX_QUERY_WINDOW_SECONDS, TopicHealthRequirement, TopicHealthSnapshot, WindowQueryError,
-    query_diagnostics, query_topic_health,
+    DEFAULT_QUERY_WINDOW_SECONDS, DiagnosticsRequirement, MAX_QUERY_WINDOW_SECONDS,
+    TopicHealthRequirement, TopicHealthSnapshot, WindowQueryError, query_diagnostics,
+    query_topic_health,
 };
 #[cfg(not(target_arch = "wasm32"))]
 pub use recording::FileMessageStream;

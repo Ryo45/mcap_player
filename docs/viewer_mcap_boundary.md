@@ -1,8 +1,9 @@
 # viewer-core / viewer-mcap boundary
 
 `viewer-mcap` isolates the existing MCAP implementation from the viewer domain.
-This extraction changes ownership and imports, not playback/query algorithms,
-resource limits, file validation, caches, scheduling or wire formats.
+The initial extraction changed ownership and imports without changing algorithms.
+Subsequent focused changes add latest-query work budgets and separate pure health
+reducers; see issues 011–013 for their behavior and verification.
 
 ```mermaid
 flowchart LR
@@ -26,8 +27,8 @@ tests use a dev-dependency on `viewer-mcap`; rendering itself depends only on co
   range queries, their source errors and read diagnostics.
 - `McapPlayback`, including the existing transactional seek and persistent archive.
 - MCAP-backed numeric/builtin Plot loading and Topic Health/Diagnostics queries.
-  Their existing request/result/error types move with the source-bound query modules.
-  Separating those query modules further is outside this extraction.
+  Source-bound request/error types and Topic Health metadata snapshots stay here.
+  Pure Diagnostics DTOs and aggregation now belong to core.
 - All MCAP fixture integration tests, including feature-runtime regressions that
   load a recording before exercising the shared runtime.
 
@@ -38,7 +39,9 @@ capabilities, `SessionPlan`, playback requirements and `RestorePlanner` remain
 source-neutral domain contracts. Clock/effects, bounded data windows, CDR codecs,
 schema-driven inspection/numeric extraction, feature runtime, presentation,
 bookmarks/preview products, Plot products and the pure `SignalOverviewReducer`
-also remain in core.
+also remain in core. `DiagnosticAggregator` owns bounded CDR aggregation and
+`TopicTimingFacts` computes statistics from sorted log times and an explicit
+predecessor. Neither performs recording I/O or owns a worker.
 
 The only method-to-function adjustment is `SchemaDefinition::from_mcap` becoming
 `viewer_mcap::schema_definition_from_mcap`: its allocation and byte-preservation
