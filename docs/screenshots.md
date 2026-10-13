@@ -32,3 +32,27 @@ Previewはこのコピーのsource fingerprintに対応して別途生成しま�
 
 READMEの画像はfieldを折りたたんだ状態です。Inspectorではheaderを展開し、下へscrollして
 `ranges`などの配列を64要素ずつ閲覧できます。
+
+## ブラウザ版を撮影する
+
+READMEの[ブラウザ画面](images/monitor-workspace-web.png)は、同じ
+`/tmp/mcap-readme-demo/recording.mcap`をChromeのWeb版で開いた実画面です。
+
+```sh
+cd apps/viewer-web
+trunk serve --release
+```
+
+1. Chromeで表示されたURLを開き、viewportを1600 × 1100 pixelsにする。
+2. `Open MCAP`から撮影用の`recording.mcap`を選択する。Web版ではPreview sidecarは不要。
+3. timelineを末尾までseekし、停止状態にする。
+4. Topicsから`/scan`を選び、Inspectorの自動取得が完了するまで待つ。
+5. `3D Scene`、`Chase`、`Accumulate scans` off、フロントCameraを選ぶ。
+6. Inspectorのfieldは折りたたみ、Remote Recording Serverも閉じた状態でページ領域をPNG保存する。
+
+撮影時はNativeと同じcursor `1768724930204523401 ns`、Scan sequence 43、360点、
+Camera overlayの可視点30を確認した。パネル配置と再生状態を揃え、Web固有の操作部と
+camera thumbnailsはそのまま表示している。
+
+撮影にはheadless ChromeとソフトウェアWebGPUを使用した。画像はページviewportの実キャプチャで、
+ブラウザのtoolbarやDesktopを含まない。撮影用にパネルを隠したり合成したりしていない。
