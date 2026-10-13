@@ -6,11 +6,21 @@ ROS 2 の MCAP を再生し、カメラ映像・車両状態・周辺情報を�
 一つの画面で追うための監視・解析ツールです。記録を再生・停止・seekしながら、映像と空間表示を
 確認し、気になるtopicの値を同じ再生位置で調べられます。
 
+**Native**
+
 ![Nativeのmonitor画面。左にTopic一覧とLaserScanのInspector、右上に点群と計画軌跡の3D Scene、右下に軌跡を重畳したフロントCamera。](docs/images/monitor-workspace.png)
 
 *同梱のシミュレーション記録をNativeで再生し、`/scan`をInspectした実画面です。
 水色はLaserScan、黄色はScene上の計画軌跡、緑色はCameraへの軌跡投影です。
 画面上部には速度・再生状態・TF／Cameraの状態を表示しています。*
+
+**ブラウザ（Chrome／WebGPU）**
+
+![ChromeのWeb版。Nativeと同じ録画・再生位置で、左にLaserScanのInspector、右上に3D Scene、右下に軌跡overlay付きフロントCameraを表示。](docs/images/monitor-workspace-web.png)
+
+*同じサンプルをブラウザで開いた実画面です。Nativeと同じく、左にTopics／Inspector、右上にScene、
+右下にCameraを配置し、記録の末尾で停止して`/scan`を表示しています。
+ローカルMCAPを選択するだけで、ブラウザでも点群・計画軌跡・Camera overlay・メッセージの値を確認できます。*
 
 topicを調べても、CameraやSceneの再生対象は変わりません。大きな記録は必要なtopicと範囲を読み、
 配列はページ単位で、Plotは点数を制限した概要として表示します。
