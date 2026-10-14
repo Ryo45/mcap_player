@@ -1,0 +1,400 @@
+{
+  "git_commit": "e2baa176aef3aea975faa55d9d192e10171b9dd0",
+  "git_status": "M Cargo.lock\n M Cargo.toml\n M crates/viewer-mcap/src/lib.rs\n M crates/viewer-mcap/src/recording.rs\n M crates/viewer-mcap/src/recording/backing.rs\n M crates/viewer-mcap/src/recording/source.rs\n?? .agents/\n?? AGENTS.md\n?? docs/performance/\n?? tools/performance-probe/",
+  "source_diff_sha256": "e8ece83ace80c573c3499326720ef917b4da629017cbe30e88b02e35fe5b3772",
+  "binary_sha256": "31da2c9ff2fd6e8e78a70d2a4879f2d5a1c9ec78acbd1a029f3b5794d92eafd7",
+  "probe_sources_sha256": {
+    "tools/performance-probe/src/main.rs": "19d73c5cca8a6afca8b81bfd1b5a3f0186726a934f2daecaca6b6218e2f00985"
+  },
+  "python": "3.12.3",
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+  "cpu_info": "\t: Intel(R) Core(TM) Ultra 7 265KF",
+  "cpu_affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "meminfo": "MemTotal:       32470796 kB\nMemFree:          655060 kB\nMemAvailable:    4268400 kB\nBuffers:           13172 kB\nCached:          3552092 kB\nSwapCached:        43872 kB\nActive:          9317812 kB\nInactive:       19411972 kB\nActive(anon):    8477708 kB\nInactive(anon): 16985500 kB\nActive(file):     840104 kB\nInactive(file):  2426472 kB\nUnevictable:       79644 kB\nMlocked:           12532 kB\nSwapTotal:       8388604 kB\nSwapFree:            204 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:            197308 kB\nWriteback:             0 kB\nAnonPages:      25204004 kB\nMapped:           749224 kB\nShmem:            337100 kB\nKReclaimable:     802388 kB\nSlab:            1452796 kB\nSReclaimable:     802388 kB\nSUnreclaim:       650408 kB\nKernelStack:      105888 kB\nPageTables:       307496 kB\nSecPageTables:      5704 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    24624000 kB\nCommitted_AS:   207015172 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:      249692 kB\nVmallocChunk:          0 kB\nPercpu:            48320 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:   1718272 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:      2048 kB\nFilePmdMapped:      2048 kB\nCmaTotal:              0 kB\nCmaFree:           33660 kB\nUnaccepted:            0 kB\nBalloon:               0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:    21388556 kB\nDirectMap2M:     9680896 kB\nDirectMap1G:     2097152 kB\n",
+  "rustc": "rustc 1.91.1 (ed61e7d7e 2025-11-07)\nbinary: rustc\ncommit-hash: ed61e7d7e242494fb7057f2657300d9e77bb4fcb\ncommit-date: 2025-11-07\nhost: x86_64-unknown-linux-gnu\nrelease: 1.91.1\nLLVM version: 21.1.2",
+  "settings": {
+    "data_dir": "/tmp/mcap-perf-20261014-final-data",
+    "output": "docs/performance/2026-10-14-headless",
+    "seconds": 20,
+    "repeats": 3,
+    "seeks": 64,
+    "large_seconds": 600,
+    "binary": "/home/ryo/development/mcap_player/target/release/performance-probe",
+    "summarize_only": false
+  },
+  "cache": "uncontrolled/cache-allowed, generated and SHA256-read before measurement; no drop_caches",
+  "datasets": [
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 65536,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "none-65536-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-65536-mixed-20s-jpeg.mcap",
+      "bytes": 12014929,
+      "sha256": "bc6b839091c6fffc850d68f9aa4a5cf6dafab5b9f7740eaed7ff3468c44a15a6"
+    },
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 65536,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "none-65536-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-65536-grouped-20s-jpeg.mcap",
+      "bytes": 12012638,
+      "sha256": "67339ed4af71b6f27659999988216da1c30d2ed5f8e85e9232588f2d0e153b3b"
+    },
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 1048576,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "none-1048576-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-1048576-mixed-20s-jpeg.mcap",
+      "bytes": 11989020,
+      "sha256": "53cf8a910d587b6624247122b39417e5d7773b728a4f4aa1a25b846cff2e268a"
+    },
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 1048576,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "none-1048576-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-1048576-grouped-20s-jpeg.mcap",
+      "bytes": 12000878,
+      "sha256": "c3b4b964cafa52b2864e1a8b30da53d6d6f2bcd9f25e7c421df982ff3a899e8a"
+    },
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 8388608,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "none-8388608-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-8388608-mixed-20s-jpeg.mcap",
+      "bytes": 11986550,
+      "sha256": "1e0e943500884bee3402d5eae5fd665bbd42e113f2f7e43af7ab0642b5f54978"
+    },
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 8388608,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "none-8388608-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-8388608-grouped-20s-jpeg.mcap",
+      "bytes": 12000878,
+      "sha256": "e310c23ac0c0555ddc3f3bc2f68dcfde0086210e4aca048f3982c130b9887671"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 65536,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "zstd-65536-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-65536-mixed-20s-jpeg.mcap",
+      "bytes": 11575429,
+      "sha256": "9a4262f735be281d07c8cf5b0575a9fd33e8be17c68bc3ef091b5c08af05752e"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 65536,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "zstd-65536-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-65536-grouped-20s-jpeg.mcap",
+      "bytes": 11440782,
+      "sha256": "95e3dc845ddc35a792788fd38eca856eafb60affeaa93954f8f7b09c156ab33a"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 1048576,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "zstd-1048576-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-1048576-mixed-20s-jpeg.mcap",
+      "bytes": 9457088,
+      "sha256": "7decbe4bc892982d5664dde049cf60e653cf8ec20bd482fafd240ff3f644a286"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 1048576,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "zstd-1048576-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-1048576-grouped-20s-jpeg.mcap",
+      "bytes": 11332932,
+      "sha256": "4dc4f59d0446015f86fb8993511f6d4a75eb4240e8ce3c80a2fa70c962a17f45"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 8388608,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "zstd-8388608-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-8388608-mixed-20s-jpeg.mcap",
+      "bytes": 2154002,
+      "sha256": "3be36f921efac0858da7ed38ff2cfa821fc05ca452643d9908f96103d1345834"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 8388608,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "zstd-8388608-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-8388608-grouped-20s-jpeg.mcap",
+      "bytes": 11332932,
+      "sha256": "847e11c39faad6cf6aeb0d5d444281068a79095ae36d49652d17a9daa9173924"
+    },
+    {
+      "case": {
+        "codec": "lz4",
+        "chunk": 65536,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "lz4-65536-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/lz4-65536-mixed-20s-jpeg.mcap",
+      "bytes": 11577197,
+      "sha256": "5cf886394a592025238ffc68571509ab26671f0182adfad49bf6cf96f304301b"
+    },
+    {
+      "case": {
+        "codec": "lz4",
+        "chunk": 65536,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "lz4-65536-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/lz4-65536-grouped-20s-jpeg.mcap",
+      "bytes": 11528096,
+      "sha256": "c4c3c759a7131f328353a139af84214ad2e43b68d65d7890349b837961559b5c"
+    },
+    {
+      "case": {
+        "codec": "lz4",
+        "chunk": 1048576,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "lz4-1048576-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/lz4-1048576-mixed-20s-jpeg.mcap",
+      "bytes": 11471813,
+      "sha256": "22029deb76dea1c40dc71ef45d5edec336e802c27112a96d5b4a13cc3ce9bcfa"
+    },
+    {
+      "case": {
+        "codec": "lz4",
+        "chunk": 1048576,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "lz4-1048576-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/lz4-1048576-grouped-20s-jpeg.mcap",
+      "bytes": 11464658,
+      "sha256": "49b658607e906444409fb6fee8c11f1f0418b92703a0a06f57076b0049400a39"
+    },
+    {
+      "case": {
+        "codec": "lz4",
+        "chunk": 8388608,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "lz4-8388608-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/lz4-8388608-mixed-20s-jpeg.mcap",
+      "bytes": 11462057,
+      "sha256": "adc9892ddf17d03535e52726bc8807aa48b6b2f55f505e7d8731bd14b9423bd5"
+    },
+    {
+      "case": {
+        "codec": "lz4",
+        "chunk": 8388608,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "lz4-8388608-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/lz4-8388608-grouped-20s-jpeg.mcap",
+      "bytes": 11464658,
+      "sha256": "9d64ac5e2462cbd46d576254c7fc51a7a2bde0c63d821f1f610aa1afb3eed870"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 1048576,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "raw"
+      },
+      "name": "zstd-1048576-mixed-20s-raw",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-1048576-mixed-20s-raw.mcap",
+      "bytes": 91755826,
+      "sha256": "fcc6e63a4a40d59165c714c16c90a1449a1b51ad849b4bea1247418edf1fe660"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 1048576,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "raw"
+      },
+      "name": "zstd-1048576-grouped-20s-raw",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-1048576-grouped-20s-raw.mcap",
+      "bytes": 92236662,
+      "sha256": "62d6268aa51fc05cfa2b5c2cc3afae75631c3d11f5c0dabaf68ab01acff8e968"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 1048576,
+        "layout": "mixed",
+        "seconds": 120,
+        "encoding": "jpeg"
+      },
+      "name": "zstd-1048576-mixed-120s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-1048576-mixed-120s-jpeg.mcap",
+      "bytes": 56419759,
+      "sha256": "ffa63111d449575c551c2bdc919dddec7cc335af2c0eaf618dea64998f95b4ea"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 1048576,
+        "layout": "mixed",
+        "seconds": 600,
+        "encoding": "jpeg"
+      },
+      "name": "zstd-1048576-mixed-600s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-1048576-mixed-600s-jpeg.mcap",
+      "bytes": 280987971,
+      "sha256": "d7bee82e0bc496c191bb9ad55a3e32b45cb5564497a23a2df5d3c5deb09eff14"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 1048576,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "scan"
+      },
+      "name": "zstd-1048576-mixed-20s-scan",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-1048576-mixed-20s-scan.mcap",
+      "bytes": 10459,
+      "sha256": "5f8b17598de1236a0d892047a4f376f5bfe80ebc4df28a2290b53307de2e152e"
+    },
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 1048576,
+        "layout": "mixed",
+        "seconds": 60,
+        "encoding": "raw"
+      },
+      "name": "none-1048576-mixed-60s-raw",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-1048576-mixed-60s-raw.mcap",
+      "bytes": 277591449,
+      "sha256": "13c64a0fdabe1e02bf5a6d58a0ce8b33df463cd39c9feee7e4567bb7ef38df2c"
+    },
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 1048576,
+        "layout": "mixed",
+        "seconds": 60,
+        "encoding": "scan"
+      },
+      "name": "none-1048576-mixed-60s-scan",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-1048576-mixed-60s-scan.mcap",
+      "bytes": 932933,
+      "sha256": "1ce84e107eef4f4c9790b2ef3ec150c6372482ffc0931e412be23f14f9e7b15b"
+    },
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 1048576,
+        "layout": "mixed",
+        "seconds": 600,
+        "encoding": "raw"
+      },
+      "name": "none-1048576-mixed-600s-raw",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-1048576-mixed-600s-raw.mcap",
+      "bytes": 2775889569,
+      "sha256": "d2ddfa4f3b8721c1f9315ff90057a02815f3fb86136fdfd081d04d4c69858aa0"
+    },
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 1048576,
+        "layout": "mixed",
+        "seconds": 600,
+        "encoding": "scan"
+      },
+      "name": "none-1048576-mixed-600s-scan",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-1048576-mixed-600s-scan.mcap",
+      "bytes": 9309509,
+      "sha256": "6823b5a51e97f066268bf2713e32ba7e6db270a90bfb681b2e5d257ac3cbd55f"
+    }
+  ]
+}

@@ -39,8 +39,30 @@ pub struct McapSource {
     selected_streams: Option<HashSet<StreamId>>,
     index_facts: std::sync::Arc<[IndexedChunkFact]>,
     stream_chunks: std::sync::Arc<HashMap<StreamId, StreamChunks>>,
+    read_metrics: std::sync::Arc<ChunkReadMetrics>,
     #[cfg(test)]
     index_metrics: std::sync::Arc<IndexReadMetrics>,
+}
+
+#[derive(Default)]
+struct ChunkReadMetrics {
+    chunks: std::sync::atomic::AtomicU64,
+    expanded_bytes: std::sync::atomic::AtomicU64,
+    decompressed_bytes: std::sync::atomic::AtomicU64,
+}
+
+/// Cumulative work shared by file/source forks. File bytes count successful positional
+/// reads, including metadata and rereads, not physical disk traffic or OS cache misses.
+/// Chunk counters count successful expansion (including uncompressed chunks).
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct SourceReadDiagnostics {
+    pub file_read_calls: u64,
+    pub file_read_bytes: u64,
+    pub chunks_expanded: u64,
+    pub expanded_bytes: u64,
+    pub decompressed_bytes: u64,
+    /// Current sequential cache's unique backing, not total process or feature memory.
+    pub sequential_cache_backing_bytes: u64,
 }
 
 pub(crate) struct McapSourcePosition {
@@ -190,6 +212,7 @@ impl McapSource {
             selected_streams: None,
             index_facts: std::sync::Arc::from(index_facts),
             stream_chunks: std::sync::Arc::new(stream_chunks),
+            read_metrics: Default::default(),
             #[cfg(test)]
             index_metrics: Default::default(),
         })
@@ -208,6 +231,7 @@ impl McapSource {
             selected_streams: None,
             index_facts: self.index_facts.clone(),
             stream_chunks: self.stream_chunks.clone(),
+            read_metrics: self.read_metrics.clone(),
             #[cfg(test)]
             index_metrics: self.index_metrics.clone(),
         }
@@ -234,6 +258,24 @@ impl McapSource {
     }
     pub fn catalog(&self) -> &SourceCatalog {
         &self.catalog
+    }
+
+    pub fn read_diagnostics(&self) -> SourceReadDiagnostics {
+        use std::sync::atomic::Ordering::Relaxed;
+        let (file_read_calls, file_read_bytes) = self.backing.file_read_totals();
+        SourceReadDiagnostics {
+            file_read_calls,
+            file_read_bytes,
+            chunks_expanded: self.read_metrics.chunks.load(Relaxed),
+            expanded_bytes: self.read_metrics.expanded_bytes.load(Relaxed),
+            decompressed_bytes: self.read_metrics.decompressed_bytes.load(Relaxed),
+            sequential_cache_backing_bytes: if self.cache.is_empty() {
+                0
+            } else {
+                self.chunk
+                    .map_or(0, |i| self.summary.chunk_indexes[i].uncompressed_size)
+            },
+        }
     }
     pub fn time_range(&self) -> RecordingTimeRange {
         self.range
@@ -595,6 +637,16 @@ impl McapSource {
             });
         }
         let backing = super::decode_mcap_chunk(&chunk.compression, compressed, expected_size)?;
+        use std::sync::atomic::Ordering::Relaxed;
+        self.read_metrics.chunks.fetch_add(1, Relaxed);
+        self.read_metrics
+            .expanded_bytes
+            .fetch_add(backing.len() as u64, Relaxed);
+        if !chunk.compression.is_empty() {
+            self.read_metrics
+                .decompressed_bytes
+                .fetch_add(backing.len() as u64, Relaxed);
+        }
         if cancelled() {
             return Err(McapSourceError::QueryCancelled);
         }
@@ -673,6 +725,34 @@ mod tests {
     use super::*;
     use mcap::{Compression, WriteOptions, Writer, records::MessageHeader};
     use std::{collections::BTreeMap, io::Cursor};
+
+    #[test]
+    fn read_diagnostics_count_reexpansion_and_share_work_across_forks() {
+        let source = no_predecessor_fixture(2);
+        assert_eq!(source.read_diagnostics().chunks_expanded, 0);
+        let streams = source
+            .catalog()
+            .streams
+            .iter()
+            .map(|s| s.id)
+            .collect::<Vec<_>>();
+        let fork = source.fork_reader();
+        let before = source.read_diagnostics();
+        let result = fork.latest_before(&streams, ArrivalTime(101)).unwrap();
+        let after = source.read_diagnostics();
+        assert_eq!(
+            after.chunks_expanded,
+            result.diagnostics.chunks_streamed as u64
+        );
+        assert!(after.expanded_bytes > before.expanded_bytes);
+        assert_eq!(after.decompressed_bytes, 0);
+        assert_eq!(after.file_read_bytes, 0); // Owned bytes are not filesystem reads.
+        source.latest_before(&streams, ArrivalTime(101)).unwrap();
+        assert_eq!(
+            source.read_diagnostics().expanded_bytes,
+            2 * after.expanded_bytes
+        );
+    }
 
     fn no_predecessor_fixture(chunks: u64) -> McapSource {
         let mut output = Cursor::new(Vec::new());
