@@ -41,6 +41,9 @@ impl Default for CameraFixture {
 fn main() -> Result<()> {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
     match args.first().map(String::as_str) {
+        Some("extract-jpeg") if args.len() == 5 => {
+            extract_jpeg(&args[1], &args[2], &args[3], args[4].parse()?)
+        }
         Some("rechunk") if args.len() == 5 => {
             rechunk(&args[1], &args[2], &args[3], args[4].parse()?)
         }
@@ -80,9 +83,43 @@ fn main() -> Result<()> {
             args.get(6).map(String::as_str).unwrap_or("rgb"),
         ),
         _ => bail!(
-            "generate PATH none|zstd|lz4 CHUNK_BYTES mixed|grouped SECONDS jpeg|raw|scan [WIDTH HEIGHT [VARIANTS [CAMERA_HZ [CAMERAS]]]]\nrechunk INPUT OUTPUT none|zstd|lz4 CHUNK_BYTES\nrun PATH scan|all forward|indexed|seek|seek-cached|repeat|repeat-cached SEEK_COUNT [TICK_MS [rgb|rgba]]"
+            "generate PATH none|zstd|lz4 CHUNK_BYTES mixed|grouped SECONDS jpeg|raw|scan [WIDTH HEIGHT [VARIANTS [CAMERA_HZ [CAMERAS]]]]\nrechunk INPUT OUTPUT none|zstd|lz4 CHUNK_BYTES\nextract-jpeg INPUT OUTPUT_DIR TOPIC COUNT\nrun PATH scan|all forward|indexed|seek|seek-cached|repeat|repeat-cached SEEK_COUNT [TICK_MS [rgb|rgba]]"
         ),
     }
+}
+
+fn extract_jpeg(input: &str, output: &str, topic: &str, count: usize) -> Result<()> {
+    ensure!(
+        (1..=32).contains(&count),
+        "JPEG extraction count must be 1..=32"
+    );
+    fs::create_dir(output)?;
+    let mut written = 0;
+    for message in FileMessageStream::open(Path::new(input))? {
+        let message = message?;
+        if message.channel.topic != topic {
+            continue;
+        }
+        ensure!(
+            message.channel.message_encoding == "cdr"
+                && message
+                    .channel
+                    .schema
+                    .as_ref()
+                    .is_some_and(|s| s.name == "sensor_msgs/msg/CompressedImage"),
+            "invalid camera schema"
+        );
+        let image = viewer_core::decode_compressed_image(&message.data)?;
+        let path = Path::new(output).join(format!("{written:02}.jpg"));
+        use std::io::Write;
+        fs::File::create_new(path)?.write_all(&image.jpeg)?;
+        written += 1;
+        if written == count {
+            break;
+        }
+    }
+    ensure!(written == count, "not enough camera JPEGs");
+    Ok(())
 }
 
 fn rechunk(input: &str, output: &str, compression: &str, chunk_bytes: u64) -> Result<()> {

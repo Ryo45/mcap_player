@@ -29,7 +29,9 @@ struct WebViewState {
 
 impl WebViewState {
     fn reset_for_source(&mut self) {
-        *self = Self::default();
+        self.camera.reset();
+        self.presentation_metrics = Default::default();
+        self.scene = Default::default();
         rebuild_camera_cards(&[]);
         clear_canvas("camera");
         invalidate_gpu();
@@ -37,7 +39,9 @@ impl WebViewState {
 
     fn apply_playback_effect(&mut self, effect: viewer_core::PlaybackEffect) {
         if effect == viewer_core::PlaybackEffect::Seeked {
-            *self = Self::default();
+            self.camera.reset();
+            self.presentation_metrics = Default::default();
+            self.scene = Default::default();
             clear_canvas("camera");
             invalidate_gpu();
         }
@@ -331,6 +335,9 @@ fn tick() {
         );
         let presentation = build_viewer_presentation(session, view, selected_camera);
         update_dom_diagnostics(&presentation, session);
+        if let Some(error) = view.camera.errors.values().next() {
+            set_status(error, true);
+        }
         update_scene_presentation(
             session,
             view,

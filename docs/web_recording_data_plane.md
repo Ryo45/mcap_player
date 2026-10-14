@@ -125,7 +125,9 @@ Copies are:
 The range/decompressed `Vec<u8>` moves into `Bytes` without copying. Every retained Local message
 is a `Bytes::slice()` of that Chunk backing; every Remote message is a slice of its batch body.
 Camera CDR parsing then retains JPEG with another `Bytes::slice()`. No per-message payload copy,
-full-file allocation, or JSON/Base64 payload exists. `residentBytes` counts unique Chunk/page
+full-file allocation, or JSON/Base64 payload exists in the recording data plane. Camera pixel
+presentation makes bounded compact JPEG copies for Web Workers separately; see
+[Browser JPEG presentation](web_jpeg.md). `residentBytes` counts unique Chunk/page
 backings pinned by a Window, while `logicalPayloadBytes` sums only visible message payloads. No
 automatic compaction is performed when a small payload pins a large backing.
 

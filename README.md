@@ -217,3 +217,6 @@ Diagnostics（producer が報告した DiagnosticArray の level）を別 Panel 
 詳細と設定は [Native recording health panels](docs/native_recording_health.md) を参照してください。
 
 Rustの責務別配置と命名方針は[module structure](docs/module_structure.md)を参照してください。
+
+Webのカメラ表示は2本のWeb WorkerでJPEGをデコードし、表示サイズに合わせたImageBitmapをCanvasへ渡します。
+[設計・制限と検証](docs/web_jpeg.md)、[4K JPEGのFHD基準比較](docs/performance/2026-10-15-web-jpeg/README.md)を参照してください。
