@@ -25,7 +25,9 @@ round robinで別cameraも処理する。完成結果のchannelは2枚までで�
 したがって完成2枚＋実行中2枚までのRGBA bufferが一時的に残り得る。原寸decodeではthread化による一時メモリ増加が大きい。
 
 worker入力はJPEG部分だけをowned bufferへコピーする。MCAP Chunk全体を`Bytes`のbackingとして引き留めないためである。
-待機・実行・完成・表示済みframeのJPEG参照を含めて64 MiBの共有上限を設ける。
+待機・実行中のJPEGコピーに64 MiBの共有上限を設ける。
+デコード完了時にJPEGコピーを解放し、完成結果と表示済みstateはpixelsとCameraFrameMetadataだけを保持する。
+metadataにはcamera ID、measurement time、arrival time、frame IDを保持し、投影APIはJPEGを要求しない。
 入力1枚は32 MiB、元画像は32×1024×1024 pixels、camera identitiesは32まで。
 progressive JPEGのTurboJPEG decodeには100 scansの上限を設定する。
 巨大な画像を縮小表示する場合にも元寸法の上限を検査する。
@@ -33,7 +35,7 @@ CMYK/YCCKは既存Rust decoderで原寸RGBAへ変換するfallbackを持ち、lo
 これらは縮小の高速化を期待する経路ではない。GPUの最大texture寸法もupload前に検査する。
 
 byte上限でadmissionできないときはUIを待たせず、次のtickで再試行する。
-非常に大きなJPEGを多数表示して表示済み参照だけで上限に近づけば、更新を抑制する。この場合に上限を自動拡大しない。
+表示済みmetadataはencoded budgetを占有しない。32 MiBのJPEGを2枚処理して上限に達した場合も、完了後は次のframeを受け入れられる。
 RGBAはupload後に解放する。GPU textureとcanonical CameraStateのbacking memoryはこの64 MiBの外側であり、総RSSとは別である。
 成功したseek/source changeだけがgenerationを進め、待機と完成済みを破棄する。
 実行中のdecodeは途中cancelせず、古いgenerationの結果をuploadから除外する。

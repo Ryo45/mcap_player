@@ -34,7 +34,7 @@ mod browser {
         },
         time::Duration,
     };
-    use viewer_core::{ArrivalTime, CameraFrame, CameraId};
+    use viewer_core::{ArrivalTime, CameraFrame, CameraFrameMetadata, CameraId};
     use wasm_bindgen::{JsCast, prelude::*};
     use wasm_bindgen_futures::{JsFuture, spawn_local};
     use web_sys::ImageBitmap;
@@ -65,7 +65,7 @@ mod browser {
         }
     }
     pub(crate) struct CompletedImage {
-        pub(crate) frame: CameraFrame,
+        pub(crate) frame: CameraFrameMetadata,
         pub(crate) source_size: (u32, u32),
         pub(crate) pixel_size: (u32, u32),
         pub(crate) image: Result<Bitmap, String>,
@@ -199,7 +199,7 @@ mod browser {
                     state.active.remove(&id);
                     if state.generation == generation {
                         state.ready.push(CompletedImage {
-                            frame: request.frame,
+                            frame: request.frame.into(),
                             source_size: request.source,
                             pixel_size: request.pixels,
                             image,
@@ -278,6 +278,78 @@ mod browser {
         }
         if queue.encoded_bytes.load(Ordering::Relaxed) != 0 {
             return Err(JsValue::from_str("encoded budget leaked"));
+        }
+        // Saturate the encoded budget with valid padded JPEGs, then retain displayed
+        // metadata across completion and verify that another camera can still advance.
+        queue.reset();
+        let mut padded = frame.jpeg.to_vec();
+        padded.resize(32 * 1024 * 1024, 0);
+        frame.jpeg = padded.into();
+        frame.arrival_time = ArrivalTime(123456789);
+        frame.measurement_time = viewer_core::MeasurementTime(987654321);
+        for id in 0..2 {
+            frame.camera_id = CameraId(id);
+            queue
+                .submit(&frame, (160, 120))
+                .map_err(|e| JsValue::from_str(&e))?;
+        }
+        frame.camera_id = CameraId(2);
+        queue
+            .submit(&frame, (160, 120))
+            .map_err(|e| JsValue::from_str(&e))?;
+        if queue.encoded_bytes.load(Ordering::Relaxed) != 64 * 1024 * 1024
+            || queue.state.borrow().pending.len() != 2
+            || queue.state.borrow().submitted.contains_key(&CameraId(2))
+        {
+            return Err(JsValue::from_str("encoded backpressure failed"));
+        }
+        let mut displayed = Vec::new();
+        let started = Date::now();
+        while displayed.len() < 2 {
+            queue.start_pending();
+            JsFuture::from(cameraTestTick()).await?;
+            for result in queue.drain() {
+                result.image.map_err(|e| JsValue::from_str(&e))?;
+                if result.frame.arrival_time != frame.arrival_time
+                    || result.frame.measurement_time != frame.measurement_time
+                    || result.frame.frame_id != frame.frame_id
+                {
+                    return Err(JsValue::from_str("displayed metadata mismatch"));
+                }
+                displayed.push(result.frame);
+            }
+            if Date::now() - started > 20000. {
+                return Err(JsValue::from_str("saturated queue timed out"));
+            }
+        }
+        if queue.encoded_bytes.load(Ordering::Relaxed) != 0 {
+            return Err(JsValue::from_str(
+                "displayed metadata retained encoded budget",
+            ));
+        }
+        queue
+            .submit(&frame, (160, 120))
+            .map_err(|e| JsValue::from_str(&e))?;
+        let started = Date::now();
+        loop {
+            queue.start_pending();
+            JsFuture::from(cameraTestTick()).await?;
+            let ready = queue.drain();
+            if let Some(result) = ready.into_iter().next() {
+                result.image.map_err(|e| JsValue::from_str(&e))?;
+                if result.frame.camera_id != CameraId(2)
+                    || queue.encoded_bytes.load(Ordering::Relaxed) != 0
+                    || displayed.len() != 2
+                {
+                    return Err(JsValue::from_str(
+                        "camera did not recover from backpressure",
+                    ));
+                }
+                break;
+            }
+            if Date::now() - started > 20000. {
+                return Err(JsValue::from_str("post-budget update timed out"));
+            }
         }
         Ok(())
     }

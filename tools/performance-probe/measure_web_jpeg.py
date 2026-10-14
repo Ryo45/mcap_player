@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Measure a served jpeg-benchmark Web build through an existing Chrome CDP port.
 Run from the repo root after extracting 32 JPEGs into the dist/samples directory.
-Usage: python3 tools/performance-probe/measure_web_jpeg.py PORT OUTPUT_JSON [--camera-check]
+Usage: python3 tools/performance-probe/measure_web_jpeg.py PORT OUTPUT_JSON [--camera-check | --queue-check]
 """
 import base64
 import hashlib
@@ -67,6 +67,8 @@ def call(method, params=None):
 
 
 camera_check='--camera-check' in sys.argv
+queue_check='--queue-check' in sys.argv
+if camera_check and queue_check: raise ValueError('choose one check')
 call('Page.enable')
 call('Emulation.setDeviceMetricsOverride', {'width':1920, 'height':1080, 'deviceScaleFactor':1, 'mobile':False})
 call('Page.navigate', {'url':'http://127.0.0.1:8094/index.html'})
@@ -77,11 +79,19 @@ for _ in range(300):
 else:raise RuntimeError('benchmark build did not load')
 sock.settimeout(300)
 expression=Path('tools/performance-probe/check_web_camera.js' if camera_check else 'tools/performance-probe/web_jpeg_benchmark.js').read_text()
+if queue_check:
+    expression = '''(async () => {
+        const bytes = new Uint8Array(await (await fetch('/samples/00.jpg')).arrayBuffer());
+        await window.wasmBindings.check_camera_bitmap_queue(bytes);
+        return {queueCheck: 'passed', saturatedEncodedBytes: 64 * 1024 * 1024,
+                checks: ['coalescing', 'seek generation', 'two job limit',
+                         'metadata identity', 'budget release', 'post-budget admission']};
+    })()'''
 result=call('Runtime.evaluate', {'expression':expression,'awaitPromise':True,'returnByValue':True,'timeout':240000})
 if 'exceptionDetails' in result:raise RuntimeError(result['exceptionDetails'])
 data=result['result']['value']
 Path(sys.argv[2]).write_text(json.dumps(data,indent=2)+'\n')
-print(json.dumps(data if camera_check else data['summary'],indent=2))
+print(json.dumps(data if camera_check or queue_check else data['summary'],indent=2))
 if camera_check:
     screenshot=call('Page.captureScreenshot',{'format':'png'})
     Path(sys.argv[2]).with_suffix('.png').write_bytes(base64.b64decode(screenshot['data']))

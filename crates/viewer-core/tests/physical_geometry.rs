@@ -320,7 +320,8 @@ fn malformed_path_z_does_not_commit_a_partially_restored_feature_state() {
 #[test]
 fn camera_projection_uses_authored_height_and_tf_ground_plane() {
     use viewer_core::{
-        CameraCalibrationSet, CameraFrame, CameraId, PathFrame, TransformBatch, TransformState,
+        CameraCalibrationSet, CameraFrameMetadata, CameraId, PathFrame, TransformBatch,
+        TransformState,
     };
     let calibration=CameraCalibrationSet::from_json(r#"{"version":1,"provenance":"analytic test","cameras":[{"frame_id":"optical","projection_model":"pinhole","width":320,"height":240,"fx":200,"fy":200,"cx":160,"cy":120,"distortion_model":"none"}]}"#).unwrap();
     let mut transforms = TransformState::default();
@@ -342,12 +343,11 @@ fn camera_projection_uses_authored_height_and_tf_ground_plane() {
             ),
         ],
     });
-    let frame = CameraFrame {
+    let frame = CameraFrameMetadata {
         camera_id: CameraId(0),
         measurement_time: MeasurementTime(20),
         arrival_time: ArrivalTime(20),
         frame_id: "optical".into(),
-        jpeg: Default::default(),
     };
     let path = PathFrame {
         measurement_time: MeasurementTime(10),

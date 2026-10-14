@@ -28,10 +28,11 @@ EXIF Orientation=6を付加したJPEGと元JPEGで、出力pixelが一致する�
 - 実行中＋未uploadの完成結果は合計2枚まで。完成結果をdrainしてから次を開始する。
 - 最大32 camera identities。JPEG 1枚32 MiB、元画像32×1024×1024 pixels、frame ID 4096 bytesまで。
   Workerのheader処理も4096 markersまでに制限する。
-- RustのJPEGコピーは、待機・実行・完成・表示済みframe参照を合わせて64 MiBまで。
+- RustのJPEGコピーは、待機・実行中を合わせて64 MiBまで。
   `Bytes`のMCAP Chunk backingをworker用に保持せず、JPEGだけをowned copyにする。
   byte上限に達したらそのtickのadmissionを見送り、次に再試行する。上限を自動拡大しない。
-  表示済みJPEGだけで上限に近づくと更新が止まり得る。[metadata分離の課題](issue/014-camera-presentation-metadata/README.md)を別途記録した。
+  完了時にJPEGコピーを解放する。完成結果と表示済みstateはBitmap/CanvasとCameraFrameMetadataだけを持ち、encoded budgetを占有しない。
+  投影には表示中imageのcamera ID、measurement time、arrival time、frame IDを渡す。[metadata分離の対応](issue/014-camera-presentation-metadata/README.md)を参照。
 - JS/Workerへ渡したArrayBuffer、Blob、browser内部のdecode作業領域、Bitmap、Canvas、canonical CameraStateとDataPlaneは64 MiBの外側。
   **総RSSの64 MiB上限ではない。** 同時job数と入力・元画像の寸法を制限するが、browser内部の一時allocation/GCは直接管理できない。
 - source/seek reset時は待機と完成済みを破棄し、generationを進める。camera queue自体は置換しない。

@@ -11,7 +11,7 @@ use std::{
     thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
-use viewer_core::{ArrivalTime, CameraFrame, CameraId};
+use viewer_core::{ArrivalTime, CameraFrame, CameraFrameMetadata, CameraId};
 
 const MAX_CAMERAS: usize = 32;
 const MAX_ENCODED_BYTES: usize = 64 * 1024 * 1024;
@@ -46,7 +46,7 @@ struct Request {
 }
 
 pub struct CameraDecodeResult {
-    pub frame: CameraFrame,
+    pub frame: CameraFrameMetadata,
     pub image: Result<NativeImage, NativeJpegError>,
     pub decode_time: Duration,
     generation: u64,
@@ -93,7 +93,8 @@ impl std::error::Error for CameraDecodeStartError {
 
 /// One pending image per camera, at most one active decode per camera, and a
 /// completion channel bounded by worker count. Owned JPEG copies do not retain
-/// MCAP chunk backing. The 64 MiB budget also counts completed/displayed copies.
+/// MCAP chunk backing. The 64 MiB budget covers pending/active input; completed
+/// results retain metadata and pixels only.
 pub struct CameraDecodeQueue {
     shared: Arc<Shared>,
     ready: Option<Receiver<CameraDecodeResult>>,
@@ -157,7 +158,7 @@ impl CameraDecodeQueue {
                             let start = Instant::now();
                             let image = decoder.decode(&request.frame.jpeg, request.target);
                             let result = CameraDecodeResult {
-                                frame: request.frame,
+                                frame: request.frame.into(),
                                 image,
                                 decode_time: start.elapsed(),
                                 generation: request.generation,
@@ -345,7 +346,7 @@ mod tests {
         assert_eq!(result.image.unwrap().geometry.source_size, (64, 48));
     }
     #[test]
-    fn worker_input_is_compact_and_bad_camera_does_not_block_others() {
+    fn bad_camera_does_not_block_others_and_completions_release_input() {
         let mut queue = CameraDecodeQueue::new(2).unwrap();
         let mut good = frame(1, 1);
         let mut backing = vec![0; 1024 * 1024];
@@ -353,8 +354,23 @@ mod tests {
         good.jpeg = Bytes::from(backing).slice(..good.jpeg.len());
         let mut bad = frame(0, 1);
         bad.jpeg = Bytes::from_static(b"not jpeg");
+        {
+            queue
+                .shared
+                .state
+                .lock()
+                .unwrap()
+                .active
+                .insert(good.camera_id);
+            queue.submit(&good, (32, 24)).unwrap();
+            let mut state = queue.shared.state.lock().unwrap();
+            let pending = &state.pending[&good.camera_id].frame;
+            assert_ne!(pending.jpeg.as_ptr(), good.jpeg.as_ptr());
+            assert_eq!(pending.jpeg, good.jpeg);
+            state.active.remove(&good.camera_id);
+        }
+        queue.shared.available.notify_all();
         queue.submit(&bad, (32, 24)).unwrap();
-        queue.submit(&good, (32, 24)).unwrap();
         let first = complete(&mut queue);
         let second = complete(&mut queue);
         let results = [first, second];
@@ -363,8 +379,7 @@ mod tests {
             .find(|r| r.frame.camera_id == CameraId(1))
             .unwrap();
         assert!(decoded.image.is_ok());
-        assert_ne!(decoded.frame.jpeg.as_ptr(), good.jpeg.as_ptr());
-        assert_eq!(decoded.frame.jpeg, good.jpeg);
+        assert_eq!(decoded.frame, CameraFrameMetadata::from(&good));
         assert!(
             results
                 .iter()
@@ -373,7 +388,7 @@ mod tests {
                 .image
                 .is_err()
         );
-        assert_eq!(queue.encoded_bytes(), good.jpeg.len() + bad.jpeg.len());
+        assert_eq!(queue.encoded_bytes(), 0);
         drop(results);
         assert_eq!(queue.encoded_bytes(), 0);
         assert!(!queue.has_work());
@@ -400,6 +415,51 @@ mod tests {
         assert!(!queue.has_work());
     }
     #[test]
+    fn completed_images_release_saturated_budget_while_metadata_is_retained() {
+        let mut queue = CameraDecodeQueue::new(2).unwrap();
+        queue
+            .shared
+            .state
+            .lock()
+            .unwrap()
+            .active
+            .extend([CameraId(0), CameraId(1)]);
+        let mut large = frame(0, 123456789);
+        let mut jpeg = large.jpeg.to_vec();
+        // Valid JPEG with trailing padding: exercise the encoded limit without giant pixels.
+        jpeg.resize(32 * 1024 * 1024, 0);
+        large.jpeg = jpeg.into();
+        assert!(queue.submit(&large, (32, 24)).unwrap());
+        large.camera_id = CameraId(1);
+        assert!(queue.submit(&large, (32, 24)).unwrap());
+        assert_eq!(queue.encoded_bytes(), MAX_ENCODED_BYTES);
+        assert!(!queue.submit(&frame(2, 1), (32, 24)).unwrap());
+        queue.shared.state.lock().unwrap().active.clear();
+        queue.shared.available.notify_all();
+        let results = [complete(&mut queue), complete(&mut queue)];
+        let displayed: Vec<_> = results
+            .iter()
+            .map(|result| {
+                assert_eq!(
+                    result.image.as_ref().unwrap().geometry.source_size,
+                    (64, 48)
+                );
+                assert_eq!(result.frame.arrival_time, large.arrival_time);
+                assert_eq!(result.frame.measurement_time, large.measurement_time);
+                assert_eq!(result.frame.frame_id, large.frame_id);
+                result.frame.clone()
+            })
+            .collect();
+        // Even retained pixel results and displayed metadata must not retain encoded leases.
+        assert_eq!(queue.encoded_bytes(), 0);
+        assert!(queue.submit(&frame(2, 2), (32, 24)).unwrap());
+        let next = complete(&mut queue);
+        assert!(next.image.is_ok());
+        assert_eq!(next.frame.camera_id, CameraId(2));
+        assert_eq!(displayed.len(), 2);
+        assert_eq!(queue.encoded_bytes(), 0);
+    }
+    #[test]
     fn stale_ready_is_filtered_and_full_completion_queue_can_shutdown() {
         let mut queue = CameraDecodeQueue::new(2).unwrap();
         let (sender, receiver) = mpsc::sync_channel(2);
@@ -407,7 +467,7 @@ mod tests {
         queue.outstanding.fetch_add(1, Ordering::Relaxed);
         sender
             .send(CameraDecodeResult {
-                frame: frame(0, 0),
+                frame: frame(0, 0).into(),
                 image: Err(NativeJpegError::Limit("test")),
                 decode_time: Duration::ZERO,
                 generation: 0,
