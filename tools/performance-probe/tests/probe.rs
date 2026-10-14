@@ -5,6 +5,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 use viewer_core::{InspectorMessage, InspectorScalar, InspectorSchema, InspectorValue};
+use viewer_mcap::FileMessageStream;
 use viewer_mcap::McapSource;
 
 fn command(args: &[&str]) -> Value {
@@ -97,6 +98,77 @@ fn grouped_ros_fixture_delivers_exactly_once_in_order_at_100_ms_ticks() {
     assert_eq!(replay["unknown_messages"], 0);
     assert_eq!(replay["feature_decoded"], 30);
     assert_eq!(replay["jpeg_decodes"], 20);
+    std::fs::remove_file(path).unwrap();
+}
+
+#[test]
+fn rechunk_preserves_message_payloads_and_timestamps() {
+    let input = fixture("jpeg");
+    let output = input.with_extension("rechunk.mcap");
+    command(&[
+        "rechunk",
+        input.to_str().unwrap(),
+        output.to_str().unwrap(),
+        "none",
+        "536870912",
+    ]);
+    let messages = |path: &PathBuf| {
+        FileMessageStream::open(path)
+            .unwrap()
+            .map(|m| {
+                let m = m.unwrap();
+                (
+                    m.channel.topic.clone(),
+                    m.log_time,
+                    m.publish_time,
+                    m.sequence,
+                    m.data.into_owned(),
+                )
+            })
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(messages(&input), messages(&output));
+    std::fs::remove_file(input).unwrap();
+    std::fs::remove_file(output).unwrap();
+}
+
+#[test]
+fn eight_cameras_at_ten_hz_use_real_rgba_decode_and_keep_latest_pixels() {
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let path = std::env::temp_dir().join(format!("mcap-rate-{nonce}.mcap"));
+    let stats = command(&[
+        "generate",
+        path.to_str().unwrap(),
+        "none",
+        "65536",
+        "mixed",
+        "1",
+        "jpeg",
+        "32",
+        "24",
+        "2",
+        "10",
+        "8",
+    ]);
+    assert_eq!(stats["camera_hz"], 10);
+    assert_eq!(stats["cameras"], 8);
+    let result = command(&[
+        "run",
+        path.to_str().unwrap(),
+        "all",
+        "forward",
+        "0",
+        "50",
+        "rgba",
+    ]);
+    assert_eq!(result["delivered_messages"], 90);
+    assert_eq!(result["unknown_messages"], 0);
+    assert_eq!(result["pixel_format"], "rgba");
+    assert_eq!(result["retained_pixel_bytes"], 8 * 32 * 24 * 4);
+    assert!(result["jpeg_decodes"].as_u64().unwrap() < 80);
     std::fs::remove_file(path).unwrap();
 }
 

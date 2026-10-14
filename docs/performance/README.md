@@ -8,6 +8,8 @@
 27 dataset、432 run、最大約2.6 GiB。生データと全条件の集計も保存している。
 [Native Forward pruningとGrouped時間順序の後続検証](2026-10-14-forward-pruning/findings.md)では、
 初回の記録を再利用して100 ms / 1秒tickを比較する。初回結果は修正前のbaselineとして保持する。
+[4K・8カメラ10 Hz・最大512 MiB Chunkの計測](2026-10-14-4k-large-chunks/findings.md)は、
+本番RGBA decode、4camera×20 Hzとの比較、製品側上限による拒否も含めて記録している。
 
 ## 再現
 

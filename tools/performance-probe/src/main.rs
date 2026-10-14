@@ -14,34 +14,120 @@ use viewer_core::{
     MeasurementTime, PlaybackRequirements, SessionPlan, WorkspaceBindings,
     encode_compressed_image_cdr, encode_laser_scan_cdr,
 };
-use viewer_mcap::{LatestMessageReader, McapSource};
+use viewer_mcap::{FileMessageStream, LatestMessageReader, McapSource};
 
 const BASE: u64 = 1_735_689_600_000_000_000;
-const STEP: u64 = 100_000_000;
-const CAMERA_COUNT: usize = 4;
+
+#[derive(Clone, Copy)]
+struct CameraFixture {
+    width: u32,
+    height: u32,
+    variants: u32,
+    hz: u32,
+    count: usize,
+}
+impl Default for CameraFixture {
+    fn default() -> Self {
+        Self {
+            width: 320,
+            height: 240,
+            variants: 32,
+            hz: 5,
+            count: 4,
+        }
+    }
+}
 
 fn main() -> Result<()> {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
     match args.first().map(String::as_str) {
-        Some("generate") if args.len() == 7 => generate(
+        Some("rechunk") if args.len() == 5 => {
+            rechunk(&args[1], &args[2], &args[3], args[4].parse()?)
+        }
+        Some("generate") if matches!(args.len(), 7 | 9..=12) => generate(
             &args[1],
             &args[2],
             args[3].parse()?,
             &args[4],
             args[5].parse()?,
             &args[6],
+            CameraFixture {
+                width: args
+                    .get(7)
+                    .map(|v| v.parse())
+                    .transpose()?
+                    .unwrap_or(CameraFixture::default().width),
+                height: args
+                    .get(8)
+                    .map(|v| v.parse())
+                    .transpose()?
+                    .unwrap_or(CameraFixture::default().height),
+                variants: args
+                    .get(9)
+                    .map(|v| v.parse())
+                    .transpose()?
+                    .unwrap_or(CameraFixture::default().variants),
+                hz: args.get(10).map(|v| v.parse()).transpose()?.unwrap_or(5),
+                count: args.get(11).map(|v| v.parse()).transpose()?.unwrap_or(4),
+            },
         ),
-        Some("run") if args.len() == 5 || args.len() == 6 => run(
+        Some("run") if matches!(args.len(), 5..=7) => run(
             &args[1],
             &args[2],
             &args[3],
             args[4].parse()?,
             args.get(5).map(|v| v.parse()).transpose()?.unwrap_or(1000),
+            args.get(6).map(String::as_str).unwrap_or("rgb"),
         ),
         _ => bail!(
-            "generate PATH none|zstd|lz4 CHUNK_BYTES mixed|grouped SECONDS jpeg|raw|scan\nrun PATH scan|all forward|indexed|seek|seek-cached|repeat|repeat-cached SEEK_COUNT [TICK_MS]"
+            "generate PATH none|zstd|lz4 CHUNK_BYTES mixed|grouped SECONDS jpeg|raw|scan [WIDTH HEIGHT [VARIANTS [CAMERA_HZ [CAMERAS]]]]\nrechunk INPUT OUTPUT none|zstd|lz4 CHUNK_BYTES\nrun PATH scan|all forward|indexed|seek|seek-cached|repeat|repeat-cached SEEK_COUNT [TICK_MS [rgb|rgba]]"
         ),
     }
+}
+
+fn rechunk(input: &str, output: &str, compression: &str, chunk_bytes: u64) -> Result<()> {
+    ensure!(
+        (4096..=512 * 1024 * 1024).contains(&chunk_bytes),
+        "invalid chunk size"
+    );
+    let compression = match compression {
+        "none" => None,
+        "zstd" => Some(Compression::Zstd),
+        "lz4" => Some(Compression::Lz4),
+        _ => bail!("invalid compression"),
+    };
+    let mut writer = Writer::with_options(
+        BufWriter::new(fs::File::create_new(output)?),
+        WriteOptions::new()
+            .profile("ros2")
+            .compression(compression)
+            .compression_level(3)
+            .compression_threads(0)
+            .chunk_size(Some(chunk_bytes)),
+    )?;
+    let mut count = 0u64;
+    for message in FileMessageStream::open(Path::new(input))? {
+        writer.write(&message?)?;
+        count += 1;
+    }
+    writer.finish()?;
+    let source = McapSource::open_file(Path::new(output))?;
+    ensure!(
+        source
+            .summary()
+            .stats
+            .as_ref()
+            .is_some_and(|s| s.message_count == count),
+        "rechunk count mismatch"
+    );
+    println!(
+        "{}",
+        json!({"file":output,"file_bytes":fs::metadata(output)?.len(),"target_chunk_bytes":chunk_bytes,
+        "messages":count,"chunk_count":source.summary().chunk_indexes.len(),
+        "largest_chunk_bytes":source.summary().chunk_indexes.iter().map(|c|c.uncompressed_size).max().unwrap_or(0),
+        "total_chunk_bytes":source.summary().chunk_indexes.iter().map(|c|c.uncompressed_size).sum::<u64>()})
+    );
+    Ok(())
 }
 
 fn generate(
@@ -51,10 +137,21 @@ fn generate(
     layout: &str,
     seconds: u64,
     encoding: &str,
+    image_spec: CameraFixture,
 ) -> Result<()> {
+    ensure!(
+        (1..=3840).contains(&image_spec.width)
+            && (1..=2160).contains(&image_spec.height)
+            && (1..=32).contains(&image_spec.variants),
+        "image dimensions must be 1..3840 by 1..2160, variants 1..32"
+    );
+    ensure!(
+        matches!(image_spec.hz, 5 | 10 | 20) && (1..=8).contains(&image_spec.count),
+        "camera hz must be 5/10/20 and count 1..8"
+    );
     ensure!((1..=86_400).contains(&seconds), "seconds must be 1..86400");
     ensure!(
-        (4096..=128 * 1024 * 1024).contains(&chunk_bytes),
+        (4096..=512 * 1024 * 1024).contains(&chunk_bytes),
         "invalid chunk size"
     );
     ensure!(matches!(layout, "mixed" | "grouped"), "invalid layout");
@@ -71,14 +168,18 @@ fn generate(
     if let Some(parent) = Path::new(path).parent() {
         fs::create_dir_all(parent)?;
     }
-    let mut writer = Writer::with_options(
-        BufWriter::new(fs::File::create_new(path)?),
-        WriteOptions::new()
-            .profile("ros2")
-            .compression(compression)
-            .compression_level(3)
-            .chunk_size(Some(chunk_bytes)),
-    )?;
+    let options = WriteOptions::new()
+        .profile("ros2")
+        .compression(compression)
+        .compression_level(3)
+        .chunk_size(Some(chunk_bytes));
+    // Keep stress generation's codec workspaces bounded; preserve legacy fixture options.
+    let options = if image_spec.width > 320 || image_spec.height > 240 {
+        options.compression_threads(0)
+    } else {
+        options
+    };
+    let mut writer = Writer::with_options(BufWriter::new(fs::File::create_new(path)?), options)?;
     let scan_schema = writer.add_schema("sensor_msgs/msg/LaserScan", "ros2msg",
         b"std_msgs/Header header\nfloat32 angle_min\nfloat32 angle_max\nfloat32 angle_increment\nfloat32 time_increment\nfloat32 scan_time\nfloat32 range_min\nfloat32 range_max\nfloat32[] ranges\nfloat32[] intensities\n================================================================================\nMSG: std_msgs/Header\nbuiltin_interfaces/Time stamp\nstring frame_id\n================================================================================\nMSG: builtin_interfaces/Time\nint32 sec\nuint32 nanosec")?;
     let scan_id = writer.add_channel(scan_schema, "/scan", "cdr", &BTreeMap::new())?;
@@ -89,7 +190,7 @@ fn generate(
     };
     let mut camera_ids = Vec::new();
     if encoding != "scan" {
-        for i in 0..CAMERA_COUNT {
+        for i in 0..image_spec.count {
             camera_ids.push(writer.add_channel(
                 schema,
                 &format!("/camera/{i}"),
@@ -100,9 +201,9 @@ fn generate(
     }
     // Deterministic textured image; camera/time variants avoid a repeated-payload compression oracle.
     let mut images = Vec::new();
-    for variant in 0..32u32 {
+    for variant in 0..image_spec.variants {
         let mut seed = 0x12345678u32 ^ variant;
-        let image = image::RgbImage::from_fn(320, 240, |x, y| {
+        let image = image::RgbImage::from_fn(image_spec.width, image_spec.height, |x, y| {
             seed ^= seed << 13;
             seed ^= seed >> 17;
             seed ^= seed << 5;
@@ -123,36 +224,25 @@ fn generate(
         }
     }
     for second in 0..seconds {
+        // Keep only record descriptors, not one second of copied 4K payloads.
         let mut records = Vec::new();
-        for tick in 0..10u64 {
-            let sequence = (second * 10 + tick) as u32;
-            let time = BASE + second * 1_000_000_000 + tick * STEP;
-            let scan = encode_laser_scan_cdr(&LaserScan {
-                measurement_time: MeasurementTime(time as i64),
-                frame_id: "base_scan".into(),
-                angle_min: 0.0,
-                angle_increment: 0.01745,
-                range_min: 0.12,
-                range_max: 3.5,
-                ranges: (0..360)
-                    .map(|i| 1.0 + ((i + sequence) % 200) as f32 / 100.0)
-                    .collect(),
-            })?;
-            records.push((scan_id, time, sequence, scan));
-            if tick % 2 == 0 {
+        let ticks = u64::from(image_spec.hz.max(10));
+        for tick in 0..ticks {
+            let time = BASE + second * 1_000_000_000 + tick * (1_000_000_000 / ticks);
+            if tick % (ticks / 10) == 0 {
+                records.push((
+                    scan_id,
+                    time,
+                    (second * 10 + tick / (ticks / 10)) as u32,
+                    None,
+                ));
+            }
+            if tick % (ticks / u64::from(image_spec.hz)) == 0 {
+                let sequence = (second * u64::from(image_spec.hz)
+                    + tick / (ticks / u64::from(image_spec.hz)))
+                    as u32;
                 for (i, &id) in camera_ids.iter().enumerate() {
-                    let bytes = &images[(sequence as usize / 2 + i * 7) % images.len()];
-                    let payload = if encoding == "raw" {
-                        raw_image(time, bytes)
-                    } else {
-                        encode_compressed_image_cdr(&CompressedImage {
-                            measurement_time: MeasurementTime(time as i64),
-                            frame_id: "optical".into(),
-                            format: "jpeg".into(),
-                            jpeg: bytes.clone(),
-                        })?
-                    };
-                    records.push((id, time, sequence / 2, payload));
+                    records.push((id, time, sequence, Some(i)));
                 }
             }
         }
@@ -160,7 +250,32 @@ fn generate(
             records.sort_by_key(|r| (r.0, r.1));
         }
         let mut previous = None;
-        for (id, time, sequence, payload) in records {
+        for (id, time, sequence, camera) in records {
+            let payload = if let Some(i) = camera {
+                let bytes = &images[(sequence as usize + i * 7) % images.len()];
+                if encoding == "raw" {
+                    raw_image(time, bytes, image_spec)
+                } else {
+                    encode_compressed_image_cdr(&CompressedImage {
+                        measurement_time: MeasurementTime(time as i64),
+                        frame_id: "optical".into(),
+                        format: "jpeg".into(),
+                        jpeg: bytes.clone(),
+                    })?
+                }
+            } else {
+                encode_laser_scan_cdr(&LaserScan {
+                    measurement_time: MeasurementTime(time as i64),
+                    frame_id: "base_scan".into(),
+                    angle_min: 0.0,
+                    angle_increment: 0.01745,
+                    range_min: 0.12,
+                    range_max: 3.5,
+                    ranges: (0..360)
+                        .map(|i| 1.0 + ((i + sequence) % 200) as f32 / 100.0)
+                        .collect(),
+                })?
+            };
             if layout == "grouped" && previous != Some(id) {
                 writer.flush()?;
             }
@@ -180,15 +295,22 @@ fn generate(
         }
     }
     writer.finish()?;
+    let source = McapSource::open_file(Path::new(path))?;
+    let chunks = &source.summary().chunk_indexes;
     println!(
         "{}",
-        json!({"file":path,"file_bytes":fs::metadata(path)?.len(),"seconds":seconds,"layout":layout,"encoding":encoding})
+        json!({"camera_hz":image_spec.hz,"cameras":image_spec.count,"width":image_spec.width,"height":image_spec.height,"variants":image_spec.variants,
+            "target_chunk_bytes":chunk_bytes,"chunk_count":chunks.len(),
+            "largest_chunk_bytes":chunks.iter().map(|c|c.uncompressed_size).max().unwrap_or(0),
+            "total_chunk_bytes":chunks.iter().map(|c|c.uncompressed_size).sum::<u64>(),
+            "chunk_time_spans_ns":chunks.iter().map(|c|c.message_end_time-c.message_start_time).collect::<Vec<_>>(),
+            "file":path,"file_bytes":fs::metadata(path)?.len(),"seconds":seconds,"layout":layout,"encoding":encoding})
     );
     Ok(())
 }
 
 // Minimal standard little-endian CDR Image encoding, only for unselected background traffic.
-fn raw_image(time: u64, pixels: &[u8]) -> Vec<u8> {
+fn raw_image(time: u64, pixels: &[u8], spec: CameraFixture) -> Vec<u8> {
     fn u32_field(out: &mut Vec<u8>, n: u32) {
         while !(out.len() - 4).is_multiple_of(4) {
             out.push(0);
@@ -204,11 +326,11 @@ fn raw_image(time: u64, pixels: &[u8]) -> Vec<u8> {
     u32_field(&mut out, (time / 1_000_000_000) as u32);
     u32_field(&mut out, (time % 1_000_000_000) as u32);
     string(&mut out, "optical");
-    u32_field(&mut out, 240);
-    u32_field(&mut out, 320);
+    u32_field(&mut out, spec.height);
+    u32_field(&mut out, spec.width);
     string(&mut out, "rgb8");
     out.push(0);
-    u32_field(&mut out, 960);
+    u32_field(&mut out, spec.width * 3);
     u32_field(&mut out, pixels.len() as u32);
     out.extend(pixels);
     out
@@ -237,7 +359,18 @@ fn io(source: &McapSource) -> Value {
         "expanded_bytes":d.expanded_bytes,"decompressed_bytes":d.decompressed_bytes,"source_cache_backing_bytes":d.sequential_cache_backing_bytes})
 }
 
-fn run(path: &str, selection: &str, mode: &str, seek_count: usize, tick_ms: u64) -> Result<()> {
+fn run(
+    path: &str,
+    selection: &str,
+    mode: &str,
+    seek_count: usize,
+    tick_ms: u64,
+    pixel_format: &str,
+) -> Result<()> {
+    ensure!(
+        matches!(pixel_format, "rgb" | "rgba"),
+        "pixel format must be rgb/rgba"
+    );
     ensure!((1..=1000).contains(&tick_ms), "tick_ms must be 1..1000");
     ensure!(matches!(selection, "scan" | "all"), "invalid selection");
     ensure!(
@@ -301,7 +434,7 @@ fn run(path: &str, selection: &str, mode: &str, seek_count: usize, tick_ms: u64)
         .map(|c| c.message_index_length)
         .sum();
     let mut runtime = FeatureRuntime::new(&plan, true);
-    let mut pixels: BTreeMap<CameraId, image::DynamicImage> = BTreeMap::new();
+    let mut pixels: BTreeMap<CameraId, Vec<u8>> = BTreeMap::new();
     let mut versions = BTreeMap::new();
     let mut jpeg_decodes = 0u64;
     let range = source.time_range();
@@ -394,7 +527,15 @@ fn run(path: &str, selection: &str, mode: &str, seek_count: usize, tick_ms: u64)
                 if versions.get(&id) != Some(&frame.arrival_time) {
                     pixels.insert(
                         id,
-                        image::load_from_memory_with_format(&frame.jpeg, image::ImageFormat::Jpeg)?,
+                        if pixel_format == "rgba" {
+                            viewer_renderer::decode_jpeg(&frame.jpeg)?.rgba
+                        } else {
+                            image::load_from_memory_with_format(
+                                &frame.jpeg,
+                                image::ImageFormat::Jpeg,
+                            )?
+                            .into_bytes()
+                        },
                     );
                     versions.insert(id, frame.arrival_time);
                     jpeg_decodes += 1;
@@ -430,11 +571,11 @@ fn run(path: &str, selection: &str, mode: &str, seek_count: usize, tick_ms: u64)
         .map_or(0, |p| p.points.len());
     println!(
         "{}",
-        json!({"path":path,"selection":selection,"mode":mode,"tick_ms":tick_ms,"file_bytes":fs::metadata(path)?.len(),
+        json!({"path":path,"selection":selection,"mode":mode,"tick_ms":tick_ms,"pixel_format":pixel_format,"file_bytes":fs::metadata(path)?.len(),
         "open_ms":open_ms,"workload_ms":workload.elapsed().as_secs_f64()*1000.0,"read_ms":read_ms,"feature_ms":feature_ms,"jpeg_ms":jpeg_ms,
         "delivered_messages":delivered,"expected_messages":expected_messages,"payload_bytes":payload_bytes,
         "feature_decoded":counters.decoded,"feature_dropped":counters.dropped,"unknown_messages":counters.unknown_streams,
-        "jpeg_decodes":jpeg_decodes,"retained_camera_logical_bytes":camera_bytes,"retained_pixel_bytes":pixels.values().map(|i| i.as_bytes().len()).sum::<usize>(),
+        "jpeg_decodes":jpeg_decodes,"retained_camera_logical_bytes":camera_bytes,"retained_pixel_bytes":pixels.values().map(Vec::len).sum::<usize>(),
         "retained_scan_points":point_count,"chunk_count":chunk_count,"largest_chunk_bytes":largest_chunk,"total_chunk_bytes":total_expanded,"message_index_bytes":index_bytes,
         "initial_memory":initial_memory,"open_memory":open_memory,"final_memory":memory(),"seek_live_memory":seek_live_memory,"open_io":open_io,"io":io(&source),"samples":samples,"seek_samples":seek_samples,
         "os_storage_read_bytes":disk_after.get("read_bytes").copied().unwrap_or(0).saturating_sub(disk_before.get("read_bytes").copied().unwrap_or(0))})
