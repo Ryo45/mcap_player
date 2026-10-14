@@ -6,6 +6,8 @@
 
 [2026-10-14の初回結果とH1〜H5の評価](2026-10-14-headless/findings.md)を参照。
 27 dataset、432 run、最大約2.6 GiB。生データと全条件の集計も保存している。
+[Native Forward pruningとGrouped時間順序の後続検証](2026-10-14-forward-pruning/findings.md)では、
+初回の記録を再利用して100 ms / 1秒tickを比較する。初回結果は修正前のbaselineとして保持する。
 
 ## 再現
 
@@ -81,8 +83,10 @@ JPEG/allとのdecode時間の公平な比較には使わない。unknown counter
 
 全件通過の測定はSummaryのmessage countとdelivery countの一致、feature decode
 errorが0であることを検査し、失敗時に停止する。seekはpredecessorの時刻境界を検査する。
-groupedは1秒内で物理書き込み順が非時系列になる。このprobeでは1秒batchで読むため
-成立するが、細かなNative tickの順序保証や遅延は別の正しさ検証が必要。
+groupedは1秒内で物理書き込み順が非時系列になる。初回は1秒batchのcount確認だけであり、
+時間順序の検証は後続修正で追加した。現在のprobeは各batchの `[start,end)` 内包と
+時刻/stream順序を検査する。`run PATH all forward 0 100`の最後の引数はtick ms。
+省略時は1000 ms。100 msでは元の5 Hz camera入力を1秒batchのようにcoalesceしない。
 
 ## 指標の意味
 
@@ -98,7 +102,8 @@ groupedは1秒内で物理書き込み順が非時系列になる。このprobe�
   `final_memory`はその解放後なので、cache保持量の比較には前者を使う。
   共有Chunk backing、index/catalog、allocatorの再利用領域、
   decodeの一時領域も含む。HWMは終了時のlive heapではない。GPU・browser memoryは含まない。
-* `source_cache_backing_bytes`はNative sequential cacheがpinする1 Chunkのサイズ。
+* `source_cache_backing_bytes`は初回baselineではNative cacheの1 Chunk、後続修正では
+  時間範囲の重なるactive Chunkの合計サイズ。
   camera等のfeatureが別Chunkをpinする量を含まず、logical JPEGサイズをtotal retained
   backingサイズと読み替えない。実測RSSとlogical/pixel/Scanの保持量を併記する。
 * `open_memory`と再生progressごとのRSSを保存し、metadata増加とfeature履歴を分ける。

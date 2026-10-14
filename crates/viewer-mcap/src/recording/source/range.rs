@@ -115,55 +115,32 @@ impl super::McapSource {
         let mut source = self.fork_reader();
         source.select_streams(query.streams.iter().copied())?;
         source.seek(query.range.start)?;
+        let mut state = source.forward.clone();
         let mut messages = Vec::new();
         let mut payload_bytes = 0_usize;
-        loop {
-            while let Some(message) = source.cache.get(source.position) {
-                if message.arrival >= query.range.end_exclusive {
-                    return Ok(RangeQueryResult {
-                        messages,
-                        payload_bytes,
-                        complete: true,
-                    });
-                }
-                let next_bytes = payload_bytes
-                    .checked_add(message.payload.len())
-                    .ok_or_else(|| RangeQueryError::PayloadBytesOverflow)?;
-                if messages.len() == query.limits.max_messages
-                    || next_bytes > query.limits.max_payload_bytes
-                {
-                    return Ok(RangeQueryResult {
-                        messages,
-                        payload_bytes,
-                        complete: false,
-                    });
-                }
-                messages.push(RawMessage {
-                    publish_time_ns: message.publish_time_ns,
-                    sequence: message.sequence,
-                    stream_id: message.stream_id,
-                    arrival_time: message.arrival,
-                    payload: message.payload.clone(),
-                });
-                payload_bytes = next_bytes;
-                source.position += 1;
-            }
-            let Some(next) = source.chunk.map(|value| value + 1) else {
+        while let Some(message) = source.next_forward(
+            &mut state,
+            viewer_core::ArrivalTime(query.range.end_exclusive.0 - 1),
+        )? {
+            let next_bytes = payload_bytes
+                .checked_add(message.payload.len())
+                .ok_or(RangeQueryError::PayloadBytesOverflow)?;
+            if messages.len() == query.limits.max_messages
+                || next_bytes > query.limits.max_payload_bytes
+            {
                 return Ok(RangeQueryResult {
                     messages,
                     payload_bytes,
-                    complete: true,
-                });
-            };
-            let count = source.summary.chunk_indexes.len();
-            if next >= count {
-                return Ok(RangeQueryResult {
-                    messages,
-                    payload_bytes,
-                    complete: true,
+                    complete: false,
                 });
             }
-            source.load_chunk(next)?;
+            messages.push(message);
+            payload_bytes = next_bytes;
         }
+        Ok(RangeQueryResult {
+            messages,
+            payload_bytes,
+            complete: true,
+        })
     }
 }
