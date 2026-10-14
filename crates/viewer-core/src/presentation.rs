@@ -1,7 +1,9 @@
 mod camera;
 mod diagnostics;
 mod metrics;
+mod path;
 mod projection;
+pub use path::{FrameTransformError, PathProjectionPolicy};
 mod scene;
 mod telemetry;
 
@@ -12,8 +14,7 @@ pub use projection::{
     CalibrationError, CameraCalibration, CameraCalibrationSet, ProjectedPlan, ProjectionError,
 };
 pub use scene::{
-    BevFrameBuilder, BevSnapshot, SceneDiagnostics, ScenePresentationState, SceneSnapshot,
-    SceneTfError,
+    BevSnapshot, SceneDiagnostics, ScenePresentationInput, ScenePresentationState, SceneSnapshot,
 };
 pub use telemetry::TelemetryPresentation;
 
@@ -127,7 +128,13 @@ mod tests {
         let mut performance = PresentationSnapshot::default();
         performance.camera_fps.insert(CameraId(1), 5.0);
         let mut overlays = BTreeMap::new();
-        overlays.insert(CameraId(1), OverlayStatus::Ready { visible_points: 7 });
+        overlays.insert(
+            CameraId(1),
+            OverlayStatus::Ready {
+                visible_points: 7,
+                calibration_provenance: "test calibration".into(),
+            },
+        );
         let path = PathState::default();
         let topics = [
             (CameraId(0), "/front".into()),
@@ -152,7 +159,10 @@ mod tests {
         assert_eq!(focused.id, CameraId(1));
         assert_eq!(focused.status, CameraStatus::Ready);
         assert_eq!(focused.fps, 5.0);
-        assert_eq!(focused.overlay.to_string(), "plan 7 visible pts");
+        assert_eq!(
+            focused.overlay.to_string(),
+            "plan 7 visible pts · test calibration"
+        );
         assert_eq!(model.telemetry.unwrap().position_x, 3.0);
     }
 }

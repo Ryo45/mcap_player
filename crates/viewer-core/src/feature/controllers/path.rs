@@ -46,11 +46,7 @@ impl PathController {
                     measurement_time: path.measurement_time,
                     arrival_time: message.arrival_time,
                     frame_id: path.frame_id,
-                    points: path
-                        .points
-                        .into_iter()
-                        .map(|[forward, left]| [-left as f32, forward as f32])
-                        .collect(),
+                    points: path.points,
                 });
                 self.counters.decoded = self.counters.decoded.saturating_add(1);
                 Ok(())

@@ -169,7 +169,13 @@ fn seven_camera_fixture_routes_exact_messages_to_concrete_controllers() {
     let mut total_visible = 0;
     for (camera_id, camera) in cameras.state().frames() {
         let projected = calibrations
-            .project_plan(camera, path_frame, transforms.state(), (320, 240))
+            .project_plan(
+                camera,
+                path_frame,
+                transforms.state(),
+                (320, 240),
+                &viewer_core::PathProjectionPolicy::default(),
+            )
             .expect("camera projection");
         if *camera_id == viewer_core::CameraId(0) {
             assert!(
@@ -185,13 +191,16 @@ fn seven_camera_fixture_routes_exact_messages_to_concrete_controllers() {
     let raw_scan = scene.point_cloud().latest().expect("fixture scan");
     assert_eq!(raw_scan.frame_id, "base_scan");
     let mut scene_presentation = ScenePresentationState::new();
-    let snapshot = scene_presentation.build(
-        path.state(),
-        odometry.state(),
-        scene.point_cloud(),
-        transforms.state(),
-        true,
-    );
+    let snapshot = scene_presentation.build(viewer_core::ScenePresentationInput {
+        path: path.state(),
+        telemetry: odometry.state(),
+        point_cloud: scene.point_cloud(),
+        transforms: transforms.state(),
+        platform: None,
+        path_projection: &viewer_core::PathProjectionPolicy::default(),
+        accumulate: true,
+    });
+
     assert!(!snapshot.cloud.is_empty());
     assert_eq!(
         snapshot.diagnostics.last_tf_route.as_deref(),

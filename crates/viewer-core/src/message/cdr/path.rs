@@ -5,8 +5,8 @@ use crate::MeasurementTime;
 pub struct PathMessage {
     pub measurement_time: MeasurementTime,
     pub frame_id: String,
-    /// ROS coordinates in metres: +x forward, +y left.
-    pub points: Vec<[f64; 2]>,
+    /// Positions in the named ROS frame, in metres; body axes are forward/left/up.
+    pub points: Vec<[f64; 3]>,
 }
 
 pub fn decode_path(bytes: &[u8]) -> Result<PathMessage, DecodeError> {
@@ -31,18 +31,25 @@ pub fn decode_path(bytes: &[u8]) -> Result<PathMessage, DecodeError> {
         if pose_nanoseconds >= 1_000_000_000 {
             return Err(DecodeError::InvalidTimestamp);
         }
-        let _pose_frame_id = reader.string()?;
+        let pose_frame_id = reader.string()?;
+        if !pose_frame_id.is_empty()
+            && pose_frame_id.trim_start_matches('/') != frame_id.trim_start_matches('/')
+        {
+            return Err(DecodeError::UnsupportedFormat(
+                "Path poses must share the Path header frame".into(),
+            ));
+        }
         let x = reader.f64()?;
         let y = reader.f64()?;
-        let _z = reader.f64()?;
+        let z = reader.f64()?;
         let _orientation_x = reader.f64()?;
         let _orientation_y = reader.f64()?;
         let _orientation_z = reader.f64()?;
         let _orientation_w = reader.f64()?;
-        if !x.is_finite() || !y.is_finite() {
+        if !x.is_finite() || !y.is_finite() || !z.is_finite() {
             return Err(DecodeError::InvalidLength);
         }
-        points.push([x, y]);
+        points.push([x, y, z]);
     }
     Ok(PathMessage {
         measurement_time,
@@ -63,14 +70,14 @@ pub fn encode_path_cdr(path: &PathMessage) -> Result<Vec<u8>, DecodeError> {
         &mut output,
         u32::try_from(path.points.len()).map_err(|_| DecodeError::InvalidLength)?,
     );
-    for [x, y] in &path.points {
-        if !x.is_finite() || !y.is_finite() {
+    for [x, y, z] in &path.points {
+        if !x.is_finite() || !y.is_finite() || !z.is_finite() {
             return Err(DecodeError::InvalidLength);
         }
         push_u32(&mut output, seconds as u32);
         push_u32(&mut output, nanoseconds);
         push_string(&mut output, &path.frame_id)?;
-        for value in [*x, *y, 0.0, 0.0, 0.0, 0.0, 1.0] {
+        for value in [*x, *y, *z, 0.0, 0.0, 0.0, 1.0] {
             push_f64(&mut output, value);
         }
     }

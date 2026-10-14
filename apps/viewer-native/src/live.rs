@@ -441,7 +441,7 @@ mod tests {
                     payload: encode_path_cdr(&PathMessage {
                         measurement_time: MeasurementTime(10),
                         frame_id: "map".into(),
-                        points: vec![[1.0, 2.0]],
+                        points: vec![[1.0, 2.0, 0.0]],
                     })
                     .unwrap()
                     .into(),
@@ -466,7 +466,7 @@ mod tests {
 
         let latest = runtime.path().state().latest().unwrap();
         assert_eq!(latest.arrival_time, ArrivalTime(10));
-        assert_eq!(latest.points, [[-2.0, 1.0]]);
+        assert_eq!(latest.points, [[1.0, 2.0, 0.0]]);
         assert_eq!(runtime.path().counters().errors, 1);
     }
 

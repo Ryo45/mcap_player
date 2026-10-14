@@ -1,16 +1,17 @@
 use std::collections::BTreeMap;
 use viewer_core::{
     ArrivalTime, CameraCalibrationSet, CameraFrame, CameraId, OverlayStatus, PathFrame,
-    TransformState,
+    PathProjectionPolicy, TransformState,
 };
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 struct CameraOverlayKey {
     camera_arrival: ArrivalTime,
     path_revision: u64,
     transform_revision: u64,
     image_size: (u32, u32),
     source_generation: u64,
+    policy: PathProjectionPolicy,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -47,6 +48,7 @@ impl CameraOverlayState {
         transforms: &TransformState,
         transform_revision: u64,
         calibrations: &CameraCalibrationSet,
+        policy: &PathProjectionPolicy,
     ) -> bool {
         let key = CameraOverlayKey {
             camera_arrival: frame.arrival_time,
@@ -54,6 +56,7 @@ impl CameraOverlayState {
             transform_revision,
             image_size,
             source_generation: self.source_generation,
+            policy: policy.clone(),
         };
         if self
             .entries
@@ -64,11 +67,12 @@ impl CameraOverlayState {
         }
         let (projected_path, status) = path.map_or_else(
             || (Vec::new(), OverlayStatus::Waiting),
-            |path| match calibrations.project_plan(frame, path, transforms, image_size) {
+            |path| match calibrations.project_plan(frame, path, transforms, image_size, policy) {
                 Ok(projected) => (
                     projected.points,
                     OverlayStatus::Ready {
                         visible_points: projected.visible_points,
+                        calibration_provenance: calibrations.provenance().into(),
                     },
                 ),
                 Err(error) => (Vec::new(), OverlayStatus::Error(error.to_string())),
@@ -127,7 +131,10 @@ mod tests {
             measurement_time: MeasurementTime(10),
             arrival_time: ArrivalTime(11),
             frame_id: "base_link".to_owned(),
-            points,
+            points: points
+                .into_iter()
+                .map(|[right, forward]| [f64::from(forward), -f64::from(right), 0.0])
+                .collect(),
         }
     }
 
@@ -171,6 +178,10 @@ mod tests {
             &transforms,
             transforms.revision(),
             &calibrations,
+            &PathProjectionPolicy {
+                fixed_frame: "base_link".into(),
+                ground_frame: None
+            },
         ));
         let first_revision = state.snapshot(CameraId(0)).unwrap().revision;
         assert!(!base.needs_update(&first_frame));
@@ -182,6 +193,10 @@ mod tests {
             &transforms,
             transforms.revision(),
             &calibrations,
+            &PathProjectionPolicy {
+                fixed_frame: "base_link".into(),
+                ground_frame: None
+            },
         ));
         assert!(base.needs_update(&next_frame));
         assert!(state.update(
@@ -192,6 +207,10 @@ mod tests {
             &transforms,
             transforms.revision(),
             &calibrations,
+            &PathProjectionPolicy {
+                fixed_frame: "base_link".into(),
+                ground_frame: None
+            },
         ));
         assert_ne!(
             state.snapshot(CameraId(0)).unwrap().revision,
@@ -216,6 +235,10 @@ mod tests {
             &transforms,
             transforms.revision(),
             &calibrations,
+            &PathProjectionPolicy {
+                fixed_frame: "base_link".into(),
+                ground_frame: None
+            },
         ));
         let initial = overlays.snapshot(CameraId(0)).unwrap().revision;
 
@@ -227,6 +250,10 @@ mod tests {
             &transforms,
             transforms.revision(),
             &calibrations,
+            &PathProjectionPolicy {
+                fixed_frame: "base_link".into(),
+                ground_frame: None
+            },
         ));
         let path_revision = overlays.snapshot(CameraId(0)).unwrap().revision;
         assert_ne!(path_revision, initial);
@@ -240,6 +267,10 @@ mod tests {
             &transforms,
             transforms.revision().wrapping_add(1),
             &calibrations,
+            &PathProjectionPolicy {
+                fixed_frame: "base_link".into(),
+                ground_frame: None
+            },
         ));
         assert_ne!(
             overlays.snapshot(CameraId(0)).unwrap().revision,
@@ -261,6 +292,10 @@ mod tests {
             &transforms,
             transforms.revision(),
             &calibrations(),
+            &PathProjectionPolicy {
+                fixed_frame: "base_link".into(),
+                ground_frame: None
+            },
         ));
         assert_eq!(
             state.snapshot(CameraId(0)).unwrap().status,
@@ -274,6 +309,10 @@ mod tests {
             &transforms,
             transforms.revision(),
             &CameraCalibrationSet::default(),
+            &PathProjectionPolicy {
+                fixed_frame: "base_link".into(),
+                ground_frame: None
+            },
         ));
         assert!(matches!(
             state.snapshot(CameraId(0)).unwrap().status,
@@ -294,6 +333,10 @@ mod tests {
             &transforms,
             transforms.revision(),
             &calibrations(),
+            &PathProjectionPolicy {
+                fixed_frame: "base_link".into(),
+                ground_frame: None,
+            },
         );
         state.reset_source();
         assert!(state.snapshot(CameraId(0)).is_none());
@@ -305,6 +348,61 @@ mod tests {
             &transforms,
             transforms.revision(),
             &calibrations(),
+            &PathProjectionPolicy {
+                fixed_frame: "base_link".into(),
+                ground_frame: None
+            },
+        ));
+    }
+    #[test]
+    fn ground_policy_invalidates_overlay_for_the_same_camera_and_path() {
+        let frame = camera(11);
+        let path = path(vec![[0.0, 1.0]]);
+        let tf = transforms();
+        let c = calibrations();
+        let mut policy = PathProjectionPolicy {
+            fixed_frame: "base_link".into(),
+            ground_frame: None,
+        };
+        let mut state = CameraOverlayState::default();
+        assert!(state.update(
+            &frame,
+            (320, 240),
+            Some(&path),
+            1,
+            &tf,
+            tf.revision(),
+            &c,
+            &policy
+        ));
+        assert!(matches!(
+            state.snapshot(frame.camera_id).unwrap().status,
+            OverlayStatus::Ready { .. }
+        ));
+        policy.ground_frame = Some("missing".into());
+        assert!(state.update(
+            &frame,
+            (320, 240),
+            Some(&path),
+            1,
+            &tf,
+            tf.revision(),
+            &c,
+            &policy
+        ));
+        assert!(matches!(
+            state.snapshot(frame.camera_id).unwrap().status,
+            OverlayStatus::Error(_)
+        ));
+        assert!(!state.update(
+            &frame,
+            (320, 240),
+            Some(&path),
+            1,
+            &tf,
+            tf.revision(),
+            &c,
+            &policy
         ));
     }
 }

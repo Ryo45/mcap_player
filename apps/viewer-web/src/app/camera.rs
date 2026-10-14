@@ -158,6 +158,7 @@ pub(super) fn update_camera_presentation(
     view: &mut CameraViewState,
     metrics: &mut PresentationMetrics,
     calibrations: &CameraCalibrationSet,
+    policy: &viewer_core::PathProjectionPolicy,
     selected_camera: Option<CameraId>,
 ) {
     let camera_topics = session.camera_topics();
@@ -217,6 +218,7 @@ pub(super) fn update_camera_presentation(
                 session.transforms().state(),
                 session.transforms().state().revision(),
                 calibrations,
+                policy,
             ) {
                 camera_visual_changes.insert(*camera_id);
             }

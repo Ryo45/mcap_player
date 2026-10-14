@@ -2,6 +2,7 @@ struct Viewport {
     size: vec2<f32>,
     pixels_per_meter: f32,
     _padding: f32,
+    footprint: vec4<f32>,
 }
 
 @group(0) @binding(0) var<uniform> viewport: Viewport;
@@ -68,32 +69,17 @@ fn fs_main(@builtin(position) p: vec4<f32>) -> @location(0) vec4<f32> {
     color = mix(color, vec3(0.18, 0.39, 0.34), y_axis * 0.52);
     color = mix(color, vec3(0.39, 0.22, 0.20), x_axis * 0.42);
 
-    let local_pixels = vec2(
-        world.x * viewport.pixels_per_meter,
-        -world.y * viewport.pixels_per_meter,
-    );
-    let car_half_size = vec2(0.92, 2.10) * viewport.pixels_per_meter;
-    let car_distance = rounded_box_distance(
-        local_pixels,
-        car_half_size,
-        0.28 * viewport.pixels_per_meter,
-    );
-    let car = 1.0 - smoothstep(-0.8, 0.8, car_distance);
-    color = mix(color, vec3(0.10, 0.72, 0.82), car);
-
-    // Windshield and nose mark the vehicle heading without adding synthetic scene data.
-    let windshield = select(
-        0.0,
-        1.0,
-        abs(world.x) < 0.62 && world.y > 0.35 && world.y < 1.28,
-    );
-    color = mix(color, vec3(0.035, 0.13, 0.17), windshield * car * 0.92);
-    let nose = select(
-        0.0,
-        1.0,
-        abs(world.x) < (1.78 - world.y) * 0.62 && world.y > 1.42 && world.y < 1.78,
-    );
-    color = mix(color, vec3(0.73, 0.96, 0.99), nose * car);
+    // Physical right/forward bounds supplied by presentation, with an arbitrary origin.
+    let lo=viewport.footprint.xy;
+    let hi=viewport.footprint.zw;
+    if all(hi>lo) {
+        let center=(lo+hi)*0.5;
+        let half=(hi-lo)*0.5;
+        let q=abs(world-center)-half;
+        let distance=min(max(q.x,q.y),0.0)+length(max(q,vec2(0.0)));
+        let edge=1.0-smoothstep(0.5,1.5,abs(distance)*viewport.pixels_per_meter);
+        color=mix(color,vec3(0.10,0.72,0.82),edge);
+    }
 
     return vec4(color, 1.0);
 }

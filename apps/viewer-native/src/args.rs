@@ -19,6 +19,9 @@ pub(crate) struct Args {
     pub(crate) mcap: PathBuf,
     pub(crate) topic: String,
     pub(crate) calibration: PathBuf,
+    pub(crate) platform_geometry: Option<PathBuf>,
+    pub(crate) ground_frame: Option<String>,
+    pub(crate) fixed_frame: String,
     pub(crate) mode: SourceMode,
     pub(crate) layout: WorkspaceLayout,
     pub(crate) inspect_topic: Option<String>,
@@ -33,6 +36,11 @@ impl Args {
         let mut mcap = PathBuf::from(DEFAULT_FIXTURE);
         let mut topic = DEFAULT_TOPIC.to_owned();
         let mut calibration = PathBuf::from(DEFAULT_CALIBRATION);
+        let mut platform_geometry = Some(PathBuf::from(
+            "config/platform_geometry/turtlebot3_waffle_pi.json",
+        ));
+        let mut ground_frame = None;
+        let mut fixed_frame = "odom".to_owned();
         let mut live = false;
         let mut reliable = false;
         let mut layout = WorkspaceLayout::Standard;
@@ -51,6 +59,20 @@ impl Args {
                     }
                     inspect_topic = Some(topic);
                 }
+                "--platform-geometry" => {
+                    platform_geometry = Some(PathBuf::from(
+                        values
+                            .next()
+                            .context("--platform-geometry needs a JSON path")?,
+                    ))
+                }
+                "--no-platform-geometry" => platform_geometry = None,
+                "--fixed-frame" => {
+                    fixed_frame = values.next().context("--fixed-frame needs a TF frame")?
+                }
+                "--ground-frame" => {
+                    ground_frame = Some(values.next().context("--ground-frame needs a TF frame")?)
+                }
                 "--camera-calibration" => {
                     calibration =
                         PathBuf::from(values.next().context("--camera-calibration needs a path")?)
@@ -62,7 +84,7 @@ impl Args {
                 }
                 "--help" | "-h" => {
                     println!(
-                        "viewer-native [--mcap PATH] [--camera-topic TOPIC] [--camera-calibration JSON] [--layout standard|showcase|explore|monitor|health] [--inspect-topic TOPIC] [--live [--reliable]]\n\nFiles can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
+                        "viewer-native [--mcap PATH] [--camera-topic TOPIC] [--camera-calibration JSON] [--platform-geometry JSON | --no-platform-geometry] [--fixed-frame FRAME] [--ground-frame FRAME] [--layout standard|showcase|explore|monitor|health] [--inspect-topic TOPIC] [--live [--reliable]]\n\nFiles can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
                     );
                     std::process::exit(0);
                 }
@@ -74,11 +96,22 @@ impl Args {
         if live && inspect_topic.is_some() {
             bail!("--inspect-topic requires recording input; live Inspector is unavailable");
         }
+        if fixed_frame.trim().is_empty()
+            || fixed_frame.len() > 256
+            || ground_frame
+                .as_ref()
+                .is_some_and(|f| f.trim().is_empty() || f.len() > 256)
+        {
+            bail!("world/ground frame names must be nonempty and at most 256 bytes");
+        }
         let mode = source_mode(live, reliable)?;
         Ok(Self {
             mcap,
             topic,
             calibration,
+            platform_geometry,
+            ground_frame,
+            fixed_frame,
             mode,
             layout,
             inspect_topic,

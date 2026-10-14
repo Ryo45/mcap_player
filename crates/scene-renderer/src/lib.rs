@@ -6,11 +6,12 @@ use bytemuck::{Pod, Zeroable};
 pub struct SceneFrame<'a> {
     pub revision: u64,
     pub cloud_revision: u64,
-    /// ROS odometry coordinates: +x forward, +y left.
-    pub ego_position: [f32; 2],
-    pub ego_yaw: f32,
-    /// Ego-relative BEV coordinates: +x right, +y forward.
-    pub path: &'a [[f32; 2]],
+    /// World ROS metre positions, already placed by presentation.
+    pub focus: [f32; 3],
+    pub forward: [f32; 3],
+    pub view_radius: f32,
+    pub platform: Option<[[f32; 3]; 8]>,
+    pub path: &'a [[f32; 3]],
     /// ROS world-frame points: +x forward, +y left, +z up.
     /// The acquisition-time pose has already been applied.
     pub cloud: &'a [[f32; 3]],
@@ -55,7 +56,7 @@ impl SceneCameraMode {
 impl Default for SceneCamera {
     fn default() -> Self {
         Self {
-            distance: 18.4,
+            distance: 6.0,
             azimuth: 0.699,
             elevation: 0.48,
         }
@@ -311,7 +312,7 @@ impl SceneRenderer {
         let (eye, target) = camera_pose(self.camera_mode, self.camera, frame);
         let view = look_at_rh(eye, target, [0.0, 1.0, 0.0]);
         let aspect = self.size.0 as f32 / self.size.1 as f32;
-        let projection = perspective_rh(48.0_f32.to_radians(), aspect, 0.1, 160.0);
+        let projection = perspective_rh(48.0_f32.to_radians(), aspect, 0.01, 160.0);
         let view_projection = multiply(projection, view);
         let uniform = SceneUniform {
             view_projection,
@@ -416,7 +417,7 @@ impl SceneRenderer {
         if self.camera_mode == SceneCameraMode::VehicleEye {
             return;
         }
-        let distance = (self.camera.distance * (-wheel_delta * 0.002).exp()).clamp(4.0, 80.0);
+        let distance = (self.camera.distance * (-wheel_delta * 0.002).exp()).clamp(0.3, 80.0);
         if (distance - self.camera.distance).abs() > f32::EPSILON {
             self.camera.distance = distance;
             self.camera_dirty = true;
@@ -443,48 +444,39 @@ fn camera_pose(
     camera: SceneCamera,
     frame: SceneFrame<'_>,
 ) -> ([f32; 3], [f32; 3]) {
-    let ego = odom_to_world(frame.ego_position);
-    let (sin_yaw, cos_yaw) = frame.ego_yaw.sin_cos();
-    let right = [cos_yaw, 0.0, -sin_yaw];
-    let forward = [-sin_yaw, 0.0, -cos_yaw];
+    let focus = ros_to_render(frame.focus);
+    let forward = normalize(ros_to_render(frame.forward));
     match mode {
-        SceneCameraMode::Chase => {
-            let horizontal_distance = camera.distance * camera.elevation.cos();
-            let right_offset = horizontal_distance * camera.azimuth.sin();
-            let rear_offset = horizontal_distance * camera.azimuth.cos();
+        SceneCameraMode::Chase | SceneCameraMode::Free => {
+            let yaw = if mode == SceneCameraMode::Chase {
+                (-forward[0]).atan2(-forward[2])
+            } else {
+                0.0
+            };
+            let azimuth = camera.azimuth + yaw;
+            let horizontal = camera.distance * camera.elevation.cos();
             (
                 [
-                    ego[0] + right[0] * right_offset - forward[0] * rear_offset,
-                    camera.distance * camera.elevation.sin(),
-                    ego[1] + right[2] * right_offset - forward[2] * rear_offset,
+                    focus[0] + horizontal * azimuth.sin(),
+                    focus[1] + camera.distance * camera.elevation.sin(),
+                    focus[2] + horizontal * azimuth.cos(),
                 ],
-                [ego[0], 0.6, ego[1]],
-            )
-        }
-        SceneCameraMode::Free => {
-            let horizontal_distance = camera.distance * camera.elevation.cos();
-            (
-                [
-                    ego[0] + horizontal_distance * camera.azimuth.sin(),
-                    camera.distance * camera.elevation.sin(),
-                    ego[1] + horizontal_distance * camera.azimuth.cos(),
-                ],
-                [ego[0], 0.6, ego[1]],
+                focus,
             )
         }
         SceneCameraMode::VehicleEye => {
-            let eye_forward = 0.8;
-            let target_forward = 15.0;
+            // A virtual view policy derived from the supplied envelope, not sensor extrinsics.
+            let r = frame.view_radius.max(0.01);
             (
                 [
-                    ego[0] + forward[0] * eye_forward,
-                    1.15,
-                    ego[1] + forward[2] * eye_forward,
+                    focus[0] + forward[0] * r * 0.25,
+                    focus[1] + r,
+                    focus[2] + forward[2] * r * 0.25,
                 ],
                 [
-                    ego[0] + forward[0] * target_forward,
-                    1.05,
-                    ego[1] + forward[2] * target_forward,
+                    focus[0] + forward[0] * r * 20.0,
+                    focus[1] + r + forward[1] * r * 20.0,
+                    focus[2] + forward[2] * r * 20.0,
                 ],
             )
         }
@@ -509,75 +501,59 @@ fn make_grid() -> Vec<Vertex> {
         } else {
             [0.055, 0.10, 0.12]
         };
-        push_line(
-            &mut vertices,
-            [-50.0, 0.0, coordinate],
-            [50.0, 0.0, coordinate],
-            color,
-        );
-        push_line(
-            &mut vertices,
-            [coordinate, 0.0, -50.0],
-            [coordinate, 0.0, 50.0],
-            color,
-        );
+        // Short metric segments remain stable when the near plane cuts a grid line.
+        for step in -50_i32..50 {
+            let start = step as f32;
+            let end = start + 1.0;
+            push_line(
+                &mut vertices,
+                [start, 0.0, coordinate],
+                [end, 0.0, coordinate],
+                color,
+            );
+            push_line(
+                &mut vertices,
+                [coordinate, 0.0, start],
+                [coordinate, 0.0, end],
+                color,
+            );
+        }
     }
     vertices
 }
 
 fn make_dynamic_lines(frame: SceneFrame<'_>) -> Vec<Vertex> {
-    let mut vertices = Vec::with_capacity(30 + frame.path.len().saturating_mul(2));
-    let ego = odom_to_world(frame.ego_position);
-    let (sin_yaw, cos_yaw) = frame.ego_yaw.sin_cos();
-    let right = [cos_yaw, -sin_yaw];
-    let forward = [-sin_yaw, -cos_yaw];
-    let to_world = |right_offset: f32, forward_offset: f32, height: f32| {
-        [
-            ego[0] + right[0] * right_offset + forward[0] * forward_offset,
-            height,
-            ego[1] + right[1] * right_offset + forward[1] * forward_offset,
-        ]
-    };
-
-    let corners = [
-        to_world(-0.92, -2.1, 0.05),
-        to_world(0.92, -2.1, 0.05),
-        to_world(0.92, 2.1, 0.05),
-        to_world(-0.92, 2.1, 0.05),
-        to_world(-0.92, -2.1, 1.5),
-        to_world(0.92, -2.1, 1.5),
-        to_world(0.92, 2.1, 1.5),
-        to_world(-0.92, 2.1, 1.5),
-    ];
-    let ego_color = [0.10, 0.78, 0.88];
-    for [a, b] in [
-        [0, 1],
-        [1, 2],
-        [2, 3],
-        [3, 0],
-        [4, 5],
-        [5, 6],
-        [6, 7],
-        [7, 4],
-        [0, 4],
-        [1, 5],
-        [2, 6],
-        [3, 7],
-    ] {
-        push_line(&mut vertices, corners[a], corners[b], ego_color);
+    let mut vertices = Vec::with_capacity(24 + frame.path.len().saturating_mul(2));
+    if let Some(corners) = frame.platform {
+        for [a, b] in [
+            [0, 1],
+            [1, 2],
+            [2, 3],
+            [3, 0],
+            [4, 5],
+            [5, 6],
+            [6, 7],
+            [7, 4],
+            [0, 4],
+            [1, 5],
+            [2, 6],
+            [3, 7],
+        ] {
+            push_line(
+                &mut vertices,
+                ros_to_render(corners[a]),
+                ros_to_render(corners[b]),
+                [0.10, 0.78, 0.88],
+            );
+        }
     }
-    push_line(
-        &mut vertices,
-        to_world(0.0, 2.1, 1.5),
-        to_world(0.0, 3.3, 1.5),
-        [0.72, 0.97, 1.0],
-    );
-
-    let path_color = [0.96, 0.72, 0.16];
     for segment in frame.path.windows(2) {
-        let start = to_world(segment[0][0], segment[0][1], 0.08);
-        let end = to_world(segment[1][0], segment[1][1], 0.08);
-        push_line(&mut vertices, start, end, path_color);
+        push_line(
+            &mut vertices,
+            ros_to_render(segment[0]),
+            ros_to_render(segment[1]),
+            [0.96, 0.72, 0.16],
+        );
     }
     vertices
 }
@@ -660,8 +636,8 @@ fn make_targets(
     (texture, view, depth, depth_view)
 }
 
-fn odom_to_world(position: [f32; 2]) -> [f32; 2] {
-    [-position[1], -position[0]]
+fn ros_to_render([forward, left, up]: [f32; 3]) -> [f32; 3] {
+    [-left, up, -forward]
 }
 
 type Matrix = [[f32; 4]; 4];
@@ -732,16 +708,18 @@ mod tests {
 
     #[test]
     fn dynamic_scene_contains_ego_and_path_lines() {
-        let path = [[0.0, 0.0], [0.5, 1.0], [1.0, 2.0]];
+        let path = [[0.0, 0.0, 0.1], [1.0, -0.5, 0.2], [2.0, -1.0, 0.3]];
         let vertices = make_dynamic_lines(SceneFrame {
             revision: 1,
             cloud_revision: 0,
-            ego_position: [2.0, 3.0],
-            ego_yaw: 0.25,
+            focus: [2.0, 3.0, 0.0],
+            forward: [1.0, 0.0, 0.0],
+            view_radius: 0.2,
+            platform: None,
             path: &path,
             cloud: &[],
         });
-        assert_eq!(vertices.len(), 24 + 2 + 4);
+        assert_eq!(vertices.len(), 4);
         assert!(vertices.iter().all(|vertex| {
             vertex
                 .position
@@ -765,29 +743,51 @@ mod tests {
     #[test]
     fn camera_zoom_orbit_and_reset_are_bounded() {
         let mut camera = SceneCamera::default();
-        camera.distance = (camera.distance * (-10_000.0_f32 * 0.002).exp()).clamp(4.0, 80.0);
-        assert_eq!(camera.distance, 4.0);
+        camera.distance = (camera.distance * (-10_000.0_f32 * 0.002).exp()).clamp(0.3, 80.0);
+        assert_eq!(camera.distance, 0.3);
         camera.elevation = (camera.elevation + 10_000.0 * 0.008).clamp(0.12, 1.35);
         assert_eq!(camera.elevation, 1.35);
-        assert_eq!(SceneCamera::default().distance, 18.4);
+        assert_eq!(SceneCamera::default().distance, 6.0);
     }
 
     #[test]
     fn chase_and_vehicle_eye_follow_ego_heading() {
         let frame = SceneFrame {
-            ego_position: [2.0, 3.0],
-            ego_yaw: std::f32::consts::FRAC_PI_2,
+            focus: [2.0, 3.0, 0.0],
+            forward: [0.0, 1.0, 0.0],
+            view_radius: 0.2,
             ..SceneFrame::default()
         };
         let (chase_eye, chase_target) =
             camera_pose(SceneCameraMode::Chase, SceneCamera::default(), frame);
         assert!(chase_eye.iter().all(|value| value.is_finite()));
-        assert_eq!(chase_target, [-3.0, 0.6, -2.0]);
+        assert_eq!(chase_target, [-3.0, 0.0, -2.0]);
 
         let (vehicle_eye, vehicle_target) =
             camera_pose(SceneCameraMode::VehicleEye, SceneCamera::default(), frame);
         let view_direction = subtract(vehicle_target, vehicle_eye);
         assert!(view_direction[0] < 0.0);
         assert!(view_direction[0].abs() > view_direction[2].abs());
+    }
+    #[test]
+    fn grid_spacing_is_one_metre_and_path_axis_mapping_preserves_distance() {
+        let grid = make_grid();
+        assert_eq!(grid[0].position, [-50.0, 0.0, -50.0]);
+        assert_eq!(grid[1].position, [-49.0, 0.0, -50.0]);
+        assert!(grid.iter().all(|v| v.position[1] == 0.0
+            && v.position[0].fract() == 0.0
+            && v.position[2].fract() == 0.0));
+        let path = [[1.0, 2.0, 0.3], [2.0, 2.0, 0.3]];
+        let lines = make_dynamic_lines(SceneFrame {
+            path: &path,
+            ..Default::default()
+        });
+        assert_eq!(lines.len(), 2);
+        assert_eq!(lines[0].position, [-2.0, 0.3, -1.0]);
+        assert_eq!(lines[1].position, [-2.0, 0.3, -2.0]);
+        assert_eq!(
+            subtract(lines[1].position, lines[0].position),
+            [0.0, 0.0, -1.0]
+        );
     }
 }

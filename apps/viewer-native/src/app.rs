@@ -11,6 +11,7 @@ use crate::{
 };
 use std::{
     fs,
+    io::Read,
     path::Path,
     sync::Arc,
     time::{Duration, Instant},
@@ -23,6 +24,19 @@ use winit::{
     event_loop::ActiveEventLoop,
     window::{Window, WindowId},
 };
+
+fn read_presentation_config(path: &Path) -> Result<String, String> {
+    let mut json = String::new();
+    fs::File::open(path)
+        .map_err(|e| e.to_string())?
+        .take(64 * 1024 + 1)
+        .read_to_string(&mut json)
+        .map_err(|e| e.to_string())?;
+    if json.len() > 64 * 1024 {
+        return Err("presentation JSON exceeds 64 KiB".into());
+    }
+    Ok(json)
+}
 
 pub(crate) struct App {
     pub(crate) args: Args,
@@ -363,27 +377,46 @@ impl ApplicationHandler for App {
                 return;
             }
         };
-        let calibration_json = match fs::read_to_string(&self.args.calibration) {
-            Ok(json) => json,
-            Err(error) => {
-                self.diagnostics.set_presentation_error(format!(
-                    "read camera calibration {}: {error}",
-                    self.args.calibration.display()
-                ));
-                event_loop.exit();
-                return;
-            }
-        };
-        let calibrations = match CameraCalibrationSet::from_json(&calibration_json) {
-            Ok(calibrations) => calibrations,
-            Err(error) => {
-                self.diagnostics.set_presentation_error(error.to_string());
-                event_loop.exit();
-                return;
+        let calibrations = read_presentation_config(&self.args.calibration)
+            .map_err(|e| e.to_string())
+            .and_then(|json| CameraCalibrationSet::from_json(&json).map_err(|e| e.to_string()));
+        let calibrations = match calibrations {
+            Ok(c) => c,
+            Err(e) => {
+                self.diagnostics
+                    .set_presentation_error(format!("Camera calibration unavailable: {e}"));
+                CameraCalibrationSet::default()
             }
         };
         self.presentation_state
             .set_camera_calibrations(calibrations);
+        let platform = self
+            .args
+            .platform_geometry
+            .as_ref()
+            .map(|path| {
+                read_presentation_config(path)
+                    .map_err(|e| e.to_string())
+                    .and_then(|json| {
+                        serde_json::from_str::<viewer_core::PlatformGeometry>(&json)
+                            .map_err(|e| e.to_string())
+                    })
+            })
+            .transpose();
+        match platform {
+            Ok(g) => self.presentation_state.set_platform(g),
+            Err(e) => {
+                self.diagnostics
+                    .set_presentation_error(format!("Platform geometry: {e}"));
+                event_loop.exit();
+                return;
+            }
+        }
+        self.presentation_state
+            .set_path_projection(viewer_core::PathProjectionPolicy {
+                fixed_frame: self.args.fixed_frame.clone(),
+                ground_frame: self.args.ground_frame.clone(),
+            });
         match pollster::block_on(Graphics::new(window.clone())) {
             Ok(graphics) => self.graphics = Some(graphics),
             Err(error) => {

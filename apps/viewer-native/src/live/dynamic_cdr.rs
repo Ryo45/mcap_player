@@ -47,11 +47,18 @@ fn extract_path(message: &DynamicMessage) -> Result<PathMessage, String> {
     let points = poses
         .iter()
         .map(|pose_stamped| {
+            let (_, pose_frame) = header(pose_stamped.get("header"), "poses[].header")?;
+            if !pose_frame.is_empty()
+                && pose_frame.trim_start_matches('/') != frame_id.trim_start_matches('/')
+            {
+                return Err("Path poses must share the Path header frame".into());
+            }
             let pose = message_view(pose_stamped.get("pose"), "poses[].pose")?;
             let position = message_view(pose.get("position"), "poses[].pose.position")?;
             Ok([
                 double(position.get("x"), "poses[].pose.position.x")?,
                 double(position.get("y"), "poses[].pose.position.y")?,
+                double(position.get("z"), "poses[].pose.position.z")?,
             ])
         })
         .collect::<Result<Vec<_>, String>>()?;

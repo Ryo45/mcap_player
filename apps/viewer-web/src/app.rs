@@ -1,5 +1,6 @@
 //! Browser application root: event wiring and frame/source orchestration.
 mod camera;
+mod physical_settings;
 mod presentation;
 mod scene;
 mod source;
@@ -50,6 +51,9 @@ struct WebApp {
     calibrations: CameraCalibrationSet,
     topics: crate::topics::TopicBrowser,
     previous_ms: f64,
+    platform: Option<viewer_core::PlatformGeometry>,
+    platform_enabled: bool,
+    path_projection: viewer_core::PathProjectionPolicy,
 }
 
 thread_local! { static APP: RefCell<WebApp> = RefCell::new(WebApp {
@@ -60,6 +64,9 @@ thread_local! { static APP: RefCell<WebApp> = RefCell::new(WebApp {
         "../../../config/camera_calibration.json"
     )).expect("bundled camera calibration"),
     previous_ms: Date::now(),
+    platform: Some(serde_json::from_str(include_str!("../../../config/platform_geometry/turtlebot3_waffle_pi.json")).expect("bundled platform geometry")),
+    path_projection: viewer_core::PathProjectionPolicy::default(),
+    platform_enabled:true,
     topics: crate::topics::TopicBrowser::default(),
 }); }
 
@@ -278,12 +285,16 @@ fn tick() {
             calibrations,
             topics,
             previous_ms: _,
+            platform,
+            platform_enabled,
+            path_projection,
         } = &mut *app;
         let Some(session) = playback else {
             render_scene(
                 BevFrame {
                     revision: u64::MAX,
                     path: &[],
+                    footprint: None,
                 },
                 SceneFrame::default(),
             );
@@ -315,11 +326,17 @@ fn tick() {
             &mut view.camera,
             &mut view.presentation_metrics,
             calibrations,
+            path_projection,
             selected_camera,
         );
         let presentation = build_viewer_presentation(session, view, selected_camera);
         update_dom_diagnostics(&presentation, session);
-        update_scene_presentation(session, view);
+        update_scene_presentation(
+            session,
+            view,
+            platform.as_ref().filter(|_| *platform_enabled),
+            path_projection,
+        );
         view.presentation_metrics
             .record_render(duration_since(tick_started));
         view.presentation_metrics.advance(elapsed);
@@ -333,6 +350,7 @@ fn duration_since(started_ms: f64) -> Duration {
 #[wasm_bindgen(start)]
 pub fn start() -> Result<(), JsValue> {
     source::install_controls();
+    physical_settings::install_controls();
     install_controls();
     install_workspace_controls();
     initialize_webgpu();

@@ -346,3 +346,11 @@ Path materialization uses `PathFrame`/`PathState` independently of its BEV/Scene
 views. `PointCloudController` owns LaserScan materialization; Scene presentation
 retains TF projection and accumulation. Shared ROS schema and artifact identity
 are source-neutral core concepts. Module moves preserve playback/query contracts.
+
+## Physical positions
+
+Path state now retains f64 ROS xyz in its source frame. Presentation anchors it
+at measurement time and creates world Scene geometry, reference-frame BEV geometry
+and camera-time projection. Platform bounds are independent core facts, configured
+by the frontend; no physical feature has a renderer correction multiplier.
+See [physical_geometry.md](physical_geometry.md) for contracts and bounded TF limits.

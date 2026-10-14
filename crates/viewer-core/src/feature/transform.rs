@@ -66,18 +66,12 @@ impl RigidTransform {
         }
     }
 
+    fn transform_point_f64(self, point: [f64; 3]) -> [f64; 3] {
+        add(rotate(self.rotation, point), self.translation)
+    }
     fn transform_point(self, point: [f32; 3]) -> [f32; 3] {
-        let point = [
-            f64::from(point[0]),
-            f64::from(point[1]),
-            f64::from(point[2]),
-        ];
-        let transformed = add(rotate(self.rotation, point), self.translation);
-        [
-            transformed[0] as f32,
-            transformed[1] as f32,
-            transformed[2] as f32,
-        ]
+        self.transform_point_f64(point.map(f64::from))
+            .map(|v| v as f32)
     }
 }
 
@@ -183,6 +177,26 @@ impl TransformState {
     ) -> Option<Vec<[f32; 3]>> {
         let transform = self.resolve(source_frame, target_frame, Some(measurement_time))?;
         Some(transform_points(transform, points))
+    }
+
+    /// Physical positions remain f64 until a presentation creates renderer inputs.
+    pub fn transform_positions_at(
+        &self,
+        source: &str,
+        target: &str,
+        time: MeasurementTime,
+        points: &[[f64; 3]],
+    ) -> Option<Vec<[f64; 3]>> {
+        let transform = self.resolve(source, target, Some(time))?;
+        let result = points
+            .iter()
+            .map(|p| transform.transform_point_f64(*p))
+            .collect::<Vec<_>>();
+        result
+            .iter()
+            .flatten()
+            .all(|v| v.is_finite())
+            .then_some(result)
     }
 
     fn resolve(

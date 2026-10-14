@@ -47,9 +47,21 @@ pub(crate) struct PresentationState {
     calibrations: CameraCalibrationSet,
     metrics: PresentationMetrics,
     scene: ScenePresentationState,
+    platform: Option<viewer_core::PlatformGeometry>,
+    path_projection: viewer_core::PathProjectionPolicy,
 }
 
 impl PresentationState {
+    pub(crate) fn set_platform(&mut self, geometry: Option<viewer_core::PlatformGeometry>) {
+        self.platform = geometry;
+        self.scene.reset();
+    }
+    pub(crate) fn set_path_projection(&mut self, policy: viewer_core::PathProjectionPolicy) {
+        self.path_projection = policy;
+        self.camera_overlays.reset_source();
+        self.scene.reset();
+    }
+
     pub(crate) fn set_camera_calibrations(&mut self, calibrations: CameraCalibrationSet) {
         self.calibrations = calibrations;
         self.camera_overlays.reset_source();
@@ -77,6 +89,7 @@ impl PresentationState {
                 transforms.state(),
                 transforms.state().revision(),
                 &self.calibrations,
+                &self.path_projection,
             );
         }
     }
@@ -121,16 +134,17 @@ impl PresentationState {
         });
         let static_transform_count = transforms.state().static_len();
         let dynamic_transform_count = transforms.state().dynamic_len();
-        let bev = viewer_core::BevFrameBuilder::new(path.state()).build();
-        let scene = point_cloud_controller.map_or_else(SceneSnapshot::default, |controller| {
-            self.scene.build(
-                path.state(),
-                odometry.state(),
-                controller.point_cloud(),
-                transforms.state(),
-                accumulate_points,
-            )
+        let empty = viewer_core::PointCloudState::default();
+        let scene = self.scene.build(viewer_core::ScenePresentationInput {
+            path: path.state(),
+            telemetry: odometry.state(),
+            point_cloud: point_cloud_controller.map_or(&empty, |c| c.point_cloud()),
+            transforms: transforms.state(),
+            platform: self.platform.as_ref(),
+            path_projection: &self.path_projection,
+            accumulate: accumulate_points,
         });
+        let bev = scene.bev;
         PresentationFrame {
             viewer,
             camera_overlays: &self.camera_overlays,

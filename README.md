@@ -75,6 +75,25 @@ ROS 2 CDR のフィールドは完全な ros2msg dependency 定義があれば�
 3D は Chase / Free / Vehicle eye、点群蓄積に対応し、BEV 表示にも切り替えられます。
 Native / Web の対応状況と今後の開発順は[差分一覧](docs/native_web_parity.md)を参照してください。
 
+## 物理geometryとTurtleBot3
+
+Scene内の距離は **1.0 = 1 metre** です。車体・Path・Scanに個別の倍率を掛けません。
+同梱データ向けの車体はTurtleBot3 Waffle PiのURDF collision形状の包絡で、
+約 **0.283 × 0.306 × 0.141 m**。1 m gridと同じ単位で表示します。
+Pathはframe付き3D座標とzを保持し、TFでScene／BEV／Cameraへ変換します。
+
+```sh
+cargo run -p viewer-native -- --layout monitor \
+  --platform-geometry config/platform_geometry/turtlebot3_waffle_pi.json \
+  --ground-frame base_footprint
+```
+
+geometry JSONは別のロボットや自動車の非対称なboundsにも置き換えられます。
+Nativeは`--no-platform-geometry`、WebはSceneの設定から車体を非表示にできます。
+Ground frameを指定しなければPathの元のzを使います。Camera calibrationは別設定で、
+同梱値がデモ値であることをoverlay状態に表示します。
+寸法の出所・座標系・検証・現在の制約は[physical geometry](docs/physical_geometry.md)を参照してください。
+
 ## Recording Server
 
 LAN 上の MCAP をブラウザから再生する場合に使用します。

@@ -56,3 +56,10 @@ camera thumbnailsはそのまま表示している。
 
 撮影にはheadless ChromeとソフトウェアWebGPUを使用した。画像はページviewportの実キャプチャで、
 ブラウザのtoolbarやDesktopを含まない。撮影用にパネルを隠したり合成したりしていない。
+
+## 物理geometry更新後の画像
+
+両画像はWaffle Piの物理bounds、1 m grid、Chase距離6 m、Pathの元のxyzを使って
+撮り直したものです。録画・末尾cursor・Scan sequence 43は同じです。
+Pathは生成された15 mのサンプルを縮めずに表示しています。Cameraの校正値は
+実測済みではなく、画像内でもdemo calibrationと明示しています。

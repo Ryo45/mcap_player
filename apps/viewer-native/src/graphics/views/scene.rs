@@ -25,7 +25,7 @@ pub(crate) struct SceneViewOutput {
 pub(crate) fn show_scene_view(ui: &mut egui::Ui, input: SceneViewInput<'_>) -> SceneViewOutput {
     let mut camera_mode = input.camera_mode;
     let mut accumulation_change = None;
-    let tf_status = if let Some(error) = &input.diagnostics.current_tf_error {
+    let mut tf_status = if let Some(error) = &input.diagnostics.current_tf_error {
         format!(
             "TF missing {} → {} · misses {}",
             error.source_frame, error.target_frame, input.diagnostics.tf_misses
@@ -43,6 +43,23 @@ pub(crate) fn show_scene_view(ui: &mut egui::Ui, input: SceneViewInput<'_>) -> S
             },
         )
     };
+    for (name, error) in [
+        ("Path", &input.diagnostics.path_tf_error),
+        ("Platform", &input.diagnostics.platform_tf_error),
+    ] {
+        if let Some(e) = error {
+            tf_status.push_str(&format!(
+                " · {name} TF missing {} → {}",
+                e.source_frame, e.target_frame
+            ));
+        }
+    }
+    if let Some(error) = input.diagnostics.platform_geometry_error {
+        tf_status.push_str(&format!(" · {error}"));
+    }
+    if let Some(error) = input.diagnostics.path_geometry_error {
+        tf_status.push_str(&format!(" · {error}"));
+    }
 
     ui.horizontal_wrapped(|ui| {
         ui.strong(format!("3D VIEW · SCAN {} pts", input.scan_points));

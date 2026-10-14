@@ -50,11 +50,11 @@ pub use playback::{
     PlaybackSpeed, PlaybackView, SerializedWindow, StageTiming,
 };
 pub use presentation::{
-    BevFrameBuilder, BevSnapshot, CalibrationError, CameraCalibration, CameraCalibrationSet,
-    CameraPresentation, DiagnosticsPresentation, OverlayStatus, PresentationMetrics,
-    PresentationSnapshot, ProjectedPlan, ProjectionError, SceneDiagnostics, ScenePresentationState,
-    SceneSnapshot, SceneTfError, TelemetryPresentation, ViewerPresentation,
-    ViewerPresentationInput,
+    BevSnapshot, CalibrationError, CameraCalibration, CameraCalibrationSet, CameraPresentation,
+    DiagnosticsPresentation, FrameTransformError, OverlayStatus, PathProjectionPolicy,
+    PresentationMetrics, PresentationSnapshot, ProjectedPlan, ProjectionError, SceneDiagnostics,
+    ScenePresentationInput, ScenePresentationState, SceneSnapshot, TelemetryPresentation,
+    ViewerPresentation, ViewerPresentationInput,
 };
 pub use recording::{
     CameraRoute, PlaybackRequirements, RawMessage, RecordingTimeRange, RestoreInput, RestorePlan,
@@ -84,3 +84,6 @@ pub use health::{
     DiagnosticAggregator, DiagnosticEvent, DiagnosticsReduceError, DiagnosticsSnapshot,
     TopicTimingFacts, summarize_topic_timing,
 };
+
+mod platform_geometry;
+pub use platform_geometry::{PlatformGeometry, PlatformGeometryError};
