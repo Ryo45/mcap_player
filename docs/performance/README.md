@@ -132,3 +132,5 @@ percentileは各run内のnearest-rankを出してから反復間の中央値を�
 圧縮され、Chunk IndexにchannelごとのMessage Index位置を持つ。
 [ROS 2 recording guide](https://mcap.dev/guides/getting-started/ros-2)では記録側の圧縮・
 Chunk設定をstorage optionsで変更できる。結果の解釈は仕様と実装、実測を区別する。
+
+[Native JPEG・FHD表示の改善](2026-10-14-native-jpeg/README.md)では、同じ4K入力をTurboJPEG、IDCT縮小、2 workersで比較し、速度・メモリ・実時間処理の限界を記録した。

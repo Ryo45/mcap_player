@@ -1,6 +1,6 @@
 # Native JPEG / FHD表示の比較
 
-2026-10-14。[直前の4K/large Chunk計測](../2026-10-14-4k-large-chunks/README.md)と同じ4つのMCAPをSHA256で確認し、5条件×3回、合計60 processを順番に実行した。全run成功、どの条件でも8camは179枚、4camは100枚のJPEGをdecodeした。
+2026-10-14。[直前の4K/large Chunk計測](../2026-10-14-4k-large-chunks/findings.md)と同じ4つのMCAPをSHA256で確認し、5条件×3回、合計60 processを順番に実行した。全run成功、どの条件でも8camは179枚、4camは100枚のJPEGをdecodeした。
 
 [summary.md](summary.md)に中央値、[runs.jsonl](runs.jsonl)に個別結果、[environment.json](environment.json)に入力・binary・source hash、実行条件を保存している。
 実装とresource boundsは[Native JPEG presentation](../../native_jpeg.md)を参照。
