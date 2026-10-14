@@ -1,0 +1,40 @@
+{
+  "measured_at": "2026-10-14T21:53:42.465959+00:00",
+  "parent_commit": "09581164a2b0fc36e7d4781a7dd4262c99408dc1",
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.0.0 Safari/537.36",
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+  "source_sha256": {
+    "apps/viewer-web/src/camera_bitmap.rs": "4d8a393bef695b44698ff400b9cd358c26938a231a84647229b15f0bd29936e3",
+    "apps/viewer-web/src/jpeg_benchmark.rs": "6f93d391b14635f2ed2de8cc1063a7cd266c48cfc0dff22450bd47cba5ead187",
+    "apps/viewer-web/src/app/camera.rs": "a98b16507368ed52987a2d9e7179adeabd9841786e91f840a6f68bf5eca96ddf",
+    "apps/viewer-web/src/app.rs": "a5cbd96517ee739bedfc5602f4fdc04c202c66bbc3273674591b6e27695b1474",
+    "apps/viewer-web/camera_bitmap.js": "d08cb7052a53875c266b03f20fa5df1c8607c39e38802d322912ec0ba6992ff7",
+    "apps/viewer-web/camera_decode_worker.js": "304342357438246b75ee25bb6b5cc07deb314a65e294b7066ca7e7f03e54a0d3",
+    "apps/viewer-web/Cargo.toml": "d6173a5ee7072f01eddcac120e5aeec423e21a3f2b0daec040d7090ced39954f",
+    "crates/viewer-renderer/src/image.rs": "2476a33210d7ed700e6d0336530740f4d19c690a39d530fb648acd02e0238400",
+    "tools/performance-probe/web_jpeg_benchmark.js": "c4b06c014df1d917d690e78bf377e129caa1136d23a0ce21b2ae4a8230469514",
+    "tools/performance-probe/measure_web_jpeg.py": "5bbdb34325f0086023ed1c0b8bae417a148006b49b2ffca3d0b28a822a991edf",
+    "Cargo.lock": "cd6da82ef06746329f9dd84c6fdbd5913659f67c76e8c784d6331ba08a2ce771"
+  },
+  "build_sha256": {
+    "apps/viewer-web/dist/viewer-web-c7a8076fd76d2e4a.js": "a3f4eaff14e1c49bb9d38cf648635fe4bcc85f7eddf4345feefe6dbcd3cebe9a",
+    "apps/viewer-web/dist/viewer-web-c7a8076fd76d2e4a_bg.wasm": "e8e0476ecb793a5ae796f609d3d8f198e17e94e5c99179706b4375baa3671039"
+  },
+  "worker_sha256": "304342357438246b75ee25bb6b5cc07deb314a65e294b7066ca7e7f03e54a0d3",
+  "baseline_datasets_sha256": "30de308eaed45d83c68f9284ba10352af8523dcb77aed4f60427be87256ddbef",
+  "flags": [
+    "--headless",
+    "--no-sandbox",
+    "--enable-unsafe-webgpu"
+  ],
+  "scope": "JPEG + base canvas only; fixed 179 jobs, at most one active job per camera, macro-task yield between batches excluded from workMs, no MCAP I/O, no frame drops, no visible DOM/scene GPU rendering; cache allowed; one page, rotated order; canvas bytes are dimensions*4, not measured RSS",
+  "post_measurement_driver_update": {
+    "sha256": "3f70c89da730886f09720deb77de8df4d59423d679568705212359fc2e43325f",
+    "note": "Added --camera-check option after comparison. JPEG comparison expression and worker implementation unchanged."
+  },
+  "chrome_version": "Google Chrome 143.0.7499.192",
+  "gui_build_sha256": {
+    "apps/viewer-web/dist/viewer-web-ec840c4aab7663fe_bg.wasm": "a39f4a5807c546663298d9f1db9f2e53d5f7ae79d2da65251d8d85fa33875e44",
+    "apps/viewer-web/dist/viewer-web-ec840c4aab7663fe.js": "2bd7ce34d3f87c4796e405096ed14bde3133f224189deba75230315a6bb0443b"
+  }
+}

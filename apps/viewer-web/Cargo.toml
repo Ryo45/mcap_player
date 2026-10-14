@@ -7,6 +7,9 @@ license.workspace = true
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+jpeg-benchmark = []
+
 [dependencies]
 viewer-mcap = { path = "../../crates/viewer-mcap", default-features = false, features = ["mcap-zstd"] }
 bev-renderer = { path = "../../crates/bev-renderer" }
@@ -26,6 +29,6 @@ js-sys = "0.3"
 web-sys = { workspace = true, features = [
     "AbortController", "AbortSignal", "Blob", "CanvasRenderingContext2d", "Document", "Event",
     "File", "FileList", "Headers", "HtmlButtonElement", "HtmlCanvasElement", "HtmlElement",
-    "HtmlInputElement", "HtmlSelectElement", "ImageData", "Request", "RequestInit", "RequestMode",
+    "HtmlInputElement", "HtmlSelectElement", "ImageData", "ImageBitmap", "Request", "RequestInit", "RequestMode",
     "Response", "Url", "UrlSearchParams", "Window", "MouseEvent", "WheelEvent",
 ] }

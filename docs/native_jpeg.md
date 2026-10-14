@@ -2,7 +2,7 @@
 
 NativeのJPEG pixel decodeはlibjpeg-turbo 3.1.0（`turbojpeg` 1.5.1 / `turbojpeg-sys` 1.2.0のvendored build）を使う。
 `viewer-core`のCompressedImage CDR decode、camera admission、focused/background Hz、MCAP I/Oはこの変更で変えない。
-WebのRust JPEG decoderも維持する。
+Webの後続改善は[Browser JPEG presentation](web_jpeg.md)を参照。
 
 ## 表示サイズと座標
 

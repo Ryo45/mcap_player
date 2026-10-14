@@ -1,17 +1,22 @@
 //! Camera canvas preparation, overlay composition and thumbnail presentation.
-use super::{document, duration_since, element, set_status};
-use crate::playback::WebPlayback;
+use super::{document, duration_since, element};
+use crate::{
+    camera_bitmap::{CameraBitmapQueue, target_size},
+    playback::WebPlayback,
+};
 use js_sys::Date;
 use std::collections::{BTreeMap, BTreeSet};
 use viewer_core::{CameraCalibrationSet, CameraId, PresentationMetrics};
-use viewer_renderer::{
-    CameraBaseImageTracker, CameraOverlaySnapshot, CameraOverlayState, DecodedImage,
-    decode_camera_frame,
-};
-use wasm_bindgen::{Clamped, JsCast};
+use viewer_renderer::{CameraBaseImageTracker, CameraOverlaySnapshot, CameraOverlayState};
+use wasm_bindgen::JsCast;
 use web_sys::{
-    CanvasRenderingContext2d, HtmlButtonElement, HtmlCanvasElement, HtmlElement, ImageData,
+    CanvasRenderingContext2d, HtmlButtonElement, HtmlCanvasElement, HtmlElement, ImageBitmap,
 };
+struct CameraImageGeometry {
+    source_size: (u32, u32),
+    pixel_size: (u32, u32),
+}
+
 #[derive(Default)]
 pub(super) struct CameraViewState {
     last_drawn: Option<i64>,
@@ -20,43 +25,89 @@ pub(super) struct CameraViewState {
     camera_base_canvases: BTreeMap<CameraId, HtmlCanvasElement>,
     pub(super) camera_overlays: CameraOverlayState,
     camera_topics: Vec<(CameraId, String)>,
+    decode: CameraBitmapQueue,
+    geometry: BTreeMap<CameraId, CameraImageGeometry>,
+    presented_frames: BTreeMap<CameraId, viewer_core::CameraFrame>,
+    pub(super) errors: BTreeMap<CameraId, String>,
 }
 
-fn draw_base_image(canvas: &HtmlCanvasElement, image: &DecodedImage) {
-    if canvas.width() != image.width {
-        canvas.set_width(image.width);
+impl CameraViewState {
+    fn record_error(&mut self, id: CameraId, error: String) {
+        if self.errors.len() < 32 || self.errors.contains_key(&id) {
+            self.errors.insert(id, format!("camera {}: {error}", id.0));
+        }
     }
-    if canvas.height() != image.height {
-        canvas.set_height(image.height);
+    pub(super) fn reset(&mut self) {
+        self.decode.reset();
+        self.errors.clear();
+        for canvas in self.camera_base_canvases.values() {
+            canvas.set_width(0);
+            canvas.set_height(0);
+        }
+        self.camera_base_canvases.clear();
+        self.camera_base_images.clear();
+        self.presented_frames.clear();
+        self.geometry.clear();
+        self.camera_overlays.reset_source();
+        self.camera_topics.clear();
+        self.last_drawn = None;
+        self.last_drawn_camera = None;
+    }
+}
+
+fn display_target(canvas: &HtmlCanvasElement) -> (u32, u32) {
+    let density = web_sys::window().expect("window").device_pixel_ratio();
+    (
+        ((canvas.client_width().max(1) as f64 * density)
+            .ceil()
+            .max(1.0)) as u32,
+        ((canvas.client_height().max(1) as f64 * density)
+            .ceil()
+            .max(1.0)) as u32,
+    )
+}
+fn decode_target(id: CameraId, selected: Option<CameraId>) -> (u32, u32) {
+    let thumbnail: HtmlCanvasElement = element(&format!("camera-thumb-{}", id.0));
+    let mut target = display_target(&thumbnail);
+    if selected == Some(id) {
+        let focus: HtmlCanvasElement = element("camera");
+        let size = display_target(&focus);
+        target.0 = target.0.max(size.0);
+        target.1 = target.1.max(size.1);
+    }
+    target
+}
+fn draw_base_image(canvas: &HtmlCanvasElement, image: &ImageBitmap) -> Result<(), String> {
+    if canvas.width() != image.width() {
+        canvas.set_width(image.width());
+    }
+    if canvas.height() != image.height() {
+        canvas.set_height(image.height());
     }
     let context: CanvasRenderingContext2d = canvas
         .get_context("2d")
-        .expect("2d query")
-        .expect("2d context")
+        .map_err(|e| format!("camera context: {e:?}"))?
+        .ok_or("camera 2d context unavailable")?
         .dyn_into()
-        .expect("canvas 2d");
-    let data = ImageData::new_with_u8_clamped_array_and_sh(
-        Clamped(&image.rgba),
-        image.width,
-        image.height,
-    )
-    .expect("image data");
+        .map_err(|_| "invalid camera 2d context")?;
     context
-        .put_image_data(&data, 0.0, 0.0)
-        .expect("draw camera");
+        .draw_image_with_image_bitmap(image, 0.0, 0.0)
+        .map_err(|e| format!("camera upload: {e:?}"))
 }
 
 fn compose_camera_canvas(
     destination_id: &str,
     base: &HtmlCanvasElement,
     overlay: Option<&CameraOverlaySnapshot>,
+    source_size: (u32, u32),
 ) {
     let destination: HtmlCanvasElement = element(destination_id);
-    if destination.width() != base.width() {
-        destination.set_width(base.width());
+    let size = target_size(source_size, display_target(&destination));
+    if destination.width() != size.0 {
+        destination.set_width(size.0);
     }
-    if destination.height() != base.height() {
-        destination.set_height(base.height());
+    if destination.height() != size.1 {
+        destination.set_height(size.1);
     }
     let context: CanvasRenderingContext2d = destination
         .get_context("2d")
@@ -65,16 +116,33 @@ fn compose_camera_canvas(
         .dyn_into()
         .expect("canvas 2d");
     context
-        .draw_image_with_html_canvas_element(base, 0.0, 0.0)
+        .draw_image_with_html_canvas_element_and_dw_and_dh(
+            base,
+            0.0,
+            0.0,
+            f64::from(size.0),
+            f64::from(size.1),
+        )
         .expect("draw camera base image");
     if let Some(overlay) = overlay
-        && overlay.image_size == (base.width(), base.height())
+        && overlay.image_size == source_size
     {
-        draw_camera_overlay(&context, overlay);
+        draw_camera_overlay(
+            &context,
+            overlay,
+            [
+                f64::from(size.0) / f64::from(source_size.0),
+                f64::from(size.1) / f64::from(source_size.1),
+            ],
+        );
     }
 }
 
-fn draw_camera_overlay(context: &CanvasRenderingContext2d, overlay: &CameraOverlaySnapshot) {
+fn draw_camera_overlay(
+    context: &CanvasRenderingContext2d,
+    overlay: &CameraOverlaySnapshot,
+    scale: [f64; 2],
+) {
     for (color, width) in [("rgba(0,0,0,0.7)", 5.0), ("#2deba5", 2.0)] {
         context.set_stroke_style_str(color);
         context.set_line_width(width);
@@ -83,8 +151,11 @@ fn draw_camera_overlay(context: &CanvasRenderingContext2d, overlay: &CameraOverl
                 continue;
             };
             context.begin_path();
-            context.move_to(f64::from(start[0]), f64::from(start[1]));
-            context.line_to(f64::from(end[0]), f64::from(end[1]));
+            context.move_to(
+                f64::from(start[0]) * scale[0],
+                f64::from(start[1]) * scale[1],
+            );
+            context.line_to(f64::from(end[0]) * scale[0], f64::from(end[1]) * scale[1]);
             context.stroke();
         }
     }
@@ -167,61 +238,79 @@ pub(super) fn update_camera_presentation(
         view.camera_topics = camera_topics.to_vec();
     }
     if view.last_drawn_camera != selected_camera {
+        clear_canvas("camera");
         view.last_drawn = None;
         view.last_drawn_camera = selected_camera;
     }
 
     let cameras = session.cameras().state();
     let mut camera_visual_changes = BTreeSet::new();
-    for (camera_id, frame) in cameras.frames() {
-        if view.camera_base_images.needs_update(frame) {
-            let decode_started = Date::now();
-            match decode_camera_frame(frame) {
-                Ok(image) => {
-                    let decode_elapsed = duration_since(decode_started);
-                    let upload_started = Date::now();
-                    let base_canvas = view
-                        .camera_base_canvases
-                        .entry(*camera_id)
-                        .or_insert_with(|| {
-                            document()
-                                .create_element("canvas")
-                                .expect("camera base canvas")
-                                .dyn_into()
-                                .expect("camera base canvas element")
-                        })
-                        .clone();
-                    draw_base_image(&base_canvas, &image);
-                    view.camera_base_images.mark_updated(frame);
-                    metrics.record_camera(
-                        *camera_id,
-                        decode_elapsed,
-                        duration_since(upload_started),
-                    );
-                    camera_visual_changes.insert(*camera_id);
-                }
-                Err(error) => {
-                    set_status(&error.to_string(), true);
+    for completed in view.decode.drain() {
+        let frame = completed.frame;
+        let id = frame.camera_id;
+        if view
+            .camera_base_images
+            .arrival(id)
+            .is_some_and(|arrival| arrival > frame.arrival_time)
+            || target_size(completed.source_size, decode_target(id, selected_camera))
+                != completed.pixel_size
+        {
+            continue;
+        }
+        match completed.image {
+            Ok(bitmap) => {
+                let uploaded = Date::now();
+                let base = view.camera_base_canvases.entry(id).or_insert_with(|| {
+                    document()
+                        .create_element("canvas")
+                        .expect("camera base")
+                        .dyn_into()
+                        .expect("canvas")
+                });
+                if let Err(error) = draw_base_image(base, &bitmap.0) {
+                    view.record_error(id, error);
                     continue;
                 }
+                view.errors.remove(&id);
+                view.camera_base_images.mark_updated(&frame);
+                view.geometry.insert(
+                    id,
+                    CameraImageGeometry {
+                        source_size: completed.source_size,
+                        pixel_size: completed.pixel_size,
+                    },
+                );
+                view.presented_frames.insert(id, frame);
+                metrics.record_camera(id, completed.decode_time, duration_since(uploaded));
+                camera_visual_changes.insert(id);
             }
+            Err(error) => view.record_error(id, error),
         }
-        if view.camera_base_images.arrival(*camera_id) == Some(frame.arrival_time) {
-            let Some(base_canvas) = view.camera_base_canvases.get(camera_id) else {
-                continue;
-            };
-            if view.camera_overlays.update(
-                frame,
-                (base_canvas.width(), base_canvas.height()),
-                session.path().state().latest(),
-                session.path().state().revision(),
-                session.transforms().state(),
-                session.transforms().state().revision(),
-                calibrations,
-                policy,
-            ) {
-                camera_visual_changes.insert(*camera_id);
-            }
+    }
+    for (camera_id, frame) in cameras.frames() {
+        let target = decode_target(*camera_id, selected_camera);
+        if (view.camera_base_images.needs_update(frame)
+            || view.geometry.get(camera_id).is_none_or(|geometry| {
+                target_size(geometry.source_size, target) != geometry.pixel_size
+            }))
+            && let Err(error) = view.decode.submit(frame, target)
+        {
+            view.record_error(*camera_id, error);
+        }
+    }
+    view.decode.start_pending();
+    for (camera_id, frame) in &view.presented_frames {
+        if view.camera_overlays.update(
+            frame,
+            view.geometry[camera_id].source_size,
+            session.path().state().latest(),
+            session.path().state().revision(),
+            session.transforms().state(),
+            session.transforms().state().revision(),
+            calibrations,
+            policy,
+        ) {
+            camera_visual_changes.insert(*camera_id);
         }
     }
     for camera_id in &camera_visual_changes {
@@ -232,31 +321,34 @@ pub(super) fn update_camera_presentation(
             &format!("camera-thumb-{}", camera_id.0),
             base_canvas,
             view.camera_overlays.snapshot(*camera_id),
+            view.geometry[camera_id].source_size,
         );
     }
 
-    let selected_has_base = selected_camera.is_some_and(|camera_id| {
-        cameras.latest_for(camera_id).is_some_and(|frame| {
-            view.camera_base_images.arrival(camera_id) == Some(frame.arrival_time)
-        })
-    });
+    let selected_has_base =
+        selected_camera.is_some_and(|id| view.presented_frames.contains_key(&id));
     if !selected_has_base && view.last_drawn.is_some() {
         clear_canvas("camera");
         view.last_drawn = None;
     }
-    if let Some(camera_id) = selected_camera
-        && let Some(frame) = cameras.latest_for(camera_id)
-        && selected_has_base
-        && (view.last_drawn != Some(frame.arrival_time.0)
-            || camera_visual_changes.contains(&camera_id))
-        && let Some(base_canvas) = view.camera_base_canvases.get(&camera_id)
+    if let Some(id) = selected_camera
+        && let Some(frame) = view.presented_frames.get(&id)
+        && let Some(base) = view.camera_base_canvases.get(&id)
     {
-        compose_camera_canvas(
-            "camera",
-            base_canvas,
-            view.camera_overlays.snapshot(camera_id),
-        );
-        view.last_drawn = Some(frame.arrival_time.0);
+        let canvas: HtmlCanvasElement = element("camera");
+        let size = target_size(view.geometry[&id].source_size, display_target(&canvas));
+        if view.last_drawn != Some(frame.arrival_time.0)
+            || camera_visual_changes.contains(&id)
+            || (canvas.width(), canvas.height()) != size
+        {
+            compose_camera_canvas(
+                "camera",
+                base,
+                view.camera_overlays.snapshot(id),
+                view.geometry[&id].source_size,
+            );
+            view.last_drawn = Some(frame.arrival_time.0);
+        }
     }
     if cameras.frames().next().is_none() {
         for (camera_id, _) in camera_topics {

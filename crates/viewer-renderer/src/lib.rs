@@ -16,7 +16,7 @@ pub use native_jpeg::{NativeImage, NativeImageGeometry, NativeJpegDecoder, Nativ
 pub use camera_base::CameraBaseImageTracker;
 pub use camera_overlay::{CameraOverlaySnapshot, CameraOverlayState};
 pub use camera_texture::{CameraTextureSlot, TextureMetrics};
-pub use image::{DecodedImage, ImageDecodeError, decode_jpeg};
+pub use image::{DecodedImage, ImageDecodeError, decode_jpeg, jpeg_dimensions};
 
 use viewer_core::CameraFrame;
 

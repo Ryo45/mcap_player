@@ -79,8 +79,11 @@ restore leaves current presentation intact. The UI uploads completed images with
 pixel decode and uses the displayed image's measurement time/frame ID for its overlay.
 Physical display pixels select 1/1, 1/2, 1/4, or 1/8 IDCT output; projection remains in original
 source pixel coordinates, including aspect ratio/cropping for odd dimensions. Resize/focus changes
-can re-decode the same message. Browser uses the existing Rust decoder. No arbitrary topic history
-enters this boundary.
+can re-decode the same message. Browser uses two bounded camera Web Workers with resized
+`ImageBitmap` output and explicit close; source dimensions and displayed frame time remain the
+projection inputs. Browser queue generations survive view reset so old work continues counting
+toward the concurrency limit. See [Browser JPEG presentation](web_jpeg.md). No arbitrary topic
+history enters this boundary.
 
 Route resolution does not infer whether a source is a recording from the presence of a time range.
 Native, Browser Local, and Remote recording adapters explicitly validate Catalog,

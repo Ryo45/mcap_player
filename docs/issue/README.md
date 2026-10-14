@@ -120,3 +120,7 @@ transitionでresetします。restore failure時はtransitionしないためCPU 
 - ROS 2 Jazzy環境で `viewer-native --features ros2-live` テスト成功（78 passed、既存2 ignored）。
 - ChromeでLocal/Remote InspectorとScene/BEVの通し確認成功。
 - `cargo tree -p viewer-core --edges all` でMCAP/codecs/HTTPの逆依存なし。
+
+## 014: camera presentation metadata
+
+[表示済みcameraが不要な圧縮JPEGを保持し、encoded budgetを占有する課題](014-camera-presentation-metadata/README.md)を記録した。現在の4K/8camera計測条件では未発生だが、大きなJPEGの条件では継続更新を阻害し得る。

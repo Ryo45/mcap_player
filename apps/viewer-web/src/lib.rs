@@ -12,6 +12,8 @@ mod remote;
 mod topics;
 
 #[cfg(any(test, target_arch = "wasm32"))]
+mod camera_bitmap;
+#[cfg(any(test, target_arch = "wasm32"))]
 mod webgpu;
 
 #[cfg(target_arch = "wasm32")]
@@ -22,3 +24,6 @@ pub use app::start;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn start() {}
+
+#[cfg(all(feature = "jpeg-benchmark", target_arch = "wasm32"))]
+mod jpeg_benchmark;
