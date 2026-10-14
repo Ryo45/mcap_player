@@ -123,4 +123,4 @@ transitionでresetします。restore failure時はtransitionしないためCPU 
 
 ## 014: camera presentation metadata
 
-[表示済みcameraが不要な圧縮JPEGを保持し、encoded budgetを占有する課題](014-camera-presentation-metadata/README.md)を記録した。現在の4K/8camera計測条件では未発生だが、大きなJPEGの条件では継続更新を阻害し得る。
+[表示済みcameraのmetadata分離](014-camera-presentation-metadata/README.md)に対応済み。Native/WebともJPEGコピーをデコード完了時に解放し、大きなJPEGでencoded budget到達後も次frameを受け入れられるようにした。

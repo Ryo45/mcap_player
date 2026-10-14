@@ -31,11 +31,11 @@ pub use derived::{
     arrival_time_from_plot_x, cursor_seconds, merge_signal_buckets,
 };
 pub use feature::{
-    CameraController, CameraFrame, CameraId, CameraState, CameraStatus, DYNAMIC_TF_HISTORY,
-    FeatureRestoreError, FeatureRestoreErrorKind, FeatureRuntime, OdometryController,
-    PathController, PathFrame, PathState, PlaybackPerformance, PointCloudController,
-    PointCloudFrame, PointCloudState, ProcessingCounters, TelemetryFrame, TelemetryState,
-    TransformBatch, TransformController, TransformState,
+    CameraController, CameraFrame, CameraFrameMetadata, CameraId, CameraState, CameraStatus,
+    DYNAMIC_TF_HISTORY, FeatureRestoreError, FeatureRestoreErrorKind, FeatureRuntime,
+    OdometryController, PathController, PathFrame, PathState, PlaybackPerformance,
+    PointCloudController, PointCloudFrame, PointCloudState, ProcessingCounters, TelemetryFrame,
+    TelemetryState, TransformBatch, TransformController, TransformState,
 };
 pub use message::{
     ArrivalTime, CompressedImage, DecodeError, DecodedCompressedImage, LaserScan, MeasurementTime,

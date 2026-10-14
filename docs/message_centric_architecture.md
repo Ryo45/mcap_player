@@ -73,7 +73,8 @@ own Camera/TF/PointCloud copies. Camera compressed-image materialization lives h
 JPEG pixel decode belongs to presentation, with GPU resources owned by renderers.
 Native uses `CameraDecodeQueue`: two TurboJPEG workers, one coalesced pending image per camera,
 a two-result completion channel, and at most 32 camera identities. JPEG inputs are compact owned
-copies under a shared 64 MiB limit, including completed/displayed frame references; workers do not
+copies under a shared 64 MiB limit for pending/active input; completed results and displayed
+state retain only CameraFrameMetadata plus pixels, releasing encoded copies at decode completion. Workers do not
 pin MCAP Chunk backing. Successful seek/source transitions invalidate old generations. Failed
 restore leaves current presentation intact. The UI uploads completed images without waiting for
 pixel decode and uses the displayed image's measurement time/frame ID for its overlay.

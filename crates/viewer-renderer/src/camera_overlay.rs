@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 use viewer_core::{
-    ArrivalTime, CameraCalibrationSet, CameraFrame, CameraId, OverlayStatus, PathFrame,
+    ArrivalTime, CameraCalibrationSet, CameraFrameMetadata, CameraId, OverlayStatus, PathFrame,
     PathProjectionPolicy, TransformState,
 };
 
@@ -41,7 +41,7 @@ impl CameraOverlayState {
     #[allow(clippy::too_many_arguments)]
     pub fn update(
         &mut self,
-        frame: &CameraFrame,
+        frame: &CameraFrameMetadata,
         image_size: (u32, u32),
         path: Option<&PathFrame>,
         path_revision: u64,
@@ -116,13 +116,12 @@ mod tests {
     use crate::CameraBaseImageTracker;
     use viewer_core::{MeasurementTime, TransformBatch, TransformStamped};
 
-    fn camera(arrival: i64) -> CameraFrame {
-        CameraFrame {
+    fn camera(arrival: i64) -> CameraFrameMetadata {
+        CameraFrameMetadata {
             camera_id: CameraId(0),
             measurement_time: MeasurementTime(10),
             arrival_time: ArrivalTime(arrival),
             frame_id: "camera_front_optical_frame".to_owned(),
-            jpeg: Vec::new().into(),
         }
     }
 
@@ -168,8 +167,8 @@ mod tests {
         let next_frame = camera(12);
         let mut base = CameraBaseImageTracker::default();
         let mut state = CameraOverlayState::default();
-        assert!(base.needs_update(&first_frame));
-        base.mark_updated(&first_frame);
+        assert!(base.needs_update(first_frame.camera_id, first_frame.arrival_time));
+        base.mark_updated(first_frame.camera_id, first_frame.arrival_time);
         assert!(state.update(
             &first_frame,
             (320, 240),
@@ -184,7 +183,7 @@ mod tests {
             },
         ));
         let first_revision = state.snapshot(CameraId(0)).unwrap().revision;
-        assert!(!base.needs_update(&first_frame));
+        assert!(!base.needs_update(first_frame.camera_id, first_frame.arrival_time));
         assert!(!state.update(
             &first_frame,
             (320, 240),
@@ -198,7 +197,7 @@ mod tests {
                 ground_frame: None
             },
         ));
-        assert!(base.needs_update(&next_frame));
+        assert!(base.needs_update(next_frame.camera_id, next_frame.arrival_time));
         assert!(state.update(
             &next_frame,
             (320, 240),
@@ -225,7 +224,7 @@ mod tests {
         let path = path(vec![[0.0, 1.0], [0.0, 2.0]]);
         let calibrations = calibrations();
         let mut base = CameraBaseImageTracker::default();
-        base.mark_updated(&frame);
+        base.mark_updated(frame.camera_id, frame.arrival_time);
         let mut overlays = CameraOverlayState::default();
         assert!(overlays.update(
             &frame,
@@ -257,7 +256,7 @@ mod tests {
         ));
         let path_revision = overlays.snapshot(CameraId(0)).unwrap().revision;
         assert_ne!(path_revision, initial);
-        assert!(!base.needs_update(&frame));
+        assert!(!base.needs_update(frame.camera_id, frame.arrival_time));
 
         assert!(overlays.update(
             &frame,
@@ -276,7 +275,7 @@ mod tests {
             overlays.snapshot(CameraId(0)).unwrap().revision,
             path_revision
         );
-        assert!(!base.needs_update(&frame));
+        assert!(!base.needs_update(frame.camera_id, frame.arrival_time));
     }
 
     #[test]

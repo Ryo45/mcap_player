@@ -134,7 +134,8 @@ impl Graphics {
                 );
             }
             self.camera_geometry.insert(camera_id, decoded.geometry);
-            self.camera_base_images.mark_updated(&frame);
+            self.camera_base_images
+                .mark_updated(frame.camera_id, frame.arrival_time);
             self.presented_camera_frames.insert(camera_id, frame);
             updates.push(CameraBasePresentationUpdate {
                 camera_id,
@@ -146,7 +147,9 @@ impl Graphics {
             let Some(&target) = self.camera_decode_sizes.get(camera_id) else {
                 continue;
             };
-            if !self.camera_base_images.needs_update(frame)
+            if !self
+                .camera_base_images
+                .needs_update(frame.camera_id, frame.arrival_time)
                 && self
                     .camera_geometry
                     .get(camera_id)
@@ -177,7 +180,7 @@ impl Graphics {
 
     pub(crate) fn presented_camera_frames(
         &self,
-    ) -> impl Iterator<Item = (&viewer_core::CameraFrame, (u32, u32))> {
+    ) -> impl Iterator<Item = (&viewer_core::CameraFrameMetadata, (u32, u32))> {
         self.presented_camera_frames
             .iter()
             .filter_map(|(id, frame)| Some((frame, self.camera_geometry.get(id)?.source_size)))

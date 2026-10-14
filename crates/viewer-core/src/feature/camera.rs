@@ -22,6 +22,38 @@ pub struct CameraFrame {
     pub jpeg: Bytes,
 }
 
+/// Frame identity and projection facts, independent of the encoded image backing.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CameraFrameMetadata {
+    pub camera_id: CameraId,
+    pub measurement_time: MeasurementTime,
+    pub arrival_time: ArrivalTime,
+    pub frame_id: String,
+}
+
+impl From<&CameraFrame> for CameraFrameMetadata {
+    fn from(frame: &CameraFrame) -> Self {
+        Self {
+            camera_id: frame.camera_id,
+            measurement_time: frame.measurement_time,
+            arrival_time: frame.arrival_time,
+            frame_id: frame.frame_id.clone(),
+        }
+    }
+}
+
+impl From<CameraFrame> for CameraFrameMetadata {
+    fn from(frame: CameraFrame) -> Self {
+        Self {
+            camera_id: frame.camera_id,
+            measurement_time: frame.measurement_time,
+            arrival_time: frame.arrival_time,
+            frame_id: frame.frame_id,
+        }
+        // The remaining JPEG field drops here, including any decode-queue byte lease.
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum CameraStatus {
     WaitingForCameraFrame,
@@ -98,6 +130,39 @@ mod tests {
             frame_id: String::new(),
             jpeg: Bytes::new(),
         }
+    }
+
+    #[test]
+    fn metadata_preserves_projection_facts_without_retaining_jpeg_backing() {
+        use std::sync::{
+            Arc,
+            atomic::{AtomicBool, Ordering},
+        };
+        struct Backing(Vec<u8>, Arc<AtomicBool>);
+        impl AsRef<[u8]> for Backing {
+            fn as_ref(&self) -> &[u8] {
+                &self.0
+            }
+        }
+        impl Drop for Backing {
+            fn drop(&mut self) {
+                self.1.store(true, Ordering::SeqCst);
+            }
+        }
+        let released = Arc::new(AtomicBool::new(false));
+        let mut source = frame(123456789);
+        source.camera_id = CameraId(7);
+        source.measurement_time = MeasurementTime(987654321);
+        source.frame_id = "camera_optical".into();
+        source.jpeg = Bytes::from_owner(Backing(vec![0; 1024 * 1024], Arc::clone(&released)));
+        let borrowed = CameraFrameMetadata::from(&source);
+        let owned = CameraFrameMetadata::from(source);
+        assert!(released.load(Ordering::SeqCst));
+        assert_eq!(owned, borrowed);
+        assert_eq!(owned.camera_id, CameraId(7));
+        assert_eq!(owned.arrival_time, ArrivalTime(123456789));
+        assert_eq!(owned.measurement_time, MeasurementTime(987654321));
+        assert_eq!(owned.frame_id, "camera_optical");
     }
 
     #[test]

@@ -170,7 +170,7 @@ fn seven_camera_fixture_routes_exact_messages_to_concrete_controllers() {
     for (camera_id, camera) in cameras.state().frames() {
         let projected = calibrations
             .project_plan(
-                camera,
+                &viewer_core::CameraFrameMetadata::from(camera),
                 path_frame,
                 transforms.state(),
                 (320, 240),

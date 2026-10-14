@@ -27,7 +27,7 @@ pub(super) struct CameraViewState {
     camera_topics: Vec<(CameraId, String)>,
     decode: CameraBitmapQueue,
     geometry: BTreeMap<CameraId, CameraImageGeometry>,
-    presented_frames: BTreeMap<CameraId, viewer_core::CameraFrame>,
+    presented_frames: BTreeMap<CameraId, viewer_core::CameraFrameMetadata>,
     pub(super) errors: BTreeMap<CameraId, String>,
 }
 
@@ -272,7 +272,8 @@ pub(super) fn update_camera_presentation(
                     continue;
                 }
                 view.errors.remove(&id);
-                view.camera_base_images.mark_updated(&frame);
+                view.camera_base_images
+                    .mark_updated(frame.camera_id, frame.arrival_time);
                 view.geometry.insert(
                     id,
                     CameraImageGeometry {
@@ -289,7 +290,9 @@ pub(super) fn update_camera_presentation(
     }
     for (camera_id, frame) in cameras.frames() {
         let target = decode_target(*camera_id, selected_camera);
-        if (view.camera_base_images.needs_update(frame)
+        if (view
+            .camera_base_images
+            .needs_update(frame.camera_id, frame.arrival_time)
             || view.geometry.get(camera_id).is_none_or(|geometry| {
                 target_size(geometry.source_size, target) != geometry.pixel_size
             }))

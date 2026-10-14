@@ -9,7 +9,7 @@ mod runtime;
 mod telemetry;
 mod transform;
 
-pub use camera::{CameraFrame, CameraId, CameraState, CameraStatus};
+pub use camera::{CameraFrame, CameraFrameMetadata, CameraId, CameraState, CameraStatus};
 pub use controllers::{
     CameraController, OdometryController, PathController, PointCloudController, ProcessingCounters,
     TransformController,

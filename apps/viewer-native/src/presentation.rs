@@ -71,7 +71,7 @@ impl PresentationState {
         &mut self,
         path: &viewer_core::PathController,
         transforms: &viewer_core::TransformController,
-        base_images: &[(viewer_core::CameraFrame, (u32, u32))],
+        base_images: &[(viewer_core::CameraFrameMetadata, (u32, u32))],
     ) {
         for (frame, image_size) in base_images {
             self.camera_overlays.update(

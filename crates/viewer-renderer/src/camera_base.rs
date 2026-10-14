@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use viewer_core::{ArrivalTime, CameraFrame, CameraId};
+use viewer_core::{ArrivalTime, CameraId};
 
 #[derive(Clone, Debug, Default)]
 pub struct CameraBaseImageTracker {
@@ -7,12 +7,12 @@ pub struct CameraBaseImageTracker {
 }
 
 impl CameraBaseImageTracker {
-    pub fn needs_update(&self, frame: &CameraFrame) -> bool {
-        self.arrivals.get(&frame.camera_id) != Some(&frame.arrival_time)
+    pub fn needs_update(&self, camera_id: CameraId, arrival: ArrivalTime) -> bool {
+        self.arrivals.get(&camera_id) != Some(&arrival)
     }
 
-    pub fn mark_updated(&mut self, frame: &CameraFrame) {
-        self.arrivals.insert(frame.camera_id, frame.arrival_time);
+    pub fn mark_updated(&mut self, camera_id: CameraId, arrival: ArrivalTime) {
+        self.arrivals.insert(camera_id, arrival);
     }
 
     pub fn arrival(&self, camera_id: CameraId) -> Option<ArrivalTime> {
@@ -27,15 +27,14 @@ impl CameraBaseImageTracker {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use viewer_core::MeasurementTime;
+    use viewer_core::{CameraFrameMetadata, MeasurementTime};
 
-    fn frame(camera_id: u16, arrival: i64) -> CameraFrame {
-        CameraFrame {
+    fn frame(camera_id: u16, arrival: i64) -> CameraFrameMetadata {
+        CameraFrameMetadata {
             camera_id: CameraId(camera_id),
             measurement_time: MeasurementTime(arrival),
             arrival_time: ArrivalTime(arrival),
             frame_id: "camera".to_owned(),
-            jpeg: Vec::new().into(),
         }
     }
 
@@ -45,13 +44,13 @@ mod tests {
         let next = frame(0, 11);
         let other = frame(1, 10);
         let mut tracker = CameraBaseImageTracker::default();
-        assert!(tracker.needs_update(&first));
-        tracker.mark_updated(&first);
-        assert!(!tracker.needs_update(&first));
-        assert!(tracker.needs_update(&next));
-        assert!(tracker.needs_update(&other));
+        assert!(tracker.needs_update(first.camera_id, first.arrival_time));
+        tracker.mark_updated(first.camera_id, first.arrival_time);
+        assert!(!tracker.needs_update(first.camera_id, first.arrival_time));
+        assert!(tracker.needs_update(next.camera_id, next.arrival_time));
+        assert!(tracker.needs_update(other.camera_id, other.arrival_time));
         assert_eq!(tracker.arrival(CameraId(0)), Some(ArrivalTime(10)));
         tracker.clear();
-        assert!(tracker.needs_update(&first));
+        assert!(tracker.needs_update(first.camera_id, first.arrival_time));
     }
 }
