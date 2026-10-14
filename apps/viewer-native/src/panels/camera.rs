@@ -94,6 +94,7 @@ impl CameraPanel {
                 },
             );
             let mut panel_output = PanelOutput::default();
+            panel_output.render_requests.camera_sizes = output.decode_sizes;
             if self.config.camera_topic.is_none()
                 && let Some(camera_id) = output.selected_camera
             {

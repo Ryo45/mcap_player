@@ -70,8 +70,17 @@ decoded-message history or additional renderer instance.
 Controllers implement its concrete feature-specific admission, decode and history policies. Panels,
 Camera overlays, Scene and diagnostics borrow shared materialized state. They do not decode their
 own Camera/TF/PointCloud copies. Camera compressed-image materialization lives here; expensive
-JPEG pixel decode is shared by the platform `CameraBaseImageTracker`, with GPU resources owned by
-renderers. No arbitrary topic history enters this boundary.
+JPEG pixel decode belongs to presentation, with GPU resources owned by renderers.
+Native uses `CameraDecodeQueue`: two TurboJPEG workers, one coalesced pending image per camera,
+a two-result completion channel, and at most 32 camera identities. JPEG inputs are compact owned
+copies under a shared 64 MiB limit, including completed/displayed frame references; workers do not
+pin MCAP Chunk backing. Successful seek/source transitions invalidate old generations. Failed
+restore leaves current presentation intact. The UI uploads completed images without waiting for
+pixel decode and uses the displayed image's measurement time/frame ID for its overlay.
+Physical display pixels select 1/1, 1/2, 1/4, or 1/8 IDCT output; projection remains in original
+source pixel coordinates, including aspect ratio/cropping for odd dimensions. Resize/focus changes
+can re-decode the same message. Browser uses the existing Rust decoder. No arbitrary topic history
+enters this boundary.
 
 Route resolution does not infer whether a source is a recording from the presence of a time range.
 Native, Browser Local, and Remote recording adapters explicitly validate Catalog,

@@ -71,6 +71,11 @@ pub(crate) struct Graphics {
     camera_slots: BTreeMap<CameraId, CameraTextureSlot>,
     camera_texture_ids: BTreeMap<CameraId, egui::TextureId>,
     camera_base_images: CameraBaseImageTracker,
+    jpeg_decoder: viewer_renderer::NativeJpegDecoder,
+    camera_decode: viewer_renderer::CameraDecodeQueue,
+    presented_camera_frames: BTreeMap<CameraId, viewer_core::CameraFrame>,
+    camera_decode_sizes: BTreeMap<CameraId, (u32, u32)>,
+    camera_geometry: BTreeMap<CameraId, viewer_renderer::NativeImageGeometry>,
     preview_camera_slots: BTreeMap<CameraId, CameraTextureSlot>,
     preview_camera_texture_ids: BTreeMap<CameraId, egui::TextureId>,
     preview_camera_keys: BTreeMap<CameraId, (viewer_core::ArrivalTime, u32, u32)>,
@@ -99,6 +104,7 @@ impl Graphics {
         interaction: &ViewerInteractionState,
     ) -> Result<RenderOutput, wgpu::SurfaceError> {
         let ui = self.build_ui(window, &input, layout, panels, interaction);
+        self.camera_decode_sizes = ui.render_requests.camera_sizes;
         let view_requests = ViewRenderRequests {
             bev_size: ui.render_requests.bev_size,
             scene: ui.render_requests.scene.map(|scene| SceneRenderRequest {

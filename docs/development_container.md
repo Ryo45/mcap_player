@@ -1,7 +1,7 @@
 # Development container
 
 The development image uses the official ROS 2 Jazzy `ros-base-noble` image (Ubuntu 24.04),
-Rust 1.91.1, clang/lld 18, the `wasm32-unknown-unknown` target, rustfmt/clippy and trunk 0.21.14.
+Rust 1.91.1, clang/lld 18, the `wasm32-unknown-unknown` target, rustfmt/clippy and trunk 0.21.14. CMake/NASM build the statically linked SIMD libjpeg-turbo used by Native.
 ROS setup is sourced by the entrypoint, so the `ros2-live` feature can be compiled and tested.
 The image builds tools only; source code is mounted at runtime. The build context excludes the
 repository, credentials and recordings. The container runs with a non-root UID/GID, and Cargo

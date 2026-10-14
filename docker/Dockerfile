@@ -38,7 +38,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup-ini
 USER root
 # rclrs vendor bindings also link its example/test message interface libraries.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ros-jazzy-example-interfaces ros-jazzy-test-msgs \
+    ros-jazzy-example-interfaces ros-jazzy-test-msgs cmake nasm \
     && rm -rf /var/lib/apt/lists/*
 COPY docker/entrypoint.sh /usr/local/bin/mcap-dev-entrypoint
 COPY docker/check.sh /usr/local/bin/mcap-dev-check

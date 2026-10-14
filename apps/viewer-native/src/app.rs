@@ -154,9 +154,11 @@ impl App {
         }
         self.presentation_state
             .record_camera_updates(camera_updates);
-        let camera_base_images = graphics.camera_base_images().collect::<Vec<_>>();
+        let camera_base_images = graphics
+            .presented_camera_frames()
+            .map(|(frame, size)| (frame.clone(), size))
+            .collect::<Vec<_>>();
         self.presentation_state.update_camera_overlays(
-            self.workspace.cameras(),
             self.workspace.path(),
             self.workspace.transforms(),
             &camera_base_images,

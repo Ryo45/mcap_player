@@ -108,6 +108,7 @@ impl ScenePanel {
                 render_requests: super::PanelRenderRequests {
                     bev_size: None,
                     scene: Some(output),
+                    ..Default::default()
                 },
             }
         })

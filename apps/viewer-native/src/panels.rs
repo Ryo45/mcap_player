@@ -328,12 +328,22 @@ pub(crate) struct PanelOutput {
 
 #[derive(Default)]
 pub(crate) struct PanelRenderRequests {
+    pub(crate) camera_sizes: std::collections::BTreeMap<viewer_core::CameraId, (u32, u32)>,
     pub(crate) bev_size: Option<egui::Vec2>,
     pub(crate) scene: Option<SceneViewOutput>,
 }
 
 impl PanelOutput {
     pub(crate) fn merge(&mut self, mut other: Self) {
+        for (camera, size) in other.render_requests.camera_sizes {
+            let current = self
+                .render_requests
+                .camera_sizes
+                .entry(camera)
+                .or_insert((0, 0));
+            current.0 = current.0.max(size.0);
+            current.1 = current.1.max(size.1);
+        }
         self.actions.append(&mut other.actions);
         if other.render_requests.bev_size.is_some() {
             self.render_requests.bev_size = other.render_requests.bev_size;
@@ -357,6 +367,7 @@ mod tests {
             render_requests: PanelRenderRequests {
                 bev_size: Some(egui::vec2(320.0, 180.0)),
                 scene: None,
+                ..Default::default()
             },
         });
         assert_eq!(aggregate.actions.len(), 1);

@@ -39,6 +39,10 @@ impl Graphics {
                         texture_id,
                         arrival_time,
                         size,
+                        uv_max: self
+                            .camera_geometry
+                            .get(&camera.id)
+                            .map_or([1.; 2], |g| g.uv_max),
                     })
             })
             .collect::<Vec<_>>();
@@ -54,6 +58,7 @@ impl Graphics {
                         texture_id,
                         arrival_time,
                         size,
+                        uv_max: [1.; 2],
                     },
                 )
             })

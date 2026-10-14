@@ -69,18 +69,11 @@ impl PresentationState {
 
     pub(crate) fn update_camera_overlays(
         &mut self,
-        cameras: &viewer_core::CameraController,
         path: &viewer_core::PathController,
         transforms: &viewer_core::TransformController,
-        base_images: &[(CameraId, viewer_core::ArrivalTime, (u32, u32))],
+        base_images: &[(viewer_core::CameraFrame, (u32, u32))],
     ) {
-        for (camera_id, base_arrival, image_size) in base_images {
-            let Some(frame) = cameras.state().latest_for(*camera_id) else {
-                continue;
-            };
-            if frame.arrival_time != *base_arrival {
-                continue;
-            }
+        for (frame, image_size) in base_images {
             self.camera_overlays.update(
                 frame,
                 *image_size,
