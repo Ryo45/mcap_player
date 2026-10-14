@@ -1,6 +1,6 @@
 //! Camera overlay projection from semantic feature state.
 
-use crate::{CameraFrame, PathFrame, TransformState};
+use crate::{CameraFrame, PathFrame, PathProjectionPolicy, TransformState};
 use serde::Deserialize;
 use std::{collections::BTreeMap, fmt};
 
@@ -24,12 +24,15 @@ pub struct CameraCalibration {
 #[derive(Clone, Debug, Default)]
 pub struct CameraCalibrationSet {
     cameras: BTreeMap<String, CameraCalibration>,
+    provenance: String,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 struct CalibrationFile {
     version: u32,
     cameras: Vec<CameraCalibration>,
+    #[serde(default)]
+    provenance: String,
 }
 
 #[derive(Clone, Debug)]
@@ -117,9 +120,24 @@ impl CameraCalibrationSet {
                 return Err(CalibrationError::DuplicateFrame(frame));
             }
         }
-        Ok(Self { cameras })
+        if file.provenance.len() > 256 {
+            return Err(CalibrationError::InvalidCamera(
+                "calibration provenance too long".into(),
+            ));
+        }
+        Ok(Self {
+            cameras,
+            provenance: file.provenance,
+        })
     }
 
+    pub fn provenance(&self) -> &str {
+        if self.provenance.trim().is_empty() {
+            "unspecified calibration"
+        } else {
+            &self.provenance
+        }
+    }
     pub fn get(&self, frame_id: &str) -> Option<&CameraCalibration> {
         self.cameras.get(&normalize_frame(frame_id))
     }
@@ -138,26 +156,21 @@ impl CameraCalibrationSet {
         path: &PathFrame,
         transforms: &TransformState,
         image_size: (u32, u32),
+        policy: &PathProjectionPolicy,
     ) -> Result<ProjectedPlan, ProjectionError> {
         let calibration = self
             .get(&camera.frame_id)
             .ok_or_else(|| ProjectionError::MissingCalibration(camera.frame_id.clone()))?;
-        let ros_points = path
-            .points
-            .iter()
-            .map(|[right, forward]| [*forward, -*right, 0.0])
-            .collect::<Vec<_>>();
-        let camera_points = transforms
-            .transform_points_at(
-                &path.frame_id,
-                &camera.frame_id,
-                camera.measurement_time,
-                &ros_points,
-            )
-            .ok_or_else(|| ProjectionError::MissingTransform {
-                source: path.frame_id.clone(),
-                target: camera.frame_id.clone(),
+        let physical = policy
+            .positions_in_frame(path, transforms, &camera.frame_id, camera.measurement_time)
+            .map_err(|e| ProjectionError::MissingTransform {
+                source: e.source_frame,
+                target: e.target_frame,
             })?;
+        let camera_points = physical
+            .into_iter()
+            .map(|p| p.map(|v| v as f32))
+            .collect::<Vec<_>>();
         Ok(project_camera_points(
             calibration,
             &camera_points,
@@ -275,7 +288,7 @@ mod tests {
             measurement_time: MeasurementTime(10),
             arrival_time: ArrivalTime(11),
             frame_id: "base_link".into(),
-            points: vec![[0.0, 1.0], [0.0, -1.0]],
+            points: vec![[1.0, -(0.0), 0.0], [-1.0, -(0.0), 0.0]],
         }
     }
 
@@ -313,7 +326,16 @@ mod tests {
             }],
         });
         let projected = set
-            .project_plan(&camera(), &path(), &transforms, (320, 240))
+            .project_plan(
+                &camera(),
+                &path(),
+                &transforms,
+                (320, 240),
+                &PathProjectionPolicy {
+                    fixed_frame: "base_link".into(),
+                    ground_frame: None,
+                },
+            )
             .unwrap();
         let center = projected.points[0].unwrap();
         assert!((center[0] - 159.5).abs() < 0.01);

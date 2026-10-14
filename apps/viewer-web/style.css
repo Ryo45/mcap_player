@@ -18,7 +18,7 @@ h2 { margin: 0 0 .65rem; font-size: .9rem; font-weight: 600; color: #8ba4b1; tex
 canvas { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: auto; }
 .camera-frame { position: relative; min-height: 0; background: #030506; overflow: hidden; }
 .camera-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-.scene-panel { grid-template-rows: auto minmax(0, 1fr) auto; }
+.scene-panel { grid-template-rows: auto auto minmax(0, 1fr) auto; }
 .scene-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .5rem; }
 .scene-toolbar h2 { margin: 0; width: 100%; }
 .scene-toolbar label, #scene-info { font-size: .75rem; color: #8ba4b1; }
@@ -47,3 +47,8 @@ button:disabled { cursor: default; opacity: .5; }
 .remote-source pre { margin: 0; padding: .65rem; overflow: auto; background: #080c10; color: #b7cbd5; font: .76rem/1.45 ui-monospace, monospace; white-space: pre-wrap; }
 @media (max-width: 1100px) { header { flex-wrap: wrap; } #performance, #telemetry { width: 100%; } }
 @media (max-width: 760px) { body { height: auto; min-height: 100dvh; } main { grid-template-columns: 1fr; } .topics-panel { height: 30rem; } .visuals { grid-template-rows: 28rem 28rem; } #status { width: 100%; } }
+
+.physical-settings { color: #8ba4b1; font-size: .72rem; margin-bottom: .4rem; }
+.physical-settings label { display: block; margin: .4rem 0; }
+
+#physical-settings-error {color: #ff7777;}

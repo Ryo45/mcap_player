@@ -1,55 +1,50 @@
 //! CPU-owned BEV and scene presentation state.
 
-use crate::{PathState, PointCloudState, TelemetryState, TransformState};
+use crate::{
+    FrameTransformError, MeasurementTime, PathProjectionPolicy, PathState, PlatformGeometry,
+    PointCloudState, TelemetryState, TransformState,
+};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct BevSnapshot<'a> {
     pub revision: u64,
+    /// right/forward metres in the platform reference frame.
     pub path: &'a [[f32; 2]],
-}
-
-pub struct BevFrameBuilder<'a> {
-    state: &'a PathState,
-}
-
-impl<'a> BevFrameBuilder<'a> {
-    pub fn new(state: &'a PathState) -> Self {
-        Self { state }
-    }
-
-    pub fn build(self) -> BevSnapshot<'a> {
-        BevSnapshot {
-            revision: self.state.revision(),
-            path: self
-                .state
-                .latest()
-                .map_or(&[], |frame| frame.points.as_slice()),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct SceneTfError {
-    pub source_frame: String,
-    pub target_frame: String,
+    pub footprint: Option<[f32; 4]>,
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct SceneDiagnostics {
     pub tf_misses: u64,
     pub last_tf_route: Option<String>,
-    pub current_tf_error: Option<SceneTfError>,
+    pub current_tf_error: Option<FrameTransformError>,
+    pub path_tf_error: Option<FrameTransformError>,
+    pub path_geometry_error: Option<&'static str>,
+    pub platform_tf_error: Option<FrameTransformError>,
+    pub platform_geometry_error: Option<&'static str>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SceneSnapshot<'a> {
     pub revision: u64,
     pub cloud_revision: u64,
-    pub ego_position: [f32; 2],
-    pub ego_yaw: f32,
-    pub path: &'a [[f32; 2]],
+    pub focus: [f32; 3],
+    pub forward: [f32; 3],
+    pub view_radius: f32,
+    pub platform: Option<[[f32; 3]; 8]>,
+    pub path: &'a [[f32; 3]],
+    pub bev: BevSnapshot<'a>,
     pub cloud: &'a [[f32; 3]],
     pub diagnostics: SceneDiagnostics,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct PathPlacementKey {
+    path_revision: u64,
+    transform_revision: u64,
+    reference_frame: String,
+    reference_time: MeasurementTime,
+    policy: PathProjectionPolicy,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -62,6 +57,25 @@ pub struct ScenePresentationState {
     visible_cloud: Vec<[f32; 3]>,
     accumulate: bool,
     diagnostics: SceneDiagnostics,
+    path_key: Option<PathPlacementKey>,
+    world_path: Vec<[f32; 3]>,
+    bev_path: Vec<[f32; 2]>,
+    platform: Option<[[f32; 3]; 8]>,
+    geometry_revision: u64,
+    focus: [f32; 3],
+    forward: [f32; 3],
+    footprint: Option<[f32; 4]>,
+}
+
+/// Source facts and independent presentation choices; no renderer-specific scale.
+pub struct ScenePresentationInput<'a> {
+    pub path: &'a PathState,
+    pub telemetry: &'a TelemetryState,
+    pub point_cloud: &'a PointCloudState,
+    pub transforms: &'a TransformState,
+    pub platform: Option<&'a PlatformGeometry>,
+    pub path_projection: &'a PathProjectionPolicy,
+    pub accumulate: bool,
 }
 
 const MAX_VISIBLE_SCENE_POINTS: usize = 65_536;
@@ -79,16 +93,23 @@ impl ScenePresentationState {
         &self.diagnostics
     }
 
-    pub fn build<'a>(
-        &'a mut self,
-        path: &'a PathState,
-        telemetry: &'a TelemetryState,
-        point_cloud: &'a PointCloudState,
-        transforms: &'a TransformState,
-        accumulate: bool,
-    ) -> SceneSnapshot<'a> {
+    pub fn build(&mut self, input: ScenePresentationInput<'_>) -> SceneSnapshot<'_> {
+        let ScenePresentationInput {
+            path,
+            telemetry,
+            point_cloud,
+            transforms,
+            platform,
+            path_projection,
+            accumulate,
+        } = input;
         let telemetry = telemetry.latest();
-        let target_frame = telemetry.map_or("odom", |frame| frame.frame_id.as_str());
+        let target_frame = path_projection.fixed_frame.as_str();
+        // Existing accumulated positions are never mixed across different world frames.
+        if self.target_frame != target_frame && !self.visible_cloud.is_empty() {
+            self.visible_cloud.clear();
+            self.visible_revision = self.visible_revision.wrapping_add(1);
+        }
         let point_cloud_revision = point_cloud.revision();
         let transform_revision = transforms.revision();
         let source_changed =
@@ -121,7 +142,7 @@ impl ScenePresentationState {
                             self.diagnostics.tf_misses =
                                 self.diagnostics.tf_misses.saturating_add(1);
                         }
-                        self.diagnostics.current_tf_error = Some(SceneTfError {
+                        self.diagnostics.current_tf_error = Some(FrameTransformError {
                             source_frame,
                             target_frame: target_frame.to_owned(),
                         });
@@ -135,15 +156,154 @@ impl ScenePresentationState {
 
         self.update_visible_cloud(transformed_changed, accumulate);
 
-        let telemetry_revision = telemetry.map_or(0, |frame| frame.arrival_time.0 as u64);
+        let reference = platform.map_or_else(
+            || telemetry.map_or("base_link", |t| t.child_frame_id.as_str()),
+            PlatformGeometry::reference_frame,
+        );
+        let time = telemetry.map_or_else(
+            || {
+                point_cloud.latest().map_or_else(
+                    || {
+                        path.latest()
+                            .map_or(MeasurementTime(0), |p| p.measurement_time)
+                    },
+                    |p| p.measurement_time,
+                )
+            },
+            |t| t.measurement_time,
+        );
+        let placement_changed = self.path_key.as_ref().is_none_or(|k| {
+            k.path_revision != path.revision()
+                || k.transform_revision != transforms.revision()
+                || k.reference_frame != reference
+                || k.reference_time != time
+                || k.policy != *path_projection
+        });
+        let mut path_changed = false;
+        if placement_changed {
+            self.path_key = Some(PathPlacementKey {
+                path_revision: path.revision(),
+                transform_revision: transforms.revision(),
+                reference_frame: reference.into(),
+                reference_time: time,
+                policy: path_projection.clone(),
+            });
+            self.diagnostics.path_tf_error = None;
+            self.diagnostics.path_geometry_error = None;
+            let mut world_path = Vec::new();
+            let mut bev_path = Vec::new();
+            if let Some(p) = path.latest() {
+                match path_projection.positions_in_fixed_frame(p, transforms) {
+                    Ok(points) => {
+                        world_path = points.into_iter().map(|v| v.map(|x| x as f32)).collect()
+                    }
+                    Err(e) => self.diagnostics.path_tf_error = Some(e),
+                }
+                match path_projection.positions_in_frame(p, transforms, reference, time) {
+                    Ok(points) => {
+                        bev_path = points
+                            .into_iter()
+                            .map(|[x, y, _]| [-y as f32, x as f32])
+                            .collect()
+                    }
+                    Err(e) => self.diagnostics.path_tf_error = Some(e),
+                }
+            }
+            if !world_path
+                .iter()
+                .flatten()
+                .chain(bev_path.iter().flatten())
+                .all(|v| v.is_finite())
+            {
+                world_path.clear();
+                bev_path.clear();
+                self.diagnostics.path_geometry_error =
+                    Some("Path exceeds the renderer coordinate range");
+            }
+            path_changed = self.world_path != world_path || self.bev_path != bev_path;
+            self.world_path = world_path;
+            self.bev_path = bev_path;
+        }
+        let mut body = None;
+        self.diagnostics.platform_tf_error = None;
+        self.diagnostics.platform_geometry_error = None;
+        let mut focus = telemetry
+            .filter(|t| t.frame_id.trim_start_matches('/') == target_frame.trim_start_matches('/'))
+            .map_or([0.0; 3], |t| {
+                [t.position_x as f32, t.position_y as f32, 0.0]
+            });
+        let mut forward = telemetry.map_or([1.0, 0.0, 0.0], |t| {
+            [t.yaw_radians.cos() as f32, t.yaw_radians.sin() as f32, 0.0]
+        });
+        let mut view_radius = 0.5;
+        if let Some(g) = platform {
+            let mut corners = g.corners().to_vec();
+            corners.extend([[0.0; 3], [1.0, 0.0, 0.0]]);
+            match transforms.transform_positions_at(
+                g.reference_frame(),
+                target_frame,
+                time,
+                &corners,
+            ) {
+                Some(points) if points.iter().flatten().all(|v| (*v as f32).is_finite()) => {
+                    let bounds = std::array::from_fn(|i| points[i].map(|v| v as f32));
+                    focus = std::array::from_fn(|axis| {
+                        (bounds.iter().map(|p| f64::from(p[axis])).sum::<f64>() / 8.0) as f32
+                    });
+                    forward = std::array::from_fn(|i| (points[9][i] - points[8][i]) as f32);
+                    view_radius =
+                        (g.extent()[0].hypot(g.extent()[1]).hypot(g.extent()[2]) / 2.0) as f32;
+                    body = Some(bounds);
+                }
+                Some(_) => {
+                    self.diagnostics.platform_geometry_error =
+                        Some("Platform exceeds the renderer coordinate range")
+                }
+                None => {
+                    self.diagnostics.platform_tf_error = Some(FrameTransformError {
+                        source_frame: g.reference_frame().into(),
+                        target_frame: target_frame.into(),
+                    })
+                }
+            }
+        }
+        let footprint = platform.and_then(|g| {
+            let min = g.min();
+            let max = g.max();
+            let bounds = [-max[1] as f32, min[0] as f32, -min[1] as f32, max[0] as f32];
+            if bounds.iter().all(|v| v.is_finite()) {
+                Some(bounds)
+            } else {
+                self.diagnostics.platform_geometry_error =
+                    Some("Platform exceeds the renderer coordinate range");
+                None
+            }
+        });
+        if self.footprint != footprint
+            || path_changed
+            || self.platform != body
+            || self.focus != focus
+            || self.forward != forward
+        {
+            self.geometry_revision = self.geometry_revision.wrapping_add(1);
+            self.platform = body;
+            self.focus = focus;
+            self.forward = forward;
+            self.footprint = footprint;
+        }
         SceneSnapshot {
-            revision: path.revision().rotate_left(17) ^ telemetry_revision,
+            revision: self.geometry_revision,
             cloud_revision: self.visible_revision,
-            ego_position: telemetry.map_or([0.0, 0.0], |frame| {
-                [frame.position_x as f32, frame.position_y as f32]
-            }),
-            ego_yaw: telemetry.map_or(0.0, |frame| frame.yaw_radians as f32),
-            path: path.latest().map_or(&[], |frame| frame.points.as_slice()),
+            focus,
+            forward,
+            view_radius,
+            platform: body,
+            path: &self.world_path,
+            bev: BevSnapshot {
+                revision: self.geometry_revision,
+                path: &self.bev_path,
+                footprint,
+            },
             cloud: &self.visible_cloud,
             diagnostics: self.diagnostics.clone(),
         }
@@ -228,7 +388,7 @@ mod tests {
             measurement_time: MeasurementTime(1),
             arrival_time: ArrivalTime(2),
             frame_id: "base_link".into(),
-            points: vec![[0.0, 1.0]],
+            points: vec![[1.0, -(0.0), 0.0]],
         });
         let mut odometry = TelemetryState::default();
         odometry.apply(telemetry(3, [4.0, 5.0]));
@@ -240,14 +400,20 @@ mod tests {
             points: vec![[1.0, 2.0, 3.0]],
         });
 
-        let bev = BevFrameBuilder::new(&path).build();
-        assert_eq!(bev.path, [[0.0, 1.0]]);
         let mut builder = ScenePresentationState::new();
         let transforms = TransformState::default();
-        let scene = builder.build(&path, &odometry, &point_cloud, &transforms, true);
-        assert_eq!(scene.ego_position, [4.0, 5.0]);
-        assert_eq!(scene.ego_yaw, 0.25);
-        assert_eq!(scene.path, bev.path);
+        let scene = builder.build(ScenePresentationInput {
+            path: &path,
+            telemetry: &odometry,
+            point_cloud: &point_cloud,
+            transforms: &transforms,
+            platform: None,
+            path_projection: &PathProjectionPolicy::default(),
+            accumulate: true,
+        });
+        assert_eq!(scene.focus, [4.0, 5.0, 0.0]);
+        assert!(scene.path.is_empty());
+        assert!(scene.diagnostics.path_tf_error.is_some());
         assert_eq!(scene.cloud, [[1.0, 2.0, 3.0]]);
     }
 
@@ -265,7 +431,15 @@ mod tests {
         let mut builder = ScenePresentationState::new();
         let path = PathState::default();
         let mut odometry = TelemetryState::default();
-        let first = builder.build(&path, &odometry, &point_cloud, &transforms, true);
+        let first = builder.build(ScenePresentationInput {
+            path: &path,
+            telemetry: &odometry,
+            point_cloud: &point_cloud,
+            transforms: &transforms,
+            platform: None,
+            path_projection: &PathProjectionPolicy::default(),
+            accumulate: true,
+        });
         assert_eq!(first.cloud, [[3.0, 3.0, 0.5]]);
         let revision = first.cloud_revision;
         assert_eq!(
@@ -274,7 +448,15 @@ mod tests {
         );
 
         odometry.apply(telemetry(20, [100.0, -50.0]));
-        let second = builder.build(&path, &odometry, &point_cloud, &transforms, true);
+        let second = builder.build(ScenePresentationInput {
+            path: &path,
+            telemetry: &odometry,
+            point_cloud: &point_cloud,
+            transforms: &transforms,
+            platform: None,
+            path_projection: &PathProjectionPolicy::default(),
+            accumulate: true,
+        });
         assert_eq!(second.cloud, [[3.0, 3.0, 0.5]]);
         assert_eq!(second.cloud_revision, revision);
         let raw = point_cloud.latest().unwrap();
@@ -295,12 +477,28 @@ mod tests {
         });
         let mut builder = ScenePresentationState::new();
         let mut transforms = TransformState::default();
-        let missing = builder.build(&path, &odometry, &point_cloud, &transforms, false);
+        let missing = builder.build(ScenePresentationInput {
+            path: &path,
+            telemetry: &odometry,
+            point_cloud: &point_cloud,
+            transforms: &transforms,
+            platform: None,
+            path_projection: &PathProjectionPolicy::default(),
+            accumulate: false,
+        });
         assert!(missing.cloud.is_empty());
         assert_eq!(missing.diagnostics.tf_misses, 1);
 
         transforms.apply(scan_transform(2.0, 0.0, 0.0));
-        let recovered = builder.build(&path, &odometry, &point_cloud, &transforms, false);
+        let recovered = builder.build(ScenePresentationInput {
+            path: &path,
+            telemetry: &odometry,
+            point_cloud: &point_cloud,
+            transforms: &transforms,
+            platform: None,
+            path_projection: &PathProjectionPolicy::default(),
+            accumulate: false,
+        });
         assert_eq!(recovered.cloud, [[3.0, 0.0, 0.0]]);
         assert_eq!(recovered.diagnostics.tf_misses, 1);
         assert!(recovered.diagnostics.current_tf_error.is_none());
@@ -322,7 +520,15 @@ mod tests {
         });
         assert_eq!(
             presentation
-                .build(&path, &odometry, &point_cloud, &transforms, true)
+                .build(ScenePresentationInput {
+                    path: &path,
+                    telemetry: &odometry,
+                    point_cloud: &point_cloud,
+                    transforms: &transforms,
+                    platform: None,
+                    path_projection: &PathProjectionPolicy::default(),
+                    accumulate: true
+                })
                 .cloud
                 .len(),
             2
@@ -334,26 +540,52 @@ mod tests {
             frame_id: "odom".into(),
             points: vec![[3.0, 0.0, 0.0]],
         });
-        let accumulated = presentation.build(&path, &odometry, &point_cloud, &transforms, true);
+        let accumulated = presentation.build(ScenePresentationInput {
+            path: &path,
+            telemetry: &odometry,
+            point_cloud: &point_cloud,
+            transforms: &transforms,
+            platform: None,
+            path_projection: &PathProjectionPolicy::default(),
+            accumulate: true,
+        });
         assert_eq!(accumulated.cloud.len(), 3);
         let revision = accumulated.cloud_revision;
 
-        let unchanged = presentation.build(&path, &odometry, &point_cloud, &transforms, true);
+        let unchanged = presentation.build(ScenePresentationInput {
+            path: &path,
+            telemetry: &odometry,
+            point_cloud: &point_cloud,
+            transforms: &transforms,
+            platform: None,
+            path_projection: &PathProjectionPolicy::default(),
+            accumulate: true,
+        });
         assert_eq!(unchanged.cloud.len(), 3);
         assert_eq!(unchanged.cloud_revision, revision);
 
-        let latest = presentation.build(&path, &odometry, &point_cloud, &transforms, false);
+        let latest = presentation.build(ScenePresentationInput {
+            path: &path,
+            telemetry: &odometry,
+            point_cloud: &point_cloud,
+            transforms: &transforms,
+            platform: None,
+            path_projection: &PathProjectionPolicy::default(),
+            accumulate: false,
+        });
         assert_eq!(latest.cloud, [[3.0, 0.0, 0.0]]);
         presentation.reset();
         assert!(
             presentation
-                .build(
-                    &path,
-                    &odometry,
-                    &PointCloudState::default(),
-                    &transforms,
-                    true
-                )
+                .build(ScenePresentationInput {
+                    path: &path,
+                    telemetry: &odometry,
+                    point_cloud: &PointCloudState::default(),
+                    transforms: &transforms,
+                    platform: None,
+                    path_projection: &PathProjectionPolicy::default(),
+                    accumulate: true
+                })
                 .cloud
                 .is_empty()
         );
@@ -374,7 +606,15 @@ mod tests {
                 .collect(),
         });
         let mut presentation = ScenePresentationState::new();
-        let snapshot = presentation.build(&path, &odometry, &point_cloud, &transforms, true);
+        let snapshot = presentation.build(ScenePresentationInput {
+            path: &path,
+            telemetry: &odometry,
+            point_cloud: &point_cloud,
+            transforms: &transforms,
+            platform: None,
+            path_projection: &PathProjectionPolicy::default(),
+            accumulate: true,
+        });
         assert_eq!(snapshot.cloud.len(), MAX_VISIBLE_SCENE_POINTS);
         assert_eq!(snapshot.cloud[0][0], 17.0);
     }

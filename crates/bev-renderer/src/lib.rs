@@ -4,6 +4,7 @@
 pub struct BevFrame<'a> {
     pub revision: u64,
     pub path: &'a [[f32; 2]],
+    pub footprint: Option<[f32; 4]>,
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -51,7 +52,7 @@ impl BevRenderer {
         });
         let viewport_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("BEV viewport uniform"),
-            size: 16,
+            size: 32,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -177,13 +178,17 @@ impl BevRenderer {
             self.metrics.layer_uploads += 1;
         }
         // Keep the visible metric extent predictable across differently-shaped panels.
-        // The shorter axis shows at least 36 metres, with a small lower bound for tiny windows.
-        let pixels_per_meter = (self.size.0.min(self.size.1) as f32 / 36.0).max(4.0);
+        // The shorter axis shows at least 8 metres, with a small lower bound for tiny windows.
+        let pixels_per_meter = (self.size.0.min(self.size.1) as f32 / 8.0).max(4.0);
         let viewport = [
             self.size.0 as f32,
             self.size.1 as f32,
             pixels_per_meter,
             0.0,
+            frame.footprint.unwrap_or([0.0; 4])[0],
+            frame.footprint.unwrap_or([0.0; 4])[1],
+            frame.footprint.unwrap_or([0.0; 4])[2],
+            frame.footprint.unwrap_or([0.0; 4])[3],
         ];
         queue.write_buffer(&self.viewport_buffer, 0, bytemuck::cast_slice(&viewport));
         let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
@@ -281,6 +286,7 @@ mod tests {
         let frame = BevFrame {
             revision: 4,
             path: &points,
+            footprint: None,
         };
         assert_eq!(frame.revision, 4);
         assert_eq!(frame.path.len(), 2);

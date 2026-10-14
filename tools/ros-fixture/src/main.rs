@@ -964,7 +964,7 @@ fn verify_jpeg_mcap(input: &Path) -> Result<VerificationStats> {
         if message.channel.topic == PATH_TOPIC {
             let path = decode_path(&message.data)?;
             ensure!(path.points.len() == 31, "dummy path pose count changed");
-            ensure!(path.points.first() == Some(&[0.0, 0.0]));
+            ensure!(path.points.first() == Some(&[0.0, 0.0, 0.0]));
             if let Some(expected) = &expected_path {
                 ensure!(
                     expected == &path.points,

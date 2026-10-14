@@ -67,7 +67,7 @@ fn live_adapter_models_round_trip_through_concrete_cdr_encoders() {
     let path = PathMessage {
         measurement_time: MeasurementTime(12_345_000_006),
         frame_id: "map".into(),
-        points: vec![[1.0, -2.0], [3.5, 4.25]],
+        points: vec![[1.0, -2.0, 0.0], [3.5, 4.25, 0.0]],
     };
     assert_eq!(decode_path(&encode_path_cdr(&path).unwrap()).unwrap(), path);
 
@@ -167,7 +167,7 @@ fn decodes_little_endian_path() {
     let path = decode_path(&payload).unwrap();
     assert_eq!(path.measurement_time, MeasurementTime(12_000_000_034));
     assert_eq!(path.frame_id, "base_link");
-    assert_eq!(path.points, vec![[2.0, -1.0]]);
+    assert_eq!(path.points, vec![[2.0, -1.0, 0.0]]);
 }
 
 #[test]

@@ -83,6 +83,8 @@ pub(crate) struct Graphics {
 impl Graphics {
     pub(crate) fn apply_transition(&mut self, transition: PresentationTransition) {
         self.hide_camera();
+        self.bev_renderer.invalidate();
+        self.scene_renderer.invalidate();
         if transition == PresentationTransition::SourceChanged {
             self.clear_preview();
         }
@@ -158,6 +160,7 @@ impl Graphics {
         let frame = BevFrame {
             revision: snapshot.revision,
             path: snapshot.path,
+            footprint: snapshot.footprint,
         };
         if bev_resized || self.bev_renderer.needs_render(frame) {
             self.bev_renderer.render(&self.device, &self.queue, frame);
@@ -185,8 +188,10 @@ impl Graphics {
         let frame = SceneFrame {
             revision: snapshot.revision,
             cloud_revision: snapshot.cloud_revision,
-            ego_position: snapshot.ego_position,
-            ego_yaw: snapshot.ego_yaw,
+            focus: snapshot.focus,
+            forward: snapshot.forward,
+            view_radius: snapshot.view_radius,
+            platform: snapshot.platform,
             path: snapshot.path,
             cloud: snapshot.cloud,
         };

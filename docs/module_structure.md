@@ -95,3 +95,11 @@ example `use viewer_core::{ArrivalTime, RawMessage, SourceCatalog};`. Do not
 forward an external crate into the local root with a wildcard re-export. This
 makes ownership and each file's dependencies visible without inspecting another
 crate's entire API. Local public surface exports remain explicit.
+
+## Physical geometry
+
+`viewer-core/platform_geometry.rs` owns frame-relative metre bounds;
+`presentation/path.rs` owns fixed-frame anchoring and optional TF ground-plane
+projection. Controllers retain canonical xyz. `viewer-web/app/physical_settings.rs`
+loads independent geometry/calibration inputs and projection settings. Renderers
+consume already-placed geometry. See [physical_geometry.md](physical_geometry.md).

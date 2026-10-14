@@ -1,4 +1,4 @@
-//! Decoded path state used by BEV features.
+//! Canonical path positions in the source ROS frame.
 
 use crate::{ArrivalTime, MeasurementTime};
 
@@ -7,8 +7,8 @@ pub struct PathFrame {
     pub measurement_time: MeasurementTime,
     pub arrival_time: ArrivalTime,
     pub frame_id: String,
-    /// Ego-relative path in metres: +x right, +y forward.
-    pub points: Vec<[f32; 2]>,
+    /// Metres in frame_id; no BEV conversion or ground projection.
+    pub points: Vec<[f64; 3]>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -54,7 +54,7 @@ mod tests {
             measurement_time: MeasurementTime(arrival - 1),
             arrival_time: ArrivalTime(arrival),
             frame_id: "base_link".into(),
-            points: vec![[1.0, 2.0]],
+            points: vec![[2.0, -(1.0), 0.0]],
         }
     }
 

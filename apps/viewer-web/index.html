@@ -42,6 +42,15 @@
         <label><input id="accumulate-scans" type="checkbox"> Accumulate scans</label>
         <button id="reset-scene" type="button">Reset view</button>
       </div>
+      <details class="physical-settings">
+        <summary id="platform-geometry-label">Platform geometry / path / calibration</summary>
+        <label><input id="platform-enabled" type="checkbox" checked> Show configured physical body</label>
+        <label>Platform geometry JSON <input id="platform-geometry-file" type="file" accept=".json"></label>
+        <label>World frame <input id="fixed-frame" value="odom" size="12"></label>
+        <label>Ground frame (empty = original Path z) <input id="ground-frame" value="" size="16"></label>
+        <label>Camera calibration JSON <input id="camera-calibration-file" type="file" accept=".json"></label>
+        <div id="physical-settings-error" role="status"></div>
+      </details>
       <div class="scene-frame"><canvas id="bev" width="512" height="512" aria-label="3D Scene or BEV view"></canvas></div>
       <div id="scene-info">Scan / TF: waiting</div>
     </section>

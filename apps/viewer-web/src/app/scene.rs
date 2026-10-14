@@ -4,7 +4,6 @@ use crate::{playback::WebPlayback, webgpu::WebGpuHost};
 use bev_renderer::BevFrame;
 use scene_renderer::{SceneCameraMode, SceneFrame};
 use std::cell::RefCell;
-use viewer_core::BevFrameBuilder;
 use wasm_bindgen::{JsCast, closure::Closure};
 use wasm_bindgen_futures::spawn_local;
 use web_sys::{
@@ -64,20 +63,27 @@ pub(super) fn render_scene(bev: BevFrame<'_>, scene: SceneFrame<'_>) {
     }
 }
 
-pub(super) fn update_scene_presentation(session: &WebPlayback, view: &mut WebViewState) {
-    let bev = BevFrameBuilder::new(session.path().state()).build();
+pub(super) fn update_scene_presentation(
+    session: &WebPlayback,
+    view: &mut WebViewState,
+    platform: Option<&viewer_core::PlatformGeometry>,
+    policy: &viewer_core::PathProjectionPolicy,
+) {
     let empty = viewer_core::PointCloudState::default();
     let points = session
         .point_cloud()
         .map_or(&empty, |scene| scene.point_cloud());
     let accumulate: HtmlInputElement = element("accumulate-scans");
-    let scene = view.scene.build(
-        session.path().state(),
-        session.odometry().state(),
-        points,
-        session.transforms().state(),
-        accumulate.checked(),
-    );
+    let scene = view.scene.build(viewer_core::ScenePresentationInput {
+        path: session.path().state(),
+        telemetry: session.odometry().state(),
+        point_cloud: points,
+        transforms: session.transforms().state(),
+        platform,
+        path_projection: policy,
+        accumulate: accumulate.checked(),
+    });
+    let bev = scene.bev;
     let info: HtmlElement = element("scene-info");
     info.set_inner_text(&format!(
         "Scan: {} visible points · {}",
@@ -94,16 +100,39 @@ pub(super) fn update_scene_presentation(session: &WebPlayback, view: &mut WebVie
             )
         )
     ));
+    for e in [
+        &scene.diagnostics.path_tf_error,
+        &scene.diagnostics.platform_tf_error,
+    ]
+    .into_iter()
+    .flatten()
+    {
+        info.set_inner_text(&format!(
+            "{} · TF missing: {} → {}",
+            info.inner_text(),
+            e.source_frame,
+            e.target_frame
+        ));
+    }
+    if let Some(error) = scene.diagnostics.platform_geometry_error {
+        info.set_inner_text(&format!("{} · {error}", info.inner_text()));
+    }
+    if let Some(error) = scene.diagnostics.path_geometry_error {
+        info.set_inner_text(&format!("{} · {error}", info.inner_text()));
+    }
     render_scene(
         BevFrame {
             revision: bev.revision,
             path: bev.path,
+            footprint: bev.footprint,
         },
         SceneFrame {
             revision: scene.revision,
             cloud_revision: scene.cloud_revision,
-            ego_position: scene.ego_position,
-            ego_yaw: scene.ego_yaw,
+            focus: scene.focus,
+            forward: scene.forward,
+            view_radius: scene.view_radius,
+            platform: scene.platform,
             path: scene.path,
             cloud: scene.cloud,
         },

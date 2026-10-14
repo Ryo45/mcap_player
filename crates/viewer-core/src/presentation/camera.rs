@@ -7,6 +7,7 @@ pub enum OverlayStatus {
     Waiting,
     Ready {
         visible_points: usize,
+        calibration_provenance: String,
     },
     Error(String),
 }
@@ -15,8 +16,14 @@ impl fmt::Display for OverlayStatus {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Waiting => formatter.write_str("plan waiting"),
-            Self::Ready { visible_points } => {
-                write!(formatter, "plan {visible_points} visible pts")
+            Self::Ready {
+                visible_points,
+                calibration_provenance,
+            } => {
+                write!(
+                    formatter,
+                    "plan {visible_points} visible pts · {calibration_provenance}"
+                )
             }
             Self::Error(error) => formatter.write_str(error),
         }
