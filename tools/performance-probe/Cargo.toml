@@ -11,3 +11,4 @@ mcap = { workspace = true, features = ["lz4", "zstd"] }
 serde_json.workspace = true
 viewer-core = { path = "../../crates/viewer-core" }
 viewer-mcap = { path = "../../crates/viewer-mcap" }
+viewer-renderer = { path = "../../crates/viewer-renderer" }
