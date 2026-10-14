@@ -62,6 +62,45 @@ fn probe_counts_real_file_reads_and_selected_feature_decodes() {
 }
 
 #[test]
+fn grouped_ros_fixture_delivers_exactly_once_in_order_at_100_ms_ticks() {
+    let path = fixture("jpeg");
+    let mut source = McapSource::open_file(&path).unwrap();
+    let streams = source
+        .catalog()
+        .streams
+        .iter()
+        .map(|s| s.id)
+        .collect::<Vec<_>>();
+    source.select_streams(streams).unwrap();
+    let start = source.time_range().start.0;
+    let mut all = Vec::new();
+    for tick in 0..10 {
+        let end = start + (tick + 1) * 100_000_000;
+        let messages = source
+            .read_through(viewer_core::ArrivalTime(end - 1))
+            .unwrap();
+        assert!(
+            messages
+                .iter()
+                .all(|m| m.arrival_time.0 >= start + tick * 100_000_000 && m.arrival_time.0 < end)
+        );
+        all.extend(messages);
+    }
+    assert_eq!(all.len(), 30);
+    assert!(
+        all.windows(2)
+            .all(|pair| (pair[0].arrival_time, pair[0].stream_id.0)
+                <= (pair[1].arrival_time, pair[1].stream_id.0))
+    );
+    let replay = command(&["run", path.to_str().unwrap(), "all", "forward", "0", "100"]);
+    assert_eq!(replay["delivered_messages"], 30);
+    assert_eq!(replay["unknown_messages"], 0);
+    assert_eq!(replay["feature_decoded"], 30);
+    assert_eq!(replay["jpeg_decodes"], 20);
+    std::fs::remove_file(path).unwrap();
+}
+
+#[test]
 fn raw_background_is_valid_ros_image_cdr_and_not_reported_as_decoded_camera() {
     let path = fixture("raw");
     let mut source = McapSource::open_file(&path).unwrap();

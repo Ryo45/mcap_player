@@ -1,5 +1,8 @@
 # 初回性能検証の結果（2026-10-14）
 
+この文書は修正前のbaseline。[後続のForward pruning・時間順序検証](../2026-10-14-forward-pruning/findings.md)
+でNative forwardを修正した。以下の測定結果を現在の挙動と混同しない。
+
 27種類の合成ROS 2記録で、Native forward / indexed history query / latest-before
 queryを各3回測定した。計432 run。最大記録は2,647.295 MiB（約2.585 GiB）、600秒。
 結果は「省メモリと選択decodeは確認できるが、選択I/Oは経路とChunk構成次第」。

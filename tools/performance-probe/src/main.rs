@@ -31,9 +31,15 @@ fn main() -> Result<()> {
             args[5].parse()?,
             &args[6],
         ),
-        Some("run") if args.len() == 5 => run(&args[1], &args[2], &args[3], args[4].parse()?),
+        Some("run") if args.len() == 5 || args.len() == 6 => run(
+            &args[1],
+            &args[2],
+            &args[3],
+            args[4].parse()?,
+            args.get(5).map(|v| v.parse()).transpose()?.unwrap_or(1000),
+        ),
         _ => bail!(
-            "generate PATH none|zstd|lz4 CHUNK_BYTES mixed|grouped SECONDS jpeg|raw|scan\nrun PATH scan|all forward|indexed|seek SEEK_COUNT"
+            "generate PATH none|zstd|lz4 CHUNK_BYTES mixed|grouped SECONDS jpeg|raw|scan\nrun PATH scan|all forward|indexed|seek|seek-cached|repeat|repeat-cached SEEK_COUNT [TICK_MS]"
         ),
     }
 }
@@ -231,7 +237,8 @@ fn io(source: &McapSource) -> Value {
         "expanded_bytes":d.expanded_bytes,"decompressed_bytes":d.decompressed_bytes,"source_cache_backing_bytes":d.sequential_cache_backing_bytes})
 }
 
-fn run(path: &str, selection: &str, mode: &str, seek_count: usize) -> Result<()> {
+fn run(path: &str, selection: &str, mode: &str, seek_count: usize, tick_ms: u64) -> Result<()> {
+    ensure!((1..=1000).contains(&tick_ms), "tick_ms must be 1..1000");
     ensure!(matches!(selection, "scan" | "all"), "invalid selection");
     ensure!(
         matches!(
@@ -350,7 +357,7 @@ fn run(path: &str, selection: &str, mode: &str, seek_count: usize) -> Result<()>
     } else {
         let mut start = range.start.0;
         while start < range.end_exclusive.0 {
-            let end = (start + 1_000_000_000).min(range.end_exclusive.0);
+            let end = (start + (tick_ms * 1_000_000) as i64).min(range.end_exclusive.0);
             let t = Instant::now();
             let messages = if mode == "forward" {
                 source.read_through(ArrivalTime(end - 1))?
@@ -364,10 +371,23 @@ fn run(path: &str, selection: &str, mode: &str, seek_count: usize) -> Result<()>
                     .messages
             };
             read_ms += t.elapsed().as_secs_f64() * 1000.0;
+            ensure!(
+                messages
+                    .iter()
+                    .all(|m| m.arrival_time.0 >= start && m.arrival_time.0 < end),
+                "late or future message in playback tick"
+            );
+            ensure!(
+                messages
+                    .windows(2)
+                    .all(|p| (p[0].arrival_time, p[0].stream_id.0)
+                        <= (p[1].arrival_time, p[1].stream_id.0)),
+                "playback tick is not chronological"
+            );
             delivered += messages.len() as u64;
             payload_bytes += messages.iter().map(|m| m.payload.len() as u64).sum::<u64>();
             let t = Instant::now();
-            runtime.process_messages(Duration::from_secs(1), &messages);
+            runtime.process_messages(Duration::from_millis(tick_ms), &messages);
             feature_ms += t.elapsed().as_secs_f64() * 1000.0;
             let t = Instant::now();
             for (&id, frame) in runtime.cameras().state().frames() {
@@ -410,7 +430,7 @@ fn run(path: &str, selection: &str, mode: &str, seek_count: usize) -> Result<()>
         .map_or(0, |p| p.points.len());
     println!(
         "{}",
-        json!({"path":path,"selection":selection,"mode":mode,"file_bytes":fs::metadata(path)?.len(),
+        json!({"path":path,"selection":selection,"mode":mode,"tick_ms":tick_ms,"file_bytes":fs::metadata(path)?.len(),
         "open_ms":open_ms,"workload_ms":workload.elapsed().as_secs_f64()*1000.0,"read_ms":read_ms,"feature_ms":feature_ms,"jpeg_ms":jpeg_ms,
         "delivered_messages":delivered,"expected_messages":expected_messages,"payload_bytes":payload_bytes,
         "feature_decoded":counters.decoded,"feature_dropped":counters.dropped,"unknown_messages":counters.unknown_streams,

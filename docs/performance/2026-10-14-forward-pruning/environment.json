@@ -1,0 +1,251 @@
+{
+  "baseline_environment_sha256": "d64402c1be4abbbdc725428ce09132e528b23bbb97d97efa7bfd63cd2f5acf4b",
+  "binary_sha256": "4a2408b63c1f7154aa497f428f8ceeec114236edec1183364f375f1a20c97947",
+  "git_commit": "50b377eaa2a27c0e8d966c2c6e6742986e7e31c9",
+  "git_status": " M crates/viewer-mcap/src/recording/source.rs\n M crates/viewer-mcap/src/recording/source/range.rs\n M tools/performance-probe/src/main.rs\n M tools/performance-probe/tests/probe.rs\n?? .agents/\n?? AGENTS.md\n?? crates/viewer-mcap/tests/forward_order.rs\n?? tools/performance-probe/measure_forward.py\n",
+  "datasets": [
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 65536,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "none-65536-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-65536-mixed-20s-jpeg.mcap",
+      "bytes": 12014929,
+      "sha256": "bc6b839091c6fffc850d68f9aa4a5cf6dafab5b9f7740eaed7ff3468c44a15a6"
+    },
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 65536,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "none-65536-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-65536-grouped-20s-jpeg.mcap",
+      "bytes": 12012638,
+      "sha256": "67339ed4af71b6f27659999988216da1c30d2ed5f8e85e9232588f2d0e153b3b"
+    },
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 1048576,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "none-1048576-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-1048576-mixed-20s-jpeg.mcap",
+      "bytes": 11989020,
+      "sha256": "53cf8a910d587b6624247122b39417e5d7773b728a4f4aa1a25b846cff2e268a"
+    },
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 1048576,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "none-1048576-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-1048576-grouped-20s-jpeg.mcap",
+      "bytes": 12000878,
+      "sha256": "c3b4b964cafa52b2864e1a8b30da53d6d6f2bcd9f25e7c421df982ff3a899e8a"
+    },
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 8388608,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "none-8388608-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-8388608-mixed-20s-jpeg.mcap",
+      "bytes": 11986550,
+      "sha256": "1e0e943500884bee3402d5eae5fd665bbd42e113f2f7e43af7ab0642b5f54978"
+    },
+    {
+      "case": {
+        "codec": "none",
+        "chunk": 8388608,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "none-8388608-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/none-8388608-grouped-20s-jpeg.mcap",
+      "bytes": 12000878,
+      "sha256": "e310c23ac0c0555ddc3f3bc2f68dcfde0086210e4aca048f3982c130b9887671"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 65536,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "zstd-65536-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-65536-mixed-20s-jpeg.mcap",
+      "bytes": 11575429,
+      "sha256": "9a4262f735be281d07c8cf5b0575a9fd33e8be17c68bc3ef091b5c08af05752e"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 65536,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "zstd-65536-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-65536-grouped-20s-jpeg.mcap",
+      "bytes": 11440782,
+      "sha256": "95e3dc845ddc35a792788fd38eca856eafb60affeaa93954f8f7b09c156ab33a"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 1048576,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "zstd-1048576-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-1048576-mixed-20s-jpeg.mcap",
+      "bytes": 9457088,
+      "sha256": "7decbe4bc892982d5664dde049cf60e653cf8ec20bd482fafd240ff3f644a286"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 1048576,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "zstd-1048576-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-1048576-grouped-20s-jpeg.mcap",
+      "bytes": 11332932,
+      "sha256": "4dc4f59d0446015f86fb8993511f6d4a75eb4240e8ce3c80a2fa70c962a17f45"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 8388608,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "zstd-8388608-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-8388608-mixed-20s-jpeg.mcap",
+      "bytes": 2154002,
+      "sha256": "3be36f921efac0858da7ed38ff2cfa821fc05ca452643d9908f96103d1345834"
+    },
+    {
+      "case": {
+        "codec": "zstd",
+        "chunk": 8388608,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "zstd-8388608-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/zstd-8388608-grouped-20s-jpeg.mcap",
+      "bytes": 11332932,
+      "sha256": "847e11c39faad6cf6aeb0d5d444281068a79095ae36d49652d17a9daa9173924"
+    },
+    {
+      "case": {
+        "codec": "lz4",
+        "chunk": 65536,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "lz4-65536-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/lz4-65536-mixed-20s-jpeg.mcap",
+      "bytes": 11577197,
+      "sha256": "5cf886394a592025238ffc68571509ab26671f0182adfad49bf6cf96f304301b"
+    },
+    {
+      "case": {
+        "codec": "lz4",
+        "chunk": 65536,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "lz4-65536-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/lz4-65536-grouped-20s-jpeg.mcap",
+      "bytes": 11528096,
+      "sha256": "c4c3c759a7131f328353a139af84214ad2e43b68d65d7890349b837961559b5c"
+    },
+    {
+      "case": {
+        "codec": "lz4",
+        "chunk": 1048576,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "lz4-1048576-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/lz4-1048576-mixed-20s-jpeg.mcap",
+      "bytes": 11471813,
+      "sha256": "22029deb76dea1c40dc71ef45d5edec336e802c27112a96d5b4a13cc3ce9bcfa"
+    },
+    {
+      "case": {
+        "codec": "lz4",
+        "chunk": 1048576,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "lz4-1048576-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/lz4-1048576-grouped-20s-jpeg.mcap",
+      "bytes": 11464658,
+      "sha256": "49b658607e906444409fb6fee8c11f1f0418b92703a0a06f57076b0049400a39"
+    },
+    {
+      "case": {
+        "codec": "lz4",
+        "chunk": 8388608,
+        "layout": "mixed",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "lz4-8388608-mixed-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/lz4-8388608-mixed-20s-jpeg.mcap",
+      "bytes": 11462057,
+      "sha256": "adc9892ddf17d03535e52726bc8807aa48b6b2f55f505e7d8731bd14b9423bd5"
+    },
+    {
+      "case": {
+        "codec": "lz4",
+        "chunk": 8388608,
+        "layout": "grouped",
+        "seconds": 20,
+        "encoding": "jpeg"
+      },
+      "name": "lz4-8388608-grouped-20s-jpeg",
+      "path": "/tmp/mcap-perf-20261014-final-data/lz4-8388608-grouped-20s-jpeg.mcap",
+      "bytes": 11464658,
+      "sha256": "9d64ac5e2462cbd46d576254c7fc51a7a2bde0c63d821f1f610aa1afb3eed870"
+    }
+  ],
+  "cache": "uncontrolled/cache-allowed; SHA256-read first",
+  "repeats": 3,
+  "cpu_info": "\t: Intel(R) Core(TM) Ultra 7 265KF",
+  "sources_sha256": {
+    "tools/performance-probe/measure_forward.py": "8293ffeffbfb9ba06b8aea7b779a9c28231bd19f54c5d6c5d6487106d74fb3e0",
+    "tools/performance-probe/src/main.rs": "f63b28311296eff822d68b907713d47c05f50e2c1e3491606133e50a9f9153a6",
+    "crates/viewer-mcap/src/recording/source.rs": "3b8b13a234fcfaf0135bc4408fd157afe8cbac470e9c94c83d40eb7e1145eab9",
+    "crates/viewer-mcap/src/recording/source/range.rs": "e748764d128fdb6aafa0bc7646ab7322531616f3523c266c99cf19a01388c9b0"
+  }
+}

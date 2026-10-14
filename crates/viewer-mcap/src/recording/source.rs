@@ -33,9 +33,11 @@ pub struct McapSource {
     summary: std::sync::Arc<Summary>,
     catalog: std::sync::Arc<SourceCatalog>,
     range: RecordingTimeRange,
-    cache: Vec<CachedMessage>,
-    chunk: Option<usize>,
-    position: usize,
+    forward: McapSourcePosition,
+    all_chunks: std::sync::Arc<[usize]>,
+    all_prefix_max_end: std::sync::Arc<[ArrivalTime]>,
+    forward_chunks: std::sync::Arc<[usize]>,
+    forward_prefix_max_end: std::sync::Arc<[ArrivalTime]>,
     selected_streams: Option<HashSet<StreamId>>,
     index_facts: std::sync::Arc<[IndexedChunkFact]>,
     stream_chunks: std::sync::Arc<HashMap<StreamId, StreamChunks>>,
@@ -61,13 +63,20 @@ pub struct SourceReadDiagnostics {
     pub chunks_expanded: u64,
     pub expanded_bytes: u64,
     pub decompressed_bytes: u64,
-    /// Current sequential cache's unique backing, not total process or feature memory.
+    /// Sum of active overlapping sequential chunk backings, excluding feature/output memory.
     pub sequential_cache_backing_bytes: u64,
 }
 
+#[derive(Clone, Default)]
 pub(crate) struct McapSourcePosition {
-    cache: Vec<CachedMessage>,
-    chunk: Option<usize>,
+    next: usize,
+    active: Vec<ActiveChunk>,
+    lower: Option<ArrivalTime>,
+}
+#[derive(Clone)]
+struct ActiveChunk {
+    index: usize,
+    messages: std::sync::Arc<[CachedMessage]>,
     position: usize,
 }
 
@@ -201,14 +210,22 @@ impl McapSource {
                 index.prefix_max_chunk.push(max_chunk);
             }
         }
+        let mut all_chunks = (0..summary.chunk_indexes.len()).collect::<Vec<_>>();
+        all_chunks.sort_by_key(|&i| (summary.chunk_indexes[i].message_start_time, i));
+        let all_prefix_max_end: std::sync::Arc<[ArrivalTime]> =
+            forward_prefix_max_end(&summary, &all_chunks).into();
+        let all_chunks: std::sync::Arc<[usize]> = all_chunks.into();
         Ok(Self {
+            forward_chunks: all_chunks.clone(),
+            forward_prefix_max_end: all_prefix_max_end.clone(),
+            all_chunks,
+            all_prefix_max_end,
+            forward: Default::default(),
             backing,
             summary: std::sync::Arc::new(summary),
             catalog: std::sync::Arc::new(catalog),
             range,
-            cache: vec![],
-            chunk: None,
-            position: 0,
+
             selected_streams: None,
             index_facts: std::sync::Arc::from(index_facts),
             stream_chunks: std::sync::Arc::new(stream_chunks),
@@ -225,9 +242,11 @@ impl McapSource {
             summary: self.summary.clone(),
             catalog: self.catalog.clone(),
             range: self.range,
-            cache: vec![],
-            chunk: None,
-            position: 0,
+            forward: Default::default(),
+            all_chunks: self.all_chunks.clone(),
+            forward_chunks: self.all_chunks.clone(),
+            all_prefix_max_end: self.all_prefix_max_end.clone(),
+            forward_prefix_max_end: self.all_prefix_max_end.clone(),
             selected_streams: None,
             index_facts: self.index_facts.clone(),
             stream_chunks: self.stream_chunks.clone(),
@@ -269,12 +288,12 @@ impl McapSource {
             chunks_expanded: self.read_metrics.chunks.load(Relaxed),
             expanded_bytes: self.read_metrics.expanded_bytes.load(Relaxed),
             decompressed_bytes: self.read_metrics.decompressed_bytes.load(Relaxed),
-            sequential_cache_backing_bytes: if self.cache.is_empty() {
-                0
-            } else {
-                self.chunk
-                    .map_or(0, |i| self.summary.chunk_indexes[i].uncompressed_size)
-            },
+            sequential_cache_backing_bytes: self
+                .forward
+                .active
+                .iter()
+                .map(|c| self.summary.chunk_indexes[c.index].uncompressed_size)
+                .sum(),
         }
     }
     pub fn time_range(&self) -> RecordingTimeRange {
@@ -294,10 +313,22 @@ impl McapSource {
             ensure_indexed(&self.index_facts, *stream, descriptor.timing.message_count)
                 .map_err(McapSourceError::MessageIndexRequired)?;
         }
-        self.cache.clear();
-        self.chunk = None;
+        self.forward_chunks = self
+            .all_chunks
+            .iter()
+            .copied()
+            .filter(|&i| {
+                self.index_facts[i]
+                    .indexed_streams
+                    .iter()
+                    .any(|s| selected.contains(s))
+            })
+            .collect::<Vec<_>>()
+            .into();
+        self.forward_prefix_max_end =
+            forward_prefix_max_end(&self.summary, &self.forward_chunks).into();
+        self.forward = Default::default();
         self.selected_streams = Some(selected);
-        self.position = 0;
         Ok(())
     }
 
@@ -311,92 +342,116 @@ impl McapSource {
         &self,
         cursor: ArrivalTime,
     ) -> Result<McapSourcePosition, McapSourceError> {
-        if self
-            .selected_streams
-            .as_ref()
-            .is_some_and(HashSet::is_empty)
-        {
-            return Ok(McapSourcePosition {
-                cache: Vec::new(),
-                chunk: None,
-                position: 0,
-            });
+        let mut state = McapSourcePosition {
+            lower: Some(cursor),
+            next: self
+                .forward_prefix_max_end
+                .partition_point(|end| *end < cursor),
+            ..Default::default()
+        };
+        // End times need not be monotonic. Stage every selected chunk spanning the target.
+        while let Some(&index) = self.forward_chunks.get(state.next) {
+            if self.index_facts[index].start > cursor {
+                break;
+            }
+            state.next += 1;
+            if self.index_facts[index].end_inclusive >= cursor {
+                self.stage_forward_chunk(&mut state, index)?;
+            }
         }
-        let partition = self
-            .summary
-            .chunk_indexes
-            .partition_point(|index| to_arrival_lossy(index.message_end_time) < cursor);
-        let selected = partition.min(self.summary.chunk_indexes.len() - 1);
-        let cache = self.read_chunk(selected)?;
-        let position = cache.partition_point(|message| message.arrival < cursor);
-        Ok(McapSourcePosition {
-            cache,
-            chunk: Some(selected),
-            position,
-        })
+        Ok(state)
     }
 
     pub(crate) fn commit_seek(&mut self, position: McapSourcePosition) {
-        self.cache = position.cache;
-        self.chunk = position.chunk;
-        self.position = position.position;
+        self.forward = position;
     }
 
-    /// Inclusive delivery, committed only after every required physical read succeeds.
+    fn stage_forward_chunk(
+        &self,
+        state: &mut McapSourcePosition,
+        index: usize,
+    ) -> Result<(), McapSourceError> {
+        let size = self.summary.chunk_indexes[index].uncompressed_size;
+        let retained = state
+            .active
+            .iter()
+            .map(|c| self.summary.chunk_indexes[c.index].uncompressed_size)
+            .sum::<u64>();
+        if size.saturating_add(retained) > super::backing::MAX_SOURCE_RECORD_BYTES as u64 {
+            return Err(McapSourceError::QueryLimit {
+                resource: "forward overlapping chunk backing bytes",
+                maximum: super::backing::MAX_SOURCE_RECORD_BYTES,
+            });
+        }
+        let messages = self.read_chunk(index)?;
+        let position = state
+            .lower
+            .map_or(0, |lower| messages.partition_point(|m| m.arrival < lower));
+        if position < messages.len() {
+            state.active.push(ActiveChunk {
+                index,
+                messages: messages.into(),
+                position,
+            });
+        }
+        Ok(())
+    }
+
+    fn next_forward(
+        &self,
+        state: &mut McapSourcePosition,
+        cursor: ArrivalTime,
+    ) -> Result<Option<RawMessage>, McapSourceError> {
+        loop {
+            let head = state.active.iter().enumerate().min_by_key(|(_, c)| {
+                let m = &c.messages[c.position];
+                (m.arrival, m.stream_id.0, c.index, c.position)
+            });
+            let horizon = head.map_or(cursor, |(_, c)| c.messages[c.position].arrival.min(cursor));
+            if let Some(&index) = self.forward_chunks.get(state.next)
+                && self.index_facts[index].start <= horizon
+            {
+                state.next += 1;
+                self.stage_forward_chunk(state, index)?;
+                continue;
+            }
+            let Some((slot, c)) = head else {
+                return Ok(None);
+            };
+            let m = &c.messages[c.position];
+            if m.arrival > cursor {
+                return Ok(None);
+            }
+            let message = RawMessage {
+                stream_id: m.stream_id,
+                arrival_time: m.arrival,
+                publish_time_ns: m.publish_time_ns,
+                sequence: m.sequence,
+                payload: m.payload.clone(),
+            };
+            let c = &mut state.active[slot];
+            c.position += 1;
+            if c.position == c.messages.len() {
+                state.active.remove(slot);
+            }
+            return Ok(Some(message));
+        }
+    }
+
+    /// Inclusive, chronological delivery; equal times use stream then physical record order.
+    /// All fallible work is staged before committing traversal. Overlapping chunk backings are
+    /// bounded to 256 MiB; consumed chunks are released instead of accumulating a history.
     pub fn read_through(
         &mut self,
         cursor: ArrivalTime,
     ) -> Result<Vec<RawMessage>, McapSourceError> {
-        if self
-            .selected_streams
-            .as_ref()
-            .is_some_and(HashSet::is_empty)
-        {
-            return Ok(Vec::new());
+        let mut state = self.forward.clone();
+        let mut messages = Vec::new();
+        while let Some(message) = self.next_forward(&mut state, cursor)? {
+            messages.push(message);
         }
-        let mut chunk = self.chunk;
-        let mut position = self.position;
-        let mut candidate_cache = None;
-        if chunk.is_none() {
-            candidate_cache = Some(self.read_chunk(0)?);
-            chunk = Some(0);
-            position = 0;
-        }
-        let mut output = Vec::new();
-        loop {
-            let cache = candidate_cache.as_ref().unwrap_or(&self.cache);
-            while let Some(message) = cache.get(position) {
-                if message.arrival > cursor {
-                    break;
-                }
-                output.push(RawMessage {
-                    stream_id: message.stream_id,
-                    arrival_time: message.arrival,
-                    publish_time_ns: message.publish_time_ns,
-                    sequence: message.sequence,
-                    payload: message.payload.clone(),
-                });
-                position += 1;
-            }
-            if cache.get(position).is_some() {
-                break;
-            }
-            let next = chunk.expect("initial chunk staged") + 1;
-            if next >= self.summary.chunk_indexes.len()
-                || to_arrival_lossy(self.summary.chunk_indexes[next].message_start_time) > cursor
-            {
-                break;
-            }
-            candidate_cache = Some(self.read_chunk(next)?);
-            chunk = Some(next);
-            position = 0;
-        }
-        if let Some(cache) = candidate_cache {
-            self.cache = cache;
-        }
-        self.chunk = chunk;
-        self.position = position;
-        Ok(output)
+        self.forward = state;
+        Ok(messages)
     }
 
     /// Concrete streaming I/O for numeric reduction, independent of playback selection/cursor.
@@ -575,14 +630,6 @@ impl McapSource {
         Ok(&self.summary)
     }
 
-    fn load_chunk(&mut self, index: usize) -> Result<(), McapSourceError> {
-        let cache = self.read_chunk(index)?;
-        self.cache = cache;
-        self.chunk = Some(index);
-        self.position = 0;
-        Ok(())
-    }
-
     fn read_chunk(&self, index: usize) -> Result<Vec<CachedMessage>, McapSourceError> {
         let mut cache = Vec::new();
         for message in self.parse_chunk(index)? {
@@ -711,6 +758,17 @@ fn parse_chunk_backing(
     Ok(messages)
 }
 
+fn forward_prefix_max_end(summary: &Summary, chunks: &[usize]) -> Vec<ArrivalTime> {
+    let mut max = ArrivalTime(i64::MIN);
+    chunks
+        .iter()
+        .map(|&i| {
+            max = max.max(to_arrival_lossy(summary.chunk_indexes[i].message_end_time));
+            max
+        })
+        .collect()
+}
+
 fn to_arrival(value: u64) -> Result<ArrivalTime, McapSourceError> {
     i64::try_from(value)
         .map(ArrivalTime)
@@ -725,6 +783,37 @@ mod tests {
     use super::*;
     use mcap::{Compression, WriteOptions, Writer, records::MessageHeader};
     use std::{collections::BTreeMap, io::Cursor};
+
+    #[test]
+    fn forward_overlap_budget_rejects_before_reading_and_preserves_position() {
+        let mut source = no_predecessor_fixture(2);
+        // Model a fully occupied active backing without allocating 256 MiB in a unit test.
+        std::sync::Arc::make_mut(&mut source.summary).chunk_indexes[0].uncompressed_size =
+            super::super::backing::MAX_SOURCE_RECORD_BYTES as u64;
+        source.forward.next = 1;
+        source.forward.active.push(ActiveChunk {
+            index: 0,
+            messages: vec![CachedMessage {
+                publish_time_ns: None,
+                sequence: None,
+                arrival: ArrivalTime(200),
+                stream_id: StreamId(1),
+                payload: Bytes::from_static(&[1]),
+            }]
+            .into(),
+            position: 0,
+        });
+        assert!(matches!(
+            source.read_through(ArrivalTime(200)),
+            Err(McapSourceError::QueryLimit {
+                resource: "forward overlapping chunk backing bytes",
+                ..
+            })
+        ));
+        assert_eq!(source.forward.next, 1);
+        assert_eq!(source.forward.active[0].position, 0);
+        assert_eq!(source.read_diagnostics().chunks_expanded, 0);
+    }
 
     #[test]
     fn read_diagnostics_count_reexpansion_and_share_work_across_forks() {

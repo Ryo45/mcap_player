@@ -4,6 +4,15 @@ The recording is the canonical persistent store. Opening a recording does not in
 the complete log. Exact playback reads only streams required by the open workspace, retains bounded
 serialized windows, and routes `RawMessage` values directly to concrete feature controllers.
 
+Native forward traversal prunes chunks using selected channel facts before reading payloads.
+Chunk start times define traversal order; overlapping chunks are merged by log time, stream ID,
+physical chunk index, then record order. Chunk end times need not be monotonic. Seek uses a
+prefix maximum of end times to locate possible overlaps, stages reads before committing, and
+skips messages strictly before the requested forward position. Active serialized chunk backings
+are capped at 256 MiB; an excessive overlap produces an explicit error instead of unbounded
+retention. Consumed chunks are released. Transaction staging and the caller's returned batch
+can temporarily retain additional backings; the cap is not a total RSS limit.
+
 ## Ownership and data flow
 
 ```text
