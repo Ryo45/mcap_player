@@ -16,6 +16,16 @@ pub(super) enum Backing {
     File(std::sync::Arc<FileRanges>),
 }
 impl Backing {
+    pub fn file_read_totals(&self) -> (u64, u64) {
+        match self {
+            Self::Bytes(_) => (0, 0),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::File(file) => (
+                file.read_calls.load(std::sync::atomic::Ordering::Relaxed),
+                file.read_bytes.load(std::sync::atomic::Ordering::Relaxed),
+            ),
+        }
+    }
     pub fn validate(&self) -> Result<(), McapSourceError> {
         match self {
             Self::Bytes(_) => Ok(()),
@@ -114,6 +124,8 @@ impl Backing {
 pub(super) struct FileRanges {
     file: std::fs::File,
     metadata: std::fs::Metadata,
+    read_calls: std::sync::atomic::AtomicU64,
+    read_bytes: std::sync::atomic::AtomicU64,
     #[cfg(not(any(unix, windows)))]
     cursor: std::sync::Mutex<()>,
 }
@@ -128,6 +140,8 @@ impl FileRanges {
         Ok(Self {
             file,
             metadata,
+            read_calls: Default::default(),
+            read_bytes: Default::default(),
             #[cfg(not(any(unix, windows)))]
             cursor: std::sync::Mutex::new(()),
         })
@@ -178,7 +192,13 @@ impl FileRanges {
                         "short positional read",
                     )));
                 }
-                Ok(count) => done += count,
+                Ok(count) => {
+                    self.read_calls
+                        .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    self.read_bytes
+                        .fetch_add(count as u64, std::sync::atomic::Ordering::Relaxed);
+                    done += count;
+                }
                 Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
                 Err(error) => return Err(McapSourceError::Io(error)),
             }

@@ -18,7 +18,7 @@ pub use message_index::{
 };
 pub use source::{
     IndexedMessagePosition, IndexedMessages, IndexedReadDiagnostics, LatestMessageReader,
-    LatestQueryDiagnostics, McapSource,
+    LatestQueryDiagnostics, McapSource, SourceReadDiagnostics,
 };
 pub use source::{QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult};
 pub use source_identity::{MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity};
