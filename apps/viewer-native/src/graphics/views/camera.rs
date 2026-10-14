@@ -7,6 +7,7 @@ pub(crate) struct CameraTextureView {
     pub(crate) texture_id: egui::TextureId,
     pub(crate) arrival_time: ArrivalTime,
     pub(crate) size: (u32, u32),
+    pub(crate) uv_max: [f32; 2],
 }
 
 pub(crate) struct CameraViewInput<'a> {
@@ -34,6 +35,7 @@ pub(crate) struct CameraImageInput<'a> {
 #[derive(Default)]
 pub(crate) struct CameraViewOutput {
     pub(crate) selected_camera: Option<CameraId>,
+    pub(crate) decode_sizes: std::collections::BTreeMap<CameraId, (u32, u32)>,
 }
 
 pub(crate) fn show_camera_view(ui: &mut egui::Ui, input: CameraViewInput<'_>) -> CameraViewOutput {
@@ -66,6 +68,27 @@ pub(crate) fn show_camera_view(ui: &mut egui::Ui, input: CameraViewInput<'_>) ->
     let available = ui.available_size();
     let thumbnail_reserve = if input.show_thumbnails { 70.0 } else { 0.0 };
     let focus_area = egui::vec2(available.x, (available.y - thumbnail_reserve).max(1.0));
+    let density = ui.ctx().pixels_per_point();
+    if input.show_thumbnails {
+        for camera in input.cameras {
+            output.decode_sizes.insert(
+                camera.id,
+                (
+                    (96.0 * density).ceil() as u32,
+                    (72.0 * density).ceil() as u32,
+                ),
+            );
+        }
+    }
+    if let Some(camera) = input.focused_camera {
+        output.decode_sizes.insert(
+            camera,
+            (
+                (focus_area.x * density).ceil().max(1.0) as u32,
+                (focus_area.y * density).ceil().max(1.0) as u32,
+            ),
+        );
+    }
     show_camera_image(
         ui,
         focus_area,
@@ -89,7 +112,14 @@ pub(crate) fn show_camera_view(ui: &mut egui::Ui, input: CameraViewInput<'_>) ->
                     height as f32 * scale.max(0.01),
                 );
                 let response = ui
-                    .add(egui::Image::new((texture.texture_id, size)).sense(egui::Sense::click()))
+                    .add(
+                        egui::Image::new((texture.texture_id, size))
+                            .uv(egui::Rect::from_min_max(
+                                egui::Pos2::ZERO,
+                                egui::pos2(texture.uv_max[0], texture.uv_max[1]),
+                            ))
+                            .sense(egui::Sense::click()),
+                    )
                     .on_hover_text(format!("Focus camera {}", texture.camera_id.0));
                 if input.show_overlay && !showing_preview {
                     paint_camera_overlay(ui, response.rect, texture, input.overlays);
@@ -151,7 +181,10 @@ pub(crate) fn show_camera_image(
     let image_rect = contain_image_rect(container, texture.size);
     ui.put(
         image_rect,
-        egui::Image::new((texture.texture_id, image_rect.size())),
+        egui::Image::new((texture.texture_id, image_rect.size())).uv(egui::Rect::from_min_max(
+            egui::Pos2::ZERO,
+            egui::pos2(texture.uv_max[0], texture.uv_max[1]),
+        )),
     );
     if input.show_overlay && !showing_preview {
         paint_camera_overlay(ui, image_rect, texture, input.overlays);

@@ -189,9 +189,14 @@ NativeのMCAP読み込みはbounded positional readを使います。元ファ�
 読み込み済みpayloadのRust参照は無効化されません。検知した変更はエラーとして扱います。
 詳細とAPIの時間境界は[現在のarchitecture](docs/message_centric_architecture.md)を参照してください。
 
+Nativeカメラは表示の物理pixel数に合わせてlibjpeg-turboのIDCT縮小を使い、2本のbounded workerでJPEGをdecodeします。
+overlayは元画像の座標で計算します。[設計と制限](docs/native_jpeg.md)、[FHD表示を基準にした4K記録の比較計測](docs/performance/2026-10-14-native-jpeg/summary.md)を参照してください。
+
 ## 開発環境
 
 [Docker開発コンテナ](docs/development_container.md)にRust 1.91.1・clang・WASM・trunk・ROS 2 Jazzyをまとめています。
+NativeのJPEGデコードにはSIMDを有効にしたlibjpeg-turboを静的リンクします。ホストでビルドする場合はC/C++ツールチェーン、CMake、NASMが必要です（Ubuntu: `sudo apt install build-essential cmake nasm pkg-config`）。Dockerには同梱しています。
+
 `docker compose build dev`で準備し、`docker compose run --rm dev mcap-dev-check`で検証できます。
 
 ## 開発時のチェック

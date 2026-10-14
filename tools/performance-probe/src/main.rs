@@ -368,8 +368,16 @@ fn run(
     pixel_format: &str,
 ) -> Result<()> {
     ensure!(
-        matches!(pixel_format, "rgb" | "rgba"),
-        "pixel format must be rgb/rgba"
+        matches!(
+            pixel_format,
+            "rgb"
+                | "rgba"
+                | "native-full"
+                | "native-half"
+                | "native-layout"
+                | "native-layout-workers2"
+        ),
+        "unknown pixel decode mode"
     );
     ensure!((1..=1000).contains(&tick_ms), "tick_ms must be 1..1000");
     ensure!(matches!(selection, "scan" | "all"), "invalid selection");
@@ -435,6 +443,16 @@ fn run(
         .sum();
     let mut runtime = FeatureRuntime::new(&plan, true);
     let mut pixels: BTreeMap<CameraId, Vec<u8>> = BTreeMap::new();
+    let mut native_decoder = if pixel_format.starts_with("native-") {
+        Some(viewer_renderer::NativeJpegDecoder::new()?)
+    } else {
+        None
+    };
+    let mut decode_queue = if pixel_format.ends_with("workers2") {
+        Some(viewer_renderer::CameraDecodeQueue::new(2)?)
+    } else {
+        None
+    };
     let mut versions = BTreeMap::new();
     let mut jpeg_decodes = 0u64;
     let range = source.time_range();
@@ -525,20 +543,51 @@ fn run(
             let t = Instant::now();
             for (&id, frame) in runtime.cameras().state().frames() {
                 if versions.get(&id) != Some(&frame.arrival_time) {
-                    pixels.insert(
-                        id,
-                        if pixel_format == "rgba" {
-                            viewer_renderer::decode_jpeg(&frame.jpeg)?.rgba
+                    if let Some(queue) = decode_queue.as_mut() {
+                        let target = if Some(id) == plan.primary_camera() {
+                            (1920, 1080)
                         } else {
-                            image::load_from_memory_with_format(
-                                &frame.jpeg,
-                                image::ImageFormat::Jpeg,
-                            )?
-                            .into_bytes()
-                        },
-                    );
+                            (96, 72)
+                        };
+                        ensure!(
+                            queue.submit(frame, target)?,
+                            "unexpected JPEG queue backpressure in barrier benchmark"
+                        );
+                    } else {
+                        pixels.insert(
+                            id,
+                            if let Some(decoder) = native_decoder.as_mut() {
+                                let target = match pixel_format {
+                                    "native-full" => (u32::MAX, u32::MAX),
+                                    "native-half" => (1920, 1080),
+                                    _ if Some(id) == plan.primary_camera() => (1920, 1080),
+                                    _ => (96, 72),
+                                };
+                                decoder.decode(&frame.jpeg, target)?.image.rgba
+                            } else if pixel_format == "rgba" {
+                                viewer_renderer::decode_jpeg(&frame.jpeg)?.rgba
+                            } else {
+                                image::load_from_memory_with_format(
+                                    &frame.jpeg,
+                                    image::ImageFormat::Jpeg,
+                                )?
+                                .into_bytes()
+                            },
+                        );
+                    }
                     versions.insert(id, frame.arrival_time);
                     jpeg_decodes += 1;
+                }
+            }
+            // Barrier keeps exactly the same admitted JPEG count as the serial modes.
+            // Production UI does not wait: it coalesces pending frames independently.
+            if let Some(queue) = decode_queue.as_mut() {
+                while queue.has_work() {
+                    if let Some(result) = queue.take_ready() {
+                        pixels.insert(result.frame.camera_id, result.image?.image.rgba);
+                    } else {
+                        std::thread::sleep(Duration::from_millis(1));
+                    }
                 }
             }
             jpeg_ms += t.elapsed().as_secs_f64() * 1000.0;

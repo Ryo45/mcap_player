@@ -58,6 +58,7 @@ impl BevPanel {
                 render_requests: super::PanelRenderRequests {
                     bev_size: Some(output.logical_size),
                     scene: None,
+                    ..Default::default()
                 },
                 ..PanelOutput::default()
             }
