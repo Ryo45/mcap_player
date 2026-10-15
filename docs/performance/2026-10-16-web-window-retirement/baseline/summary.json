@@ -1,0 +1,42 @@
+[
+  {
+    "run": "none-8MiB-light-r1",
+    "status": "ok",
+    "peak_pss_mib": 1767.1767578125,
+    "max_wasm_mib": 1004.3125,
+    "play_ms": 4067.5,
+    "painted_during_play": 99,
+    "decode_p50_ms": 63.300048828125,
+    "post_to_decode_p50_ms": 1.900146484375,
+    "decode_to_receive_p50_ms": 0.099853515625,
+    "draw_p50_ms": 0,
+    "decode_focus_p50_ms": 65.400146484375,
+    "decode_thumb_p50_ms": 63.1500244140625,
+    "pre_gc": {
+      "pss_mib": 1625.09375,
+      "wasm_mib": 1004.3125,
+      "main_heap_used_mib": 1.0966110229492188,
+      "main_backing_mib": 1004.3843574523926
+    },
+    "post_gc": {
+      "pss_mib": 1616.3359375,
+      "wasm_mib": 1004.3125,
+      "main_heap_used_mib": 1.066314697265625,
+      "main_backing_mib": 1004.3851547241211
+    }
+  },
+  {
+    "run": "zstd-64MiB-light-r1",
+    "status": "resource-limit",
+    "peak_pss_mib": 2090.138671875,
+    "max_wasm_mib": 1307.6875,
+    "play_ms": null,
+    "painted_during_play": 21,
+    "decode_p50_ms": 71.099853515625,
+    "post_to_decode_p50_ms": 2.2498779296875,
+    "decode_to_receive_p50_ms": 11.0501708984375,
+    "draw_p50_ms": 0,
+    "decode_focus_p50_ms": 73.10009765625,
+    "decode_thumb_p50_ms": 71.099853515625
+  }
+]

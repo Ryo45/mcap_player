@@ -1,0 +1,106 @@
+[
+  {
+    "run": "none-8MiB-light-r1",
+    "status": "ok",
+    "peak_pss_mib": 1537.94921875,
+    "max_wasm_mib": 771.6875,
+    "play_ms": 4099.200000286102,
+    "painted_during_play": 99,
+    "decode_p50_ms": 63.800048828125,
+    "post_to_decode_p50_ms": 2.0,
+    "decode_to_receive_p50_ms": 0.0,
+    "draw_p50_ms": 0,
+    "decode_focus_p50_ms": 65.800048828125,
+    "decode_thumb_p50_ms": 63.60009765625,
+    "pre_gc": {
+      "pss_mib": 1379.53515625,
+      "wasm_mib": 771.6875,
+      "main_heap_used_mib": 1.2783889770507812,
+      "main_backing_mib": 771.7599983215332
+    },
+    "post_gc": {
+      "pss_mib": 1369.5283203125,
+      "wasm_mib": 771.6875,
+      "main_heap_used_mib": 1.0675048828125,
+      "main_backing_mib": 771.7601318359375
+    }
+  },
+  {
+    "run": "none-8MiB-light-r2",
+    "status": "ok",
+    "peak_pss_mib": 1498.43359375,
+    "max_wasm_mib": 772.375,
+    "play_ms": 4106.0,
+    "painted_during_play": 101,
+    "decode_p50_ms": 62.900146484375,
+    "post_to_decode_p50_ms": 1.80029296875,
+    "decode_to_receive_p50_ms": 0.099853515625,
+    "draw_p50_ms": 0,
+    "decode_focus_p50_ms": 64.300048828125,
+    "decode_thumb_p50_ms": 62.5999755859375,
+    "pre_gc": {
+      "pss_mib": 1403.6005859375,
+      "wasm_mib": 772.375,
+      "main_heap_used_mib": 1.0594825744628906,
+      "main_backing_mib": 772.4468460083008
+    },
+    "post_gc": {
+      "pss_mib": 1395.7109375,
+      "wasm_mib": 772.375,
+      "main_heap_used_mib": 1.0694732666015625,
+      "main_backing_mib": 772.4476318359375
+    }
+  },
+  {
+    "run": "zstd-64MiB-light-r1",
+    "status": "ok",
+    "peak_pss_mib": 1860.22265625,
+    "max_wasm_mib": 1046.5625,
+    "play_ms": 3918.5,
+    "painted_during_play": 88,
+    "decode_p50_ms": 62.050048828125,
+    "post_to_decode_p50_ms": 1.900146484375,
+    "decode_to_receive_p50_ms": 0.199951171875,
+    "draw_p50_ms": 0.0,
+    "decode_focus_p50_ms": 64.4500732421875,
+    "decode_thumb_p50_ms": 61.800048828125,
+    "pre_gc": {
+      "pss_mib": 1612.4833984375,
+      "wasm_mib": 1046.5625,
+      "main_heap_used_mib": 1.1904449462890625,
+      "main_backing_mib": 1046.6350736618042
+    },
+    "post_gc": {
+      "pss_mib": 1602.9794921875,
+      "wasm_mib": 1046.5625,
+      "main_heap_used_mib": 1.0870704650878906,
+      "main_backing_mib": 1046.635172843933
+    }
+  },
+  {
+    "run": "zstd-64MiB-light-r2",
+    "status": "ok",
+    "peak_pss_mib": 1890.962890625,
+    "max_wasm_mib": 1046.5625,
+    "play_ms": 4041.5999999046326,
+    "painted_during_play": 84,
+    "decode_p50_ms": 65.0,
+    "post_to_decode_p50_ms": 2.10009765625,
+    "decode_to_receive_p50_ms": 0.10009765625,
+    "draw_p50_ms": 0.0,
+    "decode_focus_p50_ms": 66.7998046875,
+    "decode_thumb_p50_ms": 64.39990234375,
+    "pre_gc": {
+      "pss_mib": 1584.2412109375,
+      "wasm_mib": 1046.5625,
+      "main_heap_used_mib": 1.1862907409667969,
+      "main_backing_mib": 1046.6350736618042
+    },
+    "post_gc": {
+      "pss_mib": 1575.8095703125,
+      "wasm_mib": 1046.5625,
+      "main_heap_used_mib": 1.0869522094726562,
+      "main_backing_mib": 1046.635172843933
+    }
+  }
+]
