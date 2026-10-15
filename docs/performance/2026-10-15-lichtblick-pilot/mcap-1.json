@@ -1,0 +1,2935 @@
+{
+  "app": "mcap",
+  "dataset": "/tmp/mcap-oss-compare-data/3840x2160-1cam-10hz-none-8MiB-20s.mcap",
+  "dataset_bytes": 622973335,
+  "dataset_sha256": "fe2191b830a59e69fba52aec674ff4e7df2ad6d2d8104d995cb837a87cb89615",
+  "url": "http://127.0.0.1:8094/",
+  "viewport": [
+    1920,
+    1080
+  ],
+  "dpr": 1,
+  "focus": [
+    960,
+    540
+  ],
+  "thumbnail": [
+    112,
+    63
+  ],
+  "samples": [
+    {
+      "wall_seconds": 0.0004983372054994106,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 2 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s",
+        "performance": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.05 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 1 loads/6 reads \u00b7 35.5 MB loaded/0.0 MB decompressed \u00b7 1 windows/29.5 MB logical/35.5 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 1.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 32.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0,
+        "playing": true
+      },
+      "pss_kib": 463984,
+      "summed_rss_kib": 1252312,
+      "cpu_seconds_live_processes": 8.87,
+      "rchar_live_processes": 69701865,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 0.21275437297299504,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 5 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.21s",
+        "performance": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.05 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 3 loads/14 reads \u00b7 107.1 MB loaded/0.0 MB decompressed \u00b7 3 windows/89.1 MB logical/107.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.79/2.00s actual/target \u00b7 0 evicted \u00b7 last 42.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.0105,
+        "playing": true
+      },
+      "pss_kib": 566422,
+      "summed_rss_kib": 1355144,
+      "cpu_seconds_live_processes": 9.76,
+      "rchar_live_processes": 144746640,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 0.42886363016441464,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.43s",
+        "performance": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.05 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 3 loads/14 reads \u00b7 107.1 MB loaded/0.0 MB decompressed \u00b7 3 windows/89.1 MB logical/107.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.57/2.00s actual/target \u00b7 0 evicted \u00b7 last 42.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.0217,
+        "playing": true
+      },
+      "pss_kib": 573974,
+      "summed_rss_kib": 1362712,
+      "cpu_seconds_live_processes": 10.66,
+      "rchar_live_processes": 144748037,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 0.6447440250776708,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 13 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.64s",
+        "performance": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.05 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 3 loads/14 reads \u00b7 107.1 MB loaded/0.0 MB decompressed \u00b7 3 windows/89.1 MB logical/107.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.36/2.00s actual/target \u00b7 0 evicted \u00b7 last 42.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.0322,
+        "playing": true
+      },
+      "pss_kib": 584250,
+      "summed_rss_kib": 1372996,
+      "cpu_seconds_live_processes": 11.49,
+      "rchar_live_processes": 144749446,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 0.8600471070967615,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 17 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.86s",
+        "performance": "Focus 6.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.41 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 3 loads/14 reads \u00b7 107.1 MB loaded/0.0 MB decompressed \u00b7 3 windows/89.1 MB logical/107.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.14/2.00s actual/target \u00b7 0 evicted \u00b7 last 42.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.0434,
+        "playing": true
+      },
+      "pss_kib": 601014,
+      "summed_rss_kib": 1389748,
+      "cpu_seconds_live_processes": 12.22,
+      "rchar_live_processes": 144750851,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 1.0758988461457193,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 21 decoded \u00b7 0 errors \u00b7 1 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.07s",
+        "performance": "Focus 6.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.41 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 4 loads/18 reads \u00b7 142.6 MB loaded/0.0 MB decompressed \u00b7 4 windows/118.8 MB logical/142.6 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.93/2.00s actual/target \u00b7 0 evicted \u00b7 last 34.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.0539,
+        "playing": true
+      },
+      "pss_kib": 656658,
+      "summed_rss_kib": 1445392,
+      "cpu_seconds_live_processes": 13.11,
+      "rchar_live_processes": 181975479,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 1.2923394138924778,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 25 decoded \u00b7 0 errors \u00b7 1 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.30s",
+        "performance": "Focus 6.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.41 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 4 loads/18 reads \u00b7 142.6 MB loaded/0.0 MB decompressed \u00b7 4 windows/118.8 MB logical/142.6 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.70/2.00s actual/target \u00b7 0 evicted \u00b7 last 34.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.0651,
+        "playing": true
+      },
+      "pss_kib": 674026,
+      "summed_rss_kib": 1462712,
+      "cpu_seconds_live_processes": 13.89,
+      "rchar_live_processes": 181978488,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 1.507893499918282,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 30 decoded \u00b7 0 errors \u00b7 1 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.50s",
+        "performance": "Focus 6.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.41 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 4 loads/18 reads \u00b7 142.6 MB loaded/0.0 MB decompressed \u00b7 4 windows/118.8 MB logical/142.6 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.50/2.00s actual/target \u00b7 0 evicted \u00b7 last 34.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.0756,
+        "playing": true
+      },
+      "pss_kib": 746690,
+      "summed_rss_kib": 1535380,
+      "cpu_seconds_live_processes": 14.71,
+      "rchar_live_processes": 181979951,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 1.725512612145394,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 34 decoded \u00b7 0 errors \u00b7 1 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.73s",
+        "performance": "Focus 6.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.41 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 4 loads/18 reads \u00b7 142.6 MB loaded/0.0 MB decompressed \u00b7 4 windows/118.8 MB logical/142.6 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.27/2.00s actual/target \u00b7 0 evicted \u00b7 last 34.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.0868,
+        "playing": true
+      },
+      "pss_kib": 750606,
+      "summed_rss_kib": 1539296,
+      "cpu_seconds_live_processes": 15.54,
+      "rchar_live_processes": 181981381,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 1.9425811311230063,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 38 decoded \u00b7 0 errors \u00b7 2 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.95s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.54 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 4 loads/18 reads \u00b7 142.6 MB loaded/0.0 MB decompressed \u00b7 4 windows/118.8 MB logical/142.6 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.05/2.00s actual/target \u00b7 0 evicted \u00b7 last 34.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.0981,
+        "playing": true
+      },
+      "pss_kib": 760622,
+      "summed_rss_kib": 1549312,
+      "cpu_seconds_live_processes": 16.35,
+      "rchar_live_processes": 181982764,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 2.1597643801942468,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 42 decoded \u00b7 0 errors \u00b7 2 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.16s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.54 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 5 loads/22 reads \u00b7 178.1 MB loaded/0.0 MB decompressed \u00b7 5 windows/148.3 MB logical/178.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.84/2.00s actual/target \u00b7 0 evicted \u00b7 last 35.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.1085,
+        "playing": true
+      },
+      "pss_kib": 809382,
+      "summed_rss_kib": 1598072,
+      "cpu_seconds_live_processes": 17.22,
+      "rchar_live_processes": 219215170,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 2.3769937879405916,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 46 decoded \u00b7 0 errors \u00b7 2 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.38s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.54 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 5 loads/22 reads \u00b7 178.1 MB loaded/0.0 MB decompressed \u00b7 5 windows/148.3 MB logical/178.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.62/2.00s actual/target \u00b7 0 evicted \u00b7 last 35.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.1198,
+        "playing": true
+      },
+      "pss_kib": 697851,
+      "summed_rss_kib": 1486600,
+      "cpu_seconds_live_processes": 18.02,
+      "rchar_live_processes": 219216603,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 2.593021595850587,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 50 decoded \u00b7 0 errors \u00b7 2 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.59s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.54 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 5 loads/22 reads \u00b7 178.1 MB loaded/0.0 MB decompressed \u00b7 5 windows/148.3 MB logical/178.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.41/2.00s actual/target \u00b7 0 evicted \u00b7 last 35.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.1303,
+        "playing": true
+      },
+      "pss_kib": 713787,
+      "summed_rss_kib": 1502536,
+      "cpu_seconds_live_processes": 18.82,
+      "rchar_live_processes": 219218009,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 2.809279073961079,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 55 decoded \u00b7 0 errors \u00b7 3 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.82s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.67 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.46 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 5 loads/22 reads \u00b7 178.1 MB loaded/0.0 MB decompressed \u00b7 5 windows/148.3 MB logical/178.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.18/2.00s actual/target \u00b7 0 evicted \u00b7 last 35.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.1415,
+        "playing": true
+      },
+      "pss_kib": 723859,
+      "summed_rss_kib": 1512608,
+      "cpu_seconds_live_processes": 19.6,
+      "rchar_live_processes": 219219442,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 3.0255933171138167,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 59 decoded \u00b7 0 errors \u00b7 3 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.03s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.67 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.46 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 6 loads/22 reads \u00b7 178.1 MB loaded/0.0 MB decompressed \u00b7 5 windows/148.3 MB logical/178.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 1.97/2.00s actual/target \u00b7 0 evicted \u00b7 last 35.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.1523,
+        "playing": true
+      },
+      "pss_kib": 754635,
+      "summed_rss_kib": 1543384,
+      "cpu_seconds_live_processes": 20.44,
+      "rchar_live_processes": 247038866,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 3.246350542176515,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 63 decoded \u00b7 0 errors \u00b7 3 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.25s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.67 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.46 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 6 loads/26 reads \u00b7 213.6 MB loaded/0.0 MB decompressed \u00b7 6 windows/178.1 MB logical/213.6 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.75/2.00s actual/target \u00b7 0 evicted \u00b7 last 49.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.1632,
+        "playing": true
+      },
+      "pss_kib": 778115,
+      "summed_rss_kib": 1566868,
+      "cpu_seconds_live_processes": 21.29,
+      "rchar_live_processes": 256492657,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 3.46316926414147,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 67 decoded \u00b7 0 errors \u00b7 3 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.47s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.67 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.46 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 6 loads/26 reads \u00b7 213.6 MB loaded/0.0 MB decompressed \u00b7 6 windows/178.1 MB logical/213.6 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.53/2.00s actual/target \u00b7 0 evicted \u00b7 last 49.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.1745,
+        "playing": true
+      },
+      "pss_kib": 770365,
+      "summed_rss_kib": 1559120,
+      "cpu_seconds_live_processes": 22.08,
+      "rchar_live_processes": 256494087,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 3.681408630218357,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 70 decoded \u00b7 0 errors \u00b7 3 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.68s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.67 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.46 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 6 loads/26 reads \u00b7 213.6 MB loaded/0.0 MB decompressed \u00b7 6 windows/178.1 MB logical/213.6 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.32/2.00s actual/target \u00b7 0 evicted \u00b7 last 49.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.1849,
+        "playing": true
+      },
+      "pss_kib": 777685,
+      "summed_rss_kib": 1566440,
+      "cpu_seconds_live_processes": 22.89,
+      "rchar_live_processes": 256495534,
+      "storage_read_bytes_live_processes": 41439232,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 3.8978717690333724,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 75 decoded \u00b7 0 errors \u00b7 4 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.44 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.52 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 6 loads/26 reads \u00b7 213.6 MB loaded/0.0 MB decompressed \u00b7 6 windows/178.1 MB logical/213.6 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.10/2.00s actual/target \u00b7 0 evicted \u00b7 last 49.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.1962,
+        "playing": true
+      },
+      "pss_kib": 794313,
+      "summed_rss_kib": 1583072,
+      "cpu_seconds_live_processes": 23.72,
+      "rchar_live_processes": 256496982,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 4.113988725934178,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 79 decoded \u00b7 0 errors \u00b7 4 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 4.11s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.44 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.52 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 7 loads/30 reads \u00b7 249.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.89/2.00s actual/target \u00b7 0 evicted \u00b7 last 34.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.2066,
+        "playing": true
+      },
+      "pss_kib": 852829,
+      "summed_rss_kib": 1641588,
+      "cpu_seconds_live_processes": 24.6,
+      "rchar_live_processes": 293989016,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 4.330598968081176,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 83 decoded \u00b7 0 errors \u00b7 4 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 4.34s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.44 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.52 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 7 loads/30 reads \u00b7 249.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.66/2.00s actual/target \u00b7 0 evicted \u00b7 last 34.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.2179,
+        "playing": true
+      },
+      "pss_kib": 869117,
+      "summed_rss_kib": 1657876,
+      "cpu_seconds_live_processes": 25.42,
+      "rchar_live_processes": 293990407,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 4.547645503189415,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 87 decoded \u00b7 0 errors \u00b7 4 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 4.54s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.44 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.52 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 7 loads/30 reads \u00b7 249.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.46/2.00s actual/target \u00b7 0 evicted \u00b7 last 34.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.2283,
+        "playing": true
+      },
+      "pss_kib": 888637,
+      "summed_rss_kib": 1677396,
+      "cpu_seconds_live_processes": 26.22,
+      "rchar_live_processes": 293991877,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 4.765052218921483,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 91 decoded \u00b7 0 errors \u00b7 5 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 4.77s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.44 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.52 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 7 loads/30 reads \u00b7 249.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.23/2.00s actual/target \u00b7 0 evicted \u00b7 last 34.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.2396,
+        "playing": true
+      },
+      "pss_kib": 783561,
+      "summed_rss_kib": 1572324,
+      "cpu_seconds_live_processes": 26.99,
+      "rchar_live_processes": 293993277,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 4.980872127227485,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 95 decoded \u00b7 0 errors \u00b7 5 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 4.98s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.41 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 7 loads/30 reads \u00b7 249.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.02/2.00s actual/target \u00b7 0 evicted \u00b7 last 34.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.2501,
+        "playing": true
+      },
+      "pss_kib": 799601,
+      "summed_rss_kib": 1588364,
+      "cpu_seconds_live_processes": 27.8,
+      "rchar_live_processes": 293994724,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 5.1968437931500375,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 100 decoded \u00b7 0 errors \u00b7 5 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 5.20s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.41 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 8 loads/34 reads \u00b7 284.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.80/2.00s actual/target \u00b7 1 evicted \u00b7 last 47.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.2613,
+        "playing": true
+      },
+      "pss_kib": 848989,
+      "summed_rss_kib": 1637752,
+      "cpu_seconds_live_processes": 28.72,
+      "rchar_live_processes": 331263712,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 5.413366258144379,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 104 decoded \u00b7 0 errors \u00b7 5 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 5.41s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.41 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 8 loads/34 reads \u00b7 284.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.59/2.00s actual/target \u00b7 1 evicted \u00b7 last 47.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.2718,
+        "playing": true
+      },
+      "pss_kib": 865381,
+      "summed_rss_kib": 1654144,
+      "cpu_seconds_live_processes": 29.58,
+      "rchar_live_processes": 331265159,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 5.631090443115681,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 108 decoded \u00b7 0 errors \u00b7 5 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 5.63s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.41 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 8 loads/34 reads \u00b7 284.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.37/2.00s actual/target \u00b7 1 evicted \u00b7 last 47.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.283,
+        "playing": true
+      },
+      "pss_kib": 945481,
+      "summed_rss_kib": 1734248,
+      "cpu_seconds_live_processes": 30.34,
+      "rchar_live_processes": 331266548,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 5.850309906993061,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 112 decoded \u00b7 0 errors \u00b7 6 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 5.86s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.78 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.44 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 8 loads/34 reads \u00b7 284.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.14/2.00s actual/target \u00b7 1 evicted \u00b7 last 47.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.2943,
+        "playing": true
+      },
+      "pss_kib": 933961,
+      "summed_rss_kib": 1722728,
+      "cpu_seconds_live_processes": 31.15,
+      "rchar_live_processes": 331267988,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 6.077487447299063,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 116 decoded \u00b7 0 errors \u00b7 6 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 6.08s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.78 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.44 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 9 loads/38 reads \u00b7 320.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.8 MB logical/249.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.92/2.00s actual/target \u00b7 2 evicted \u00b7 last 27.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.3055,
+        "playing": true
+      },
+      "pss_kib": 1008293,
+      "summed_rss_kib": 1797060,
+      "cpu_seconds_live_processes": 32.05,
+      "rchar_live_processes": 368502091,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 6.305661092977971,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 121 decoded \u00b7 0 errors \u00b7 6 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 6.30s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.78 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.44 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 9 loads/38 reads \u00b7 320.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.8 MB logical/249.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.70/2.00s actual/target \u00b7 2 evicted \u00b7 last 27.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.3168,
+        "playing": true
+      },
+      "pss_kib": 967709,
+      "summed_rss_kib": 1756476,
+      "cpu_seconds_live_processes": 32.9,
+      "rchar_live_processes": 368505199,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 6.532054462004453,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 125 decoded \u00b7 0 errors \u00b7 6 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 6.53s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.78 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.44 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 9 loads/38 reads \u00b7 320.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.8 MB logical/249.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.47/2.00s actual/target \u00b7 2 evicted \u00b7 last 27.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.328,
+        "playing": true
+      },
+      "pss_kib": 982125,
+      "summed_rss_kib": 1770896,
+      "cpu_seconds_live_processes": 33.71,
+      "rchar_live_processes": 368506613,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 6.759616530966014,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 129 decoded \u00b7 0 errors \u00b7 7 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 6.77s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.78 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.44 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 9 loads/38 reads \u00b7 320.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.8 MB logical/249.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.23/2.00s actual/target \u00b7 2 evicted \u00b7 last 27.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.3401,
+        "playing": true
+      },
+      "pss_kib": 1066173,
+      "summed_rss_kib": 1854944,
+      "cpu_seconds_live_processes": 34.58,
+      "rchar_live_processes": 368508051,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 6.98976124310866,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 133 decoded \u00b7 0 errors \u00b7 7 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 6.99s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 68.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.38 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 9 loads/38 reads \u00b7 320.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.8 MB logical/249.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.01/2.00s actual/target \u00b7 2 evicted \u00b7 last 27.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.3514,
+        "playing": true
+      },
+      "pss_kib": 892845,
+      "summed_rss_kib": 1681616,
+      "cpu_seconds_live_processes": 35.44,
+      "rchar_live_processes": 368509417,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 7.2187759331427515,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 138 decoded \u00b7 0 errors \u00b7 7 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 7.22s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 68.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.38 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 10 loads/42 reads \u00b7 356.2 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.78/2.00s actual/target \u00b7 3 evicted \u00b7 last 23.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.3626,
+        "playing": true
+      },
+      "pss_kib": 878548,
+      "summed_rss_kib": 1667488,
+      "cpu_seconds_live_processes": 36.3,
+      "rchar_live_processes": 406048159,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 7.444597070105374,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 142 decoded \u00b7 0 errors \u00b7 7 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 7.44s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 68.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.38 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 10 loads/42 reads \u00b7 356.2 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.56/2.00s actual/target \u00b7 3 evicted \u00b7 last 23.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.3739,
+        "playing": true
+      },
+      "pss_kib": 894888,
+      "summed_rss_kib": 1683872,
+      "cpu_seconds_live_processes": 37.2,
+      "rchar_live_processes": 406049670,
+      "storage_read_bytes_live_processes": 41447424,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 7.67147401208058,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 146 decoded \u00b7 0 errors \u00b7 8 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 7.68s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 68.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.38 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 10 loads/42 reads \u00b7 356.2 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.32/2.00s actual/target \u00b7 3 evicted \u00b7 last 23.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.3859,
+        "playing": true
+      },
+      "pss_kib": 911500,
+      "summed_rss_kib": 1700484,
+      "cpu_seconds_live_processes": 38.04,
+      "rchar_live_processes": 406051164,
+      "storage_read_bytes_live_processes": 41578496,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 7.897755590267479,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 151 decoded \u00b7 0 errors \u00b7 8 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 7.90s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.62 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 10 loads/42 reads \u00b7 356.2 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.1 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.10/2.00s actual/target \u00b7 3 evicted \u00b7 last 23.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.3972,
+        "playing": true
+      },
+      "pss_kib": 928104,
+      "summed_rss_kib": 1717088,
+      "cpu_seconds_live_processes": 38.89,
+      "rchar_live_processes": 406052579,
+      "storage_read_bytes_live_processes": 41578496,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 8.124489427078515,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 155 decoded \u00b7 0 errors \u00b7 8 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 8.13s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.62 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 11 loads/46 reads \u00b7 392.0 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.87/2.00s actual/target \u00b7 4 evicted \u00b7 last 28.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.4084,
+        "playing": true
+      },
+      "pss_kib": 952608,
+      "summed_rss_kib": 1741596,
+      "cpu_seconds_live_processes": 39.78,
+      "rchar_live_processes": 443589696,
+      "storage_read_bytes_live_processes": 41578496,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 8.350741237867624,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 159 decoded \u00b7 0 errors \u00b7 8 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 8.35s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.62 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 11 loads/46 reads \u00b7 392.0 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.65/2.00s actual/target \u00b7 4 evicted \u00b7 last 28.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.4197,
+        "playing": true
+      },
+      "pss_kib": 969008,
+      "summed_rss_kib": 1757996,
+      "cpu_seconds_live_processes": 40.6,
+      "rchar_live_processes": 443591166,
+      "storage_read_bytes_live_processes": 41578496,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 8.577658890280873,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 163 decoded \u00b7 0 errors \u00b7 8 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 8.58s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.62 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 11 loads/46 reads \u00b7 392.0 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.42/2.00s actual/target \u00b7 4 evicted \u00b7 last 28.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.431,
+        "playing": true
+      },
+      "pss_kib": 985448,
+      "summed_rss_kib": 1774436,
+      "cpu_seconds_live_processes": 41.44,
+      "rchar_live_processes": 443592638,
+      "storage_read_bytes_live_processes": 41578496,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 8.805334236938506,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 168 decoded \u00b7 0 errors \u00b7 9 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 8.80s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.62 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 11 loads/46 reads \u00b7 392.0 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.20/2.00s actual/target \u00b7 4 evicted \u00b7 last 28.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.4422,
+        "playing": true
+      },
+      "pss_kib": 1002485,
+      "summed_rss_kib": 1792164,
+      "cpu_seconds_live_processes": 42.28,
+      "rchar_live_processes": 443594126,
+      "storage_read_bytes_live_processes": 41578496,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 9.03334314795211,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 172 decoded \u00b7 0 errors \u00b7 9 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 9.04s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 12 loads/50 reads \u00b7 427.8 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/249.7 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.96/2.00s actual/target \u00b7 5 evicted \u00b7 last 22.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.4543,
+        "playing": true
+      },
+      "pss_kib": 1055199,
+      "summed_rss_kib": 1844900,
+      "cpu_seconds_live_processes": 43.13,
+      "rchar_live_processes": 481091597,
+      "storage_read_bytes_live_processes": 41578496,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 9.263619411271065,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 176 decoded \u00b7 0 errors \u00b7 9 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 9.26s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 12 loads/50 reads \u00b7 427.8 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/249.7 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.74/2.00s actual/target \u00b7 5 evicted \u00b7 last 22.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.4655,
+        "playing": true
+      },
+      "pss_kib": 1071878,
+      "summed_rss_kib": 1863500,
+      "cpu_seconds_live_processes": 44.02,
+      "rchar_live_processes": 482135156,
+      "storage_read_bytes_live_processes": 41578496,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 9.493355317041278,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 180 decoded \u00b7 0 errors \u00b7 9 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 9.49s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 12 loads/50 reads \u00b7 427.8 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/249.7 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.51/2.00s actual/target \u00b7 5 evicted \u00b7 last 22.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.4768,
+        "playing": true
+      },
+      "pss_kib": 970179,
+      "summed_rss_kib": 1762684,
+      "cpu_seconds_live_processes": 44.9,
+      "rchar_live_processes": 484209347,
+      "storage_read_bytes_live_processes": 41582592,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 9.722578153945506,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 186 decoded \u00b7 0 errors \u00b7 10 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 9.73s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 12 loads/50 reads \u00b7 427.8 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/249.7 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.27/2.00s actual/target \u00b7 5 evicted \u00b7 last 22.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.4888,
+        "playing": true
+      },
+      "pss_kib": 1005208,
+      "summed_rss_kib": 1797296,
+      "cpu_seconds_live_processes": 45.8,
+      "rchar_live_processes": 489122932,
+      "storage_read_bytes_live_processes": 41582592,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 9.95031863823533,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 190 decoded \u00b7 0 errors \u00b7 10 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 9.95s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 71.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.46 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 12 loads/50 reads \u00b7 427.8 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/249.7 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.05/2.00s actual/target \u00b7 5 evicted \u00b7 last 22.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.5001,
+        "playing": true
+      },
+      "pss_kib": 1032766,
+      "summed_rss_kib": 1826060,
+      "cpu_seconds_live_processes": 46.63,
+      "rchar_live_processes": 489124358,
+      "storage_read_bytes_live_processes": 41582592,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 10.178627104964107,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 194 decoded \u00b7 0 errors \u00b7 10 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 10.18s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 71.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.46 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 13 loads/54 reads \u00b7 463.3 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.8 MB logical/249.7 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.82/2.00s actual/target \u00b7 6 evicted \u00b7 last 28.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.5114,
+        "playing": true
+      },
+      "pss_kib": 1020126,
+      "summed_rss_kib": 1818040,
+      "cpu_seconds_live_processes": 47.6,
+      "rchar_live_processes": 538693766,
+      "storage_read_bytes_live_processes": 41582592,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071,
+        1461133,
+        1461139
+      ]
+    },
+    {
+      "wall_seconds": 10.407393906265497,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 199 decoded \u00b7 0 errors \u00b7 11 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 10.42s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 71.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.46 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 13 loads/54 reads \u00b7 463.3 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.8 MB logical/249.7 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.58/2.00s actual/target \u00b7 6 evicted \u00b7 last 28.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.5234,
+        "playing": true
+      },
+      "pss_kib": 1049524,
+      "summed_rss_kib": 1845808,
+      "cpu_seconds_live_processes": 48.48,
+      "rchar_live_processes": 539415266,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 10.635422519873828,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 203 decoded \u00b7 0 errors \u00b7 11 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 10.64s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 71.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.46 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 13 loads/54 reads \u00b7 463.3 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.8 MB logical/249.7 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.36/2.00s actual/target \u00b7 6 evicted \u00b7 last 28.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.5347,
+        "playing": true
+      },
+      "pss_kib": 1066400,
+      "summed_rss_kib": 1862684,
+      "cpu_seconds_live_processes": 49.3,
+      "rchar_live_processes": 539416787,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 10.862696703057736,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 207 decoded \u00b7 0 errors \u00b7 11 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 10.86s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.56 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.48 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 13 loads/54 reads \u00b7 463.3 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.8 MB logical/249.7 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.14/2.00s actual/target \u00b7 6 evicted \u00b7 last 28.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.5459,
+        "playing": true
+      },
+      "pss_kib": 1082884,
+      "summed_rss_kib": 1879168,
+      "cpu_seconds_live_processes": 50.13,
+      "rchar_live_processes": 539418202,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 11.090619452297688,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 211 decoded \u00b7 0 errors \u00b7 11 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 11.09s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.56 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.48 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 14 loads/58 reads \u00b7 499.0 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.7 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.91/2.00s actual/target \u00b7 7 evicted \u00b7 last 23.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.5572,
+        "playing": true
+      },
+      "pss_kib": 1136196,
+      "summed_rss_kib": 1932480,
+      "cpu_seconds_live_processes": 51.03,
+      "rchar_live_processes": 576916471,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 11.319818270858377,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 216 decoded \u00b7 0 errors \u00b7 11 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 11.33s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.56 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.48 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 14 loads/58 reads \u00b7 499.0 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.7 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.67/2.00s actual/target \u00b7 7 evicted \u00b7 last 23.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.5692,
+        "playing": true
+      },
+      "pss_kib": 1151976,
+      "summed_rss_kib": 1948264,
+      "cpu_seconds_live_processes": 51.89,
+      "rchar_live_processes": 576919565,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 11.548547515179962,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 220 decoded \u00b7 0 errors \u00b7 12 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 11.55s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.56 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.48 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 14 loads/58 reads \u00b7 499.0 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.7 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.45/2.00s actual/target \u00b7 7 evicted \u00b7 last 23.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.5805,
+        "playing": true
+      },
+      "pss_kib": 1168848,
+      "summed_rss_kib": 1965136,
+      "cpu_seconds_live_processes": 52.7,
+      "rchar_live_processes": 576921008,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 11.777472951915115,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 12 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 11.78s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.56 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.48 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 14 loads/58 reads \u00b7 499.0 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.7 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.22/2.00s actual/target \u00b7 7 evicted \u00b7 last 23.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.5918,
+        "playing": true
+      },
+      "pss_kib": 1057520,
+      "summed_rss_kib": 1853808,
+      "cpu_seconds_live_processes": 53.58,
+      "rchar_live_processes": 576922520,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 12.00556484889239,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 229 decoded \u00b7 0 errors \u00b7 12 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 12.00s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.44 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.44 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 14 loads/58 reads \u00b7 499.0 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.7 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.00/2.00s actual/target \u00b7 7 evicted \u00b7 last 23.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.603,
+        "playing": true
+      },
+      "pss_kib": 1084504,
+      "summed_rss_kib": 1881816,
+      "cpu_seconds_live_processes": 54.43,
+      "rchar_live_processes": 586374630,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460923,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 12.237083219923079,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 233 decoded \u00b7 0 errors \u00b7 12 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 12.24s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.44 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.44 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 15 loads/62 reads \u00b7 534.8 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.9 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.76/2.00s actual/target \u00b7 8 evicted \u00b7 last 37.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.6151,
+        "playing": true
+      },
+      "pss_kib": 1042643,
+      "summed_rss_kib": 1752544,
+      "cpu_seconds_live_processes": 55.32,
+      "rchar_live_processes": 614477486,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 12.464138510171324,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 237 decoded \u00b7 0 errors \u00b7 13 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 12.46s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.44 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.44 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 15 loads/62 reads \u00b7 534.8 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.9 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.54/2.00s actual/target \u00b7 8 evicted \u00b7 last 37.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.6263,
+        "playing": true
+      },
+      "pss_kib": 1024243,
+      "summed_rss_kib": 1734144,
+      "cpu_seconds_live_processes": 56.14,
+      "rchar_live_processes": 614478973,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 12.691886798013002,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 241 decoded \u00b7 0 errors \u00b7 13 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 12.69s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.44 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.44 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 15 loads/62 reads \u00b7 534.8 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.9 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.31/2.00s actual/target \u00b7 8 evicted \u00b7 last 37.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.6376,
+        "playing": true
+      },
+      "pss_kib": 1040799,
+      "summed_rss_kib": 1750700,
+      "cpu_seconds_live_processes": 57.01,
+      "rchar_live_processes": 614480452,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 12.918622904922813,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 246 decoded \u00b7 0 errors \u00b7 13 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 12.93s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 69.56 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 15 loads/62 reads \u00b7 534.8 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.9 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.07/2.00s actual/target \u00b7 8 evicted \u00b7 last 37.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.6496,
+        "playing": true
+      },
+      "pss_kib": 1054749,
+      "summed_rss_kib": 1764672,
+      "cpu_seconds_live_processes": 57.79,
+      "rchar_live_processes": 614481939,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 13.138327130116522,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 250 decoded \u00b7 0 errors \u00b7 13 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 13.14s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 69.56 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 16 loads/66 reads \u00b7 570.3 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/249.9 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.86/2.00s actual/target \u00b7 9 evicted \u00b7 last 26.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.6601,
+        "playing": true
+      },
+      "pss_kib": 1159943,
+      "summed_rss_kib": 1869848,
+      "cpu_seconds_live_processes": 58.67,
+      "rchar_live_processes": 651707124,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 13.357635757885873,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 254 decoded \u00b7 0 errors \u00b7 14 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 13.36s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 69.56 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 16 loads/66 reads \u00b7 570.3 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/249.9 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.64/2.00s actual/target \u00b7 9 evicted \u00b7 last 26.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.6714,
+        "playing": true
+      },
+      "pss_kib": 1189599,
+      "summed_rss_kib": 1899504,
+      "cpu_seconds_live_processes": 59.52,
+      "rchar_live_processes": 651708643,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 13.578894366044551,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 258 decoded \u00b7 0 errors \u00b7 14 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 13.58s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 69.56 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 16 loads/66 reads \u00b7 570.3 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/249.9 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.42/2.00s actual/target \u00b7 9 evicted \u00b7 last 26.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.6826,
+        "playing": true
+      },
+      "pss_kib": 1176219,
+      "summed_rss_kib": 1886124,
+      "cpu_seconds_live_processes": 60.33,
+      "rchar_live_processes": 651710114,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 13.798502621240914,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 263 decoded \u00b7 0 errors \u00b7 14 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 13.81s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 69.56 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 16 loads/66 reads \u00b7 570.3 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/249.9 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.19/2.00s actual/target \u00b7 9 evicted \u00b7 last 26.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.6939,
+        "playing": true
+      },
+      "pss_kib": 1202759,
+      "summed_rss_kib": 1912668,
+      "cpu_seconds_live_processes": 61.12,
+      "rchar_live_processes": 651711576,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 14.018256208859384,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 267 decoded \u00b7 0 errors \u00b7 14 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 14.02s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.49 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 17 loads/66 reads \u00b7 570.3 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/249.9 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 1.98/2.00s actual/target \u00b7 9 evicted \u00b7 last 26.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.7043,
+        "playing": true
+      },
+      "pss_kib": 1237335,
+      "summed_rss_kib": 1948268,
+      "cpu_seconds_live_processes": 61.96,
+      "rchar_live_processes": 679754941,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461057,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 14.240155261941254,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 271 decoded \u00b7 0 errors \u00b7 15 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 14.24s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.49 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 17 loads/70 reads \u00b7 605.8 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.8 MB logical/249.6 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.76/2.00s actual/target \u00b7 10 evicted \u00b7 last 31.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.7156,
+        "playing": true
+      },
+      "pss_kib": 1042611,
+      "summed_rss_kib": 1661904,
+      "cpu_seconds_live_processes": 62.77,
+      "rchar_live_processes": 688942334,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 14.45758179621771,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 275 decoded \u00b7 0 errors \u00b7 15 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 14.46s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.49 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 17 loads/70 reads \u00b7 605.8 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.8 MB logical/249.6 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.54/2.00s actual/target \u00b7 10 evicted \u00b7 last 31.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.7268,
+        "playing": true
+      },
+      "pss_kib": 1058487,
+      "summed_rss_kib": 1677780,
+      "cpu_seconds_live_processes": 63.59,
+      "rchar_live_processes": 688943822,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 14.674786509945989,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 279 decoded \u00b7 0 errors \u00b7 15 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 14.67s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.33 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.49 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 17 loads/70 reads \u00b7 605.8 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.8 MB logical/249.6 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.33/2.00s actual/target \u00b7 10 evicted \u00b7 last 31.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.7373,
+        "playing": true
+      },
+      "pss_kib": 1073331,
+      "summed_rss_kib": 1692628,
+      "cpu_seconds_live_processes": 64.38,
+      "rchar_live_processes": 688945219,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 14.891726666130126,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 283 decoded \u00b7 0 errors \u00b7 15 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 14.90s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.22 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.35 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 17 loads/70 reads \u00b7 605.8 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.8 MB logical/249.6 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.10/2.00s actual/target \u00b7 10 evicted \u00b7 last 31.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.7485,
+        "playing": true
+      },
+      "pss_kib": 1085767,
+      "summed_rss_kib": 1705064,
+      "cpu_seconds_live_processes": 65.19,
+      "rchar_live_processes": 688946665,
+      "storage_read_bytes_live_processes": 41689088,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 15.109125373885036,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 288 decoded \u00b7 0 errors \u00b7 16 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 15.10s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.22 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.35 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 18 loads/74 reads \u00b7 641.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.90/2.00s actual/target \u00b7 11 evicted \u00b7 last 26.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.759,
+        "playing": true
+      },
+      "pss_kib": 1133427,
+      "summed_rss_kib": 1752724,
+      "cpu_seconds_live_processes": 66.02,
+      "rchar_live_processes": 726223373,
+      "storage_read_bytes_live_processes": 41795584,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 15.326864239294082,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 292 decoded \u00b7 0 errors \u00b7 16 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 15.33s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.22 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.35 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 18 loads/74 reads \u00b7 641.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.67/2.00s actual/target \u00b7 11 evicted \u00b7 last 26.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.7703,
+        "playing": true
+      },
+      "pss_kib": 1126075,
+      "summed_rss_kib": 1745376,
+      "cpu_seconds_live_processes": 66.81,
+      "rchar_live_processes": 726224835,
+      "storage_read_bytes_live_processes": 41795584,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 15.544791728258133,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 296 decoded \u00b7 0 errors \u00b7 16 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 15.55s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.22 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.35 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 18 loads/74 reads \u00b7 641.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.45/2.00s actual/target \u00b7 11 evicted \u00b7 last 26.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.7815,
+        "playing": true
+      },
+      "pss_kib": 1126755,
+      "summed_rss_kib": 1746056,
+      "cpu_seconds_live_processes": 67.61,
+      "rchar_live_processes": 726226227,
+      "storage_read_bytes_live_processes": 41795584,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 15.7633913801983,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 299 decoded \u00b7 0 errors \u00b7 16 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 15.76s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.22 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.35 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 18 loads/74 reads \u00b7 641.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.24/2.00s actual/target \u00b7 11 evicted \u00b7 last 26.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.792,
+        "playing": true
+      },
+      "pss_kib": 1129855,
+      "summed_rss_kib": 1749156,
+      "cpu_seconds_live_processes": 68.38,
+      "rchar_live_processes": 726227616,
+      "storage_read_bytes_live_processes": 41795584,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 15.98157463222742,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 303 decoded \u00b7 0 errors \u00b7 16 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 15.98s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 64.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 18 loads/74 reads \u00b7 641.4 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.02/2.00s actual/target \u00b7 11 evicted \u00b7 last 26.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.8032,
+        "playing": true
+      },
+      "pss_kib": 1142367,
+      "summed_rss_kib": 1761668,
+      "cpu_seconds_live_processes": 69.21,
+      "rchar_live_processes": 726228974,
+      "storage_read_bytes_live_processes": 41795584,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 16.19933410687372,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 308 decoded \u00b7 0 errors \u00b7 17 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 16.21s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 64.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 19 loads/78 reads \u00b7 677.1 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.79/2.00s actual/target \u00b7 12 evicted \u00b7 last 37.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.8145,
+        "playing": true
+      },
+      "pss_kib": 1116867,
+      "summed_rss_kib": 1736172,
+      "cpu_seconds_live_processes": 70.04,
+      "rchar_live_processes": 763723349,
+      "storage_read_bytes_live_processes": 61186048,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 16.41665504220873,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 312 decoded \u00b7 0 errors \u00b7 17 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 16.42s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 64.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 19 loads/78 reads \u00b7 677.1 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.58/2.00s actual/target \u00b7 12 evicted \u00b7 last 37.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.8249,
+        "playing": true
+      },
+      "pss_kib": 1001691,
+      "summed_rss_kib": 1620996,
+      "cpu_seconds_live_processes": 70.84,
+      "rchar_live_processes": 763724771,
+      "storage_read_bytes_live_processes": 61214720,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 16.633351544849575,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 316 decoded \u00b7 0 errors \u00b7 17 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 16.64s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 64.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 19 loads/78 reads \u00b7 677.1 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.36/2.00s actual/target \u00b7 12 evicted \u00b7 last 37.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.8362,
+        "playing": true
+      },
+      "pss_kib": 1014139,
+      "summed_rss_kib": 1633444,
+      "cpu_seconds_live_processes": 71.65,
+      "rchar_live_processes": 763726186,
+      "storage_read_bytes_live_processes": 61214720,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 16.85821285098791,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 320 decoded \u00b7 0 errors \u00b7 17 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 16.86s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 64.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 19 loads/78 reads \u00b7 677.1 MB loaded/0.0 MB decompressed \u00b7 7 windows/207.9 MB logical/249.4 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 2.14/2.00s actual/target \u00b7 12 evicted \u00b7 last 37.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.8474,
+        "playing": true
+      },
+      "pss_kib": 1026615,
+      "summed_rss_kib": 1645920,
+      "cpu_seconds_live_processes": 72.48,
+      "rchar_live_processes": 763727680,
+      "storage_read_bytes_live_processes": 61214720,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 17.083462196867913,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 324 decoded \u00b7 0 errors \u00b7 18 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 17.09s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.44 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 2.81/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.8587,
+        "playing": true
+      },
+      "pss_kib": 1072187,
+      "summed_rss_kib": 1691496,
+      "cpu_seconds_live_processes": 73.31,
+      "rchar_live_processes": 798094374,
+      "storage_read_bytes_live_processes": 84549632,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 17.309104434214532,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 329 decoded \u00b7 0 errors \u00b7 18 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 17.31s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.44 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 2.59/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.8699,
+        "playing": true
+      },
+      "pss_kib": 1084527,
+      "summed_rss_kib": 1703836,
+      "cpu_seconds_live_processes": 74.12,
+      "rchar_live_processes": 798097460,
+      "storage_read_bytes_live_processes": 84549632,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 17.534660242963582,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 333 decoded \u00b7 0 errors \u00b7 18 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 17.54s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.44 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 2.36/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.8812,
+        "playing": true
+      },
+      "pss_kib": 1097039,
+      "summed_rss_kib": 1716348,
+      "cpu_seconds_live_processes": 74.91,
+      "rchar_live_processes": 798098868,
+      "storage_read_bytes_live_processes": 84549632,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 17.76029519084841,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 337 decoded \u00b7 0 errors \u00b7 18 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 17.76s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.89 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.44 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 2.14/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.8925,
+        "playing": true
+      },
+      "pss_kib": 1055995,
+      "summed_rss_kib": 1675308,
+      "cpu_seconds_live_processes": 75.76,
+      "rchar_live_processes": 798100314,
+      "storage_read_bytes_live_processes": 84549632,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 17.98557877028361,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 341 decoded \u00b7 0 errors \u00b7 19 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 17.98s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 1.92/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.9037,
+        "playing": true
+      },
+      "pss_kib": 1068311,
+      "summed_rss_kib": 1687624,
+      "cpu_seconds_live_processes": 76.54,
+      "rchar_live_processes": 798101761,
+      "storage_read_bytes_live_processes": 84549632,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 18.211373175960034,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 346 decoded \u00b7 0 errors \u00b7 19 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 18.21s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 1.69/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.915,
+        "playing": true
+      },
+      "pss_kib": 1080623,
+      "summed_rss_kib": 1699936,
+      "cpu_seconds_live_processes": 77.4,
+      "rchar_live_processes": 798104842,
+      "storage_read_bytes_live_processes": 84549632,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 18.437232025898993,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 350 decoded \u00b7 0 errors \u00b7 19 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 18.43s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 1.47/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.9262,
+        "playing": true
+      },
+      "pss_kib": 1093019,
+      "summed_rss_kib": 1712332,
+      "cpu_seconds_live_processes": 78.21,
+      "rchar_live_processes": 798106331,
+      "storage_read_bytes_live_processes": 84549632,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 18.66264700703323,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 354 decoded \u00b7 0 errors \u00b7 19 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 18.67s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 1.23/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.9383,
+        "playing": true
+      },
+      "pss_kib": 1104963,
+      "summed_rss_kib": 1724280,
+      "cpu_seconds_live_processes": 79.02,
+      "rchar_live_processes": 798107788,
+      "storage_read_bytes_live_processes": 84549632,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 18.888217084109783,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 358 decoded \u00b7 0 errors \u00b7 20 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 18.90s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.40 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 1.00/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.9495,
+        "playing": true
+      },
+      "pss_kib": 989583,
+      "summed_rss_kib": 1608900,
+      "cpu_seconds_live_processes": 79.82,
+      "rchar_live_processes": 798109276,
+      "storage_read_bytes_live_processes": 84549632,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 19.113222236279398,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 363 decoded \u00b7 0 errors \u00b7 20 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 19.12s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.56 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.37 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 0.78/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.9608,
+        "playing": true
+      },
+      "pss_kib": 1002123,
+      "summed_rss_kib": 1621440,
+      "cpu_seconds_live_processes": 80.63,
+      "rchar_live_processes": 798110693,
+      "storage_read_bytes_live_processes": 84549632,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 19.33921871613711,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 367 decoded \u00b7 0 errors \u00b7 20 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 19.34s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.56 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.37 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 0.56/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.9721,
+        "playing": true
+      },
+      "pss_kib": 1016304,
+      "summed_rss_kib": 1638456,
+      "cpu_seconds_live_processes": 81.48,
+      "rchar_live_processes": 798994539,
+      "storage_read_bytes_live_processes": 84549632,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 19.564004675019532,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 371 decoded \u00b7 0 errors \u00b7 20 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 19.57s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.56 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.37 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 0.33/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.9833,
+        "playing": true
+      },
+      "pss_kib": 1028764,
+      "summed_rss_kib": 1650920,
+      "cpu_seconds_live_processes": 82.3,
+      "rchar_live_processes": 798995963,
+      "storage_read_bytes_live_processes": 84549632,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 19.789996607229114,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 375 decoded \u00b7 0 errors \u00b7 20 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 19.79s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.56 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.37 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 0.11/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 0.9946,
+        "playing": true
+      },
+      "pss_kib": 1041228,
+      "summed_rss_kib": 1663384,
+      "cpu_seconds_live_processes": 83.12,
+      "rchar_live_processes": 798997402,
+      "storage_read_bytes_live_processes": 84549632,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    },
+    {
+      "wall_seconds": 20.015972507186234,
+      "state": {
+        "ready": true,
+        "text": "Ready \u00b7 379 decoded \u00b7 0 errors \u00b7 21 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 19.90s",
+        "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.22 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.46 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "position": 1,
+        "playing": true
+      },
+      "pss_kib": 1053672,
+      "summed_rss_kib": 1675828,
+      "cpu_seconds_live_processes": 83.92,
+      "rchar_live_processes": 798998833,
+      "storage_read_bytes_live_processes": 84549632,
+      "pids": [
+        1460834,
+        1460838,
+        1460839,
+        1460848,
+        1460849,
+        1460870,
+        1460874,
+        1460902,
+        1460940,
+        1461055,
+        1461071
+      ]
+    }
+  ],
+  "sampling": "200 ms target; observed intervals stored; PSS includes dedicated Chrome tree",
+  "cache": "cache-allowed; SHA256 read immediately before each run; fresh profile/process",
+  "sources_sha256": {
+    "measure_viewer_pilot.py": "9e8a93e673b54a573ca3402061f3602fae349fb230fe3930c5c74b11e2e1eda2",
+    "browser_cdp.py": "8b7e986d3a28f616b5df7ce8aadf486a4c9e19ea9d527339c9d144b813435625"
+  },
+  "git_commit": "e67827efc80c60804031b543480b47cff8c539ba",
+  "chrome_command": [
+    "google-chrome",
+    "--headless",
+    "--no-sandbox",
+    "--enable-unsafe-webgpu",
+    "--enable-unsafe-swiftshader",
+    "--use-gl=angle",
+    "--use-angle=swiftshader",
+    "--remote-debugging-port=9238",
+    "--user-data-dir=/tmp/mcap-viewer-pilot-4em8vpfe",
+    "about:blank"
+  ],
+  "browser_version": {
+    "Browser": "Chrome/143.0.7499.192",
+    "Protocol-Version": "1.3",
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.0.0 Safari/537.36",
+    "V8-Version": "14.3.127.17",
+    "WebKit-Version": "537.36 (@be2c1f4fd451578a9ada68a0ac12d659362b44bf)",
+    "webSocketDebuggerUrl": "ws://127.0.0.1:9238/devtools/browser/df2fc5e4-f1e2-4944-8002-1dc7ffb7cbe1"
+  },
+  "gpu": {
+    "gpu": {
+      "devices": [
+        {
+          "vendorId": 65535,
+          "deviceId": 65535,
+          "vendorString": "Google Inc. (Google)",
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "driverVendor": "SwANGLE",
+          "driverVersion": "5.0.0"
+        }
+      ],
+      "auxAttributes": {
+        "amdSwitchable": false,
+        "canSupportThreadedTextureMailbox": false,
+        "directRenderingVersion": "",
+        "displayType": "ANGLE_SWIFTSHADER",
+        "glExtensions": "GL_AMD_performance_monitor GL_ANGLE_base_vertex_base_instance_shader_builtin GL_ANGLE_blob_cache GL_ANGLE_client_arrays GL_ANGLE_clip_cull_distance GL_ANGLE_compressed_texture_etc GL_ANGLE_copy_texture_3d GL_ANGLE_depth_texture GL_ANGLE_framebuffer_blit GL_ANGLE_framebuffer_multisample GL_ANGLE_get_image GL_ANGLE_get_serialized_context_string GL_ANGLE_get_tex_level_parameter GL_ANGLE_instanced_arrays GL_ANGLE_memory_object_flags GL_ANGLE_memory_size GL_ANGLE_multi_draw GL_ANGLE_pack_reverse_row_order GL_ANGLE_polygon_mode GL_ANGLE_program_binary_readiness_query GL_ANGLE_program_cache_control GL_ANGLE_read_only_depth_stencil_feedback_loops GL_ANGLE_relaxed_vertex_attribute_type GL_ANGLE_renderability_validation GL_ANGLE_request_extension GL_ANGLE_rgbx_internal_format GL_ANGLE_robust_client_memory GL_ANGLE_robust_fragment_shader_output GL_ANGLE_robust_resource_initialization GL_ANGLE_shader_pixel_local_storage GL_ANGLE_shader_pixel_local_storage_coherent GL_ANGLE_stencil_texturing GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ANGLE_texture_multisample GL_ANGLE_texture_usage GL_ANGLE_translated_shader_source GL_ANGLE_vulkan_image GL_ANGLE_yuv_internal_format GL_APPLE_clip_distance GL_ARM_rgba8 GL_ARM_shader_framebuffer_fetch GL_ARM_shader_framebuffer_fetch_depth_stencil GL_CHROMIUM_bind_generates_resource GL_CHROMIUM_bind_uniform_location GL_CHROMIUM_copy_compressed_texture GL_CHROMIUM_copy_texture GL_CHROMIUM_lose_context GL_EXT_EGL_image_array GL_EXT_EGL_image_external_wrap_modes GL_EXT_EGL_image_storage GL_EXT_base_instance GL_EXT_blend_minmax GL_EXT_buffer_storage GL_EXT_clear_texture GL_EXT_clip_control GL_EXT_clip_cull_distance GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_compressed_ETC1_RGB8_sub_texture GL_EXT_conservative_depth GL_EXT_copy_image GL_EXT_debug_label GL_EXT_debug_marker GL_EXT_depth_clamp GL_EXT_discard_framebuffer GL_EXT_disjoint_timer_query GL_EXT_draw_buffers GL_EXT_draw_buffers_indexed GL_EXT_draw_elements_base_vertex GL_EXT_float_blend GL_EXT_frag_depth GL_EXT_instanced_arrays GL_EXT_map_buffer_range GL_EXT_memory_object GL_EXT_memory_object_fd GL_EXT_occlusion_query_boolean GL_EXT_polygon_offset_clamp GL_EXT_read_format_bgra GL_EXT_robustness GL_EXT_sRGB GL_EXT_sRGB_write_control GL_EXT_semaphore GL_EXT_semaphore_fd GL_EXT_separate_shader_objects GL_EXT_shader_framebuffer_fetch GL_EXT_shader_framebuffer_fetch_non_coherent GL_EXT_shader_non_constant_global_initializers GL_EXT_shader_texture_lod GL_EXT_shadow_samplers GL_EXT_texture_border_clamp GL_EXT_texture_compression_bptc GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc_srgb GL_EXT_texture_cube_map_array GL_EXT_texture_filter_anisotropic GL_EXT_texture_format_BGRA8888 GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_rg GL_EXT_texture_sRGB_R8 GL_EXT_texture_sRGB_RG8 GL_EXT_texture_sRGB_decode GL_EXT_texture_shadow_lod GL_EXT_texture_storage GL_EXT_texture_type_2_10_10_10_REV GL_EXT_unpack_subimage GL_KHR_blend_equation_advanced GL_KHR_debug GL_KHR_robust_buffer_access_behavior GL_KHR_robustness GL_KHR_texture_compression_astc_ldr GL_NV_depth_buffer_float2 GL_NV_fence GL_NV_framebuffer_blit GL_NV_pack_subimage GL_NV_pixel_buffer_object GL_NV_polygon_mode GL_NV_read_depth GL_NV_read_depth_stencil GL_NV_read_stencil GL_NV_shader_noperspective_interpolation GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_EGL_image_external_essl3 GL_OES_EGL_sync GL_OES_compressed_EAC_R11_signed_texture GL_OES_compressed_EAC_R11_unsigned_texture GL_OES_compressed_EAC_RG11_signed_texture GL_OES_compressed_EAC_RG11_unsigned_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_compressed_ETC2_RGB8_texture GL_OES_compressed_ETC2_RGBA8_texture GL_OES_compressed_ETC2_punchthroughA_RGBA8_texture GL_OES_compressed_ETC2_punchthroughA_sRGB8_alpha_texture GL_OES_compressed_ETC2_sRGB8_alpha8_texture GL_OES_compressed_ETC2_sRGB8_texture GL_OES_copy_image GL_OES_depth24 GL_OES_depth32 GL_OES_depth_texture GL_OES_depth_texture_cube_map GL_OES_draw_buffers_indexed GL_OES_draw_elements_base_vertex GL_OES_element_index_uint GL_OES_fbo_render_mipmap GL_OES_get_program_binary GL_OES_mapbuffer GL_OES_packed_depth_stencil GL_OES_required_internalformat GL_OES_rgb8_rgba8 GL_OES_sample_shading GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_standard_derivatives GL_OES_surfaceless_context GL_OES_texture_3D GL_OES_texture_border_clamp GL_OES_texture_cube_map_array GL_OES_texture_float GL_OES_texture_float_linear GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_texture_npot GL_OES_texture_stencil8 GL_OES_texture_storage_multisample_2d_array GL_OES_vertex_array_object GL_OES_vertex_half_float GL_OES_vertex_type_10_10_10_2 GL_OVR_multiview GL_OVR_multiview2 ",
+        "glImplementationParts": "(gl=egl-angle,angle=swiftshader)",
+        "glRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+        "glResetNotificationStrategy": 33362,
+        "glVendor": "Google Inc. (Google)",
+        "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.26423 git hash: 2dfb5b7603d0)",
+        "glWsExtensions": "EGL_EXT_create_context_robustness EGL_ANGLE_surface_orientation EGL_KHR_create_context EGL_KHR_image EGL_KHR_image_base EGL_EXT_image_gl_colorspace EGL_KHR_gl_colorspace EGL_KHR_gl_texture_2D_image EGL_KHR_gl_texture_cubemap_image EGL_KHR_gl_renderbuffer_image EGL_KHR_get_all_proc_addresses EGL_KHR_fence_sync EGL_KHR_wait_sync EGL_ANGLE_create_context_webgl_compatibility EGL_CHROMIUM_create_context_bind_generates_resource EGL_KHR_swap_buffers_with_damage EGL_EXT_pixel_format_float EGL_KHR_surfaceless_context EGL_ANGLE_display_texture_share_group EGL_ANGLE_display_semaphore_share_group EGL_ANGLE_create_context_client_arrays EGL_ANGLE_program_cache_control EGL_ANGLE_robust_resource_initialization EGL_ANGLE_create_context_extensions_enabled EGL_ANDROID_blob_cache EGL_ANDROID_recordable EGL_ANGLE_create_context_backwards_compatible EGL_KHR_no_config_context EGL_IMG_context_priority EGL_KHR_create_context_no_error EGL_KHR_reusable_sync EGL_EXT_buffer_age EGL_ANGLE_create_surface_swap_interval EGL_ANGLE_vulkan_image EGL_KHR_partial_update EGL_ANGLE_global_fence_sync EGL_ANGLE_memory_usage_report ",
+        "glWsVendor": "Google Inc. (Google)",
+        "glWsVersion": "1.5 (ANGLE 2.1.26423 git hash: 2dfb5b7603d0)",
+        "hardwareSupportsVulkan": false,
+        "inProcessGpu": false,
+        "initializationTime": 0.176881,
+        "isAsan": false,
+        "isClangCoverage": false,
+        "jpegDecodeAcceleratorSupported": false,
+        "maxMsaaSamples": "4",
+        "optimus": false,
+        "passthroughCmdDecoder": true,
+        "pixelShaderVersion": "3.00",
+        "processCrashCount": 0,
+        "sandboxed": false,
+        "skiaBackendType": "GaneshGL",
+        "subpixelFontRendering": true,
+        "targetCpuBits": 64,
+        "vertexShaderVersion": "3.00",
+        "visibilityCallbackCallCount": 0
+      },
+      "featureStatus": {
+        "2d_canvas": "enabled",
+        "direct_rendering_display_compositor": "disabled_off_ok",
+        "gpu_compositing": "enabled",
+        "multiple_raster_threads": "enabled_on",
+        "opengl": "enabled_on",
+        "rasterization": "enabled",
+        "raw_draw": "disabled_off_ok",
+        "skia_graphite": "disabled_off",
+        "trees_in_viz": "disabled_off",
+        "video_decode": "enabled",
+        "video_encode": "disabled_software",
+        "vulkan": "disabled_off",
+        "webgl": "enabled",
+        "webgpu": "unavailable_software",
+        "webnn": "disabled_off"
+      },
+      "driverBugWorkarounds": [
+        "enable_webgl_timer_query_extensions",
+        "exit_on_context_lost",
+        "disabled_extension_GL_KHR_blend_equation_advanced",
+        "disabled_extension_GL_KHR_blend_equation_advanced_coherent"
+      ],
+      "videoDecoding": [],
+      "videoEncoding": [],
+      "imageDecoding": []
+    },
+    "modelName": "",
+    "modelVersion": "",
+    "commandLine": "/usr/bin/google-chrome --headless --no-sandbox --enable-unsafe-webgpu --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader --remote-debugging-port=9238 --user-data-dir=/tmp/mcap-viewer-pilot-4em8vpfe --noerrdialogs --no-first-run --ozone-platform=headless --ozone-override-screen-size=800,600 --flag-switches-begin --flag-switches-end --enable-unsafe-swiftshader about:blank"
+  },
+  "before_open": {
+    "pss_kib": 323268,
+    "summed_rss_kib": 926660,
+    "cpu_seconds_live_processes": 1.43,
+    "rchar_live_processes": 8043887,
+    "storage_read_bytes_live_processes": 25743360,
+    "pids": [
+      1460834,
+      1460838,
+      1460839,
+      1460848,
+      1460849,
+      1460870,
+      1460874,
+      1460902,
+      1460921,
+      1460923,
+      1460940
+    ]
+  },
+  "ready_ui_ms": 54.635472130030394,
+  "opened_state": {
+    "ready": true,
+    "text": "Ready \u00b7 2 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s",
+    "performance": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.05 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 1 loads/6 reads \u00b7 35.5 MB loaded/0.0 MB decompressed \u00b7 1 windows/29.5 MB logical/35.5 MB RAM (1.20x) \u00b7 copied 0.0 MB \u00b7 ahead 1.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 32.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+    "position": 0,
+    "playing": false
+  },
+  "canvases": [
+    {
+      "id": "bev",
+      "width": 512,
+      "height": 512,
+      "css": [
+        0,
+        0
+      ],
+      "rect": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "camera",
+      "width": 960,
+      "height": 540,
+      "css": [
+        960,
+        540
+      ],
+      "rect": [
+        346,
+        185.390625
+      ]
+    },
+    {
+      "id": "camera-thumb-0",
+      "width": 112,
+      "height": 63,
+      "css": [
+        112,
+        67
+      ],
+      "rect": [
+        351,
+        791.8125
+      ]
+    }
+  ],
+  "before_play": {
+    "pss_kib": 463896,
+    "summed_rss_kib": 1252176,
+    "cpu_seconds_live_processes": 8.82,
+    "rchar_live_processes": 69701074,
+    "storage_read_bytes_live_processes": 41439232,
+    "pids": [
+      1460834,
+      1460838,
+      1460839,
+      1460848,
+      1460849,
+      1460870,
+      1460874,
+      1460902,
+      1460923,
+      1460940,
+      1461055,
+      1461057,
+      1461071
+    ]
+  },
+  "cursor_run_ms": 20015.972507186234,
+  "end_state": {
+    "ready": true,
+    "text": "Ready \u00b7 379 decoded \u00b7 0 errors \u00b7 21 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 19.90s",
+    "performance": "Focus 8.9/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.22 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.46 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 20 loads/82 reads \u00b7 709.9 MB loaded/0.0 MB decompressed \u00b7 7 windows/208.1 MB logical/246.6 MB RAM (1.18x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 13 evicted \u00b7 last 41.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+    "position": 1,
+    "playing": true
+  },
+  "after_play": {
+    "pss_kib": 1053688,
+    "summed_rss_kib": 1675844,
+    "cpu_seconds_live_processes": 84.0,
+    "rchar_live_processes": 798999108,
+    "storage_read_bytes_live_processes": 84549632,
+    "pids": [
+      1460834,
+      1460838,
+      1460839,
+      1460848,
+      1460849,
+      1460870,
+      1460874,
+      1460902,
+      1460940,
+      1461055,
+      1461071
+    ]
+  },
+  "settled": {
+    "pss_kib": 1055452,
+    "summed_rss_kib": 1677608,
+    "cpu_seconds_live_processes": 92.45,
+    "rchar_live_processes": 799015768,
+    "storage_read_bytes_live_processes": 84549632,
+    "pids": [
+      1460834,
+      1460838,
+      1460839,
+      1460848,
+      1460849,
+      1460870,
+      1460874,
+      1460902,
+      1460940,
+      1461055,
+      1461071
+    ]
+  },
+  "errors": [],
+  "peak_sampled_pss_kib": 1237335,
+  "status": "ok"
+}
