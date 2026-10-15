@@ -81,14 +81,15 @@ zstd64は再生中に打ち切り。OOM・製品の拒否とは判定してい�
 圧縮だけでもChunkサイズだけでも結果を説明できない。
 zstd8のWASMがnone8より小さい理由を、この計測だけでallocatorの再利用等へ断定しない。
 
-完走時の製品DataPlane表示は以下だった。ここは製品が出す十進MBであり、表のMiBとは異なる。
+完走時の製品DataPlane表示は以下だった。UIはMBと表示していたが、計算はMiBだった。
+2026-10-16に単位の解釈を訂正した。以下はMiBとして示す。
 
 | 条件 | 保持window数 | logical payload | retained backing | 累計read bytes |
 |---|---:|---:|---:|---:|
-| none8 / zstd8 | 3 | 712.6 MB | 727.6 MB | 968.2 / 959.3 MB |
-| none64 | 3 | 712.6 MB | 885.1 MB | 1146.4 MB |
+| none8 / zstd8 | 3 | 712.6 MiB | 727.6 MiB | 968.2 / 959.3 MiB |
+| none64 | 3 | 712.6 MiB | 885.1 MiB | 1146.4 MiB |
 
-zstd64のguard時も3 windows、logical 712.6 MB、backing 849.4 MBだった。
+zstd64のguard時も3 windows、logical 712.6 MiB、backing 849.4 MiBだった。
 Chunk境界とwindow境界の重なりで、同じChunkを別window用に読み直し、backingを別に保持し得る。
 現在のloaderはwindowをまたぐChunk再利用を行わない。
 

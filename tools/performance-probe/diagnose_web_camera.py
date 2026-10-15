@@ -15,9 +15,11 @@ def run(args):
     with args.data.open('rb') as source:
         dataset_sha=hashlib.file_digest(source,'sha256').hexdigest()
     result={'mode':args.mode,'dataset':str(args.data),'samples':[],'status':'running',
-            'dataset_sha256':dataset_sha,
+            'dataset_sha256':dataset_sha,'dataset_bytes':args.data.stat().st_size,
+            'play_timeout_seconds':args.play_timeout,
             'sources_sha256':{p:hashlib.sha256((here/p).read_bytes()).hexdigest() for p in
-                              ['diagnose_web_camera.py','web_camera_pipeline.js']}}
+                              ['diagnose_web_camera.py','web_camera_pipeline.js','measure_viewer_pilot.py',
+                               'measure_web_camera_stress.py','browser_cdp.py']}}
     with browser(args.port) as (process,page,environment):
         result['environment']=environment
         script='window.probeMode='+json.dumps(args.mode)+';'+(here/'web_camera_pipeline.js').read_text()
@@ -54,14 +56,14 @@ def run(args):
                 time.sleep(.2)
             time.sleep(1)
             sample()
-            page.evaluate("pipelineProbe.phase='play';pipelineProbe.playStart=performance.now();document.querySelector('#play').click()")
-            deadline=time.monotonic()+20
+            result['play_start_ms']=page.evaluate("(()=>{pipelineProbe.phase='play';pipelineProbe.playStart=performance.now();document.querySelector('#play').click();return pipelineProbe.playStart;})()")
+            deadline=time.monotonic()+args.play_timeout
             while True:
                 s=sample()
                 if s['cursor']>=1:break
                 if time.monotonic()>deadline:raise RuntimeError('play timeout')
                 time.sleep(.2)
-            result['play_ms']=s['now']-page.evaluate('pipelineProbe.playStart')
+            result['play_ms']=s['now']-result['play_start_ms']
             page.evaluate("pipelineProbe.phase='drain'")
             for _ in range(5):time.sleep(.2);sample()
             result['pre_gc']=sample()
@@ -88,7 +90,10 @@ if __name__=='__main__':
     parser.add_argument('--mode',choices=['bare','light','fingerprint'],required=True)
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--port',type=int,default=9241)
+    parser.add_argument('--play-timeout',type=float,default=20,
+                        help='maximum wall seconds for playback (use 180 for 60-second fixtures)')
     args=parser.parse_args()
     if args.output.exists():parser.error('use a new output path')
+    if not 0 < args.play_timeout <= 3600:parser.error('--play-timeout must be in (0, 3600]')
     args.output.parent.mkdir(parents=True,exist_ok=True)
     run(args)

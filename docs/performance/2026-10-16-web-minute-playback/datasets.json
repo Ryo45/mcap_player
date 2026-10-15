@@ -1,0 +1,51 @@
+{
+  "nominal_seconds": 60,
+  "log_span_seconds": 59.9,
+  "width": 3840,
+  "height": 2160,
+  "camera_hz": 10,
+  "camera_count": 8,
+  "jpeg_quality": 85,
+  "jpeg_variants": 32,
+  "scan_hz": 10,
+  "scan_points": 360,
+  "camera_messages": 4800,
+  "scan_messages": 600,
+  "total_messages": 5400,
+  "layout": "mixed",
+  "compression_level": 3,
+  "datasets": [
+    {
+      "name": "none-8MiB",
+      "path": "/tmp/mcap-web-60s-data/3840x2160-8cam-10hz-none-8MiB-60s.mcap",
+      "bytes": 14944878140,
+      "sha256": "9f31b9ad47758f2f2313b83b584240757241330e71060ba537b5a8716ceda07e"
+    },
+    {
+      "name": "zstd-64MiB",
+      "path": "/tmp/mcap-web-60s-data/3840x2160-8cam-10hz-zstd-64MiB-60s.mcap",
+      "bytes": 14812121345,
+      "sha256": "37c1e8ef603ba9f7c33aaf94af8d2867e7af9359d935c1beccbfa351fb6936a7"
+    }
+  ],
+  "none_chunks": {
+    "count": 1600,
+    "largest_uncompressed_bytes": 9492701,
+    "total_uncompressed_bytes": 14944459940
+  },
+  "zstd_rechunk_result": {
+    "chunk_count": 219,
+    "file": "/tmp/mcap-web-60s-data/3840x2160-8cam-10hz-zstd-64MiB-60s.mcap",
+    "file_bytes": 14812121345,
+    "largest_chunk_bytes": 68718315,
+    "messages": 5400,
+    "target_chunk_bytes": 67108864,
+    "total_chunk_bytes": 14944459940
+  },
+  "generator_binary_sha256": "db5a0747d2b27e59de67ebecadb2f1252067ad0c19e96b6deb9546d0a83f3374",
+  "generator_source_sha256": "d12d0052107ddd76ccd51c46afb2c22fe003b8db188d78b15771945a504a34e0",
+  "commands": [
+    "target/release/performance-probe generate /tmp/mcap-web-60s-data/3840x2160-8cam-10hz-none-8MiB-60s.mcap none 8388608 mixed 60 jpeg 3840 2160 32 10 8",
+    "target/release/performance-probe rechunk /tmp/mcap-web-60s-data/3840x2160-8cam-10hz-none-8MiB-60s.mcap /tmp/mcap-web-60s-data/3840x2160-8cam-10hz-zstd-64MiB-60s.mcap zstd 67108864"
+  ]
+}
