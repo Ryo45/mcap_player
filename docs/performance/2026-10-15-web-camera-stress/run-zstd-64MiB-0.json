@@ -1,0 +1,6398 @@
+{
+  "dataset": "/tmp/mcap-stress2-20261014-data/3840x2160-8cam-10hz-zstd-64MiB-jpeg.mcap",
+  "dataset_sha256": "3622cffba65fff17efcca56238f0457c1e97203669cfcbfd6882389eb088190e",
+  "dataset_bytes": 987511660,
+  "references_sha256": "dd89788026ac0c61a6544c29f17d4f159f1046bb02a30a71394cc9edbe990d28",
+  "git_commit": "8d1a1537c2d5a1ceb8a6ecf641860ee6647be7bc",
+  "sources_sha256": {
+    "measure_web_camera_stress.py": "c6301496c2112a8473352d24b3741844115ac00c812b95f2b4ec8adf830290cf",
+    "web_camera_stress.js": "28bd9c41e49d79613764c35611d74e8c5e4b897b5033b713d2d37670aab96a44",
+    "browser_cdp.py": "8b7e986d3a28f616b5df7ce8aadf486a4c9e19ea9d527339c9d144b813435625",
+    "measure_viewer_pilot.py": "51670cce8bf1e33e869b3a830c2e8053e5fd8395564be17c05e1030d9a45ce80"
+  },
+  "viewport": [
+    1920,
+    1080
+  ],
+  "focus": [
+    960,
+    540
+  ],
+  "thumbnail": [
+    112,
+    63
+  ],
+  "cache": "cache-allowed; dataset SHA256 read before Chrome startup",
+  "pss_limit_kib": 2097152,
+  "memory": [
+    {
+      "wall_seconds": 0.0726377279497683,
+      "phase": "setup",
+      "pss_kib": 259354,
+      "summed_rss_kib": 860504,
+      "cpu_seconds_live_processes": 0.54,
+      "rchar_live_processes": 7542477,
+      "storage_read_bytes_live_processes": 1499136,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 0.32213248312473297,
+      "phase": "setup",
+      "pss_kib": 661606,
+      "summed_rss_kib": 1276800,
+      "cpu_seconds_live_processes": 1.76,
+      "rchar_live_processes": 152676385,
+      "storage_read_bytes_live_processes": 1536000,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 0.5321178920567036,
+      "phase": "setup",
+      "pss_kib": 885685,
+      "summed_rss_kib": 1500112,
+      "cpu_seconds_live_processes": 2.69,
+      "rchar_live_processes": 279563641,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 0.7349888272583485,
+      "phase": "setup",
+      "pss_kib": 937877,
+      "summed_rss_kib": 1555384,
+      "cpu_seconds_live_processes": 3.53,
+      "rchar_live_processes": 280018352,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 0.9432555353268981,
+      "phase": "setup",
+      "pss_kib": 868131,
+      "summed_rss_kib": 1485632,
+      "cpu_seconds_live_processes": 4.36,
+      "rchar_live_processes": 280022391,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 1.1569974841549993,
+      "phase": "play",
+      "pss_kib": 877888,
+      "summed_rss_kib": 1496756,
+      "cpu_seconds_live_processes": 5.09,
+      "rchar_live_processes": 280023757,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 1.3771193069405854,
+      "phase": "play",
+      "pss_kib": 1031574,
+      "summed_rss_kib": 1656604,
+      "cpu_seconds_live_processes": 5.82,
+      "rchar_live_processes": 426342932,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 1.6135682170279324,
+      "phase": "play",
+      "pss_kib": 1260868,
+      "summed_rss_kib": 1880916,
+      "cpu_seconds_live_processes": 6.65,
+      "rchar_live_processes": 619696860,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 1.8748299651779234,
+      "phase": "play",
+      "pss_kib": 1423984,
+      "summed_rss_kib": 2046084,
+      "cpu_seconds_live_processes": 7.47,
+      "rchar_live_processes": 759522775,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 2.0861690691672266,
+      "phase": "play",
+      "pss_kib": 1565256,
+      "summed_rss_kib": 2185252,
+      "cpu_seconds_live_processes": 8.1,
+      "rchar_live_processes": 891274078,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 2.3387540401890874,
+      "phase": "play",
+      "pss_kib": 1726816,
+      "summed_rss_kib": 2348868,
+      "cpu_seconds_live_processes": 8.91,
+      "rchar_live_processes": 1031412704,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 2.5422076690010726,
+      "phase": "play",
+      "pss_kib": 1996976,
+      "summed_rss_kib": 2616980,
+      "cpu_seconds_live_processes": 9.43,
+      "rchar_live_processes": 1165286445,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 2.7500093961134553,
+      "phase": "play",
+      "pss_kib": 2072900,
+      "summed_rss_kib": 2692912,
+      "cpu_seconds_live_processes": 10.33,
+      "rchar_live_processes": 1200044164,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 2.9690762502141297,
+      "phase": "play",
+      "pss_kib": 2090332,
+      "summed_rss_kib": 2711376,
+      "cpu_seconds_live_processes": 11.32,
+      "rchar_live_processes": 1200048252,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 3.184250721242279,
+      "phase": "play",
+      "pss_kib": 2002556,
+      "summed_rss_kib": 2621696,
+      "cpu_seconds_live_processes": 12.21,
+      "rchar_live_processes": 1200050656,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 3.385819853283465,
+      "phase": "play",
+      "pss_kib": 1908223,
+      "summed_rss_kib": 2527584,
+      "cpu_seconds_live_processes": 13.13,
+      "rchar_live_processes": 1200052930,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 3.5931393951177597,
+      "phase": "play",
+      "pss_kib": 1931215,
+      "summed_rss_kib": 2551700,
+      "cpu_seconds_live_processes": 14.11,
+      "rchar_live_processes": 1200055443,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 3.8022310701198876,
+      "phase": "play",
+      "pss_kib": 1905483,
+      "summed_rss_kib": 2522164,
+      "cpu_seconds_live_processes": 15.02,
+      "rchar_live_processes": 1200057981,
+      "storage_read_bytes_live_processes": 1540096,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 4.012987689115107,
+      "phase": "play",
+      "pss_kib": 1883019,
+      "summed_rss_kib": 2499708,
+      "cpu_seconds_live_processes": 15.99,
+      "rchar_live_processes": 1200063737,
+      "storage_read_bytes_live_processes": 1564672,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 4.2307955538854,
+      "phase": "play",
+      "pss_kib": 1908867,
+      "summed_rss_kib": 2525564,
+      "cpu_seconds_live_processes": 16.95,
+      "rchar_live_processes": 1200066264,
+      "storage_read_bytes_live_processes": 1564672,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 4.453151538968086,
+      "phase": "play",
+      "pss_kib": 1988020,
+      "summed_rss_kib": 2604704,
+      "cpu_seconds_live_processes": 18.0,
+      "rchar_live_processes": 1200068874,
+      "storage_read_bytes_live_processes": 1564672,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 4.669277731329203,
+      "phase": "play",
+      "pss_kib": 1995896,
+      "summed_rss_kib": 2612580,
+      "cpu_seconds_live_processes": 18.92,
+      "rchar_live_processes": 1200071379,
+      "storage_read_bytes_live_processes": 1564672,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 4.883496074937284,
+      "phase": "play",
+      "pss_kib": 1938381,
+      "summed_rss_kib": 2555044,
+      "cpu_seconds_live_processes": 19.92,
+      "rchar_live_processes": 1200073968,
+      "storage_read_bytes_live_processes": 1593344,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479545,
+        1479546,
+        1479563
+      ]
+    },
+    {
+      "wall_seconds": 5.08409488433972,
+      "phase": "seek-28",
+      "pss_kib": 1877409,
+      "summed_rss_kib": 2665236,
+      "cpu_seconds_live_processes": 21.23,
+      "rchar_live_processes": 1224278999,
+      "storage_read_bytes_live_processes": 44101632,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 5.296274640131742,
+      "phase": "seek-28",
+      "pss_kib": 1902897,
+      "summed_rss_kib": 2693284,
+      "cpu_seconds_live_processes": 22.54,
+      "rchar_live_processes": 1364423989,
+      "storage_read_bytes_live_processes": 116490240,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 5.541034737136215,
+      "phase": "seek-28",
+      "pss_kib": 1984118,
+      "summed_rss_kib": 2772388,
+      "cpu_seconds_live_processes": 23.52,
+      "rchar_live_processes": 1498278199,
+      "storage_read_bytes_live_processes": 250744832,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 5.745856347959489,
+      "phase": "seek-28",
+      "pss_kib": 1964774,
+      "summed_rss_kib": 2753108,
+      "cpu_seconds_live_processes": 24.35,
+      "rchar_live_processes": 1601188760,
+      "storage_read_bytes_live_processes": 353390592,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 5.951126575004309,
+      "phase": "seek-28",
+      "pss_kib": 1965010,
+      "summed_rss_kib": 2753268,
+      "cpu_seconds_live_processes": 24.93,
+      "rchar_live_processes": 1601191051,
+      "storage_read_bytes_live_processes": 353390592,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 6.157424960285425,
+      "phase": "seek-28",
+      "pss_kib": 1963306,
+      "summed_rss_kib": 2751564,
+      "cpu_seconds_live_processes": 25.48,
+      "rchar_live_processes": 1601195021,
+      "storage_read_bytes_live_processes": 353390592,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 6.358918210957199,
+      "phase": "seek-10",
+      "pss_kib": 2035664,
+      "summed_rss_kib": 2825512,
+      "cpu_seconds_live_processes": 26.14,
+      "rchar_live_processes": 1683526198,
+      "storage_read_bytes_live_processes": 435990528,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 6.579981961287558,
+      "phase": "seek-10",
+      "pss_kib": 2072650,
+      "summed_rss_kib": 2862268,
+      "cpu_seconds_live_processes": 27.16,
+      "rchar_live_processes": 1827531476,
+      "storage_read_bytes_live_processes": 579907584,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 6.787000828888267,
+      "phase": "seek-10",
+      "pss_kib": 1973454,
+      "summed_rss_kib": 2761016,
+      "cpu_seconds_live_processes": 28.06,
+      "rchar_live_processes": 1940871438,
+      "storage_read_bytes_live_processes": 693284864,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 7.003099760040641,
+      "phase": "seek-10",
+      "pss_kib": 1969622,
+      "summed_rss_kib": 2757132,
+      "cpu_seconds_live_processes": 28.64,
+      "rchar_live_processes": 1940873942,
+      "storage_read_bytes_live_processes": 693284864,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 7.2185894921422005,
+      "phase": "seek-10",
+      "pss_kib": 1970507,
+      "summed_rss_kib": 2758264,
+      "cpu_seconds_live_processes": 29.23,
+      "rchar_live_processes": 1940879407,
+      "storage_read_bytes_live_processes": 693329920,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 7.440075587015599,
+      "phase": "seek-26",
+      "pss_kib": 1979058,
+      "summed_rss_kib": 2767036,
+      "cpu_seconds_live_processes": 29.78,
+      "rchar_live_processes": 2008689168,
+      "storage_read_bytes_live_processes": 761438208,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 7.65628765290603,
+      "phase": "seek-26",
+      "pss_kib": 2014644,
+      "summed_rss_kib": 2803656,
+      "cpu_seconds_live_processes": 30.73,
+      "rchar_live_processes": 2146731370,
+      "storage_read_bytes_live_processes": 831684608,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 7.896058304235339,
+      "phase": "seek-26",
+      "pss_kib": 2037252,
+      "summed_rss_kib": 2826280,
+      "cpu_seconds_live_processes": 31.8,
+      "rchar_live_processes": 2282354790,
+      "storage_read_bytes_live_processes": 967213056,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 8.111803663894534,
+      "phase": "seek-26",
+      "pss_kib": 2020620,
+      "summed_rss_kib": 2808656,
+      "cpu_seconds_live_processes": 32.4,
+      "rchar_live_processes": 2348414108,
+      "storage_read_bytes_live_processes": 1033142272,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 8.318114661145955,
+      "phase": "seek-26",
+      "pss_kib": 2021080,
+      "summed_rss_kib": 2809116,
+      "cpu_seconds_live_processes": 32.96,
+      "rchar_live_processes": 2348416416,
+      "storage_read_bytes_live_processes": 1033379840,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 8.524379200302064,
+      "phase": "seek-12",
+      "pss_kib": 2026012,
+      "summed_rss_kib": 2815072,
+      "cpu_seconds_live_processes": 33.5,
+      "rchar_live_processes": 2348419396,
+      "storage_read_bytes_live_processes": 1033379840,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    },
+    {
+      "wall_seconds": 8.736206563189626,
+      "phase": "seek-12",
+      "pss_kib": 2166564,
+      "summed_rss_kib": 2953192,
+      "cpu_seconds_live_processes": 34.36,
+      "rchar_live_processes": 2507601111,
+      "storage_read_bytes_live_processes": 1123700736,
+      "pids": [
+        1479457,
+        1479461,
+        1479462,
+        1479471,
+        1479472,
+        1479493,
+        1479497,
+        1479526,
+        1479546,
+        1479563,
+        1479684,
+        1479686,
+        1479702
+      ]
+    }
+  ],
+  "seeks": [
+    {
+      "sequence": 28,
+      "target": 0.7282051282051282,
+      "start": 5079.300000190735,
+      "all_images_ms": 642.2999997138977,
+      "completed": {
+        "now": 5721.599999904633,
+        "last": {
+          "0": {
+            "t": 5546.200000286102,
+            "phase": "seek-28",
+            "cam": 0,
+            "size": "960x540",
+            "hash": "32dc8139",
+            "variant": 28,
+            "sequenceModulo32": 28,
+            "cursor": 2.8399799999999997,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+          },
+          "1": {
+            "t": 5651,
+            "phase": "seek-28",
+            "cam": 1,
+            "size": "112x63",
+            "hash": "4e78991",
+            "variant": 3,
+            "sequenceModulo32": 28,
+            "cursor": 2.8399799999999997,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+          },
+          "2": {
+            "t": 5651.599999904633,
+            "phase": "seek-28",
+            "cam": 2,
+            "size": "112x63",
+            "hash": "6125043e",
+            "variant": 10,
+            "sequenceModulo32": 28,
+            "cursor": 2.8399799999999997,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+          },
+          "3": {
+            "t": 5307.599999904633,
+            "phase": "seek-28",
+            "cam": 3,
+            "size": "112x63",
+            "hash": "d5d2e16a",
+            "variant": 17,
+            "sequenceModulo32": 28,
+            "cursor": 2.8399799999999997,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+          },
+          "4": {
+            "t": 5315.099999904633,
+            "phase": "seek-28",
+            "cam": 4,
+            "size": "112x63",
+            "hash": "fb811837",
+            "variant": 24,
+            "sequenceModulo32": 28,
+            "cursor": 2.8399799999999997,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+          },
+          "5": {
+            "t": 5417.400000095367,
+            "phase": "seek-28",
+            "cam": 5,
+            "size": "112x63",
+            "hash": "49bb6bca",
+            "variant": 31,
+            "sequenceModulo32": 28,
+            "cursor": 2.8399799999999997,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+          },
+          "6": {
+            "t": 5419.099999904633,
+            "phase": "seek-28",
+            "cam": 6,
+            "size": "112x63",
+            "hash": "e929b9b7",
+            "variant": 6,
+            "sequenceModulo32": 28,
+            "cursor": 2.8399799999999997,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+          },
+          "7": {
+            "t": 5543.800000190735,
+            "phase": "seek-28",
+            "cam": 7,
+            "size": "112x63",
+            "hash": "fd959385",
+            "variant": 13,
+            "sequenceModulo32": 28,
+            "cursor": 2.8399799999999997,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+          }
+        },
+        "errors": [],
+        "cards": 8,
+        "cursor": 0.7282,
+        "status": "Ready \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s",
+        "performance": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.00 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 5 loads/25 reads \u00b7 1430.8 MB loaded/1443.5 MB decompressed \u00b7 1 windows/237.5 MB logical/297.0 MB RAM (1.25x) \u00b7 copied 0.0 MB \u00b7 ahead 1.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 489.0 ms (MCAP 166.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "playButtonSaysPause": true,
+        "canvases": [
+          {
+            "id": "bev",
+            "width": 512,
+            "height": 512
+          },
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "sequence": 10,
+      "target": 0.26666666666666666,
+      "start": 6237,
+      "all_images_ms": 546.3000001907349,
+      "completed": {
+        "now": 6783.300000190735,
+        "last": {
+          "0": {
+            "t": 6661.900000095367,
+            "phase": "seek-10",
+            "cam": 0,
+            "size": "960x540",
+            "hash": "2e8b4bf",
+            "variant": 10,
+            "sequenceModulo32": 10,
+            "cursor": 1.04013,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+          },
+          "1": {
+            "t": 6763.700000286102,
+            "phase": "seek-10",
+            "cam": 1,
+            "size": "112x63",
+            "hash": "d5d2e16a",
+            "variant": 17,
+            "sequenceModulo32": 10,
+            "cursor": 1.04013,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+          },
+          "2": {
+            "t": 6764.200000286102,
+            "phase": "seek-10",
+            "cam": 2,
+            "size": "112x63",
+            "hash": "fb811837",
+            "variant": 24,
+            "sequenceModulo32": 10,
+            "cursor": 1.04013,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+          },
+          "3": {
+            "t": 6447.900000095367,
+            "phase": "seek-10",
+            "cam": 3,
+            "size": "112x63",
+            "hash": "49bb6bca",
+            "variant": 31,
+            "sequenceModulo32": 10,
+            "cursor": 1.04013,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+          },
+          "4": {
+            "t": 6448.700000286102,
+            "phase": "seek-10",
+            "cam": 4,
+            "size": "112x63",
+            "hash": "e929b9b7",
+            "variant": 6,
+            "sequenceModulo32": 10,
+            "cursor": 1.04013,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+          },
+          "5": {
+            "t": 6557.800000190735,
+            "phase": "seek-10",
+            "cam": 5,
+            "size": "112x63",
+            "hash": "fd959385",
+            "variant": 13,
+            "sequenceModulo32": 10,
+            "cursor": 1.04013,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+          },
+          "6": {
+            "t": 6558.700000286102,
+            "phase": "seek-10",
+            "cam": 6,
+            "size": "112x63",
+            "hash": "1c1301ba",
+            "variant": 20,
+            "sequenceModulo32": 10,
+            "cursor": 1.04013,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+          },
+          "7": {
+            "t": 6660.300000190735,
+            "phase": "seek-10",
+            "cam": 7,
+            "size": "112x63",
+            "hash": "d373827a",
+            "variant": 27,
+            "sequenceModulo32": 10,
+            "cursor": 1.04013,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+          }
+        },
+        "errors": [],
+        "cards": 8,
+        "cursor": 0.2667,
+        "status": "Ready \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s",
+        "performance": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.00 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 6 loads/29 reads \u00b7 1689.7 MB loaded/1704.7 MB decompressed \u00b7 1 windows/237.5 MB logical/261.3 MB RAM (1.10x) \u00b7 copied 0.0 MB \u00b7 ahead 1.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 415.0 ms (MCAP 145.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "playButtonSaysPause": true,
+        "canvases": [
+          {
+            "id": "bev",
+            "width": 512,
+            "height": 512
+          },
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "sequence": 26,
+      "target": 0.676923076923077,
+      "start": 7319.5,
+      "all_images_ms": 686.4000000953674,
+      "completed": {
+        "now": 8005.900000095367,
+        "last": {
+          "0": {
+            "t": 7777.800000190735,
+            "phase": "seek-26",
+            "cam": 0,
+            "size": "960x540",
+            "hash": "f736c6dc",
+            "variant": 26,
+            "sequenceModulo32": 26,
+            "cursor": 2.6399099999999995,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+          },
+          "1": {
+            "t": 7894.800000190735,
+            "phase": "seek-26",
+            "cam": 1,
+            "size": "112x63",
+            "hash": "2d29951d",
+            "variant": 1,
+            "sequenceModulo32": 26,
+            "cursor": 2.6399099999999995,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+          },
+          "2": {
+            "t": 7897.800000190735,
+            "phase": "seek-26",
+            "cam": 2,
+            "size": "112x63",
+            "hash": "b85cd406",
+            "variant": 8,
+            "sequenceModulo32": 26,
+            "cursor": 2.6399099999999995,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+          },
+          "3": {
+            "t": 7547.5,
+            "phase": "seek-26",
+            "cam": 3,
+            "size": "112x63",
+            "hash": "9c0f0645",
+            "variant": 15,
+            "sequenceModulo32": 26,
+            "cursor": 2.6399099999999995,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+          },
+          "4": {
+            "t": 7547.900000095367,
+            "phase": "seek-26",
+            "cam": 4,
+            "size": "112x63",
+            "hash": "b9a88f8e",
+            "variant": 22,
+            "sequenceModulo32": 26,
+            "cursor": 2.6399099999999995,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+          },
+          "5": {
+            "t": 7656,
+            "phase": "seek-26",
+            "cam": 5,
+            "size": "112x63",
+            "hash": "766f4c9d",
+            "variant": 29,
+            "sequenceModulo32": 26,
+            "cursor": 2.6399099999999995,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+          },
+          "6": {
+            "t": 7657,
+            "phase": "seek-26",
+            "cam": 6,
+            "size": "112x63",
+            "hash": "6461494e",
+            "variant": 4,
+            "sequenceModulo32": 26,
+            "cursor": 2.6399099999999995,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+          },
+          "7": {
+            "t": 7775.5,
+            "phase": "seek-26",
+            "cam": 7,
+            "size": "112x63",
+            "hash": "6ef105a5",
+            "variant": 11,
+            "sequenceModulo32": 26,
+            "cursor": 2.6399099999999995,
+            "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+          }
+        },
+        "errors": [],
+        "cards": 8,
+        "cursor": 0.6769,
+        "status": "Ready \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s",
+        "performance": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.00 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 7 loads/34 reads \u00b7 2013.7 MB loaded/2031.6 MB decompressed \u00b7 1 windows/237.5 MB logical/326.8 MB RAM (1.38x) \u00b7 copied 0.0 MB \u00b7 ahead 1.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 533.0 ms (MCAP 176.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+        "playButtonSaysPause": true,
+        "canvases": [
+          {
+            "id": "bev",
+            "width": 512,
+            "height": 512
+          },
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    }
+  ],
+  "status": "resource-limit",
+  "environment": {
+    "version": {
+      "Browser": "Chrome/143.0.7499.192",
+      "Protocol-Version": "1.3",
+      "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.0.0 Safari/537.36",
+      "V8-Version": "14.3.127.17",
+      "WebKit-Version": "537.36 (@be2c1f4fd451578a9ada68a0ac12d659362b44bf)",
+      "webSocketDebuggerUrl": "ws://127.0.0.1:9238/devtools/browser/4ab53d64-1826-43fe-8f9a-4665a5e58ee3"
+    },
+    "gpu": {
+      "gpu": {
+        "devices": [
+          {
+            "vendorId": 65535,
+            "deviceId": 65535,
+            "vendorString": "Google Inc. (Google)",
+            "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+            "driverVendor": "SwANGLE",
+            "driverVersion": "5.0.0"
+          }
+        ],
+        "auxAttributes": {
+          "amdSwitchable": false,
+          "canSupportThreadedTextureMailbox": false,
+          "directRenderingVersion": "",
+          "displayType": "ANGLE_SWIFTSHADER",
+          "glExtensions": "GL_AMD_performance_monitor GL_ANGLE_base_vertex_base_instance_shader_builtin GL_ANGLE_blob_cache GL_ANGLE_client_arrays GL_ANGLE_clip_cull_distance GL_ANGLE_compressed_texture_etc GL_ANGLE_copy_texture_3d GL_ANGLE_depth_texture GL_ANGLE_framebuffer_blit GL_ANGLE_framebuffer_multisample GL_ANGLE_get_image GL_ANGLE_get_serialized_context_string GL_ANGLE_get_tex_level_parameter GL_ANGLE_instanced_arrays GL_ANGLE_memory_object_flags GL_ANGLE_memory_size GL_ANGLE_multi_draw GL_ANGLE_pack_reverse_row_order GL_ANGLE_polygon_mode GL_ANGLE_program_binary_readiness_query GL_ANGLE_program_cache_control GL_ANGLE_read_only_depth_stencil_feedback_loops GL_ANGLE_relaxed_vertex_attribute_type GL_ANGLE_renderability_validation GL_ANGLE_request_extension GL_ANGLE_rgbx_internal_format GL_ANGLE_robust_client_memory GL_ANGLE_robust_fragment_shader_output GL_ANGLE_robust_resource_initialization GL_ANGLE_shader_pixel_local_storage GL_ANGLE_shader_pixel_local_storage_coherent GL_ANGLE_stencil_texturing GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ANGLE_texture_multisample GL_ANGLE_texture_usage GL_ANGLE_translated_shader_source GL_ANGLE_vulkan_image GL_ANGLE_yuv_internal_format GL_APPLE_clip_distance GL_ARM_rgba8 GL_ARM_shader_framebuffer_fetch GL_ARM_shader_framebuffer_fetch_depth_stencil GL_CHROMIUM_bind_generates_resource GL_CHROMIUM_bind_uniform_location GL_CHROMIUM_copy_compressed_texture GL_CHROMIUM_copy_texture GL_CHROMIUM_lose_context GL_EXT_EGL_image_array GL_EXT_EGL_image_external_wrap_modes GL_EXT_EGL_image_storage GL_EXT_base_instance GL_EXT_blend_minmax GL_EXT_buffer_storage GL_EXT_clear_texture GL_EXT_clip_control GL_EXT_clip_cull_distance GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_compressed_ETC1_RGB8_sub_texture GL_EXT_conservative_depth GL_EXT_copy_image GL_EXT_debug_label GL_EXT_debug_marker GL_EXT_depth_clamp GL_EXT_discard_framebuffer GL_EXT_disjoint_timer_query GL_EXT_draw_buffers GL_EXT_draw_buffers_indexed GL_EXT_draw_elements_base_vertex GL_EXT_float_blend GL_EXT_frag_depth GL_EXT_instanced_arrays GL_EXT_map_buffer_range GL_EXT_memory_object GL_EXT_memory_object_fd GL_EXT_occlusion_query_boolean GL_EXT_polygon_offset_clamp GL_EXT_read_format_bgra GL_EXT_robustness GL_EXT_sRGB GL_EXT_sRGB_write_control GL_EXT_semaphore GL_EXT_semaphore_fd GL_EXT_separate_shader_objects GL_EXT_shader_framebuffer_fetch GL_EXT_shader_framebuffer_fetch_non_coherent GL_EXT_shader_non_constant_global_initializers GL_EXT_shader_texture_lod GL_EXT_shadow_samplers GL_EXT_texture_border_clamp GL_EXT_texture_compression_bptc GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc_srgb GL_EXT_texture_cube_map_array GL_EXT_texture_filter_anisotropic GL_EXT_texture_format_BGRA8888 GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_rg GL_EXT_texture_sRGB_R8 GL_EXT_texture_sRGB_RG8 GL_EXT_texture_sRGB_decode GL_EXT_texture_shadow_lod GL_EXT_texture_storage GL_EXT_texture_type_2_10_10_10_REV GL_EXT_unpack_subimage GL_KHR_blend_equation_advanced GL_KHR_debug GL_KHR_robust_buffer_access_behavior GL_KHR_robustness GL_KHR_texture_compression_astc_ldr GL_NV_depth_buffer_float2 GL_NV_fence GL_NV_framebuffer_blit GL_NV_pack_subimage GL_NV_pixel_buffer_object GL_NV_polygon_mode GL_NV_read_depth GL_NV_read_depth_stencil GL_NV_read_stencil GL_NV_shader_noperspective_interpolation GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_EGL_image_external_essl3 GL_OES_EGL_sync GL_OES_compressed_EAC_R11_signed_texture GL_OES_compressed_EAC_R11_unsigned_texture GL_OES_compressed_EAC_RG11_signed_texture GL_OES_compressed_EAC_RG11_unsigned_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_compressed_ETC2_RGB8_texture GL_OES_compressed_ETC2_RGBA8_texture GL_OES_compressed_ETC2_punchthroughA_RGBA8_texture GL_OES_compressed_ETC2_punchthroughA_sRGB8_alpha_texture GL_OES_compressed_ETC2_sRGB8_alpha8_texture GL_OES_compressed_ETC2_sRGB8_texture GL_OES_copy_image GL_OES_depth24 GL_OES_depth32 GL_OES_depth_texture GL_OES_depth_texture_cube_map GL_OES_draw_buffers_indexed GL_OES_draw_elements_base_vertex GL_OES_element_index_uint GL_OES_fbo_render_mipmap GL_OES_get_program_binary GL_OES_mapbuffer GL_OES_packed_depth_stencil GL_OES_required_internalformat GL_OES_rgb8_rgba8 GL_OES_sample_shading GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_standard_derivatives GL_OES_surfaceless_context GL_OES_texture_3D GL_OES_texture_border_clamp GL_OES_texture_cube_map_array GL_OES_texture_float GL_OES_texture_float_linear GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_texture_npot GL_OES_texture_stencil8 GL_OES_texture_storage_multisample_2d_array GL_OES_vertex_array_object GL_OES_vertex_half_float GL_OES_vertex_type_10_10_10_2 GL_OVR_multiview GL_OVR_multiview2 ",
+          "glImplementationParts": "(gl=egl-angle,angle=swiftshader)",
+          "glRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "glResetNotificationStrategy": 33362,
+          "glVendor": "Google Inc. (Google)",
+          "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.26423 git hash: 2dfb5b7603d0)",
+          "glWsExtensions": "EGL_EXT_create_context_robustness EGL_ANGLE_surface_orientation EGL_KHR_create_context EGL_KHR_image EGL_KHR_image_base EGL_EXT_image_gl_colorspace EGL_KHR_gl_colorspace EGL_KHR_gl_texture_2D_image EGL_KHR_gl_texture_cubemap_image EGL_KHR_gl_renderbuffer_image EGL_KHR_get_all_proc_addresses EGL_KHR_fence_sync EGL_KHR_wait_sync EGL_ANGLE_create_context_webgl_compatibility EGL_CHROMIUM_create_context_bind_generates_resource EGL_KHR_swap_buffers_with_damage EGL_EXT_pixel_format_float EGL_KHR_surfaceless_context EGL_ANGLE_display_texture_share_group EGL_ANGLE_display_semaphore_share_group EGL_ANGLE_create_context_client_arrays EGL_ANGLE_program_cache_control EGL_ANGLE_robust_resource_initialization EGL_ANGLE_create_context_extensions_enabled EGL_ANDROID_blob_cache EGL_ANDROID_recordable EGL_ANGLE_create_context_backwards_compatible EGL_KHR_no_config_context EGL_IMG_context_priority EGL_KHR_create_context_no_error EGL_KHR_reusable_sync EGL_EXT_buffer_age EGL_ANGLE_create_surface_swap_interval EGL_ANGLE_vulkan_image EGL_KHR_partial_update EGL_ANGLE_global_fence_sync EGL_ANGLE_memory_usage_report ",
+          "glWsVendor": "Google Inc. (Google)",
+          "glWsVersion": "1.5 (ANGLE 2.1.26423 git hash: 2dfb5b7603d0)",
+          "hardwareSupportsVulkan": false,
+          "inProcessGpu": false,
+          "initializationTime": 0.106848,
+          "isAsan": false,
+          "isClangCoverage": false,
+          "jpegDecodeAcceleratorSupported": false,
+          "maxMsaaSamples": "4",
+          "optimus": false,
+          "passthroughCmdDecoder": true,
+          "pixelShaderVersion": "3.00",
+          "processCrashCount": 0,
+          "sandboxed": false,
+          "skiaBackendType": "GaneshGL",
+          "subpixelFontRendering": true,
+          "targetCpuBits": 64,
+          "vertexShaderVersion": "3.00",
+          "visibilityCallbackCallCount": 0
+        },
+        "featureStatus": {
+          "2d_canvas": "enabled",
+          "direct_rendering_display_compositor": "disabled_off_ok",
+          "gpu_compositing": "enabled",
+          "multiple_raster_threads": "enabled_on",
+          "opengl": "enabled_on",
+          "rasterization": "enabled",
+          "raw_draw": "disabled_off_ok",
+          "skia_graphite": "disabled_off",
+          "trees_in_viz": "disabled_off",
+          "video_decode": "enabled",
+          "video_encode": "disabled_software",
+          "vulkan": "disabled_off",
+          "webgl": "enabled",
+          "webgpu": "unavailable_software",
+          "webnn": "disabled_off"
+        },
+        "driverBugWorkarounds": [
+          "enable_webgl_timer_query_extensions",
+          "exit_on_context_lost",
+          "disabled_extension_GL_KHR_blend_equation_advanced",
+          "disabled_extension_GL_KHR_blend_equation_advanced_coherent"
+        ],
+        "videoDecoding": [],
+        "videoEncoding": [],
+        "imageDecoding": []
+      },
+      "modelName": "",
+      "modelVersion": "",
+      "commandLine": "/usr/bin/google-chrome --headless --no-sandbox --enable-unsafe-webgpu --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader --remote-debugging-port=9238 --user-data-dir=/tmp/mcap-camera-stress-8n44f37e --noerrdialogs --no-first-run --ozone-platform=headless --ozone-override-screen-size=800,600 --flag-switches-begin --flag-switches-end --enable-unsafe-swiftshader about:blank"
+    },
+    "command": [
+      "google-chrome",
+      "--headless",
+      "--no-sandbox",
+      "--enable-unsafe-webgpu",
+      "--enable-unsafe-swiftshader",
+      "--use-gl=angle",
+      "--use-angle=swiftshader",
+      "--remote-debugging-port=9238",
+      "--user-data-dir=/tmp/mcap-camera-stress-8n44f37e",
+      "about:blank"
+    ]
+  },
+  "before_open": {
+    "pss_kib": 256486,
+    "summed_rss_kib": 856244,
+    "cpu_seconds_live_processes": 0.48,
+    "rchar_live_processes": 7377177,
+    "storage_read_bytes_live_processes": 1335296,
+    "pids": [
+      1479457,
+      1479461,
+      1479462,
+      1479471,
+      1479472,
+      1479493,
+      1479497,
+      1479526,
+      1479545,
+      1479546,
+      1479563
+    ]
+  },
+  "initial": {
+    "now": 939.5999999046326,
+    "last": {
+      "0": {
+        "t": 665.9000000953674,
+        "phase": "setup",
+        "cam": 0,
+        "size": "960x540",
+        "hash": "1a559111",
+        "variant": 0,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      },
+      "1": {
+        "t": 659.9000000953674,
+        "phase": "setup",
+        "cam": 1,
+        "size": "112x63",
+        "hash": "6f8c6172",
+        "variant": 7,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      },
+      "2": {
+        "t": 764.3000001907349,
+        "phase": "setup",
+        "cam": 2,
+        "size": "112x63",
+        "hash": "2438ade9",
+        "variant": 14,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      },
+      "3": {
+        "t": 765.0999999046326,
+        "phase": "setup",
+        "cam": 3,
+        "size": "112x63",
+        "hash": "e2bb0b65",
+        "variant": 21,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      },
+      "4": {
+        "t": 844.0999999046326,
+        "phase": "setup",
+        "cam": 4,
+        "size": "112x63",
+        "hash": "969d66d0",
+        "variant": 28,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      },
+      "5": {
+        "t": 844.9000000953674,
+        "phase": "setup",
+        "cam": 5,
+        "size": "112x63",
+        "hash": "4e78991",
+        "variant": 3,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      },
+      "6": {
+        "t": 924,
+        "phase": "setup",
+        "cam": 6,
+        "size": "112x63",
+        "hash": "6125043e",
+        "variant": 10,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      },
+      "7": {
+        "t": 924.7000002861023,
+        "phase": "setup",
+        "cam": 7,
+        "size": "112x63",
+        "hash": "d5d2e16a",
+        "variant": 17,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      }
+    },
+    "errors": [],
+    "cards": 8,
+    "cursor": 0,
+    "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s",
+    "performance": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.00 ms \u00b7 source/controller 0.00/0.03 ms \u00b7 Browser file 1 loads/6 reads \u00b7 259.0 MB loaded/261.3 MB decompressed \u00b7 1 windows/237.5 MB logical/261.3 MB RAM (1.10x) \u00b7 copied 0.0 MB \u00b7 ahead 1.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 418.0 ms (MCAP 218.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+    "playButtonSaysPause": false,
+    "canvases": [
+      {
+        "id": "bev",
+        "width": 512,
+        "height": 512
+      },
+      {
+        "id": "camera",
+        "width": 960,
+        "height": 540
+      },
+      {
+        "id": "camera-thumb-0",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-1",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-2",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-3",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-4",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-5",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-6",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-7",
+        "width": 112,
+        "height": 63
+      }
+    ]
+  },
+  "play_end": {
+    "now": 5078.900000095367,
+    "last": {
+      "0": {
+        "t": 4751.700000286102,
+        "phase": "play",
+        "cam": 0,
+        "size": "960x540",
+        "hash": "3bacd57f",
+        "variant": 3,
+        "sequenceModulo32": 3,
+        "cursor": 3.6000900000000002,
+        "status": "Ready \u00b7 193 decoded \u00b7 0 errors \u00b7 124 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.58s"
+      },
+      "1": {
+        "t": 4795.5,
+        "phase": "play",
+        "cam": 1,
+        "size": "112x63",
+        "hash": "d38ccdfe",
+        "variant": 9,
+        "sequenceModulo32": 2,
+        "cursor": 3.64806,
+        "status": "Ready \u00b7 195 decoded \u00b7 0 errors \u00b7 131 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.63s"
+      },
+      "2": {
+        "t": 4829,
+        "phase": "play",
+        "cam": 2,
+        "size": "112x63",
+        "hash": "dd8ebdd8",
+        "variant": 16,
+        "sequenceModulo32": 2,
+        "cursor": 3.68004,
+        "status": "Ready \u00b7 195 decoded \u00b7 0 errors \u00b7 131 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.66s"
+      },
+      "3": {
+        "t": 4875.300000190735,
+        "phase": "play",
+        "cam": 3,
+        "size": "112x63",
+        "hash": "583df7d6",
+        "variant": 23,
+        "sequenceModulo32": 2,
+        "cursor": 3.72801,
+        "status": "Ready \u00b7 203 decoded \u00b7 0 errors \u00b7 131 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.71s"
+      },
+      "4": {
+        "t": 4907.400000095367,
+        "phase": "play",
+        "cam": 4,
+        "size": "112x63",
+        "hash": "48e4ae59",
+        "variant": 0,
+        "sequenceModulo32": 4,
+        "cursor": 3.7599899999999997,
+        "status": "Ready \u00b7 204 decoded \u00b7 0 errors \u00b7 131 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.74s"
+      },
+      "5": {
+        "t": 4973.200000286102,
+        "phase": "play",
+        "cam": 5,
+        "size": "112x63",
+        "hash": "6f8c6172",
+        "variant": 7,
+        "sequenceModulo32": 4,
+        "cursor": 3.80913,
+        "status": "Ready \u00b7 204 decoded \u00b7 0 errors \u00b7 131 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.79s"
+      },
+      "6": {
+        "t": 5054.700000286102,
+        "phase": "play",
+        "cam": 6,
+        "size": "112x63",
+        "hash": "2438ade9",
+        "variant": 14,
+        "sequenceModulo32": 4,
+        "cursor": 3.83019,
+        "status": "Ready \u00b7 205 decoded \u00b7 0 errors \u00b7 138 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.81s"
+      },
+      "7": {
+        "t": 5067.700000286102,
+        "phase": "play",
+        "cam": 7,
+        "size": "112x63",
+        "hash": "e2bb0b65",
+        "variant": 21,
+        "sequenceModulo32": 4,
+        "cursor": 3.9,
+        "status": "Ready \u00b7 205 decoded \u00b7 0 errors \u00b7 138 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.83s"
+      }
+    },
+    "errors": [],
+    "cards": 8,
+    "cursor": 1,
+    "status": "Ready \u00b7 214 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+    "performance": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.58 ms \u00b7 canvas 0.00 ms \u00b7 tick 2.05 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/20 reads \u00b7 1136.3 MB loaded/1146.4 MB decompressed \u00b7 3 windows/712.6 MB logical/885.1 MB RAM (1.24x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 446.0 ms (MCAP 226.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+    "playButtonSaysPause": true,
+    "canvases": [
+      {
+        "id": "bev",
+        "width": 512,
+        "height": 512
+      },
+      {
+        "id": "camera",
+        "width": 960,
+        "height": 540
+      },
+      {
+        "id": "camera-thumb-0",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-1",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-2",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-3",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-4",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-5",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-6",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-7",
+        "width": 112,
+        "height": 63
+      }
+    ]
+  },
+  "play_ms": 3926.4000000953674,
+  "error": "Chrome PSS exceeded 2 GiB",
+  "paint_events": [
+    {
+      "t": 659.9000000953674,
+      "phase": "setup",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "6f8c6172",
+      "variant": 7,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 665.9000000953674,
+      "phase": "setup",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "1a559111",
+      "variant": 0,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 764.3000001907349,
+      "phase": "setup",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "2438ade9",
+      "variant": 14,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 765.0999999046326,
+      "phase": "setup",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "e2bb0b65",
+      "variant": 21,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 844.0999999046326,
+      "phase": "setup",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "969d66d0",
+      "variant": 28,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 844.9000000953674,
+      "phase": "setup",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "4e78991",
+      "variant": 3,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 924,
+      "phase": "setup",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "6125043e",
+      "variant": 10,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 924.7000002861023,
+      "phase": "setup",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "d5d2e16a",
+      "variant": 17,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 1362.7000002861023,
+      "phase": "play",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "b85cd406",
+      "variant": 8,
+      "sequenceModulo32": 1,
+      "cursor": 0.20904,
+      "status": "Ready \u00b7 20 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.20s"
+    },
+    {
+      "t": 1365.0999999046326,
+      "phase": "play",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "67be4bfd",
+      "variant": 1,
+      "sequenceModulo32": 1,
+      "cursor": 0.20904,
+      "status": "Ready \u00b7 20 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.20s"
+    },
+    {
+      "t": 1474.2000002861023,
+      "phase": "play",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "9c0f0645",
+      "variant": 15,
+      "sequenceModulo32": 1,
+      "cursor": 0.32292,
+      "status": "Ready \u00b7 29 decoded \u00b7 0 errors \u00b7 7 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.32s"
+    },
+    {
+      "t": 1474.5999999046326,
+      "phase": "play",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "b9a88f8e",
+      "variant": 22,
+      "sequenceModulo32": 1,
+      "cursor": 0.32292,
+      "status": "Ready \u00b7 29 decoded \u00b7 0 errors \u00b7 7 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.32s"
+    },
+    {
+      "t": 1670.7000002861023,
+      "phase": "play",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "49bb6bca",
+      "variant": 31,
+      "sequenceModulo32": 3,
+      "cursor": 0.52104,
+      "status": "Ready \u00b7 31 decoded \u00b7 0 errors \u00b7 7 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.43s"
+    },
+    {
+      "t": 1671.8000001907349,
+      "phase": "play",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "e929b9b7",
+      "variant": 6,
+      "sequenceModulo32": 3,
+      "cursor": 0.52104,
+      "status": "Ready \u00b7 31 decoded \u00b7 0 errors \u00b7 7 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.43s"
+    },
+    {
+      "t": 1774.7000002861023,
+      "phase": "play",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "9c0f0645",
+      "variant": 15,
+      "sequenceModulo32": 5,
+      "cursor": 0.62712,
+      "status": "Ready \u00b7 41 decoded \u00b7 0 errors \u00b7 14 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.62s"
+    },
+    {
+      "t": 1775.0999999046326,
+      "phase": "play",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "b9a88f8e",
+      "variant": 22,
+      "sequenceModulo32": 5,
+      "cursor": 0.62712,
+      "status": "Ready \u00b7 41 decoded \u00b7 0 errors \u00b7 14 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.62s"
+    },
+    {
+      "t": 1964.3000001907349,
+      "phase": "play",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "9e60c528",
+      "variant": 12,
+      "sequenceModulo32": 5,
+      "cursor": 0.8131499999999999,
+      "status": "Ready \u00b7 50 decoded \u00b7 0 errors \u00b7 22 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.72s"
+    },
+    {
+      "t": 1966.5,
+      "phase": "play",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "92ef2084",
+      "variant": 5,
+      "sequenceModulo32": 5,
+      "cursor": 0.8131499999999999,
+      "status": "Ready \u00b7 50 decoded \u00b7 0 errors \u00b7 22 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.72s"
+    },
+    {
+      "t": 2078.0999999046326,
+      "phase": "play",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "e2bb0b65",
+      "variant": 21,
+      "sequenceModulo32": 7,
+      "cursor": 0.92781,
+      "status": "Ready \u00b7 53 decoded \u00b7 0 errors \u00b7 29 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.91s"
+    },
+    {
+      "t": 2078.5999999046326,
+      "phase": "play",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "969d66d0",
+      "variant": 28,
+      "sequenceModulo32": 7,
+      "cursor": 0.92781,
+      "status": "Ready \u00b7 53 decoded \u00b7 0 errors \u00b7 29 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.91s"
+    },
+    {
+      "t": 2237.5,
+      "phase": "play",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "34b3bc3c",
+      "variant": 5,
+      "sequenceModulo32": 9,
+      "cursor": 1.08888,
+      "status": "Ready \u00b7 62 decoded \u00b7 0 errors \u00b7 29 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.01s"
+    },
+    {
+      "t": 2238.5,
+      "phase": "play",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "9e60c528",
+      "variant": 12,
+      "sequenceModulo32": 9,
+      "cursor": 1.08888,
+      "status": "Ready \u00b7 62 decoded \u00b7 0 errors \u00b7 29 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.01s"
+    },
+    {
+      "t": 2423.800000190735,
+      "phase": "play",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "d2309b77",
+      "variant": 19,
+      "sequenceModulo32": 9,
+      "cursor": 1.27491,
+      "status": "Ready \u00b7 71 decoded \u00b7 0 errors \u00b7 36 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.19s"
+    },
+    {
+      "t": 2424.7000002861023,
+      "phase": "play",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "3adbe2fb",
+      "variant": 26,
+      "sequenceModulo32": 9,
+      "cursor": 1.27491,
+      "status": "Ready \u00b7 71 decoded \u00b7 0 errors \u00b7 36 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.19s"
+    },
+    {
+      "t": 2543.5,
+      "phase": "play",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "b3a4a33",
+      "variant": 18,
+      "sequenceModulo32": 11,
+      "cursor": 1.39308,
+      "status": "Ready \u00b7 82 decoded \u00b7 0 errors \u00b7 44 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.39s"
+    },
+    {
+      "t": 2547,
+      "phase": "play",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "68fd2d12",
+      "variant": 12,
+      "sequenceModulo32": 12,
+      "cursor": 1.39308,
+      "status": "Ready \u00b7 82 decoded \u00b7 0 errors \u00b7 44 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.39s"
+    },
+    {
+      "t": 2635.9000000953674,
+      "phase": "play",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "d373827a",
+      "variant": 27,
+      "sequenceModulo32": 13,
+      "cursor": 1.48785,
+      "status": "Ready \u00b7 83 decoded \u00b7 0 errors \u00b7 44 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.47s"
+    },
+    {
+      "t": 2636.4000000953674,
+      "phase": "play",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "94ea6ab6",
+      "variant": 2,
+      "sequenceModulo32": 13,
+      "cursor": 1.48785,
+      "status": "Ready \u00b7 83 decoded \u00b7 0 errors \u00b7 44 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.47s"
+    },
+    {
+      "t": 2715.300000190735,
+      "phase": "play",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "d38ccdfe",
+      "variant": 9,
+      "sequenceModulo32": 13,
+      "cursor": 1.56819,
+      "status": "Ready \u00b7 85 decoded \u00b7 0 errors \u00b7 52 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.55s"
+    },
+    {
+      "t": 2715.7000002861023,
+      "phase": "play",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "dd8ebdd8",
+      "variant": 16,
+      "sequenceModulo32": 13,
+      "cursor": 1.56819,
+      "status": "Ready \u00b7 85 decoded \u00b7 0 errors \u00b7 52 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.55s"
+    },
+    {
+      "t": 2795.4000000953674,
+      "phase": "play",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "583df7d6",
+      "variant": 23,
+      "sequenceModulo32": 13,
+      "cursor": 1.64814,
+      "status": "Ready \u00b7 94 decoded \u00b7 0 errors \u00b7 59 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.63s"
+    },
+    {
+      "t": 2795.7000002861023,
+      "phase": "play",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "2d1ad2f3",
+      "variant": 30,
+      "sequenceModulo32": 13,
+      "cursor": 1.64814,
+      "status": "Ready \u00b7 94 decoded \u00b7 0 errors \u00b7 59 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.63s"
+    },
+    {
+      "t": 2877,
+      "phase": "play",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "583df7d6",
+      "variant": 23,
+      "sequenceModulo32": 16,
+      "cursor": 1.72809,
+      "status": "Ready \u00b7 95 decoded \u00b7 0 errors \u00b7 59 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.71s"
+    },
+    {
+      "t": 2878.5,
+      "phase": "play",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "98f571e3",
+      "variant": 16,
+      "sequenceModulo32": 16,
+      "cursor": 1.72809,
+      "status": "Ready \u00b7 95 decoded \u00b7 0 errors \u00b7 59 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.71s"
+    },
+    {
+      "t": 2957.300000190735,
+      "phase": "play",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "2d1ad2f3",
+      "variant": 30,
+      "sequenceModulo32": 16,
+      "cursor": 1.80804,
+      "status": "Ready \u00b7 96 decoded \u00b7 0 errors \u00b7 59 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.79s"
+    },
+    {
+      "t": 2957.7000002861023,
+      "phase": "play",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "34b3bc3c",
+      "variant": 5,
+      "sequenceModulo32": 16,
+      "cursor": 1.80804,
+      "status": "Ready \u00b7 96 decoded \u00b7 0 errors \u00b7 59 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.79s"
+    },
+    {
+      "t": 3036.2000002861023,
+      "phase": "play",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "2438ade9",
+      "variant": 14,
+      "sequenceModulo32": 18,
+      "cursor": 1.8879899999999998,
+      "status": "Ready \u00b7 105 decoded \u00b7 0 errors \u00b7 66 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.87s"
+    },
+    {
+      "t": 3036.800000190735,
+      "phase": "play",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "e2bb0b65",
+      "variant": 21,
+      "sequenceModulo32": 18,
+      "cursor": 1.8879899999999998,
+      "status": "Ready \u00b7 105 decoded \u00b7 0 errors \u00b7 66 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.87s"
+    },
+    {
+      "t": 3115.5,
+      "phase": "play",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "969d66d0",
+      "variant": 28,
+      "sequenceModulo32": 18,
+      "cursor": 1.9679400000000002,
+      "status": "Ready \u00b7 107 decoded \u00b7 0 errors \u00b7 66 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.95s"
+    },
+    {
+      "t": 3115.9000000953674,
+      "phase": "play",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "4e78991",
+      "variant": 3,
+      "sequenceModulo32": 18,
+      "cursor": 1.9679400000000002,
+      "status": "Ready \u00b7 107 decoded \u00b7 0 errors \u00b7 66 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.95s"
+    },
+    {
+      "t": 3204.4000000953674,
+      "phase": "play",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "56a47ead",
+      "variant": 25,
+      "sequenceModulo32": 18,
+      "cursor": 2.04789,
+      "status": "Ready \u00b7 115 decoded \u00b7 0 errors \u00b7 73 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.03s"
+    },
+    {
+      "t": 3206.5999999046326,
+      "phase": "play",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "66361d5c",
+      "variant": 19,
+      "sequenceModulo32": 19,
+      "cursor": 2.04789,
+      "status": "Ready \u00b7 115 decoded \u00b7 0 errors \u00b7 73 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.03s"
+    },
+    {
+      "t": 3275.4000000953674,
+      "phase": "play",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "94ea6ab6",
+      "variant": 2,
+      "sequenceModulo32": 20,
+      "cursor": 2.12784,
+      "status": "Ready \u00b7 117 decoded \u00b7 0 errors \u00b7 73 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.11s"
+    },
+    {
+      "t": 3291.5999999046326,
+      "phase": "play",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "d38ccdfe",
+      "variant": 9,
+      "sequenceModulo32": 20,
+      "cursor": 2.14383,
+      "status": "Ready \u00b7 117 decoded \u00b7 0 errors \u00b7 73 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.13s"
+    },
+    {
+      "t": 3339.5,
+      "phase": "play",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "dd8ebdd8",
+      "variant": 16,
+      "sequenceModulo32": 20,
+      "cursor": 2.19219,
+      "status": "Ready \u00b7 118 decoded \u00b7 0 errors \u00b7 73 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.18s"
+    },
+    {
+      "t": 3373.5,
+      "phase": "play",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "583df7d6",
+      "variant": 23,
+      "sequenceModulo32": 20,
+      "cursor": 2.22417,
+      "status": "Ready \u00b7 119 decoded \u00b7 0 errors \u00b7 80 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.21s"
+    },
+    {
+      "t": 3419.9000000953674,
+      "phase": "play",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "2d1ad2f3",
+      "variant": 30,
+      "sequenceModulo32": 20,
+      "cursor": 2.27214,
+      "status": "Ready \u00b7 126 decoded \u00b7 0 errors \u00b7 80 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.26s"
+    },
+    {
+      "t": 3452.9000000953674,
+      "phase": "play",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "6f8c6172",
+      "variant": 7,
+      "sequenceModulo32": 22,
+      "cursor": 2.3041199999999997,
+      "status": "Ready \u00b7 127 decoded \u00b7 0 errors \u00b7 80 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.29s"
+    },
+    {
+      "t": 3503.5,
+      "phase": "play",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "c06c8b7e",
+      "variant": 21,
+      "sequenceModulo32": 21,
+      "cursor": 2.35209,
+      "status": "Ready \u00b7 128 decoded \u00b7 0 errors \u00b7 80 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.34s"
+    },
+    {
+      "t": 3531.5999999046326,
+      "phase": "play",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "766f4c9d",
+      "variant": 29,
+      "sequenceModulo32": 22,
+      "cursor": 2.38407,
+      "status": "Ready \u00b7 128 decoded \u00b7 0 errors \u00b7 80 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.37s"
+    },
+    {
+      "t": 3581.5999999046326,
+      "phase": "play",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "6461494e",
+      "variant": 4,
+      "sequenceModulo32": 22,
+      "cursor": 2.43204,
+      "status": "Ready \u00b7 130 decoded \u00b7 0 errors \u00b7 88 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.42s"
+    },
+    {
+      "t": 3611.5,
+      "phase": "play",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "6ef105a5",
+      "variant": 11,
+      "sequenceModulo32": 22,
+      "cursor": 2.46402,
+      "status": "Ready \u00b7 137 decoded \u00b7 0 errors \u00b7 88 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.45s"
+    },
+    {
+      "t": 3659.7000002861023,
+      "phase": "play",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "1c1301ba",
+      "variant": 20,
+      "sequenceModulo32": 24,
+      "cursor": 2.51199,
+      "status": "Ready \u00b7 137 decoded \u00b7 0 errors \u00b7 88 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.50s"
+    },
+    {
+      "t": 3691.4000000953674,
+      "phase": "play",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "d373827a",
+      "variant": 27,
+      "sequenceModulo32": 24,
+      "cursor": 2.54397,
+      "status": "Ready \u00b7 139 decoded \u00b7 0 errors \u00b7 88 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.53s"
+    },
+    {
+      "t": 3739.5,
+      "phase": "play",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "94ea6ab6",
+      "variant": 2,
+      "sequenceModulo32": 24,
+      "cursor": 2.5919399999999997,
+      "status": "Ready \u00b7 139 decoded \u00b7 0 errors \u00b7 88 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.58s"
+    },
+    {
+      "t": 3771.9000000953674,
+      "phase": "play",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "d38ccdfe",
+      "variant": 9,
+      "sequenceModulo32": 24,
+      "cursor": 2.6239199999999996,
+      "status": "Ready \u00b7 140 decoded \u00b7 0 errors \u00b7 95 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.61s"
+    },
+    {
+      "t": 3822.5,
+      "phase": "play",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "d1f12b5f",
+      "variant": 25,
+      "sequenceModulo32": 25,
+      "cursor": 2.6718900000000003,
+      "status": "Ready \u00b7 148 decoded \u00b7 0 errors \u00b7 95 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.66s"
+    },
+    {
+      "t": 3851.7000002861023,
+      "phase": "play",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "49bb6bca",
+      "variant": 31,
+      "sequenceModulo32": 24,
+      "cursor": 2.70387,
+      "status": "Ready \u00b7 148 decoded \u00b7 0 errors \u00b7 95 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.69s"
+    },
+    {
+      "t": 3899.5999999046326,
+      "phase": "play",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "b85cd406",
+      "variant": 8,
+      "sequenceModulo32": 26,
+      "cursor": 2.75184,
+      "status": "Ready \u00b7 150 decoded \u00b7 0 errors \u00b7 95 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.74s"
+    },
+    {
+      "t": 3931.4000000953674,
+      "phase": "play",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "9c0f0645",
+      "variant": 15,
+      "sequenceModulo32": 26,
+      "cursor": 2.78382,
+      "status": "Ready \u00b7 150 decoded \u00b7 0 errors \u00b7 95 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.77s"
+    },
+    {
+      "t": 3979.4000000953674,
+      "phase": "play",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "b9a88f8e",
+      "variant": 22,
+      "sequenceModulo32": 26,
+      "cursor": 2.8321799999999997,
+      "status": "Ready \u00b7 151 decoded \u00b7 0 errors \u00b7 102 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.82s"
+    },
+    {
+      "t": 4011.4000000953674,
+      "phase": "play",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "766f4c9d",
+      "variant": 29,
+      "sequenceModulo32": 26,
+      "cursor": 2.86416,
+      "status": "Ready \u00b7 159 decoded \u00b7 0 errors \u00b7 102 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.85s"
+    },
+    {
+      "t": 4059.4000000953674,
+      "phase": "play",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "6461494e",
+      "variant": 4,
+      "sequenceModulo32": 26,
+      "cursor": 2.91213,
+      "status": "Ready \u00b7 159 decoded \u00b7 0 errors \u00b7 102 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.90s"
+    },
+    {
+      "t": 4091.4000000953674,
+      "phase": "play",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "fd959385",
+      "variant": 13,
+      "sequenceModulo32": 28,
+      "cursor": 2.94411,
+      "status": "Ready \u00b7 160 decoded \u00b7 0 errors \u00b7 102 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.93s"
+    },
+    {
+      "t": 4143,
+      "phase": "play",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "32dc8139",
+      "variant": 28,
+      "sequenceModulo32": 28,
+      "cursor": 2.99208,
+      "status": "Ready \u00b7 161 decoded \u00b7 0 errors \u00b7 102 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.98s"
+    },
+    {
+      "t": 4171.599999904633,
+      "phase": "play",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "4e78991",
+      "variant": 3,
+      "sequenceModulo32": 28,
+      "cursor": 3.02406,
+      "status": "Ready \u00b7 162 decoded \u00b7 0 errors \u00b7 109 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.01s"
+    },
+    {
+      "t": 4219.800000190735,
+      "phase": "play",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "6125043e",
+      "variant": 10,
+      "sequenceModulo32": 28,
+      "cursor": 3.07203,
+      "status": "Ready \u00b7 169 decoded \u00b7 0 errors \u00b7 109 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.06s"
+    },
+    {
+      "t": 4236.599999904633,
+      "phase": "play",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "d5d2e16a",
+      "variant": 17,
+      "sequenceModulo32": 28,
+      "cursor": 3.0880199999999998,
+      "status": "Ready \u00b7 170 decoded \u00b7 0 errors \u00b7 109 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.07s"
+    },
+    {
+      "t": 4299.5,
+      "phase": "play",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "3adbe2fb",
+      "variant": 26,
+      "sequenceModulo32": 30,
+      "cursor": 3.15198,
+      "status": "Ready \u00b7 171 decoded \u00b7 0 errors \u00b7 109 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.14s"
+    },
+    {
+      "t": 4315.5,
+      "phase": "play",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "2d29951d",
+      "variant": 1,
+      "sequenceModulo32": 30,
+      "cursor": 3.16797,
+      "status": "Ready \u00b7 171 decoded \u00b7 0 errors \u00b7 109 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.15s"
+    },
+    {
+      "t": 4363.300000190735,
+      "phase": "play",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "b85cd406",
+      "variant": 8,
+      "sequenceModulo32": 30,
+      "cursor": 3.21594,
+      "status": "Ready \u00b7 173 decoded \u00b7 0 errors \u00b7 116 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.20s"
+    },
+    {
+      "t": 4395.400000095367,
+      "phase": "play",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "9c0f0645",
+      "variant": 15,
+      "sequenceModulo32": 30,
+      "cursor": 3.2479199999999997,
+      "status": "Ready \u00b7 173 decoded \u00b7 0 errors \u00b7 116 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.23s"
+    },
+    {
+      "t": 4447.5,
+      "phase": "play",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "6dc9470c",
+      "variant": 31,
+      "sequenceModulo32": 31,
+      "cursor": 3.29589,
+      "status": "Ready \u00b7 180 decoded \u00b7 0 errors \u00b7 116 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.28s"
+    },
+    {
+      "t": 4475.5,
+      "phase": "play",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "34b3bc3c",
+      "variant": 5,
+      "sequenceModulo32": 30,
+      "cursor": 3.32904,
+      "status": "Ready \u00b7 182 decoded \u00b7 0 errors \u00b7 116 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.31s"
+    },
+    {
+      "t": 4523.300000190735,
+      "phase": "play",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "2438ade9",
+      "variant": 14,
+      "sequenceModulo32": 0,
+      "cursor": 3.37584,
+      "status": "Ready \u00b7 182 decoded \u00b7 0 errors \u00b7 116 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.36s"
+    },
+    {
+      "t": 4555.700000286102,
+      "phase": "play",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "e2bb0b65",
+      "variant": 21,
+      "sequenceModulo32": 0,
+      "cursor": 3.40782,
+      "status": "Ready \u00b7 182 decoded \u00b7 0 errors \u00b7 116 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.39s"
+    },
+    {
+      "t": 4587.800000190735,
+      "phase": "play",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "969d66d0",
+      "variant": 28,
+      "sequenceModulo32": 0,
+      "cursor": 3.44019,
+      "status": "Ready \u00b7 184 decoded \u00b7 0 errors \u00b7 124 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.42s"
+    },
+    {
+      "t": 4636.099999904633,
+      "phase": "play",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "4e78991",
+      "variant": 3,
+      "sequenceModulo32": 0,
+      "cursor": 3.4881599999999997,
+      "status": "Ready \u00b7 191 decoded \u00b7 0 errors \u00b7 124 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.47s"
+    },
+    {
+      "t": 4667.599999904633,
+      "phase": "play",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "6125043e",
+      "variant": 10,
+      "sequenceModulo32": 0,
+      "cursor": 3.5201399999999996,
+      "status": "Ready \u00b7 192 decoded \u00b7 0 errors \u00b7 124 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.50s"
+    },
+    {
+      "t": 4716,
+      "phase": "play",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "d2309b77",
+      "variant": 19,
+      "sequenceModulo32": 2,
+      "cursor": 3.56811,
+      "status": "Ready \u00b7 193 decoded \u00b7 0 errors \u00b7 124 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.55s"
+    },
+    {
+      "t": 4751.700000286102,
+      "phase": "play",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "3bacd57f",
+      "variant": 3,
+      "sequenceModulo32": 3,
+      "cursor": 3.6000900000000002,
+      "status": "Ready \u00b7 193 decoded \u00b7 0 errors \u00b7 124 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.58s"
+    },
+    {
+      "t": 4795.5,
+      "phase": "play",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "d38ccdfe",
+      "variant": 9,
+      "sequenceModulo32": 2,
+      "cursor": 3.64806,
+      "status": "Ready \u00b7 195 decoded \u00b7 0 errors \u00b7 131 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.63s"
+    },
+    {
+      "t": 4829,
+      "phase": "play",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "dd8ebdd8",
+      "variant": 16,
+      "sequenceModulo32": 2,
+      "cursor": 3.68004,
+      "status": "Ready \u00b7 195 decoded \u00b7 0 errors \u00b7 131 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.66s"
+    },
+    {
+      "t": 4875.300000190735,
+      "phase": "play",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "583df7d6",
+      "variant": 23,
+      "sequenceModulo32": 2,
+      "cursor": 3.72801,
+      "status": "Ready \u00b7 203 decoded \u00b7 0 errors \u00b7 131 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.71s"
+    },
+    {
+      "t": 4907.400000095367,
+      "phase": "play",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "48e4ae59",
+      "variant": 0,
+      "sequenceModulo32": 4,
+      "cursor": 3.7599899999999997,
+      "status": "Ready \u00b7 204 decoded \u00b7 0 errors \u00b7 131 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.74s"
+    },
+    {
+      "t": 4973.200000286102,
+      "phase": "play",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "6f8c6172",
+      "variant": 7,
+      "sequenceModulo32": 4,
+      "cursor": 3.80913,
+      "status": "Ready \u00b7 204 decoded \u00b7 0 errors \u00b7 131 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.79s"
+    },
+    {
+      "t": 5054.700000286102,
+      "phase": "play",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "2438ade9",
+      "variant": 14,
+      "sequenceModulo32": 4,
+      "cursor": 3.83019,
+      "status": "Ready \u00b7 205 decoded \u00b7 0 errors \u00b7 138 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.81s"
+    },
+    {
+      "t": 5067.700000286102,
+      "phase": "play",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "e2bb0b65",
+      "variant": 21,
+      "sequenceModulo32": 4,
+      "cursor": 3.9,
+      "status": "Ready \u00b7 205 decoded \u00b7 0 errors \u00b7 138 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.83s"
+    },
+    {
+      "t": 5135.200000286102,
+      "phase": "seek-28",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "92ef2084",
+      "variant": 5,
+      "sequenceModulo32": 5,
+      "cursor": 3.9,
+      "status": "Seeking \u00b7 214 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s"
+    },
+    {
+      "t": 5307.599999904633,
+      "phase": "seek-28",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "d5d2e16a",
+      "variant": 17,
+      "sequenceModulo32": 28,
+      "cursor": 2.8399799999999997,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+    },
+    {
+      "t": 5315.099999904633,
+      "phase": "seek-28",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "fb811837",
+      "variant": 24,
+      "sequenceModulo32": 28,
+      "cursor": 2.8399799999999997,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+    },
+    {
+      "t": 5417.400000095367,
+      "phase": "seek-28",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "49bb6bca",
+      "variant": 31,
+      "sequenceModulo32": 28,
+      "cursor": 2.8399799999999997,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+    },
+    {
+      "t": 5419.099999904633,
+      "phase": "seek-28",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "e929b9b7",
+      "variant": 6,
+      "sequenceModulo32": 28,
+      "cursor": 2.8399799999999997,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+    },
+    {
+      "t": 5543.800000190735,
+      "phase": "seek-28",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "fd959385",
+      "variant": 13,
+      "sequenceModulo32": 28,
+      "cursor": 2.8399799999999997,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+    },
+    {
+      "t": 5546.200000286102,
+      "phase": "seek-28",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "32dc8139",
+      "variant": 28,
+      "sequenceModulo32": 28,
+      "cursor": 2.8399799999999997,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+    },
+    {
+      "t": 5651,
+      "phase": "seek-28",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "4e78991",
+      "variant": 3,
+      "sequenceModulo32": 28,
+      "cursor": 2.8399799999999997,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+    },
+    {
+      "t": 5651.599999904633,
+      "phase": "seek-28",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "6125043e",
+      "variant": 10,
+      "sequenceModulo32": 28,
+      "cursor": 2.8399799999999997,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 223 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.84s"
+    },
+    {
+      "t": 6447.900000095367,
+      "phase": "seek-10",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "49bb6bca",
+      "variant": 31,
+      "sequenceModulo32": 10,
+      "cursor": 1.04013,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+    },
+    {
+      "t": 6448.700000286102,
+      "phase": "seek-10",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "e929b9b7",
+      "variant": 6,
+      "sequenceModulo32": 10,
+      "cursor": 1.04013,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+    },
+    {
+      "t": 6557.800000190735,
+      "phase": "seek-10",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "fd959385",
+      "variant": 13,
+      "sequenceModulo32": 10,
+      "cursor": 1.04013,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+    },
+    {
+      "t": 6558.700000286102,
+      "phase": "seek-10",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "1c1301ba",
+      "variant": 20,
+      "sequenceModulo32": 10,
+      "cursor": 1.04013,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+    },
+    {
+      "t": 6660.300000190735,
+      "phase": "seek-10",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "d373827a",
+      "variant": 27,
+      "sequenceModulo32": 10,
+      "cursor": 1.04013,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+    },
+    {
+      "t": 6661.900000095367,
+      "phase": "seek-10",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "2e8b4bf",
+      "variant": 10,
+      "sequenceModulo32": 10,
+      "cursor": 1.04013,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+    },
+    {
+      "t": 6763.700000286102,
+      "phase": "seek-10",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "d5d2e16a",
+      "variant": 17,
+      "sequenceModulo32": 10,
+      "cursor": 1.04013,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+    },
+    {
+      "t": 6764.200000286102,
+      "phase": "seek-10",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "fb811837",
+      "variant": 24,
+      "sequenceModulo32": 10,
+      "cursor": 1.04013,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 232 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.04s"
+    },
+    {
+      "t": 7547.5,
+      "phase": "seek-26",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "9c0f0645",
+      "variant": 15,
+      "sequenceModulo32": 26,
+      "cursor": 2.6399099999999995,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+    },
+    {
+      "t": 7547.900000095367,
+      "phase": "seek-26",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "b9a88f8e",
+      "variant": 22,
+      "sequenceModulo32": 26,
+      "cursor": 2.6399099999999995,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+    },
+    {
+      "t": 7656,
+      "phase": "seek-26",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "766f4c9d",
+      "variant": 29,
+      "sequenceModulo32": 26,
+      "cursor": 2.6399099999999995,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+    },
+    {
+      "t": 7657,
+      "phase": "seek-26",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "6461494e",
+      "variant": 4,
+      "sequenceModulo32": 26,
+      "cursor": 2.6399099999999995,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+    },
+    {
+      "t": 7775.5,
+      "phase": "seek-26",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "6ef105a5",
+      "variant": 11,
+      "sequenceModulo32": 26,
+      "cursor": 2.6399099999999995,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+    },
+    {
+      "t": 7777.800000190735,
+      "phase": "seek-26",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "f736c6dc",
+      "variant": 26,
+      "sequenceModulo32": 26,
+      "cursor": 2.6399099999999995,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+    },
+    {
+      "t": 7894.800000190735,
+      "phase": "seek-26",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "2d29951d",
+      "variant": 1,
+      "sequenceModulo32": 26,
+      "cursor": 2.6399099999999995,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+    },
+    {
+      "t": 7897.800000190735,
+      "phase": "seek-26",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "b85cd406",
+      "variant": 8,
+      "sequenceModulo32": 26,
+      "cursor": 2.6399099999999995,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 241 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.64s"
+    },
+    {
+      "t": 8716.5,
+      "phase": "seek-12",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "2d29951d",
+      "variant": 1,
+      "sequenceModulo32": 12,
+      "cursor": 1.23981,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 250 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.24s"
+    },
+    {
+      "t": 8717.200000286102,
+      "phase": "seek-12",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "b85cd406",
+      "variant": 8,
+      "sequenceModulo32": 12,
+      "cursor": 1.23981,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 250 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.24s"
+    },
+    {
+      "t": 8811.800000190735,
+      "phase": "seek-12",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "9c0f0645",
+      "variant": 15,
+      "sequenceModulo32": 12,
+      "cursor": 1.23981,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 250 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.24s"
+    },
+    {
+      "t": 8812.400000095367,
+      "phase": "seek-12",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "b9a88f8e",
+      "variant": 22,
+      "sequenceModulo32": 12,
+      "cursor": 1.23981,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 250 decoded \u00b7 0 errors \u00b7 146 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.24s"
+    }
+  ],
+  "heartbeat": [
+    {
+      "t": 35.40000009536743,
+      "phase": "setup",
+      "interval": 30.40000009536743
+    },
+    {
+      "t": 45,
+      "phase": "setup",
+      "interval": 9.599999904632568
+    },
+    {
+      "t": 55,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 65,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 81.59999990463257,
+      "phase": "setup",
+      "interval": 16.59999990463257
+    },
+    {
+      "t": 109.5,
+      "phase": "setup",
+      "interval": 27.90000009536743
+    },
+    {
+      "t": 200.7000002861023,
+      "phase": "setup",
+      "interval": 91.2000002861023
+    },
+    {
+      "t": 207.2000002861023,
+      "phase": "setup",
+      "interval": 6.5
+    },
+    {
+      "t": 317.59999990463257,
+      "phase": "setup",
+      "interval": 110.39999961853027
+    },
+    {
+      "t": 411.90000009536743,
+      "phase": "setup",
+      "interval": 94.30000019073486
+    },
+    {
+      "t": 416.80000019073486,
+      "phase": "setup",
+      "interval": 4.900000095367432
+    },
+    {
+      "t": 501,
+      "phase": "setup",
+      "interval": 84.19999980926514
+    },
+    {
+      "t": 508.59999990463257,
+      "phase": "setup",
+      "interval": 7.599999904632568
+    },
+    {
+      "t": 515,
+      "phase": "setup",
+      "interval": 6.400000095367432
+    },
+    {
+      "t": 525.0999999046326,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 535,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 545,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 555.3000001907349,
+      "phase": "setup",
+      "interval": 10.300000190734863
+    },
+    {
+      "t": 565,
+      "phase": "setup",
+      "interval": 9.699999809265137
+    },
+    {
+      "t": 575,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 585.0999999046326,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 595,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 670,
+      "phase": "setup",
+      "interval": 75
+    },
+    {
+      "t": 675,
+      "phase": "setup",
+      "interval": 5
+    },
+    {
+      "t": 685,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 695,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 705,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 715.3000001907349,
+      "phase": "setup",
+      "interval": 10.300000190734863
+    },
+    {
+      "t": 725,
+      "phase": "setup",
+      "interval": 9.699999809265137
+    },
+    {
+      "t": 735.0999999046326,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 745,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 755.0999999046326,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 768.5999999046326,
+      "phase": "setup",
+      "interval": 13.5
+    },
+    {
+      "t": 775,
+      "phase": "setup",
+      "interval": 6.400000095367432
+    },
+    {
+      "t": 785,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 795.4000000953674,
+      "phase": "setup",
+      "interval": 10.400000095367432
+    },
+    {
+      "t": 805.0999999046326,
+      "phase": "setup",
+      "interval": 9.699999809265137
+    },
+    {
+      "t": 815,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 825.0999999046326,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 835,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 847.9000000953674,
+      "phase": "setup",
+      "interval": 12.900000095367432
+    },
+    {
+      "t": 855,
+      "phase": "setup",
+      "interval": 7.099999904632568
+    },
+    {
+      "t": 865.0999999046326,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 875.5999999046326,
+      "phase": "setup",
+      "interval": 10.5
+    },
+    {
+      "t": 885.0999999046326,
+      "phase": "setup",
+      "interval": 9.5
+    },
+    {
+      "t": 895,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 905,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 915.0999999046326,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 925.5,
+      "phase": "setup",
+      "interval": 10.400000095367432
+    },
+    {
+      "t": 935,
+      "phase": "setup",
+      "interval": 9.5
+    },
+    {
+      "t": 945,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 955.4000000953674,
+      "phase": "setup",
+      "interval": 10.400000095367432
+    },
+    {
+      "t": 965,
+      "phase": "setup",
+      "interval": 9.599999904632568
+    },
+    {
+      "t": 975,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 985.0999999046326,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 995,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 1005.0999999046326,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 1015,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 1025.0999999046326,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 1035.5999999046326,
+      "phase": "setup",
+      "interval": 10.5
+    },
+    {
+      "t": 1045,
+      "phase": "setup",
+      "interval": 9.400000095367432
+    },
+    {
+      "t": 1055,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1065,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1075,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1085,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1095,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1105,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1115.4000000953674,
+      "phase": "setup",
+      "interval": 10.400000095367432
+    },
+    {
+      "t": 1125,
+      "phase": "setup",
+      "interval": 9.599999904632568
+    },
+    {
+      "t": 1135,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1145,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1155,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 1165.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 1249.7000002861023,
+      "phase": "play",
+      "interval": 84.60000038146973
+    },
+    {
+      "t": 1256.0999999046326,
+      "phase": "play",
+      "interval": 6.399999618530273
+    },
+    {
+      "t": 1350.7000002861023,
+      "phase": "play",
+      "interval": 94.60000038146973
+    },
+    {
+      "t": 1368.8000001907349,
+      "phase": "play",
+      "interval": 18.09999990463257
+    },
+    {
+      "t": 1375.3000001907349,
+      "phase": "play",
+      "interval": 6.5
+    },
+    {
+      "t": 1461.9000000953674,
+      "phase": "play",
+      "interval": 86.59999990463257
+    },
+    {
+      "t": 1465.5,
+      "phase": "play",
+      "interval": 3.5999999046325684
+    },
+    {
+      "t": 1479.5,
+      "phase": "play",
+      "interval": 14
+    },
+    {
+      "t": 1485,
+      "phase": "play",
+      "interval": 5.5
+    },
+    {
+      "t": 1571.8000001907349,
+      "phase": "play",
+      "interval": 86.80000019073486
+    },
+    {
+      "t": 1576.3000001907349,
+      "phase": "play",
+      "interval": 4.5
+    },
+    {
+      "t": 1676.0999999046326,
+      "phase": "play",
+      "interval": 99.7999997138977
+    },
+    {
+      "t": 1768.0999999046326,
+      "phase": "play",
+      "interval": 92
+    },
+    {
+      "t": 1779.8000001907349,
+      "phase": "play",
+      "interval": 11.700000286102295
+    },
+    {
+      "t": 1868.0999999046326,
+      "phase": "play",
+      "interval": 88.2999997138977
+    },
+    {
+      "t": 1875.5,
+      "phase": "play",
+      "interval": 7.400000095367432
+    },
+    {
+      "t": 1970.5,
+      "phase": "play",
+      "interval": 95
+    },
+    {
+      "t": 2005.3000001907349,
+      "phase": "play",
+      "interval": 34.80000019073486
+    },
+    {
+      "t": 2061.5,
+      "phase": "play",
+      "interval": 56.19999980926514
+    },
+    {
+      "t": 2065,
+      "phase": "play",
+      "interval": 3.5
+    },
+    {
+      "t": 2082.5,
+      "phase": "play",
+      "interval": 17.5
+    },
+    {
+      "t": 2085.0999999046326,
+      "phase": "play",
+      "interval": 2.5999999046325684
+    },
+    {
+      "t": 2095.0999999046326,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2105,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 2115,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2125,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2135,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2145,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2156.300000190735,
+      "phase": "play",
+      "interval": 11.300000190734863
+    },
+    {
+      "t": 2235.5999999046326,
+      "phase": "play",
+      "interval": 79.2999997138977
+    },
+    {
+      "t": 2246.4000000953674,
+      "phase": "play",
+      "interval": 10.800000190734863
+    },
+    {
+      "t": 2335.0999999046326,
+      "phase": "play",
+      "interval": 88.69999980926514
+    },
+    {
+      "t": 2421.5,
+      "phase": "play",
+      "interval": 86.40000009536743
+    },
+    {
+      "t": 2428.800000190735,
+      "phase": "play",
+      "interval": 7.300000190734863
+    },
+    {
+      "t": 2435.0999999046326,
+      "phase": "play",
+      "interval": 6.299999713897705
+    },
+    {
+      "t": 2538.5,
+      "phase": "play",
+      "interval": 103.40000009536743
+    },
+    {
+      "t": 2557.300000190735,
+      "phase": "play",
+      "interval": 18.800000190734863
+    },
+    {
+      "t": 2601.0999999046326,
+      "phase": "play",
+      "interval": 43.799999713897705
+    },
+    {
+      "t": 2605,
+      "phase": "play",
+      "interval": 3.9000000953674316
+    },
+    {
+      "t": 2615,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2625,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2640.300000190735,
+      "phase": "play",
+      "interval": 15.300000190734863
+    },
+    {
+      "t": 2645.0999999046326,
+      "phase": "play",
+      "interval": 4.799999713897705
+    },
+    {
+      "t": 2655,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 2665,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2675,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2685.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 2695.0999999046326,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2705,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 2719.7000002861023,
+      "phase": "play",
+      "interval": 14.700000286102295
+    },
+    {
+      "t": 2725,
+      "phase": "play",
+      "interval": 5.299999713897705
+    },
+    {
+      "t": 2735,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2745,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2755.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 2765,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 2775.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 2785,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 2799.4000000953674,
+      "phase": "play",
+      "interval": 14.400000095367432
+    },
+    {
+      "t": 2805.0999999046326,
+      "phase": "play",
+      "interval": 5.699999809265137
+    },
+    {
+      "t": 2815.0999999046326,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2825,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 2835,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2845,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2855.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 2865,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 2881.7000002861023,
+      "phase": "play",
+      "interval": 16.700000286102295
+    },
+    {
+      "t": 2885,
+      "phase": "play",
+      "interval": 3.299999713897705
+    },
+    {
+      "t": 2895,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2905,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2915,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2925.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 2935.0999999046326,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2945,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 2960.7000002861023,
+      "phase": "play",
+      "interval": 15.700000286102295
+    },
+    {
+      "t": 2965,
+      "phase": "play",
+      "interval": 4.299999713897705
+    },
+    {
+      "t": 2975.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 2985,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 2995,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3005,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3015,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3025,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3040.5999999046326,
+      "phase": "play",
+      "interval": 15.599999904632568
+    },
+    {
+      "t": 3045,
+      "phase": "play",
+      "interval": 4.400000095367432
+    },
+    {
+      "t": 3055,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3065,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3075,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3085,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3095.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 3105,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3119.300000190735,
+      "phase": "play",
+      "interval": 14.300000190734863
+    },
+    {
+      "t": 3125.0999999046326,
+      "phase": "play",
+      "interval": 5.799999713897705
+    },
+    {
+      "t": 3135.0999999046326,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3145.0999999046326,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3155,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3165.5999999046326,
+      "phase": "play",
+      "interval": 10.599999904632568
+    },
+    {
+      "t": 3175.0999999046326,
+      "phase": "play",
+      "interval": 9.5
+    },
+    {
+      "t": 3185,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3210.0999999046326,
+      "phase": "play",
+      "interval": 25.09999990463257
+    },
+    {
+      "t": 3215,
+      "phase": "play",
+      "interval": 4.900000095367432
+    },
+    {
+      "t": 3225,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3235,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3245,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3255.2000002861023,
+      "phase": "play",
+      "interval": 10.200000286102295
+    },
+    {
+      "t": 3265,
+      "phase": "play",
+      "interval": 9.799999713897705
+    },
+    {
+      "t": 3277.4000000953674,
+      "phase": "play",
+      "interval": 12.400000095367432
+    },
+    {
+      "t": 3285.0999999046326,
+      "phase": "play",
+      "interval": 7.699999809265137
+    },
+    {
+      "t": 3295,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3305,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3315.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 3325,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3335,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3345,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3355.800000190735,
+      "phase": "play",
+      "interval": 10.800000190734863
+    },
+    {
+      "t": 3365,
+      "phase": "play",
+      "interval": 9.199999809265137
+    },
+    {
+      "t": 3375.300000190735,
+      "phase": "play",
+      "interval": 10.300000190734863
+    },
+    {
+      "t": 3385.0999999046326,
+      "phase": "play",
+      "interval": 9.799999713897705
+    },
+    {
+      "t": 3395.0999999046326,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3405,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3415.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 3425,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3437,
+      "phase": "play",
+      "interval": 12
+    },
+    {
+      "t": 3445,
+      "phase": "play",
+      "interval": 8
+    },
+    {
+      "t": 3455.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 3465,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3475.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 3485,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3495,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3506.5,
+      "phase": "play",
+      "interval": 11.5
+    },
+    {
+      "t": 3515.4000000953674,
+      "phase": "play",
+      "interval": 8.900000095367432
+    },
+    {
+      "t": 3525,
+      "phase": "play",
+      "interval": 9.599999904632568
+    },
+    {
+      "t": 3535.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 3545,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3555,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3565.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 3575.0999999046326,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3585,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3596.300000190735,
+      "phase": "play",
+      "interval": 11.300000190734863
+    },
+    {
+      "t": 3605.0999999046326,
+      "phase": "play",
+      "interval": 8.799999713897705
+    },
+    {
+      "t": 3615,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3625,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3635,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3645,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3655,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3665,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3675.7000002861023,
+      "phase": "play",
+      "interval": 10.700000286102295
+    },
+    {
+      "t": 3685,
+      "phase": "play",
+      "interval": 9.299999713897705
+    },
+    {
+      "t": 3695.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 3705,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3715,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3725,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3735,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3745,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3758,
+      "phase": "play",
+      "interval": 13
+    },
+    {
+      "t": 3765,
+      "phase": "play",
+      "interval": 7
+    },
+    {
+      "t": 3775,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3785,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3795.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 3805,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3815,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3825.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 3835.4000000953674,
+      "phase": "play",
+      "interval": 10.300000190734863
+    },
+    {
+      "t": 3844.9000000953674,
+      "phase": "play",
+      "interval": 9.5
+    },
+    {
+      "t": 3855,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 3865,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3875.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 3885,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3895,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3905.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 3915.5999999046326,
+      "phase": "play",
+      "interval": 10.5
+    },
+    {
+      "t": 3925,
+      "phase": "play",
+      "interval": 9.400000095367432
+    },
+    {
+      "t": 3935,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3945,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3955,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 3965.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 3975,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 3985.2000002861023,
+      "phase": "play",
+      "interval": 10.200000286102295
+    },
+    {
+      "t": 3997.800000190735,
+      "phase": "play",
+      "interval": 12.599999904632568
+    },
+    {
+      "t": 4005,
+      "phase": "play",
+      "interval": 7.199999809265137
+    },
+    {
+      "t": 4015.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4025.0999999046326,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4035.0999999046326,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4045,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4055.0999999046326,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4065,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4075.5,
+      "phase": "play",
+      "interval": 10.5
+    },
+    {
+      "t": 4085.0999999046326,
+      "phase": "play",
+      "interval": 9.599999904632568
+    },
+    {
+      "t": 4095,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4105.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4115,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4125,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4135,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4145.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4155.599999904633,
+      "phase": "play",
+      "interval": 10.5
+    },
+    {
+      "t": 4165,
+      "phase": "play",
+      "interval": 9.400000095367432
+    },
+    {
+      "t": 4175,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4185.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4195,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4205.5,
+      "phase": "play",
+      "interval": 10.5
+    },
+    {
+      "t": 4215,
+      "phase": "play",
+      "interval": 9.5
+    },
+    {
+      "t": 4225,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4247.5,
+      "phase": "play",
+      "interval": 22.5
+    },
+    {
+      "t": 4255,
+      "phase": "play",
+      "interval": 7.5
+    },
+    {
+      "t": 4265,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4275,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4285,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4295.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4305,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4317.599999904633,
+      "phase": "play",
+      "interval": 12.599999904632568
+    },
+    {
+      "t": 4325,
+      "phase": "play",
+      "interval": 7.400000095367432
+    },
+    {
+      "t": 4335.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4345,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4355,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4365.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4375,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4385.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4397.400000095367,
+      "phase": "play",
+      "interval": 12.300000190734863
+    },
+    {
+      "t": 4405,
+      "phase": "play",
+      "interval": 7.599999904632568
+    },
+    {
+      "t": 4415,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4425,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4435,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4449.599999904633,
+      "phase": "play",
+      "interval": 14.599999904632568
+    },
+    {
+      "t": 4455,
+      "phase": "play",
+      "interval": 5.400000095367432
+    },
+    {
+      "t": 4465,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4477.099999904633,
+      "phase": "play",
+      "interval": 12.099999904632568
+    },
+    {
+      "t": 4485.099999904633,
+      "phase": "play",
+      "interval": 8
+    },
+    {
+      "t": 4495,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4505.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4515,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4525.300000190735,
+      "phase": "play",
+      "interval": 10.300000190734863
+    },
+    {
+      "t": 4535,
+      "phase": "play",
+      "interval": 9.699999809265137
+    },
+    {
+      "t": 4545,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4557.300000190735,
+      "phase": "play",
+      "interval": 12.300000190734863
+    },
+    {
+      "t": 4565,
+      "phase": "play",
+      "interval": 7.699999809265137
+    },
+    {
+      "t": 4575.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4585.099999904633,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4595.099999904633,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4605,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4615,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4625.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4638.599999904633,
+      "phase": "play",
+      "interval": 13.5
+    },
+    {
+      "t": 4645.200000286102,
+      "phase": "play",
+      "interval": 6.600000381469727
+    },
+    {
+      "t": 4655,
+      "phase": "play",
+      "interval": 9.799999713897705
+    },
+    {
+      "t": 4665,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4675,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4685,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4695,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4705,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4718.099999904633,
+      "phase": "play",
+      "interval": 13.099999904632568
+    },
+    {
+      "t": 4725,
+      "phase": "play",
+      "interval": 6.900000095367432
+    },
+    {
+      "t": 4735.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4745,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4755,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4765,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4775,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4785,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4797.200000286102,
+      "phase": "play",
+      "interval": 12.200000286102295
+    },
+    {
+      "t": 4805,
+      "phase": "play",
+      "interval": 7.799999713897705
+    },
+    {
+      "t": 4815,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4825.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4835,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4845,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4855.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4865,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4877,
+      "phase": "play",
+      "interval": 12
+    },
+    {
+      "t": 4885,
+      "phase": "play",
+      "interval": 8
+    },
+    {
+      "t": 4895.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4905,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4915,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4925,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 4935.099999904633,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 4945,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 4976.200000286102,
+      "phase": "play",
+      "interval": 31.200000286102295
+    },
+    {
+      "t": 5058.800000190735,
+      "phase": "play",
+      "interval": 82.59999990463257
+    },
+    {
+      "t": 5070.599999904633,
+      "phase": "play",
+      "interval": 11.799999713897705
+    },
+    {
+      "t": 5075,
+      "phase": "play",
+      "interval": 4.400000095367432
+    },
+    {
+      "t": 5085.300000190735,
+      "phase": "seek-28",
+      "interval": 10.300000190734863
+    },
+    {
+      "t": 5095,
+      "phase": "seek-28",
+      "interval": 9.699999809265137
+    },
+    {
+      "t": 5105,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5116.099999904633,
+      "phase": "seek-28",
+      "interval": 11.099999904632568
+    },
+    {
+      "t": 5125,
+      "phase": "seek-28",
+      "interval": 8.900000095367432
+    },
+    {
+      "t": 5139.5,
+      "phase": "seek-28",
+      "interval": 14.5
+    },
+    {
+      "t": 5145,
+      "phase": "seek-28",
+      "interval": 5.5
+    },
+    {
+      "t": 5155.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 5211.5,
+      "phase": "seek-28",
+      "interval": 56.40000009536743
+    },
+    {
+      "t": 5215.099999904633,
+      "phase": "seek-28",
+      "interval": 3.5999999046325684
+    },
+    {
+      "t": 5291.900000095367,
+      "phase": "seek-28",
+      "interval": 76.80000019073486
+    },
+    {
+      "t": 5298.5,
+      "phase": "seek-28",
+      "interval": 6.599999904632568
+    },
+    {
+      "t": 5305.099999904633,
+      "phase": "seek-28",
+      "interval": 6.599999904632568
+    },
+    {
+      "t": 5321,
+      "phase": "seek-28",
+      "interval": 15.900000095367432
+    },
+    {
+      "t": 5325.099999904633,
+      "phase": "seek-28",
+      "interval": 4.099999904632568
+    },
+    {
+      "t": 5335,
+      "phase": "seek-28",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 5345,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5355.900000095367,
+      "phase": "seek-28",
+      "interval": 10.900000095367432
+    },
+    {
+      "t": 5365.099999904633,
+      "phase": "seek-28",
+      "interval": 9.199999809265137
+    },
+    {
+      "t": 5416.200000286102,
+      "phase": "seek-28",
+      "interval": 51.10000038146973
+    },
+    {
+      "t": 5425,
+      "phase": "seek-28",
+      "interval": 8.799999713897705
+    },
+    {
+      "t": 5435.900000095367,
+      "phase": "seek-28",
+      "interval": 10.900000095367432
+    },
+    {
+      "t": 5445,
+      "phase": "seek-28",
+      "interval": 9.099999904632568
+    },
+    {
+      "t": 5455,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5465.700000286102,
+      "phase": "seek-28",
+      "interval": 10.700000286102295
+    },
+    {
+      "t": 5475.300000190735,
+      "phase": "seek-28",
+      "interval": 9.599999904632568
+    },
+    {
+      "t": 5485,
+      "phase": "seek-28",
+      "interval": 9.699999809265137
+    },
+    {
+      "t": 5495.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 5557.800000190735,
+      "phase": "seek-28",
+      "interval": 62.700000286102295
+    },
+    {
+      "t": 5565.700000286102,
+      "phase": "seek-28",
+      "interval": 7.900000095367432
+    },
+    {
+      "t": 5575.099999904633,
+      "phase": "seek-28",
+      "interval": 9.399999618530273
+    },
+    {
+      "t": 5585.400000095367,
+      "phase": "seek-28",
+      "interval": 10.300000190734863
+    },
+    {
+      "t": 5596.300000190735,
+      "phase": "seek-28",
+      "interval": 10.900000095367432
+    },
+    {
+      "t": 5605.700000286102,
+      "phase": "seek-28",
+      "interval": 9.400000095367432
+    },
+    {
+      "t": 5652.200000286102,
+      "phase": "seek-28",
+      "interval": 46.5
+    },
+    {
+      "t": 5656.700000286102,
+      "phase": "seek-28",
+      "interval": 4.5
+    },
+    {
+      "t": 5665,
+      "phase": "seek-28",
+      "interval": 8.299999713897705
+    },
+    {
+      "t": 5676.200000286102,
+      "phase": "seek-28",
+      "interval": 11.200000286102295
+    },
+    {
+      "t": 5701.400000095367,
+      "phase": "seek-28",
+      "interval": 25.199999809265137
+    },
+    {
+      "t": 5705,
+      "phase": "seek-28",
+      "interval": 3.5999999046325684
+    },
+    {
+      "t": 5715,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5725,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5735,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5745.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 5755.300000190735,
+      "phase": "seek-28",
+      "interval": 10.200000286102295
+    },
+    {
+      "t": 5765,
+      "phase": "seek-28",
+      "interval": 9.699999809265137
+    },
+    {
+      "t": 5775,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5785,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5795.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 5805,
+      "phase": "seek-28",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 5815,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5825,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5835.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 5845,
+      "phase": "seek-28",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 5855.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 5865.099999904633,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5875,
+      "phase": "seek-28",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 5885,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5895,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5905.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 5915.300000190735,
+      "phase": "seek-28",
+      "interval": 10.200000286102295
+    },
+    {
+      "t": 5925,
+      "phase": "seek-28",
+      "interval": 9.699999809265137
+    },
+    {
+      "t": 5935,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5945.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 5955.099999904633,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5965,
+      "phase": "seek-28",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 5975,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 5985.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 5995.099999904633,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 6005,
+      "phase": "seek-28",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6015.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 6025,
+      "phase": "seek-28",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6035,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 6045.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 6055.099999904633,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 6065,
+      "phase": "seek-28",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6075.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 6085,
+      "phase": "seek-28",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6095,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 6105,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 6115.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 6125,
+      "phase": "seek-28",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6135.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 6145,
+      "phase": "seek-28",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6155.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 6165,
+      "phase": "seek-28",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6175.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 6185,
+      "phase": "seek-28",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6195,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 6205.099999904633,
+      "phase": "seek-28",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 6215,
+      "phase": "seek-28",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6225,
+      "phase": "seek-28",
+      "interval": 10
+    },
+    {
+      "t": 6235.400000095367,
+      "phase": "seek-28",
+      "interval": 10.400000095367432
+    },
+    {
+      "t": 6245.099999904633,
+      "phase": "seek-10",
+      "interval": 9.699999809265137
+    },
+    {
+      "t": 6255.099999904633,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6265,
+      "phase": "seek-10",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6275,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6285.200000286102,
+      "phase": "seek-10",
+      "interval": 10.200000286102295
+    },
+    {
+      "t": 6333.400000095367,
+      "phase": "seek-10",
+      "interval": 48.19999980926514
+    },
+    {
+      "t": 6340.099999904633,
+      "phase": "seek-10",
+      "interval": 6.699999809265137
+    },
+    {
+      "t": 6345.5,
+      "phase": "seek-10",
+      "interval": 5.400000095367432
+    },
+    {
+      "t": 6355.300000190735,
+      "phase": "seek-10",
+      "interval": 9.800000190734863
+    },
+    {
+      "t": 6365.200000286102,
+      "phase": "seek-10",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6375,
+      "phase": "seek-10",
+      "interval": 9.799999713897705
+    },
+    {
+      "t": 6385.5,
+      "phase": "seek-10",
+      "interval": 10.5
+    },
+    {
+      "t": 6396.400000095367,
+      "phase": "seek-10",
+      "interval": 10.900000095367432
+    },
+    {
+      "t": 6405,
+      "phase": "seek-10",
+      "interval": 8.599999904632568
+    },
+    {
+      "t": 6452.099999904633,
+      "phase": "seek-10",
+      "interval": 47.09999990463257
+    },
+    {
+      "t": 6457.400000095367,
+      "phase": "seek-10",
+      "interval": 5.300000190734863
+    },
+    {
+      "t": 6465.099999904633,
+      "phase": "seek-10",
+      "interval": 7.699999809265137
+    },
+    {
+      "t": 6476.200000286102,
+      "phase": "seek-10",
+      "interval": 11.100000381469727
+    },
+    {
+      "t": 6485,
+      "phase": "seek-10",
+      "interval": 8.799999713897705
+    },
+    {
+      "t": 6495,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6505.099999904633,
+      "phase": "seek-10",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 6553.900000095367,
+      "phase": "seek-10",
+      "interval": 48.80000019073486
+    },
+    {
+      "t": 6562.599999904633,
+      "phase": "seek-10",
+      "interval": 8.699999809265137
+    },
+    {
+      "t": 6567.700000286102,
+      "phase": "seek-10",
+      "interval": 5.100000381469727
+    },
+    {
+      "t": 6576.300000190735,
+      "phase": "seek-10",
+      "interval": 8.599999904632568
+    },
+    {
+      "t": 6585,
+      "phase": "seek-10",
+      "interval": 8.699999809265137
+    },
+    {
+      "t": 6595,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6605,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6655.900000095367,
+      "phase": "seek-10",
+      "interval": 50.90000009536743
+    },
+    {
+      "t": 6665.800000190735,
+      "phase": "seek-10",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6675.200000286102,
+      "phase": "seek-10",
+      "interval": 9.400000095367432
+    },
+    {
+      "t": 6685.800000190735,
+      "phase": "seek-10",
+      "interval": 10.599999904632568
+    },
+    {
+      "t": 6695,
+      "phase": "seek-10",
+      "interval": 9.199999809265137
+    },
+    {
+      "t": 6705.900000095367,
+      "phase": "seek-10",
+      "interval": 10.900000095367432
+    },
+    {
+      "t": 6716.200000286102,
+      "phase": "seek-10",
+      "interval": 10.300000190734863
+    },
+    {
+      "t": 6763,
+      "phase": "seek-10",
+      "interval": 46.799999713897705
+    },
+    {
+      "t": 6767.400000095367,
+      "phase": "seek-10",
+      "interval": 4.400000095367432
+    },
+    {
+      "t": 6775,
+      "phase": "seek-10",
+      "interval": 7.599999904632568
+    },
+    {
+      "t": 6785,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6795.099999904633,
+      "phase": "seek-10",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 6805,
+      "phase": "seek-10",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6815.099999904633,
+      "phase": "seek-10",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 6825,
+      "phase": "seek-10",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6835.099999904633,
+      "phase": "seek-10",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 6845.099999904633,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6855,
+      "phase": "seek-10",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6865,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6875,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6885,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6895,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6905.099999904633,
+      "phase": "seek-10",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 6915,
+      "phase": "seek-10",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6925,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6935,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6945.099999904633,
+      "phase": "seek-10",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 6955,
+      "phase": "seek-10",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 6965,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6975,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6985,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 6995,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 7005.099999904633,
+      "phase": "seek-10",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 7015,
+      "phase": "seek-10",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 7025,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 7035.200000286102,
+      "phase": "seek-10",
+      "interval": 10.200000286102295
+    },
+    {
+      "t": 7045,
+      "phase": "seek-10",
+      "interval": 9.799999713897705
+    },
+    {
+      "t": 7055,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 7065,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 7075,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 7085,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 7095,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 7105,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 7115.300000190735,
+      "phase": "seek-10",
+      "interval": 10.300000190734863
+    },
+    {
+      "t": 7125,
+      "phase": "seek-10",
+      "interval": 9.699999809265137
+    },
+    {
+      "t": 7135,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 7145,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 7155.099999904633,
+      "phase": "seek-10",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 7165,
+      "phase": "seek-10",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 7175,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 7185,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 7195.300000190735,
+      "phase": "seek-10",
+      "interval": 10.300000190734863
+    },
+    {
+      "t": 7205,
+      "phase": "seek-10",
+      "interval": 9.699999809265137
+    },
+    {
+      "t": 7215.099999904633,
+      "phase": "seek-10",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 7225,
+      "phase": "seek-10",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 7235.200000286102,
+      "phase": "seek-10",
+      "interval": 10.200000286102295
+    },
+    {
+      "t": 7245,
+      "phase": "seek-10",
+      "interval": 9.799999713897705
+    },
+    {
+      "t": 7255,
+      "phase": "seek-10",
+      "interval": 10
+    },
+    {
+      "t": 7265.099999904633,
+      "phase": "seek-10",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 7275.200000286102,
+      "phase": "seek-10",
+      "interval": 10.100000381469727
+    },
+    {
+      "t": 7285.099999904633,
+      "phase": "seek-10",
+      "interval": 9.899999618530273
+    },
+    {
+      "t": 7295,
+      "phase": "seek-10",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 7305.099999904633,
+      "phase": "seek-10",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 7315,
+      "phase": "seek-10",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 7325,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 7335,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 7345,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 7355.599999904633,
+      "phase": "seek-26",
+      "interval": 10.599999904632568
+    },
+    {
+      "t": 7365,
+      "phase": "seek-26",
+      "interval": 9.400000095367432
+    },
+    {
+      "t": 7375,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 7385.300000190735,
+      "phase": "seek-26",
+      "interval": 10.300000190734863
+    },
+    {
+      "t": 7443.5,
+      "phase": "seek-26",
+      "interval": 58.19999980926514
+    },
+    {
+      "t": 7447.900000095367,
+      "phase": "seek-26",
+      "interval": 4.400000095367432
+    },
+    {
+      "t": 7457.200000286102,
+      "phase": "seek-26",
+      "interval": 9.300000190734863
+    },
+    {
+      "t": 7532.200000286102,
+      "phase": "seek-26",
+      "interval": 75
+    },
+    {
+      "t": 7538.800000190735,
+      "phase": "seek-26",
+      "interval": 6.599999904632568
+    },
+    {
+      "t": 7545.099999904633,
+      "phase": "seek-26",
+      "interval": 6.299999713897705
+    },
+    {
+      "t": 7555,
+      "phase": "seek-26",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 7565.300000190735,
+      "phase": "seek-26",
+      "interval": 10.300000190734863
+    },
+    {
+      "t": 7575.099999904633,
+      "phase": "seek-26",
+      "interval": 9.799999713897705
+    },
+    {
+      "t": 7585,
+      "phase": "seek-26",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 7596.099999904633,
+      "phase": "seek-26",
+      "interval": 11.099999904632568
+    },
+    {
+      "t": 7605.099999904633,
+      "phase": "seek-26",
+      "interval": 9
+    },
+    {
+      "t": 7652.900000095367,
+      "phase": "seek-26",
+      "interval": 47.80000019073486
+    },
+    {
+      "t": 7661.599999904633,
+      "phase": "seek-26",
+      "interval": 8.699999809265137
+    },
+    {
+      "t": 7666.300000190735,
+      "phase": "seek-26",
+      "interval": 4.700000286102295
+    },
+    {
+      "t": 7676.200000286102,
+      "phase": "seek-26",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 7685,
+      "phase": "seek-26",
+      "interval": 8.799999713897705
+    },
+    {
+      "t": 7695.099999904633,
+      "phase": "seek-26",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 7705.099999904633,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 7715.099999904633,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 7725.099999904633,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 7770.5,
+      "phase": "seek-26",
+      "interval": 45.40000009536743
+    },
+    {
+      "t": 7781.700000286102,
+      "phase": "seek-26",
+      "interval": 11.200000286102295
+    },
+    {
+      "t": 7786,
+      "phase": "seek-26",
+      "interval": 4.299999713897705
+    },
+    {
+      "t": 7795,
+      "phase": "seek-26",
+      "interval": 9
+    },
+    {
+      "t": 7805.099999904633,
+      "phase": "seek-26",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 7815,
+      "phase": "seek-26",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 7825.099999904633,
+      "phase": "seek-26",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 7835.5,
+      "phase": "seek-26",
+      "interval": 10.400000095367432
+    },
+    {
+      "t": 7845.099999904633,
+      "phase": "seek-26",
+      "interval": 9.599999904632568
+    },
+    {
+      "t": 7898.5,
+      "phase": "seek-26",
+      "interval": 53.40000009536743
+    },
+    {
+      "t": 7906.400000095367,
+      "phase": "seek-26",
+      "interval": 7.900000095367432
+    },
+    {
+      "t": 7916.400000095367,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 7925,
+      "phase": "seek-26",
+      "interval": 8.599999904632568
+    },
+    {
+      "t": 7935,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 7945.099999904633,
+      "phase": "seek-26",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 7986,
+      "phase": "seek-26",
+      "interval": 40.90000009536743
+    },
+    {
+      "t": 7995,
+      "phase": "seek-26",
+      "interval": 9
+    },
+    {
+      "t": 8005,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8015,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8025,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8035.099999904633,
+      "phase": "seek-26",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 8045,
+      "phase": "seek-26",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 8055,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8065.099999904633,
+      "phase": "seek-26",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 8074.900000095367,
+      "phase": "seek-26",
+      "interval": 9.800000190734863
+    },
+    {
+      "t": 8085,
+      "phase": "seek-26",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 8095,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8105,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8115,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8125,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8135,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8145,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8155.200000286102,
+      "phase": "seek-26",
+      "interval": 10.200000286102295
+    },
+    {
+      "t": 8165,
+      "phase": "seek-26",
+      "interval": 9.799999713897705
+    },
+    {
+      "t": 8175,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8185,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8195,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8205,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8215.099999904633,
+      "phase": "seek-26",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 8225,
+      "phase": "seek-26",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 8235.099999904633,
+      "phase": "seek-26",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 8245,
+      "phase": "seek-26",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 8255.099999904633,
+      "phase": "seek-26",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 8265,
+      "phase": "seek-26",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 8275,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8285,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8295,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8305,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8315,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8325,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8335,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8345,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8355,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8365,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8375,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8385,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8395,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8405,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8415,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8425,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8435.099999904633,
+      "phase": "seek-26",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 8445,
+      "phase": "seek-26",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 8455,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8465,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8475,
+      "phase": "seek-26",
+      "interval": 10
+    },
+    {
+      "t": 8485.099999904633,
+      "phase": "seek-26",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 8495,
+      "phase": "seek-26",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 8505.099999904633,
+      "phase": "seek-26",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 8515,
+      "phase": "seek-26",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 8525.099999904633,
+      "phase": "seek-12",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 8535,
+      "phase": "seek-12",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 8545,
+      "phase": "seek-12",
+      "interval": 10
+    },
+    {
+      "t": 8556.5,
+      "phase": "seek-12",
+      "interval": 11.5
+    },
+    {
+      "t": 8565,
+      "phase": "seek-12",
+      "interval": 8.5
+    },
+    {
+      "t": 8575.099999904633,
+      "phase": "seek-12",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 8621.5,
+      "phase": "seek-12",
+      "interval": 46.40000009536743
+    },
+    {
+      "t": 8628.800000190735,
+      "phase": "seek-12",
+      "interval": 7.300000190734863
+    },
+    {
+      "t": 8636.200000286102,
+      "phase": "seek-12",
+      "interval": 7.400000095367432
+    },
+    {
+      "t": 8710.400000095367,
+      "phase": "seek-12",
+      "interval": 74.19999980926514
+    },
+    {
+      "t": 8720.900000095367,
+      "phase": "seek-12",
+      "interval": 10.5
+    },
+    {
+      "t": 8725.300000190735,
+      "phase": "seek-12",
+      "interval": 4.400000095367432
+    },
+    {
+      "t": 8735,
+      "phase": "seek-12",
+      "interval": 9.699999809265137
+    },
+    {
+      "t": 8745,
+      "phase": "seek-12",
+      "interval": 10
+    },
+    {
+      "t": 8755.400000095367,
+      "phase": "seek-12",
+      "interval": 10.400000095367432
+    },
+    {
+      "t": 8765,
+      "phase": "seek-12",
+      "interval": 9.599999904632568
+    },
+    {
+      "t": 8810.900000095367,
+      "phase": "seek-12",
+      "interval": 45.90000009536743
+    },
+    {
+      "t": 8817.599999904633,
+      "phase": "seek-12",
+      "interval": 6.699999809265137
+    }
+  ],
+  "errors": [],
+  "peak_sampled_pss_kib": 2166564,
+  "case": "zstd-64MiB",
+  "repeat": 0,
+  "returncode": 1
+}

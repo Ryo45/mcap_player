@@ -1,0 +1,1651 @@
+{
+  "dataset": "/tmp/mcap-stress2-20261014-data/3840x2160-8cam-10hz-zstd-64MiB-jpeg.mcap",
+  "dataset_sha256": "3622cffba65fff17efcca56238f0457c1e97203669cfcbfd6882389eb088190e",
+  "dataset_bytes": 987511660,
+  "references_sha256": "dd89788026ac0c61a6544c29f17d4f159f1046bb02a30a71394cc9edbe990d28",
+  "git_commit": "8d1a1537c2d5a1ceb8a6ecf641860ee6647be7bc",
+  "sources_sha256": {
+    "measure_web_camera_stress.py": "c6301496c2112a8473352d24b3741844115ac00c812b95f2b4ec8adf830290cf",
+    "web_camera_stress.js": "28bd9c41e49d79613764c35611d74e8c5e4b897b5033b713d2d37670aab96a44",
+    "browser_cdp.py": "8b7e986d3a28f616b5df7ce8aadf486a4c9e19ea9d527339c9d144b813435625",
+    "measure_viewer_pilot.py": "51670cce8bf1e33e869b3a830c2e8053e5fd8395564be17c05e1030d9a45ce80"
+  },
+  "viewport": [
+    1920,
+    1080
+  ],
+  "focus": [
+    960,
+    540
+  ],
+  "thumbnail": [
+    112,
+    63
+  ],
+  "cache": "cache-allowed; dataset SHA256 read before Chrome startup",
+  "pss_limit_kib": 2097152,
+  "memory": [
+    {
+      "wall_seconds": 0.0792102999985218,
+      "phase": "setup",
+      "pss_kib": 267426,
+      "summed_rss_kib": 859592,
+      "cpu_seconds_live_processes": 0.58,
+      "rchar_live_processes": 7790087,
+      "storage_read_bytes_live_processes": 41750528,
+      "pids": [
+        1480440,
+        1480444,
+        1480445,
+        1480454,
+        1480455,
+        1480476,
+        1480479,
+        1480510,
+        1480529,
+        1480530,
+        1480548
+      ]
+    },
+    {
+      "wall_seconds": 0.31192136090248823,
+      "phase": "setup",
+      "pss_kib": 546528,
+      "summed_rss_kib": 1148404,
+      "cpu_seconds_live_processes": 1.83,
+      "rchar_live_processes": 91050973,
+      "storage_read_bytes_live_processes": 41807872,
+      "pids": [
+        1480440,
+        1480444,
+        1480445,
+        1480454,
+        1480455,
+        1480476,
+        1480479,
+        1480510,
+        1480529,
+        1480530,
+        1480548
+      ]
+    },
+    {
+      "wall_seconds": 0.5361476480029523,
+      "phase": "setup",
+      "pss_kib": 810687,
+      "summed_rss_kib": 1413440,
+      "cpu_seconds_live_processes": 2.39,
+      "rchar_live_processes": 279906811,
+      "storage_read_bytes_live_processes": 41807872,
+      "pids": [
+        1480440,
+        1480444,
+        1480445,
+        1480454,
+        1480455,
+        1480476,
+        1480479,
+        1480510,
+        1480529,
+        1480530,
+        1480548
+      ]
+    },
+    {
+      "wall_seconds": 0.7524365591816604,
+      "phase": "setup",
+      "pss_kib": 876664,
+      "summed_rss_kib": 1485748,
+      "cpu_seconds_live_processes": 3.21,
+      "rchar_live_processes": 279998424,
+      "storage_read_bytes_live_processes": 41807872,
+      "pids": [
+        1480440,
+        1480444,
+        1480445,
+        1480454,
+        1480455,
+        1480476,
+        1480479,
+        1480510,
+        1480529,
+        1480530,
+        1480548
+      ]
+    },
+    {
+      "wall_seconds": 0.9555080491118133,
+      "phase": "setup",
+      "pss_kib": 871335,
+      "summed_rss_kib": 1478480,
+      "cpu_seconds_live_processes": 4.12,
+      "rchar_live_processes": 280000920,
+      "storage_read_bytes_live_processes": 41807872,
+      "pids": [
+        1480440,
+        1480444,
+        1480445,
+        1480454,
+        1480455,
+        1480476,
+        1480479,
+        1480510,
+        1480529,
+        1480530,
+        1480548
+      ]
+    },
+    {
+      "wall_seconds": 1.1834717611782253,
+      "phase": "play",
+      "pss_kib": 907715,
+      "summed_rss_kib": 1518564,
+      "cpu_seconds_live_processes": 4.89,
+      "rchar_live_processes": 289506400,
+      "storage_read_bytes_live_processes": 41934848,
+      "pids": [
+        1480440,
+        1480444,
+        1480445,
+        1480454,
+        1480455,
+        1480476,
+        1480479,
+        1480510,
+        1480529,
+        1480530,
+        1480548
+      ]
+    },
+    {
+      "wall_seconds": 1.4007988721132278,
+      "phase": "play",
+      "pss_kib": 1045003,
+      "summed_rss_kib": 1653780,
+      "cpu_seconds_live_processes": 5.46,
+      "rchar_live_processes": 483788523,
+      "storage_read_bytes_live_processes": 41934848,
+      "pids": [
+        1480440,
+        1480444,
+        1480445,
+        1480454,
+        1480455,
+        1480476,
+        1480479,
+        1480510,
+        1480529,
+        1480530,
+        1480548
+      ]
+    },
+    {
+      "wall_seconds": 1.6181668201461434,
+      "phase": "play",
+      "pss_kib": 1349092,
+      "summed_rss_kib": 1959944,
+      "cpu_seconds_live_processes": 6.41,
+      "rchar_live_processes": 619675332,
+      "storage_read_bytes_live_processes": 41934848,
+      "pids": [
+        1480440,
+        1480444,
+        1480445,
+        1480454,
+        1480455,
+        1480476,
+        1480479,
+        1480510,
+        1480529,
+        1480530,
+        1480548
+      ]
+    },
+    {
+      "wall_seconds": 1.8653009720146656,
+      "phase": "play",
+      "pss_kib": 1437740,
+      "summed_rss_kib": 2050644,
+      "cpu_seconds_live_processes": 7.1,
+      "rchar_live_processes": 778774608,
+      "storage_read_bytes_live_processes": 41934848,
+      "pids": [
+        1480440,
+        1480444,
+        1480445,
+        1480454,
+        1480455,
+        1480476,
+        1480479,
+        1480510,
+        1480529,
+        1480530,
+        1480548
+      ]
+    },
+    {
+      "wall_seconds": 2.0729985968209803,
+      "phase": "play",
+      "pss_kib": 1635884,
+      "summed_rss_kib": 2246688,
+      "cpu_seconds_live_processes": 7.8,
+      "rchar_live_processes": 891254451,
+      "storage_read_bytes_live_processes": 41934848,
+      "pids": [
+        1480440,
+        1480444,
+        1480445,
+        1480454,
+        1480455,
+        1480476,
+        1480479,
+        1480510,
+        1480529,
+        1480530,
+        1480548
+      ]
+    },
+    {
+      "wall_seconds": 2.2978839520365,
+      "phase": "play",
+      "pss_kib": 1774388,
+      "summed_rss_kib": 2385196,
+      "cpu_seconds_live_processes": 8.58,
+      "rchar_live_processes": 1027198349,
+      "storage_read_bytes_live_processes": 41934848,
+      "pids": [
+        1480440,
+        1480444,
+        1480445,
+        1480454,
+        1480455,
+        1480476,
+        1480479,
+        1480510,
+        1480529,
+        1480530,
+        1480548
+      ]
+    },
+    {
+      "wall_seconds": 2.497909471858293,
+      "phase": "play",
+      "pss_kib": 2012380,
+      "summed_rss_kib": 2623192,
+      "cpu_seconds_live_processes": 9.22,
+      "rchar_live_processes": 1163169415,
+      "storage_read_bytes_live_processes": 41934848,
+      "pids": [
+        1480440,
+        1480444,
+        1480445,
+        1480454,
+        1480455,
+        1480476,
+        1480479,
+        1480510,
+        1480529,
+        1480530,
+        1480548
+      ]
+    },
+    {
+      "wall_seconds": 2.707893563900143,
+      "phase": "play",
+      "pss_kib": 2059530,
+      "summed_rss_kib": 2671432,
+      "cpu_seconds_live_processes": 9.94,
+      "rchar_live_processes": 1200024238,
+      "storage_read_bytes_live_processes": 41934848,
+      "pids": [
+        1480440,
+        1480444,
+        1480445,
+        1480454,
+        1480455,
+        1480476,
+        1480479,
+        1480510,
+        1480529,
+        1480530,
+        1480548
+      ]
+    },
+    {
+      "wall_seconds": 2.921772222034633,
+      "phase": "play",
+      "pss_kib": 2135698,
+      "summed_rss_kib": 2918672,
+      "cpu_seconds_live_processes": 11.34,
+      "rchar_live_processes": 1224203086,
+      "storage_read_bytes_live_processes": 63483904,
+      "pids": [
+        1480440,
+        1480444,
+        1480445,
+        1480454,
+        1480455,
+        1480476,
+        1480479,
+        1480510,
+        1480530,
+        1480548,
+        1480665,
+        1480667,
+        1480683
+      ]
+    }
+  ],
+  "seeks": [],
+  "status": "resource-limit",
+  "environment": {
+    "version": {
+      "Browser": "Chrome/143.0.7499.192",
+      "Protocol-Version": "1.3",
+      "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.0.0 Safari/537.36",
+      "V8-Version": "14.3.127.17",
+      "WebKit-Version": "537.36 (@be2c1f4fd451578a9ada68a0ac12d659362b44bf)",
+      "webSocketDebuggerUrl": "ws://127.0.0.1:9238/devtools/browser/0ca78a8b-e5ab-4d24-8a85-256b6d3995a0"
+    },
+    "gpu": {
+      "gpu": {
+        "devices": [
+          {
+            "vendorId": 65535,
+            "deviceId": 65535,
+            "vendorString": "Google Inc. (Google)",
+            "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+            "driverVendor": "SwANGLE",
+            "driverVersion": "5.0.0"
+          }
+        ],
+        "auxAttributes": {
+          "amdSwitchable": false,
+          "canSupportThreadedTextureMailbox": false,
+          "directRenderingVersion": "",
+          "displayType": "ANGLE_SWIFTSHADER",
+          "glExtensions": "GL_AMD_performance_monitor GL_ANGLE_base_vertex_base_instance_shader_builtin GL_ANGLE_blob_cache GL_ANGLE_client_arrays GL_ANGLE_clip_cull_distance GL_ANGLE_compressed_texture_etc GL_ANGLE_copy_texture_3d GL_ANGLE_depth_texture GL_ANGLE_framebuffer_blit GL_ANGLE_framebuffer_multisample GL_ANGLE_get_image GL_ANGLE_get_serialized_context_string GL_ANGLE_get_tex_level_parameter GL_ANGLE_instanced_arrays GL_ANGLE_memory_object_flags GL_ANGLE_memory_size GL_ANGLE_multi_draw GL_ANGLE_pack_reverse_row_order GL_ANGLE_polygon_mode GL_ANGLE_program_binary_readiness_query GL_ANGLE_program_cache_control GL_ANGLE_read_only_depth_stencil_feedback_loops GL_ANGLE_relaxed_vertex_attribute_type GL_ANGLE_renderability_validation GL_ANGLE_request_extension GL_ANGLE_rgbx_internal_format GL_ANGLE_robust_client_memory GL_ANGLE_robust_fragment_shader_output GL_ANGLE_robust_resource_initialization GL_ANGLE_shader_pixel_local_storage GL_ANGLE_shader_pixel_local_storage_coherent GL_ANGLE_stencil_texturing GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ANGLE_texture_multisample GL_ANGLE_texture_usage GL_ANGLE_translated_shader_source GL_ANGLE_vulkan_image GL_ANGLE_yuv_internal_format GL_APPLE_clip_distance GL_ARM_rgba8 GL_ARM_shader_framebuffer_fetch GL_ARM_shader_framebuffer_fetch_depth_stencil GL_CHROMIUM_bind_generates_resource GL_CHROMIUM_bind_uniform_location GL_CHROMIUM_copy_compressed_texture GL_CHROMIUM_copy_texture GL_CHROMIUM_lose_context GL_EXT_EGL_image_array GL_EXT_EGL_image_external_wrap_modes GL_EXT_EGL_image_storage GL_EXT_base_instance GL_EXT_blend_minmax GL_EXT_buffer_storage GL_EXT_clear_texture GL_EXT_clip_control GL_EXT_clip_cull_distance GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_compressed_ETC1_RGB8_sub_texture GL_EXT_conservative_depth GL_EXT_copy_image GL_EXT_debug_label GL_EXT_debug_marker GL_EXT_depth_clamp GL_EXT_discard_framebuffer GL_EXT_disjoint_timer_query GL_EXT_draw_buffers GL_EXT_draw_buffers_indexed GL_EXT_draw_elements_base_vertex GL_EXT_float_blend GL_EXT_frag_depth GL_EXT_instanced_arrays GL_EXT_map_buffer_range GL_EXT_memory_object GL_EXT_memory_object_fd GL_EXT_occlusion_query_boolean GL_EXT_polygon_offset_clamp GL_EXT_read_format_bgra GL_EXT_robustness GL_EXT_sRGB GL_EXT_sRGB_write_control GL_EXT_semaphore GL_EXT_semaphore_fd GL_EXT_separate_shader_objects GL_EXT_shader_framebuffer_fetch GL_EXT_shader_framebuffer_fetch_non_coherent GL_EXT_shader_non_constant_global_initializers GL_EXT_shader_texture_lod GL_EXT_shadow_samplers GL_EXT_texture_border_clamp GL_EXT_texture_compression_bptc GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc_srgb GL_EXT_texture_cube_map_array GL_EXT_texture_filter_anisotropic GL_EXT_texture_format_BGRA8888 GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_rg GL_EXT_texture_sRGB_R8 GL_EXT_texture_sRGB_RG8 GL_EXT_texture_sRGB_decode GL_EXT_texture_shadow_lod GL_EXT_texture_storage GL_EXT_texture_type_2_10_10_10_REV GL_EXT_unpack_subimage GL_KHR_blend_equation_advanced GL_KHR_debug GL_KHR_robust_buffer_access_behavior GL_KHR_robustness GL_KHR_texture_compression_astc_ldr GL_NV_depth_buffer_float2 GL_NV_fence GL_NV_framebuffer_blit GL_NV_pack_subimage GL_NV_pixel_buffer_object GL_NV_polygon_mode GL_NV_read_depth GL_NV_read_depth_stencil GL_NV_read_stencil GL_NV_shader_noperspective_interpolation GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_EGL_image_external_essl3 GL_OES_EGL_sync GL_OES_compressed_EAC_R11_signed_texture GL_OES_compressed_EAC_R11_unsigned_texture GL_OES_compressed_EAC_RG11_signed_texture GL_OES_compressed_EAC_RG11_unsigned_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_compressed_ETC2_RGB8_texture GL_OES_compressed_ETC2_RGBA8_texture GL_OES_compressed_ETC2_punchthroughA_RGBA8_texture GL_OES_compressed_ETC2_punchthroughA_sRGB8_alpha_texture GL_OES_compressed_ETC2_sRGB8_alpha8_texture GL_OES_compressed_ETC2_sRGB8_texture GL_OES_copy_image GL_OES_depth24 GL_OES_depth32 GL_OES_depth_texture GL_OES_depth_texture_cube_map GL_OES_draw_buffers_indexed GL_OES_draw_elements_base_vertex GL_OES_element_index_uint GL_OES_fbo_render_mipmap GL_OES_get_program_binary GL_OES_mapbuffer GL_OES_packed_depth_stencil GL_OES_required_internalformat GL_OES_rgb8_rgba8 GL_OES_sample_shading GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_standard_derivatives GL_OES_surfaceless_context GL_OES_texture_3D GL_OES_texture_border_clamp GL_OES_texture_cube_map_array GL_OES_texture_float GL_OES_texture_float_linear GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_texture_npot GL_OES_texture_stencil8 GL_OES_texture_storage_multisample_2d_array GL_OES_vertex_array_object GL_OES_vertex_half_float GL_OES_vertex_type_10_10_10_2 GL_OVR_multiview GL_OVR_multiview2 ",
+          "glImplementationParts": "(gl=egl-angle,angle=swiftshader)",
+          "glRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "glResetNotificationStrategy": 33362,
+          "glVendor": "Google Inc. (Google)",
+          "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.26423 git hash: 2dfb5b7603d0)",
+          "glWsExtensions": "EGL_EXT_create_context_robustness EGL_ANGLE_surface_orientation EGL_KHR_create_context EGL_KHR_image EGL_KHR_image_base EGL_EXT_image_gl_colorspace EGL_KHR_gl_colorspace EGL_KHR_gl_texture_2D_image EGL_KHR_gl_texture_cubemap_image EGL_KHR_gl_renderbuffer_image EGL_KHR_get_all_proc_addresses EGL_KHR_fence_sync EGL_KHR_wait_sync EGL_ANGLE_create_context_webgl_compatibility EGL_CHROMIUM_create_context_bind_generates_resource EGL_KHR_swap_buffers_with_damage EGL_EXT_pixel_format_float EGL_KHR_surfaceless_context EGL_ANGLE_display_texture_share_group EGL_ANGLE_display_semaphore_share_group EGL_ANGLE_create_context_client_arrays EGL_ANGLE_program_cache_control EGL_ANGLE_robust_resource_initialization EGL_ANGLE_create_context_extensions_enabled EGL_ANDROID_blob_cache EGL_ANDROID_recordable EGL_ANGLE_create_context_backwards_compatible EGL_KHR_no_config_context EGL_IMG_context_priority EGL_KHR_create_context_no_error EGL_KHR_reusable_sync EGL_EXT_buffer_age EGL_ANGLE_create_surface_swap_interval EGL_ANGLE_vulkan_image EGL_KHR_partial_update EGL_ANGLE_global_fence_sync EGL_ANGLE_memory_usage_report ",
+          "glWsVendor": "Google Inc. (Google)",
+          "glWsVersion": "1.5 (ANGLE 2.1.26423 git hash: 2dfb5b7603d0)",
+          "hardwareSupportsVulkan": false,
+          "inProcessGpu": false,
+          "initializationTime": 0.281448,
+          "isAsan": false,
+          "isClangCoverage": false,
+          "jpegDecodeAcceleratorSupported": false,
+          "maxMsaaSamples": "4",
+          "optimus": false,
+          "passthroughCmdDecoder": true,
+          "pixelShaderVersion": "3.00",
+          "processCrashCount": 0,
+          "sandboxed": false,
+          "skiaBackendType": "GaneshGL",
+          "subpixelFontRendering": true,
+          "targetCpuBits": 64,
+          "vertexShaderVersion": "3.00",
+          "visibilityCallbackCallCount": 0
+        },
+        "featureStatus": {
+          "2d_canvas": "enabled",
+          "direct_rendering_display_compositor": "disabled_off_ok",
+          "gpu_compositing": "enabled",
+          "multiple_raster_threads": "enabled_on",
+          "opengl": "enabled_on",
+          "rasterization": "enabled",
+          "raw_draw": "disabled_off_ok",
+          "skia_graphite": "disabled_off",
+          "trees_in_viz": "disabled_off",
+          "video_decode": "enabled",
+          "video_encode": "disabled_software",
+          "vulkan": "disabled_off",
+          "webgl": "enabled",
+          "webgpu": "unavailable_software",
+          "webnn": "disabled_off"
+        },
+        "driverBugWorkarounds": [
+          "enable_webgl_timer_query_extensions",
+          "exit_on_context_lost",
+          "disabled_extension_GL_KHR_blend_equation_advanced",
+          "disabled_extension_GL_KHR_blend_equation_advanced_coherent"
+        ],
+        "videoDecoding": [],
+        "videoEncoding": [],
+        "imageDecoding": []
+      },
+      "modelName": "",
+      "modelVersion": "",
+      "commandLine": "/usr/bin/google-chrome --headless --no-sandbox --enable-unsafe-webgpu --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader --remote-debugging-port=9238 --user-data-dir=/tmp/mcap-camera-stress-12m7xchq --noerrdialogs --no-first-run --ozone-platform=headless --ozone-override-screen-size=800,600 --flag-switches-begin --flag-switches-end --enable-unsafe-swiftshader about:blank"
+    },
+    "command": [
+      "google-chrome",
+      "--headless",
+      "--no-sandbox",
+      "--enable-unsafe-webgpu",
+      "--enable-unsafe-swiftshader",
+      "--use-gl=angle",
+      "--use-angle=swiftshader",
+      "--remote-debugging-port=9238",
+      "--user-data-dir=/tmp/mcap-camera-stress-12m7xchq",
+      "about:blank"
+    ]
+  },
+  "before_open": {
+    "pss_kib": 264898,
+    "summed_rss_kib": 855772,
+    "cpu_seconds_live_processes": 0.52,
+    "rchar_live_processes": 7625137,
+    "storage_read_bytes_live_processes": 41586688,
+    "pids": [
+      1480440,
+      1480444,
+      1480445,
+      1480454,
+      1480455,
+      1480476,
+      1480479,
+      1480510,
+      1480529,
+      1480530,
+      1480548
+    ]
+  },
+  "initial": {
+    "now": 991,
+    "last": {
+      "0": {
+        "t": 744.5,
+        "phase": "setup",
+        "cam": 0,
+        "size": "960x540",
+        "hash": "1a559111",
+        "variant": 0,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 8 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      },
+      "1": {
+        "t": 738.7999997138977,
+        "phase": "setup",
+        "cam": 1,
+        "size": "112x63",
+        "hash": "6f8c6172",
+        "variant": 7,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 8 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      },
+      "2": {
+        "t": 816.5,
+        "phase": "setup",
+        "cam": 2,
+        "size": "112x63",
+        "hash": "2438ade9",
+        "variant": 14,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      },
+      "3": {
+        "t": 832.6999998092651,
+        "phase": "setup",
+        "cam": 3,
+        "size": "112x63",
+        "hash": "e2bb0b65",
+        "variant": 21,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      },
+      "4": {
+        "t": 880.9000000953674,
+        "phase": "setup",
+        "cam": 4,
+        "size": "112x63",
+        "hash": "969d66d0",
+        "variant": 28,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      },
+      "5": {
+        "t": 896.7999997138977,
+        "phase": "setup",
+        "cam": 5,
+        "size": "112x63",
+        "hash": "4e78991",
+        "variant": 3,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      },
+      "6": {
+        "t": 960.5,
+        "phase": "setup",
+        "cam": 6,
+        "size": "112x63",
+        "hash": "6125043e",
+        "variant": 10,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      },
+      "7": {
+        "t": 961.0999999046326,
+        "phase": "setup",
+        "cam": 7,
+        "size": "112x63",
+        "hash": "d5d2e16a",
+        "variant": 17,
+        "sequenceModulo32": 0,
+        "cursor": 0,
+        "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+      }
+    },
+    "errors": [],
+    "cards": 8,
+    "cursor": 0,
+    "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s",
+    "performance": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.00 ms \u00b7 source/controller 0.00/0.03 ms \u00b7 Browser file 1 loads/6 reads \u00b7 259.0 MB loaded/261.3 MB decompressed \u00b7 1 windows/237.5 MB logical/261.3 MB RAM (1.10x) \u00b7 copied 0.0 MB \u00b7 ahead 1.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 401.0 ms (MCAP 211.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+    "playButtonSaysPause": false,
+    "canvases": [
+      {
+        "id": "bev",
+        "width": 512,
+        "height": 512
+      },
+      {
+        "id": "camera",
+        "width": 960,
+        "height": 540
+      },
+      {
+        "id": "camera-thumb-0",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-1",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-2",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-3",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-4",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-5",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-6",
+        "width": 112,
+        "height": 63
+      },
+      {
+        "id": "camera-thumb-7",
+        "width": 112,
+        "height": 63
+      }
+    ]
+  },
+  "error": "Chrome PSS exceeded 2 GiB",
+  "paint_events": [
+    {
+      "t": 738.7999997138977,
+      "phase": "setup",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "6f8c6172",
+      "variant": 7,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 8 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 744.5,
+      "phase": "setup",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "1a559111",
+      "variant": 0,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 8 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 816.5,
+      "phase": "setup",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "2438ade9",
+      "variant": 14,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 832.6999998092651,
+      "phase": "setup",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "e2bb0b65",
+      "variant": 21,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 880.9000000953674,
+      "phase": "setup",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "969d66d0",
+      "variant": 28,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 896.7999997138977,
+      "phase": "setup",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "4e78991",
+      "variant": 3,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 960.5,
+      "phase": "setup",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "6125043e",
+      "variant": 10,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 961.0999999046326,
+      "phase": "setup",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "d5d2e16a",
+      "variant": 17,
+      "sequenceModulo32": 0,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s"
+    },
+    {
+      "t": 1466.9000000953674,
+      "phase": "play",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "b85cd406",
+      "variant": 8,
+      "sequenceModulo32": 1,
+      "cursor": 0.28587,
+      "status": "Ready \u00b7 18 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.20s"
+    },
+    {
+      "t": 1469.0999999046326,
+      "phase": "play",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "67be4bfd",
+      "variant": 1,
+      "sequenceModulo32": 1,
+      "cursor": 0.28587,
+      "status": "Ready \u00b7 18 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.20s"
+    },
+    {
+      "t": 1574.6999998092651,
+      "phase": "play",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "9c0f0645",
+      "variant": 15,
+      "sequenceModulo32": 1,
+      "cursor": 0.40482,
+      "status": "Ready \u00b7 28 decoded \u00b7 0 errors \u00b7 7 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.34s"
+    },
+    {
+      "t": 1575.1999998092651,
+      "phase": "play",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "b9a88f8e",
+      "variant": 22,
+      "sequenceModulo32": 1,
+      "cursor": 0.40482,
+      "status": "Ready \u00b7 28 decoded \u00b7 0 errors \u00b7 7 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.34s"
+    },
+    {
+      "t": 1761.2999997138977,
+      "phase": "play",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "49bb6bca",
+      "variant": 31,
+      "sequenceModulo32": 3,
+      "cursor": 0.59007,
+      "status": "Ready \u00b7 31 decoded \u00b7 0 errors \u00b7 15 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.50s"
+    },
+    {
+      "t": 1761.6999998092651,
+      "phase": "play",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "e929b9b7",
+      "variant": 6,
+      "sequenceModulo32": 3,
+      "cursor": 0.59007,
+      "status": "Ready \u00b7 31 decoded \u00b7 0 errors \u00b7 15 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.50s"
+    },
+    {
+      "t": 1949,
+      "phase": "play",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "9c0f0645",
+      "variant": 15,
+      "sequenceModulo32": 5,
+      "cursor": 0.7788299999999999,
+      "status": "Ready \u00b7 41 decoded \u00b7 0 errors \u00b7 15 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.69s"
+    },
+    {
+      "t": 1949.6999998092651,
+      "phase": "play",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "b9a88f8e",
+      "variant": 22,
+      "sequenceModulo32": 5,
+      "cursor": 0.7788299999999999,
+      "status": "Ready \u00b7 41 decoded \u00b7 0 errors \u00b7 15 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.69s"
+    },
+    {
+      "t": 2050.699999809265,
+      "phase": "play",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "9e60c528",
+      "variant": 12,
+      "sequenceModulo32": 5,
+      "cursor": 0.87984,
+      "status": "Ready \u00b7 51 decoded \u00b7 0 errors \u00b7 30 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.88s"
+    },
+    {
+      "t": 2053.9000000953674,
+      "phase": "play",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "ff4f8c3b",
+      "variant": 6,
+      "sequenceModulo32": 6,
+      "cursor": 0.87984,
+      "status": "Ready \u00b7 51 decoded \u00b7 0 errors \u00b7 30 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.88s"
+    },
+    {
+      "t": 2128.4000000953674,
+      "phase": "play",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "b9a88f8e",
+      "variant": 22,
+      "sequenceModulo32": 8,
+      "cursor": 0.96018,
+      "status": "Ready \u00b7 52 decoded \u00b7 0 errors \u00b7 30 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.94s"
+    },
+    {
+      "t": 2145.0999999046326,
+      "phase": "play",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "766f4c9d",
+      "variant": 29,
+      "sequenceModulo32": 8,
+      "cursor": 0.9761700000000001,
+      "status": "Ready \u00b7 52 decoded \u00b7 0 errors \u00b7 30 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.96s"
+    },
+    {
+      "t": 2258.2999997138977,
+      "phase": "play",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "6461494e",
+      "variant": 4,
+      "sequenceModulo32": 8,
+      "cursor": 1.08693,
+      "status": "Ready \u00b7 54 decoded \u00b7 0 errors \u00b7 37 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.01s"
+    },
+    {
+      "t": 2352.5,
+      "phase": "play",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "6ef105a5",
+      "variant": 11,
+      "sequenceModulo32": 8,
+      "cursor": 1.18404,
+      "status": "Ready \u00b7 62 decoded \u00b7 0 errors \u00b7 37 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.09s"
+    },
+    {
+      "t": 2446.199999809265,
+      "phase": "play",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "1c1301ba",
+      "variant": 20,
+      "sequenceModulo32": 10,
+      "cursor": 1.2760799999999999,
+      "status": "Ready \u00b7 63 decoded \u00b7 0 errors \u00b7 37 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.18s"
+    },
+    {
+      "t": 2453.5,
+      "phase": "play",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "d373827a",
+      "variant": 27,
+      "sequenceModulo32": 10,
+      "cursor": 1.28115,
+      "status": "Ready \u00b7 65 decoded \u00b7 0 errors \u00b7 45 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.28s"
+    },
+    {
+      "t": 2615.4000000953674,
+      "phase": "play",
+      "cam": 1,
+      "size": "112x63",
+      "hash": "d5d2e16a",
+      "variant": 17,
+      "sequenceModulo32": 10,
+      "cursor": 1.443,
+      "status": "Ready \u00b7 75 decoded \u00b7 0 errors \u00b7 53 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.40s"
+    },
+    {
+      "t": 2617.7999997138977,
+      "phase": "play",
+      "cam": 0,
+      "size": "960x540",
+      "hash": "68fd2d12",
+      "variant": 12,
+      "sequenceModulo32": 12,
+      "cursor": 1.443,
+      "status": "Ready \u00b7 75 decoded \u00b7 0 errors \u00b7 53 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.40s"
+    },
+    {
+      "t": 2688.5,
+      "phase": "play",
+      "cam": 2,
+      "size": "112x63",
+      "hash": "3adbe2fb",
+      "variant": 26,
+      "sequenceModulo32": 12,
+      "cursor": 1.51983,
+      "status": "Ready \u00b7 84 decoded \u00b7 0 errors \u00b7 60 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.50s"
+    },
+    {
+      "t": 2704.5,
+      "phase": "play",
+      "cam": 3,
+      "size": "112x63",
+      "hash": "2d29951d",
+      "variant": 1,
+      "sequenceModulo32": 12,
+      "cursor": 1.53582,
+      "status": "Ready \u00b7 84 decoded \u00b7 0 errors \u00b7 60 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.52s"
+    },
+    {
+      "t": 2769,
+      "phase": "play",
+      "cam": 4,
+      "size": "112x63",
+      "hash": "6ef105a5",
+      "variant": 11,
+      "sequenceModulo32": 15,
+      "cursor": 1.6001699999999999,
+      "status": "Ready \u00b7 84 decoded \u00b7 0 errors \u00b7 60 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.58s"
+    },
+    {
+      "t": 2785.5999999046326,
+      "phase": "play",
+      "cam": 5,
+      "size": "112x63",
+      "hash": "b3a4a33",
+      "variant": 18,
+      "sequenceModulo32": 15,
+      "cursor": 1.6161599999999998,
+      "status": "Ready \u00b7 85 decoded \u00b7 0 errors \u00b7 60 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.60s"
+    },
+    {
+      "t": 2892.9000000953674,
+      "phase": "play",
+      "cam": 6,
+      "size": "112x63",
+      "hash": "56a47ead",
+      "variant": 25,
+      "sequenceModulo32": 15,
+      "cursor": 1.68012,
+      "status": "Ready \u00b7 86 decoded \u00b7 0 errors \u00b7 60 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.66s"
+    },
+    {
+      "t": 2903,
+      "phase": "play",
+      "cam": 7,
+      "size": "112x63",
+      "hash": "48e4ae59",
+      "variant": 0,
+      "sequenceModulo32": 15,
+      "cursor": 1.7288700000000001,
+      "status": "Ready \u00b7 86 decoded \u00b7 0 errors \u00b7 60 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.68s"
+    }
+  ],
+  "heartbeat": [
+    {
+      "t": 36.5,
+      "phase": "setup",
+      "interval": 30.800000190734863
+    },
+    {
+      "t": 45.799999713897705,
+      "phase": "setup",
+      "interval": 9.299999713897705
+    },
+    {
+      "t": 55.799999713897705,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 65.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 179.5,
+      "phase": "setup",
+      "interval": 113.7000002861023
+    },
+    {
+      "t": 189.2999997138977,
+      "phase": "setup",
+      "interval": 9.799999713897705
+    },
+    {
+      "t": 307.2999997138977,
+      "phase": "setup",
+      "interval": 118
+    },
+    {
+      "t": 415.5,
+      "phase": "setup",
+      "interval": 108.2000002861023
+    },
+    {
+      "t": 500.7999997138977,
+      "phase": "setup",
+      "interval": 85.2999997138977
+    },
+    {
+      "t": 587.5999999046326,
+      "phase": "setup",
+      "interval": 86.80000019073486
+    },
+    {
+      "t": 597.1999998092651,
+      "phase": "setup",
+      "interval": 9.599999904632568
+    },
+    {
+      "t": 605.6999998092651,
+      "phase": "setup",
+      "interval": 8.5
+    },
+    {
+      "t": 615.7999997138977,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 625.6999998092651,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 635.7999997138977,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 645.6999998092651,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 656.6999998092651,
+      "phase": "setup",
+      "interval": 11
+    },
+    {
+      "t": 665.7999997138977,
+      "phase": "setup",
+      "interval": 9.099999904632568
+    },
+    {
+      "t": 675.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 685.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 748.1999998092651,
+      "phase": "setup",
+      "interval": 62.40000009536743
+    },
+    {
+      "t": 755.7999997138977,
+      "phase": "setup",
+      "interval": 7.599999904632568
+    },
+    {
+      "t": 765.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 775.6999998092651,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 785.7999997138977,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 795.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 805.6999998092651,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 818.6999998092651,
+      "phase": "setup",
+      "interval": 13
+    },
+    {
+      "t": 825.7999997138977,
+      "phase": "setup",
+      "interval": 7.099999904632568
+    },
+    {
+      "t": 835.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 845.6999998092651,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 855.7999997138977,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 865.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 875.6999998092651,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 885.7999997138977,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 898.7999997138977,
+      "phase": "setup",
+      "interval": 13
+    },
+    {
+      "t": 905.6999998092651,
+      "phase": "setup",
+      "interval": 6.900000095367432
+    },
+    {
+      "t": 915.6999998092651,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 925.6999998092651,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 935.7999997138977,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 945.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 955.6999998092651,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 965.7999997138977,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 976.5,
+      "phase": "setup",
+      "interval": 10.700000286102295
+    },
+    {
+      "t": 985.7999997138977,
+      "phase": "setup",
+      "interval": 9.299999713897705
+    },
+    {
+      "t": 995.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1005.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1015.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1025.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1035.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1045.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1056.5,
+      "phase": "setup",
+      "interval": 10.700000286102295
+    },
+    {
+      "t": 1065.7999997138977,
+      "phase": "setup",
+      "interval": 9.299999713897705
+    },
+    {
+      "t": 1075.6999998092651,
+      "phase": "setup",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 1085.7999997138977,
+      "phase": "setup",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 1095.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1105.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1115.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1125.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1136.4000000953674,
+      "phase": "setup",
+      "interval": 10.600000381469727
+    },
+    {
+      "t": 1145.7999997138977,
+      "phase": "setup",
+      "interval": 9.399999618530273
+    },
+    {
+      "t": 1155.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1165.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1175.7999997138977,
+      "phase": "setup",
+      "interval": 10
+    },
+    {
+      "t": 1186.4000000953674,
+      "phase": "play",
+      "interval": 10.600000381469727
+    },
+    {
+      "t": 1268.1999998092651,
+      "phase": "play",
+      "interval": 81.7999997138977
+    },
+    {
+      "t": 1277.2999997138977,
+      "phase": "play",
+      "interval": 9.099999904632568
+    },
+    {
+      "t": 1365.1999998092651,
+      "phase": "play",
+      "interval": 87.90000009536743
+    },
+    {
+      "t": 1366.2999997138977,
+      "phase": "play",
+      "interval": 1.0999999046325684
+    },
+    {
+      "t": 1473.5,
+      "phase": "play",
+      "interval": 107.2000002861023
+    },
+    {
+      "t": 1478.1999998092651,
+      "phase": "play",
+      "interval": 4.699999809265137
+    },
+    {
+      "t": 1507.9000000953674,
+      "phase": "play",
+      "interval": 29.700000286102295
+    },
+    {
+      "t": 1573.1999998092651,
+      "phase": "play",
+      "interval": 65.2999997138977
+    },
+    {
+      "t": 1579,
+      "phase": "play",
+      "interval": 5.800000190734863
+    },
+    {
+      "t": 1585.7999997138977,
+      "phase": "play",
+      "interval": 6.799999713897705
+    },
+    {
+      "t": 1670.4000000953674,
+      "phase": "play",
+      "interval": 84.60000038146973
+    },
+    {
+      "t": 1757.4000000953674,
+      "phase": "play",
+      "interval": 87
+    },
+    {
+      "t": 1767,
+      "phase": "play",
+      "interval": 9.599999904632568
+    },
+    {
+      "t": 1860.6999998092651,
+      "phase": "play",
+      "interval": 93.69999980926514
+    },
+    {
+      "t": 1947,
+      "phase": "play",
+      "interval": 86.30000019073486
+    },
+    {
+      "t": 1955.6999998092651,
+      "phase": "play",
+      "interval": 8.699999809265137
+    },
+    {
+      "t": 2044.2999997138977,
+      "phase": "play",
+      "interval": 88.59999990463257
+    },
+    {
+      "t": 2047.9000000953674,
+      "phase": "play",
+      "interval": 3.6000003814697266
+    },
+    {
+      "t": 2057.9000000953674,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2065.7999997138977,
+      "phase": "play",
+      "interval": 7.899999618530273
+    },
+    {
+      "t": 2075.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2085.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2096.199999809265,
+      "phase": "play",
+      "interval": 10.400000095367432
+    },
+    {
+      "t": 2105.7999997138977,
+      "phase": "play",
+      "interval": 9.599999904632568
+    },
+    {
+      "t": 2115.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2125.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2136,
+      "phase": "play",
+      "interval": 10.200000286102295
+    },
+    {
+      "t": 2146.7999997138977,
+      "phase": "play",
+      "interval": 10.799999713897705
+    },
+    {
+      "t": 2155.7999997138977,
+      "phase": "play",
+      "interval": 9
+    },
+    {
+      "t": 2165.699999809265,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 2177.0999999046326,
+      "phase": "play",
+      "interval": 11.400000095367432
+    },
+    {
+      "t": 2254.7999997138977,
+      "phase": "play",
+      "interval": 77.69999980926514
+    },
+    {
+      "t": 2260.7999997138977,
+      "phase": "play",
+      "interval": 6
+    },
+    {
+      "t": 2265.7999997138977,
+      "phase": "play",
+      "interval": 5
+    },
+    {
+      "t": 2354.5,
+      "phase": "play",
+      "interval": 88.7000002861023
+    },
+    {
+      "t": 2355.9000000953674,
+      "phase": "play",
+      "interval": 1.4000000953674316
+    },
+    {
+      "t": 2444.2999997138977,
+      "phase": "play",
+      "interval": 88.39999961853027
+    },
+    {
+      "t": 2448.7999997138977,
+      "phase": "play",
+      "interval": 4.5
+    },
+    {
+      "t": 2457.7999997138977,
+      "phase": "play",
+      "interval": 9
+    },
+    {
+      "t": 2493.199999809265,
+      "phase": "play",
+      "interval": 35.40000009536743
+    },
+    {
+      "t": 2571.7999997138977,
+      "phase": "play",
+      "interval": 78.59999990463257
+    },
+    {
+      "t": 2621.0999999046326,
+      "phase": "play",
+      "interval": 49.30000019073486
+    },
+    {
+      "t": 2625.7999997138977,
+      "phase": "play",
+      "interval": 4.699999809265137
+    },
+    {
+      "t": 2635.699999809265,
+      "phase": "play",
+      "interval": 9.900000095367432
+    },
+    {
+      "t": 2645.7999997138977,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 2656.0999999046326,
+      "phase": "play",
+      "interval": 10.300000190734863
+    },
+    {
+      "t": 2665.699999809265,
+      "phase": "play",
+      "interval": 9.599999904632568
+    },
+    {
+      "t": 2675.7999997138977,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 2685.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2695.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2706.7999997138977,
+      "phase": "play",
+      "interval": 11
+    },
+    {
+      "t": 2715.7999997138977,
+      "phase": "play",
+      "interval": 9
+    },
+    {
+      "t": 2725.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2736.2999997138977,
+      "phase": "play",
+      "interval": 10.5
+    },
+    {
+      "t": 2745.7999997138977,
+      "phase": "play",
+      "interval": 9.5
+    },
+    {
+      "t": 2755.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2765.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2775.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2787.5999999046326,
+      "phase": "play",
+      "interval": 11.800000190734863
+    },
+    {
+      "t": 2795.7999997138977,
+      "phase": "play",
+      "interval": 8.199999809265137
+    },
+    {
+      "t": 2805.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2816.7999997138977,
+      "phase": "play",
+      "interval": 11
+    },
+    {
+      "t": 2825.7999997138977,
+      "phase": "play",
+      "interval": 9
+    },
+    {
+      "t": 2835.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2845.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2896.5999999046326,
+      "phase": "play",
+      "interval": 50.80000019073486
+    },
+    {
+      "t": 2905.699999809265,
+      "phase": "play",
+      "interval": 9.099999904632568
+    },
+    {
+      "t": 2915.7999997138977,
+      "phase": "play",
+      "interval": 10.099999904632568
+    },
+    {
+      "t": 2925.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2935.7999997138977,
+      "phase": "play",
+      "interval": 10
+    },
+    {
+      "t": 2945.699999809265,
+      "phase": "play",
+      "interval": 9.900000095367432
+    }
+  ],
+  "errors": [],
+  "peak_sampled_pss_kib": 2135698,
+  "case": "zstd-64MiB",
+  "repeat": 2,
+  "returncode": 1
+}
