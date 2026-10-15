@@ -126,7 +126,9 @@ python3 tools/performance-probe/run_viewer_pilot.py \
 docker stop mcap-lichtblick-compare
 ```
 
-harness導入前の試行で、mcap_playerがカーソル終端でもPlay状態を保つことと、Lichtblickのpanel mount完了前にはresizeできないことを確認した。
+harness導入前の試行で、mcap_playerの終端でボタン表示が更新されないことと、Lichtblickのpanel mount完了前にはresizeできないことを確認した。
+後続の[8camera検証](../2026-10-15-web-camera-stress/README.md)で、時計自体は終端で停止していると確認した。
+このpilotの`playing`フィールドはボタン表示から取得しており、時計状態そのものではない。
 これらを計測の待機条件で扱い、失敗したpreflightは集計に含めていない。
 
 検証: Pythonの構文チェック、両app各3回の実ブラウザrun、canvas寸法assert、

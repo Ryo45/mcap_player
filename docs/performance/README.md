@@ -140,3 +140,7 @@ Chunk設定をstorage optionsで変更できる。結果の解釈は仕様と実
 [Lichtblickとの最初のGUI比較](2026-10-15-lichtblick-pilot/README.md)では、同じ4K・1camera・20秒のMCAPを
 Web Localで各3回再生し、Chrome process treeのPSSを比較した。再生後は両者ほぼ同じだった。
 表示FPS・画像の鮮度・random Seekはまだ比較していない。
+
+[Webの4K・8camera再生と連続Seek](2026-10-15-web-camera-stress/README.md)では、実際に描いた画像を識別して
+8台すべての復帰を検証した。非圧縮8 MiB条件は完走し、zstd64 MiB条件は外部PSS 2 GiB guardで打ち切った。
+カーソル1xと画像更新頻度の違いも記録している。
