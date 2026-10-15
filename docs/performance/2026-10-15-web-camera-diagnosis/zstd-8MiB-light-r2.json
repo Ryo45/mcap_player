@@ -1,0 +1,4197 @@
+{
+  "mode": "light",
+  "dataset": "/tmp/mcap-stress2-20261014-data/3840x2160-8cam-10hz-zstd-8MiB-jpeg.mcap",
+  "samples": [
+    {
+      "now": 6.900000095367432,
+      "phase": "setup",
+      "cursor": 0,
+      "status": "Open a recording",
+      "metrics": "Performance: waiting",
+      "labels": [],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 233578,
+        "summed_rss_kib": 810204,
+        "cpu_seconds_live_processes": 0.32,
+        "rchar_live_processes": 6835688,
+        "storage_read_bytes_live_processes": 5033984,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 1268192,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 1635176,
+        "backingStorageSize": 1388360
+      }
+    },
+    {
+      "now": 40,
+      "phase": "setup",
+      "wasm_bytes": 1310720,
+      "cursor": 0,
+      "status": "Reading MCAP Summary\u2026",
+      "metrics": "Performance: waiting",
+      "labels": [],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 257575,
+        "summed_rss_kib": 844956,
+        "cpu_seconds_live_processes": 0.46,
+        "rchar_live_processes": 7496695,
+        "storage_read_bytes_live_processes": 7749632,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 1298296,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 1635176,
+        "backingStorageSize": 1402066
+      }
+    },
+    {
+      "now": 334.69999980926514,
+      "phase": "setup",
+      "wasm_bytes": 76546048,
+      "cursor": 0,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 0 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 0 pts \u00b7 0.00s",
+      "metrics": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.00 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 1 loads/2 reads \u00b7 0.0 MB loaded/0.0 MB decompressed \u00b7 0 windows/0.0 MB logical/0.0 MB RAM (n/a) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 0.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 0.0 Hz",
+        "/camera/1 \u00b7 0.0 Hz",
+        "/camera/2 \u00b7 0.0 Hz",
+        "/camera/3 \u00b7 0.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 423678,
+        "summed_rss_kib": 1020564,
+        "cpu_seconds_live_processes": 1.93,
+        "rchar_live_processes": 65493214,
+        "storage_read_bytes_live_processes": 8368128,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 999132,
+        "totalSize": 3145728,
+        "embedderHeapUsedSize": 1258216,
+        "backingStorageSize": 95025966
+      }
+    },
+    {
+      "now": 558.6999998092651,
+      "phase": "setup",
+      "wasm_bytes": 190119936,
+      "cursor": 0,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 0 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 0 pts \u00b7 0.00s",
+      "metrics": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.00 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 1 loads/2 reads \u00b7 0.0 MB loaded/0.0 MB decompressed \u00b7 0 windows/0.0 MB logical/0.0 MB RAM (n/a) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 0.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 0.0 Hz",
+        "/camera/1 \u00b7 0.0 Hz",
+        "/camera/2 \u00b7 0.0 Hz",
+        "/camera/3 \u00b7 0.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 554410,
+        "summed_rss_kib": 1151648,
+        "cpu_seconds_live_processes": 2.89,
+        "rchar_live_processes": 193069612,
+        "storage_read_bytes_live_processes": 8380416,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 915460,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 764456,
+        "backingStorageSize": 227485452
+      }
+    },
+    {
+      "now": 772.9000000953674,
+      "phase": "setup",
+      "wasm_bytes": 284688384,
+      "cursor": 0,
+      "status": "Ready \u00b7 6 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s",
+      "metrics": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.00 ms \u00b7 source/controller 0.00/0.09 ms \u00b7 Browser file 1 loads/29 reads \u00b7 238.4 MB loaded/240.6 MB decompressed \u00b7 1 windows/237.5 MB logical/240.6 MB RAM (1.01x) \u00b7 copied 0.0 MB \u00b7 ahead 1.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 622.0 ms (MCAP 194.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 0.0 Hz",
+        "/camera/1 \u00b7 0.0 Hz",
+        "/camera/2 \u00b7 0.0 Hz",
+        "/camera/3 \u00b7 0.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 3,
+      "paints": 1,
+      "errors": [],
+      "process": {
+        "pss_kib": 642123,
+        "summed_rss_kib": 1241240,
+        "cpu_seconds_live_processes": 3.79,
+        "rchar_live_processes": 258327885,
+        "storage_read_bytes_live_processes": 8650752,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 988564,
+        "totalSize": 3407872,
+        "embedderHeapUsedSize": 1537104,
+        "backingStorageSize": 284769118
+      }
+    },
+    {
+      "now": 1789.0999999046326,
+      "phase": "setup",
+      "wasm_bytes": 284688384,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s",
+      "metrics": "Focus 1.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 71.00 ms \u00b7 canvas 0.12 ms \u00b7 tick 0.89 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 1 loads/29 reads \u00b7 238.4 MB loaded/240.6 MB decompressed \u00b7 1 windows/237.5 MB logical/240.6 MB RAM (1.01x) \u00b7 copied 0.0 MB \u00b7 ahead 1.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 622.0 ms (MCAP 194.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 1.0 Hz",
+        "/camera/1 \u00b7 1.0 Hz",
+        "/camera/2 \u00b7 1.0 Hz",
+        "/camera/3 \u00b7 1.0 Hz",
+        "/camera/4 \u00b7 1.0 Hz",
+        "/camera/5 \u00b7 1.0 Hz",
+        "/camera/6 \u00b7 1.0 Hz",
+        "/camera/7 \u00b7 1.0 Hz"
+      ],
+      "jobs": 8,
+      "paints": 8,
+      "errors": [],
+      "process": {
+        "pss_kib": 688579,
+        "summed_rss_kib": 1289824,
+        "cpu_seconds_live_processes": 6.97,
+        "rchar_live_processes": 258334212,
+        "storage_read_bytes_live_processes": 8650752,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 1293412,
+        "totalSize": 3670016,
+        "embedderHeapUsedSize": 6460600,
+        "backingStorageSize": 284774332
+      }
+    },
+    {
+      "now": 1805.1999998092651,
+      "phase": "play",
+      "wasm_bytes": 284688384,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s",
+      "metrics": "Focus 1.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 71.00 ms \u00b7 canvas 0.12 ms \u00b7 tick 0.89 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 1 loads/29 reads \u00b7 238.4 MB loaded/240.6 MB decompressed \u00b7 1 windows/237.5 MB logical/240.6 MB RAM (1.01x) \u00b7 copied 0.0 MB \u00b7 ahead 1.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 622.0 ms (MCAP 194.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 1.0 Hz",
+        "/camera/1 \u00b7 1.0 Hz",
+        "/camera/2 \u00b7 1.0 Hz",
+        "/camera/3 \u00b7 1.0 Hz",
+        "/camera/4 \u00b7 1.0 Hz",
+        "/camera/5 \u00b7 1.0 Hz",
+        "/camera/6 \u00b7 1.0 Hz",
+        "/camera/7 \u00b7 1.0 Hz"
+      ],
+      "jobs": 8,
+      "paints": 8,
+      "errors": [],
+      "process": {
+        "pss_kib": 688787,
+        "summed_rss_kib": 1290056,
+        "cpu_seconds_live_processes": 7.01,
+        "rchar_live_processes": 258334715,
+        "storage_read_bytes_live_processes": 8650752,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 1315040,
+        "totalSize": 3670016,
+        "embedderHeapUsedSize": 6545568,
+        "backingStorageSize": 284775122
+      }
+    },
+    {
+      "now": 2027.5,
+      "phase": "play",
+      "wasm_bytes": 417136640,
+      "cursor": 0.0551,
+      "status": "Ready \u00b7 20 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.21s",
+      "metrics": "Focus 1.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 71.00 ms \u00b7 canvas 0.12 ms \u00b7 tick 0.89 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 2 loads/29 reads \u00b7 238.4 MB loaded/240.6 MB decompressed \u00b7 1 windows/237.5 MB logical/240.6 MB RAM (1.01x) \u00b7 copied 0.0 MB \u00b7 ahead 0.79/2.00s actual/target \u00b7 0 evicted \u00b7 last 622.0 ms (MCAP 194.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 1.0 Hz",
+        "/camera/1 \u00b7 1.0 Hz",
+        "/camera/2 \u00b7 1.0 Hz",
+        "/camera/3 \u00b7 1.0 Hz",
+        "/camera/4 \u00b7 1.0 Hz",
+        "/camera/5 \u00b7 1.0 Hz",
+        "/camera/6 \u00b7 1.0 Hz",
+        "/camera/7 \u00b7 1.0 Hz"
+      ],
+      "jobs": 12,
+      "paints": 10,
+      "errors": [],
+      "process": {
+        "pss_kib": 935198,
+        "summed_rss_kib": 1537812,
+        "cpu_seconds_live_processes": 8.09,
+        "rchar_live_processes": 375827554,
+        "storage_read_bytes_live_processes": 8650752,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 980108,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 1678584,
+        "backingStorageSize": 445440783
+      }
+    },
+    {
+      "now": 2251,
+      "phase": "play",
+      "wasm_bytes": 539230208,
+      "cursor": 0.1167,
+      "status": "Ready \u00b7 31 decoded \u00b7 0 errors \u00b7 7 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.46s",
+      "metrics": "Focus 1.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 76.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.57 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 2 loads/29 reads \u00b7 238.4 MB loaded/240.6 MB decompressed \u00b7 1 windows/237.5 MB logical/240.6 MB RAM (1.01x) \u00b7 copied 0.0 MB \u00b7 ahead 0.55/2.00s actual/target \u00b7 0 evicted \u00b7 last 622.0 ms (MCAP 194.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 1.0 Hz",
+        "/camera/1 \u00b7 1.0 Hz",
+        "/camera/2 \u00b7 0.0 Hz",
+        "/camera/3 \u00b7 0.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 18,
+      "paints": 16,
+      "errors": [],
+      "process": {
+        "pss_kib": 1063386,
+        "summed_rss_kib": 1666008,
+        "cpu_seconds_live_processes": 9.21,
+        "rchar_live_processes": 486183207,
+        "storage_read_bytes_live_processes": 8650752,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 983004,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 1324160,
+        "backingStorageSize": 558175665
+      }
+    },
+    {
+      "now": 2481.4000000953674,
+      "phase": "play",
+      "wasm_bytes": 652279808,
+      "cursor": 0.1764,
+      "status": "Ready \u00b7 42 decoded \u00b7 0 errors \u00b7 14 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.69s",
+      "metrics": "Focus 1.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 76.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.57 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 3 loads/57 reads \u00b7 485.6 MB loaded/490.1 MB decompressed \u00b7 2 windows/475.1 MB logical/490.1 MB RAM (1.03x) \u00b7 copied 0.0 MB \u00b7 ahead 1.31/2.00s actual/target \u00b7 0 evicted \u00b7 last 512.0 ms (MCAP 217.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 1.0 Hz",
+        "/camera/1 \u00b7 1.0 Hz",
+        "/camera/2 \u00b7 0.0 Hz",
+        "/camera/3 \u00b7 0.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 22,
+      "paints": 20,
+      "errors": [],
+      "process": {
+        "pss_kib": 1156430,
+        "summed_rss_kib": 1759056,
+        "cpu_seconds_live_processes": 10.45,
+        "rchar_live_processes": 610309729,
+        "storage_read_bytes_live_processes": 8650752,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 987392,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 1103576,
+        "backingStorageSize": 680673034
+      }
+    },
+    {
+      "now": 2704,
+      "phase": "play",
+      "wasm_bytes": 765722624,
+      "cursor": 0.2303,
+      "status": "Ready \u00b7 53 decoded \u00b7 0 errors \u00b7 21 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.90s",
+      "metrics": "Focus 1.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 76.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.57 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 3 loads/57 reads \u00b7 485.6 MB loaded/490.1 MB decompressed \u00b7 2 windows/475.1 MB logical/490.1 MB RAM (1.03x) \u00b7 copied 0.0 MB \u00b7 ahead 1.10/2.00s actual/target \u00b7 0 evicted \u00b7 last 512.0 ms (MCAP 217.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 1.0 Hz",
+        "/camera/1 \u00b7 1.0 Hz",
+        "/camera/2 \u00b7 0.0 Hz",
+        "/camera/3 \u00b7 0.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 28,
+      "paints": 26,
+      "errors": [],
+      "process": {
+        "pss_kib": 1350318,
+        "summed_rss_kib": 1952952,
+        "cpu_seconds_live_processes": 11.71,
+        "rchar_live_processes": 721230030,
+        "storage_read_bytes_live_processes": 8650752,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 997836,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 1541040,
+        "backingStorageSize": 793961943
+      }
+    },
+    {
+      "now": 2941.699999809265,
+      "phase": "play",
+      "wasm_bytes": 822476800,
+      "cursor": 0.2915,
+      "status": "Ready \u00b7 65 decoded \u00b7 0 errors \u00b7 35 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.14s",
+      "metrics": "Focus 1.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 76.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.57 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/84 reads \u00b7 723.9 MB loaded/730.6 MB decompressed \u00b7 2 windows/475.1 MB logical/490.1 MB RAM (1.03x) \u00b7 copied 0.0 MB \u00b7 ahead 1.86/2.00s actual/target \u00b7 1 evicted \u00b7 last 504.0 ms (MCAP 205.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 1.0 Hz",
+        "/camera/1 \u00b7 1.0 Hz",
+        "/camera/2 \u00b7 0.0 Hz",
+        "/camera/3 \u00b7 0.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 34,
+      "paints": 32,
+      "errors": [],
+      "process": {
+        "pss_kib": 1408066,
+        "summed_rss_kib": 2009728,
+        "cpu_seconds_live_processes": 12.99,
+        "rchar_live_processes": 850662630,
+        "storage_read_bytes_live_processes": 8650752,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 1015740,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 1582488,
+        "backingStorageSize": 850371474
+      }
+    },
+    {
+      "now": 3175.5999999046326,
+      "phase": "play",
+      "wasm_bytes": 822476800,
+      "cursor": 0.349,
+      "status": "Ready \u00b7 83 decoded \u00b7 0 errors \u00b7 42 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.36s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 72.81 ms \u00b7 canvas 0.04 ms \u00b7 tick 0.98 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/84 reads \u00b7 723.9 MB loaded/730.6 MB decompressed \u00b7 2 windows/475.1 MB logical/490.1 MB RAM (1.03x) \u00b7 copied 0.0 MB \u00b7 ahead 1.64/2.00s actual/target \u00b7 1 evicted \u00b7 last 504.0 ms (MCAP 205.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 4.0 Hz",
+        "/camera/3 \u00b7 4.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 40,
+      "paints": 38,
+      "errors": [],
+      "process": {
+        "pss_kib": 1562164,
+        "summed_rss_kib": 2164908,
+        "cpu_seconds_live_processes": 14.23,
+        "rchar_live_processes": 985638395,
+        "storage_read_bytes_live_processes": 37617664,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 1009392,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 1605160,
+        "backingStorageSize": 840928761
+      }
+    },
+    {
+      "now": 3400.7999997138977,
+      "phase": "play",
+      "wasm_bytes": 822476800,
+      "cursor": 0.4103,
+      "status": "Ready \u00b7 95 decoded \u00b7 0 errors \u00b7 50 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.60s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 72.81 ms \u00b7 canvas 0.04 ms \u00b7 tick 0.98 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 2.30/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 4.0 Hz",
+        "/camera/3 \u00b7 4.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 46,
+      "paints": 44,
+      "errors": [],
+      "process": {
+        "pss_kib": 1313411,
+        "summed_rss_kib": 1915132,
+        "cpu_seconds_live_processes": 15.28,
+        "rchar_live_processes": 1014342619,
+        "storage_read_bytes_live_processes": 55574528,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 1085792,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 2362960,
+        "backingStorageSize": 865635929
+      }
+    },
+    {
+      "now": 3620,
+      "phase": "play",
+      "wasm_bytes": 822476800,
+      "cursor": 0.4677,
+      "status": "Ready \u00b7 106 decoded \u00b7 0 errors \u00b7 57 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.82s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 72.81 ms \u00b7 canvas 0.04 ms \u00b7 tick 0.98 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 2.08/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 4.0 Hz",
+        "/camera/3 \u00b7 4.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 52,
+      "paints": 50,
+      "errors": [],
+      "process": {
+        "pss_kib": 1351959,
+        "summed_rss_kib": 1953684,
+        "cpu_seconds_live_processes": 16.17,
+        "rchar_live_processes": 1014343830,
+        "storage_read_bytes_live_processes": 55574528,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 1160056,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 3377728,
+        "backingStorageSize": 865646860
+      }
+    },
+    {
+      "now": 3839.699999809265,
+      "phase": "play",
+      "wasm_bytes": 822476800,
+      "cursor": 0.521,
+      "status": "Ready \u00b7 117 decoded \u00b7 0 errors \u00b7 64 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.03s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 72.81 ms \u00b7 canvas 0.04 ms \u00b7 tick 0.98 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 1.87/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 4.0 Hz",
+        "/camera/3 \u00b7 4.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 56,
+      "paints": 54,
+      "errors": [],
+      "process": {
+        "pss_kib": 1314927,
+        "summed_rss_kib": 1916652,
+        "cpu_seconds_live_processes": 17.07,
+        "rchar_live_processes": 1014344981,
+        "storage_read_bytes_live_processes": 55574528,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 1233744,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 4447744,
+        "backingStorageSize": 865657799
+      }
+    },
+    {
+      "now": 4059.7999997138977,
+      "phase": "play",
+      "wasm_bytes": 822476800,
+      "cursor": 0.5785,
+      "status": "Ready \u00b7 128 decoded \u00b7 0 errors \u00b7 71 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.26s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 72.81 ms \u00b7 canvas 0.04 ms \u00b7 tick 0.98 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 1.64/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 4.0 Hz",
+        "/camera/3 \u00b7 4.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 62,
+      "paints": 60,
+      "errors": [],
+      "process": {
+        "pss_kib": 1354463,
+        "summed_rss_kib": 1956252,
+        "cpu_seconds_live_processes": 17.98,
+        "rchar_live_processes": 1014349423,
+        "storage_read_bytes_live_processes": 55574528,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 1300560,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 5455896,
+        "backingStorageSize": 865667994
+      }
+    },
+    {
+      "now": 4279.5,
+      "phase": "play",
+      "wasm_bytes": 822476800,
+      "cursor": 0.6359,
+      "status": "Ready \u00b7 139 decoded \u00b7 0 errors \u00b7 86 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.48s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.54 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.05 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 1.42/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 68,
+      "paints": 66,
+      "errors": [],
+      "process": {
+        "pss_kib": 1453267,
+        "summed_rss_kib": 2055056,
+        "cpu_seconds_live_processes": 19.01,
+        "rchar_live_processes": 1014350738,
+        "storage_read_bytes_live_processes": 55574528,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 1370700,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 6458120,
+        "backingStorageSize": 865678934
+      }
+    },
+    {
+      "now": 4501.699999809265,
+      "phase": "play",
+      "wasm_bytes": 822476800,
+      "cursor": 0.6933,
+      "status": "Ready \u00b7 151 decoded \u00b7 0 errors \u00b7 93 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.70s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.54 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.05 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 1.20/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 74,
+      "paints": 72,
+      "errors": [],
+      "process": {
+        "pss_kib": 1478263,
+        "summed_rss_kib": 2080056,
+        "cpu_seconds_live_processes": 19.9,
+        "rchar_live_processes": 1014351991,
+        "storage_read_bytes_live_processes": 55574528,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 1040628,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 1794408,
+        "backingStorageSize": 822555286
+      }
+    },
+    {
+      "now": 4722.599999904633,
+      "phase": "play",
+      "wasm_bytes": 822476800,
+      "cursor": 0.7508,
+      "status": "Ready \u00b7 162 decoded \u00b7 0 errors \u00b7 100 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.93s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.54 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.05 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.97/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 81,
+      "paints": 79,
+      "errors": [],
+      "process": {
+        "pss_kib": 1491846,
+        "summed_rss_kib": 2094124,
+        "cpu_seconds_live_processes": 20.91,
+        "rchar_live_processes": 1014353366,
+        "storage_read_bytes_live_processes": 55578624,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 1119972,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 2823200,
+        "backingStorageSize": 822566236
+      }
+    },
+    {
+      "now": 4960.299999713898,
+      "phase": "play",
+      "wasm_bytes": 822476800,
+      "cursor": 0.8082,
+      "status": "Ready \u00b7 173 decoded \u00b7 0 errors \u00b7 107 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.15s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.54 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.05 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.75/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 87,
+      "paints": 85,
+      "errors": [],
+      "process": {
+        "pss_kib": 1435876,
+        "summed_rss_kib": 2040748,
+        "cpu_seconds_live_processes": 22.0,
+        "rchar_live_processes": 1015821269,
+        "storage_read_bytes_live_processes": 57892864,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485438,
+          1485440,
+          1485458
+        ]
+      },
+      "heap": {
+        "usedSize": 1206148,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 3791696,
+        "backingStorageSize": 822578754
+      }
+    },
+    {
+      "now": 5196.099999904633,
+      "phase": "play",
+      "wasm_bytes": 822476800,
+      "cursor": 0.8697,
+      "status": "Ready \u00b7 184 decoded \u00b7 0 errors \u00b7 114 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.39s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.59 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.13 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.51/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 4.0 Hz",
+        "/camera/5 \u00b7 4.0 Hz",
+        "/camera/6 \u00b7 4.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 93,
+      "paints": 91,
+      "errors": [],
+      "process": {
+        "pss_kib": 1386729,
+        "summed_rss_kib": 2160844,
+        "cpu_seconds_live_processes": 23.69,
+        "rchar_live_processes": 1038532843,
+        "storage_read_bytes_live_processes": 92700672,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485440,
+          1485458,
+          1485576,
+          1485578,
+          1485594
+        ]
+      },
+      "heap": {
+        "usedSize": 1276616,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 4815032,
+        "backingStorageSize": 822589762
+      }
+    },
+    {
+      "now": 5431.299999713898,
+      "phase": "play",
+      "wasm_bytes": 822476800,
+      "cursor": 0.9313,
+      "status": "Ready \u00b7 197 decoded \u00b7 0 errors \u00b7 129 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.63s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.59 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.13 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.27/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 4.0 Hz",
+        "/camera/5 \u00b7 4.0 Hz",
+        "/camera/6 \u00b7 4.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 99,
+      "paints": 97,
+      "errors": [],
+      "process": {
+        "pss_kib": 1399785,
+        "summed_rss_kib": 2174088,
+        "cpu_seconds_live_processes": 24.92,
+        "rchar_live_processes": 1038534582,
+        "storage_read_bytes_live_processes": 92827648,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485440,
+          1485458,
+          1485576,
+          1485578,
+          1485594
+        ]
+      },
+      "heap": {
+        "usedSize": 1352424,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 6092144,
+        "backingStorageSize": 822601498
+      }
+    },
+    {
+      "now": 5663.599999904633,
+      "phase": "play",
+      "wasm_bytes": 822476800,
+      "cursor": 0.9887,
+      "status": "Ready \u00b7 215 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.86s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.59 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.13 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.04/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 4.0 Hz",
+        "/camera/5 \u00b7 4.0 Hz",
+        "/camera/6 \u00b7 4.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 105,
+      "paints": 103,
+      "errors": [],
+      "process": {
+        "pss_kib": 1466093,
+        "summed_rss_kib": 2240348,
+        "cpu_seconds_live_processes": 26.1,
+        "rchar_live_processes": 1038535856,
+        "storage_read_bytes_live_processes": 92827648,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485440,
+          1485458,
+          1485576,
+          1485578,
+          1485594
+        ]
+      },
+      "heap": {
+        "usedSize": 1428664,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 7098856,
+        "backingStorageSize": 822612452
+      }
+    },
+    {
+      "now": 5897.699999809265,
+      "phase": "play",
+      "wasm_bytes": 822476800,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.59 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.13 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 4.0 Hz",
+        "/camera/5 \u00b7 4.0 Hz",
+        "/camera/6 \u00b7 4.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 112,
+      "paints": 110,
+      "errors": [],
+      "process": {
+        "pss_kib": 1472065,
+        "summed_rss_kib": 2246320,
+        "cpu_seconds_live_processes": 27.26,
+        "rchar_live_processes": 1038537172,
+        "storage_read_bytes_live_processes": 92827648,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485440,
+          1485458,
+          1485576,
+          1485578,
+          1485594
+        ]
+      },
+      "heap": {
+        "usedSize": 1503992,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 8287136,
+        "backingStorageSize": 822613395
+      }
+    },
+    {
+      "now": 6123.799999713898,
+      "phase": "drain",
+      "wasm_bytes": 822476800,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 4.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.81 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.06 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 4.0 Hz",
+        "/camera/1 \u00b7 4.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 4.0 Hz"
+      ],
+      "jobs": 118,
+      "paints": 116,
+      "errors": [],
+      "process": {
+        "pss_kib": 1509061,
+        "summed_rss_kib": 2283320,
+        "cpu_seconds_live_processes": 28.41,
+        "rchar_live_processes": 1038571375,
+        "storage_read_bytes_live_processes": 92827648,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485440,
+          1485458,
+          1485576,
+          1485578,
+          1485594
+        ]
+      },
+      "heap": {
+        "usedSize": 1057024,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 1756328,
+        "backingStorageSize": 822552968
+      }
+    },
+    {
+      "now": 6345.900000095367,
+      "phase": "drain",
+      "wasm_bytes": 822476800,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 4.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.81 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.06 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 4.0 Hz",
+        "/camera/1 \u00b7 4.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 4.0 Hz"
+      ],
+      "jobs": 118,
+      "paints": 118,
+      "errors": [],
+      "process": {
+        "pss_kib": 1438377,
+        "summed_rss_kib": 2212636,
+        "cpu_seconds_live_processes": 29.15,
+        "rchar_live_processes": 1038572556,
+        "storage_read_bytes_live_processes": 92827648,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485440,
+          1485458,
+          1485576,
+          1485578,
+          1485594
+        ]
+      },
+      "heap": {
+        "usedSize": 1110236,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 2584472,
+        "backingStorageSize": 822552968
+      }
+    },
+    {
+      "now": 6566.5,
+      "phase": "drain",
+      "wasm_bytes": 822476800,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 4.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.81 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.06 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 4.0 Hz",
+        "/camera/1 \u00b7 4.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 4.0 Hz"
+      ],
+      "jobs": 118,
+      "paints": 118,
+      "errors": [],
+      "process": {
+        "pss_kib": 1438953,
+        "summed_rss_kib": 2213212,
+        "cpu_seconds_live_processes": 29.75,
+        "rchar_live_processes": 1038573694,
+        "storage_read_bytes_live_processes": 92827648,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485440,
+          1485458,
+          1485576,
+          1485578,
+          1485594
+        ]
+      },
+      "heap": {
+        "usedSize": 1167588,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 3539824,
+        "backingStorageSize": 822552968
+      }
+    },
+    {
+      "now": 6795.799999713898,
+      "phase": "drain",
+      "wasm_bytes": 822476800,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 4.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.81 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.06 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 4.0 Hz",
+        "/camera/1 \u00b7 4.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 4.0 Hz"
+      ],
+      "jobs": 118,
+      "paints": 118,
+      "errors": [],
+      "process": {
+        "pss_kib": 1439605,
+        "summed_rss_kib": 2213864,
+        "cpu_seconds_live_processes": 30.42,
+        "rchar_live_processes": 1038574867,
+        "storage_read_bytes_live_processes": 92827648,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485440,
+          1485458,
+          1485576,
+          1485578,
+          1485594
+        ]
+      },
+      "heap": {
+        "usedSize": 1221172,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 4583928,
+        "backingStorageSize": 822552968
+      }
+    },
+    {
+      "now": 7025.5,
+      "phase": "drain",
+      "wasm_bytes": 822476800,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 4.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.81 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.06 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 4.0 Hz",
+        "/camera/1 \u00b7 4.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 4.0 Hz"
+      ],
+      "jobs": 118,
+      "paints": 118,
+      "errors": [],
+      "process": {
+        "pss_kib": 1435557,
+        "summed_rss_kib": 2209764,
+        "cpu_seconds_live_processes": 31.08,
+        "rchar_live_processes": 1038577615,
+        "storage_read_bytes_live_processes": 92827648,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485440,
+          1485458,
+          1485576,
+          1485578,
+          1485594
+        ]
+      },
+      "heap": {
+        "usedSize": 1274756,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 5546904,
+        "backingStorageSize": 822552968
+      }
+    },
+    {
+      "now": 7055.099999904633,
+      "phase": "drain",
+      "wasm_bytes": 822476800,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 4.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.81 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.06 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 4.0 Hz",
+        "/camera/1 \u00b7 4.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 4.0 Hz"
+      ],
+      "jobs": 118,
+      "paints": 118,
+      "errors": [],
+      "process": {
+        "pss_kib": 1435637,
+        "summed_rss_kib": 2209844,
+        "cpu_seconds_live_processes": 31.13,
+        "rchar_live_processes": 1038577952,
+        "storage_read_bytes_live_processes": 92827648,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485440,
+          1485458,
+          1485576,
+          1485578,
+          1485594
+        ]
+      },
+      "heap": {
+        "usedSize": 1283124,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 5581656,
+        "backingStorageSize": 822552968
+      }
+    },
+    {
+      "now": 7487.400000095367,
+      "phase": "drain",
+      "wasm_bytes": 822476800,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.25 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.24 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 0.0 Hz",
+        "/camera/1 \u00b7 0.0 Hz",
+        "/camera/2 \u00b7 1.0 Hz",
+        "/camera/3 \u00b7 1.0 Hz",
+        "/camera/4 \u00b7 1.0 Hz",
+        "/camera/5 \u00b7 1.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 118,
+      "paints": 118,
+      "errors": [],
+      "process": {
+        "pss_kib": 1426331,
+        "summed_rss_kib": 2200596,
+        "cpu_seconds_live_processes": 32.38,
+        "rchar_live_processes": 1038581565,
+        "storage_read_bytes_live_processes": 92827648,
+        "pids": [
+          1485350,
+          1485354,
+          1485355,
+          1485364,
+          1485365,
+          1485386,
+          1485390,
+          1485420,
+          1485440,
+          1485458,
+          1485576,
+          1485578,
+          1485594
+        ]
+      },
+      "heap": {
+        "usedSize": 1129656,
+        "totalSize": 2097152,
+        "embedderHeapUsedSize": 2951320,
+        "backingStorageSize": 822552156
+      }
+    }
+  ],
+  "status": "ok",
+  "dataset_sha256": "3d4bf85ce374ccac882d6555e9fe45c0caf6050c9d0b2ece410e91df14183721",
+  "sources_sha256": {
+    "diagnose_web_camera.py": "11d27852a8ed0965f8c486aeb53f3c87df6a41391f51240be9fdac9522779f99",
+    "web_camera_pipeline.js": "ceb1b368a1d387009f6781f4b34bdc84ad6fad672ae4ba58f4db9deb25991f89"
+  },
+  "environment": {
+    "version": {
+      "Browser": "Chrome/143.0.7499.192",
+      "Protocol-Version": "1.3",
+      "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.0.0 Safari/537.36",
+      "V8-Version": "14.3.127.17",
+      "WebKit-Version": "537.36 (@be2c1f4fd451578a9ada68a0ac12d659362b44bf)",
+      "webSocketDebuggerUrl": "ws://127.0.0.1:9241/devtools/browser/02556822-2643-4f52-a16a-7199f557ccd8"
+    },
+    "gpu": {
+      "gpu": {
+        "devices": [
+          {
+            "vendorId": 65535,
+            "deviceId": 65535,
+            "vendorString": "Google Inc. (Google)",
+            "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+            "driverVendor": "SwANGLE",
+            "driverVersion": "5.0.0"
+          }
+        ],
+        "auxAttributes": {
+          "amdSwitchable": false,
+          "canSupportThreadedTextureMailbox": false,
+          "directRenderingVersion": "",
+          "displayType": "ANGLE_SWIFTSHADER",
+          "glExtensions": "GL_AMD_performance_monitor GL_ANGLE_base_vertex_base_instance_shader_builtin GL_ANGLE_blob_cache GL_ANGLE_client_arrays GL_ANGLE_clip_cull_distance GL_ANGLE_compressed_texture_etc GL_ANGLE_copy_texture_3d GL_ANGLE_depth_texture GL_ANGLE_framebuffer_blit GL_ANGLE_framebuffer_multisample GL_ANGLE_get_image GL_ANGLE_get_serialized_context_string GL_ANGLE_get_tex_level_parameter GL_ANGLE_instanced_arrays GL_ANGLE_memory_object_flags GL_ANGLE_memory_size GL_ANGLE_multi_draw GL_ANGLE_pack_reverse_row_order GL_ANGLE_polygon_mode GL_ANGLE_program_binary_readiness_query GL_ANGLE_program_cache_control GL_ANGLE_read_only_depth_stencil_feedback_loops GL_ANGLE_relaxed_vertex_attribute_type GL_ANGLE_renderability_validation GL_ANGLE_request_extension GL_ANGLE_rgbx_internal_format GL_ANGLE_robust_client_memory GL_ANGLE_robust_fragment_shader_output GL_ANGLE_robust_resource_initialization GL_ANGLE_shader_pixel_local_storage GL_ANGLE_shader_pixel_local_storage_coherent GL_ANGLE_stencil_texturing GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ANGLE_texture_multisample GL_ANGLE_texture_usage GL_ANGLE_translated_shader_source GL_ANGLE_vulkan_image GL_ANGLE_yuv_internal_format GL_APPLE_clip_distance GL_ARM_rgba8 GL_ARM_shader_framebuffer_fetch GL_ARM_shader_framebuffer_fetch_depth_stencil GL_CHROMIUM_bind_generates_resource GL_CHROMIUM_bind_uniform_location GL_CHROMIUM_copy_compressed_texture GL_CHROMIUM_copy_texture GL_CHROMIUM_lose_context GL_EXT_EGL_image_array GL_EXT_EGL_image_external_wrap_modes GL_EXT_EGL_image_storage GL_EXT_base_instance GL_EXT_blend_minmax GL_EXT_buffer_storage GL_EXT_clear_texture GL_EXT_clip_control GL_EXT_clip_cull_distance GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_compressed_ETC1_RGB8_sub_texture GL_EXT_conservative_depth GL_EXT_copy_image GL_EXT_debug_label GL_EXT_debug_marker GL_EXT_depth_clamp GL_EXT_discard_framebuffer GL_EXT_disjoint_timer_query GL_EXT_draw_buffers GL_EXT_draw_buffers_indexed GL_EXT_draw_elements_base_vertex GL_EXT_float_blend GL_EXT_frag_depth GL_EXT_instanced_arrays GL_EXT_map_buffer_range GL_EXT_memory_object GL_EXT_memory_object_fd GL_EXT_occlusion_query_boolean GL_EXT_polygon_offset_clamp GL_EXT_read_format_bgra GL_EXT_robustness GL_EXT_sRGB GL_EXT_sRGB_write_control GL_EXT_semaphore GL_EXT_semaphore_fd GL_EXT_separate_shader_objects GL_EXT_shader_framebuffer_fetch GL_EXT_shader_framebuffer_fetch_non_coherent GL_EXT_shader_non_constant_global_initializers GL_EXT_shader_texture_lod GL_EXT_shadow_samplers GL_EXT_texture_border_clamp GL_EXT_texture_compression_bptc GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc_srgb GL_EXT_texture_cube_map_array GL_EXT_texture_filter_anisotropic GL_EXT_texture_format_BGRA8888 GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_rg GL_EXT_texture_sRGB_R8 GL_EXT_texture_sRGB_RG8 GL_EXT_texture_sRGB_decode GL_EXT_texture_shadow_lod GL_EXT_texture_storage GL_EXT_texture_type_2_10_10_10_REV GL_EXT_unpack_subimage GL_KHR_blend_equation_advanced GL_KHR_debug GL_KHR_robust_buffer_access_behavior GL_KHR_robustness GL_KHR_texture_compression_astc_ldr GL_NV_depth_buffer_float2 GL_NV_fence GL_NV_framebuffer_blit GL_NV_pack_subimage GL_NV_pixel_buffer_object GL_NV_polygon_mode GL_NV_read_depth GL_NV_read_depth_stencil GL_NV_read_stencil GL_NV_shader_noperspective_interpolation GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_EGL_image_external_essl3 GL_OES_EGL_sync GL_OES_compressed_EAC_R11_signed_texture GL_OES_compressed_EAC_R11_unsigned_texture GL_OES_compressed_EAC_RG11_signed_texture GL_OES_compressed_EAC_RG11_unsigned_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_compressed_ETC2_RGB8_texture GL_OES_compressed_ETC2_RGBA8_texture GL_OES_compressed_ETC2_punchthroughA_RGBA8_texture GL_OES_compressed_ETC2_punchthroughA_sRGB8_alpha_texture GL_OES_compressed_ETC2_sRGB8_alpha8_texture GL_OES_compressed_ETC2_sRGB8_texture GL_OES_copy_image GL_OES_depth24 GL_OES_depth32 GL_OES_depth_texture GL_OES_depth_texture_cube_map GL_OES_draw_buffers_indexed GL_OES_draw_elements_base_vertex GL_OES_element_index_uint GL_OES_fbo_render_mipmap GL_OES_get_program_binary GL_OES_mapbuffer GL_OES_packed_depth_stencil GL_OES_required_internalformat GL_OES_rgb8_rgba8 GL_OES_sample_shading GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_standard_derivatives GL_OES_surfaceless_context GL_OES_texture_3D GL_OES_texture_border_clamp GL_OES_texture_cube_map_array GL_OES_texture_float GL_OES_texture_float_linear GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_texture_npot GL_OES_texture_stencil8 GL_OES_texture_storage_multisample_2d_array GL_OES_vertex_array_object GL_OES_vertex_half_float GL_OES_vertex_type_10_10_10_2 GL_OVR_multiview GL_OVR_multiview2 ",
+          "glImplementationParts": "(gl=egl-angle,angle=swiftshader)",
+          "glRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "glResetNotificationStrategy": 33362,
+          "glVendor": "Google Inc. (Google)",
+          "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.26423 git hash: 2dfb5b7603d0)",
+          "glWsExtensions": "EGL_EXT_create_context_robustness EGL_ANGLE_surface_orientation EGL_KHR_create_context EGL_KHR_image EGL_KHR_image_base EGL_EXT_image_gl_colorspace EGL_KHR_gl_colorspace EGL_KHR_gl_texture_2D_image EGL_KHR_gl_texture_cubemap_image EGL_KHR_gl_renderbuffer_image EGL_KHR_get_all_proc_addresses EGL_KHR_fence_sync EGL_KHR_wait_sync EGL_ANGLE_create_context_webgl_compatibility EGL_CHROMIUM_create_context_bind_generates_resource EGL_KHR_swap_buffers_with_damage EGL_EXT_pixel_format_float EGL_KHR_surfaceless_context EGL_ANGLE_display_texture_share_group EGL_ANGLE_display_semaphore_share_group EGL_ANGLE_create_context_client_arrays EGL_ANGLE_program_cache_control EGL_ANGLE_robust_resource_initialization EGL_ANGLE_create_context_extensions_enabled EGL_ANDROID_blob_cache EGL_ANDROID_recordable EGL_ANGLE_create_context_backwards_compatible EGL_KHR_no_config_context EGL_IMG_context_priority EGL_KHR_create_context_no_error EGL_KHR_reusable_sync EGL_EXT_buffer_age EGL_ANGLE_create_surface_swap_interval EGL_ANGLE_vulkan_image EGL_KHR_partial_update EGL_ANGLE_global_fence_sync EGL_ANGLE_memory_usage_report ",
+          "glWsVendor": "Google Inc. (Google)",
+          "glWsVersion": "1.5 (ANGLE 2.1.26423 git hash: 2dfb5b7603d0)",
+          "hardwareSupportsVulkan": false,
+          "inProcessGpu": false,
+          "initializationTime": 0.110464,
+          "isAsan": false,
+          "isClangCoverage": false,
+          "jpegDecodeAcceleratorSupported": false,
+          "maxMsaaSamples": "4",
+          "optimus": false,
+          "passthroughCmdDecoder": true,
+          "pixelShaderVersion": "3.00",
+          "processCrashCount": 0,
+          "sandboxed": false,
+          "skiaBackendType": "GaneshGL",
+          "subpixelFontRendering": true,
+          "targetCpuBits": 64,
+          "vertexShaderVersion": "3.00",
+          "visibilityCallbackCallCount": 0
+        },
+        "featureStatus": {
+          "2d_canvas": "enabled",
+          "direct_rendering_display_compositor": "disabled_off_ok",
+          "gpu_compositing": "enabled",
+          "multiple_raster_threads": "enabled_on",
+          "opengl": "enabled_on",
+          "rasterization": "enabled",
+          "raw_draw": "disabled_off_ok",
+          "skia_graphite": "disabled_off",
+          "trees_in_viz": "disabled_off",
+          "video_decode": "enabled",
+          "video_encode": "disabled_software",
+          "vulkan": "disabled_off",
+          "webgl": "enabled",
+          "webgpu": "unavailable_software",
+          "webnn": "disabled_off"
+        },
+        "driverBugWorkarounds": [
+          "enable_webgl_timer_query_extensions",
+          "exit_on_context_lost",
+          "disabled_extension_GL_KHR_blend_equation_advanced",
+          "disabled_extension_GL_KHR_blend_equation_advanced_coherent"
+        ],
+        "videoDecoding": [],
+        "videoEncoding": [],
+        "imageDecoding": []
+      },
+      "modelName": "",
+      "modelVersion": "",
+      "commandLine": "/usr/bin/google-chrome --headless --no-sandbox --enable-unsafe-webgpu --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader --remote-debugging-port=9241 --user-data-dir=/tmp/mcap-camera-stress-8t51y9cd --noerrdialogs --no-first-run --ozone-platform=headless --ozone-override-screen-size=800,600 --flag-switches-begin --flag-switches-end --enable-unsafe-swiftshader about:blank"
+    },
+    "command": [
+      "google-chrome",
+      "--headless",
+      "--no-sandbox",
+      "--enable-unsafe-webgpu",
+      "--enable-unsafe-swiftshader",
+      "--use-gl=angle",
+      "--use-angle=swiftshader",
+      "--remote-debugging-port=9241",
+      "--user-data-dir=/tmp/mcap-camera-stress-8t51y9cd",
+      "about:blank"
+    ]
+  },
+  "play_ms": 4092.9000000953674,
+  "pre_gc": {
+    "now": 7055.099999904633,
+    "phase": "drain",
+    "wasm_bytes": 822476800,
+    "cursor": 1,
+    "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+    "metrics": "Focus 4.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.81 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.06 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+    "labels": [
+      "/camera/0 \u00b7 4.0 Hz",
+      "/camera/1 \u00b7 4.0 Hz",
+      "/camera/2 \u00b7 3.0 Hz",
+      "/camera/3 \u00b7 3.0 Hz",
+      "/camera/4 \u00b7 3.0 Hz",
+      "/camera/5 \u00b7 3.0 Hz",
+      "/camera/6 \u00b7 3.0 Hz",
+      "/camera/7 \u00b7 4.0 Hz"
+    ],
+    "jobs": 118,
+    "paints": 118,
+    "errors": [],
+    "process": {
+      "pss_kib": 1435637,
+      "summed_rss_kib": 2209844,
+      "cpu_seconds_live_processes": 31.13,
+      "rchar_live_processes": 1038577952,
+      "storage_read_bytes_live_processes": 92827648,
+      "pids": [
+        1485350,
+        1485354,
+        1485355,
+        1485364,
+        1485365,
+        1485386,
+        1485390,
+        1485420,
+        1485440,
+        1485458,
+        1485576,
+        1485578,
+        1485594
+      ]
+    },
+    "heap": {
+      "usedSize": 1283124,
+      "totalSize": 2621440,
+      "embedderHeapUsedSize": 5581656,
+      "backingStorageSize": 822552968
+    }
+  },
+  "post_gc": {
+    "now": 7487.400000095367,
+    "phase": "drain",
+    "wasm_bytes": 822476800,
+    "cursor": 1,
+    "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+    "metrics": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 65.25 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.24 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 959.3 MB loaded/968.2 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 400.0 ms (MCAP 143.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+    "labels": [
+      "/camera/0 \u00b7 0.0 Hz",
+      "/camera/1 \u00b7 0.0 Hz",
+      "/camera/2 \u00b7 1.0 Hz",
+      "/camera/3 \u00b7 1.0 Hz",
+      "/camera/4 \u00b7 1.0 Hz",
+      "/camera/5 \u00b7 1.0 Hz",
+      "/camera/6 \u00b7 0.0 Hz",
+      "/camera/7 \u00b7 0.0 Hz"
+    ],
+    "jobs": 118,
+    "paints": 118,
+    "errors": [],
+    "process": {
+      "pss_kib": 1426331,
+      "summed_rss_kib": 2200596,
+      "cpu_seconds_live_processes": 32.38,
+      "rchar_live_processes": 1038581565,
+      "storage_read_bytes_live_processes": 92827648,
+      "pids": [
+        1485350,
+        1485354,
+        1485355,
+        1485364,
+        1485365,
+        1485386,
+        1485390,
+        1485420,
+        1485440,
+        1485458,
+        1485576,
+        1485578,
+        1485594
+      ]
+    },
+    "heap": {
+      "usedSize": 1129656,
+      "totalSize": 2097152,
+      "embedderHeapUsedSize": 2951320,
+      "backingStorageSize": 822552156
+    }
+  },
+  "jobs": [
+    {
+      "id": 0,
+      "phase": "setup",
+      "post": 1792070031934.7002,
+      "bytes": 2895465,
+      "width": 960,
+      "height": 540,
+      "received": 1792070032017.1,
+      "decode": {
+        "start": 1792070031946.2,
+        "end": 1792070032017.1
+      },
+      "upload": 1792070032028.6,
+      "draw_ms": 0.199951171875
+    },
+    {
+      "id": 1,
+      "phase": "setup",
+      "post": 1792070031936.7002,
+      "bytes": 3119065,
+      "width": 112,
+      "height": 63,
+      "received": 1792070032007.6,
+      "decode": {
+        "start": 1792070031945.3,
+        "end": 1792070032007.5
+      },
+      "upload": 1792070032012.5,
+      "draw_ms": 0.10009765625
+    },
+    {
+      "id": 2,
+      "phase": "setup",
+      "post": 1792070032015.4001,
+      "bytes": 3154891,
+      "width": 112,
+      "height": 63,
+      "received": 1792070032093.5,
+      "decode": {
+        "start": 1792070032018.3,
+        "end": 1792070032092.8
+      },
+      "upload": 1792070032108.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 3,
+      "phase": "setup",
+      "post": 1792070032032.2002,
+      "bytes": 3161641,
+      "width": 112,
+      "height": 63,
+      "received": 1792070032096.6,
+      "decode": {
+        "start": 1792070032034.2,
+        "end": 1792070032096.6
+      },
+      "upload": 1792070032108.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 4,
+      "phase": "setup",
+      "post": 1792070032111,
+      "bytes": 3121506,
+      "width": 112,
+      "height": 63,
+      "received": 1792070032175.7002,
+      "decode": {
+        "start": 1792070032113,
+        "end": 1792070032175.7
+      },
+      "upload": 1792070032188.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 5,
+      "phase": "setup",
+      "post": 1792070032112.7002,
+      "bytes": 3168148,
+      "width": 112,
+      "height": 63,
+      "received": 1792070032177.6,
+      "decode": {
+        "start": 1792070032114.4,
+        "end": 1792070032177.7
+      },
+      "upload": 1792070032188.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 6,
+      "phase": "setup",
+      "post": 1792070032190.5,
+      "bytes": 3155382,
+      "width": 112,
+      "height": 63,
+      "received": 1792070032257.4001,
+      "decode": {
+        "start": 1792070032192.4,
+        "end": 1792070032257.2
+      },
+      "upload": 1792070032268.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 7,
+      "phase": "setup",
+      "post": 1792070032191.9001,
+      "bytes": 3129615,
+      "width": 112,
+      "height": 63,
+      "received": 1792070032256.2002,
+      "decode": {
+        "start": 1792070032193.7,
+        "end": 1792070032256.2
+      },
+      "upload": 1792070032268.4001,
+      "draw_ms": 0.099853515625
+    },
+    {
+      "id": 8,
+      "phase": "play",
+      "post": 1792070033153.6,
+      "bytes": 3122500,
+      "width": 960,
+      "height": 540,
+      "received": 1792070033229.1,
+      "decode": {
+        "start": 1792070033155.4,
+        "end": 1792070033221.1
+      },
+      "upload": 1792070033229.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 9,
+      "phase": "play",
+      "post": 1792070033154.9001,
+      "bytes": 2895015,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033229.1,
+      "decode": {
+        "start": 1792070033157.8,
+        "end": 1792070033218.0999
+      },
+      "upload": 1792070033229.3,
+      "draw_ms": 0
+    },
+    {
+      "id": 10,
+      "phase": "play",
+      "post": 1792070033231.9001,
+      "bytes": 3132773,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033305.2002,
+      "decode": {
+        "start": 1792070033233.9,
+        "end": 1792070033299.9
+      },
+      "upload": 1792070033323,
+      "draw_ms": 0
+    },
+    {
+      "id": 11,
+      "phase": "play",
+      "post": 1792070033233.2002,
+      "bytes": 3149370,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033305.2002,
+      "decode": {
+        "start": 1792070033235.3,
+        "end": 1792070033298.7
+      },
+      "upload": 1792070033322.9001,
+      "draw_ms": 0
+    },
+    {
+      "id": 12,
+      "phase": "play",
+      "post": 1792070033325,
+      "bytes": 3166893,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033403.6,
+      "decode": {
+        "start": 1792070033327.1,
+        "end": 1792070033393.2
+      },
+      "upload": 1792070033404.8,
+      "draw_ms": 0.10009765625
+    },
+    {
+      "id": 13,
+      "phase": "play",
+      "post": 1792070033326.4001,
+      "bytes": 3121160,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033403.6,
+      "decode": {
+        "start": 1792070033328.0999,
+        "end": 1792070033399.7
+      },
+      "upload": 1792070033404.9001,
+      "draw_ms": 0
+    },
+    {
+      "id": 14,
+      "phase": "play",
+      "post": 1792070033406.8,
+      "bytes": 3160812,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033474,
+      "decode": {
+        "start": 1792070033409.5,
+        "end": 1792070033473
+      },
+      "upload": 1792070033474.2002,
+      "draw_ms": 0
+    },
+    {
+      "id": 15,
+      "phase": "play",
+      "post": 1792070033408.8,
+      "bytes": 3125510,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033477.2002,
+      "decode": {
+        "start": 1792070033410.9,
+        "end": 1792070033475.5
+      },
+      "upload": 1792070033492.1,
+      "draw_ms": 0
+    },
+    {
+      "id": 16,
+      "phase": "play",
+      "post": 1792070033476.7002,
+      "bytes": 3121160,
+      "width": 960,
+      "height": 540,
+      "received": 1792070033556,
+      "decode": {
+        "start": 1792070033478.9,
+        "end": 1792070033553.5
+      },
+      "upload": 1792070033566.3,
+      "draw_ms": 0
+    },
+    {
+      "id": 17,
+      "phase": "play",
+      "post": 1792070033494.1,
+      "bytes": 3155382,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033571.7002,
+      "decode": {
+        "start": 1792070033496.2,
+        "end": 1792070033571.3
+      },
+      "upload": 1792070033587.8,
+      "draw_ms": 0
+    },
+    {
+      "id": 18,
+      "phase": "play",
+      "post": 1792070033569.4001,
+      "bytes": 3163373,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033641,
+      "decode": {
+        "start": 1792070033572.2,
+        "end": 1792070033638.5
+      },
+      "upload": 1792070033656.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 19,
+      "phase": "play",
+      "post": 1792070033590.1,
+      "bytes": 3159432,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033658.5,
+      "decode": {
+        "start": 1792070033591.9,
+        "end": 1792070033652.0999
+      },
+      "upload": 1792070033661.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 20,
+      "phase": "play",
+      "post": 1792070033658.4001,
+      "bytes": 3122500,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033730.6,
+      "decode": {
+        "start": 1792070033660.1,
+        "end": 1792070033728.6
+      },
+      "upload": 1792070033747.3,
+      "draw_ms": 0
+    },
+    {
+      "id": 21,
+      "phase": "play",
+      "post": 1792070033663.9001,
+      "bytes": 2895015,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033725.1,
+      "decode": {
+        "start": 1792070033665.2,
+        "end": 1792070033724.2
+      },
+      "upload": 1792070033747.2002,
+      "draw_ms": 0.099853515625
+    },
+    {
+      "id": 22,
+      "phase": "play",
+      "post": 1792070033749.2002,
+      "bytes": 3132773,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033821.8,
+      "decode": {
+        "start": 1792070033750.9,
+        "end": 1792070033819.4
+      },
+      "upload": 1792070033822,
+      "draw_ms": 0
+    },
+    {
+      "id": 23,
+      "phase": "play",
+      "post": 1792070033750.5,
+      "bytes": 3149370,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033821.8,
+      "decode": {
+        "start": 1792070033752.2,
+        "end": 1792070033818.4
+      },
+      "upload": 1792070033822,
+      "draw_ms": 0
+    },
+    {
+      "id": 24,
+      "phase": "play",
+      "post": 1792070033823.8,
+      "bytes": 3119065,
+      "width": 960,
+      "height": 540,
+      "received": 1792070033894.7002,
+      "decode": {
+        "start": 1792070033825.5,
+        "end": 1792070033893.1
+      },
+      "upload": 1792070033913.3,
+      "draw_ms": 0
+    },
+    {
+      "id": 25,
+      "phase": "play",
+      "post": 1792070033825.2002,
+      "bytes": 3154891,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033892.2002,
+      "decode": {
+        "start": 1792070033827,
+        "end": 1792070033891.7
+      },
+      "upload": 1792070033892.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 26,
+      "phase": "play",
+      "post": 1792070033894.3,
+      "bytes": 3161641,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033974.8,
+      "decode": {
+        "start": 1792070033896,
+        "end": 1792070033959.2
+      },
+      "upload": 1792070033975,
+      "draw_ms": 0
+    },
+    {
+      "id": 27,
+      "phase": "play",
+      "post": 1792070033915.8,
+      "bytes": 3121506,
+      "width": 112,
+      "height": 63,
+      "received": 1792070033981.1,
+      "decode": {
+        "start": 1792070033917.6,
+        "end": 1792070033980.1
+      },
+      "upload": 1792070033981.2002,
+      "draw_ms": 0.099853515625
+    },
+    {
+      "id": 28,
+      "phase": "play",
+      "post": 1792070033980.6,
+      "bytes": 3161865,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034052.7002,
+      "decode": {
+        "start": 1792070033982.7,
+        "end": 1792070034051.8
+      },
+      "upload": 1792070034052.9001,
+      "draw_ms": 0
+    },
+    {
+      "id": 29,
+      "phase": "play",
+      "post": 1792070033982.9001,
+      "bytes": 3124279,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034052.6,
+      "decode": {
+        "start": 1792070033985.5,
+        "end": 1792070034048
+      },
+      "upload": 1792070034052.8,
+      "draw_ms": 0.10009765625
+    },
+    {
+      "id": 30,
+      "phase": "play",
+      "post": 1792070034054.7002,
+      "bytes": 3163373,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034124.5,
+      "decode": {
+        "start": 1792070034056.4,
+        "end": 1792070034120.8
+      },
+      "upload": 1792070034125.1,
+      "draw_ms": 0
+    },
+    {
+      "id": 31,
+      "phase": "play",
+      "post": 1792070034056.1,
+      "bytes": 3159432,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034124.6,
+      "decode": {
+        "start": 1792070034058.0999,
+        "end": 1792070034121.9
+      },
+      "upload": 1792070034125.1,
+      "draw_ms": 0
+    },
+    {
+      "id": 32,
+      "phase": "play",
+      "post": 1792070034128.1,
+      "bytes": 3155382,
+      "width": 960,
+      "height": 540,
+      "received": 1792070034206.2002,
+      "decode": {
+        "start": 1792070034129.9,
+        "end": 1792070034196.5
+      },
+      "upload": 1792070034206.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 33,
+      "phase": "play",
+      "post": 1792070034129.4001,
+      "bytes": 2888723,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034193.5,
+      "decode": {
+        "start": 1792070034130.9,
+        "end": 1792070034191.5999
+      },
+      "upload": 1792070034206.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 34,
+      "phase": "play",
+      "post": 1792070034211.5,
+      "bytes": 3120807,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034280.3,
+      "decode": {
+        "start": 1792070034213.3,
+        "end": 1792070034276.4
+      },
+      "upload": 1792070034292.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 35,
+      "phase": "play",
+      "post": 1792070034212.9001,
+      "bytes": 2895465,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034280.3,
+      "decode": {
+        "start": 1792070034214.5,
+        "end": 1792070034275
+      },
+      "upload": 1792070034292.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 36,
+      "phase": "play",
+      "post": 1792070034294.4001,
+      "bytes": 3119065,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034362.5,
+      "decode": {
+        "start": 1792070034296.2,
+        "end": 1792070034359.4
+      },
+      "upload": 1792070034364.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 37,
+      "phase": "play",
+      "post": 1792070034295.8,
+      "bytes": 3154891,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034364,
+      "decode": {
+        "start": 1792070034297.9,
+        "end": 1792070034363.9
+      },
+      "upload": 1792070034364.6,
+      "draw_ms": 0
+    },
+    {
+      "id": 38,
+      "phase": "play",
+      "post": 1792070034367.1,
+      "bytes": 3161641,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034439.8,
+      "decode": {
+        "start": 1792070034368.8,
+        "end": 1792070034439.1
+      },
+      "upload": 1792070034445.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 39,
+      "phase": "play",
+      "post": 1792070034368.5,
+      "bytes": 3121506,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034440.7002,
+      "decode": {
+        "start": 1792070034370.2,
+        "end": 1792070034439.9
+      },
+      "upload": 1792070034445.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 40,
+      "phase": "play",
+      "post": 1792070034447.4001,
+      "bytes": 3154891,
+      "width": 960,
+      "height": 540,
+      "received": 1792070034514.8,
+      "decode": {
+        "start": 1792070034449.5,
+        "end": 1792070034514.8
+      },
+      "upload": 1792070034524.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 41,
+      "phase": "play",
+      "post": 1792070034448.9001,
+      "bytes": 3125510,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034514.3,
+      "decode": {
+        "start": 1792070034450.5,
+        "end": 1792070034514.2
+      },
+      "upload": 1792070034524.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 42,
+      "phase": "play",
+      "post": 1792070034526.5,
+      "bytes": 3162836,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034596.1,
+      "decode": {
+        "start": 1792070034529.4,
+        "end": 1792070034596.2
+      },
+      "upload": 1792070034604.6,
+      "draw_ms": 0
+    },
+    {
+      "id": 43,
+      "phase": "play",
+      "post": 1792070034528.5,
+      "bytes": 3155979,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034595.6,
+      "decode": {
+        "start": 1792070034532.0999,
+        "end": 1792070034595.5999
+      },
+      "upload": 1792070034604.5,
+      "draw_ms": 0.10009765625
+    },
+    {
+      "id": 44,
+      "phase": "play",
+      "post": 1792070034607.8,
+      "bytes": 3164983,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034672.9001,
+      "decode": {
+        "start": 1792070034610.1,
+        "end": 1792070034672.9
+      },
+      "upload": 1792070034684.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 45,
+      "phase": "play",
+      "post": 1792070034608.8,
+      "bytes": 3155323,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034673.4001,
+      "decode": {
+        "start": 1792070034610.7,
+        "end": 1792070034673.5
+      },
+      "upload": 1792070034684.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 46,
+      "phase": "play",
+      "post": 1792070034686.2002,
+      "bytes": 3120807,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034752.2002,
+      "decode": {
+        "start": 1792070034688,
+        "end": 1792070034752.2
+      },
+      "upload": 1792070034764.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 47,
+      "phase": "play",
+      "post": 1792070034687.4001,
+      "bytes": 2895465,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034752.2002,
+      "decode": {
+        "start": 1792070034689.3,
+        "end": 1792070034752.2
+      },
+      "upload": 1792070034764.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 48,
+      "phase": "play",
+      "post": 1792070034766.4001,
+      "bytes": 3129615,
+      "width": 960,
+      "height": 540,
+      "received": 1792070034831.7002,
+      "decode": {
+        "start": 1792070034768.2,
+        "end": 1792070034831.8
+      },
+      "upload": 1792070034844.6,
+      "draw_ms": 0
+    },
+    {
+      "id": 49,
+      "phase": "play",
+      "post": 1792070034767.3,
+      "bytes": 3149370,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034829.1,
+      "decode": {
+        "start": 1792070034769,
+        "end": 1792070034829
+      },
+      "upload": 1792070034844.5,
+      "draw_ms": 0.10009765625
+    },
+    {
+      "id": 50,
+      "phase": "play",
+      "post": 1792070034846.4001,
+      "bytes": 3119973,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034913.1,
+      "decode": {
+        "start": 1792070034848.4,
+        "end": 1792070034913.2
+      },
+      "upload": 1792070034924.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 51,
+      "phase": "play",
+      "post": 1792070034847.3,
+      "bytes": 3159923,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034911.5,
+      "decode": {
+        "start": 1792070034849,
+        "end": 1792070034911.5999
+      },
+      "upload": 1792070034924.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 52,
+      "phase": "play",
+      "post": 1792070034926,
+      "bytes": 3160812,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034993.1,
+      "decode": {
+        "start": 1792070034928.8,
+        "end": 1792070034993.2
+      },
+      "upload": 1792070035004.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 53,
+      "phase": "play",
+      "post": 1792070034927.2002,
+      "bytes": 3125510,
+      "width": 112,
+      "height": 63,
+      "received": 1792070034991.7002,
+      "decode": {
+        "start": 1792070034929.3,
+        "end": 1792070034991.7
+      },
+      "upload": 1792070035004.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 54,
+      "phase": "play",
+      "post": 1792070035006.1,
+      "bytes": 3162836,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035071.6,
+      "decode": {
+        "start": 1792070035008.4,
+        "end": 1792070035071.7
+      },
+      "upload": 1792070035084.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 55,
+      "phase": "play",
+      "post": 1792070035007.1,
+      "bytes": 3155979,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035070.9001,
+      "decode": {
+        "start": 1792070035009.0999,
+        "end": 1792070035070.9
+      },
+      "upload": 1792070035084.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 56,
+      "phase": "play",
+      "post": 1792070035086.1,
+      "bytes": 3163373,
+      "width": 960,
+      "height": 540,
+      "received": 1792070035156.9001,
+      "decode": {
+        "start": 1792070035087.9,
+        "end": 1792070035156.9
+      },
+      "upload": 1792070035164.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 57,
+      "phase": "play",
+      "post": 1792070035087.1,
+      "bytes": 3159432,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035154.4001,
+      "decode": {
+        "start": 1792070035088.7,
+        "end": 1792070035154.4
+      },
+      "upload": 1792070035164.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 58,
+      "phase": "play",
+      "post": 1792070035166.3,
+      "bytes": 3122500,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035231.2002,
+      "decode": {
+        "start": 1792070035168.1,
+        "end": 1792070035231.3
+      },
+      "upload": 1792070035244.6,
+      "draw_ms": 0
+    },
+    {
+      "id": 59,
+      "phase": "play",
+      "post": 1792070035167.2002,
+      "bytes": 2895015,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035231,
+      "decode": {
+        "start": 1792070035168.8,
+        "end": 1792070035229.9
+      },
+      "upload": 1792070035244.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 60,
+      "phase": "play",
+      "post": 1792070035246,
+      "bytes": 3129615,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035310.4001,
+      "decode": {
+        "start": 1792070035247.8,
+        "end": 1792070035308.9
+      },
+      "upload": 1792070035324.7002,
+      "draw_ms": 0
+    },
+    {
+      "id": 61,
+      "phase": "play",
+      "post": 1792070035246.9001,
+      "bytes": 2901117,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035307.3,
+      "decode": {
+        "start": 1792070035248.5,
+        "end": 1792070035307.0999
+      },
+      "upload": 1792070035308.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 62,
+      "phase": "play",
+      "post": 1792070035310.3,
+      "bytes": 3119973,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035376.7002,
+      "decode": {
+        "start": 1792070035317.4,
+        "end": 1792070035376.7
+      },
+      "upload": 1792070035388.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 63,
+      "phase": "play",
+      "post": 1792070035327,
+      "bytes": 3159923,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035388.4001,
+      "decode": {
+        "start": 1792070035329.9,
+        "end": 1792070035388.3
+      },
+      "upload": 1792070035388.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 64,
+      "phase": "play",
+      "post": 1792070035390.1,
+      "bytes": 3149370,
+      "width": 960,
+      "height": 540,
+      "received": 1792070035468.2002,
+      "decode": {
+        "start": 1792070035391.9,
+        "end": 1792070035468.2
+      },
+      "upload": 1792070035468.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 65,
+      "phase": "play",
+      "post": 1792070035391,
+      "bytes": 3121506,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035470.6,
+      "decode": {
+        "start": 1792070035392.8,
+        "end": 1792070035468.9
+      },
+      "upload": 1792070035484.7002,
+      "draw_ms": 0
+    },
+    {
+      "id": 66,
+      "phase": "play",
+      "post": 1792070035470.5,
+      "bytes": 3159923,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035540.6,
+      "decode": {
+        "start": 1792070035472.3,
+        "end": 1792070035540.6
+      },
+      "upload": 1792070035548.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 67,
+      "phase": "play",
+      "post": 1792070035487.1,
+      "bytes": 3160812,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035554,
+      "decode": {
+        "start": 1792070035489.4,
+        "end": 1792070035554.0999
+      },
+      "upload": 1792070035564.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 68,
+      "phase": "play",
+      "post": 1792070035550.9001,
+      "bytes": 3125510,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035613,
+      "decode": {
+        "start": 1792070035552.6,
+        "end": 1792070035612.8
+      },
+      "upload": 1792070035628.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 69,
+      "phase": "play",
+      "post": 1792070035566.5,
+      "bytes": 3162836,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035630.1,
+      "decode": {
+        "start": 1792070035568.5999,
+        "end": 1792070035628.7
+      },
+      "upload": 1792070035644.7002,
+      "draw_ms": 0
+    },
+    {
+      "id": 70,
+      "phase": "play",
+      "post": 1792070035630,
+      "bytes": 3155979,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035690.6,
+      "decode": {
+        "start": 1792070035631.8,
+        "end": 1792070035690.7
+      },
+      "upload": 1792070035692.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 71,
+      "phase": "play",
+      "post": 1792070035648.5,
+      "bytes": 3164983,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035711.1,
+      "decode": {
+        "start": 1792070035650.5999,
+        "end": 1792070035711.0999
+      },
+      "upload": 1792070035724.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 72,
+      "phase": "play",
+      "post": 1792070035694.5,
+      "bytes": 3159432,
+      "width": 960,
+      "height": 540,
+      "received": 1792070035766.2002,
+      "decode": {
+        "start": 1792070035696.8,
+        "end": 1792070035766.2
+      },
+      "upload": 1792070035772.6,
+      "draw_ms": 0
+    },
+    {
+      "id": 73,
+      "phase": "play",
+      "post": 1792070035726,
+      "bytes": 3122500,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035787.9001,
+      "decode": {
+        "start": 1792070035728.5999,
+        "end": 1792070035787.9
+      },
+      "upload": 1792070035788.5,
+      "draw_ms": 0.10009765625
+    },
+    {
+      "id": 74,
+      "phase": "play",
+      "post": 1792070035774.6,
+      "bytes": 2895015,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035835.6,
+      "decode": {
+        "start": 1792070035776.4,
+        "end": 1792070035835.6
+      },
+      "upload": 1792070035836.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 75,
+      "phase": "play",
+      "post": 1792070035790.3,
+      "bytes": 3132773,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035851.6,
+      "decode": {
+        "start": 1792070035792.0999,
+        "end": 1792070035851.5
+      },
+      "upload": 1792070035852.6,
+      "draw_ms": 0
+    },
+    {
+      "id": 76,
+      "phase": "play",
+      "post": 1792070035838.3,
+      "bytes": 3149370,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035899.9001,
+      "decode": {
+        "start": 1792070035840.3,
+        "end": 1792070035899.9
+      },
+      "upload": 1792070035900.5,
+      "draw_ms": 0.10009765625
+    },
+    {
+      "id": 77,
+      "phase": "play",
+      "post": 1792070035856.1,
+      "bytes": 3119973,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035917.3,
+      "decode": {
+        "start": 1792070035857.8,
+        "end": 1792070035916.8
+      },
+      "upload": 1792070035932.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 78,
+      "phase": "play",
+      "post": 1792070035902.2002,
+      "bytes": 3159923,
+      "width": 112,
+      "height": 63,
+      "received": 1792070035962.3,
+      "decode": {
+        "start": 1792070035903.8,
+        "end": 1792070035962.4
+      },
+      "upload": 1792070035964.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 79,
+      "phase": "play",
+      "post": 1792070035934,
+      "bytes": 3160812,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036001.7002,
+      "decode": {
+        "start": 1792070035935.7,
+        "end": 1792070036001.8
+      },
+      "upload": 1792070036012.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 80,
+      "phase": "play",
+      "post": 1792070035966.1,
+      "bytes": 3121506,
+      "width": 960,
+      "height": 540,
+      "received": 1792070036042.5,
+      "decode": {
+        "start": 1792070035967.7,
+        "end": 1792070036042.5
+      },
+      "upload": 1792070036044.6,
+      "draw_ms": 0
+    },
+    {
+      "id": 81,
+      "phase": "play",
+      "post": 1792070036014.2002,
+      "bytes": 3168148,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036074.7002,
+      "decode": {
+        "start": 1792070036015.8,
+        "end": 1792070036074.7
+      },
+      "upload": 1792070036076.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 82,
+      "phase": "play",
+      "post": 1792070036046.7002,
+      "bytes": 3155382,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036107.5,
+      "decode": {
+        "start": 1792070036048.3,
+        "end": 1792070036107.5
+      },
+      "upload": 1792070036108.5,
+      "draw_ms": 0.10009765625
+    },
+    {
+      "id": 83,
+      "phase": "play",
+      "post": 1792070036078.9001,
+      "bytes": 3163373,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036141.2002,
+      "decode": {
+        "start": 1792070036080.5,
+        "end": 1792070036140.5999
+      },
+      "upload": 1792070036156.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 84,
+      "phase": "play",
+      "post": 1792070036110.9001,
+      "bytes": 3159432,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036174.7002,
+      "decode": {
+        "start": 1792070036114.6,
+        "end": 1792070036174.7
+      },
+      "upload": 1792070036188.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 85,
+      "phase": "play",
+      "post": 1792070036158.1,
+      "bytes": 3122500,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036231.6,
+      "decode": {
+        "start": 1792070036159.9,
+        "end": 1792070036231.5999
+      },
+      "upload": 1792070036236.6,
+      "draw_ms": 0
+    },
+    {
+      "id": 86,
+      "phase": "play",
+      "post": 1792070036190,
+      "bytes": 2895015,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036258.9001,
+      "decode": {
+        "start": 1792070036191.9,
+        "end": 1792070036258.9
+      },
+      "upload": 1792070036268.6,
+      "draw_ms": 0
+    },
+    {
+      "id": 87,
+      "phase": "play",
+      "post": 1792070036238.8,
+      "bytes": 3132773,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036307,
+      "decode": {
+        "start": 1792070036243.2,
+        "end": 1792070036306.9
+      },
+      "upload": 1792070036317.8,
+      "draw_ms": 0
+    },
+    {
+      "id": 88,
+      "phase": "play",
+      "post": 1792070036272.3,
+      "bytes": 3119973,
+      "width": 960,
+      "height": 540,
+      "received": 1792070036347.6,
+      "decode": {
+        "start": 1792070036274.3,
+        "end": 1792070036347.7
+      },
+      "upload": 1792070036348.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 89,
+      "phase": "play",
+      "post": 1792070036319.9001,
+      "bytes": 3119065,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036392.6,
+      "decode": {
+        "start": 1792070036323.0999,
+        "end": 1792070036392.5999
+      },
+      "upload": 1792070036396.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 90,
+      "phase": "play",
+      "post": 1792070036350.8,
+      "bytes": 3154891,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036415.5,
+      "decode": {
+        "start": 1792070036352.6,
+        "end": 1792070036415.5
+      },
+      "upload": 1792070036428.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 91,
+      "phase": "play",
+      "post": 1792070036398.3,
+      "bytes": 3161641,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036468.4001,
+      "decode": {
+        "start": 1792070036400.0999,
+        "end": 1792070036468.5
+      },
+      "upload": 1792070036476.6,
+      "draw_ms": 0
+    },
+    {
+      "id": 92,
+      "phase": "play",
+      "post": 1792070036430.1,
+      "bytes": 3121506,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036492.2002,
+      "decode": {
+        "start": 1792070036431.9,
+        "end": 1792070036492.3
+      },
+      "upload": 1792070036492.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 93,
+      "phase": "play",
+      "post": 1792070036481.2002,
+      "bytes": 3161865,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036544.5,
+      "decode": {
+        "start": 1792070036483.2,
+        "end": 1792070036544.5999
+      },
+      "upload": 1792070036556.5,
+      "draw_ms": 0.10009765625
+    },
+    {
+      "id": 94,
+      "phase": "play",
+      "post": 1792070036494.6,
+      "bytes": 3124279,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036556.1,
+      "decode": {
+        "start": 1792070036496.4,
+        "end": 1792070036556.2
+      },
+      "upload": 1792070036556.6,
+      "draw_ms": 0
+    },
+    {
+      "id": 95,
+      "phase": "play",
+      "post": 1792070036558.4001,
+      "bytes": 3163373,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036622.6,
+      "decode": {
+        "start": 1792070036560.5,
+        "end": 1792070036622.5
+      },
+      "upload": 1792070036636.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 96,
+      "phase": "play",
+      "post": 1792070036559.4001,
+      "bytes": 3168148,
+      "width": 960,
+      "height": 540,
+      "received": 1792070036625,
+      "decode": {
+        "start": 1792070036561.5999,
+        "end": 1792070036625.0999
+      },
+      "upload": 1792070036636.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 97,
+      "phase": "play",
+      "post": 1792070036638.3,
+      "bytes": 3124578,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036711.9001,
+      "decode": {
+        "start": 1792070036640,
+        "end": 1792070036711.9
+      },
+      "upload": 1792070036716.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 98,
+      "phase": "play",
+      "post": 1792070036639.1,
+      "bytes": 2888723,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036712,
+      "decode": {
+        "start": 1792070036642,
+        "end": 1792070036711.9
+      },
+      "upload": 1792070036716.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 99,
+      "phase": "play",
+      "post": 1792070036718.1,
+      "bytes": 3120807,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036784.7002,
+      "decode": {
+        "start": 1792070036719.9,
+        "end": 1792070036784.8
+      },
+      "upload": 1792070036796.6,
+      "draw_ms": 0
+    },
+    {
+      "id": 100,
+      "phase": "play",
+      "post": 1792070036719,
+      "bytes": 2895465,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036780.2002,
+      "decode": {
+        "start": 1792070036720.5,
+        "end": 1792070036780.2
+      },
+      "upload": 1792070036780.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 101,
+      "phase": "play",
+      "post": 1792070036782.5,
+      "bytes": 3119065,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036842.7002,
+      "decode": {
+        "start": 1792070036784.8,
+        "end": 1792070036842.7
+      },
+      "upload": 1792070036844.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 102,
+      "phase": "play",
+      "post": 1792070036798.2002,
+      "bytes": 3154891,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036859.2002,
+      "decode": {
+        "start": 1792070036800.6,
+        "end": 1792070036859.1
+      },
+      "upload": 1792070036860.7002,
+      "draw_ms": 0
+    },
+    {
+      "id": 103,
+      "phase": "play",
+      "post": 1792070036846.1,
+      "bytes": 3161641,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036907.2002,
+      "decode": {
+        "start": 1792070036847.8,
+        "end": 1792070036907.0999
+      },
+      "upload": 1792070036908.4001,
+      "draw_ms": 0.099853515625
+    },
+    {
+      "id": 104,
+      "phase": "play",
+      "post": 1792070036862.6,
+      "bytes": 3161865,
+      "width": 960,
+      "height": 540,
+      "received": 1792070036935.5,
+      "decode": {
+        "start": 1792070036864.3,
+        "end": 1792070036935.6
+      },
+      "upload": 1792070036940.8,
+      "draw_ms": 0
+    },
+    {
+      "id": 105,
+      "phase": "play",
+      "post": 1792070036911.4001,
+      "bytes": 3160812,
+      "width": 112,
+      "height": 63,
+      "received": 1792070036975,
+      "decode": {
+        "start": 1792070036914.4,
+        "end": 1792070036975.0999
+      },
+      "upload": 1792070036988.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 106,
+      "phase": "play",
+      "post": 1792070036943.6,
+      "bytes": 3125510,
+      "width": 112,
+      "height": 63,
+      "received": 1792070037005.4001,
+      "decode": {
+        "start": 1792070036945.7,
+        "end": 1792070037004.4
+      },
+      "upload": 1792070037020.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 107,
+      "phase": "play",
+      "post": 1792070036990.2002,
+      "bytes": 3162836,
+      "width": 112,
+      "height": 63,
+      "received": 1792070037052.3,
+      "decode": {
+        "start": 1792070036992.4,
+        "end": 1792070037052.3
+      },
+      "upload": 1792070037052.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 108,
+      "phase": "play",
+      "post": 1792070037022.2002,
+      "bytes": 3155979,
+      "width": 112,
+      "height": 63,
+      "received": 1792070037085.6,
+      "decode": {
+        "start": 1792070037024,
+        "end": 1792070037085.5
+      },
+      "upload": 1792070037100.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 109,
+      "phase": "play",
+      "post": 1792070037054.2002,
+      "bytes": 3124578,
+      "width": 112,
+      "height": 63,
+      "received": 1792070037118.2002,
+      "decode": {
+        "start": 1792070037056.2,
+        "end": 1792070037118
+      },
+      "upload": 1792070037132.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 110,
+      "phase": "play",
+      "post": 1792070037105,
+      "bytes": 3129615,
+      "width": 112,
+      "height": 63,
+      "received": 1792070037175.5,
+      "decode": {
+        "start": 1792070037107.1,
+        "end": 1792070037175.6
+      },
+      "upload": 1792070037180.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 111,
+      "phase": "play",
+      "post": 1792070037134.2002,
+      "bytes": 2901117,
+      "width": 112,
+      "height": 63,
+      "received": 1792070037197.2002,
+      "decode": {
+        "start": 1792070037136.0999,
+        "end": 1792070037197.2
+      },
+      "upload": 1792070037212.4001,
+      "draw_ms": 0
+    },
+    {
+      "id": 112,
+      "phase": "drain",
+      "post": 1792070037182.3,
+      "bytes": 3119065,
+      "width": 960,
+      "height": 540,
+      "received": 1792070037247.8,
+      "decode": {
+        "start": 1792070037184.4,
+        "end": 1792070037247.8
+      },
+      "upload": 1792070037260.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 113,
+      "phase": "drain",
+      "post": 1792070037214,
+      "bytes": 3154891,
+      "width": 112,
+      "height": 63,
+      "received": 1792070037275.5,
+      "decode": {
+        "start": 1792070037216.0999,
+        "end": 1792070037275.5
+      },
+      "upload": 1792070037276.4001,
+      "draw_ms": 0.099853515625
+    },
+    {
+      "id": 114,
+      "phase": "drain",
+      "post": 1792070037262.3,
+      "bytes": 3161641,
+      "width": 112,
+      "height": 63,
+      "received": 1792070037327.8,
+      "decode": {
+        "start": 1792070037264.4,
+        "end": 1792070037327.8
+      },
+      "upload": 1792070037340.7002,
+      "draw_ms": 0
+    },
+    {
+      "id": 115,
+      "phase": "drain",
+      "post": 1792070037278.5,
+      "bytes": 3121506,
+      "width": 112,
+      "height": 63,
+      "received": 1792070037342.9001,
+      "decode": {
+        "start": 1792070037281.0999,
+        "end": 1792070037341
+      },
+      "upload": 1792070037356.5,
+      "draw_ms": 0
+    },
+    {
+      "id": 116,
+      "phase": "drain",
+      "post": 1792070037342.7002,
+      "bytes": 3168148,
+      "width": 112,
+      "height": 63,
+      "received": 1792070037405.2002,
+      "decode": {
+        "start": 1792070037344.8,
+        "end": 1792070037405.3
+      },
+      "upload": 1792070037420.4001,
+      "draw_ms": 0.099853515625
+    },
+    {
+      "id": 117,
+      "phase": "drain",
+      "post": 1792070037358.2002,
+      "bytes": 3155382,
+      "width": 112,
+      "height": 63,
+      "received": 1792070037421.3,
+      "decode": {
+        "start": 1792070037360.8,
+        "end": 1792070037420.4
+      },
+      "upload": 1792070037436.5,
+      "draw_ms": 0
+    }
+  ],
+  "paints": [
+    {
+      "phase": "setup",
+      "camera": 1,
+      "job": 1,
+      "t": 1792070032013.2002
+    },
+    {
+      "phase": "setup",
+      "camera": 0,
+      "job": 0,
+      "t": 1792070032030.5
+    },
+    {
+      "phase": "setup",
+      "camera": 2,
+      "job": 2,
+      "t": 1792070032108.6
+    },
+    {
+      "phase": "setup",
+      "camera": 3,
+      "job": 3,
+      "t": 1792070032108.7002
+    },
+    {
+      "phase": "setup",
+      "camera": 4,
+      "job": 4,
+      "t": 1792070032188.5
+    },
+    {
+      "phase": "setup",
+      "camera": 5,
+      "job": 5,
+      "t": 1792070032188.7002
+    },
+    {
+      "phase": "setup",
+      "camera": 6,
+      "job": 6,
+      "t": 1792070032268.6
+    },
+    {
+      "phase": "setup",
+      "camera": 7,
+      "job": 7,
+      "t": 1792070032268.8
+    },
+    {
+      "phase": "play",
+      "camera": 1,
+      "job": 9,
+      "t": 1792070033229.8
+    },
+    {
+      "phase": "play",
+      "camera": 0,
+      "job": 8,
+      "t": 1792070033230
+    },
+    {
+      "phase": "play",
+      "camera": 2,
+      "job": 10,
+      "t": 1792070033323
+    },
+    {
+      "phase": "play",
+      "camera": 3,
+      "job": 11,
+      "t": 1792070033323.1
+    },
+    {
+      "phase": "play",
+      "camera": 4,
+      "job": 12,
+      "t": 1792070033404.9001
+    },
+    {
+      "phase": "play",
+      "camera": 5,
+      "job": 13,
+      "t": 1792070033405
+    },
+    {
+      "phase": "play",
+      "camera": 6,
+      "job": 14,
+      "t": 1792070033474.6
+    },
+    {
+      "phase": "play",
+      "camera": 7,
+      "job": 15,
+      "t": 1792070033492.1
+    },
+    {
+      "phase": "play",
+      "camera": 0,
+      "job": 16,
+      "t": 1792070033566.7002
+    },
+    {
+      "phase": "play",
+      "camera": 1,
+      "job": 17,
+      "t": 1792070033588.2002
+    },
+    {
+      "phase": "play",
+      "camera": 2,
+      "job": 18,
+      "t": 1792070033656.6
+    },
+    {
+      "phase": "play",
+      "camera": 3,
+      "job": 19,
+      "t": 1792070033661.5
+    },
+    {
+      "phase": "play",
+      "camera": 4,
+      "job": 20,
+      "t": 1792070033747.4001
+    },
+    {
+      "phase": "play",
+      "camera": 5,
+      "job": 21,
+      "t": 1792070033747.4001
+    },
+    {
+      "phase": "play",
+      "camera": 6,
+      "job": 22,
+      "t": 1792070033822
+    },
+    {
+      "phase": "play",
+      "camera": 7,
+      "job": 23,
+      "t": 1792070033822.1
+    },
+    {
+      "phase": "play",
+      "camera": 1,
+      "job": 25,
+      "t": 1792070033892.5
+    },
+    {
+      "phase": "play",
+      "camera": 0,
+      "job": 24,
+      "t": 1792070033914
+    },
+    {
+      "phase": "play",
+      "camera": 2,
+      "job": 26,
+      "t": 1792070033977.8
+    },
+    {
+      "phase": "play",
+      "camera": 3,
+      "job": 27,
+      "t": 1792070033981.3
+    },
+    {
+      "phase": "play",
+      "camera": 4,
+      "job": 28,
+      "t": 1792070034053
+    },
+    {
+      "phase": "play",
+      "camera": 5,
+      "job": 29,
+      "t": 1792070034053
+    },
+    {
+      "phase": "play",
+      "camera": 6,
+      "job": 30,
+      "t": 1792070034125.4001
+    },
+    {
+      "phase": "play",
+      "camera": 7,
+      "job": 31,
+      "t": 1792070034125.5
+    },
+    {
+      "phase": "play",
+      "camera": 1,
+      "job": 33,
+      "t": 1792070034208.6
+    },
+    {
+      "phase": "play",
+      "camera": 0,
+      "job": 32,
+      "t": 1792070034208.7002
+    },
+    {
+      "phase": "play",
+      "camera": 2,
+      "job": 34,
+      "t": 1792070034292.5
+    },
+    {
+      "phase": "play",
+      "camera": 3,
+      "job": 35,
+      "t": 1792070034292.6
+    },
+    {
+      "phase": "play",
+      "camera": 4,
+      "job": 36,
+      "t": 1792070034364.6
+    },
+    {
+      "phase": "play",
+      "camera": 5,
+      "job": 37,
+      "t": 1792070034364.6
+    },
+    {
+      "phase": "play",
+      "camera": 6,
+      "job": 38,
+      "t": 1792070034445.5
+    },
+    {
+      "phase": "play",
+      "camera": 7,
+      "job": 39,
+      "t": 1792070034445.6
+    },
+    {
+      "phase": "play",
+      "camera": 1,
+      "job": 41,
+      "t": 1792070034524.8
+    },
+    {
+      "phase": "play",
+      "camera": 0,
+      "job": 40,
+      "t": 1792070034524.8
+    },
+    {
+      "phase": "play",
+      "camera": 2,
+      "job": 42,
+      "t": 1792070034606.3
+    },
+    {
+      "phase": "play",
+      "camera": 3,
+      "job": 43,
+      "t": 1792070034606.3
+    },
+    {
+      "phase": "play",
+      "camera": 4,
+      "job": 44,
+      "t": 1792070034684.5
+    },
+    {
+      "phase": "play",
+      "camera": 5,
+      "job": 45,
+      "t": 1792070034684.5
+    },
+    {
+      "phase": "play",
+      "camera": 6,
+      "job": 46,
+      "t": 1792070034764.8
+    },
+    {
+      "phase": "play",
+      "camera": 7,
+      "job": 47,
+      "t": 1792070034764.9001
+    },
+    {
+      "phase": "play",
+      "camera": 1,
+      "job": 49,
+      "t": 1792070034844.9001
+    },
+    {
+      "phase": "play",
+      "camera": 0,
+      "job": 48,
+      "t": 1792070034844.9001
+    },
+    {
+      "phase": "play",
+      "camera": 2,
+      "job": 50,
+      "t": 1792070034924.5
+    },
+    {
+      "phase": "play",
+      "camera": 3,
+      "job": 51,
+      "t": 1792070034924.6
+    },
+    {
+      "phase": "play",
+      "camera": 4,
+      "job": 52,
+      "t": 1792070035004.5
+    },
+    {
+      "phase": "play",
+      "camera": 5,
+      "job": 53,
+      "t": 1792070035004.7002
+    },
+    {
+      "phase": "play",
+      "camera": 6,
+      "job": 54,
+      "t": 1792070035084.6
+    },
+    {
+      "phase": "play",
+      "camera": 7,
+      "job": 55,
+      "t": 1792070035084.6
+    },
+    {
+      "phase": "play",
+      "camera": 1,
+      "job": 57,
+      "t": 1792070035165
+    },
+    {
+      "phase": "play",
+      "camera": 0,
+      "job": 56,
+      "t": 1792070035165
+    },
+    {
+      "phase": "play",
+      "camera": 2,
+      "job": 58,
+      "t": 1792070035244.6
+    },
+    {
+      "phase": "play",
+      "camera": 3,
+      "job": 59,
+      "t": 1792070035244.7002
+    },
+    {
+      "phase": "play",
+      "camera": 5,
+      "job": 61,
+      "t": 1792070035308.6
+    },
+    {
+      "phase": "play",
+      "camera": 4,
+      "job": 60,
+      "t": 1792070035325
+    },
+    {
+      "phase": "play",
+      "camera": 6,
+      "job": 62,
+      "t": 1792070035388.5
+    },
+    {
+      "phase": "play",
+      "camera": 7,
+      "job": 63,
+      "t": 1792070035388.6
+    },
+    {
+      "phase": "play",
+      "camera": 0,
+      "job": 64,
+      "t": 1792070035468.9001
+    },
+    {
+      "phase": "play",
+      "camera": 1,
+      "job": 65,
+      "t": 1792070035484.7002
+    },
+    {
+      "phase": "play",
+      "camera": 2,
+      "job": 66,
+      "t": 1792070035548.9001
+    },
+    {
+      "phase": "play",
+      "camera": 3,
+      "job": 67,
+      "t": 1792070035564.6
+    },
+    {
+      "phase": "play",
+      "camera": 4,
+      "job": 68,
+      "t": 1792070035628.6
+    },
+    {
+      "phase": "play",
+      "camera": 5,
+      "job": 69,
+      "t": 1792070035646.7002
+    },
+    {
+      "phase": "play",
+      "camera": 6,
+      "job": 70,
+      "t": 1792070035692.6
+    },
+    {
+      "phase": "play",
+      "camera": 7,
+      "job": 71,
+      "t": 1792070035724.6
+    },
+    {
+      "phase": "play",
+      "camera": 0,
+      "job": 72,
+      "t": 1792070035773.2002
+    },
+    {
+      "phase": "play",
+      "camera": 1,
+      "job": 73,
+      "t": 1792070035788.7002
+    },
+    {
+      "phase": "play",
+      "camera": 2,
+      "job": 74,
+      "t": 1792070035836.5
+    },
+    {
+      "phase": "play",
+      "camera": 3,
+      "job": 75,
+      "t": 1792070035854.5
+    },
+    {
+      "phase": "play",
+      "camera": 4,
+      "job": 76,
+      "t": 1792070035900.6
+    },
+    {
+      "phase": "play",
+      "camera": 5,
+      "job": 77,
+      "t": 1792070035932.6
+    },
+    {
+      "phase": "play",
+      "camera": 6,
+      "job": 78,
+      "t": 1792070035964.5
+    },
+    {
+      "phase": "play",
+      "camera": 7,
+      "job": 79,
+      "t": 1792070036012.5
+    },
+    {
+      "phase": "play",
+      "camera": 0,
+      "job": 80,
+      "t": 1792070036044.9001
+    },
+    {
+      "phase": "play",
+      "camera": 1,
+      "job": 81,
+      "t": 1792070036076.5
+    },
+    {
+      "phase": "play",
+      "camera": 2,
+      "job": 82,
+      "t": 1792070036108.8
+    },
+    {
+      "phase": "play",
+      "camera": 3,
+      "job": 83,
+      "t": 1792070036156.4001
+    },
+    {
+      "phase": "play",
+      "camera": 4,
+      "job": 84,
+      "t": 1792070036188.6
+    },
+    {
+      "phase": "play",
+      "camera": 5,
+      "job": 85,
+      "t": 1792070036236.7002
+    },
+    {
+      "phase": "play",
+      "camera": 6,
+      "job": 86,
+      "t": 1792070036270.7002
+    },
+    {
+      "phase": "play",
+      "camera": 7,
+      "job": 87,
+      "t": 1792070036317.8
+    },
+    {
+      "phase": "play",
+      "camera": 0,
+      "job": 88,
+      "t": 1792070036349
+    },
+    {
+      "phase": "play",
+      "camera": 1,
+      "job": 89,
+      "t": 1792070036396.5
+    },
+    {
+      "phase": "play",
+      "camera": 2,
+      "job": 90,
+      "t": 1792070036428.5
+    },
+    {
+      "phase": "play",
+      "camera": 3,
+      "job": 91,
+      "t": 1792070036479.2002
+    },
+    {
+      "phase": "play",
+      "camera": 4,
+      "job": 92,
+      "t": 1792070036492.6
+    },
+    {
+      "phase": "play",
+      "camera": 5,
+      "job": 93,
+      "t": 1792070036556.8
+    },
+    {
+      "phase": "play",
+      "camera": 6,
+      "job": 94,
+      "t": 1792070036556.9001
+    },
+    {
+      "phase": "play",
+      "camera": 7,
+      "job": 95,
+      "t": 1792070036636.9001
+    },
+    {
+      "phase": "play",
+      "camera": 0,
+      "job": 96,
+      "t": 1792070036637
+    },
+    {
+      "phase": "play",
+      "camera": 1,
+      "job": 97,
+      "t": 1792070036716.5
+    },
+    {
+      "phase": "play",
+      "camera": 2,
+      "job": 98,
+      "t": 1792070036716.6
+    },
+    {
+      "phase": "play",
+      "camera": 4,
+      "job": 100,
+      "t": 1792070036780.9001
+    },
+    {
+      "phase": "play",
+      "camera": 3,
+      "job": 99,
+      "t": 1792070036796.7002
+    },
+    {
+      "phase": "play",
+      "camera": 5,
+      "job": 101,
+      "t": 1792070036844.5
+    },
+    {
+      "phase": "play",
+      "camera": 6,
+      "job": 102,
+      "t": 1792070036860.7002
+    },
+    {
+      "phase": "play",
+      "camera": 7,
+      "job": 103,
+      "t": 1792070036908.5
+    },
+    {
+      "phase": "play",
+      "camera": 0,
+      "job": 104,
+      "t": 1792070036941.2002
+    },
+    {
+      "phase": "play",
+      "camera": 1,
+      "job": 105,
+      "t": 1792070036988.5
+    },
+    {
+      "phase": "play",
+      "camera": 2,
+      "job": 106,
+      "t": 1792070037020.4001
+    },
+    {
+      "phase": "play",
+      "camera": 3,
+      "job": 107,
+      "t": 1792070037052.4001
+    },
+    {
+      "phase": "play",
+      "camera": 4,
+      "job": 108,
+      "t": 1792070037102.9001
+    },
+    {
+      "phase": "play",
+      "camera": 5,
+      "job": 109,
+      "t": 1792070037132.5
+    },
+    {
+      "phase": "drain",
+      "camera": 6,
+      "job": 110,
+      "t": 1792070037180.4001
+    },
+    {
+      "phase": "drain",
+      "camera": 7,
+      "job": 111,
+      "t": 1792070037212.5
+    },
+    {
+      "phase": "drain",
+      "camera": 0,
+      "job": 112,
+      "t": 1792070037260.9001
+    },
+    {
+      "phase": "drain",
+      "camera": 1,
+      "job": 113,
+      "t": 1792070037276.5
+    },
+    {
+      "phase": "drain",
+      "camera": 2,
+      "job": 114,
+      "t": 1792070037340.9001
+    },
+    {
+      "phase": "drain",
+      "camera": 3,
+      "job": 115,
+      "t": 1792070037356.5
+    },
+    {
+      "phase": "drain",
+      "camera": 4,
+      "job": 116,
+      "t": 1792070037420.6
+    },
+    {
+      "phase": "drain",
+      "camera": 5,
+      "job": 117,
+      "t": 1792070037436.5
+    }
+  ]
+}

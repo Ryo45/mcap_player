@@ -1,0 +1,1686 @@
+{
+  "mode": "bare",
+  "dataset": "/tmp/mcap-stress2-20261014-data/3840x2160-8cam-10hz-none-8MiB-jpeg.mcap",
+  "samples": [
+    {
+      "now": 6.199999809265137,
+      "phase": "setup",
+      "cursor": 0,
+      "status": "Open a recording",
+      "metrics": "Performance: waiting",
+      "labels": [],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 237436,
+        "summed_rss_kib": 819288,
+        "cpu_seconds_live_processes": 0.33,
+        "rchar_live_processes": 6861427,
+        "storage_read_bytes_live_processes": 22462464,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482617,
+          1482619,
+          1482636
+        ]
+      },
+      "heap": {
+        "usedSize": 1241880,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 1703896,
+        "backingStorageSize": 1388360
+      }
+    },
+    {
+      "now": 37.19999980926514,
+      "phase": "setup",
+      "wasm_bytes": 1310720,
+      "cursor": 0,
+      "status": "Reading MCAP Summary\u2026",
+      "metrics": "Performance: waiting",
+      "labels": [],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 260859,
+        "summed_rss_kib": 854472,
+        "cpu_seconds_live_processes": 0.47,
+        "rchar_live_processes": 7484609,
+        "storage_read_bytes_live_processes": 22626304,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482617,
+          1482619,
+          1482636
+        ]
+      },
+      "heap": {
+        "usedSize": 1294912,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 1703896,
+        "backingStorageSize": 1401638
+      }
+    },
+    {
+      "now": 267.19999980926514,
+      "phase": "setup",
+      "wasm_bytes": 38666240,
+      "cursor": 0,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 0 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 0 pts \u00b7 0.00s",
+      "metrics": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.00 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 1 loads/2 reads \u00b7 0.0 MB loaded/0.0 MB decompressed \u00b7 0 windows/0.0 MB logical/0.0 MB RAM (n/a) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 0.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 0.0 Hz",
+        "/camera/1 \u00b7 0.0 Hz",
+        "/camera/2 \u00b7 0.0 Hz",
+        "/camera/3 \u00b7 0.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 361405,
+        "summed_rss_kib": 965920,
+        "cpu_seconds_live_processes": 1.53,
+        "rchar_live_processes": 50732911,
+        "storage_read_bytes_live_processes": 22687744,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482617,
+          1482619,
+          1482636
+        ]
+      },
+      "heap": {
+        "usedSize": 1017636,
+        "totalSize": 3145728,
+        "embedderHeapUsedSize": 1383288,
+        "backingStorageSize": 70093330
+      }
+    },
+    {
+      "now": 488,
+      "phase": "setup",
+      "wasm_bytes": 229834752,
+      "cursor": 0,
+      "status": "Buffering \u00b7 waiting for +0.000s \u00b7 0 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 0 pts \u00b7 0.00s",
+      "metrics": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.00 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 1 loads/2 reads \u00b7 0.0 MB loaded/0.0 MB decompressed \u00b7 0 windows/0.0 MB logical/0.0 MB RAM (n/a) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 0.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 0.0 Hz",
+        "/camera/1 \u00b7 0.0 Hz",
+        "/camera/2 \u00b7 0.0 Hz",
+        "/camera/3 \u00b7 0.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 590221,
+        "summed_rss_kib": 1194904,
+        "cpu_seconds_live_processes": 2.66,
+        "rchar_live_processes": 240475451,
+        "storage_read_bytes_live_processes": 22691840,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482617,
+          1482619,
+          1482636
+        ]
+      },
+      "heap": {
+        "usedSize": 924864,
+        "totalSize": 3407872,
+        "embedderHeapUsedSize": 1153552,
+        "backingStorageSize": 267104776
+      }
+    },
+    {
+      "now": 702.2999997138977,
+      "phase": "setup",
+      "wasm_bytes": 273940480,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s",
+      "metrics": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 0.00 ms \u00b7 source/controller 0.00/0.06 ms \u00b7 Browser file 1 loads/29 reads \u00b7 240.6 MB loaded/0.0 MB decompressed \u00b7 1 windows/237.5 MB logical/240.6 MB RAM (1.01x) \u00b7 copied 0.0 MB \u00b7 ahead 1.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 457.0 ms (MCAP 1.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 0.0 Hz",
+        "/camera/1 \u00b7 0.0 Hz",
+        "/camera/2 \u00b7 0.0 Hz",
+        "/camera/3 \u00b7 0.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 722959,
+        "summed_rss_kib": 1330288,
+        "cpu_seconds_live_processes": 3.74,
+        "rchar_live_processes": 260565860,
+        "storage_read_bytes_live_processes": 22691840,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482617,
+          1482619,
+          1482636
+        ]
+      },
+      "heap": {
+        "usedSize": 956548,
+        "totalSize": 3670016,
+        "embedderHeapUsedSize": 1293464,
+        "backingStorageSize": 274017307
+      }
+    },
+    {
+      "now": 1716.2999997138977,
+      "phase": "setup",
+      "wasm_bytes": 273940480,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s",
+      "metrics": "Focus 1.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 72.25 ms \u00b7 canvas 0.12 ms \u00b7 tick 1.19 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 1 loads/29 reads \u00b7 240.6 MB loaded/0.0 MB decompressed \u00b7 1 windows/237.5 MB logical/240.6 MB RAM (1.01x) \u00b7 copied 0.0 MB \u00b7 ahead 1.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 457.0 ms (MCAP 1.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 1.0 Hz",
+        "/camera/1 \u00b7 1.0 Hz",
+        "/camera/2 \u00b7 1.0 Hz",
+        "/camera/3 \u00b7 1.0 Hz",
+        "/camera/4 \u00b7 1.0 Hz",
+        "/camera/5 \u00b7 1.0 Hz",
+        "/camera/6 \u00b7 1.0 Hz",
+        "/camera/7 \u00b7 1.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 672679,
+        "summed_rss_kib": 1280004,
+        "cpu_seconds_live_processes": 6.87,
+        "rchar_live_processes": 260571777,
+        "storage_read_bytes_live_processes": 22691840,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482617,
+          1482619,
+          1482636
+        ]
+      },
+      "heap": {
+        "usedSize": 1250276,
+        "totalSize": 3670016,
+        "embedderHeapUsedSize": 6231528,
+        "backingStorageSize": 274021595
+      }
+    },
+    {
+      "now": 1736.6999998092651,
+      "phase": "play",
+      "wasm_bytes": 273940480,
+      "cursor": 0,
+      "status": "Ready \u00b7 9 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.00s",
+      "metrics": "Focus 1.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 72.25 ms \u00b7 canvas 0.12 ms \u00b7 tick 1.19 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 1 loads/29 reads \u00b7 240.6 MB loaded/0.0 MB decompressed \u00b7 1 windows/237.5 MB logical/240.6 MB RAM (1.01x) \u00b7 copied 0.0 MB \u00b7 ahead 1.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 457.0 ms (MCAP 1.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 1.0 Hz",
+        "/camera/1 \u00b7 1.0 Hz",
+        "/camera/2 \u00b7 1.0 Hz",
+        "/camera/3 \u00b7 1.0 Hz",
+        "/camera/4 \u00b7 1.0 Hz",
+        "/camera/5 \u00b7 1.0 Hz",
+        "/camera/6 \u00b7 1.0 Hz",
+        "/camera/7 \u00b7 1.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 676435,
+        "summed_rss_kib": 1284828,
+        "cpu_seconds_live_processes": 6.92,
+        "rchar_live_processes": 260572321,
+        "storage_read_bytes_live_processes": 22691840,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482617,
+          1482619,
+          1482636
+        ]
+      },
+      "heap": {
+        "usedSize": 1272924,
+        "totalSize": 3670016,
+        "embedderHeapUsedSize": 6336072,
+        "backingStorageSize": 283502312
+      }
+    },
+    {
+      "now": 1954.9000000953674,
+      "phase": "play",
+      "wasm_bytes": 449314816,
+      "cursor": 0.0587,
+      "status": "Ready \u00b7 20 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.23s",
+      "metrics": "Focus 1.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 72.25 ms \u00b7 canvas 0.12 ms \u00b7 tick 1.19 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 2 loads/29 reads \u00b7 240.6 MB loaded/0.0 MB decompressed \u00b7 1 windows/237.5 MB logical/240.6 MB RAM (1.01x) \u00b7 copied 0.0 MB \u00b7 ahead 0.77/2.00s actual/target \u00b7 0 evicted \u00b7 last 457.0 ms (MCAP 1.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 1.0 Hz",
+        "/camera/1 \u00b7 1.0 Hz",
+        "/camera/2 \u00b7 1.0 Hz",
+        "/camera/3 \u00b7 1.0 Hz",
+        "/camera/4 \u00b7 1.0 Hz",
+        "/camera/5 \u00b7 1.0 Hz",
+        "/camera/6 \u00b7 1.0 Hz",
+        "/camera/7 \u00b7 1.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 968191,
+        "summed_rss_kib": 1576980,
+        "cpu_seconds_live_processes": 8.06,
+        "rchar_live_processes": 438150182,
+        "storage_read_bytes_live_processes": 22691840,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482617,
+          1482619,
+          1482636
+        ]
+      },
+      "heap": {
+        "usedSize": 960776,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 1154136,
+        "backingStorageSize": 486668505
+      }
+    },
+    {
+      "now": 2183.7999997138977,
+      "phase": "play",
+      "wasm_bytes": 618659840,
+      "cursor": 0.1156,
+      "status": "Ready \u00b7 31 decoded \u00b7 0 errors \u00b7 7 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.45s",
+      "metrics": "Focus 1.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 78.75 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.38 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 3 loads/57 reads \u00b7 490.1 MB loaded/0.0 MB decompressed \u00b7 2 windows/475.1 MB logical/490.1 MB RAM (1.03x) \u00b7 copied 0.0 MB \u00b7 ahead 1.55/2.00s actual/target \u00b7 0 evicted \u00b7 last 342.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 1.0 Hz",
+        "/camera/1 \u00b7 1.0 Hz",
+        "/camera/2 \u00b7 1.0 Hz",
+        "/camera/3 \u00b7 1.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1173467,
+        "summed_rss_kib": 1783252,
+        "cpu_seconds_live_processes": 9.56,
+        "rchar_live_processes": 606429120,
+        "storage_read_bytes_live_processes": 22691840,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482617,
+          1482619,
+          1482636
+        ]
+      },
+      "heap": {
+        "usedSize": 966900,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 1610288,
+        "backingStorageSize": 656523998
+      }
+    },
+    {
+      "now": 2411.7999997138977,
+      "phase": "play",
+      "wasm_bytes": 791019520,
+      "cursor": 0.1746,
+      "status": "Ready \u00b7 42 decoded \u00b7 0 errors \u00b7 14 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.68s",
+      "metrics": "Focus 1.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 78.75 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.38 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 3 loads/57 reads \u00b7 490.1 MB loaded/0.0 MB decompressed \u00b7 2 windows/475.1 MB logical/490.1 MB RAM (1.03x) \u00b7 copied 0.0 MB \u00b7 ahead 1.32/2.00s actual/target \u00b7 0 evicted \u00b7 last 342.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 1.0 Hz",
+        "/camera/1 \u00b7 1.0 Hz",
+        "/camera/2 \u00b7 1.0 Hz",
+        "/camera/3 \u00b7 1.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1309204,
+        "summed_rss_kib": 1918024,
+        "cpu_seconds_live_processes": 10.98,
+        "rchar_live_processes": 774521245,
+        "storage_read_bytes_live_processes": 22765568,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482617,
+          1482619,
+          1482636
+        ]
+      },
+      "heap": {
+        "usedSize": 971212,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 1545424,
+        "backingStorageSize": 809439539
+      }
+    },
+    {
+      "now": 2635.5,
+      "phase": "play",
+      "wasm_bytes": 806551552,
+      "cursor": 0.2297,
+      "status": "Ready \u00b7 53 decoded \u00b7 0 errors \u00b7 21 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 0.90s",
+      "metrics": "Focus 1.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 78.75 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.38 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 3 loads/84 reads \u00b7 730.6 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/730.6 MB RAM (1.03x) \u00b7 copied 0.0 MB \u00b7 ahead 2.10/2.00s actual/target \u00b7 0 evicted \u00b7 last 333.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 1.0 Hz",
+        "/camera/1 \u00b7 1.0 Hz",
+        "/camera/2 \u00b7 1.0 Hz",
+        "/camera/3 \u00b7 1.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1385552,
+        "summed_rss_kib": 1993356,
+        "cpu_seconds_live_processes": 12.05,
+        "rchar_live_processes": 774522522,
+        "storage_read_bytes_live_processes": 22765568,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482617,
+          1482619,
+          1482636
+        ]
+      },
+      "heap": {
+        "usedSize": 1040932,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 2300936,
+        "backingStorageSize": 806636913
+      }
+    },
+    {
+      "now": 2863.5,
+      "phase": "play",
+      "wasm_bytes": 900333568,
+      "cursor": 0.2882,
+      "status": "Ready \u00b7 65 decoded \u00b7 0 errors \u00b7 35 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.12s",
+      "metrics": "Focus 1.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 78.75 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.38 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/84 reads \u00b7 730.6 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/730.6 MB RAM (1.03x) \u00b7 copied 0.0 MB \u00b7 ahead 1.88/2.00s actual/target \u00b7 0 evicted \u00b7 last 333.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 1.0 Hz",
+        "/camera/1 \u00b7 1.0 Hz",
+        "/camera/2 \u00b7 1.0 Hz",
+        "/camera/3 \u00b7 1.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1588552,
+        "summed_rss_kib": 2196908,
+        "cpu_seconds_live_processes": 13.32,
+        "rchar_live_processes": 870337382,
+        "storage_read_bytes_live_processes": 62533632,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482617,
+          1482619,
+          1482636
+        ]
+      },
+      "heap": {
+        "usedSize": 988184,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 1623648,
+        "backingStorageSize": 919390436
+      }
+    },
+    {
+      "now": 3100,
+      "phase": "play",
+      "wasm_bytes": 1003552768,
+      "cursor": 0.3492,
+      "status": "Ready \u00b7 83 decoded \u00b7 0 errors \u00b7 43 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.36s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 70.80 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.21 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/84 reads \u00b7 730.6 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/730.6 MB RAM (1.03x) \u00b7 copied 0.0 MB \u00b7 ahead 1.64/2.00s actual/target \u00b7 0 evicted \u00b7 last 333.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 4.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1745418,
+        "summed_rss_kib": 2526440,
+        "cpu_seconds_live_processes": 15.14,
+        "rchar_live_processes": 999881431,
+        "storage_read_bytes_live_processes": 182050816,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 987288,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 1617104,
+        "backingStorageSize": 1022603456
+      }
+    },
+    {
+      "now": 3336.4000000953674,
+      "phase": "play",
+      "wasm_bytes": 1050738688,
+      "cursor": 0.4103,
+      "status": "Ready \u00b7 95 decoded \u00b7 0 errors \u00b7 50 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.60s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 70.80 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.21 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 2.30/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 4.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1517969,
+        "summed_rss_kib": 2298128,
+        "cpu_seconds_live_processes": 16.63,
+        "rchar_live_processes": 1047811864,
+        "storage_read_bytes_live_processes": 229646336,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1033216,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 2036952,
+        "backingStorageSize": 1066297882
+      }
+    },
+    {
+      "now": 3564.7999997138977,
+      "phase": "play",
+      "wasm_bytes": 1050738688,
+      "cursor": 0.4718,
+      "status": "Ready \u00b7 106 decoded \u00b7 0 errors \u00b7 57 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 1.84s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 70.80 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.21 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 2.06/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 4.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1603867,
+        "summed_rss_kib": 2384028,
+        "cpu_seconds_live_processes": 17.81,
+        "rchar_live_processes": 1047813102,
+        "storage_read_bytes_live_processes": 229646336,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1102992,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 3020256,
+        "backingStorageSize": 1066308703
+      }
+    },
+    {
+      "now": 3786.2999997138977,
+      "phase": "play",
+      "wasm_bytes": 1050738688,
+      "cursor": 0.5251,
+      "status": "Ready \u00b7 117 decoded \u00b7 0 errors \u00b7 64 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.05s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 70.80 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.21 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 1.85/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 4.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1589705,
+        "summed_rss_kib": 2369848,
+        "cpu_seconds_live_processes": 18.86,
+        "rchar_live_processes": 1047814458,
+        "storage_read_bytes_live_processes": 229646336,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1170720,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 4048912,
+        "backingStorageSize": 1066319531
+      }
+    },
+    {
+      "now": 4013.5,
+      "phase": "play",
+      "wasm_bytes": 1050738688,
+      "cursor": 0.5867,
+      "status": "Ready \u00b7 128 decoded \u00b7 0 errors \u00b7 72 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.29s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 70.80 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.21 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 1.61/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 4.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1629335,
+        "summed_rss_kib": 2409488,
+        "cpu_seconds_live_processes": 20.06,
+        "rchar_live_processes": 1047817279,
+        "storage_read_bytes_live_processes": 229646336,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1241144,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 5254696,
+        "backingStorageSize": 1066330359
+      }
+    },
+    {
+      "now": 4241,
+      "phase": "play",
+      "wasm_bytes": 1050738688,
+      "cursor": 0.6441,
+      "status": "Ready \u00b7 140 decoded \u00b7 0 errors \u00b7 86 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.51s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.30 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.21 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 1.39/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 4.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 4.0 Hz",
+        "/camera/7 \u00b7 4.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1670039,
+        "summed_rss_kib": 2450192,
+        "cpu_seconds_live_processes": 21.21,
+        "rchar_live_processes": 1047818520,
+        "storage_read_bytes_live_processes": 229646336,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1314944,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 6310168,
+        "backingStorageSize": 1066342032
+      }
+    },
+    {
+      "now": 4470.799999713898,
+      "phase": "play",
+      "wasm_bytes": 1050738688,
+      "cursor": 0.7015,
+      "status": "Ready \u00b7 151 decoded \u00b7 0 errors \u00b7 93 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.74s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.30 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.21 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 1.16/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 4.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 4.0 Hz",
+        "/camera/7 \u00b7 4.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1735395,
+        "summed_rss_kib": 2515552,
+        "cpu_seconds_live_processes": 22.39,
+        "rchar_live_processes": 1047819760,
+        "storage_read_bytes_live_processes": 229646336,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1383852,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 7384600,
+        "backingStorageSize": 1066352860
+      }
+    },
+    {
+      "now": 4702.400000095367,
+      "phase": "play",
+      "wasm_bytes": 1050738688,
+      "cursor": 0.7631,
+      "status": "Ready \u00b7 162 decoded \u00b7 0 errors \u00b7 100 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 2.98s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.30 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.21 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.92/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 4.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 4.0 Hz",
+        "/camera/7 \u00b7 4.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1810022,
+        "summed_rss_kib": 2590688,
+        "cpu_seconds_live_processes": 23.53,
+        "rchar_live_processes": 1047821042,
+        "storage_read_bytes_live_processes": 229646336,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 995692,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 1523520,
+        "backingStorageSize": 1050815591
+      }
+    },
+    {
+      "now": 4939.5,
+      "phase": "play",
+      "wasm_bytes": 1050738688,
+      "cursor": 0.8205,
+      "status": "Ready \u00b7 174 decoded \u00b7 0 errors \u00b7 115 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.20s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.30 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.21 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.70/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 4.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 4.0 Hz",
+        "/camera/7 \u00b7 4.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1559774,
+        "summed_rss_kib": 2340384,
+        "cpu_seconds_live_processes": 24.69,
+        "rchar_live_processes": 1047825461,
+        "storage_read_bytes_live_processes": 229732352,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1060000,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 2381648,
+        "backingStorageSize": 1050826433
+      }
+    },
+    {
+      "now": 5170.900000095367,
+      "phase": "play",
+      "wasm_bytes": 1050738688,
+      "cursor": 0.8821,
+      "status": "Ready \u00b7 193 decoded \u00b7 0 errors \u00b7 122 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.44s",
+      "metrics": "Focus 4.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.08 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.41 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.46/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 4.0 Hz",
+        "/camera/1 \u00b7 4.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1578686,
+        "summed_rss_kib": 2359300,
+        "cpu_seconds_live_processes": 25.88,
+        "rchar_live_processes": 1047828234,
+        "storage_read_bytes_live_processes": 229732352,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1131160,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 3471888,
+        "backingStorageSize": 1050838139
+      }
+    },
+    {
+      "now": 5400.900000095367,
+      "phase": "play",
+      "wasm_bytes": 1050738688,
+      "cursor": 0.9395,
+      "status": "Ready \u00b7 204 decoded \u00b7 0 errors \u00b7 129 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.66s",
+      "metrics": "Focus 4.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.08 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.41 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.24/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 4.0 Hz",
+        "/camera/1 \u00b7 4.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1618290,
+        "summed_rss_kib": 2398908,
+        "cpu_seconds_live_processes": 27.04,
+        "rchar_live_processes": 1047829444,
+        "storage_read_bytes_live_processes": 229732352,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1199612,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 4457232,
+        "backingStorageSize": 1050848981
+      }
+    },
+    {
+      "now": 5629,
+      "phase": "play",
+      "wasm_bytes": 1050738688,
+      "cursor": 1,
+      "status": "Ready \u00b7 216 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 4.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.08 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.41 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 4.0 Hz",
+        "/camera/1 \u00b7 4.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1648742,
+        "summed_rss_kib": 2429360,
+        "cpu_seconds_live_processes": 28.12,
+        "rchar_live_processes": 1047830618,
+        "storage_read_bytes_live_processes": 229732352,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1268112,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 5606608,
+        "backingStorageSize": 1050859044
+      }
+    },
+    {
+      "now": 5857.900000095367,
+      "phase": "drain",
+      "wasm_bytes": 1050738688,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 4.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.08 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.41 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 4.0 Hz",
+        "/camera/1 \u00b7 4.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1671586,
+        "summed_rss_kib": 2453232,
+        "cpu_seconds_live_processes": 29.22,
+        "rchar_live_processes": 1047832102,
+        "storage_read_bytes_live_processes": 229732352,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1339672,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 6706144,
+        "backingStorageSize": 1050859204
+      }
+    },
+    {
+      "now": 6087.5,
+      "phase": "drain",
+      "wasm_bytes": 1050738688,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 4.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 67.08 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.41 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 4.0 Hz",
+        "/camera/1 \u00b7 4.0 Hz",
+        "/camera/2 \u00b7 3.0 Hz",
+        "/camera/3 \u00b7 3.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1644238,
+        "summed_rss_kib": 2424864,
+        "cpu_seconds_live_processes": 30.35,
+        "rchar_live_processes": 1047865994,
+        "storage_read_bytes_live_processes": 229744640,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1405808,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 7853024,
+        "backingStorageSize": 1050859934
+      }
+    },
+    {
+      "now": 6314.400000095367,
+      "phase": "drain",
+      "wasm_bytes": 1050738688,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.16 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 4.0 Hz",
+        "/camera/3 \u00b7 4.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1644898,
+        "summed_rss_kib": 2425524,
+        "cpu_seconds_live_processes": 31.0,
+        "rchar_live_processes": 1047867110,
+        "storage_read_bytes_live_processes": 229744640,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1458924,
+        "totalSize": 2621440,
+        "embedderHeapUsedSize": 8863704,
+        "backingStorageSize": 1050859934
+      }
+    },
+    {
+      "now": 6540.900000095367,
+      "phase": "drain",
+      "wasm_bytes": 1050738688,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.16 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 4.0 Hz",
+        "/camera/3 \u00b7 4.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1641934,
+        "summed_rss_kib": 2422560,
+        "cpu_seconds_live_processes": 31.62,
+        "rchar_live_processes": 1047868201,
+        "storage_read_bytes_live_processes": 229744640,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1004620,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 1720128,
+        "backingStorageSize": 1050814036
+      }
+    },
+    {
+      "now": 6768.199999809265,
+      "phase": "drain",
+      "wasm_bytes": 1050738688,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.16 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 4.0 Hz",
+        "/camera/3 \u00b7 4.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1642266,
+        "summed_rss_kib": 2422892,
+        "cpu_seconds_live_processes": 32.29,
+        "rchar_live_processes": 1047869340,
+        "storage_read_bytes_live_processes": 229744640,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1057700,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 2605776,
+        "backingStorageSize": 1050814036
+      }
+    },
+    {
+      "now": 6794.799999713898,
+      "phase": "drain",
+      "wasm_bytes": 1050738688,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.16 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 3.0 Hz",
+        "/camera/1 \u00b7 3.0 Hz",
+        "/camera/2 \u00b7 4.0 Hz",
+        "/camera/3 \u00b7 4.0 Hz",
+        "/camera/4 \u00b7 3.0 Hz",
+        "/camera/5 \u00b7 3.0 Hz",
+        "/camera/6 \u00b7 3.0 Hz",
+        "/camera/7 \u00b7 3.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1642358,
+        "summed_rss_kib": 2422984,
+        "cpu_seconds_live_processes": 32.35,
+        "rchar_live_processes": 1047869668,
+        "storage_read_bytes_live_processes": 229744640,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1065996,
+        "totalSize": 2359296,
+        "embedderHeapUsedSize": 2739016,
+        "backingStorageSize": 1050814036
+      }
+    },
+    {
+      "now": 7223.099999904633,
+      "phase": "drain",
+      "wasm_bytes": 1050738688,
+      "cursor": 1,
+      "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+      "metrics": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.05 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+      "labels": [
+        "/camera/0 \u00b7 0.0 Hz",
+        "/camera/1 \u00b7 0.0 Hz",
+        "/camera/2 \u00b7 0.0 Hz",
+        "/camera/3 \u00b7 0.0 Hz",
+        "/camera/4 \u00b7 0.0 Hz",
+        "/camera/5 \u00b7 0.0 Hz",
+        "/camera/6 \u00b7 0.0 Hz",
+        "/camera/7 \u00b7 0.0 Hz"
+      ],
+      "jobs": 0,
+      "paints": 0,
+      "errors": [],
+      "process": {
+        "pss_kib": 1634139,
+        "summed_rss_kib": 2414824,
+        "cpu_seconds_live_processes": 33.58,
+        "rchar_live_processes": 1047874863,
+        "storage_read_bytes_live_processes": 229744640,
+        "pids": [
+          1482528,
+          1482532,
+          1482533,
+          1482542,
+          1482543,
+          1482564,
+          1482568,
+          1482600,
+          1482619,
+          1482636,
+          1482771,
+          1482773,
+          1482789
+        ]
+      },
+      "heap": {
+        "usedSize": 1083792,
+        "totalSize": 2097152,
+        "embedderHeapUsedSize": 3067680,
+        "backingStorageSize": 1050814872
+      }
+    }
+  ],
+  "status": "ok",
+  "dataset_sha256": "5470da0becf885eab696369ae16bf9e539a8c7a13cc5b902e1804277016abf22",
+  "sources_sha256": {
+    "diagnose_web_camera.py": "11d27852a8ed0965f8c486aeb53f3c87df6a41391f51240be9fdac9522779f99",
+    "web_camera_pipeline.js": "ceb1b368a1d387009f6781f4b34bdc84ad6fad672ae4ba58f4db9deb25991f89"
+  },
+  "environment": {
+    "version": {
+      "Browser": "Chrome/143.0.7499.192",
+      "Protocol-Version": "1.3",
+      "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.0.0 Safari/537.36",
+      "V8-Version": "14.3.127.17",
+      "WebKit-Version": "537.36 (@be2c1f4fd451578a9ada68a0ac12d659362b44bf)",
+      "webSocketDebuggerUrl": "ws://127.0.0.1:9241/devtools/browser/349c4794-4a11-4b63-ada6-781487f4acb1"
+    },
+    "gpu": {
+      "gpu": {
+        "devices": [
+          {
+            "vendorId": 65535,
+            "deviceId": 65535,
+            "vendorString": "Google Inc. (Google)",
+            "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+            "driverVendor": "SwANGLE",
+            "driverVersion": "5.0.0"
+          }
+        ],
+        "auxAttributes": {
+          "amdSwitchable": false,
+          "canSupportThreadedTextureMailbox": false,
+          "directRenderingVersion": "",
+          "displayType": "ANGLE_SWIFTSHADER",
+          "glExtensions": "GL_AMD_performance_monitor GL_ANGLE_base_vertex_base_instance_shader_builtin GL_ANGLE_blob_cache GL_ANGLE_client_arrays GL_ANGLE_clip_cull_distance GL_ANGLE_compressed_texture_etc GL_ANGLE_copy_texture_3d GL_ANGLE_depth_texture GL_ANGLE_framebuffer_blit GL_ANGLE_framebuffer_multisample GL_ANGLE_get_image GL_ANGLE_get_serialized_context_string GL_ANGLE_get_tex_level_parameter GL_ANGLE_instanced_arrays GL_ANGLE_memory_object_flags GL_ANGLE_memory_size GL_ANGLE_multi_draw GL_ANGLE_pack_reverse_row_order GL_ANGLE_polygon_mode GL_ANGLE_program_binary_readiness_query GL_ANGLE_program_cache_control GL_ANGLE_read_only_depth_stencil_feedback_loops GL_ANGLE_relaxed_vertex_attribute_type GL_ANGLE_renderability_validation GL_ANGLE_request_extension GL_ANGLE_rgbx_internal_format GL_ANGLE_robust_client_memory GL_ANGLE_robust_fragment_shader_output GL_ANGLE_robust_resource_initialization GL_ANGLE_shader_pixel_local_storage GL_ANGLE_shader_pixel_local_storage_coherent GL_ANGLE_stencil_texturing GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ANGLE_texture_multisample GL_ANGLE_texture_usage GL_ANGLE_translated_shader_source GL_ANGLE_vulkan_image GL_ANGLE_yuv_internal_format GL_APPLE_clip_distance GL_ARM_rgba8 GL_ARM_shader_framebuffer_fetch GL_ARM_shader_framebuffer_fetch_depth_stencil GL_CHROMIUM_bind_generates_resource GL_CHROMIUM_bind_uniform_location GL_CHROMIUM_copy_compressed_texture GL_CHROMIUM_copy_texture GL_CHROMIUM_lose_context GL_EXT_EGL_image_array GL_EXT_EGL_image_external_wrap_modes GL_EXT_EGL_image_storage GL_EXT_base_instance GL_EXT_blend_minmax GL_EXT_buffer_storage GL_EXT_clear_texture GL_EXT_clip_control GL_EXT_clip_cull_distance GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_compressed_ETC1_RGB8_sub_texture GL_EXT_conservative_depth GL_EXT_copy_image GL_EXT_debug_label GL_EXT_debug_marker GL_EXT_depth_clamp GL_EXT_discard_framebuffer GL_EXT_disjoint_timer_query GL_EXT_draw_buffers GL_EXT_draw_buffers_indexed GL_EXT_draw_elements_base_vertex GL_EXT_float_blend GL_EXT_frag_depth GL_EXT_instanced_arrays GL_EXT_map_buffer_range GL_EXT_memory_object GL_EXT_memory_object_fd GL_EXT_occlusion_query_boolean GL_EXT_polygon_offset_clamp GL_EXT_read_format_bgra GL_EXT_robustness GL_EXT_sRGB GL_EXT_sRGB_write_control GL_EXT_semaphore GL_EXT_semaphore_fd GL_EXT_separate_shader_objects GL_EXT_shader_framebuffer_fetch GL_EXT_shader_framebuffer_fetch_non_coherent GL_EXT_shader_non_constant_global_initializers GL_EXT_shader_texture_lod GL_EXT_shadow_samplers GL_EXT_texture_border_clamp GL_EXT_texture_compression_bptc GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc_srgb GL_EXT_texture_cube_map_array GL_EXT_texture_filter_anisotropic GL_EXT_texture_format_BGRA8888 GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_rg GL_EXT_texture_sRGB_R8 GL_EXT_texture_sRGB_RG8 GL_EXT_texture_sRGB_decode GL_EXT_texture_shadow_lod GL_EXT_texture_storage GL_EXT_texture_type_2_10_10_10_REV GL_EXT_unpack_subimage GL_KHR_blend_equation_advanced GL_KHR_debug GL_KHR_robust_buffer_access_behavior GL_KHR_robustness GL_KHR_texture_compression_astc_ldr GL_NV_depth_buffer_float2 GL_NV_fence GL_NV_framebuffer_blit GL_NV_pack_subimage GL_NV_pixel_buffer_object GL_NV_polygon_mode GL_NV_read_depth GL_NV_read_depth_stencil GL_NV_read_stencil GL_NV_shader_noperspective_interpolation GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_EGL_image_external_essl3 GL_OES_EGL_sync GL_OES_compressed_EAC_R11_signed_texture GL_OES_compressed_EAC_R11_unsigned_texture GL_OES_compressed_EAC_RG11_signed_texture GL_OES_compressed_EAC_RG11_unsigned_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_compressed_ETC2_RGB8_texture GL_OES_compressed_ETC2_RGBA8_texture GL_OES_compressed_ETC2_punchthroughA_RGBA8_texture GL_OES_compressed_ETC2_punchthroughA_sRGB8_alpha_texture GL_OES_compressed_ETC2_sRGB8_alpha8_texture GL_OES_compressed_ETC2_sRGB8_texture GL_OES_copy_image GL_OES_depth24 GL_OES_depth32 GL_OES_depth_texture GL_OES_depth_texture_cube_map GL_OES_draw_buffers_indexed GL_OES_draw_elements_base_vertex GL_OES_element_index_uint GL_OES_fbo_render_mipmap GL_OES_get_program_binary GL_OES_mapbuffer GL_OES_packed_depth_stencil GL_OES_required_internalformat GL_OES_rgb8_rgba8 GL_OES_sample_shading GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_standard_derivatives GL_OES_surfaceless_context GL_OES_texture_3D GL_OES_texture_border_clamp GL_OES_texture_cube_map_array GL_OES_texture_float GL_OES_texture_float_linear GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_texture_npot GL_OES_texture_stencil8 GL_OES_texture_storage_multisample_2d_array GL_OES_vertex_array_object GL_OES_vertex_half_float GL_OES_vertex_type_10_10_10_2 GL_OVR_multiview GL_OVR_multiview2 ",
+          "glImplementationParts": "(gl=egl-angle,angle=swiftshader)",
+          "glRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "glResetNotificationStrategy": 33362,
+          "glVendor": "Google Inc. (Google)",
+          "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.26423 git hash: 2dfb5b7603d0)",
+          "glWsExtensions": "EGL_EXT_create_context_robustness EGL_ANGLE_surface_orientation EGL_KHR_create_context EGL_KHR_image EGL_KHR_image_base EGL_EXT_image_gl_colorspace EGL_KHR_gl_colorspace EGL_KHR_gl_texture_2D_image EGL_KHR_gl_texture_cubemap_image EGL_KHR_gl_renderbuffer_image EGL_KHR_get_all_proc_addresses EGL_KHR_fence_sync EGL_KHR_wait_sync EGL_ANGLE_create_context_webgl_compatibility EGL_CHROMIUM_create_context_bind_generates_resource EGL_KHR_swap_buffers_with_damage EGL_EXT_pixel_format_float EGL_KHR_surfaceless_context EGL_ANGLE_display_texture_share_group EGL_ANGLE_display_semaphore_share_group EGL_ANGLE_create_context_client_arrays EGL_ANGLE_program_cache_control EGL_ANGLE_robust_resource_initialization EGL_ANGLE_create_context_extensions_enabled EGL_ANDROID_blob_cache EGL_ANDROID_recordable EGL_ANGLE_create_context_backwards_compatible EGL_KHR_no_config_context EGL_IMG_context_priority EGL_KHR_create_context_no_error EGL_KHR_reusable_sync EGL_EXT_buffer_age EGL_ANGLE_create_surface_swap_interval EGL_ANGLE_vulkan_image EGL_KHR_partial_update EGL_ANGLE_global_fence_sync EGL_ANGLE_memory_usage_report ",
+          "glWsVendor": "Google Inc. (Google)",
+          "glWsVersion": "1.5 (ANGLE 2.1.26423 git hash: 2dfb5b7603d0)",
+          "hardwareSupportsVulkan": false,
+          "inProcessGpu": false,
+          "initializationTime": 0.142145,
+          "isAsan": false,
+          "isClangCoverage": false,
+          "jpegDecodeAcceleratorSupported": false,
+          "maxMsaaSamples": "4",
+          "optimus": false,
+          "passthroughCmdDecoder": true,
+          "pixelShaderVersion": "3.00",
+          "processCrashCount": 0,
+          "sandboxed": false,
+          "skiaBackendType": "GaneshGL",
+          "subpixelFontRendering": true,
+          "targetCpuBits": 64,
+          "vertexShaderVersion": "3.00",
+          "visibilityCallbackCallCount": 0
+        },
+        "featureStatus": {
+          "2d_canvas": "enabled",
+          "direct_rendering_display_compositor": "disabled_off_ok",
+          "gpu_compositing": "enabled",
+          "multiple_raster_threads": "enabled_on",
+          "opengl": "enabled_on",
+          "rasterization": "enabled",
+          "raw_draw": "disabled_off_ok",
+          "skia_graphite": "disabled_off",
+          "trees_in_viz": "disabled_off",
+          "video_decode": "enabled",
+          "video_encode": "disabled_software",
+          "vulkan": "disabled_off",
+          "webgl": "enabled",
+          "webgpu": "unavailable_software",
+          "webnn": "disabled_off"
+        },
+        "driverBugWorkarounds": [
+          "enable_webgl_timer_query_extensions",
+          "exit_on_context_lost",
+          "disabled_extension_GL_KHR_blend_equation_advanced",
+          "disabled_extension_GL_KHR_blend_equation_advanced_coherent"
+        ],
+        "videoDecoding": [],
+        "videoEncoding": [],
+        "imageDecoding": []
+      },
+      "modelName": "",
+      "modelVersion": "",
+      "commandLine": "/usr/bin/google-chrome --headless --no-sandbox --enable-unsafe-webgpu --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader --remote-debugging-port=9241 --user-data-dir=/tmp/mcap-camera-stress-vww259ij --noerrdialogs --no-first-run --ozone-platform=headless --ozone-override-screen-size=800,600 --flag-switches-begin --flag-switches-end --enable-unsafe-swiftshader about:blank"
+    },
+    "command": [
+      "google-chrome",
+      "--headless",
+      "--no-sandbox",
+      "--enable-unsafe-webgpu",
+      "--enable-unsafe-swiftshader",
+      "--use-gl=angle",
+      "--use-angle=swiftshader",
+      "--remote-debugging-port=9241",
+      "--user-data-dir=/tmp/mcap-camera-stress-vww259ij",
+      "about:blank"
+    ]
+  },
+  "play_ms": 3892.800000190735,
+  "pre_gc": {
+    "now": 6794.799999713898,
+    "phase": "drain",
+    "wasm_bytes": 1050738688,
+    "cursor": 1,
+    "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+    "metrics": "Focus 3.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 66.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.16 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+    "labels": [
+      "/camera/0 \u00b7 3.0 Hz",
+      "/camera/1 \u00b7 3.0 Hz",
+      "/camera/2 \u00b7 4.0 Hz",
+      "/camera/3 \u00b7 4.0 Hz",
+      "/camera/4 \u00b7 3.0 Hz",
+      "/camera/5 \u00b7 3.0 Hz",
+      "/camera/6 \u00b7 3.0 Hz",
+      "/camera/7 \u00b7 3.0 Hz"
+    ],
+    "jobs": 0,
+    "paints": 0,
+    "errors": [],
+    "process": {
+      "pss_kib": 1642358,
+      "summed_rss_kib": 2422984,
+      "cpu_seconds_live_processes": 32.35,
+      "rchar_live_processes": 1047869668,
+      "storage_read_bytes_live_processes": 229744640,
+      "pids": [
+        1482528,
+        1482532,
+        1482533,
+        1482542,
+        1482543,
+        1482564,
+        1482568,
+        1482600,
+        1482619,
+        1482636,
+        1482771,
+        1482773,
+        1482789
+      ]
+    },
+    "heap": {
+      "usedSize": 1065996,
+      "totalSize": 2359296,
+      "embedderHeapUsedSize": 2739016,
+      "backingStorageSize": 1050814036
+    }
+  },
+  "post_gc": {
+    "now": 7223.099999904633,
+    "phase": "drain",
+    "wasm_bytes": 1050738688,
+    "cursor": 1,
+    "status": "Ready \u00b7 224 decoded \u00b7 0 errors \u00b7 136 dropped \u00b7 path 0 pts \u00b7 scan 360 pts \u00b7 3.90s",
+    "metrics": "Focus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.05 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/111 reads \u00b7 968.2 MB loaded/0.0 MB decompressed \u00b7 3 windows/712.6 MB logical/727.6 MB RAM (1.02x) \u00b7 copied 0.0 MB \u00b7 ahead 0.00/2.00s actual/target \u00b7 1 evicted \u00b7 last 470.0 ms (MCAP 0.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+    "labels": [
+      "/camera/0 \u00b7 0.0 Hz",
+      "/camera/1 \u00b7 0.0 Hz",
+      "/camera/2 \u00b7 0.0 Hz",
+      "/camera/3 \u00b7 0.0 Hz",
+      "/camera/4 \u00b7 0.0 Hz",
+      "/camera/5 \u00b7 0.0 Hz",
+      "/camera/6 \u00b7 0.0 Hz",
+      "/camera/7 \u00b7 0.0 Hz"
+    ],
+    "jobs": 0,
+    "paints": 0,
+    "errors": [],
+    "process": {
+      "pss_kib": 1634139,
+      "summed_rss_kib": 2414824,
+      "cpu_seconds_live_processes": 33.58,
+      "rchar_live_processes": 1047874863,
+      "storage_read_bytes_live_processes": 229744640,
+      "pids": [
+        1482528,
+        1482532,
+        1482533,
+        1482542,
+        1482543,
+        1482564,
+        1482568,
+        1482600,
+        1482619,
+        1482636,
+        1482771,
+        1482773,
+        1482789
+      ]
+    },
+    "heap": {
+      "usedSize": 1083792,
+      "totalSize": 2097152,
+      "embedderHeapUsedSize": 3067680,
+      "backingStorageSize": 1050814872
+    }
+  },
+  "jobs": [],
+  "paints": []
+}

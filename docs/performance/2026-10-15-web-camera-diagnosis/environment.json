@@ -1,0 +1,15 @@
+{
+  "git_commit": "6429ece0fa67dc9e14e78a7e714503315c31ccb5",
+  "product_changes": false,
+  "assets_sha256": {
+    "apps/viewer-web/dist/index.html": "9d984cb7fd3376179fda543745ba503c42daace432435fc7c0c070de78f25d17",
+    "apps/viewer-web/dist/viewer-web-df931473077f4a17_bg.wasm": "d32cc70b199c25494cd90c2689e9f0ac641b7743d1dc61b034dd42b632628676"
+  },
+  "input_manifest": "../2026-10-14-4k-large-chunks/datasets.json",
+  "pss_guard_kib": 2097152,
+  "notes": [
+    "Sequential fresh Chrome profiles; cache allowed, SHA256 read before launch",
+    "12 repeated trials plus one preflight and one startup failure; failed startup retried after waiting for WASM startup",
+    "Baseline 6429ece; production product code unchanged; full browser version, command, GPU in each raw run"
+  ]
+}
