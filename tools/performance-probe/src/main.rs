@@ -124,8 +124,8 @@ fn extract_jpeg(input: &str, output: &str, topic: &str, count: usize) -> Result<
 
 fn rechunk(input: &str, output: &str, compression: &str, chunk_bytes: u64) -> Result<()> {
     ensure!(
-        (4096..=512 * 1024 * 1024).contains(&chunk_bytes),
-        "invalid chunk size"
+        (4096..=1024 * 1024 * 1024).contains(&chunk_bytes),
+        "rechunk size must be between 4 KiB and 1 GiB"
     );
     let compression = match compression {
         "none" => None,
