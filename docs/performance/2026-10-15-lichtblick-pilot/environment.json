@@ -1,0 +1,39 @@
+{
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "cpuinfo": "processor\t: 0\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 198\nmodel name\t: Intel(R) Core(TM) Ultra 7 265KF\nstepping\t: 2\nmicrocode\t: 0x11b\ncpu MHz\t\t: 1100.000\ncache size\t: 30720 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 0\ncpu cores\t: 20\napicid\t\t: 0\ninitial apicid\t: 0\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 35\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdt_a rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni lam wbnoinvd dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid bus_lock_detect movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs pml ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause notify_vm_exiting ipi_virt\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs bhi spectre_v2_user vmscape\nbogomips\t: 7756.80\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 42 bits physical, 48 bits virtual\npower management:",
+  "meminfo": "MemTotal:       32470796 kB\nMemFree:         2026360 kB\nMemAvailable:    4102804 kB\nBuffers:           28504 kB\nCached:          2036620 kB\nSwapCached:        44340 kB\nActive:         14087712 kB\nInactive:       13281212 kB\nActive(anon):   13764636 kB\nInactive(anon): 11846384 kB\nActive(file):     323076 kB\nInactive(file):  1434828 kB\nUnevictable:       79644 kB\nMlocked:           12532 kB\nSwapTotal:       8388604 kB\nSwapFree:              8 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:               908 kB\nWriteback:             0 kB\nAnonPages:      25343268 kB\nMapped:           898352 kB\nShmem:            349840 kB\nKReclaimable:     774164 kB\nSlab:            1424136 kB\nSReclaimable:     774164 kB\nSUnreclaim:       649972 kB\nKernelStack:      106672 kB\nPageTables:       309760 kB\nSecPageTables:      5720 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    24624000 kB\nCommitted_AS:   208731680 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:      250412 kB\nVmallocChunk:          0 kB\nPercpu:            48320 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:   1718272 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:     10240 kB\nFilePmdMapped:      2048 kB\nCmaTotal:              0 kB\nCmaFree:           37368 kB\nUnaccepted:            0 kB\nBalloon:               0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:    21943564 kB\nDirectMap2M:     9125888 kB\nDirectMap1G:     2097152 kB\n",
+  "git_commit": "e67827efc80c60804031b543480b47cff8c539ba",
+  "sources_sha256": {
+    "run_viewer_pilot.py": "010df7ec33b850179edf41e4bd4fdf89c10be7732a8083e869e29f57497d22a6",
+    "measure_viewer_pilot.py": "9e8a93e673b54a573ca3402061f3602fae349fb230fe3930c5c74b11e2e1eda2",
+    "browser_cdp.py": "8b7e986d3a28f616b5df7ce8aadf486a4c9e19ea9d527339c9d144b813435625"
+  },
+  "lichtblick_source_commit": "95713edb309d77589b130286642ab149995a5f7b",
+  "lichtblick_image": "ghcr.io/lichtblick-suite/lichtblick@sha256:230ed53813f11ab5d23c47380f94c6d358438ecf15c3a7e7de9625b07c437611",
+  "notes": [
+    "client-only process-tree PSS; servers excluded",
+    "forced SwiftShader; not hardware GPU throughput",
+    "960x540 focus + 112x63 thumbnail; viewport 1920x1080 DPR 1",
+    "cache-allowed; dataset hashed immediately before every run",
+    "CPU/I/O raw counters include live processes only; omit aggregate comparisons when processes exit"
+  ],
+  "web_assets_sha256": {
+    "camera_decode_worker.js": "304342357438246b75ee25bb6b5cc07deb314a65e294b7066ca7e7f03e54a0d3",
+    "index.html": "9d984cb7fd3376179fda543745ba503c42daace432435fc7c0c070de78f25d17",
+    "style-6cd5e38bdf76fa75.css": "fb647b04687892665801ecc91d29a78d98cd131b573edd545944edda31568f0e",
+    "viewer-web-df931473077f4a17.js": "f5b6c640fb4f283a5bd5b5ab1ac92958a36d57043c05b331a63e87f61b2dfc1b",
+    "viewer-web-df931473077f4a17_bg.wasm": "d32cc70b199c25494cd90c2689e9f0ac641b7743d1dc61b034dd42b632628676"
+  },
+  "post_measurement_note": "After measurement, corrected only summary wording about the hidden Scene (zero CSS size skips rendering; initial canvas remains 512x512), added a fail-fast CDP port collision check before browser launch, and cleaned up file hashing/imports. Numeric data and playback/sampling behavior are unchanged.",
+  "final_sources_sha256": {
+    "measure_viewer_pilot.py": "51670cce8bf1e33e869b3a830c2e8053e5fd8395564be17c05e1030d9a45ce80",
+    "run_viewer_pilot.py": "23a612face7e9b8ac325e7b492e259c75f076acb4579922242036f29e790bcc2",
+    "browser_cdp.py": "8b7e986d3a28f616b5df7ce8aadf486a4c9e19ea9d527339c9d144b813435625"
+  },
+  "dataset_generator": {
+    "source_sha256": "d12d0052107ddd76ccd51c46afb2c22fe003b8db188d78b15771945a504a34e0",
+    "binary_sha256_observed_after_run": "db5a0747d2b27e59de67ebecadb2f1252067ad0c19e96b6deb9546d0a83f3374",
+    "cargo_lock_sha256": "cd6da82ef06746329f9dd84c6fdbd5913659f67c76e8c784d6331ba08a2ce771"
+  }
+}

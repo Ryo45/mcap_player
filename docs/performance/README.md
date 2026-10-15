@@ -136,3 +136,7 @@ Chunk設定をstorage optionsで変更できる。結果の解釈は仕様と実
 [Native JPEG・FHD表示の改善](2026-10-14-native-jpeg/README.md)では、同じ4K入力をTurboJPEG、IDCT縮小、2 workersで比較し、速度・メモリ・実時間処理の限界を記録した。
 
 [Web JPEG / FHD表示の比較](2026-10-15-web-jpeg/README.md)では、旧WASM RGBAと2本のWeb Workerを同じ4K JPEGで比較し、Canvas保持量とmain-thread停止時間も確認した。
+
+[Lichtblickとの最初のGUI比較](2026-10-15-lichtblick-pilot/README.md)では、同じ4K・1camera・20秒のMCAPを
+Web Localで各3回再生し、Chrome process treeのPSSを比較した。再生後は両者ほぼ同じだった。
+表示FPS・画像の鮮度・random Seekはまだ比較していない。
