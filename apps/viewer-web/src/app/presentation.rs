@@ -100,7 +100,7 @@ pub(super) fn update_dom_diagnostics(presentation: &ViewerPresentation, session:
         .retention_ratio
         .map_or_else(|| "n/a".to_owned(), |ratio| format!("{ratio:.2}x"));
     let data_plane = format!(
-        " · {} {} loads/{} reads · {:.1} MB loaded/{:.1} MB decompressed · {} windows/{:.1} MB logical/{:.1} MB RAM ({retention}) · copied {:.1} MB · ahead {:.2}/{:.2}s actual/target · {} evicted · last {:.1} ms (MCAP {:.1} ms) · underruns {} · stale {}",
+        " · {} {} loads/{} reads · {:.1} MiB loaded/{:.1} MiB decompressed · {} windows/{:.1} MiB logical/{:.1} MiB RAM ({retention}) · copied {:.1} MiB · ahead {:.2}/{:.2}s actual/target · {} evicted · last {:.1} ms (MCAP {:.1} ms) · underruns {} · stale {}",
         session.source_label(),
         metrics.load_requests,
         metrics.source_reads,

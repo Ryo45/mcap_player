@@ -45,6 +45,9 @@ rawは[baseline/](baseline/)、[final/](final/)。各directoryのsummary.jsonは
 
 ## メモリは何に使われるか
 
+単位の訂正: 初版ではUIのMBラベルを十進MBと解釈して再換算したが、実装はMiBだった。
+logical/backingの値を訂正した。PSS・WASM容量の比較結果は変わらない。
+
 追加の1試行でChrome各processのPSSを収集した。[memory/zstd64.json](memory/zstd64.json)、
 [集計](memory/summary.json)に保存した。以下はそのpeakの**同じsampling cycle**の値。
 DOM、WASM、`/proc`、CDPの収集は順次行うためatomic snapshotではない。
@@ -65,18 +68,18 @@ DOM、WASM、`/proc`、CDPの収集は順次行うためatomic snapshotではな
 
 | アプリ内で観測できるもの | 量 | 解釈 |
 |---|---:|---|
-| DataPlane logical payload | 約679.6 MiB | 画面表示712.6 MB。3 windows内の選択streamのserialized message |
-| DataPlane retained backing | 約844.1 MiB | 画面表示885.1 MB。Chunk単位の余剰やwindow間の読み直しを含む |
+| DataPlane logical payload | 約712.6 MiB | 画面表示712.6 MB（ラベル誤り、値はMiB）。3 windows内の選択streamのserialized message |
+| DataPlane retained backing | 約885.1 MiB | 画面表示885.1 MB（ラベル誤り、値はMiB）。Chunk単位の余剰やwindow間の読み直しを含む |
 | WASM線形メモリ容量 | 1046.6 MiB | DataPlaneを含む。allocatorのlive/free領域は未分離 |
 | main JS used heap | 約1.1 MiB | ArrayBuffer等の外部領域は別 |
 | main JS backing − WASM容量 | 約100.2 MiB | 外部backingの差分。個々の用途への帰属は未確認 |
 
 大きい保持元は、decode済みの表示履歴ではなく、先読みwindowの**serialized JPEGを含むChunk backing**。
-3 windowsで約713 MBのmessageがあり、backing単位の保持でさらに約173 MB増えている。
+3 windowsで約713 MiBのmessageがあり、backing単位の保持でさらに約173 MiB増えている。
 表示対象が8カメラなら上流のtopic選択でも8台分を読む。focus/backgroundのpixel decode頻度制限は、
 このserialized windowの量を直接減らす仕組みではない。
 
-変更前後でpeak時のstore表示が同じ885 MBでも、古いwindowと次のloadの一時的な重なりは異なる。
+変更前後でpeak時のstore表示が同じ885 MiBでも、古いwindowと次のloadの一時的な重なりは異なる。
 早期退避でこの重なりを短くし、WASMの高水位を減らせたと解釈できる。
 ただしallocatorのallocation traceを取ったわけではなく、各byteの生存期間を完全に追跡してはいない。
 
