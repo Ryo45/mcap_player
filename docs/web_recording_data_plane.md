@@ -29,8 +29,8 @@ and in-memory retention. Local and Remote loaders use the same planner; loaders 
 source-specific prefetch policy.
 
 The default profile keeps one-second logical windows, two seconds of real-time reserve, and a
-256 MiB resident-memory limit. The planner converts the real-time reserve into log-time ahead from
-the selected playback speed:
+256 MiB serialized-backing eviction budget. The planner converts the real-time reserve into
+log-time ahead from the selected playback speed:
 
 | Playback speed | Target log-time ahead |
 | --- | ---: |
@@ -110,8 +110,17 @@ prefix scan. The committed presentation is invalidated only after all restore da
 
 ## Memory and copies
 
-The in-memory window budget is 256 MiB. Oldest windows are evicted after the cursor advances, while
-the current window and its immediate successor are protected. Diagnostics expose load/read counts,
+The in-memory window budget is 256 MiB. Budget enforcement on load completion evicts older
+windows without discarding current or future coverage. This is an eviction budget, not a strict
+allocation or process-memory limit: required windows, Chunk overlap, feature-owned `Bytes`,
+loader temporaries and the allocator can retain additional memory. Prefetch remains time-based.
+
+Fully consumed windows are also retired when their messages are delivered, even when no further
+load completes. Delivery of the final inclusive timestamp retires the final window. Returned
+messages retain their `Bytes`, and feature state may keep backing allocations alive; retirement
+does not guarantee an immediate RSS decrease or WASM linear-memory shrink. The exclusive
+completeness horizon remains monotonic, so subsequent windows remain adjacent and delivery does
+not repeat consumed messages. Diagnostics expose load/read counts,
 source and decompressed bytes, logical payload bytes, unique retained backing bytes, their
 retention ratio, per-message copied bytes, window count, target/actual buffer ahead, buffer
 underruns, evictions, stale results, load latency, and MCAP Chunk processing/decompression time.

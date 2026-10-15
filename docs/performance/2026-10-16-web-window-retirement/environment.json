@@ -1,0 +1,46 @@
+{
+  "git_parent": "63676f0595759c6cd93aa86a87d9160d0e4538a4",
+  "sources_sha256": {
+    "apps/viewer-web/src/data_plane.rs": "63fc3eda1651e461bdba7ee63a27781ace5c573b39d7dc81fa8cc7e8e3136d89",
+    "crates/viewer-core/src/playback/data_window.rs": "17a004bce4d31c6ac4bbd40108359ecc3c71871f556c32c253a2437758079e52"
+  },
+  "assets_sha256": {
+    "viewer-web-704695f4fc8f2ea2.js": "158d1d74c4de1e3087014e450210588e27163f663b8fcbf13e1d7152b1ee838d",
+    "index.html": "7e7dc1d2fec5dc9724f33cefd40bbc5a5a559436fde1b72fdc2bda3f52c9244f",
+    "style-6cd5e38bdf76fa75.css": "fb647b04687892665801ecc91d29a78d98cd131b573edd545944edda31568f0e",
+    "viewer-web-704695f4fc8f2ea2_bg.wasm": "ad4ff0f9fc7ad6214578ad9170e4ba51a6728238cc1ef32b1dedb3ebed72fda5",
+    "camera_decode_worker.js": "304342357438246b75ee25bb6b5cc07deb314a65e294b7066ca7e7f03e54a0d3"
+  },
+  "prefetch_changed": false,
+  "scope": "Web consumed serialized-window retirement; all production camera code unchanged",
+  "viewport": [
+    1920,
+    1080
+  ],
+  "focus": [
+    960,
+    540
+  ],
+  "thumbnails": [
+    112,
+    63
+  ],
+  "pss_guard_kib": 2097152,
+  "baseline_runs_per_case": 1,
+  "final_diagnosis_runs_per_case": 2,
+  "notes": [
+    "Fresh Chrome per run, sequential, cache allowed",
+    "final diagnosis and stress measured without concurrent builds/tests",
+    "preliminary diagnosis under /tmp excluded; tests briefly overlapped one preliminary run",
+    "product source only differs in apps/viewer-web/src/data_plane.rs; shared FetchPlanner unchanged"
+  ],
+  "probe_sources_sha256": {
+    "diagnose_web_camera.py": "d7e6d6a8e311a44bbf5af525a17e1d05442326f781a53cb13f72bbd987e7bb60",
+    "web_camera_pipeline.js": "ceb1b368a1d387009f6781f4b34bdc84ad6fad672ae4ba58f4db9deb25991f89",
+    "measure_web_camera_stress.py": "c6301496c2112a8473352d24b3741844115ac00c812b95f2b4ec8adf830290cf",
+    "web_camera_stress.js": "28bd9c41e49d79613764c35611d74e8c5e4b897b5033b713d2d37670aab96a44",
+    "measure_viewer_pilot.py": "8929733d8871c9c95942d0762d6648ec83ad5ecd0db19d9ebd1934a867e3c7bc",
+    "browser_cdp.py": "8b7e986d3a28f616b5df7ce8aadf486a4c9e19ea9d527339c9d144b813435625"
+  },
+  "memory_breakdown": "memory/zstd64.json; per-process PSS added after the final diagnosis/stress runs"
+}

@@ -406,6 +406,14 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
             .store
             .take_messages_through(after, through, !self.delivery_started);
         self.delivery_started = true;
+        // Returned messages own their Bytes; only fully delivered windows are retired.
+        // The final inclusive timestamp also consumes the final exclusive window.
+        let consumed_until = if through == ArrivalTime(self.end_exclusive.0 - 1) {
+            self.end_exclusive
+        } else {
+            through
+        };
+        self.store.evict_before(consumed_until);
         messages
     }
 
@@ -645,6 +653,81 @@ mod tests {
         assert_eq!(diagnostics.window_count, 2);
         assert_eq!(diagnostics.resident_bytes, 8);
         assert_eq!(diagnostics.eviction_count, 1);
+    }
+
+    #[test]
+    fn consumed_windows_retire_without_another_load_or_duplicate_delivery() {
+        let (mut data, shared) = data_plane(1024);
+        complete_request(
+            &mut data,
+            &shared,
+            loaded(0, SECOND, vec![message(0, Bytes::from_static(b"first"))], 5),
+            ArrivalTime(0),
+        );
+        complete_request(
+            &mut data,
+            &shared,
+            loaded(
+                SECOND,
+                2 * SECOND,
+                vec![message(SECOND, Bytes::from_static(b"next"))],
+                4,
+            ),
+            ArrivalTime(0),
+        );
+        let first = data.messages_through(ArrivalTime(0), ArrivalTime(0));
+        assert_eq!(first.len(), 1);
+        assert_eq!(data.resident_bytes(), 9);
+        let boundary = data.messages_through(ArrivalTime(0), ArrivalTime(SECOND));
+        assert_eq!(boundary.len(), 1);
+        assert_eq!(boundary[0].payload.as_ref(), b"next");
+        assert_eq!(data.resident_bytes(), 4);
+        assert_eq!(first[0].payload.as_ref(), b"first");
+        assert!(!data.poll(ArrivalTime(SECOND)).unwrap());
+        assert!(
+            data.messages_through(ArrivalTime(SECOND), ArrivalTime(2 * SECOND))
+                .is_empty()
+        );
+        assert_eq!(data.resident_bytes(), 0);
+        assert_eq!(
+            data.diagnostics(ArrivalTime(2 * SECOND), PlaybackSpeed::Normal)
+                .window_count,
+            0
+        );
+        assert!(data.is_complete_through(ArrivalTime(2 * SECOND - 1)));
+        data.ensure_available_through(
+            ArrivalTime(2 * SECOND),
+            ArrivalTime(2 * SECOND),
+            PlaybackSpeed::Normal,
+            FetchIntent::RequiredOnly,
+        )
+        .unwrap();
+        assert_eq!(
+            shared.borrow().requested.unwrap().start,
+            ArrivalTime(2 * SECOND)
+        );
+    }
+
+    #[test]
+    fn final_inclusive_timestamp_releases_the_last_window() {
+        let (mut data, shared) = data_plane(1024);
+        data.begin_seek(ArrivalTime(3 * SECOND)).unwrap();
+        complete_request(
+            &mut data,
+            &shared,
+            loaded(
+                3 * SECOND,
+                4 * SECOND,
+                vec![message(4 * SECOND - 1, Bytes::from_static(b"last"))],
+                4,
+            ),
+            ArrivalTime(3 * SECOND),
+        );
+        let messages = data.messages_through(ArrivalTime(3 * SECOND), ArrivalTime(4 * SECOND - 1));
+        assert_eq!(messages.len(), 1);
+        assert_eq!(messages[0].payload.as_ref(), b"last");
+        assert_eq!(data.resident_bytes(), 0);
+        assert!(data.is_complete_through(ArrivalTime(4 * SECOND - 1)));
     }
 
     #[test]

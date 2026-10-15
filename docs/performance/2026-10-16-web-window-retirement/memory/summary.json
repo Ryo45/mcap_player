@@ -1,0 +1,22 @@
+{
+  "sample_ms": 3364.300000190735,
+  "chrome_pss_mib": 1880.5419921875,
+  "process_roles_pss_mib": {
+    "browser": 205.744140625,
+    "zygote": 25.873046875,
+    "gpu-process": 178.2099609375,
+    "utility": 6.140625,
+    "renderer": 1464.57421875
+  },
+  "wasm_capacity_mib": 1046.5625,
+  "main_js_heap_used_mib": 1.1202430725097656,
+  "main_backing_excluding_wasm_mib": 100.22344779968262,
+  "data_plane_dom": "Focus 2.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 85.50 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.29 ms \u00b7 source/controller 0.00/0.01 ms \u00b7 Browser file 4 loads/20 reads \u00b7 1136.3 MB loaded/1146.4 MB decompressed \u00b7 3 windows/712.6 MB logical/885.1 MB RAM (1.24x) \u00b7 copied 0.0 MB \u00b7 ahead 2.09/2.00s actual/target \u00b7 1 evicted \u00b7 last 447.0 ms (MCAP 191.0 ms) \u00b7 underruns 0 \u00b7 stale 0",
+  "post_gc_pss_mib": 1579.4697265625,
+  "notes": [
+    "Same sampling cycle, not an atomic snapshot",
+    "WASM capacity and CDP backing are nested measures, not additive PSS components",
+    "Process roles follow Chrome --type; renderer sum includes spare renderers; no GPU VRAM measurement",
+    "WASM allocator live/free, JPEG internal buffers and canvas physical allocations are not individually measured"
+  ]
+}

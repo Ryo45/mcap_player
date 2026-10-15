@@ -8,6 +8,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import socket
 from pathlib import Path
 import subprocess
@@ -32,6 +33,7 @@ def process_sample(root):
         except (FileNotFoundError, ProcessLookupError):
             pass
     pss = rss = ticks = rchar = read_bytes = 0
+    processes = []
     for pid in pids:
         try:
             values = Path(f'/proc/{pid}/stat').read_text().rsplit(')', 1)[1].split()
@@ -40,13 +42,17 @@ def process_sample(root):
                       Path(f'/proc/{pid}/smaps_rollup').read_text().splitlines()[1:] if ':' in line}
             pss += memory['Pss']
             rss += memory['Rss']
+            command = Path(f'/proc/{pid}/cmdline').read_bytes().replace(b'\0', b' ')
+            process_type = re.search(rb'(?:^|\s)--type=([^\s]+)', command)
+            role = process_type[1].decode(errors='replace') if process_type else 'browser'
+            processes.append({'pid': pid, 'role': role, 'pss_kib': memory['Pss'], 'rss_kib': memory['Rss']})
             io = dict(line.split(': ') for line in Path(f'/proc/{pid}/io').read_text().splitlines())
             rchar += int(io['rchar'])
             read_bytes += int(io['read_bytes'])
         except (FileNotFoundError, ProcessLookupError):
             pass
     return {'pss_kib': pss, 'summed_rss_kib': rss, 'cpu_seconds_live_processes': ticks / os.sysconf('SC_CLK_TCK'),
-            'rchar_live_processes': rchar, 'storage_read_bytes_live_processes': read_bytes, 'pids': sorted(pids)}
+            'rchar_live_processes': rchar, 'storage_read_bytes_live_processes': read_bytes, 'pids': sorted(pids), 'processes': sorted(processes, key=lambda p: p['pid'])}
 
 
 STATE = {
