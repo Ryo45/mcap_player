@@ -1,0 +1,48 @@
+[
+  {
+    "run": 1,
+    "status": "external-pss-limit",
+    "peak_chrome_pss_mib": 2239.95703125,
+    "pss_by_process_role_at_peak_mib": {
+      "browser": 74.2578125,
+      "zygote": 26.59375,
+      "gpu-process": 150.0947265625,
+      "utility": 6.75,
+      "renderer": 1982.2607421875
+    },
+    "wall_since_first_observed_chrome_seconds": 1.8902268121019006,
+    "cgroup_events_at_peak": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0,
+      "sock_throttled": 0
+    },
+    "cgroup_current_at_peak_mib": 2257.796875
+  },
+  {
+    "run": 2,
+    "status": "external-pss-limit",
+    "peak_chrome_pss_mib": 2150.806640625,
+    "pss_by_process_role_at_peak_mib": {
+      "browser": 73.0634765625,
+      "zygote": 26.3193359375,
+      "gpu-process": 158.015625,
+      "utility": 6.5673828125,
+      "renderer": 1886.8408203125
+    },
+    "wall_since_first_observed_chrome_seconds": 1.8851208570413291,
+    "cgroup_events_at_peak": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0,
+      "sock_throttled": 0
+    },
+    "cgroup_current_at_peak_mib": 2118.91015625
+  }
+]

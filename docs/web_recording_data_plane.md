@@ -158,3 +158,18 @@ decompresses each selected compressed Chunk exactly once into its final shared b
 `zstd-sys` supports
 `wasm32-unknown-unknown` through its WASM shim but needs a WASM-capable C compiler (normally
 Clang) at build time. CI and release-builder images must provide it.
+
+## Chunk processing threads and large-Chunk limits
+
+Browser Local uses `spawn_local` for async File I/O, then synchronously decompresses and parses
+Chunks on the browser main thread. It does not use the JPEG Web Workers for MCAP processing.
+Remote MCAP processing runs in the Recording Server's bounded `spawn_blocking` jobs; the browser
+receives serialized messages rather than decompressing MCAP Chunks itself.
+
+The Local forward loader currently lacks an explicit per-Chunk compressed/uncompressed byte cap
+like Native's 256 MiB active-backing bound. Its window eviction budget does not prevent a large
+individual read or bulk decompression allocation. Seek/restore has separate work budgets.
+The [1 GiB Chunk experiment](performance/2026-10-16-web-gib-chunk/README.md) was stopped by an
+independent Chrome PSS guard before normal playback could be verified. Moving processing into
+a Worker addresses main-thread blocking, but does not by itself reduce retained decompressed
+backing or the input/output allocations. No such worker change has been made yet.

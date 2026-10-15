@@ -20,6 +20,8 @@ def run(args):
             'sources_sha256':{p:hashlib.sha256((here/p).read_bytes()).hexdigest() for p in
                               ['diagnose_web_camera.py','web_camera_pipeline.js','measure_viewer_pilot.py',
                                'measure_web_camera_stress.py','browser_cdp.py']}}
+    # Keep input identity even if an external guard terminates the process during open.
+    args.output.write_text(json.dumps(result | {'status':'starting-browser'},indent=2)+'\n')
     with browser(args.port) as (process,page,environment):
         result['environment']=environment
         script='window.probeMode='+json.dumps(args.mode)+';'+(here/'web_camera_pipeline.js').read_text()
@@ -75,9 +77,15 @@ def run(args):
             if result['status']=='running':result['status']='error'
             result['error']=str(error)
         finally:
-            result['jobs']=page.evaluate('pipelineProbe.jobs')
-            result['paints']=page.evaluate('pipelineProbe.paints')
-            if args.mode=='fingerprint':result['fingerprints']=page.evaluate('cameraStress.events')
+            try:
+                result['jobs']=page.evaluate('pipelineProbe.jobs')
+                result['paints']=page.evaluate('pipelineProbe.paints')
+                if args.mode=='fingerprint':result['fingerprints']=page.evaluate('cameraStress.events')
+            except (RuntimeError,OSError) as error:
+                # Preserve the measurements collected before a renderer crash or cgroup OOM.
+                result['capture_error']=str(error)
+                result['jobs']=[]
+                result['paints']=[]
             args.output.write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps({'output':str(args.output),'status':result['status'],'error':result.get('error'),
                       'jobs':len(result['jobs']),'paints':len(result['paints']),

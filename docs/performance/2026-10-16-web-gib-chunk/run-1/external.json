@@ -1,0 +1,3419 @@
+{
+  "command": [
+    "systemd-run",
+    "--user",
+    "--scope",
+    "--unit=mcap-web-large-chunk-1565784",
+    "-p",
+    "MemoryMax=3G",
+    "-p",
+    "MemorySwapMax=0",
+    "/usr/bin/python3",
+    "/home/ryo/development/mcap_player/tools/performance-probe/diagnose_web_camera.py",
+    "--data",
+    "/tmp/mcap-web-60s-data/3840x2160-8cam-10hz-zstd-1GiB-60s.mcap",
+    "--mode",
+    "light",
+    "--play-timeout",
+    "180",
+    "--output",
+    "/tmp/mcap-gib-web-run1/browser.json"
+  ],
+  "chrome_pss_limit_kib": 2097152,
+  "cgroup_memory_max_bytes": 3221225472,
+  "samples": [
+    {
+      "wall_seconds": 0.00441691605374217
+    },
+    {
+      "wall_seconds": 0.10863415710628033,
+      "cgroup_memory_current": 87261184,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 0.2091427710838616,
+      "cgroup_memory_current": 238256128,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 0.3095554900355637,
+      "cgroup_memory_current": 354648064,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 0.4098832360468805,
+      "cgroup_memory_current": 465534976,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 0.5101844551973045,
+      "cgroup_memory_current": 575373312,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 0.6104742367751896,
+      "cgroup_memory_current": 657125376,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 0.7108190441504121,
+      "cgroup_memory_current": 682815488,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 0.8111549192108214,
+      "cgroup_memory_current": 694611968,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 0.911443549208343,
+      "cgroup_memory_current": 748875776,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 1.0117193921469152,
+      "cgroup_memory_current": 795275264,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 1.1120020900852978,
+      "cgroup_memory_current": 840101888,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 1.2122322898358107,
+      "cgroup_memory_current": 866316288,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 1.3125330419279635,
+      "cgroup_memory_current": 909832192,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 1.4128820379264653,
+      "cgroup_memory_current": 1036709888,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 1.5132180098444223,
+      "cgroup_memory_current": 1185869824,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 1.6134702428244054,
+      "cgroup_memory_current": 1299902464,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 1.7136400449089706,
+      "cgroup_memory_current": 1406070784,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 1.8139678952284157,
+      "cgroup_memory_current": 1491529728,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 1.9141302569769323,
+      "cgroup_memory_current": 1601630208,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 2.0142639568075538,
+      "cgroup_memory_current": 1736896512,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 2.1145088151097298,
+      "cgroup_memory_current": 1890775040,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 2.2147608208470047,
+      "cgroup_memory_current": 2001661952,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 2.314999876078218,
+      "cgroup_memory_current": 2114383872,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 2.415244269184768,
+      "cgroup_memory_current": 2223435776,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 2.5153894210234284,
+      "cgroup_memory_current": 2356604928,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 2.615627315826714,
+      "cgroup_memory_current": 2390945792,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 2.7158716931007802,
+      "cgroup_memory_current": 2386747392,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 2.8161632288247347,
+      "cgroup_memory_current": 2312568832,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 2.916466066148132,
+      "cgroup_memory_current": 2312896512,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 3.016722363885492,
+      "cgroup_memory_current": 2173169664,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 3.116860011126846,
+      "cgroup_memory_current": 2283008000,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 3.216996577102691,
+      "cgroup_memory_current": 2390487040,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 3.317132556810975,
+      "cgroup_memory_current": 2500984832,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 3.417485653888434,
+      "cgroup_memory_current": 2326040576,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 3.51777784479782,
+      "cgroup_memory_current": 2160144384,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 3.6180505440570414,
+      "cgroup_memory_current": 2175348736,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 3.7183278780430555,
+      "cgroup_memory_current": 2186883072,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 3.8185946862213314,
+      "cgroup_memory_current": 2164862976,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 3.9188555921427906,
+      "cgroup_memory_current": 2194612224,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 4.018987953197211,
+      "cgroup_memory_current": 2127040512,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 4.119119210168719,
+      "cgroup_memory_current": 2237927424,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 4.219261848833412,
+      "cgroup_memory_current": 2346979328,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 4.319527298212051,
+      "cgroup_memory_current": 2351960064,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 4.419798546936363,
+      "cgroup_memory_current": 2317373440,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 4.520064921118319,
+      "cgroup_memory_current": 2302038016,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 4.620313316117972,
+      "cgroup_memory_current": 2375045120,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 4.720451274886727,
+      "cgroup_memory_current": 2500349952,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 4.820695966947824,
+      "cgroup_memory_current": 2234077184,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 4.920938371215016,
+      "cgroup_memory_current": 2216189952,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 5.021061417181045,
+      "cgroup_memory_current": 2290376704,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 5.121202282141894,
+      "cgroup_memory_current": 2294571008,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 5.221459929831326,
+      "cgroup_memory_current": 2160082944,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 5.321712045930326,
+      "cgroup_memory_current": 2166124544,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 5.421858249232173,
+      "cgroup_memory_current": 2276487168,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 5.522116309963167,
+      "cgroup_memory_current": 2052415488,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 5.62236907100305,
+      "cgroup_memory_current": 2035113984,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 5.72248617419973,
+      "cgroup_memory_current": 2089111552,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 5.822655079886317,
+      "cgroup_memory_current": 2176929792,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 5.922949953004718,
+      "cgroup_memory_current": 2170114048,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 6.023226294200867,
+      "cgroup_memory_current": 2178240512,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 6.123485947959125,
+      "cgroup_memory_current": 1983483904,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 6.223724316805601,
+      "cgroup_memory_current": 1979031552,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 6.323994508944452,
+      "cgroup_memory_current": 1996472320,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 6.424255989026278,
+      "cgroup_memory_current": 1953107968,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 6.52456097304821,
+      "cgroup_memory_current": 1937821696,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 6.624806751031429,
+      "cgroup_memory_current": 1934340096,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 6.72505016811192,
+      "cgroup_memory_current": 1828298752,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 6.825350818224251,
+      "cgroup_memory_current": 1834065920,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 6.925616012886167,
+      "cgroup_memory_current": 1838469120,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 7.025852569844574,
+      "cgroup_memory_current": 1731170304,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 7.126086332835257,
+      "cgroup_memory_current": 1712254976,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 7.226355628110468,
+      "cgroup_memory_current": 1718022144,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 7.326596419792622,
+      "cgroup_memory_current": 1697050624,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 7.426857226993889,
+      "cgroup_memory_current": 1700196352,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 7.527139115147293,
+      "cgroup_memory_current": 1705963520,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 7.627403821796179,
+      "cgroup_memory_current": 1711206400,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 7.727697419933975,
+      "cgroup_memory_current": 1717760000,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 7.828026831150055,
+      "cgroup_memory_current": 1697447936,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 7.92834891891107,
+      "cgroup_memory_current": 1700593664,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 8.028608943801373,
+      "cgroup_memory_current": 1706229760,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 8.128869438078254,
+      "cgroup_memory_current": 1713438720,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 8.229160860180855,
+      "cgroup_memory_current": 1702686720,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 8.329454509075731,
+      "cgroup_memory_current": 1699803136,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 8.429758563172072,
+      "cgroup_memory_current": 1718415360,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 8.530036812182516,
+      "cgroup_memory_current": 1696657408,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 8.630327701102942,
+      "cgroup_memory_current": 1700331520,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 8.730451706796885,
+      "cgroup_memory_current": 1705181184,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 8.830737323034555,
+      "cgroup_memory_current": 1711603712,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 8.931015429086983,
+      "cgroup_memory_current": 1722089472,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 9.031296513974667,
+      "cgroup_memory_current": 1700069376,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 9.131555539090186,
+      "cgroup_memory_current": 1704783872,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 9.231830839067698,
+      "cgroup_memory_current": 1712517120,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 9.332145375199616,
+      "cgroup_memory_current": 1723002880,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 9.432498223148286,
+      "cgroup_memory_current": 1698885632,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 9.532797220163047,
+      "cgroup_memory_current": 1700855808,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 9.633148833177984,
+      "cgroup_memory_current": 1704525824,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 9.733432007953525,
+      "cgroup_memory_current": 1710424064,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 9.833776713814586,
+      "cgroup_memory_current": 1717501952,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 9.934170647058636,
+      "cgroup_memory_current": 1724055552,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 10.034535951912403,
+      "cgroup_memory_current": 1705439232,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 10.134872656781226,
+      "cgroup_memory_current": 1711730688,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 10.235219587106258,
+      "cgroup_memory_current": 1717370880,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 10.3355293860659,
+      "cgroup_memory_current": 1722351616,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 10.435806869994849,
+      "cgroup_memory_current": 1702686720,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 10.536131089087576,
+      "cgroup_memory_current": 1709502464,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 10.636408464983106,
+      "cgroup_memory_current": 1715924992,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 10.736728323157877,
+      "cgroup_memory_current": 1724575744,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 10.836996253114194,
+      "cgroup_memory_current": 1705701376,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 10.93730564089492,
+      "cgroup_memory_current": 1712254976,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 11.037572424858809,
+      "cgroup_memory_current": 1717760000,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 11.137844271957874,
+      "cgroup_memory_current": 1724575744,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 11.23811380378902,
+      "cgroup_memory_current": 1705177088,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 11.33846074109897,
+      "cgroup_memory_current": 1710682112,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 11.438738435972482,
+      "cgroup_memory_current": 1716273152,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 11.539024128112942,
+      "cgroup_memory_current": 1723744256,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 11.639300918206573,
+      "cgroup_memory_current": 1712476160,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 11.739580618217587,
+      "cgroup_memory_current": 1711554560,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 11.839888731017709,
+      "cgroup_memory_current": 1713913856,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 11.94016082584858,
+      "cgroup_memory_current": 1717059584,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 12.04042596090585,
+      "cgroup_memory_current": 1719681024,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 12.140708638820797,
+      "cgroup_memory_current": 1726234624,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 12.24098197510466,
+      "cgroup_memory_current": 1707622400,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 12.341313925106078,
+      "cgroup_memory_current": 1711554560,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 12.44158416800201,
+      "cgroup_memory_current": 1723875328,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 12.541879870928824,
+      "cgroup_memory_current": 1803042816,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 12.642017416190356,
+      "cgroup_memory_current": 1911308288,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "wall_seconds": 12.74214651901275,
+      "cgroup_memory_current": 1996738560,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 2989,
+        "summed_rss_kib": 9144,
+        "cpu_seconds_live_processes": 0.0,
+        "rchar_live_processes": 124555,
+        "storage_read_bytes_live_processes": 4407296,
+        "pids": [
+          1565795,
+          1565799,
+          1565800
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 2535,
+            "rss_kib": 5564
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 227,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 227,
+            "rss_kib": 1784
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 12.844239097088575,
+      "cgroup_memory_current": 2139607040,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 182694,
+        "summed_rss_kib": 540356,
+        "cpu_seconds_live_processes": 0.12,
+        "rchar_live_processes": 2668465,
+        "storage_read_bytes_live_processes": 34078720,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565866,
+          1565867,
+          1565886
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 62990,
+            "rss_kib": 147588
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 190,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15994,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11449,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 61934,
+            "rss_kib": 90512
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6965,
+            "rss_kib": 46956
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 13882,
+            "rss_kib": 72500
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 9095,
+            "rss_kib": 53956
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 12.951272564008832,
+      "cgroup_memory_current": 2198294528,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 250924,
+        "summed_rss_kib": 786684,
+        "cpu_seconds_live_processes": 0.21,
+        "rchar_live_processes": 3972468,
+        "storage_read_bytes_live_processes": 69488640,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 72056,
+            "rss_kib": 164832
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15890,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11336,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 81171,
+            "rss_kib": 109952
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6825,
+            "rss_kib": 47484
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 16996,
+            "rss_kib": 88964
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11545,
+            "rss_kib": 65964
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 18060,
+            "rss_kib": 93984
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16661,
+            "rss_kib": 86660
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 13.061001825146377,
+      "cgroup_memory_current": 2178387968,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 268254,
+        "summed_rss_kib": 810364,
+        "cpu_seconds_live_processes": 0.28,
+        "rchar_live_processes": 6267260,
+        "storage_read_bytes_live_processes": 99840000,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 73291,
+            "rss_kib": 166584
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 194,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15708,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 10816,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 100160,
+            "rss_kib": 131864
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6381,
+            "rss_kib": 47484
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 16558,
+            "rss_kib": 88972
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11119,
+            "rss_kib": 65968
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17605,
+            "rss_kib": 93984
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16233,
+            "rss_kib": 86664
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 13.171135514043272,
+      "cgroup_memory_current": 2170388480,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 269038,
+        "summed_rss_kib": 850360,
+        "cpu_seconds_live_processes": 0.44,
+        "rchar_live_processes": 7594168,
+        "storage_read_bytes_live_processes": 115269632,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 74488,
+            "rss_kib": 170348
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15915,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11330,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 79970,
+            "rss_kib": 133604
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6923,
+            "rss_kib": 49128
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 34119,
+            "rss_kib": 119956
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11566,
+            "rss_kib": 66808
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17833,
+            "rss_kib": 94412
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16510,
+            "rss_kib": 87260
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 13.280291241127998,
+      "cgroup_memory_current": 2190770176,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 290639,
+        "summed_rss_kib": 875932,
+        "cpu_seconds_live_processes": 0.81,
+        "rchar_live_processes": 8207335,
+        "storage_read_bytes_live_processes": 116539392,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 75687,
+            "rss_kib": 172012
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15913,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11329,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 98677,
+            "rss_kib": 154044
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6921,
+            "rss_kib": 49128
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 35871,
+            "rss_kib": 123424
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11565,
+            "rss_kib": 66808
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17824,
+            "rss_kib": 94412
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16468,
+            "rss_kib": 87260
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 13.388395462185144,
+      "cgroup_memory_current": 2290909184,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 386381,
+        "summed_rss_kib": 979688,
+        "cpu_seconds_live_processes": 1.36,
+        "rchar_live_processes": 79980863,
+        "storage_read_bytes_live_processes": 188633088,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 76939,
+            "rss_kib": 174660
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15909,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11325,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 119700,
+            "rss_kib": 177052
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6918,
+            "rss_kib": 49128
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 109393,
+            "rss_kib": 201524
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11560,
+            "rss_kib": 66808
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17812,
+            "rss_kib": 94412
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16441,
+            "rss_kib": 87260
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 13.498007824178785,
+      "cgroup_memory_current": 2370699264,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 472650,
+        "summed_rss_kib": 1067880,
+        "cpu_seconds_live_processes": 2.04,
+        "rchar_live_processes": 123109250,
+        "storage_read_bytes_live_processes": 231882752,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 76902,
+            "rss_kib": 174752
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15911,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11325,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 152799,
+            "rss_kib": 211320
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6914,
+            "rss_kib": 49128
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 162621,
+            "rss_kib": 255356
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11558,
+            "rss_kib": 66808
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17804,
+            "rss_kib": 94412
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16432,
+            "rss_kib": 87260
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 13.609333497006446,
+      "cgroup_memory_current": 2502918144,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 628988,
+        "summed_rss_kib": 1224960,
+        "cpu_seconds_live_processes": 2.58,
+        "rchar_live_processes": 281726116,
+        "storage_read_bytes_live_processes": 390610944,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 76881,
+            "rss_kib": 174764
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15908,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11325,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 153577,
+            "rss_kib": 212172
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6914,
+            "rss_kib": 49128
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 318209,
+            "rss_kib": 411572
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11558,
+            "rss_kib": 66808
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17804,
+            "rss_kib": 94412
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16428,
+            "rss_kib": 87260
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 13.720109768211842,
+      "cgroup_memory_current": 2426945536,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 751155,
+        "summed_rss_kib": 1347416,
+        "cpu_seconds_live_processes": 3.04,
+        "rchar_live_processes": 403507092,
+        "storage_read_bytes_live_processes": 512245760,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 76852,
+            "rss_kib": 174776
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15908,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11325,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 153644,
+            "rss_kib": 212252
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6914,
+            "rss_kib": 49128
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 440338,
+            "rss_kib": 533936
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11558,
+            "rss_kib": 66808
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17804,
+            "rss_kib": 94412
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16428,
+            "rss_kib": 87260
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 13.832683221902698,
+      "cgroup_memory_current": 2296520704,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 867769,
+        "summed_rss_kib": 1464168,
+        "cpu_seconds_live_processes": 3.55,
+        "rchar_live_processes": 522928722,
+        "storage_read_bytes_live_processes": 631783424,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 76855,
+            "rss_kib": 174780
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15908,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11325,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 153710,
+            "rss_kib": 212324
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6914,
+            "rss_kib": 49128
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 556887,
+            "rss_kib": 650612
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11558,
+            "rss_kib": 66808
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17802,
+            "rss_kib": 94412
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16426,
+            "rss_kib": 87260
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 13.945678043179214,
+      "cgroup_memory_current": 2208018432,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 989733,
+        "summed_rss_kib": 1586148,
+        "cpu_seconds_live_processes": 3.99,
+        "rchar_live_processes": 646939952,
+        "storage_read_bytes_live_processes": 746471424,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 76855,
+            "rss_kib": 174780
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15908,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11325,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 153758,
+            "rss_kib": 212380
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6914,
+            "rss_kib": 49128
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 678803,
+            "rss_kib": 772536
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11558,
+            "rss_kib": 66808
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17802,
+            "rss_kib": 94412
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16426,
+            "rss_kib": 87260
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 14.056869869120419,
+      "cgroup_memory_current": 1890541568,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 1106185,
+        "summed_rss_kib": 1702608,
+        "cpu_seconds_live_processes": 4.51,
+        "rchar_live_processes": 765574874,
+        "storage_read_bytes_live_processes": 853950464,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 76859,
+            "rss_kib": 174784
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15908,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11325,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 153778,
+            "rss_kib": 212404
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6914,
+            "rss_kib": 49128
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 795231,
+            "rss_kib": 888968
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11558,
+            "rss_kib": 66808
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17802,
+            "rss_kib": 94412
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16426,
+            "rss_kib": 87260
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 14.170644694007933,
+      "cgroup_memory_current": 1487945728,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 1218383,
+        "summed_rss_kib": 1814836,
+        "cpu_seconds_live_processes": 5.0,
+        "rchar_live_processes": 881326030,
+        "storage_read_bytes_live_processes": 969162752,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 76867,
+            "rss_kib": 174792
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15908,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11325,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 153710,
+            "rss_kib": 212328
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6914,
+            "rss_kib": 49128
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 907489,
+            "rss_kib": 1001264
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11558,
+            "rss_kib": 66808
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17802,
+            "rss_kib": 94412
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16426,
+            "rss_kib": 87260
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 14.283427909947932,
+      "cgroup_memory_current": 1480302592,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 1339163,
+        "summed_rss_kib": 1935628,
+        "cpu_seconds_live_processes": 5.46,
+        "rchar_live_processes": 997339320,
+        "storage_read_bytes_live_processes": 1085161472,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 76807,
+            "rss_kib": 174732
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15908,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11325,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 153708,
+            "rss_kib": 212332
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6914,
+            "rss_kib": 49128
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 1028331,
+            "rss_kib": 1122112
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11558,
+            "rss_kib": 66808
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17802,
+            "rss_kib": 94412
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16426,
+            "rss_kib": 87260
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 14.399549184832722,
+      "cgroup_memory_current": 1621209088,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 1556700,
+        "summed_rss_kib": 2152612,
+        "cpu_seconds_live_processes": 5.87,
+        "rchar_live_processes": 1073081552,
+        "storage_read_bytes_live_processes": 1160798208,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 75736,
+            "rss_kib": 172676
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15907,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11325,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 153697,
+            "rss_kib": 212344
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6912,
+            "rss_kib": 49128
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 1246966,
+            "rss_kib": 1341140
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11558,
+            "rss_kib": 66808
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17799,
+            "rss_kib": 94412
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16416,
+            "rss_kib": 87260
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 14.515540401916951,
+      "cgroup_memory_current": 1986842624,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 1917692,
+        "summed_rss_kib": 2513604,
+        "cpu_seconds_live_processes": 5.99,
+        "rchar_live_processes": 1073081552,
+        "storage_read_bytes_live_processes": 1160798208,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 75656,
+            "rss_kib": 172596
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15907,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11325,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 153697,
+            "rss_kib": 212344
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6912,
+            "rss_kib": 49128
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 1608038,
+            "rss_kib": 1702212
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11558,
+            "rss_kib": 66808
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17799,
+            "rss_kib": 94412
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16416,
+            "rss_kib": 87260
+          }
+        ]
+      }
+    },
+    {
+      "wall_seconds": 14.63237333111465,
+      "cgroup_memory_current": 2367471616,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "chrome": {
+        "pss_kib": 2293716,
+        "summed_rss_kib": 2889628,
+        "cpu_seconds_live_processes": 6.1,
+        "rchar_live_processes": 1073081552,
+        "storage_read_bytes_live_processes": 1160798208,
+        "pids": [
+          1565795,
+          1565799,
+          1565800,
+          1565809,
+          1565810,
+          1565831,
+          1565834,
+          1565867,
+          1565886,
+          1565887,
+          1565904
+        ],
+        "processes": [
+          {
+            "pid": 1565795,
+            "role": "browser",
+            "pss_kib": 75656,
+            "rss_kib": 172596
+          },
+          {
+            "pid": 1565799,
+            "role": "browser",
+            "pss_kib": 189,
+            "rss_kib": 1796
+          },
+          {
+            "pid": 1565800,
+            "role": "browser",
+            "pss_kib": 195,
+            "rss_kib": 1788
+          },
+          {
+            "pid": 1565809,
+            "role": "zygote",
+            "pss_kib": 15907,
+            "rss_kib": 62212
+          },
+          {
+            "pid": 1565810,
+            "role": "zygote",
+            "pss_kib": 11325,
+            "rss_kib": 63048
+          },
+          {
+            "pid": 1565831,
+            "role": "gpu-process",
+            "pss_kib": 153697,
+            "rss_kib": 212344
+          },
+          {
+            "pid": 1565834,
+            "role": "utility",
+            "pss_kib": 6912,
+            "rss_kib": 49128
+          },
+          {
+            "pid": 1565867,
+            "role": "renderer",
+            "pss_kib": 1984062,
+            "rss_kib": 2078236
+          },
+          {
+            "pid": 1565886,
+            "role": "renderer",
+            "pss_kib": 11558,
+            "rss_kib": 66808
+          },
+          {
+            "pid": 1565887,
+            "role": "renderer",
+            "pss_kib": 17799,
+            "rss_kib": 94412
+          },
+          {
+            "pid": 1565904,
+            "role": "renderer",
+            "pss_kib": 16416,
+            "rss_kib": 87260
+          }
+        ]
+      }
+    }
+  ],
+  "status": "external-pss-limit",
+  "returncode": -15,
+  "peak_sampled_chrome_pss_kib": 2293716
+}
