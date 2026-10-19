@@ -1,0 +1,26 @@
+--- a/apps/viewer-web/src/camera_bitmap.rs
++++ b/apps/viewer-web/src/camera_bitmap.rs
+@@ -2 +2 @@
+-/// While playing, choose the pending focus frame first, then rotate backgrounds.
++/// While playing, keep one of the two slots available for the next focus frame.
+@@ -18,0 +19,3 @@
++    }
++    if focus.is_some() && occupied.clone().any(|id| Some(id) != focus) {
++        return None;
+@@ -280,4 +283 @@
+-        if queue.state.borrow().active.len() != 2
+-            || !queue.state.borrow().active.contains(&CameraId(1))
+-            || queue.state.borrow().last_background != Some(CameraId(0))
+-        {
++        if queue.state.borrow().active.len() != 2 {
+@@ -285 +285 @@
+-                "focus dispatch lost the stale job or background rotation",
++                "focus did not start alongside stale background job",
+@@ -416 +416 @@
+-    fn playing_focus_has_priority_without_starving_background_rotation() {
++    fn playing_focus_has_a_slot_without_starving_background_rotation() {
+@@ -418,2 +418,2 @@
+-        // If focus has no pending frame, lend all available capacity to background.
+-        assert_eq!(pick(&[1, 2], &[1], None, Some(0)), Some(2));
++        // Even before the next focus arrival, don't fill its slot with background.
++        assert_eq!(pick(&[1, 2], &[1], None, Some(0)), None);

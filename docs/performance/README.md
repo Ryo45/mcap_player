@@ -10,6 +10,8 @@
 初回の記録を再利用して100 ms / 1秒tickを比較する。初回結果は修正前のbaselineとして保持する。
 [4K・8カメラ10 Hz・最大512 MiB Chunkの計測](2026-10-14-4k-large-chunks/findings.md)は、
 本番RGBA decode、4camera×20 Hzとの比較、製品側上限による拒否も含めて記録している。
+[Webのfocus優先とbackground更新の比較](2026-10-16-web-focus-scheduling/README.md)では、
+60秒・4K/8カメラで表示頻度・画像年齢・最低background頻度とメモリを比較する。
 
 ## 再現
 

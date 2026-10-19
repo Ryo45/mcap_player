@@ -24,8 +24,15 @@ EXIF Orientation=6を付加したJPEGと元JPEGで、出力pixelが一致する�
 
 ## リソースと世代
 
-- cameraごとに実行中1枚、未開始の最新1枚。待機中は新しいarrivalで置換する。round robinで順番を選ぶ。
+- cameraごとに実行中1枚、未開始の最新1枚。待機中は新しいarrivalで置換する。
+  再生中は待機中のfocusを先に選び、残りをbackground間のround robinへ配分する。
+  focusが実行中、または次のframeが未到着なら空き枠をbackgroundへ使う。専用workerは予約しない。
+  backgroundの巡回位置はfocusのdispatchで進めない。focus変更時も実行中jobを中断せず、空きができてから新しいfocusを優先する。
+  停止中のopen/seek復元とfocus未選択時は、全cameraをround robinで処理する。
 - 実行中＋未uploadの完成結果は合計2枚まで。完成結果をdrainしてから次を開始する。
+  focus優先は処理能力や最低Hzの保証ではない。background数・decode時間・main threadの停止に依存する。
+  [60秒・4K/8カメラの比較](performance/2026-10-16-web-focus-scheduling/README.md)では、
+  focusの更新率と画像年齢、background各cameraの最低更新率・最大間隔を併記する。
 - 最大32 camera identities。JPEG 1枚32 MiB、元画像32×1024×1024 pixels、frame ID 4096 bytesまで。
   Workerのheader処理も4096 markersまでに制限する。
 - RustのJPEGコピーは、待機・実行中を合わせて64 MiBまで。

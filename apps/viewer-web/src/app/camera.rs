@@ -301,7 +301,10 @@ pub(super) fn update_camera_presentation(
             view.record_error(*camera_id, error);
         }
     }
-    view.decode.start_pending();
+    let priority = selected_camera.filter(|id| {
+        session.clock().is_playing() && cameras.frames().any(|(camera, _)| camera == id)
+    });
+    view.decode.start_pending(priority);
     for (camera_id, frame) in &view.presented_frames {
         if view.camera_overlays.update(
             frame,
