@@ -1,6 +1,13 @@
 // Measurement-only hooks. No image payloads or bitmaps are retained by this probe.
 (() => {
   const probe=window.pipelineProbe={jobs:[],paints:[],errors:[],phase:'setup'};
+  if(window.probeMode==='focus') {
+    probe.focusedCamera=0;
+    document.addEventListener('click',event=>{
+      const card=event.target.closest?.('button[data-camera]');
+      if(card)probe.focusedCamera=Number(card.dataset.camera);
+    },true);
+  }
   addEventListener('TrunkApplicationStarted',e=>{probe.memory=e.detail.wasm.memory;});
   addEventListener('error',e=>probe.errors.push(e.message));
   addEventListener('unhandledrejection',e=>probe.errors.push(String(e.reason)));
@@ -28,6 +35,12 @@
       this.postMessage=(data,...rest)=>{
         job={id:probe.jobs.length,phase:probe.phase,post:performance.timeOrigin+performance.now(),
           bytes:data.bytes.byteLength,width:data.width,height:data.height};
+        if(window.probeMode==='focus') {
+          const bytes=new Uint8Array(data.bytes);let hash=2166136261;
+          for(let i=0;i<128;i++)hash=Math.imul(hash^bytes[Math.floor(i*(bytes.length-1)/127)],16777619);
+          job.signature=bytes.length+':'+(hash>>>0).toString(16);
+          job.cursor=Number(document.querySelector('#timeline').value);
+        }
         probe.jobs.push(job);return post(data,...rest);
       };
       this.addEventListener('message',e=>{
@@ -49,10 +62,14 @@
       canvases.set(this.canvas,job);
       if(bitmaps.has(args[0])){job.upload=before;job.draw_ms=performance.timeOrigin+performance.now()-before;}
       const id=this.canvas.id;
-      const camera=id==='camera'?0:/^camera-thumb-([1-7])$/.exec(id)?.[1];
+      const focus=probe.focusedCamera ?? 0;
+      const camera=window.probeMode==='focus'
+        ? (id==='camera'?focus:/^camera-thumb-(\d+)$/.exec(id)?.[1])
+        : (id==='camera'?0:/^camera-thumb-([1-7])$/.exec(id)?.[1]);
       if(camera!==undefined && latest.get(Number(camera))!==job.id){
         latest.set(Number(camera),job.id);
-        probe.paints.push({phase:probe.phase,camera:Number(camera),job:job.id,t:before});
+        probe.paints.push({phase:probe.phase,camera:Number(camera),job:job.id,t:before,
+          ...(window.probeMode==='focus'?{focus,cursor:Number(document.querySelector('#timeline').value)}:{})});
       }
     }
     return result;

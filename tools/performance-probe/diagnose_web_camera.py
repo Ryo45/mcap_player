@@ -20,6 +20,21 @@ def run(args):
             'sources_sha256':{p:hashlib.sha256((here/p).read_bytes()).hexdigest() for p in
                               ['diagnose_web_camera.py','web_camera_pipeline.js','measure_viewer_pilot.py',
                                'measure_web_camera_stress.py','browser_cdp.py']}}
+    if args.mode=='focus':
+        dist=args.web_dist
+        result['web_build_sha256']={p.name:hashlib.sha256(p.read_bytes()).hexdigest()
+                                    for p in sorted(dist.glob('*')) if p.suffix in ('.html','.js','.wasm')}
+        # Same 32 JPEG variants as the camera stress fixture. Small, unique signatures
+        # identify encoded jobs without copying pixels or retaining their payloads.
+        manifest=[]
+        for path in sorted(args.jpeg_samples.glob('*.jpg')):
+            data=path.read_bytes();value=2166136261
+            for i in range(128):value=((value^data[i*(len(data)-1)//127])*16777619)&0xffffffff
+            manifest.append({'file':path.name,'sha256':hashlib.sha256(data).hexdigest(),
+                             'signature':f'{len(data)}:{value:x}'})
+        if len(manifest)!=32 or len({m['signature'] for m in manifest})!=32:
+            raise ValueError('focus mode requires 32 distinct fixture JPEG variants')
+        result.update(jpeg_manifest=manifest,span_seconds=args.span_seconds,focus_changes=[])
     # Keep input identity even if an external guard terminates the process during open.
     args.output.write_text(json.dumps(result | {'status':'starting-browser'},indent=2)+'\n')
     with browser(args.port) as (process,page,environment):
@@ -27,12 +42,14 @@ def run(args):
         script='window.probeMode='+json.dumps(args.mode)+';'+(here/'web_camera_pipeline.js').read_text()
         if args.mode=='fingerprint':script+=(here/'web_camera_stress.js').read_text()
         page.call('Page.addScriptToEvaluateOnNewDocument',{'source':script})
-        page.call('Page.navigate',{'url':'http://127.0.0.1:8094/index.html'})
+        page.call('Page.navigate',{'url':args.url})
         try:
             deadline=time.monotonic()+15
             while not page.evaluate('!!(pipelineProbe.memory && document.querySelector("#mcap-file"))'):
                 if time.monotonic()>deadline:raise RuntimeError('app startup timeout')
                 time.sleep(.05)
+            result['time_origin_ms']=page.evaluate('performance.timeOrigin')
+            result['time_origin_source']='loaded-page'
             if args.mode=='fingerprint':
                 refs=json.loads((here.parent.parent/'docs/performance/2026-10-15-web-camera-stress/references.json').read_text())
                 page.evaluate('cameraStress.references='+json.dumps(refs['table']))
@@ -60,9 +77,15 @@ def run(args):
             sample()
             result['play_start_ms']=page.evaluate("(()=>{pipelineProbe.phase='play';pipelineProbe.playStart=performance.now();document.querySelector('#play').click();return pipelineProbe.playStart;})()")
             deadline=time.monotonic()+args.play_timeout
+            next_focus=0
             while True:
                 s=sample()
                 if s['cursor']>=1:break
+                if args.mode=='focus' and next_focus<2 and s['cursor']*args.span_seconds>=[20,40][next_focus]:
+                    camera=[3,0][next_focus]
+                    changed=page.evaluate(f"(()=>{{document.querySelector('#camera-card-{camera}').click();return performance.now();}})()")
+                    result['focus_changes'].append({'camera':camera,'now':changed,'cursor':s['cursor']})
+                    next_focus+=1
                 if time.monotonic()>deadline:raise RuntimeError('play timeout')
                 time.sleep(.2)
             result['play_ms']=s['now']-result['play_start_ms']
@@ -95,7 +118,13 @@ def run(args):
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--data',type=Path,required=True)
-    parser.add_argument('--mode',choices=['bare','light','fingerprint'],required=True)
+    parser.add_argument('--mode',choices=['bare','light','fingerprint','focus'],required=True)
+    parser.add_argument('--jpeg-samples',type=Path,default=Path('/tmp/mcap-web-jpeg-samples'))
+    parser.add_argument('--web-dist',type=Path,default=Path(__file__).resolve().parents[2]/'apps/viewer-web/dist',
+                        help='served artifact directory, recorded by focus mode')
+    parser.add_argument('--url',default='http://127.0.0.1:8094/index.html')
+    parser.add_argument('--span-seconds',type=float,default=59.9,
+                        help='fixture log span for focus mode; cameras must be 10 Hz, variant=(sequence+camera*7)%%32')
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--port',type=int,default=9241)
     parser.add_argument('--play-timeout',type=float,default=20,

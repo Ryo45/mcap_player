@@ -1,4 +1,30 @@
 //! Browser camera pixel work; source coordinates remain independent of output pixels.
+/// While playing, choose the pending focus frame first, then rotate backgrounds.
+/// A completed result still occupies its slot until presentation drains it.
+#[cfg(any(target_arch = "wasm32", test))]
+fn next_camera(
+    pending: impl Iterator<Item = viewer_core::CameraId> + Clone,
+    occupied: impl Iterator<Item = viewer_core::CameraId> + Clone,
+    last_background: Option<viewer_core::CameraId>,
+    focus: Option<viewer_core::CameraId>,
+) -> Option<viewer_core::CameraId> {
+    if occupied.clone().count() >= 2 {
+        return None;
+    }
+    if let Some(focus) = focus
+        && pending.clone().any(|id| id == focus)
+        && !occupied.clone().any(|id| id == focus)
+    {
+        return Some(focus);
+    }
+    let mut candidates =
+        pending.filter(|id| Some(*id) != focus && !occupied.clone().any(|active| active == *id));
+    candidates
+        .clone()
+        .find(|id| last_background.is_none_or(|last| *id > last))
+        .or_else(|| candidates.next())
+}
+
 fn image_size(source: (u32, u32), target: (u32, u32)) -> (u32, u32) {
     let ratio = (target.0.max(1) as f64 / source.0 as f64)
         .min(target.1.max(1) as f64 / source.1 as f64)
@@ -83,7 +109,7 @@ mod browser {
         pending: BTreeMap<CameraId, Request>,
         ready: Vec<CompletedImage>,
         submitted: BTreeMap<CameraId, (ArrivalTime, (u32, u32))>,
-        last_camera: Option<CameraId>,
+        last_background: Option<CameraId>,
     }
     #[derive(Default)]
     pub(crate) struct CameraBitmapQueue {
@@ -153,31 +179,27 @@ mod browser {
         pub(crate) fn drain(&mut self) -> Vec<CompletedImage> {
             std::mem::take(&mut self.state.borrow_mut().ready)
         }
-        pub(crate) fn start_pending(&mut self) {
+        pub(crate) fn start_pending(&mut self, focus: Option<CameraId>) {
             loop {
                 let mut state = self.state.borrow_mut();
-                if state.active.len() + state.ready.len() >= 2 {
-                    return;
-                }
-                let id = state
-                    .pending
-                    .keys()
-                    .copied()
-                    .filter(|id| !state.active.contains(id))
-                    .find(|id| state.last_camera.is_none_or(|last| *id > last))
-                    .or_else(|| {
-                        state
-                            .pending
-                            .keys()
-                            .copied()
-                            .find(|id| !state.active.contains(id))
-                    });
+                let id = super::next_camera(
+                    state.pending.keys().copied(),
+                    state
+                        .active
+                        .iter()
+                        .copied()
+                        .chain(state.ready.iter().map(|image| image.frame.camera_id)),
+                    state.last_background,
+                    focus,
+                );
                 let Some(id) = id else {
                     return;
                 };
                 let request = state.pending.remove(&id).unwrap();
                 state.active.insert(id);
-                state.last_camera = Some(id);
+                if Some(id) != focus {
+                    state.last_background = Some(id);
+                }
                 let generation = state.generation;
                 drop(state);
                 let state = Rc::clone(&self.state);
@@ -235,7 +257,7 @@ mod browser {
         queue
             .submit(&frame, (1920, 1080))
             .map_err(|e| JsValue::from_str(&e))?;
-        queue.start_pending();
+        queue.start_pending(None);
         for time in 2..50 {
             frame.arrival_time = ArrivalTime(time);
             queue
@@ -254,10 +276,19 @@ mod browser {
         queue
             .submit(&frame, (160, 120))
             .map_err(|e| JsValue::from_str(&e))?;
+        queue.start_pending(Some(CameraId(1)));
+        if queue.state.borrow().active.len() != 2
+            || !queue.state.borrow().active.contains(&CameraId(1))
+            || queue.state.borrow().last_background != Some(CameraId(0))
+        {
+            return Err(JsValue::from_str(
+                "focus dispatch lost the stale job or background rotation",
+            ));
+        }
         let mut completed = BTreeSet::new();
         let started = Date::now();
         while completed.len() < 2 {
-            queue.start_pending();
+            queue.start_pending(Some(CameraId(1)));
             if queue.state.borrow().active.len() + queue.state.borrow().ready.len() > 2 {
                 return Err(JsValue::from_str("worker result limit exceeded"));
             }
@@ -306,7 +337,7 @@ mod browser {
         let mut displayed = Vec::new();
         let started = Date::now();
         while displayed.len() < 2 {
-            queue.start_pending();
+            queue.start_pending(None);
             JsFuture::from(cameraTestTick()).await?;
             for result in queue.drain() {
                 result.image.map_err(|e| JsValue::from_str(&e))?;
@@ -332,7 +363,7 @@ mod browser {
             .map_err(|e| JsValue::from_str(&e))?;
         let started = Date::now();
         loop {
-            queue.start_pending();
+            queue.start_pending(None);
             JsFuture::from(cameraTestTick()).await?;
             let ready = queue.drain();
             if let Some(result) = ready.into_iter().next() {
@@ -364,6 +395,49 @@ pub(crate) use browser::{CameraBitmapQueue, target_size};
 #[cfg(test)]
 mod tests {
     use super::*;
+    use viewer_core::CameraId;
+
+    fn pick(
+        pending: &[u16],
+        occupied: &[u16],
+        last: Option<u16>,
+        focus: Option<u16>,
+    ) -> Option<u16> {
+        next_camera(
+            pending.iter().copied().map(CameraId),
+            occupied.iter().copied().map(CameraId),
+            last.map(CameraId),
+            focus.map(CameraId),
+        )
+        .map(|id| id.0)
+    }
+
+    #[test]
+    fn playing_focus_has_priority_without_starving_background_rotation() {
+        assert_eq!(pick(&[0, 1, 2], &[], Some(1), Some(0)), Some(0));
+        // If focus has no pending frame, lend all available capacity to background.
+        assert_eq!(pick(&[1, 2], &[1], None, Some(0)), Some(2));
+        assert_eq!(pick(&[0, 1, 2], &[1], None, Some(0)), Some(0));
+        assert_eq!(pick(&[0, 1, 2], &[0], Some(1), Some(0)), Some(2));
+        assert_eq!(pick(&[0, 1, 2], &[0], Some(2), Some(0)), Some(1));
+        assert_eq!(pick(&[0, 1, 2], &[0, 1], None, Some(0)), None);
+    }
+
+    #[test]
+    fn switching_focus_waits_for_old_jobs_and_keeps_background_order() {
+        assert_eq!(pick(&[0, 1, 2], &[0, 1], Some(1), Some(2)), None);
+        assert_eq!(pick(&[0, 1, 2], &[0], Some(1), Some(2)), Some(2));
+        assert_eq!(pick(&[0, 1, 2, 3], &[2], Some(1), Some(2)), Some(3));
+    }
+
+    #[test]
+    fn paused_restore_and_no_focus_use_both_workers() {
+        assert_eq!(pick(&[0, 1, 2], &[1], Some(1), None), Some(2));
+        assert_eq!(pick(&[0, 1, 2], &[2], Some(2), None), Some(0));
+        assert_eq!(pick(&[], &[], None, Some(0)), None);
+        assert_eq!(pick(&[0], &[0], None, Some(0)), None);
+    }
+
     #[test]
     fn fhd_and_thumbnails_preserve_source_aspect_without_upscale() {
         assert_eq!(image_size((3840, 2160), (1920, 1080)), (1920, 1080));
