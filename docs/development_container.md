@@ -27,6 +27,8 @@ docker compose run --rm --service-ports dev bash -lc 'cd apps/viewer-web && trun
 The default service is for builds/tests and the Web development server. Native GUI/GPU and live
 ROS networking require explicit host integration (display socket, GPU device, network); these are
 not enabled by the default service. Ports 8080/8081 bind to loopback when `--service-ports` is used.
+The [Native hardware GPU environment ADR](adr/0001-native-hardware-gpu-environment.md)
+defines the planned host-first verification and optional GPU container setup; neither is enabled by this service.
 The container does not mount the Docker socket. Source changes are visible on the host; output
 files have the configured UID/GID. Changing those IDs requires rebuilding the image; pre-existing
 cache volumes retain their original ownership.
