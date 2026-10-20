@@ -1,0 +1,481 @@
+{
+  "aggregates": [
+    {
+      "case": "camera-4",
+      "app": "lichtblick",
+      "policy": "default",
+      "n": 3,
+      "median": {
+        "cpu": 369.357763884958,
+        "pss": 2142.0859375,
+        "focus_hz": 9.110715443913268,
+        "background_min_hz": 8.440944219689683,
+        "focus_lag_p95_ms": 563.2536847144358,
+        "background_worst_lag_p95_ms": 571.1126083508127,
+        "color_clear_min_hz": 15.550813108268546,
+        "color_clear_max_hz": 16.37798401828283
+      },
+      "runs": [
+        {
+          "cpu": 368.81973049323113,
+          "pss": 2142.0859375,
+          "focus_hz": 9.027407641789965,
+          "background_min_hz": 8.693059210612558,
+          "focus_lag_p95_ms": 615.7374126836652,
+          "background_worst_lag_p95_ms": 617.6983339712017,
+          "color_clear_min_hz": 16.28475049410043,
+          "color_clear_max_hz": 16.783263264327992
+        },
+        {
+          "cpu": 373.35921475611104,
+          "pss": 2187.5478515625,
+          "focus_hz": 9.110715443913268,
+          "background_min_hz": 8.358454535700245,
+          "focus_lag_p95_ms": 521.7142244800925,
+          "background_worst_lag_p95_ms": 568.9660551026457,
+          "color_clear_min_hz": 15.550813108268546,
+          "color_clear_max_hz": 16.37798401828283
+        },
+        {
+          "cpu": 369.357763884958,
+          "pss": 1943.6162109375,
+          "focus_hz": 9.443828681434992,
+          "background_min_hz": 8.440944219689683,
+          "focus_lag_p95_ms": 563.2536847144358,
+          "background_worst_lag_p95_ms": 571.1126083508127,
+          "color_clear_min_hz": 15.294205657436153,
+          "color_clear_max_hz": 15.959171120802944
+        }
+      ]
+    },
+    {
+      "case": "camera-4",
+      "app": "native",
+      "policy": "all10",
+      "n": 3,
+      "median": {
+        "cpu": 106.56858109625573,
+        "pss": 291.896484375,
+        "focus_hz": 9.862307492498543,
+        "background_min_hz": 9.857565595982914,
+        "focus_lag_p95_ms": 196.2423216551539,
+        "background_worst_lag_p95_ms": 221.88287619501244,
+        "present_calls_hz": 59.755574118127434,
+        "scene_render_hz": 0.0
+      },
+      "runs": [
+        {
+          "cpu": 105.73984465150347,
+          "pss": 291.896484375,
+          "focus_hz": 9.924373160928806,
+          "background_min_hz": 9.840975067139487,
+          "focus_lag_p95_ms": 196.2423216551539,
+          "background_worst_lag_p95_ms": 213.03529441356605,
+          "present_calls_hz": 59.806244043207094,
+          "scene_render_hz": 0.0
+        },
+        {
+          "cpu": 106.56858109625573,
+          "pss": 295.9580078125,
+          "focus_hz": 9.857565595982914,
+          "background_min_hz": 9.857565595982914,
+          "focus_lag_p95_ms": 178.14651075750555,
+          "background_worst_lag_p95_ms": 225.39725620299578,
+          "present_calls_hz": 59.73209602862238,
+          "scene_render_hz": 0.0
+        },
+        {
+          "cpu": 110.43864796887821,
+          "pss": 282.2333984375,
+          "focus_hz": 9.862307492498543,
+          "background_min_hz": 9.862307492498543,
+          "focus_lag_p95_ms": 207.54531975835545,
+          "background_worst_lag_p95_ms": 221.88287619501244,
+          "present_calls_hz": 59.755574118127434,
+          "scene_render_hz": 0.0
+        }
+      ]
+    },
+    {
+      "case": "camera-8",
+      "app": "lichtblick",
+      "policy": "default",
+      "n": 3,
+      "median": {
+        "cpu": 403.81765908075636,
+        "pss": 3505.5,
+        "focus_hz": 4.503505429142863,
+        "background_min_hz": 3.7600055451978234,
+        "focus_lag_p95_ms": 3771.3198905810714,
+        "background_worst_lag_p95_ms": 3874.9660059809685,
+        "color_clear_min_hz": 6.802721088435374,
+        "color_clear_max_hz": 7.048602573559545
+      },
+      "runs": [
+        {
+          "cpu": 401.94136000648416,
+          "pss": 3505.5,
+          "focus_hz": 4.503505429142863,
+          "background_min_hz": 4.003115937015878,
+          "focus_lag_p95_ms": 3771.3198905810714,
+          "background_worst_lag_p95_ms": 3876.027115248143,
+          "color_clear_min_hz": 6.802721088435374,
+          "color_clear_max_hz": 7.048602573559545
+        },
+        {
+          "cpu": 403.81765908075636,
+          "pss": 3527.8486328125,
+          "focus_hz": 4.4204272170598795,
+          "background_min_hz": 3.753192920145181,
+          "focus_lag_p95_ms": 3773.5854009166355,
+          "background_worst_lag_p95_ms": 3874.9660059809685,
+          "color_clear_min_hz": 7.77757765333702,
+          "color_clear_max_hz": 8.105054607161737
+        },
+        {
+          "cpu": 409.2063206768052,
+          "pss": 3317.013671875,
+          "focus_hz": 4.595562333019562,
+          "background_min_hz": 3.7600055451978234,
+          "focus_lag_p95_ms": 3674.8873058706513,
+          "background_worst_lag_p95_ms": 3824.568261019885,
+          "color_clear_min_hz": 6.2918074045632215,
+          "color_clear_max_hz": 6.788529041765582
+        }
+      ]
+    },
+    {
+      "case": "camera-8",
+      "app": "native",
+      "policy": "all10",
+      "n": 3,
+      "median": {
+        "cpu": 177.36136135976733,
+        "pss": 312.4375,
+        "focus_hz": 9.85827038808582,
+        "background_min_hz": 9.858022788300097,
+        "focus_lag_p95_ms": 221.18818666785955,
+        "background_worst_lag_p95_ms": 223.2942687347528,
+        "present_calls_hz": 59.75898414536402,
+        "scene_render_hz": 0.0
+      },
+      "runs": [
+        {
+          "cpu": 177.36136135976733,
+          "pss": 322.4111328125,
+          "focus_hz": 9.85827038808582,
+          "background_min_hz": 9.774725723780008,
+          "focus_lag_p95_ms": 218.57128106057644,
+          "background_worst_lag_p95_ms": 223.2942687347528,
+          "present_calls_hz": 59.75898414536402,
+          "scene_render_hz": 0.0
+        },
+        {
+          "cpu": 178.76664429259543,
+          "pss": 312.4375,
+          "focus_hz": 9.858459812934637,
+          "background_min_hz": 9.858459812934637,
+          "focus_lag_p95_ms": 221.18818666785955,
+          "background_worst_lag_p95_ms": 222.70837631076466,
+          "present_calls_hz": 59.75572961577139,
+          "scene_render_hz": 0.0
+        },
+        {
+          "cpu": 177.35014799075594,
+          "pss": 305.982421875,
+          "focus_hz": 9.858022788300097,
+          "background_min_hz": 9.858022788300097,
+          "focus_lag_p95_ms": 221.43631894141436,
+          "background_worst_lag_p95_ms": 223.90280943363905,
+          "present_calls_hz": 59.92175065235571,
+          "scene_render_hz": 0.0
+        }
+      ]
+    },
+    {
+      "case": "camera-8",
+      "app": "native",
+      "policy": "default",
+      "n": 3,
+      "median": {
+        "cpu": 106.2514144254735,
+        "pss": 312.3896484375,
+        "focus_hz": 9.853141494240178,
+        "background_min_hz": 4.926570747120089,
+        "focus_lag_p95_ms": 183.582099340855,
+        "background_worst_lag_p95_ms": 333.0372286960479,
+        "present_calls_hz": 59.777364032271464,
+        "scene_render_hz": 0.0
+      },
+      "runs": [
+        {
+          "cpu": 106.2514144254735,
+          "pss": 323.796875,
+          "focus_hz": 9.853141494240178,
+          "background_min_hz": 4.926570747120089,
+          "focus_lag_p95_ms": 183.582099340855,
+          "background_worst_lag_p95_ms": 333.0372286960479,
+          "present_calls_hz": 59.777364032271464,
+          "scene_render_hz": 0.0
+        },
+        {
+          "cpu": 107.03371554936658,
+          "pss": 312.18359375,
+          "focus_hz": 9.839044014469676,
+          "background_min_hz": 4.919522007234838,
+          "focus_lag_p95_ms": 200.24590902030326,
+          "background_worst_lag_p95_ms": 348.82833883166245,
+          "present_calls_hz": 59.78658031877204,
+          "scene_render_hz": 0.0
+        },
+        {
+          "cpu": 104.45740722303277,
+          "pss": 312.3896484375,
+          "focus_hz": 9.862795244181111,
+          "background_min_hz": 5.0149806326344635,
+          "focus_lag_p95_ms": 168.38426794856787,
+          "background_worst_lag_p95_ms": 318.552205897868,
+          "present_calls_hz": 59.7617429324755,
+          "scene_render_hz": 0.0
+        }
+      ]
+    },
+    {
+      "case": "cloud-60000",
+      "app": "lichtblick",
+      "policy": "default",
+      "n": 3,
+      "median": {
+        "cpu": 47.31103281747763,
+        "pss": 887.763671875,
+        "scene_change_hz": 10.614582668698597,
+        "color_clear_min_hz": 10.060864070083566,
+        "color_clear_max_hz": 10.060864070083566
+      },
+      "runs": [
+        {
+          "cpu": 49.81627724609122,
+          "pss": 879.9765625,
+          "scene_change_hz": 11.116063806237129,
+          "color_clear_min_hz": 10.063039537093475,
+          "color_clear_max_hz": 10.063039537093475
+        },
+        {
+          "cpu": 36.82531117095052,
+          "pss": 909.4091796875,
+          "scene_change_hz": 9.945450875461816,
+          "color_clear_min_hz": 10.058355084713089,
+          "color_clear_max_hz": 10.058355084713089
+        },
+        {
+          "cpu": 47.31103281747763,
+          "pss": 887.763671875,
+          "scene_change_hz": 10.614582668698597,
+          "color_clear_min_hz": 10.060864070083566,
+          "color_clear_max_hz": 10.060864070083566
+        }
+      ]
+    },
+    {
+      "case": "cloud-60000",
+      "app": "native",
+      "policy": "default",
+      "n": 3,
+      "median": {
+        "cpu": 7.240371016548639,
+        "pss": 248.7138671875,
+        "scene_change_hz": 9.945908054293184,
+        "present_calls_hz": 59.920760810350444,
+        "scene_render_hz": 9.987235470222794
+      },
+      "runs": [
+        {
+          "cpu": 7.240371016548639,
+          "pss": 249.2138671875,
+          "scene_change_hz": 9.94562516838553,
+          "present_calls_hz": 59.920760810350444,
+          "scene_render_hz": 9.98679346839174
+        },
+        {
+          "cpu": 7.490429331448471,
+          "pss": 248.7138671875,
+          "scene_change_hz": 9.945966123565002,
+          "present_calls_hz": 59.75747445181002,
+          "scene_render_hz": 9.987321635400004
+        },
+        {
+          "cpu": 7.1574558002565025,
+          "pss": 248.5986328125,
+          "scene_change_hz": 9.945908054293184,
+          "present_calls_hz": 59.92341282133677,
+          "scene_render_hz": 9.987235470222794
+        }
+      ]
+    }
+  ],
+  "archives": [
+    {
+      "name": "0-camera-4-lichtblick",
+      "files": {
+        "result.json": "37e0381994fe4fe13ef6c1e4557741925b168c1bf33afbb73d9a34fe5a261795",
+        "app.log": "b5474a949b6277ff161b655620410fb39dd37c11503e3c2155acb1f51e05297b"
+      }
+    },
+    {
+      "name": "0-camera-4-native",
+      "files": {
+        "result.json": "330db9529ac500ee8c71a47fcf4a0f005c3245425a93ab0f972bf7e0a368b6db",
+        "app.log": "5c5154d38801f1de387a66c4094c49ea14e1dff89799a2f99a4757b234690ed0"
+      }
+    },
+    {
+      "name": "0-camera-8-lichtblick",
+      "files": {
+        "result.json": "6d32e27e55e2c661aaac62c6ec20f970fa89e0b77e61d4b3dcbeb6494504879a",
+        "app.log": "275d41b39f314ec18924c3b3330f9aeb915c8904e954a1730b5b3ea42ad2ae69"
+      }
+    },
+    {
+      "name": "0-camera-8-native",
+      "files": {
+        "result.json": "4530dde0e4b1043bf1ab5288b903402388c5890a99f66e06f3134883064b567f",
+        "app.log": "6cdf997d1d264bf041390da70c2cee8432aee5dcd84557fc91af85ac07145a80"
+      }
+    },
+    {
+      "name": "0-camera-8-native-background5",
+      "files": {
+        "result.json": "f006b4315aa8736bf8e74dace41c988eefeb2419ac6dbf1bca50bc0a43bea1cf",
+        "app.log": "e3ce9d7ed97d1e6de79f456dec6030e0a7974d8276360d075a313c49f1a171fa"
+      }
+    },
+    {
+      "name": "0-cloud-60000-lichtblick",
+      "files": {
+        "result.json": "6115ae99497c80041b13bc1ba8ec9e05f2c3ef936271241e99ada7eec5e650b3",
+        "app.log": "1675dc71f59ddcc88190a84c069e758d1bdde042135c1a2cab249cfcfaecff79"
+      }
+    },
+    {
+      "name": "0-cloud-60000-native",
+      "files": {
+        "result.json": "b5f61c18b519b6137a2063f78e19602d4bcce63130e4d364c2f9b400bc2bfc07",
+        "app.log": "f09b3ef863021364838862fcf732a2685efd3f65d357150caf46c07245356562"
+      }
+    },
+    {
+      "name": "1-camera-4-lichtblick",
+      "files": {
+        "result.json": "9cc9d069b0474ae46176e238c7d445c5f67eff55d944556019d93c265097f1e5",
+        "app.log": "58cdfc33796af95ad709ab72f9a1099dbd21c2d61f0cc01691c423267cbf1de3"
+      }
+    },
+    {
+      "name": "1-camera-4-native",
+      "files": {
+        "result.json": "a29510e14c2e52997e5ffcdeb641edf537819c1e53ca8ac38af3f0cdfaa41031",
+        "app.log": "73d1a0d6dc2e1c3193f50c5dab28ee7068181e093c21648bb57f1f0a26fa0281"
+      }
+    },
+    {
+      "name": "1-camera-8-lichtblick",
+      "files": {
+        "result.json": "e398b6ab1fd089f587c833c5b00effed8e5494900befb53b0e0f5a07baef19a6",
+        "app.log": "edc22aaa3fc5ea4598cfea9d8ee156ef414266fffb1c9cfa8edfde1dd658d23f"
+      }
+    },
+    {
+      "name": "1-camera-8-native",
+      "files": {
+        "result.json": "9ae61cdd886482b5a002a7e9e731fa4716a7ece4aa6301756af26d52cb221c2b",
+        "app.log": "99b279a05a778eac706d60f6358fd92116151060df8f79873f3ee8fa9349cd49"
+      }
+    },
+    {
+      "name": "1-camera-8-native-background5",
+      "files": {
+        "result.json": "9730d951ec9f7afad3425b192cee0a9739b44cc957001fe47d732a045d70500f",
+        "app.log": "8a4eba18bb5c3f87e45243b29e5f0a127c91d82a50f51489147c48ab99a3a2ae"
+      }
+    },
+    {
+      "name": "1-cloud-60000-lichtblick",
+      "files": {
+        "result.json": "fd95e5ca7aa1254ddacf10790394517faaeadeff6a85095f5c4e7e692d6252ba",
+        "app.log": "90d19ec1805fef93b5d7f6122fa23fd4d1390f5dc8a1163c784409bd36844b0d"
+      }
+    },
+    {
+      "name": "1-cloud-60000-native",
+      "files": {
+        "result.json": "940616bfc8dc7f6898652b4c67ae978d858e3696a1ef12b73363a38bf59c2670",
+        "app.log": "1b41599247affbce5eace68e6997dc1995a5c56c26686e9ab7478017cbcb5cba"
+      }
+    },
+    {
+      "name": "2-camera-4-lichtblick",
+      "files": {
+        "result.json": "05464155ebaf8696741ff0f3cefd5997201bf89d07264c8acbb7ef76880c59f5",
+        "app.log": "aab81ca3dd498e5d96e5661d0bcf90b2c0466fd97e7253a78c9dbbe3a27fe517"
+      }
+    },
+    {
+      "name": "2-camera-4-native",
+      "files": {
+        "result.json": "92c448592e924e2a29d0ddfde53476a23dda795cf34bf2eb4904484047eeb78b",
+        "app.log": "b5b57d5316aaee71ef71eb6fb5c455e3296f44665e4dc7535bf40a3b9393f762"
+      }
+    },
+    {
+      "name": "2-camera-8-lichtblick",
+      "files": {
+        "result.json": "30725712e1ad811016cb023dd9fa6beabeac1053fdb6b61715097be611378f02",
+        "app.log": "5199cb898c29d0d9ad26f1c72b5213b6501391afc5675236177458d7da88c9b5"
+      }
+    },
+    {
+      "name": "2-camera-8-native",
+      "files": {
+        "result.json": "b0d71b3903d29f8f3f55b49a582ea28eb88baf5a4d733a93b72c12f6a42cde99",
+        "app.log": "635e4996ad7e6f136924fb9323afc11b4264a2a5bdb96ddf95edc0ce2e6e6cbb"
+      }
+    },
+    {
+      "name": "2-camera-8-native-background5",
+      "files": {
+        "result.json": "8bf519344c875c0130bcedf3f64cd15d098c68f8806c904d1da4ff8bc12920d2",
+        "app.log": "bf42d26f9831577b54153542bb39ad8452e280359bb31a3a38344d96a9df93c2"
+      }
+    },
+    {
+      "name": "2-cloud-60000-lichtblick",
+      "files": {
+        "result.json": "2a814e1d4ea5fe41baa97427c13d2b388aff1e193ab0de2f16a783a46ffe8085",
+        "app.log": "85845eff4aeae7ea9fd73042d1d226573df5c7e84f9f0cdfe89f6c987740d042"
+      }
+    },
+    {
+      "name": "2-cloud-60000-native",
+      "files": {
+        "result.json": "2823d83d6d5382030a254bcf1d858dbb204433377634c1944f132e41788dbbdb",
+        "app.log": "d2d4950727f5eda7fa8e7312e310d695a0254f49b0dc194ed77be129d280e204"
+      }
+    },
+    {
+      "name": "calibrate-camera-4-native",
+      "files": {
+        "result.json": "dd9932651f53ebbcae094503eab9717287ab7c2bb944fcc807dae466b8ab52bf",
+        "app.log": "8fcbb8089b8ac2435e9d4a59b86ca534f0ec6e7822add644686033afe0377b0d",
+        "references.json": "bf95eb8a87cb3fd94fbc965fa251ac6073c5a6ac72e8c26280674d0be905a9e2"
+      }
+    },
+    {
+      "name": "calibrate-camera-8-native",
+      "files": {
+        "result.json": "83ca90734eaa96676cb2e6d1d2229ded2a74519636c20c4326a8ecbd6e90b5b8",
+        "app.log": "0d86972adbaad27a1801dbdedf075d0e155a3da9b1afbf05062d8bc90bc4fbae",
+        "references.json": "94d952daf9d4c0c86e3e15e2ca589c2e1dcd2d6ce4bf373b8c5091d98ea39582"
+      }
+    }
+  ]
+}

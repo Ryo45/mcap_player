@@ -1,0 +1,84 @@
+{
+  "product_source_commit": "59b24fa7e0b382ab21ec14a473a56d51d9f529df",
+  "measurement_finished_utc": "2026-10-20T22:18:26.476234+00:00",
+  "dataset_facts": [
+    [
+      "camera-1",
+      14944878140,
+      "9f31b9ad47758f2f2313b83b584240757241330e71060ba537b5a8716ceda07e"
+    ],
+    [
+      "camera-4",
+      14944878140,
+      "9f31b9ad47758f2f2313b83b584240757241330e71060ba537b5a8716ceda07e"
+    ],
+    [
+      "camera-8",
+      14944878140,
+      "9f31b9ad47758f2f2313b83b584240757241330e71060ba537b5a8716ceda07e"
+    ],
+    [
+      "camera-focus-7",
+      14944878140,
+      "9f31b9ad47758f2f2313b83b584240757241330e71060ba537b5a8716ceda07e"
+    ],
+    [
+      "cloud-10000",
+      40045029,
+      "7496bfbce8181df7af6ffc6562dd0a9e15fcc771a9c66f46acea9fa6b5320d2b"
+    ],
+    [
+      "cloud-60000",
+      240048557,
+      "ef6f27cd4260f4509c469f0c6bdc8cd76db28116e165b20b3e170d36b7e45d63"
+    ],
+    [
+      "raw-closed",
+      74947,
+      "c6b98d4ceba2f9adb37b7ea54a06b8790659ee0b9b11a68a3e4db69c074d971a"
+    ],
+    [
+      "raw-open",
+      74947,
+      "c6b98d4ceba2f9adb37b7ea54a06b8790659ee0b9b11a68a3e4db69c074d971a"
+    ],
+    [
+      "scan-360",
+      311747,
+      "aca4b1732ebb547f98e722c576e230c94f376566e139a789ec90ab578baad103"
+    ],
+    [
+      "scan-3600",
+      2903747,
+      "3ed49c487a53c788ad9453ecbe503bac26cb05a0a017991274648d27e8222b53"
+    ],
+    [
+      "scan-36000",
+      28824188,
+      "c274a4e290f3052f7c2aafe825d82b2c160e68d57f667c8484239728ccd536b8"
+    ]
+  ],
+  "binary_sha256": {
+    "native": "c4accca4374eb401032377d9f2b7617cdce8bcc8de806dbe456344470f290815",
+    "lichtblick": "180eea79cebc825a7e7291b8c5ef387760773f2b03596751bda8e6e532a8b6c8"
+  },
+  "scripts_sha256": {
+    "tools/performance-probe/build_desktop_workload_probe.py": "bacefb6a88befdc433ec2a0c1833d30b2dfd3dc1f4dc36f89f3b283aaa53a0e9",
+    "tools/performance-probe/prepare_desktop_workloads.py": "d3ceef9b7256c457bd8108899d653502e4d8d8e7345a2b5a5ce363b849861ce2",
+    "tools/performance-probe/measure_desktop_workload.py": "87f6512a53417d6e3d43c11d70851a3f084ed365967a05bdc9403de720072c78",
+    "tools/performance-probe/run_desktop_workloads.py": "298940ff353806eb10cca06a746c8c02f20ddf0fed108fa19e984fa84dcca65f",
+    "tools/performance-probe/summarize_desktop_workloads.py": "9a70d9e71845d5cb26226a6b67347e77a06adca8f0c9de3330aab43bc5411871",
+    "tools/performance-probe/control_desktop_pss.py": "59a72071ac6c1dd727dd048a7dc0fff64991fd8f47f869b2703dc1d44df50bec",
+    "tools/performance-probe/measure_viewer_pilot.py": "30d644c5a79c0f0058d522f7a7a2f502144c3abb13b85b10947d636f22c8c668",
+    "tools/performance-probe/test_process_sample.py": "859569b5e54ca354eb0d186ec8c13078d6c453cb0270c77637b95ffead812333",
+    "tools/performance-probe/finish_desktop_workloads.py": "26ba3875966d62795368cfe4b677a6f9c221e96c44300cd2fda91f01f11b2dba",
+    "tools/performance-probe/browser_cdp.py": "8b7e986d3a28f616b5df7ce8aadf486a4c9e19ea9d527339c9d144b813435625",
+    "tools/performance-probe/check_native_gpu.py": "9ceab48fae6b1e37eb8190bb305e3323220f6db76821f3814a5dd5a388fab609",
+    "tools/performance-probe/compare_native_desktop.py": "6937568f53a2a649014a9ea221d48ab732d4e678586e3e6541c6dc3cf17f39ab",
+    "tools/performance-probe/measure_desktop_layout.py": "245c3b45b5af6476f60bdc8adc1786984c66dc82d8c33273f0a304196b09242c"
+  },
+  "native_patch_sha256": "f5adcc1bd483d9b16c0577752cdac48d294ba68bd0af58e676c16000f0ef4e7c",
+  "primary_valid_runs": 66,
+  "excluded_display_runs": 1,
+  "control_runs": 6
+}

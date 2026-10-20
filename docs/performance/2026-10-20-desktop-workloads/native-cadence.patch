@@ -1,0 +1,293 @@
+--- a/apps/viewer-native/src/main.rs
++++ b/apps/viewer-native/src/main.rs
+@@ -33,7 +33,9 @@
+ fn main() -> Result<()> {
+     env_logger::init();
+     let args = Args::parse()?;
+-    let mut workspace = NativeWorkspace::load_bundled_or_fallback(args.layout);
++    let mut workspace = if let Ok(path) = std::env::var("MCAP_BENCH_LAYOUT") {
++        NativeWorkspace::from_json(&std::fs::read_to_string(path)?).map_err(anyhow::Error::msg)?
++    } else { NativeWorkspace::load_bundled_or_fallback(args.layout) };
+     if let Some(topic) = &args.point_cloud_topic {
+         workspace.set_point_cloud_topic(topic.clone());
+     }
+@@ -54,3 +56,10 @@
+     event_loop.run_app(&mut app)?;
+     Ok(())
+ }
++
++pub(crate) fn bench_rect(key: &str) -> egui::Rect {
++    static VALUE: std::sync::OnceLock<serde_json::Value> = std::sync::OnceLock::new();
++    let config = VALUE.get_or_init(|| serde_json::from_str(&std::fs::read_to_string(std::env::var("MCAP_BENCH_GEOMETRY").unwrap()).unwrap()).unwrap());
++    let r = config["rects"][key].as_array().unwrap();
++    egui::Rect::from_min_size(egui::pos2(r[0].as_f64().unwrap() as f32,r[1].as_f64().unwrap() as f32),egui::vec2(r[2].as_f64().unwrap() as f32,r[3].as_f64().unwrap() as f32))
++}
+--- a/apps/viewer-native/src/app.rs
++++ b/apps/viewer-native/src/app.rs
+@@ -61,6 +61,7 @@
+             self.workspace.bindings(),
+         ) {
+             Ok(mut session) => {
++                log::info!("GPU_BENCH_SELECTION cameras={:?} cloud={:?}",session.plan().camera_topics(),session.plan().point_cloud_stream().map(|s|s.topic.as_str()));
+                 if let Some(previous) = &mut self.session {
+                     session.take_query_workers_from(previous);
+                 }
+@@ -113,7 +114,41 @@
+         if self.session.is_none() {
+             return Ok(());
+         }
++
++        static LAST: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
++        if let Ok(path) = std::env::var("MCAP_BENCH_CONTROL")
++            && let Ok(text) = std::fs::read_to_string(path)
++            && let Some((id, command)) = text.trim().split_once(' ')
++            && let Ok(id) = id.parse::<u64>()
++            && id > LAST.load(std::sync::atomic::Ordering::Relaxed)
++            && let Some(view) = self.session.as_ref().and_then(ViewerSession::playback_view)
++        {
++            let mut actions = Vec::new();
++            if let Some(offset) = command.strip_prefix("seek ").and_then(|v| v.parse::<i64>().ok()) {
++                if view.playing { actions.push(ViewerAction::Playback(viewer_core::PlaybackCommand::Toggle)); }
++                actions.push(ViewerAction::Playback(viewer_core::PlaybackCommand::Seek(viewer_core::ArrivalTime(view.start.0.saturating_add(offset)))));
++            } else if (command == "play" && !view.playing) || (command == "pause" && view.playing) {
++                actions.push(ViewerAction::Playback(viewer_core::PlaybackCommand::Toggle));
++            }
++            self.apply_frame_actions(actions);
++            LAST.store(id, std::sync::atomic::Ordering::Relaxed);
++            log::info!("GPU_BENCH_COMMAND id={id} command={command}");
++        }
++
+         self.advance_session(elapsed);
++        if let Some(view) = self.session.as_ref().and_then(ViewerSession::playback_view) {
++            static CLOCK: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(i64::MIN);
++            if CLOCK.swap(view.cursor.0,std::sync::atomic::Ordering::Relaxed) != view.cursor.0 {
++                log::info!("GPU_BENCH_CURSOR cursor={}",view.cursor.0);
++            }
++        }
++        if let Some(frame) = self.workspace.runtime.as_ref().and_then(|r|r.point_cloud()).and_then(|c|c.point_cloud().latest()) {
++            static CLOUD: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(i64::MIN);
++            if CLOUD.swap(frame.arrival_time.0,std::sync::atomic::Ordering::Relaxed) != frame.arrival_time.0 {
++                log::info!("GPU_BENCH_CLOUD arrival={} points={}",frame.arrival_time.0,frame.points.len());
++            }
++        }
++
+         if self.graphics.is_none() {
+             return Ok(());
+         }
+--- a/apps/viewer-native/src/graphics/views/camera.rs
++++ b/apps/viewer-native/src/graphics/views/camera.rs
+@@ -67,7 +67,7 @@
+     ui.separator();
+     let available = ui.available_size();
+     let thumbnail_reserve = if input.show_thumbnails { 70.0 } else { 0.0 };
+-    let focus_area = egui::vec2(available.x, (available.y - thumbnail_reserve).max(1.0));
++    let focus_area = input.focused_camera.map_or_else(|| egui::vec2(available.x, (available.y - thumbnail_reserve).max(1.0)), |id| crate::bench_rect(&format!("camera_{}",id.0)).size());
+     let density = ui.ctx().pixels_per_point();
+     if input.show_thumbnails {
+         for camera in input.cameras {
+@@ -178,7 +178,12 @@
+         );
+         return;
+     };
+-    let image_rect = contain_image_rect(container, texture.size);
++    let image_rect = contain_image_rect(crate::bench_rect(&format!("camera_{}",texture.camera_id.0)), texture.size);
++    ui.set_clip_rect(crate::bench_rect(&format!("camera_{}",texture.camera_id.0)));
++    static LAST_FRAME: [std::sync::atomic::AtomicI64; 32] = [const {std::sync::atomic::AtomicI64::new(i64::MIN)};32];
++    if LAST_FRAME[usize::from(texture.camera_id.0)].swap(texture.arrival_time.0,std::sync::atomic::Ordering::Relaxed) != texture.arrival_time.0 {
++        log::info!("GPU_BENCH_FRAME camera={} arrival={} rect={:?} size={:?}",texture.camera_id.0,texture.arrival_time.0,image_rect,texture.size);
++    }
+     ui.put(
+         image_rect,
+         egui::Image::new((texture.texture_id, image_rect.size())).uv(egui::Rect::from_min_max(
+--- a/apps/viewer-native/src/graphics/views/scene.rs
++++ b/apps/viewer-native/src/graphics/views/scene.rs
+@@ -100,9 +100,10 @@
+     });
+     ui.label(tf_status);
+ 
+-    let logical_size = ui.available_size().max(egui::vec2(1.0, 1.0));
++    let logical_size = crate::bench_rect("scene").size();
++    ui.set_clip_rect(crate::bench_rect("scene"));
+     let response = ui
+-        .add(egui::Image::new((input.texture_id, logical_size)).sense(egui::Sense::drag()))
++        .put(crate::bench_rect("scene"),egui::Image::new((input.texture_id, logical_size)).sense(egui::Sense::drag()))
+         .on_hover_text(match camera_mode {
+             SceneCameraMode::Chase => {
+                 "Vehicle-following chase view · Wheel: zoom · Double-click: reset"
+--- a/apps/viewer-native/src/graphics/layout_host.rs
++++ b/apps/viewer-native/src/graphics/layout_host.rs
+@@ -94,7 +94,7 @@
+     panels: &mut PanelRuntimeStore,
+     context: PanelCompositionInput<'_>,
+ ) -> PanelOutput {
+-    let rect = ui.available_rect_before_wrap();
++    let rect = crate::bench_rect("layout");
+     let output = show_node(ui, &document.root, panels, context, rect, "root");
+     ui.allocate_rect(rect, egui::Sense::hover());
+     output
+--- a/apps/viewer-native/src/graphics/ui.rs
++++ b/apps/viewer-native/src/graphics/ui.rs
+@@ -105,7 +105,7 @@
+             if !panels.has_embedded_topics() {
+                 egui::SidePanel::left("source-status")
+                     .resizable(true)
+-                    .default_width(260.0)
++                    .default_width(320.0)
+                     .show(context, |ui| {
+                         source_status(ui, presentation);
+                         actions.extend(crate::panels::show_topics(
+--- a/apps/viewer-native/src/panels/inspector.rs
++++ b/apps/viewer-native/src/panels/inspector.rs
+@@ -135,7 +135,13 @@
+             ui.label("Updating cursor query…");
+         });
+     }
++
+     if let Some(metadata) = inspection.metadata {
++        static RAW: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(i64::MIN);
++        if RAW.swap(metadata.log_time.0,std::sync::atomic::Ordering::Relaxed) != metadata.log_time.0 {
++            log::info!("GPU_BENCH_INSPECTOR log={}",metadata.log_time.0);
++        }
++
+         if metadata.log_time > cursor {
+             ui.label("Waiting for the earlier cursor query…");
+             return;
+@@ -328,7 +334,7 @@
+             }
+             InspectorValue::Container(child) => {
+                 ui.push_id(child.id(), |ui| {
+-                    ui.collapsing(
++                    egui::CollapsingHeader::new(
+                         format!(
+                             "{}: {} ({} {})",
+                             field.name,
+@@ -339,9 +345,9 @@
+                             } else {
+                                 "fields"
+                             }
+-                        ),
+-                        |ui| show_container(ui, message, &child, state, visible, budget),
+-                    );
++                        ))
++                        .default_open(std::env::var("MCAP_BENCH_RAW_EXPAND").as_deref() == Ok("1") && field.name == "ranges")
++                        .show(ui, |ui| show_container(ui, message, &child, state, visible, budget));
+                 });
+             }
+         }
+--- a/crates/scene-renderer/src/lib.rs
++++ b/crates/scene-renderer/src/lib.rs
+@@ -58,9 +58,9 @@
+ impl Default for SceneCamera {
+     fn default() -> Self {
+         Self {
+-            distance: 6.0,
+-            azimuth: 0.699,
+-            elevation: 0.48,
++            distance: 20.0,
++            azimuth: 45.0_f32.to_radians(),
++            elevation: 30.0_f32.to_radians(),
+         }
+     }
+ }
+@@ -343,7 +343,7 @@
+         let (eye, target) = camera_pose(self.camera_mode, self.camera, frame);
+         let view = look_at_rh(eye, target, [0.0, 1.0, 0.0]);
+         let aspect = self.size.0 as f32 / self.size.1 as f32;
+-        let projection = perspective_rh(48.0_f32.to_radians(), aspect, 0.01, 160.0);
++        let projection = perspective_rh(45.0_f32.to_radians(), aspect, 0.5, 5000.0);
+         let view_projection = multiply(projection, view);
+         let uniform = SceneUniform {
+             view_projection,
+@@ -545,17 +545,11 @@
+ 
+ fn make_grid() -> Vec<Vertex> {
+     let mut vertices = Vec::new();
+-    for meter in -50_i32..=50 {
++    for meter in -5_i32..=5 {
+         let coordinate = meter as f32;
+-        let color = if meter == 0 {
+-            [0.22, 0.48, 0.42]
+-        } else if meter % 5 == 0 {
+-            [0.12, 0.26, 0.30]
+-        } else {
+-            [0.055, 0.10, 0.12]
+-        };
++        let color = [0.017641954, 0.27049786, 1.0];
+         // Short metric segments remain stable when the near plane cuts a grid line.
+-        for step in -50_i32..50 {
++        for step in -5_i32..5 {
+             let start = step as f32;
+             let end = start + 1.0;
+             push_line(
+--- a/apps/viewer-native/src/graphics.rs
++++ b/apps/viewer-native/src/graphics.rs
+@@ -202,7 +202,8 @@
+             cloud: snapshot.cloud,
+             cloud_colors: snapshot.cloud_colors,
+         };
+-        if scene_resized || self.scene_renderer.needs_render(frame) {
++        if scene_resized || self.scene_renderer.needs_render(frame) || std::env::var_os("MCAP_BENCH_SCENE_EVERY_FRAME").is_some() {
++            log::info!("GPU_BENCH_CADENCE scene");
+             self.scene_renderer.render(&self.device, &self.queue, frame);
+         }
+     }
+--- a/apps/viewer-native/src/graphics/surface.rs
++++ b/apps/viewer-native/src/graphics/surface.rs
+@@ -175,6 +175,7 @@
+         self.queue
+             .submit(callbacks.into_iter().chain([encoder.finish()]));
+         frame.present();
++        log::info!("GPU_BENCH_CADENCE present");
+         for id in &textures_delta.free {
+             self.egui_renderer.free_texture(id);
+         }
+--- a/crates/viewer-core/src/feature/controllers/camera.rs
++++ b/crates/viewer-core/src/feature/controllers/camera.rs
+@@ -9,7 +9,10 @@
+ };
+ 
+ const FOCUSED_CAMERA_INTERVAL: Duration = Duration::from_millis(100);
+-const BACKGROUND_CAMERA_INTERVAL: Duration = Duration::from_millis(200);
++fn background_camera_interval() -> Duration {
++    static INTERVAL: std::sync::OnceLock<Duration> = std::sync::OnceLock::new();
++    *INTERVAL.get_or_init(|| Duration::from_millis(if std::env::var_os("MCAP_BENCH_ALL_CAMERA_10HZ").is_some() { 100 } else { 200 }))
++}
+ 
+ /// Shared Camera capability used by all Camera panels for one session.
+ ///
+@@ -138,7 +141,7 @@
+             self.next_presentation.insert(
+                 previous,
+                 self.presentation_elapsed
+-                    .saturating_add(BACKGROUND_CAMERA_INTERVAL),
++                    .saturating_add(background_camera_interval()),
+             );
+         }
+         self.focused_camera = focused_camera;
+@@ -181,7 +184,7 @@
+     }
+ 
+     pub fn background_hz() -> f64 {
+-        1.0 / BACKGROUND_CAMERA_INTERVAL.as_secs_f64()
++        1.0 / background_camera_interval().as_secs_f64()
+     }
+ 
+     fn is_due(&self, camera_id: CameraId) -> bool {
+@@ -194,7 +197,7 @@
+         if Some(camera_id) == self.focused_camera {
+             FOCUSED_CAMERA_INTERVAL
+         } else {
+-            BACKGROUND_CAMERA_INTERVAL
++            background_camera_interval()
+         }
+     }
+ 
+@@ -209,7 +212,7 @@
+         let background_count = background.len().max(1) as f64;
+         for (index, camera_id) in background.into_iter().enumerate() {
+             let phase = Duration::from_secs_f64(
+-                BACKGROUND_CAMERA_INTERVAL.as_secs_f64() * index as f64 / background_count,
++                background_camera_interval().as_secs_f64() * index as f64 / background_count,
+             );
+             self.next_presentation.insert(camera_id, phase);
+         }

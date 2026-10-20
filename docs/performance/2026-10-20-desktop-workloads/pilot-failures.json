@@ -1,0 +1,61 @@
+{
+  "scope": "Calibration prototype failures before primary measurements; never product capacity results",
+  "failures": [
+    {
+      "case": "camera-4",
+      "app": "lichtblick",
+      "status": "failed",
+      "error": "OSError(98, 'Address already in use')",
+      "harness_sha256": "b75d0d14837fb92c0a794c163206170dfa226db911d74107a41e62a206ee376d",
+      "wall_seconds": 0.0004548951983451843,
+      "directory": "/tmp/mcap-desktop-workloads-port-failure"
+    },
+    {
+      "case": "camera-8",
+      "app": "lichtblick",
+      "status": "failed",
+      "error": "RuntimeError('nonunique calibration')",
+      "harness_sha256": "b75d0d14837fb92c0a794c163206170dfa226db911d74107a41e62a206ee376d",
+      "wall_seconds": 12.990299106575549,
+      "directory": "/tmp/mcap-desktop-workloads-calibration-8-first"
+    },
+    {
+      "case": "camera-8",
+      "app": "lichtblick",
+      "status": "failed",
+      "error": "RuntimeError('timeout: completed calibration seek')",
+      "harness_sha256": "f885224eabbf4ea704874263616b724b0eb0693caf4d49334e9424c142b7b005",
+      "wall_seconds": 8.695831625722349,
+      "directory": "/tmp/mcap-desktop-workloads-final/calibrate-camera-8-lichtblick"
+    },
+    {
+      "case": "camera-1",
+      "app": "lichtblick",
+      "status": "failed",
+      "error": "RuntimeError('timeout: completed calibration seek')",
+      "harness_sha256": "591e04812ab338b70e8ab903894a5e06177ff1db1eba93f071cbf7cbba8020c6",
+      "wall_seconds": 9.113619521260262,
+      "directory": "/tmp/mcap-desktop-workloads-v2/calibrate-camera-1-lichtblick"
+    },
+    {
+      "case": "camera-1",
+      "app": "lichtblick",
+      "status": "failed",
+      "error": "OSError(98, 'Address already in use')",
+      "harness_sha256": "546bb7148c119a2fab68952ebe3efccfe8a2f63aaef045c808c105c82d054bb6",
+      "wall_seconds": 0.0004217168316245079,
+      "directory": "/tmp/mcap-desktop-workloads-v3/calibrate-camera-1-lichtblick"
+    }
+  ],
+  "rejected_smoke": {
+    "scope": "Before primary matrix; discard prototype performance statistics",
+    "reason": "UI polling blocked, and CPU interval ended after pause while the denominator ended before it",
+    "observer_max_ms": 26334.90750286728,
+    "harness_sha256": "ed23bd26cc85f8fb7420935f829992881e431841e89668afacc06bce0785468e"
+  },
+  "discarded_primary_prototype": {
+    "path": "/tmp/mcap-desktop-workloads-before-thread-accounting",
+    "runs": 8,
+    "reason": "Main-thread-only children traversal undercounts Electron processes; synchronous smaps_rollup also blocked pixel observation. All 8 runs discarded, including successful runs."
+  }
+}

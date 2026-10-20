@@ -1,0 +1,53 @@
+{
+  "name": "raw-open",
+  "native_layout": {
+    "schemaVersion": 1,
+    "root": {
+      "kind": "panel",
+      "id": "inspector-0",
+      "panelType": "inspector",
+      "configVersion": 1,
+      "config": {
+        "topic": "/scan"
+      }
+    }
+  },
+  "lichtblick_layout": {
+    "configById": {
+      "RawMessagesVirtual!bench": {
+        "topicPath": "/scan",
+        "expansion": {
+          "ranges": "e"
+        }
+      }
+    },
+    "layout": "RawMessagesVirtual!bench",
+    "globalVariables": {},
+    "userNodes": {},
+    "playbackConfig": {
+      "speed": 1
+    }
+  },
+  "rects": {
+    "layout": [
+      320,
+      44,
+      1600,
+      958
+    ],
+    "raw": [
+      320,
+      76,
+      1600,
+      926
+    ]
+  },
+  "kind": "raw",
+  "data": "/tmp/mcap-point-cloud2-data/scan-64-20s.mcap",
+  "cameras": 0,
+  "topics": [
+    "/scan"
+  ],
+  "points": 64,
+  "expanded": true
+}

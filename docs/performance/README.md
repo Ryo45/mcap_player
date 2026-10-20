@@ -1,5 +1,7 @@
 # 性能検証
 
+GUI比較の旧process_sampleには、別スレッドから起動した子プロセスを取りこぼす不具合があった。特に2026-10-20のDesktop比較ではrenderer欠落を確認し、CPU・PSS比較を撤回した。過去のGUI資源量は再監査が必要で、[修正後の表示パターン別比較](2026-10-20-desktop-workloads/README.md)と混ぜて集計しない。
+
 目的は性能上の特徴・限界・トレードオフを把握すること。高機能ビューアの
 機能数・優劣を比較するベンチマークではない。製品の経路を変更せず測り、
 仮説が成立しない条件も保存する。
@@ -136,7 +138,7 @@ percentileは各run内のnearest-rankを出してから反復間の中央値を�
 * SSD／NAS／遅延のあるremote、cache状態を明示したcold/warm条件。
 * 同じmessage集合の異なるChunk構成をさらに作り、混在度とサイズをできるだけ分離。
 * 復元を含むfull Seekと、操作頻度／working setに対するbounded cacheの効果。
-* 対応すればPointCloud2・画像動画encodingの条件、ROS bag分割と再結合の操作。
+* PointCloud2のさらに大きい点数・画像動画encodingの条件、ROS bag分割と再結合の操作。
 
 外部仕様の根拠: [MCAP specification](https://mcap.dev/spec)のChunkはレコード集合ごとに
 圧縮され、Chunk IndexにchannelごとのMessage Index位置を持つ。
@@ -154,3 +156,5 @@ Web Localで各3回再生し、Chrome process treeのPSSを比較した。再生
 [Webの4K・8camera再生と連続Seek](2026-10-15-web-camera-stress/README.md)では、実際に描いた画像を識別して
 8台すべての復帰を検証した。非圧縮8 MiB条件は完走し、zstd64 MiB条件は外部PSS 2 GiB guardで打ち切った。
 カーソル1xと画像更新頻度の違いも記録している。
+
+[Desktopの表示パターン別比較](2026-10-20-desktop-workloads/README.md)では、FHD画面でカメラ1／4／8台とフォーカス配置、Raw配列開閉、Scan 360〜36,000点、RGB PointCloud2 1万／6万点を比較する。背景更新頻度と縮小decodeの差も明示する。

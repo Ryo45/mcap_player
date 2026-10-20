@@ -1,0 +1,813 @@
+{
+  "scope": "Periodic PSS disabled only; pixel observation and full-process CPU/RSS remain. Paused PSS is outside timing. Three repeats per app; performed after primary matrix on shared host.",
+  "runs": [
+    {
+      "name": "0-camera-8-native",
+      "summary": {
+        "cpu_one_core_percent": 104.21109657137409,
+        "peak_sampled_pss_mib": null,
+        "pss_sample_count": 0,
+        "pss_read_ms": null,
+        "paused_pss_mib": 303.7451171875,
+        "peak_sampled_summed_rss_mib": 317.01171875,
+        "observer_work_ms": {
+          "median": 8.098990190774202,
+          "p95": 10.039984248578548,
+          "min": 5.792340263724327,
+          "max": 11.829734779894352
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 9.860848150730368,
+            "progress_hz": 9.860848150730368,
+            "lag_ms": {
+              "median": 138.03291143849455,
+              "p95": 170.10903675109114,
+              "min": 105.47418184578416,
+              "max": 170.89544814079892
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.544705897569656
+          },
+          {
+            "camera_id": 1,
+            "updates_hz": 5.013990585117136,
+            "progress_hz": 9.777281640978414,
+            "lag_ms": {
+              "median": 238.28690294176283,
+              "p95": 318.2352472096675,
+              "min": 155.7329738512635,
+              "max": 320.7925342023366
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.544705897569656
+          },
+          {
+            "camera_id": 2,
+            "updates_hz": 5.013990585117136,
+            "progress_hz": 9.860848150730368,
+            "lag_ms": {
+              "median": 188.6410444974892,
+              "p95": 268.77385918050936,
+              "min": 106.02083802223206,
+              "max": 271.3725460693226
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.544705897569656
+          },
+          {
+            "camera_id": 3,
+            "updates_hz": 5.013990585117136,
+            "progress_hz": 9.860848150730368,
+            "lag_ms": {
+              "median": 220.60335390269614,
+              "p95": 317.01134890317917,
+              "min": 120.5696277320385,
+              "max": 320.14810219406974
+            },
+            "rejected_samples": 3,
+            "max_sample_gap_ms": 100.0066502019763
+          },
+          {
+            "camera_id": 4,
+            "updates_hz": 5.013990585117136,
+            "progress_hz": 9.860848150730368,
+            "lag_ms": {
+              "median": 238.98294251412133,
+              "p95": 319.0779145807028,
+              "min": 156.47357050329447,
+              "max": 321.5391511097536
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.544705897569656
+          },
+          {
+            "camera_id": 5,
+            "updates_hz": 4.930424075365184,
+            "progress_hz": 9.777281640978414,
+            "lag_ms": {
+              "median": 189.4152516499156,
+              "p95": 269.72792521119084,
+              "min": 106.72514457255599,
+              "max": 272.02940359711647
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.544705897569656
+          },
+          {
+            "camera_id": 6,
+            "updates_hz": 5.013990585117136,
+            "progress_hz": 9.777281640978414,
+            "lag_ms": {
+              "median": 215.85122160613503,
+              "p95": 311.2012133002278,
+              "min": 115.38798045366948,
+              "max": 317.7696812897919
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.544705897569656
+          },
+          {
+            "camera_id": 7,
+            "updates_hz": 5.013990585117136,
+            "progress_hz": 9.777281640978414,
+            "lag_ms": {
+              "median": 239.75081210955923,
+              "p95": 319.6909109130495,
+              "min": 157.17231985181567,
+              "max": 322.2859434783452
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.544705897569656
+          }
+        ]
+      },
+      "control": {
+        "periodic_pss": false,
+        "cpu_rss_pixels": "unchanged",
+        "paused_pss": "still collected outside timed interval",
+        "wrapper_sha256": "59a72071ac6c1dd727dd048a7dc0fff64991fd8f47f869b2703dc1d44df50bec"
+      },
+      "harness_sha256": "87f6512a53417d6e3d43c11d70851a3f084ed365967a05bdc9403de720072c78",
+      "resource_sampler_sha256": "30d644c5a79c0f0058d522f7a7a2f502144c3abb13b85b10947d636f22c8c668",
+      "raw_sha256": "bf393e40037f985871dca8eaabda5311a9e45839bd89ce82e3c7d912d0829ca2"
+    },
+    {
+      "name": "0-camera-8-lichtblick",
+      "summary": {
+        "cpu_one_core_percent": 411.5858214082637,
+        "peak_sampled_pss_mib": null,
+        "pss_sample_count": 0,
+        "pss_read_ms": null,
+        "paused_pss_mib": 3144.92578125,
+        "peak_sampled_summed_rss_mib": 4263.0625,
+        "observer_work_ms": {
+          "median": 8.653331082314253,
+          "p95": 14.112915843725204,
+          "min": 6.02993369102478,
+          "max": 36.63880378007889
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 4.679054314166372,
+            "progress_hz": 6.935026929925159,
+            "lag_ms": {
+              "median": 2492.0485934242606,
+              "p95": 3524.4053401052947,
+              "min": 606.03510402143,
+              "max": 3727.2391416132446
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 75.05686767399311
+          },
+          {
+            "camera_id": 1,
+            "updates_hz": 4.679054314166372,
+            "progress_hz": 6.935026929925159,
+            "lag_ms": {
+              "median": 2492.3343590460718,
+              "p95": 3524.7244978323574,
+              "min": 610.6004495173693,
+              "max": 3727.5042286142702
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 75.05686767399311
+          },
+          {
+            "camera_id": 2,
+            "updates_hz": 4.679054314166372,
+            "progress_hz": 6.935026929925159,
+            "lag_ms": {
+              "median": 2492.614653147757,
+              "p95": 3525.0296037644143,
+              "min": 610.9129641205072,
+              "max": 3727.7707675471897
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 75.05686767399311
+          },
+          {
+            "camera_id": 3,
+            "updates_hz": 4.679054314166372,
+            "progress_hz": 6.935026929925159,
+            "lag_ms": {
+              "median": 2492.8976764902472,
+              "p95": 3525.342040136456,
+              "min": 657.1869779378176,
+              "max": 3728.034680150449
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 75.05686767399311
+          },
+          {
+            "camera_id": 4,
+            "updates_hz": 4.679054314166372,
+            "progress_hz": 6.935026929925159,
+            "lag_ms": {
+              "median": 2493.1812120601535,
+              "p95": 3525.654883496463,
+              "min": 657.4360592290759,
+              "max": 3728.29612288624
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 75.05686767399311
+          },
+          {
+            "camera_id": 5,
+            "updates_hz": 4.679054314166372,
+            "progress_hz": 6.935026929925159,
+            "lag_ms": {
+              "median": 2493.46303679049,
+              "p95": 3525.9702097624536,
+              "min": 657.6963219791651,
+              "max": 3728.56482155621
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 75.05686767399311
+          },
+          {
+            "camera_id": 6,
+            "updates_hz": 4.511945231517573,
+            "progress_hz": 6.935026929925159,
+            "lag_ms": {
+              "median": 2493.740462884307,
+              "p95": 3526.2802088633175,
+              "min": 657.9712921753526,
+              "max": 3728.826308995485
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 75.05686767399311
+          },
+          {
+            "camera_id": 7,
+            "updates_hz": 3.9270634422467765,
+            "progress_hz": 6.767917847276359,
+            "lag_ms": {
+              "median": 2544.416075479239,
+              "p95": 3526.59321706742,
+              "min": 658.2479424774647,
+              "max": 3875.869686156511
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 75.05686767399311
+          }
+        ]
+      },
+      "control": {
+        "periodic_pss": false,
+        "cpu_rss_pixels": "unchanged",
+        "paused_pss": "still collected outside timed interval",
+        "wrapper_sha256": "59a72071ac6c1dd727dd048a7dc0fff64991fd8f47f869b2703dc1d44df50bec"
+      },
+      "harness_sha256": "87f6512a53417d6e3d43c11d70851a3f084ed365967a05bdc9403de720072c78",
+      "resource_sampler_sha256": "30d644c5a79c0f0058d522f7a7a2f502144c3abb13b85b10947d636f22c8c668",
+      "raw_sha256": "d2cfe1c6692ac379aa2f9baa5568454a4fadcec90f5569dedae11929e0b81e36"
+    },
+    {
+      "name": "1-camera-8-native",
+      "summary": {
+        "cpu_one_core_percent": 106.00440212906551,
+        "peak_sampled_pss_mib": null,
+        "pss_sample_count": 0,
+        "pss_read_ms": null,
+        "paused_pss_mib": 307.646484375,
+        "peak_sampled_summed_rss_mib": 321.3515625,
+        "observer_work_ms": {
+          "median": 7.065244484692812,
+          "p95": 13.710672967135906,
+          "min": 5.738328211009502,
+          "max": 63.28588258475065
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 9.845881435871446,
+            "progress_hz": 9.845881435871446,
+            "lag_ms": {
+              "median": 155.4869475774467,
+              "p95": 187.89097703993286,
+              "min": 105.39420172572133,
+              "max": 189.19623531401086
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 105.73919676244259
+          },
+          {
+            "camera_id": 1,
+            "updates_hz": 5.006380391121074,
+            "progress_hz": 9.762441762686095,
+            "lag_ms": {
+              "median": 255.87124377489084,
+              "p95": 332.1580536663529,
+              "min": 155.75982108712194,
+              "max": 374.3834923952818
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 105.73919676244259
+          },
+          {
+            "camera_id": 2,
+            "updates_hz": 5.006380391121074,
+            "progress_hz": 9.845881435871446,
+            "lag_ms": {
+              "median": 206.06330819427964,
+              "p95": 286.3503150641904,
+              "min": 106.04888666421175,
+              "max": 325.58329366147467
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 105.73919676244259
+          },
+          {
+            "camera_id": 3,
+            "updates_hz": 5.006380391121074,
+            "progress_hz": 9.845881435871446,
+            "lag_ms": {
+              "median": 229.42101135849936,
+              "p95": 326.2711388990276,
+              "min": 129.27067931741476,
+              "max": 329.54418063163706
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 105.73919676244259
+          },
+          {
+            "camera_id": 4,
+            "updates_hz": 5.006380391121074,
+            "progress_hz": 9.845881435871446,
+            "lag_ms": {
+              "median": 256.4910961315036,
+              "p95": 332.20933042466606,
+              "min": 156.4041981473565,
+              "max": 336.55588198453046
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 105.73919676244259
+          },
+          {
+            "camera_id": 5,
+            "updates_hz": 4.922940717935723,
+            "progress_hz": 9.762441762686095,
+            "lag_ms": {
+              "median": 198.52680088952127,
+              "p95": 287.13493049144745,
+              "min": 106.57150987535712,
+              "max": 290.4363127425302
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 105.73919676244259
+          },
+          {
+            "camera_id": 6,
+            "updates_hz": 5.006380391121074,
+            "progress_hz": 9.762441762686095,
+            "lag_ms": {
+              "median": 226.87385594472255,
+              "p95": 309.8154732957479,
+              "min": 126.51925813406706,
+              "max": 330.20667955279316
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 105.73919676244259
+          },
+          {
+            "camera_id": 7,
+            "updates_hz": 5.006380391121074,
+            "progress_hz": 9.762441762686095,
+            "lag_ms": {
+              "median": 233.0640278756615,
+              "p95": 329.44020442664623,
+              "min": 132.87342768162523,
+              "max": 375.79922284930944
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 105.73919676244259
+          }
+        ]
+      },
+      "control": {
+        "periodic_pss": false,
+        "cpu_rss_pixels": "unchanged",
+        "paused_pss": "still collected outside timed interval",
+        "wrapper_sha256": "59a72071ac6c1dd727dd048a7dc0fff64991fd8f47f869b2703dc1d44df50bec"
+      },
+      "harness_sha256": "87f6512a53417d6e3d43c11d70851a3f084ed365967a05bdc9403de720072c78",
+      "resource_sampler_sha256": "30d644c5a79c0f0058d522f7a7a2f502144c3abb13b85b10947d636f22c8c668",
+      "raw_sha256": "9bd49130e8620a8149fd88d6cb88b3bcef52852ce69a4f2a600538e724b813cc"
+    },
+    {
+      "name": "1-camera-8-lichtblick",
+      "summary": {
+        "cpu_one_core_percent": 427.68558965894016,
+        "peak_sampled_pss_mib": null,
+        "pss_sample_count": 0,
+        "pss_read_ms": null,
+        "paused_pss_mib": 3175.310546875,
+        "peak_sampled_summed_rss_mib": 4199.98828125,
+        "observer_work_ms": {
+          "median": 8.717304561287165,
+          "p95": 13.8789601624012,
+          "min": 6.0529205948114395,
+          "max": 37.53186762332916
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 4.677849955015171,
+            "progress_hz": 7.016774932522757,
+            "lag_ms": {
+              "median": 2413.6875878088176,
+              "p95": 3470.031936839223,
+              "min": 557.9567300155759,
+              "max": 3673.528378084301
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 77.1391736343503
+          },
+          {
+            "camera_id": 1,
+            "updates_hz": 4.5107838851932005,
+            "progress_hz": 6.849708862700787,
+            "lag_ms": {
+              "median": 2390.018848609179,
+              "p95": 3470.2857706695795,
+              "min": 608.0377766862512,
+              "max": 3776.2392016127696
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 77.1391736343503
+          },
+          {
+            "camera_id": 2,
+            "updates_hz": 4.5107838851932005,
+            "progress_hz": 6.849708862700787,
+            "lag_ms": {
+              "median": 2390.2660556137557,
+              "p95": 3470.536450110376,
+              "min": 608.3272010087967,
+              "max": 3776.4963118359437
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 77.1391736343503
+          },
+          {
+            "camera_id": 3,
+            "updates_hz": 4.594316920104186,
+            "progress_hz": 7.016774932522757,
+            "lag_ms": {
+              "median": 2413.2920186966658,
+              "p95": 3470.7811802625656,
+              "min": 608.6135510355234,
+              "max": 3674.3066787719717
+            },
+            "rejected_samples": 1,
+            "max_sample_gap_ms": 95.75768932700157
+          },
+          {
+            "camera_id": 4,
+            "updates_hz": 4.5107838851932005,
+            "progress_hz": 7.016774932522757,
+            "lag_ms": {
+              "median": 2413.5372266173363,
+              "p95": 3471.0267504677176,
+              "min": 608.9113498106599,
+              "max": 3674.561768025159
+            },
+            "rejected_samples": 1,
+            "max_sample_gap_ms": 100.08917655795813
+          },
+          {
+            "camera_id": 5,
+            "updates_hz": 4.677849955015171,
+            "progress_hz": 7.016774932522757,
+            "lag_ms": {
+              "median": 2391.0071872174735,
+              "p95": 3471.274839900434,
+              "min": 659.5651902258396,
+              "max": 3674.817921780049
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 77.1391736343503
+          },
+          {
+            "camera_id": 6,
+            "updates_hz": 4.5107838851932005,
+            "progress_hz": 6.849708862700787,
+            "lag_ms": {
+              "median": 2415.2045665308833,
+              "p95": 3471.52311373502,
+              "min": 609.5098679885268,
+              "max": 3777.5205850601187
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 77.1391736343503
+          },
+          {
+            "camera_id": 7,
+            "updates_hz": 4.00958567572729,
+            "progress_hz": 6.849708862700787,
+            "lag_ms": {
+              "median": 2467.1524467878044,
+              "p95": 3471.7653768137097,
+              "min": 609.8075121641159,
+              "max": 3777.772330865263
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 77.1391736343503
+          }
+        ]
+      },
+      "control": {
+        "periodic_pss": false,
+        "cpu_rss_pixels": "unchanged",
+        "paused_pss": "still collected outside timed interval",
+        "wrapper_sha256": "59a72071ac6c1dd727dd048a7dc0fff64991fd8f47f869b2703dc1d44df50bec"
+      },
+      "harness_sha256": "87f6512a53417d6e3d43c11d70851a3f084ed365967a05bdc9403de720072c78",
+      "resource_sampler_sha256": "30d644c5a79c0f0058d522f7a7a2f502144c3abb13b85b10947d636f22c8c668",
+      "raw_sha256": "dd978b8074ccf0b660a20d24b3b9624957fa4f7bcb29af5868209265b3cecb53"
+    },
+    {
+      "name": "2-camera-8-native",
+      "summary": {
+        "cpu_one_core_percent": 105.77660306072057,
+        "peak_sampled_pss_mib": null,
+        "pss_sample_count": 0,
+        "pss_read_ms": null,
+        "paused_pss_mib": 293.2919921875,
+        "peak_sampled_summed_rss_mib": 315.7109375,
+        "observer_work_ms": {
+          "median": 8.762877900153399,
+          "p95": 10.165140964090824,
+          "min": 6.095164455473423,
+          "max": 11.23719196766615
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 9.861190878550337,
+            "progress_hz": 9.861190878550337,
+            "lag_ms": {
+              "median": 139.9029474705453,
+              "p95": 169.99613102525402,
+              "min": 106.58869333565235,
+              "max": 170.80257385969054
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.128650575876236
+          },
+          {
+            "camera_id": 1,
+            "updates_hz": 5.014164853500172,
+            "progress_hz": 9.777621464325335,
+            "lag_ms": {
+              "median": 240.34934472292608,
+              "p95": 318.8262008130547,
+              "min": 159.2278538271783,
+              "max": 320.7564761862152
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.128650575876236
+          },
+          {
+            "camera_id": 2,
+            "updates_hz": 5.014164853500172,
+            "progress_hz": 9.861190878550337,
+            "lag_ms": {
+              "median": 189.32952908799018,
+              "p95": 269.5000912994132,
+              "min": 107.09420405328274,
+              "max": 271.2911671027527
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.128650575876236
+          },
+          {
+            "camera_id": 3,
+            "updates_hz": 5.014164853500172,
+            "progress_hz": 9.861190878550337,
+            "lag_ms": {
+              "median": 217.78827346861272,
+              "p95": 316.0591676831244,
+              "min": 118.27597990632022,
+              "max": 317.64901150017977
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.128650575876236
+          },
+          {
+            "camera_id": 4,
+            "updates_hz": 5.014164853500172,
+            "progress_hz": 9.861190878550337,
+            "lag_ms": {
+              "median": 240.73485517874337,
+              "p95": 319.7231722995628,
+              "min": 160.3643512353301,
+              "max": 321.81976325809813
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.128650575876236
+          },
+          {
+            "camera_id": 5,
+            "updates_hz": 4.9305954392751685,
+            "progress_hz": 9.777621464325335,
+            "lag_ms": {
+              "median": 189.940889179706,
+              "p95": 270.2789166942239,
+              "min": 108.17669574171296,
+              "max": 271.96058183908355
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.128650575876236
+          },
+          {
+            "camera_id": 6,
+            "updates_hz": 5.014164853500172,
+            "progress_hz": 9.777621464325335,
+            "lag_ms": {
+              "median": 209.39818378537876,
+              "p95": 271.222749538719,
+              "min": 108.43373611569396,
+              "max": 317.79037732630934
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.128650575876236
+          },
+          {
+            "camera_id": 7,
+            "updates_hz": 5.014164853500172,
+            "progress_hz": 9.777621464325335,
+            "lag_ms": {
+              "median": 241.83359490707463,
+              "p95": 320.280950888991,
+              "min": 160.73794867843372,
+              "max": 322.2156221047037
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 54.128650575876236
+          }
+        ]
+      },
+      "control": {
+        "periodic_pss": false,
+        "cpu_rss_pixels": "unchanged",
+        "paused_pss": "still collected outside timed interval",
+        "wrapper_sha256": "59a72071ac6c1dd727dd048a7dc0fff64991fd8f47f869b2703dc1d44df50bec"
+      },
+      "harness_sha256": "87f6512a53417d6e3d43c11d70851a3f084ed365967a05bdc9403de720072c78",
+      "resource_sampler_sha256": "30d644c5a79c0f0058d522f7a7a2f502144c3abb13b85b10947d636f22c8c668",
+      "raw_sha256": "c51ce8e19d156c12b7ed197399d09d74aab895c925e9ecf943ae898cdcc74452"
+    },
+    {
+      "name": "2-camera-8-lichtblick",
+      "summary": {
+        "cpu_one_core_percent": 419.8339024540854,
+        "peak_sampled_pss_mib": null,
+        "pss_sample_count": 0,
+        "pss_read_ms": null,
+        "paused_pss_mib": 2839.1337890625,
+        "peak_sampled_summed_rss_mib": 3882.34375,
+        "observer_work_ms": {
+          "median": 8.70901020243764,
+          "p95": 13.723173178732395,
+          "min": 5.9468550607562065,
+          "max": 53.19890286773443
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 4.762360488634967,
+            "progress_hz": 7.018215456935741,
+            "lag_ms": {
+              "median": 2416.570934653282,
+              "p95": 3479.6753371134396,
+              "min": 606.247216835618,
+              "max": 3781.9418720901012
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 90.83350095897913
+          },
+          {
+            "camera_id": 1,
+            "updates_hz": 4.762360488634967,
+            "progress_hz": 7.018215456935741,
+            "lag_ms": {
+              "median": 2416.819052025676,
+              "p95": 3479.9612056463952,
+              "min": 606.4891055226326,
+              "max": 3782.1971038356423
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 90.83350095897913
+          },
+          {
+            "camera_id": 2,
+            "updates_hz": 4.762360488634967,
+            "progress_hz": 7.018215456935741,
+            "lag_ms": {
+              "median": 2417.0667139813304,
+              "p95": 3480.2401963621373,
+              "min": 606.7649986594915,
+              "max": 3782.4517441913486
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 90.83350095897913
+          },
+          {
+            "camera_id": 3,
+            "updates_hz": 4.678810304623828,
+            "progress_hz": 7.018215456935741,
+            "lag_ms": {
+              "median": 2420.1398915611203,
+              "p95": 3477.348775602877,
+              "min": 607.0595722645521,
+              "max": 3782.7016385272145
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 90.83350095897913
+          },
+          {
+            "camera_id": 4,
+            "updates_hz": 4.762360488634967,
+            "progress_hz": 7.018215456935741,
+            "lag_ms": {
+              "median": 2417.5574543885887,
+              "p95": 3477.593041025102,
+              "min": 607.3436200618744,
+              "max": 3782.9504627734423
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 90.83350095897913
+          },
+          {
+            "camera_id": 5,
+            "updates_hz": 4.678810304623828,
+            "progress_hz": 7.018215456935741,
+            "lag_ms": {
+              "median": 2420.7493425346906,
+              "p95": 3477.8382387012243,
+              "min": 607.6277395710349,
+              "max": 3749.6735511347642
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 90.83350095897913
+          },
+          {
+            "camera_id": 6,
+            "updates_hz": 4.678810304623828,
+            "progress_hz": 7.018215456935741,
+            "lag_ms": {
+              "median": 2421.0737873800094,
+              "p95": 3478.0869418755174,
+              "min": 607.9135149717331,
+              "max": 3749.993085116147
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 90.83350095897913
+          },
+          {
+            "camera_id": 7,
+            "updates_hz": 3.9268586485235697,
+            "progress_hz": 6.851115088913462,
+            "lag_ms": {
+              "median": 2469.241824094206,
+              "p95": 3478.3275881782174,
+              "min": 659.9367935210466,
+              "max": 3950.293359346688
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 90.83350095897913
+          }
+        ]
+      },
+      "control": {
+        "periodic_pss": false,
+        "cpu_rss_pixels": "unchanged",
+        "paused_pss": "still collected outside timed interval",
+        "wrapper_sha256": "59a72071ac6c1dd727dd048a7dc0fff64991fd8f47f869b2703dc1d44df50bec"
+      },
+      "harness_sha256": "87f6512a53417d6e3d43c11d70851a3f084ed365967a05bdc9403de720072c78",
+      "resource_sampler_sha256": "30d644c5a79c0f0058d522f7a7a2f502144c3abb13b85b10947d636f22c8c668",
+      "raw_sha256": "56dae0c8f2866e605db2710ec955efc8e12e474449736c1d3cde99404f52454a"
+    }
+  ],
+  "aggregates": [
+    {
+      "app": "native",
+      "focus_hz_median": 9.860848150730368,
+      "background_min_hz_median": 4.930424075365184,
+      "focus_p95_lag_ms_median": 170.10903675109114,
+      "cpu_percent_median": 105.77660306072057
+    },
+    {
+      "app": "lichtblick",
+      "focus_hz_median": 4.679054314166372,
+      "background_min_hz_median": 3.9270634422467765,
+      "focus_p95_lag_ms_median": 3479.6753371134396,
+      "cpu_percent_median": 419.8339024540854
+    }
+  ]
+}

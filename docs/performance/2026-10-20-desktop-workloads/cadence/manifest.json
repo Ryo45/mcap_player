@@ -1,0 +1,196 @@
+[
+  {
+    "name": "calibrate-camera-4-native",
+    "case": "camera-4",
+    "app": "native",
+    "all_camera_10hz": true,
+    "calibration": true,
+    "exit_code": 0
+  },
+  {
+    "name": "calibrate-camera-8-native",
+    "case": "camera-8",
+    "app": "native",
+    "all_camera_10hz": true,
+    "calibration": true,
+    "exit_code": 0
+  },
+  {
+    "name": "0-camera-4-native",
+    "case": "camera-4",
+    "app": "native",
+    "all_camera_10hz": true,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "0-camera-4-lichtblick",
+    "case": "camera-4",
+    "app": "lichtblick",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "0-camera-8-native",
+    "case": "camera-8",
+    "app": "native",
+    "all_camera_10hz": true,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "0-camera-8-lichtblick",
+    "case": "camera-8",
+    "app": "lichtblick",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "0-camera-8-native-background5",
+    "case": "camera-8",
+    "app": "native",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "0-cloud-60000-native",
+    "case": "cloud-60000",
+    "app": "native",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "0-cloud-60000-lichtblick",
+    "case": "cloud-60000",
+    "app": "lichtblick",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "1-camera-4-lichtblick",
+    "case": "camera-4",
+    "app": "lichtblick",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "1-camera-4-native",
+    "case": "camera-4",
+    "app": "native",
+    "all_camera_10hz": true,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "1-camera-8-lichtblick",
+    "case": "camera-8",
+    "app": "lichtblick",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "1-camera-8-native",
+    "case": "camera-8",
+    "app": "native",
+    "all_camera_10hz": true,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "1-camera-8-native-background5",
+    "case": "camera-8",
+    "app": "native",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "1-cloud-60000-lichtblick",
+    "case": "cloud-60000",
+    "app": "lichtblick",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 1,
+    "excluded": true,
+    "reason": "Transient X11 enumeration startup failure; archived separately"
+  },
+  {
+    "name": "1-cloud-60000-lichtblick",
+    "case": "cloud-60000",
+    "app": "lichtblick",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "1-cloud-60000-native",
+    "case": "cloud-60000",
+    "app": "native",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "2-camera-4-native",
+    "case": "camera-4",
+    "app": "native",
+    "all_camera_10hz": true,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "2-camera-4-lichtblick",
+    "case": "camera-4",
+    "app": "lichtblick",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "2-camera-8-native",
+    "case": "camera-8",
+    "app": "native",
+    "all_camera_10hz": true,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "2-camera-8-lichtblick",
+    "case": "camera-8",
+    "app": "lichtblick",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "2-camera-8-native-background5",
+    "case": "camera-8",
+    "app": "native",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "2-cloud-60000-native",
+    "case": "cloud-60000",
+    "app": "native",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  },
+  {
+    "name": "2-cloud-60000-lichtblick",
+    "case": "cloud-60000",
+    "app": "lichtblick",
+    "all_camera_10hz": false,
+    "calibration": false,
+    "exit_code": 0
+  }
+]

@@ -21,7 +21,7 @@ from browser_cdp import CDP
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def process_sample(root):
+def process_sample(root, *, include_pss=True):
     pids, pending = set(), [root]
     while pending:
         pid = pending.pop()
@@ -29,7 +29,13 @@ def process_sample(root):
             continue
         pids.add(pid)
         try:
-            pending.extend(map(int, Path(f'/proc/{pid}/task/{pid}/children').read_text().split()))
+            # Linux children are attached to the thread that spawned them.
+            # Main-thread-only traversal misses Electron renderers and utilities.
+            for task in Path(f'/proc/{pid}/task').iterdir():
+                try:
+                    pending.extend(map(int, (task / 'children').read_text().split()))
+                except (FileNotFoundError, ProcessLookupError):
+                    pass
         except (FileNotFoundError, ProcessLookupError):
             pass
     pss = rss = ticks = rchar = read_bytes = 0
@@ -38,9 +44,11 @@ def process_sample(root):
         try:
             values = Path(f'/proc/{pid}/stat').read_text().rsplit(')', 1)[1].split()
             ticks += int(values[11]) + int(values[12])
-            memory = {line.split(':')[0]: int(line.split()[1]) for line in
-                      Path(f'/proc/{pid}/smaps_rollup').read_text().splitlines()[1:] if ':' in line}
-            pss += memory['Pss']
+            memory = {'Pss': None, 'Rss': int(values[21]) * os.sysconf('SC_PAGE_SIZE') // 1024}
+            if include_pss:
+                memory = {line.split(':')[0]: int(line.split()[1]) for line in
+                          Path(f'/proc/{pid}/smaps_rollup').read_text().splitlines()[1:] if ':' in line}
+                pss += memory['Pss']
             rss += memory['Rss']
             command = Path(f'/proc/{pid}/cmdline').read_bytes().replace(b'\0', b' ')
             process_type = re.search(rb'(?:^|\s)--type=([^\s]+)', command)
@@ -51,7 +59,7 @@ def process_sample(root):
             read_bytes += int(io['read_bytes'])
         except (FileNotFoundError, ProcessLookupError):
             pass
-    return {'pss_kib': pss, 'summed_rss_kib': rss, 'cpu_seconds_live_processes': ticks / os.sysconf('SC_CLK_TCK'),
+    return {'pss_kib': pss if include_pss else None, 'summed_rss_kib': rss, 'cpu_seconds_live_processes': ticks / os.sysconf('SC_CLK_TCK'),
             'rchar_live_processes': rchar, 'storage_read_bytes_live_processes': read_bytes, 'pids': sorted(pids), 'processes': sorted(processes, key=lambda p: p['pid'])}
 
 

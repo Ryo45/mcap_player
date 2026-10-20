@@ -1,23 +1,23 @@
 # Desktop: Lichtblickのデフォルト構成に表示内容を合わせる
 
+**訂正: CPU・PSSの比較は無効です。** 当時のprocess_sampleはLinuxのmain threadのchildrenだけを辿り、Electronのrenderer / utilityを取りこぼしていました。保存された値は全アプリの資源量ではありません。以下のCPU・PSSに基づく比較と結論を撤回します。元データは監査用に残し、[修正した計測](../2026-10-20-desktop-workloads/README.md)で取り直します。画素観測と入力・GPU選択の記録とは区別してください。
+
 2026-10-20。NativeとLichtblick Desktop 1.29.1について、「何を表示するか」を明示した比較。カメラだけの前回測定と区別し、3D・Image・Raw Messagesの同じ配置を出発点にする。目的は各製品の総合順位ではなく、表示内容による負荷の違いを調べること。
 
 ## 結果
 
-各条件3反復の中央値。P95はrunごとのP95の中央値で、全sampleをpoolしたP95ではない。CPUは1 core=100%、PSSは各runのsample最大値の中央値。
+各条件3反復の中央値。P95はrunごとのP95の中央値で、全sampleをpoolしたP95ではない。CPU・PSSの旧値は比較から除外した。
 
-| 表示 | app | 画像更新 Hz | 画像の遅れ 中央値 / P95 ms | CPU % | PSS MiB |
-|---|---|---:|---:|---:|---:|
-| default | Native | 9.86 | 136 / 167 | 36.1 | 250.4 |
-| default | Lichtblick | 9.86 | 114 / 166 | 34.1 | 296.4 |
-| + Scan | Native | 9.86 | 155 / 167 | 36.8 | 262.5 |
-| + Scan | Lichtblick | 9.86 | 107 / 165 | 36.4 | 297.1 |
-| + Scan + Raw | Native | 9.86 | 154 / 168 | 40.5 | 284.9 |
-| + Scan + Raw | Lichtblick | 9.94 | 106 / 163 | 33.8 | 293.5 |
+| 表示  |  app  |  画像更新 Hz  |  画像の遅れ 中央値 / P95 ms |
+|---|---|---:|---:|
+| default  |  Native  |  9.86  |  136 / 167 |
+| default  |  Lichtblick  |  9.86  |  114 / 166 |
+| + Scan  |  Native  |  9.86  |  155 / 167 |
+| + Scan  |  Lichtblick  |  9.86  |  107 / 165 |
+| + Scan + Raw  |  Native  |  9.86  |  154 / 168 |
+| + Scan + Raw  |  Lichtblick  |  9.94  |  106 / 163 |
 
 - **この表示内容では双方が約10 Hzに追従する。** Scan追加時のScene画素変化も約9.94〜9.95 Hz。Nativeの大幅な速度優位は確認できない。
-- **表示内容でメモリ差が変わる。** NativeはdefaultからScanで約12 MiB、さらにRawで約22 MiB増えた。Lichtblickに対するPSS差は約46 MiBから約9 MiBへ縮まる。画像だけの数字を3D/Rawを含む画面の代表値にはできない。
-- NativeのCPUはdefault約36%からRaw約40%へ増えた。LichtblickはScan32.3〜38.2%、Raw29.4〜35.8%と反復差があり、「Rawを加えると軽くなる」とは解釈しない。共有ホスト・3反復であり、小さい差の因果的評価には不足する。Nativeのexact queryとLichtblickのstream subscriptionも同一処理ではない。
 - Nativeの画像lag中央値は大きいが、P95は両アプリとも約163〜168 ms。Lichtblickのlag中央値にはrun間で約50 msの変動があり、観測粒度や再生開始位相も含む。数十ms差をそのままcodec速度の差とは扱わない。
 
 18試行すべて成功。72回のSeekで期待画像を確認し、Nativeの36回はtextureの絶対log timeもpredecessorと一致した。画像識別は4320/4320 sampleで成功、識別済みsampleの最大gapは104.3 ms。Rawのtimestampは両アプリ・全反復で単調に前進した。観測処理の中央値はrunにより4.3〜6.4 ms、P95は8.7〜18.4 ms。記録全60秒の連続再生、巨大PointCloud、Zstd、大Chunk、8カメラ同時表示の検証へは一般化しない。
@@ -48,7 +48,7 @@ Scan + Raw Messagesを追加した構成:
 
 | case | 3D | Image | Raw Messages / Inspector | 選択トピック |
 |---|---|---|---|---|
-| default | gridのみ | `/camera/0` | 未選択 | `/camera/0` |
+| default  |  gridのみ  |  `/camera/0` |
 | scan | grid + `/scan` 360点 | 同上 | 未選択 | `/camera/0`, `/scan` |
 | raw | 同上 | 同上 | `/scan` の最新メッセージ、配列は閉じる | 同上 |
 
@@ -79,7 +79,7 @@ RTX5070Ti / NVIDIA610.57.04、Nativeはwgpu/Vulkan、LichtblickはElectron/ANGLE
 
 Rawのtimestampも記録する。ただしNativeのcursorログは100 ms bucketが変わるときに出し、Lichtblickは観測時のcursorを読む。Native側のRaw lagは最大約100 ms過小評価し得るため、アプリ間のRaw鮮度順位には使わない。Nativeは既存exact latest-before query、Lichtblickはstream subscriptionを維持し、その処理負荷の差も結果に含める。
 
-PSS / CPUはアプリの全子プロセスを含み、約250 ms周期のPSS最大値を報告する。CPUは1 core=100%。観測用Python、X server、compositor、GPU VRAMは含まない。PSS2 GiBの停止ガードを持つ。SceneのXGetImage自体もGPU readback・観測負荷を加える。各sampleのobserver_work_msを保存し、無観測の製品性能とは区別する。
+PSS / CPUは全子プロセスを含む意図だったが、renderer等を取りこぼしていたため比較に使わない。当時の設計は、約250 ms周期のPSS最大値を報告する。CPUは1 core=100%。観測用Python、X server、compositor、GPU VRAMは含まない。PSS2 GiBの停止ガードを持つ。SceneのXGetImage自体もGPU readback・観測負荷を加える。各sampleのobserver_work_msを保存し、無観測の製品性能とは区別する。
 
 Nativeは既存TurboJPEGの表示サイズに応じたIDCT縮小を使い、この寸法では480×270へdecodeする。Lichtblickの既存ImageModeはresizeWidth未指定でcreateImageBitmapへ渡す。**同じ表示領域でもdecode解像度・縮小画質は同一ではない**。CPU/PSS差をMCAPの選択読み込みだけの効果とは結論しない。Lichtblickは配布版の起動制約から`--no-sandbox`を使う。
 

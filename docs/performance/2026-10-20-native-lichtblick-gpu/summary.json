@@ -438,5 +438,13 @@
         "n": 9
       }
     }
-  ]
+  ],
+  "_correction": {
+    "invalid_metrics": [
+      "CPU process-tree comparisons",
+      "PSS process-tree comparisons"
+    ],
+    "reason": "main-thread-only children traversal omitted Electron renderer/utility; preserve historical data for audit only",
+    "replacement": "../2026-10-20-desktop-workloads/README.md"
+  }
 }
