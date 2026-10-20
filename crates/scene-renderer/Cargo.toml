@@ -7,3 +7,6 @@ license.workspace = true
 [dependencies]
 bytemuck.workspace = true
 wgpu.workspace = true
+
+[dev-dependencies]
+pollster.workspace = true

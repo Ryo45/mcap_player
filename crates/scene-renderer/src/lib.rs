@@ -94,6 +94,8 @@ pub struct SceneRenderer {
     depth_view: wgpu::TextureView,
     pipeline: wgpu::RenderPipeline,
     point_pipeline: wgpu::RenderPipeline,
+    opaque_point_pipeline: wgpu::RenderPipeline,
+    opaque_points: bool,
     uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
     grid_buffer: wgpu::Buffer,
@@ -202,7 +204,7 @@ impl SceneRenderer {
             multiview: None,
             cache: None,
         });
-        let point_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        let mut point_descriptor = wgpu::RenderPipelineDescriptor {
             label: Some("3D point billboard pipeline"),
             layout: Some(&pipeline_layout),
             vertex: wgpu::VertexState {
@@ -247,7 +249,15 @@ impl SceneRenderer {
             multisample: Default::default(),
             multiview: None,
             cache: None,
-        });
+        };
+        let point_pipeline = device.create_render_pipeline(&point_descriptor);
+        point_descriptor.label = Some("3D opaque point billboard pipeline");
+        point_descriptor
+            .depth_stencil
+            .as_mut()
+            .unwrap()
+            .depth_write_enabled = true;
+        let opaque_point_pipeline = device.create_render_pipeline(&point_descriptor);
         let grid = make_grid();
         let grid_buffer = make_vertex_buffer(device, "3D world grid", &grid);
         let dynamic_buffer = make_empty_vertex_buffer(device, "3D dynamic lines", 1);
@@ -260,6 +270,8 @@ impl SceneRenderer {
             depth_view,
             pipeline,
             point_pipeline,
+            opaque_point_pipeline,
+            opaque_points: false,
             uniform_buffer,
             uniform_bind_group,
             grid_buffer,
@@ -314,6 +326,9 @@ impl SceneRenderer {
         let cloud_changed = self.last_cloud_revision != Some(frame.cloud_revision);
         if cloud_changed {
             let points = world_cloud(frame).collect::<Vec<_>>();
+            // Opaque clouds must occlude by distance, independently of point order.
+            // Keep the existing non-writing path for clouds containing transparency.
+            self.opaque_points = points.iter().all(|point| point.color[3] >= 1.0);
             if points.len() > self.point_capacity {
                 self.point_capacity = points.len().next_power_of_two();
                 self.point_buffer = make_empty_point_buffer(device, self.point_capacity);
@@ -377,7 +392,11 @@ impl SceneRenderer {
                 pass.draw(0..self.dynamic_vertices, 0..1);
             }
             if self.point_count > 0 {
-                pass.set_pipeline(&self.point_pipeline);
+                pass.set_pipeline(if self.opaque_points {
+                    &self.opaque_point_pipeline
+                } else {
+                    &self.point_pipeline
+                });
                 pass.set_vertex_buffer(0, self.point_buffer.slice(..));
                 pass.draw(0..6, 0..self.point_count);
             }
@@ -652,7 +671,13 @@ fn make_targets(
         sample_count: 1,
         dimension: wgpu::TextureDimension::D2,
         format: wgpu::TextureFormat::Rgba8UnormSrgb,
-        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+        usage: wgpu::TextureUsages::RENDER_ATTACHMENT
+            | wgpu::TextureUsages::TEXTURE_BINDING
+            | if cfg!(test) {
+                wgpu::TextureUsages::COPY_SRC
+            } else {
+                wgpu::TextureUsages::empty()
+            },
         view_formats: &[wgpu::TextureFormat::Rgba8Unorm],
     });
     let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
@@ -840,3 +865,6 @@ mod tests {
         );
     }
 }
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod depth_tests;
