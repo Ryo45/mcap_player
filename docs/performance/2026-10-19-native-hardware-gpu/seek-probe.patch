@@ -1,0 +1,22 @@
+--- a/apps/viewer-native/src/app.rs
++++ b/apps/viewer-native/src/app.rs
+@@ -114,0 +115,19 @@
++        }
++        // Test-only instrumentation for the hardware GPU smoke run; not shipped.
++        static LAST_REQUEST: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
++        if let Ok(path) = std::env::var("MCAP_GPU_SEEK_PROBE_CONTROL")
++            && let Ok(text) = std::fs::read_to_string(path)
++            && let Some((id, offset)) = text.trim().split_once(' ')
++            && let (Ok(id), Ok(offset)) = (id.parse::<u64>(), offset.parse::<i64>())
++            && id > LAST_REQUEST.load(std::sync::atomic::Ordering::Relaxed)
++            && let Some(view) = self.session.as_ref().and_then(ViewerSession::playback_view)
++        {
++            let target = viewer_core::ArrivalTime(view.start.0.saturating_add(offset));
++            let mut actions = Vec::new();
++            if view.playing {
++                actions.push(ViewerAction::Playback(viewer_core::PlaybackCommand::Toggle));
++            }
++            actions.push(ViewerAction::Playback(viewer_core::PlaybackCommand::Seek(target)));
++            self.apply_frame_actions(actions);
++            LAST_REQUEST.store(id, std::sync::atomic::Ordering::Relaxed);
++            log::info!("GPU_PROBE_SEEK id={id} target={target:?}");

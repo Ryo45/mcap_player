@@ -12,6 +12,8 @@
 本番RGBA decode、4camera×20 Hzとの比較、製品側上限による拒否も含めて記録している。
 [Webのfocus優先とbackground更新の比較](2026-10-16-web-focus-scheduling/README.md)では、
 60秒・4K/8カメラで表示頻度・画像年齢・最低background頻度とメモリを比較する。
+[Nativeの実GPU環境確認](2026-10-19-native-hardware-gpu/README.md)では、
+ホストのNVIDIA VulkanによるCamera・BEV・Scene描画と、画面電源Off時のFIFO待ちを記録する。
 
 ## 再現
 
