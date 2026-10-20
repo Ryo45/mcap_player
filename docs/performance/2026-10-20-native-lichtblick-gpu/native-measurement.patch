@@ -1,0 +1,69 @@
+--- a/apps/viewer-native/src/main.rs
++++ b/apps/viewer-native/src/main.rs
+@@ -33,7 +33,9 @@
+ fn main() -> Result<()> {
+     env_logger::init();
+     let args = Args::parse()?;
+-    let workspace = NativeWorkspace::load_bundled_or_fallback(args.layout);
++    let workspace = if let Ok(path) = std::env::var("MCAP_BENCH_LAYOUT") {
++        NativeWorkspace::from_json(&std::fs::read_to_string(path)?).map_err(anyhow::Error::msg)?
++    } else { NativeWorkspace::load_bundled_or_fallback(args.layout) };
+     let event_loop = EventLoop::new()?;
+     event_loop.set_control_flow(ControlFlow::Poll);
+     let mut app = App {
+--- a/apps/viewer-native/src/app.rs
++++ b/apps/viewer-native/src/app.rs
+@@ -112,6 +112,27 @@
+     fn redraw(&mut self, window: &Window, elapsed: Duration) -> Result<(), wgpu::SurfaceError> {
+         if self.session.is_none() {
+             return Ok(());
++        }
++
++        // Measurement-only command injection through the existing UI action handler.
++        static LAST: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
++        if let Ok(path) = std::env::var("MCAP_BENCH_CONTROL")
++            && let Ok(text) = std::fs::read_to_string(path)
++            && let Some((id, command)) = text.trim().split_once(' ')
++            && let Ok(id) = id.parse::<u64>()
++            && id > LAST.load(std::sync::atomic::Ordering::Relaxed)
++            && let Some(view) = self.session.as_ref().and_then(ViewerSession::playback_view)
++        {
++            let mut actions = Vec::new();
++            if let Some(offset) = command.strip_prefix("seek ").and_then(|v| v.parse::<i64>().ok()) {
++                if view.playing { actions.push(ViewerAction::Playback(viewer_core::PlaybackCommand::Toggle)); }
++                actions.push(ViewerAction::Playback(viewer_core::PlaybackCommand::Seek(viewer_core::ArrivalTime(view.start.0.saturating_add(offset)))));
++            } else if (command == "play" && !view.playing) || (command == "pause" && view.playing) {
++                actions.push(ViewerAction::Playback(viewer_core::PlaybackCommand::Toggle));
++            }
++            self.apply_frame_actions(actions);
++            LAST.store(id, std::sync::atomic::Ordering::Relaxed);
++            log::info!("GPU_BENCH_COMMAND id={id}");
+         }
+         self.advance_session(elapsed);
+         if self.graphics.is_none() {
+--- a/apps/viewer-native/src/graphics/views/camera.rs
++++ b/apps/viewer-native/src/graphics/views/camera.rs
+@@ -67,7 +67,9 @@
+     ui.separator();
+     let available = ui.available_size();
+     let thumbnail_reserve = if input.show_thumbnails { 70.0 } else { 0.0 };
+-    let focus_area = egui::vec2(available.x, (available.y - thumbnail_reserve).max(1.0));
++    let focus_area = if std::env::var_os("MCAP_BENCH_LAYOUT").is_some() {
++        egui::vec2(960.0, 540.0)
++    } else { egui::vec2(available.x, (available.y - thumbnail_reserve).max(1.0)) };
+     let density = ui.ctx().pixels_per_point();
+     if input.show_thumbnails {
+         for camera in input.cameras {
+@@ -179,6 +181,12 @@
+         return;
+     };
+     let image_rect = contain_image_rect(container, texture.size);
++    if std::env::var_os("MCAP_BENCH_LAYOUT").is_some() {
++        static LAST_FRAME: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(-1);
++        if LAST_FRAME.swap(texture.arrival_time.0, std::sync::atomic::Ordering::Relaxed) != texture.arrival_time.0 {
++            log::info!("GPU_BENCH_FRAME arrival={} rect={:?}", texture.arrival_time.0, image_rect);
++        }
++    }
+     ui.put(
+         image_rect,
+         egui::Image::new((texture.texture_id, image_rect.size())).uv(egui::Rect::from_min_max(

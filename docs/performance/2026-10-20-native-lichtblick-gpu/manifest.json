@@ -1,0 +1,115 @@
+{
+  "jobs": [
+    {
+      "case": "1cam-20s",
+      "app": "native",
+      "repeat": 0,
+      "data": "/tmp/mcap-oss-compare-data/3840x2160-1cam-10hz-none-8MiB-20s.mcap",
+      "seeks": "310000000,1710000000,4110000000",
+      "exit_code": 0,
+      "output": "1cam-20s-native-0"
+    },
+    {
+      "case": "1cam-20s",
+      "app": "lichtblick",
+      "repeat": 0,
+      "data": "/tmp/mcap-oss-compare-data/3840x2160-1cam-10hz-none-8MiB-20s.mcap",
+      "seeks": "310000000,1710000000,4110000000",
+      "exit_code": 0,
+      "output": "1cam-20s-lichtblick-0"
+    },
+    {
+      "case": "8cam-60s-one-selected",
+      "app": "native",
+      "repeat": 0,
+      "data": "/tmp/mcap-web-60s-data/3840x2160-8cam-10hz-none-8MiB-60s.mcap",
+      "seeks": "25310000000,48710000000,16110000000",
+      "exit_code": 0,
+      "output": "8cam-60s-one-selected-native-0"
+    },
+    {
+      "case": "8cam-60s-one-selected",
+      "app": "lichtblick",
+      "repeat": 0,
+      "data": "/tmp/mcap-web-60s-data/3840x2160-8cam-10hz-none-8MiB-60s.mcap",
+      "seeks": "25310000000,48710000000,16110000000",
+      "exit_code": 0,
+      "output": "8cam-60s-one-selected-lichtblick-0"
+    },
+    {
+      "case": "1cam-20s",
+      "app": "lichtblick",
+      "repeat": 1,
+      "data": "/tmp/mcap-oss-compare-data/3840x2160-1cam-10hz-none-8MiB-20s.mcap",
+      "seeks": "310000000,1710000000,4110000000",
+      "exit_code": 0,
+      "output": "1cam-20s-lichtblick-1"
+    },
+    {
+      "case": "1cam-20s",
+      "app": "native",
+      "repeat": 1,
+      "data": "/tmp/mcap-oss-compare-data/3840x2160-1cam-10hz-none-8MiB-20s.mcap",
+      "seeks": "310000000,1710000000,4110000000",
+      "exit_code": 0,
+      "output": "1cam-20s-native-1"
+    },
+    {
+      "case": "8cam-60s-one-selected",
+      "app": "lichtblick",
+      "repeat": 1,
+      "data": "/tmp/mcap-web-60s-data/3840x2160-8cam-10hz-none-8MiB-60s.mcap",
+      "seeks": "25310000000,48710000000,16110000000",
+      "exit_code": 0,
+      "output": "8cam-60s-one-selected-lichtblick-1"
+    },
+    {
+      "case": "8cam-60s-one-selected",
+      "app": "native",
+      "repeat": 1,
+      "data": "/tmp/mcap-web-60s-data/3840x2160-8cam-10hz-none-8MiB-60s.mcap",
+      "seeks": "25310000000,48710000000,16110000000",
+      "exit_code": 0,
+      "output": "8cam-60s-one-selected-native-1"
+    },
+    {
+      "case": "1cam-20s",
+      "app": "native",
+      "repeat": 2,
+      "data": "/tmp/mcap-oss-compare-data/3840x2160-1cam-10hz-none-8MiB-20s.mcap",
+      "seeks": "310000000,1710000000,4110000000",
+      "exit_code": 0,
+      "output": "1cam-20s-native-2"
+    },
+    {
+      "case": "1cam-20s",
+      "app": "lichtblick",
+      "repeat": 2,
+      "data": "/tmp/mcap-oss-compare-data/3840x2160-1cam-10hz-none-8MiB-20s.mcap",
+      "seeks": "310000000,1710000000,4110000000",
+      "exit_code": 0,
+      "output": "1cam-20s-lichtblick-2"
+    },
+    {
+      "case": "8cam-60s-one-selected",
+      "app": "native",
+      "repeat": 2,
+      "data": "/tmp/mcap-web-60s-data/3840x2160-8cam-10hz-none-8MiB-60s.mcap",
+      "seeks": "25310000000,48710000000,16110000000",
+      "exit_code": 0,
+      "output": "8cam-60s-one-selected-native-2"
+    },
+    {
+      "case": "8cam-60s-one-selected",
+      "app": "lichtblick",
+      "repeat": 2,
+      "data": "/tmp/mcap-web-60s-data/3840x2160-8cam-10hz-none-8MiB-60s.mcap",
+      "seeks": "25310000000,48710000000,16110000000",
+      "exit_code": 0,
+      "output": "8cam-60s-one-selected-lichtblick-2"
+    }
+  ],
+  "started_unix": 1792478943.3604336,
+  "status": "ok",
+  "finished_unix": 1792479205.934548
+}
