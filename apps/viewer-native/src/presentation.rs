@@ -32,6 +32,7 @@ pub(crate) struct PresentationBuildInput<'a> {
     pub(crate) diagnostics: SessionDiagnostics,
     pub(crate) focused_camera: Option<CameraId>,
     pub(crate) accumulate_points: bool,
+    pub(crate) coloring: viewer_core::PointCloudColoring,
     pub(crate) error: Option<String>,
 }
 
@@ -100,6 +101,7 @@ impl PresentationState {
             diagnostics,
             focused_camera,
             accumulate_points,
+            coloring,
             error,
         } = input;
         let overlay_status = self
@@ -136,6 +138,7 @@ impl PresentationState {
             platform: self.platform.as_ref(),
             path_projection: &self.path_projection,
             accumulate: accumulate_points,
+            coloring,
         });
         let bev = scene.bev;
         PresentationFrame {
@@ -236,6 +239,7 @@ mod tests {
             diagnostics: diagnostics(),
             focused_camera: Some(CameraId(0)),
             accumulate_points: true,
+            coloring: Default::default(),
             error: None,
         });
         let camera = frame.viewer.focused_camera().unwrap();
@@ -255,6 +259,7 @@ mod tests {
             diagnostics: diagnostics(),
             focused_camera: Some(CameraId(0)),
             accumulate_points: true,
+            coloring: Default::default(),
             error: None,
         });
         let camera = frame.viewer.focused_camera().unwrap();

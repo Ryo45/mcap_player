@@ -26,11 +26,13 @@ pub(crate) enum WorkspaceLayout {
     Explore,
     Monitor,
     Health,
+    Scene,
 }
 
 impl WorkspaceLayout {
     fn bundled_json(self) -> &'static str {
         match self {
+            Self::Scene => include_str!("../../../config/layouts/native_scene.json"),
             Self::Standard => BUNDLED_DEFAULT_LAYOUT,
             Self::Showcase => BUNDLED_SHOWCASE_LAYOUT,
             Self::Monitor => include_str!("../../../config/layouts/native_monitor.json"),
@@ -56,6 +58,7 @@ pub(crate) struct CameraViewState {
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct SceneViewState {
+    pub(crate) coloring: viewer_core::PointCloudColoring,
     pub(crate) accumulate_points: bool,
 }
 
@@ -130,6 +133,14 @@ impl NativeWorkspace {
                 "Bundled layout could not be loaded; using emergency layout: {error}"
             )],
         }
+    }
+
+    pub(crate) fn set_point_cloud_topic(&mut self, topic: String) {
+        self.bindings.point_cloud_topic = topic;
+    }
+
+    pub(crate) fn point_cloud_coloring(&self) -> viewer_core::PointCloudColoring {
+        self.panels.first_point_cloud_coloring()
     }
 
     pub(crate) fn bindings(&self) -> &WorkspaceBindings {

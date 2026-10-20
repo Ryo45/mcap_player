@@ -16,6 +16,7 @@ pub struct BevSnapshot<'a> {
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct SceneDiagnostics {
     pub tf_misses: u64,
+    pub point_cloud_color_error: Option<&'static str>,
     pub last_tf_route: Option<String>,
     pub current_tf_error: Option<FrameTransformError>,
     pub path_tf_error: Option<FrameTransformError>,
@@ -35,6 +36,8 @@ pub struct SceneSnapshot<'a> {
     pub path: &'a [[f32; 3]],
     pub bev: BevSnapshot<'a>,
     pub cloud: &'a [[f32; 3]],
+    /// Linear RGBA, aligned with cloud positions.
+    pub cloud_colors: &'a [[f32; 4]],
     pub diagnostics: SceneDiagnostics,
 }
 
@@ -56,6 +59,9 @@ pub struct ScenePresentationState {
     visible_revision: u64,
     visible_cloud: Vec<[f32; 3]>,
     accumulate: bool,
+    coloring: Option<crate::PointCloudColoring>,
+    transformed_colors: Vec<[f32; 4]>,
+    visible_colors: Vec<[f32; 4]>,
     diagnostics: SceneDiagnostics,
     path_key: Option<PathPlacementKey>,
     world_path: Vec<[f32; 3]>,
@@ -76,6 +82,7 @@ pub struct ScenePresentationInput<'a> {
     pub platform: Option<&'a PlatformGeometry>,
     pub path_projection: &'a PathProjectionPolicy,
     pub accumulate: bool,
+    pub coloring: crate::PointCloudColoring,
 }
 
 const MAX_VISIBLE_SCENE_POINTS: usize = 65_536;
@@ -102,12 +109,30 @@ impl ScenePresentationState {
             platform,
             path_projection,
             accumulate,
+            coloring,
         } = input;
+        let invalid_coloring = !coloring.is_valid();
+        let coloring = if invalid_coloring {
+            crate::PointCloudColoring {
+                mode: coloring.mode,
+                ..Default::default()
+            }
+        } else {
+            coloring
+        };
         let telemetry = telemetry.latest();
         let target_frame = path_projection.fixed_frame.as_str();
+        let color_changed = self.coloring != Some(coloring);
+        if color_changed {
+            self.visible_cloud.clear();
+            self.visible_colors.clear();
+            self.coloring = Some(coloring);
+            self.visible_revision = self.visible_revision.wrapping_add(1);
+        }
         // Existing accumulated positions are never mixed across different world frames.
         if self.target_frame != target_frame && !self.visible_cloud.is_empty() {
             self.visible_cloud.clear();
+            self.visible_colors.clear();
             self.visible_revision = self.visible_revision.wrapping_add(1);
         }
         let point_cloud_revision = point_cloud.revision();
@@ -116,7 +141,14 @@ impl ScenePresentationState {
             self.source_revision != Some(point_cloud_revision) || self.target_frame != target_frame;
         let retry_missing_tf = self.diagnostics.current_tf_error.is_some()
             && self.transform_revision != transform_revision;
-        let transformed_changed = source_changed || retry_missing_tf;
+        let transformed_changed = source_changed || retry_missing_tf || color_changed;
+        self.diagnostics.point_cloud_color_error = point_cloud.latest().and_then(|frame| {
+            if invalid_coloring {
+                Some("Invalid intensity range; using 0..255")
+            } else {
+                coloring.missing_attribute(&frame.attributes)
+            }
+        });
         if transformed_changed {
             self.source_revision = Some(point_cloud_revision);
             self.transform_revision = transform_revision;
@@ -131,6 +163,7 @@ impl ScenePresentationState {
                     &frame.points,
                 ) {
                     Some(points) => {
+                        self.transformed_colors = coloring.colors(&frame.attributes, points.len());
                         self.transformed_cloud = points;
                         self.diagnostics.last_tf_route =
                             Some(format!("{source_frame} → {target_frame}"));
@@ -138,6 +171,7 @@ impl ScenePresentationState {
                     }
                     None => {
                         self.transformed_cloud.clear();
+                        self.transformed_colors.clear();
                         if source_changed {
                             self.diagnostics.tf_misses =
                                 self.diagnostics.tf_misses.saturating_add(1);
@@ -150,6 +184,7 @@ impl ScenePresentationState {
                 }
             } else {
                 self.transformed_cloud.clear();
+                self.transformed_colors.clear();
                 self.diagnostics.current_tf_error = None;
             }
         }
@@ -305,6 +340,7 @@ impl ScenePresentationState {
                 footprint,
             },
             cloud: &self.visible_cloud,
+            cloud_colors: &self.visible_colors,
             diagnostics: self.diagnostics.clone(),
         }
     }
@@ -316,25 +352,33 @@ impl ScenePresentationState {
             if self.transformed_cloud.is_empty() {
                 if !accumulate && !self.visible_cloud.is_empty() {
                     self.visible_cloud.clear();
+                    self.visible_colors.clear();
                     visible_changed = true;
                 }
             } else {
                 if !accumulate {
                     self.visible_cloud.clear();
+                    self.visible_colors.clear();
                 }
                 self.visible_cloud
                     .extend_from_slice(&self.transformed_cloud);
+                self.visible_colors
+                    .extend_from_slice(&self.transformed_colors);
                 visible_changed = true;
             }
         } else if mode_changed && !accumulate {
             self.visible_cloud.clear();
+            self.visible_colors.clear();
             self.visible_cloud
                 .extend_from_slice(&self.transformed_cloud);
+            self.visible_colors
+                .extend_from_slice(&self.transformed_colors);
             visible_changed = true;
         }
         if self.visible_cloud.len() > MAX_VISIBLE_SCENE_POINTS {
             let excess = self.visible_cloud.len() - MAX_VISIBLE_SCENE_POINTS;
             self.visible_cloud.drain(..excess);
+            self.visible_colors.drain(..excess);
             visible_changed = true;
         }
         self.accumulate = accumulate;
@@ -394,6 +438,7 @@ mod tests {
         odometry.apply(telemetry(3, [4.0, 5.0]));
         let mut point_cloud = PointCloudState::default();
         point_cloud.apply(PointCloudFrame {
+            attributes: Default::default(),
             measurement_time: MeasurementTime(1),
             arrival_time: ArrivalTime(4),
             frame_id: "odom".into(),
@@ -410,6 +455,7 @@ mod tests {
             platform: None,
             path_projection: &PathProjectionPolicy::default(),
             accumulate: true,
+            coloring: Default::default(),
         });
         assert_eq!(scene.focus, [4.0, 5.0, 0.0]);
         assert!(scene.path.is_empty());
@@ -423,6 +469,7 @@ mod tests {
         transforms.apply(scan_transform(2.0, 3.0, 0.5));
         let mut point_cloud = PointCloudState::default();
         point_cloud.apply(PointCloudFrame {
+            attributes: Default::default(),
             measurement_time: MeasurementTime(10),
             arrival_time: ArrivalTime(2),
             frame_id: "scan".into(),
@@ -439,6 +486,7 @@ mod tests {
             platform: None,
             path_projection: &PathProjectionPolicy::default(),
             accumulate: true,
+            coloring: Default::default(),
         });
         assert_eq!(first.cloud, [[3.0, 3.0, 0.5]]);
         let revision = first.cloud_revision;
@@ -456,6 +504,7 @@ mod tests {
             platform: None,
             path_projection: &PathProjectionPolicy::default(),
             accumulate: true,
+            coloring: Default::default(),
         });
         assert_eq!(second.cloud, [[3.0, 3.0, 0.5]]);
         assert_eq!(second.cloud_revision, revision);
@@ -470,6 +519,7 @@ mod tests {
         let odometry = TelemetryState::default();
         let mut point_cloud = PointCloudState::default();
         point_cloud.apply(PointCloudFrame {
+            attributes: Default::default(),
             measurement_time: MeasurementTime(10),
             arrival_time: ArrivalTime(1),
             frame_id: "scan".into(),
@@ -485,6 +535,7 @@ mod tests {
             platform: None,
             path_projection: &PathProjectionPolicy::default(),
             accumulate: false,
+            coloring: Default::default(),
         });
         assert!(missing.cloud.is_empty());
         assert_eq!(missing.diagnostics.tf_misses, 1);
@@ -498,6 +549,7 @@ mod tests {
             platform: None,
             path_projection: &PathProjectionPolicy::default(),
             accumulate: false,
+            coloring: Default::default(),
         });
         assert_eq!(recovered.cloud, [[3.0, 0.0, 0.0]]);
         assert_eq!(recovered.diagnostics.tf_misses, 1);
@@ -513,6 +565,7 @@ mod tests {
         let mut presentation = ScenePresentationState::new();
 
         point_cloud.apply(PointCloudFrame {
+            attributes: Default::default(),
             measurement_time: MeasurementTime(1),
             arrival_time: ArrivalTime(1),
             frame_id: "odom".into(),
@@ -527,7 +580,8 @@ mod tests {
                     transforms: &transforms,
                     platform: None,
                     path_projection: &PathProjectionPolicy::default(),
-                    accumulate: true
+                    accumulate: true,
+                    coloring: Default::default(),
                 })
                 .cloud
                 .len(),
@@ -535,6 +589,7 @@ mod tests {
         );
 
         point_cloud.apply(PointCloudFrame {
+            attributes: Default::default(),
             measurement_time: MeasurementTime(2),
             arrival_time: ArrivalTime(2),
             frame_id: "odom".into(),
@@ -548,6 +603,7 @@ mod tests {
             platform: None,
             path_projection: &PathProjectionPolicy::default(),
             accumulate: true,
+            coloring: Default::default(),
         });
         assert_eq!(accumulated.cloud.len(), 3);
         let revision = accumulated.cloud_revision;
@@ -560,6 +616,7 @@ mod tests {
             platform: None,
             path_projection: &PathProjectionPolicy::default(),
             accumulate: true,
+            coloring: Default::default(),
         });
         assert_eq!(unchanged.cloud.len(), 3);
         assert_eq!(unchanged.cloud_revision, revision);
@@ -572,6 +629,7 @@ mod tests {
             platform: None,
             path_projection: &PathProjectionPolicy::default(),
             accumulate: false,
+            coloring: Default::default(),
         });
         assert_eq!(latest.cloud, [[3.0, 0.0, 0.0]]);
         presentation.reset();
@@ -584,7 +642,8 @@ mod tests {
                     transforms: &transforms,
                     platform: None,
                     path_projection: &PathProjectionPolicy::default(),
-                    accumulate: true
+                    accumulate: true,
+                    coloring: Default::default(),
                 })
                 .cloud
                 .is_empty()
@@ -598,6 +657,7 @@ mod tests {
         let transforms = TransformState::default();
         let mut point_cloud = PointCloudState::default();
         point_cloud.apply(PointCloudFrame {
+            attributes: Default::default(),
             measurement_time: MeasurementTime(1),
             arrival_time: ArrivalTime(1),
             frame_id: "odom".into(),
@@ -614,8 +674,10 @@ mod tests {
             platform: None,
             path_projection: &PathProjectionPolicy::default(),
             accumulate: true,
+            coloring: Default::default(),
         });
         assert_eq!(snapshot.cloud.len(), MAX_VISIBLE_SCENE_POINTS);
+        assert_eq!(snapshot.cloud_colors.len(), MAX_VISIBLE_SCENE_POINTS);
         assert_eq!(snapshot.cloud[0][0], 17.0);
     }
 }

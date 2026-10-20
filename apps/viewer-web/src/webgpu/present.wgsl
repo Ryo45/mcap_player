@@ -24,3 +24,16 @@ fn vs_main(@builtin(vertex_index) vertex_index: u32) -> VertexOutput {
 fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
     return textureSample(source_texture, source_sampler, input.uv);
 }
+
+// Canvas formats without sRGB hardware encoding still expect display-encoded bytes.
+@fragment
+fn fs_main_encoded(input: VertexOutput) -> @location(0) vec4<f32> {
+    let color = textureSample(source_texture, source_sampler, input.uv);
+    let value = max(color.rgb, vec3(0.0));
+    let encoded = select(
+        1.055 * pow(value, vec3(1.0 / 2.4)) - vec3(0.055),
+        12.92 * value,
+        value <= vec3(0.0031308),
+    );
+    return vec4(encoded, color.a);
+}

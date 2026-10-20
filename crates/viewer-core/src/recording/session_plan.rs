@@ -11,6 +11,7 @@ const COMPRESSED_IMAGE_SCHEMA: &str = "sensor_msgs/msg/CompressedImage";
 const PATH_SCHEMA: &str = "nav_msgs/msg/Path";
 const ODOMETRY_SCHEMA: &str = "nav_msgs/msg/Odometry";
 const LASER_SCAN_SCHEMA: &str = "sensor_msgs/msg/LaserScan";
+const POINT_CLOUD2_SCHEMA: &str = "sensor_msgs/msg/PointCloud2";
 const TF_MESSAGE_SCHEMA: &str = "tf2_msgs/msg/TFMessage";
 
 /// Continuous inputs required by the currently open workspace.
@@ -163,7 +164,7 @@ impl SessionPlan {
                 return Err(SessionPlanError::MissingRequiredStream {
                     feature: "Camera",
                     topic: topic.clone(),
-                    expected_schema: COMPRESSED_IMAGE_SCHEMA,
+                    expected_schemas: &[COMPRESSED_IMAGE_SCHEMA],
                 });
             }
         }
@@ -202,14 +203,14 @@ impl SessionPlan {
         let dynamic_tf_stream = resolve_requirement(
             catalog,
             &bindings.dynamic_tf_topic,
-            TF_MESSAGE_SCHEMA,
+            &[TF_MESSAGE_SCHEMA],
             "dynamic TF",
             requirements.dynamic_transforms,
         )?;
         let static_tf_stream = resolve_requirement(
             catalog,
             &bindings.static_tf_topic,
-            TF_MESSAGE_SCHEMA,
+            &[TF_MESSAGE_SCHEMA],
             "static TF",
             requirements.static_transforms,
         )?;
@@ -228,21 +229,21 @@ impl SessionPlan {
             path_stream: resolve_requirement(
                 catalog,
                 &bindings.path_topic,
-                PATH_SCHEMA,
+                &[PATH_SCHEMA],
                 "Path",
                 requirements.path,
             )?,
             odometry_stream: resolve_requirement(
                 catalog,
                 &bindings.odometry_topic,
-                ODOMETRY_SCHEMA,
+                &[ODOMETRY_SCHEMA],
                 "Odometry",
                 requirements.odometry,
             )?,
             point_cloud_stream: resolve_requirement(
                 catalog,
                 &bindings.point_cloud_topic,
-                LASER_SCAN_SCHEMA,
+                &[LASER_SCAN_SCHEMA, POINT_CLOUD2_SCHEMA],
                 "PointCloud",
                 requirements.point_cloud,
             )?,
@@ -394,28 +395,33 @@ impl SessionPlan {
 fn select_stream(
     catalog: &SourceCatalog,
     topic: &str,
-    expected_schema: &str,
+    expected_schemas: &[&str],
 ) -> Option<StreamDescriptor> {
     catalog
         .streams
         .iter()
-        .find(|stream| stream.topic == topic && accepts(stream, expected_schema))
+        .find(|stream| {
+            stream.topic == topic
+                && expected_schemas
+                    .iter()
+                    .any(|schema| accepts(stream, schema))
+        })
         .cloned()
 }
 
 fn resolve_requirement(
     catalog: &SourceCatalog,
     topic: &str,
-    expected_schema: &'static str,
+    expected_schemas: &'static [&'static str],
     feature: &'static str,
     level: RequirementLevel,
 ) -> Result<Option<StreamDescriptor>, SessionPlanError> {
-    let selected = select_stream(catalog, topic, expected_schema);
+    let selected = select_stream(catalog, topic, expected_schemas);
     if level == RequirementLevel::Required && selected.is_none() {
         return Err(SessionPlanError::MissingRequiredStream {
             feature,
             topic: topic.into(),
-            expected_schema,
+            expected_schemas,
         });
     }
     Ok((level != RequirementLevel::Disabled)
@@ -432,7 +438,7 @@ pub enum SessionPlanError {
     MissingRequiredStream {
         feature: &'static str,
         topic: String,
-        expected_schema: &'static str,
+        expected_schemas: &'static [&'static str],
     },
     MissingPriorityCamera {
         topic: String,
@@ -456,10 +462,11 @@ impl fmt::Display for SessionPlanError {
             Self::MissingRequiredStream {
                 feature,
                 topic,
-                expected_schema,
+                expected_schemas,
             } => write!(
                 f,
-                "required {feature} topic {topic} is not an expected CDR stream ({expected_schema})"
+                "required {feature} topic {topic} is not an expected CDR stream ({})",
+                expected_schemas.join(" or ")
             ),
             Self::MissingPriorityCamera { topic } => write!(
                 f,

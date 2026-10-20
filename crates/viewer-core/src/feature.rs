@@ -16,7 +16,7 @@ pub use controllers::{
 };
 pub use path::{PathFrame, PathState};
 pub use performance::PlaybackPerformance;
-pub use point_cloud::{PointCloudFrame, PointCloudState};
+pub use point_cloud::{PointCloudAttributes, PointCloudFrame, PointCloudState};
 pub use runtime::{FeatureRestoreError, FeatureRestoreErrorKind, FeatureRuntime};
 pub use telemetry::{TelemetryFrame, TelemetryState};
 pub use transform::{DYNAMIC_TF_HISTORY, TransformBatch, TransformState};

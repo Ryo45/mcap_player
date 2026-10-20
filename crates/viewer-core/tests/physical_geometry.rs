@@ -89,6 +89,7 @@ fn changing_world_frame_clears_accumulated_cloud_and_invalidates_gpu_revision() 
         platform: None,
         path_projection: &policy,
         accumulate: true,
+        coloring: Default::default(),
     });
     assert_eq!(first.cloud.len(), 1);
     let revision = first.cloud_revision;
@@ -101,6 +102,7 @@ fn changing_world_frame_clears_accumulated_cloud_and_invalidates_gpu_revision() 
         platform: None,
         path_projection: &policy,
         accumulate: true,
+        coloring: Default::default(),
     });
     assert!(next.cloud.is_empty());
     assert_ne!(next.cloud_revision, revision);
@@ -184,6 +186,7 @@ fn physical_geometry_survives_cdr_controllers_tf_and_scene_without_a_scale_corre
         platform: Some(&g),
         path_projection: &policy,
         accumulate: false,
+        coloring: Default::default(),
     });
     assert!(
         view.diagnostics.current_tf_error.is_none()
@@ -276,6 +279,7 @@ fn geometry_change_invalidates_bev_even_when_world_pose_is_unavailable() {
         platform: Some(&original),
         path_projection: &policy,
         accumulate: false,
+        coloring: Default::default(),
     });
     let revision = first.revision;
     assert!(first.platform.is_none());
@@ -287,6 +291,7 @@ fn geometry_change_invalidates_bev_even_when_world_pose_is_unavailable() {
         platform: Some(&other),
         path_projection: &policy,
         accumulate: false,
+        coloring: Default::default(),
     });
     assert_ne!(next.revision, revision);
     assert_eq!(next.bev.footprint, Some([-0.5, -1.0, 0.5, 2.0]));

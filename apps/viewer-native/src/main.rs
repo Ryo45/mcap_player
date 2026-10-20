@@ -33,7 +33,10 @@ use workspace::NativeWorkspace;
 fn main() -> Result<()> {
     env_logger::init();
     let args = Args::parse()?;
-    let workspace = NativeWorkspace::load_bundled_or_fallback(args.layout);
+    let mut workspace = NativeWorkspace::load_bundled_or_fallback(args.layout);
+    if let Some(topic) = &args.point_cloud_topic {
+        workspace.set_point_cloud_topic(topic.clone());
+    }
     let event_loop = EventLoop::new()?;
     event_loop.set_control_flow(ControlFlow::Poll);
     let mut app = App {

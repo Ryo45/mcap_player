@@ -61,8 +61,11 @@ pub(crate) fn show_scene_view(ui: &mut egui::Ui, input: SceneViewInput<'_>) -> S
         tf_status.push_str(&format!(" · {error}"));
     }
 
+    if let Some(error) = input.diagnostics.point_cloud_color_error {
+        tf_status.push_str(&format!(" · {error}"));
+    }
     ui.horizontal_wrapped(|ui| {
-        ui.strong(format!("3D VIEW · SCAN {} pts", input.scan_points));
+        ui.strong(format!("3D VIEW · POINT CLOUD {} pts", input.scan_points));
         ui.separator();
         egui::ComboBox::from_id_salt("scene-camera-mode")
             .selected_text(camera_mode.label())
@@ -85,7 +88,7 @@ pub(crate) fn show_scene_view(ui: &mut egui::Ui, input: SceneViewInput<'_>) -> S
             });
         let mut selected_accumulation = input.accumulate_points;
         if ui
-            .checkbox(&mut selected_accumulation, "Accumulate scans")
+            .checkbox(&mut selected_accumulation, "Accumulate points")
             .changed()
         {
             accumulation_change = Some(selected_accumulation);

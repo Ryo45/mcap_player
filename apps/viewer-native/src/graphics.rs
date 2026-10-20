@@ -186,7 +186,7 @@ impl Graphics {
         if scene_resized {
             self.egui_renderer.update_egui_texture_from_wgpu_texture(
                 &self.device,
-                self.scene_renderer.view(),
+                &self.scene_renderer.encoded_view(),
                 wgpu::FilterMode::Linear,
                 self.scene_texture_id,
             );
@@ -200,6 +200,7 @@ impl Graphics {
             platform: snapshot.platform,
             path: snapshot.path,
             cloud: snapshot.cloud,
+            cloud_colors: snapshot.cloud_colors,
         };
         if scene_resized || self.scene_renderer.needs_render(frame) {
             self.scene_renderer.render(&self.device, &self.queue, frame);

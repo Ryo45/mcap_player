@@ -1,0 +1,53 @@
+{
+  "serializer": "rclpy.serialization.serialize_message (ROS 2 Jazzy)",
+  "measurement_time_ns": 12345000000,
+  "frame_id": "lidar",
+  "height": 2,
+  "width": 2,
+  "point_step": 32,
+  "row_step": 72,
+  "is_dense": true,
+  "finite_xyz": [
+    [
+      1,
+      2,
+      3
+    ],
+    [
+      4,
+      5,
+      6
+    ],
+    [
+      -1,
+      -2,
+      -3
+    ]
+  ],
+  "rgba": [
+    [
+      255,
+      0,
+      0,
+      255
+    ],
+    [
+      0,
+      255,
+      0,
+      128
+    ],
+    [
+      0,
+      0,
+      255,
+      255
+    ]
+  ],
+  "intensity": [
+    0,
+    0.5,
+    1
+  ],
+  "invalid_xyz": "one NaN point despite is_dense=true"
+}
