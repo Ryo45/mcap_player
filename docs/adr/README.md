@@ -5,4 +5,4 @@
 
 | ADR | 状態 |
 |---|---|
-| [0001: Nativeを実GPUで検証する環境](0001-native-hardware-gpu-environment.md) | 採用方針。構築・描画確認は未実施 |
+| [0001: Nativeを実GPUで検証する環境](0001-native-hardware-gpu-environment.md) | ホスト実GPU描画確認済み。画面電源Onが必要。container未実施 |

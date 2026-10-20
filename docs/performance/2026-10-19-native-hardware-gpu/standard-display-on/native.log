@@ -1,0 +1,9 @@
+[2026-10-19T05:59:04Z INFO  winit::platform_impl::linux::x11::window] Guessed window scale factor: 1
+[2026-10-19T05:59:04Z WARN  wgpu_hal::vulkan::instance] Unable to find extension: VK_EXT_physical_device_drm
+[2026-10-19T05:59:04Z DEBUG wgpu_core::instance] Instance::new: created Vulkan backend
+[2026-10-19T05:59:04Z DEBUG wgpu_core::instance] Found 1 compatible adapters. Sorted by preference:
+[2026-10-19T05:59:04Z DEBUG wgpu_core::instance] * AdapterInfo { name: "NVIDIA GeForce RTX 5070 Ti", vendor: 4318, device: 11269, device_type: DiscreteGpu, driver: "NVIDIA", driver_info: "610.57.04", backend: Vulkan }
+[2026-10-19T05:59:04Z DEBUG wgpu_core::instance] Request adapter result AdapterInfo { name: "NVIDIA GeForce RTX 5070 Ti", vendor: 4318, device: 11269, device_type: DiscreteGpu, driver: "NVIDIA", driver_info: "610.57.04", backend: Vulkan }
+[2026-10-19T05:59:04Z WARN  egui_wgpu::renderer] Detected a linear (sRGBA aware) framebuffer Bgra8UnormSrgb. egui prefers Rgba8Unorm or Bgra8Unorm
+[2026-10-19T05:59:04Z INFO  viewer_native::odometry_signals] Plot query first samples available in 2.5 ms
+[2026-10-19T05:59:04Z INFO  viewer_native::odometry_signals] Plot query scan completed in 7.0 ms

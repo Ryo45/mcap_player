@@ -1,0 +1,121 @@
+{
+  "status": "captured-hardware-gpu",
+  "layout": "standard",
+  "binary_sha256": "d8be4cfa8445abc936ecc3bbe818d6fa406a9ce4f69f37e3a018faf3b43eb31e",
+  "fixture_sha256": "1ce733f1167240d117945d574c80253fe8c97f5d8114721368da9d102e3e9141",
+  "fixture": "/tmp/mcap-readme-demo/recording.mcap",
+  "git_commit": "1cceb6fceb22c74b568fb1c46a68e263e7e0386a",
+  "probe_sha256": "f050f6256bc98fea883c4f9527dc612ba8c729f958540a9329c496567673f957",
+  "environment": {
+    "DISPLAY": ":1",
+    "XAUTHORITY": "/run/user/1000/gdm/Xauthority",
+    "VK_DRIVER_FILES": "/usr/share/vulkan/icd.d/nvidia_icd.json",
+    "RUST_LOG": "info,wgpu_core::instance=debug,wgpu_hal::vulkan=info"
+  },
+  "frames": [
+    {
+      "phase": "playing",
+      "wall_seconds": 1.6101316781714559,
+      "image": "playing.png",
+      "sha256": "e4d16ac6a38ecc254ac6a60a6ac7a6e0f0976dd4ed773015718e42ddc16ebbfc",
+      "physical_size": [
+        1920,
+        1080
+      ],
+      "window_info": "\nxwininfo: Window id: 0x3c00002 \"MCAP Camera + BEV + 3D\"\n\n  Absolute upper-left X:  40\n  Absolute upper-left Y:  97\n  Relative upper-left X:  14\n  Relative upper-left Y:  49\n  Width: 1920\n  Height: 1080\n  Depth: 24\n  Visual: 0x21\n  Visual Class: TrueColor\n  Border width: 0\n  Class: InputOutput\n  Colormap: 0x20 (installed)\n  Bit Gravity State: ForgetGravity\n  Window Gravity State: NorthWestGravity\n  Backing Store State: NotUseful\n  Save Under State: no\n  Map State: IsViewable\n  Override Redirect State: no\n  Corners:  +40+97  -600+97  -600-263  +40-263\n  -geometry 1920x1080+26+48\n\n",
+      "nvidia_process_lines": [
+        "|    0   N/A  N/A         1841661    C+G   ...rget/gpu-native/viewer-native         35MiB |"
+      ],
+      "status_memory": "\t 1003504 kB\nVmSize:\t 1003504 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t  227916 kB\nVmRSS:\t  227916 kB\nRssAnon:\t   23908 kB\nRssFile:\t  203940 kB\nRssShmem:\t      68 kB\nVmData:\t   72124 kB\nVmStk:\t     152 kB\nVmExe:\t   12392 kB\nVmLib:\t  125700 kB\nVmPTE:\t     716 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t9\n"
+    },
+    {
+      "phase": "paused",
+      "wall_seconds": 4.289237381890416,
+      "image": "paused.png",
+      "sha256": "21743bdaf42cc1e12d36d939550b01708e250e8686b70e86356471edc929c303",
+      "physical_size": [
+        1920,
+        1080
+      ],
+      "window_info": "\nxwininfo: Window id: 0x3c00002 \"MCAP Camera + BEV + 3D\"\n\n  Absolute upper-left X:  40\n  Absolute upper-left Y:  97\n  Relative upper-left X:  14\n  Relative upper-left Y:  49\n  Width: 1920\n  Height: 1080\n  Depth: 24\n  Visual: 0x21\n  Visual Class: TrueColor\n  Border width: 0\n  Class: InputOutput\n  Colormap: 0x20 (installed)\n  Bit Gravity State: ForgetGravity\n  Window Gravity State: NorthWestGravity\n  Backing Store State: NotUseful\n  Save Under State: no\n  Map State: IsViewable\n  Override Redirect State: no\n  Corners:  +40+97  -600+97  -600-263  +40-263\n  -geometry 1920x1080+26+48\n\n",
+      "nvidia_process_lines": [
+        "|    0   N/A  N/A         1841661    C+G   ...rget/gpu-native/viewer-native         35MiB |"
+      ],
+      "status_memory": "\t 1005048 kB\nVmSize:\t 1005048 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t  229668 kB\nVmRSS:\t  229668 kB\nRssAnon:\t   25596 kB\nRssFile:\t  204004 kB\nRssShmem:\t      68 kB\nVmData:\t   73808 kB\nVmStk:\t     152 kB\nVmExe:\t   12392 kB\nVmLib:\t  125700 kB\nVmPTE:\t     720 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t9\n"
+    },
+    {
+      "phase": "paused-stable",
+      "wall_seconds": 5.808262886479497,
+      "image": "paused-stable.png",
+      "sha256": "e962711d30b2c5da4629875b9e694292b584cb02fc739a3b3c0662260cce8335",
+      "physical_size": [
+        1920,
+        1080
+      ],
+      "window_info": "\nxwininfo: Window id: 0x3c00002 \"MCAP Camera + BEV + 3D\"\n\n  Absolute upper-left X:  40\n  Absolute upper-left Y:  97\n  Relative upper-left X:  14\n  Relative upper-left Y:  49\n  Width: 1920\n  Height: 1080\n  Depth: 24\n  Visual: 0x21\n  Visual Class: TrueColor\n  Border width: 0\n  Class: InputOutput\n  Colormap: 0x20 (installed)\n  Bit Gravity State: ForgetGravity\n  Window Gravity State: NorthWestGravity\n  Backing Store State: NotUseful\n  Save Under State: no\n  Map State: IsViewable\n  Override Redirect State: no\n  Corners:  +40+97  -600+97  -600-263  +40-263\n  -geometry 1920x1080+26+48\n\n",
+      "nvidia_process_lines": [
+        "|    0   N/A  N/A         1841661    C+G   ...rget/gpu-native/viewer-native         35MiB |"
+      ],
+      "status_memory": "\t 1005048 kB\nVmSize:\t 1005048 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t  229668 kB\nVmRSS:\t  229668 kB\nRssAnon:\t   25596 kB\nRssFile:\t  204004 kB\nRssShmem:\t      68 kB\nVmData:\t   73808 kB\nVmStk:\t     152 kB\nVmExe:\t   12392 kB\nVmLib:\t  125700 kB\nVmPTE:\t     720 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t9\n"
+    },
+    {
+      "phase": "resume",
+      "wall_seconds": 7.811873689293861,
+      "image": "resume.png",
+      "sha256": "14a063d84d2d90f4b1a3d4957c9c488f57b512362c9514d9e0f0495c4b05a269",
+      "physical_size": [
+        1920,
+        1080
+      ],
+      "window_info": "\nxwininfo: Window id: 0x3c00002 \"MCAP Camera + BEV + 3D\"\n\n  Absolute upper-left X:  40\n  Absolute upper-left Y:  97\n  Relative upper-left X:  14\n  Relative upper-left Y:  49\n  Width: 1920\n  Height: 1080\n  Depth: 24\n  Visual: 0x21\n  Visual Class: TrueColor\n  Border width: 0\n  Class: InputOutput\n  Colormap: 0x20 (installed)\n  Bit Gravity State: ForgetGravity\n  Window Gravity State: NorthWestGravity\n  Backing Store State: NotUseful\n  Save Under State: no\n  Map State: IsViewable\n  Override Redirect State: no\n  Corners:  +40+97  -600+97  -600-263  +40-263\n  -geometry 1920x1080+26+48\n\n",
+      "nvidia_process_lines": [
+        "|    0   N/A  N/A         1841661    C+G   ...rget/gpu-native/viewer-native         35MiB |"
+      ],
+      "status_memory": "\t 1005048 kB\nVmSize:\t 1005048 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t  229824 kB\nVmRSS:\t  229824 kB\nRssAnon:\t   25752 kB\nRssFile:\t  204004 kB\nRssShmem:\t      68 kB\nVmData:\t   73956 kB\nVmStk:\t     152 kB\nVmExe:\t   12392 kB\nVmLib:\t  125700 kB\nVmPTE:\t     720 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t9\n"
+    },
+    {
+      "phase": "resized",
+      "wall_seconds": 8.728173105046153,
+      "image": "resized.png",
+      "sha256": "822d30049a167fc8569548a62c9c5b3a81f59c64af74f0254bf740fdaf235169",
+      "physical_size": [
+        1600,
+        1000
+      ],
+      "window_info": "\nxwininfo: Window id: 0x3c00002 \"MCAP Camera + BEV + 3D\"\n\n  Absolute upper-left X:  40\n  Absolute upper-left Y:  97\n  Relative upper-left X:  14\n  Relative upper-left Y:  49\n  Width: 1600\n  Height: 1000\n  Depth: 24\n  Visual: 0x21\n  Visual Class: TrueColor\n  Border width: 0\n  Class: InputOutput\n  Colormap: 0x20 (installed)\n  Bit Gravity State: ForgetGravity\n  Window Gravity State: NorthWestGravity\n  Backing Store State: NotUseful\n  Save Under State: no\n  Map State: IsViewable\n  Override Redirect State: no\n  Corners:  +40+97  -920+97  -920-343  +40-343\n  -geometry 1600x1000+26+48\n\n",
+      "nvidia_process_lines": [
+        "|    0   N/A  N/A         1841661    C+G   ...rget/gpu-native/viewer-native         35MiB |"
+      ],
+      "status_memory": "\t 1005632 kB\nVmSize:\t 1005632 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t  230416 kB\nVmRSS:\t  230416 kB\nRssAnon:\t   26344 kB\nRssFile:\t  204004 kB\nRssShmem:\t      68 kB\nVmData:\t   74544 kB\nVmStk:\t     152 kB\nVmExe:\t   12392 kB\nVmLib:\t  125700 kB\nVmPTE:\t     720 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t9\n"
+    },
+    {
+      "phase": "end",
+      "wall_seconds": 12.144185147248209,
+      "image": "end.png",
+      "sha256": "36c78df819ad9ff22a6e7734d80ed1c242f15689630caa4ec7c4a6ba419724b7",
+      "physical_size": [
+        1600,
+        1000
+      ],
+      "window_info": "\nxwininfo: Window id: 0x3c00002 \"MCAP Camera + BEV + 3D\"\n\n  Absolute upper-left X:  40\n  Absolute upper-left Y:  97\n  Relative upper-left X:  14\n  Relative upper-left Y:  49\n  Width: 1600\n  Height: 1000\n  Depth: 24\n  Visual: 0x21\n  Visual Class: TrueColor\n  Border width: 0\n  Class: InputOutput\n  Colormap: 0x20 (installed)\n  Bit Gravity State: ForgetGravity\n  Window Gravity State: NorthWestGravity\n  Backing Store State: NotUseful\n  Save Under State: no\n  Map State: IsViewable\n  Override Redirect State: no\n  Corners:  +40+97  -920+97  -920-343  +40-343\n  -geometry 1600x1000+26+48\n\n",
+      "nvidia_process_lines": [
+        "|    0   N/A  N/A         1841661    C+G   ...rget/gpu-native/viewer-native         35MiB |"
+      ],
+      "status_memory": "\t 1006656 kB\nVmSize:\t 1006656 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t  231516 kB\nVmRSS:\t  231516 kB\nRssAnon:\t   26420 kB\nRssFile:\t  205028 kB\nRssShmem:\t      68 kB\nVmData:\t   74616 kB\nVmStk:\t     152 kB\nVmExe:\t   12392 kB\nVmLib:\t  125700 kB\nVmPTE:\t     724 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t9\n"
+    }
+  ],
+  "input_method": "targeted XSendEvent Tab/Space for pause/resume; no automated Seek",
+  "visual_validation": "not automated: inspect captured UI cursor, camera and scene",
+  "wall_deadline_seconds": 45,
+  "command": [
+    "/home/ryo/development/mcap_player/target/gpu-native/viewer-native",
+    "--mcap",
+    "/tmp/mcap-readme-demo/recording.mcap",
+    "--layout",
+    "standard"
+  ],
+  "pid": 1841661,
+  "window": "0x3c00002",
+  "cleanup_returncode": -15,
+  "wall_seconds": 12.258863164111972
+}

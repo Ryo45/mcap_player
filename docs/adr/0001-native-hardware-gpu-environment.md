@@ -1,7 +1,7 @@
 # ADR 0001: Nativeを実GPUで検証する環境
 
 - 日付: 2026-10-19
-- 状態: 採用方針。環境構築・Nativeの実GPU描画確認は未実施。
+- 状態: 方針1のホスト実GPU描画を確認済み（画面電源Onが必要）。恒久的な起動診断・GPU containerは未実装。
 - 対象: Linux上の`viewer-native`。最初の検証機は現在のNVIDIA搭載ホスト。
 
 ## 背景と目的
@@ -59,7 +59,7 @@ Vulkan loader・driver・OSを経由する通常のGPU利用であり、driver�
 Native GUI検証は、GPUとdisplayへアクセスできるホスト実行、または明示的にそれらを渡したコンテナで行う必要がある。
 
 **未確認:** NVIDIA Vulkan deviceの列挙成功、windowへのVulkan presentation、
-現在のNativeが実際に選ぶadapter、NativeのGPU利用率・VRAM・表示性能。
+現在のNativeが実際に選ぶadapter、NativeのGPU利用率・VRAM・表示性能（ADR策定時点。下記の追試で一部確認）。
 `nvidia-smi`、ICD manifestの存在、Xorgへの接続成功は、それぞれ単独ではこれらの証明にならない。
 過去のNative試行についてもadapter記録が不足しており、software描画だったとは断定しない。
 
@@ -77,8 +77,8 @@ Xvfbや新しいdisplay serverは最初の経路には使わない。
 ホストとのABIが合わない場合はホストでの同toolchainビルドへ切り替え、使用したビルド方法を記録する。
 最初からROS runtimeとの依存解決を混ぜず、`ros2-live`は基準ができてから検証する。
 
-ホストにVulkan診断toolを用意し、Nativeと同じユーザー・display・認証・driver条件で
-`vulkaninfo --summary`を実行する。必要なpackageの導入は構築作業で行う。本ADR作成時には導入しない。
+adapter列挙自体で失敗する場合は、ホストにVulkan診断toolを用意し、Nativeと同じユーザー・display・認証・driver条件で
+`vulkaninfo --summary`を実行する。今回の追試はNativeの選択ログと実描画まで確認できたため、toolの追加導入は不要だった。
 
 NVIDIAのICDだけを調べる診断runでは、存在を確認したmanifestをprocess単位で指定する。
 
@@ -175,8 +175,37 @@ FPSを増やすためにVSyncを外す実験は、基準結果とは別条件と
 | Xvfb / software描画 | 自動化しやすく、GPUなしCIで使える | 実GPUとwindow presentationの基準にならない。既存の補助試験として維持 |
 | offscreen hardware描画 | display接続と分離してGPU単体を調べられる | GUI全体の受入確認を代替できない。必要なら切り分け用に追加 |
 
-## 今回行わない変更
+## 方針策定時点で対象外にした変更
 
 本ADRでは、GPU用Compose設定、system package導入、driver/desktop変更、NativeのCLI・ログ追加を実装しない。
 GPU JPEG decode、CUDA、JPEG decoder再実装、thread数・先読み・memory budget変更、renderer再設計も対象外。
-次の作業はAのVulkan診断を完了し、B/Cで「実GPUの選択と実際の画面表示」を証拠付きで成立させることである。
+策定時点では、AからB/Cへ進めて「実GPUの選択と実際の画面表示」を証拠付きで成立させる予定だった。
+追試で確認できた範囲を以下に記録する。
+
+
+## 2026-10-19追試: ホスト実行の成立を確認
+
+[実行条件・画面・ログ・再現手順](../performance/2026-10-19-native-hardware-gpu/README.md)を保存した。
+通常のNative release binaryをホストで動かし、RTX 5070 Ti / `DiscreteGpu` / `Vulkan` / NVIDIA 610.57.04を
+wgpuの選択結果とNative PIDのNVIDIA process情報で確認した。
+FHDの実ウィンドウでCamera・BEV・3D Sceneを同時描画し、停止・再開・リサイズも確認した。
+rendererやdomain層の変更、CUDA toolkit、GPU containerは必要なかった。
+既存wgpuのdebugログを利用できたため、恒久的なadapterログ・実GPU必須flagは後続とする。
+
+ただし、**画面電源がOffのままではFIFOのUI/renderが約1秒となった**。
+ホストは2560×1440 / 59.95 Hzを報告していても、DPMSはOff、NVIDIAのdisplay activeはDisabledだった。
+ロックを解除せず、DPMSで画面電源だけOnにするとdisplay activeがEnabledになり、
+同じbinary・同じFifoでUI/render表示が約16.5 msへ戻った。
+従って、基準条件へDPMS状態・NVIDIA display active・session lock状態を追加する。
+画面電源を確認せずに「GPUが遅い」と判断したり、最初からFifoを変更したりしない。
+この値はUIのwall計測表示であり、GPU実行時間や一般的な性能保証ではない。
+
+通常GUIのmouseによるSeekは未確認である。ロック中のsessionではXTest buttonがNativeへ届かず、
+操作成功とみなさなかった。別途、記録した一時patchのbinaryからGUIと同じ`PlaybackCommand::Seek`を通し、
+1秒・4秒の前後Seek後のCamera/Scan/Path描画復元を確認する検証を行った。
+これはGPUを含むSeek復元経路の確認であり、通常GUIのpointer操作の確認とは区別する。
+検証用Rust変更は配布sourceへ残さない。sessionのロック解除やロック設定の変更も行わない。
+
+小さいfixtureでの成立確認であり、60秒・4K/8cameraの実GPU性能やGPU containerの成立は未検証。
+次の性能比較では、通常の対話session、画面電源On、同じ可視panel・出力寸法・refresh条件を揃え、
+各アプリが実GPUを選んだことを個別に確認する。
