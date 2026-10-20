@@ -1,0 +1,44 @@
+{
+  "source_commit": "8b1bfd742689e9025bb28444d246a33a5bf6f939",
+  "lichtblick_source_commit": "95713edb309d77589b130286642ab149995a5f7b",
+  "python": "3.12.3",
+  "kernel": "7.0.0-30-generic",
+  "files": {
+    "production_native": {
+      "path": "target/gpu-native/viewer-native",
+      "sha256": "05bbc42d8bbeb595f687518c55e003325d8da516c9dfa3f0d51d26a7ca4c1329"
+    },
+    "measurement_native": {
+      "path": "target/gpu-native/viewer-native-default-layout",
+      "sha256": "4d5e161935bf78ac3df05e8a6d5b1d4e9dada73ccc9a7bce3f5fb1aaf5078c04"
+    },
+    "lichtblick_executable": {
+      "path": "/tmp/mcap-lichtblick-desktop/lichtblick-1.29.1-linux-x64/lichtblick",
+      "sha256": "180eea79cebc825a7e7291b8c5ef387760773f2b03596751bda8e6e532a8b6c8"
+    },
+    "lichtblick_app_asar": {
+      "path": "/tmp/mcap-lichtblick-desktop/lichtblick-1.29.1-linux-x64/resources/app.asar",
+      "sha256": "3b3af3728e8f1a967b02cfb90f555e2f9f894e21ecfa1d38f2a7e9b84fe144c6"
+    },
+    "harness": {
+      "path": "tools/performance-probe/measure_desktop_layout.py",
+      "sha256": "245c3b45b5af6476f60bdc8adc1786984c66dc82d8c33273f0a304196b09242c"
+    },
+    "suite": {
+      "path": "tools/performance-probe/run_desktop_layout_comparison.py",
+      "sha256": "9e19860ed8fc4851b24bab4c391a5cc5c694de189042633be786c9bac35c6c21"
+    },
+    "summary_script": {
+      "path": "tools/performance-probe/summarize_desktop_layout.py",
+      "sha256": "0c1b4351aacbeb020f366c55755c866cb57625e8952521618480b7e7c54ed8a2"
+    },
+    "projection_script": {
+      "path": "tools/performance-probe/verify_desktop_scan_geometry.py",
+      "sha256": "51b8814a77a5adbc70867663caf5003ee6970c7baf607ca23216b05dc1c0064e"
+    },
+    "native_patch": {
+      "path": "docs/performance/2026-10-20-desktop-default-layout/native-measurement.patch",
+      "sha256": "b83659b01d40cb12ae0ef4ca2238ecd54f29146e37087797d957438c94ceda29"
+    }
+  }
+}

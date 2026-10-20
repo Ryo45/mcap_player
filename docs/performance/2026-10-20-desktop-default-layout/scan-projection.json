@@ -1,0 +1,26 @@
+{
+  "sequence": 31,
+  "scene_rect": [
+    320,
+    76,
+    1120,
+    926
+  ],
+  "camera_distance_m": 20,
+  "elevation_deg": 30,
+  "azimuth_deg": 45,
+  "fov_y_deg": 45,
+  "tolerance_px": 3,
+  "images": {
+    "native": {
+      "path": "docs/performance/2026-10-20-desktop-default-layout/calibration-native/calibrated.png",
+      "projected_points": 360,
+      "cyan_pixel_hits": 360
+    },
+    "lichtblick": {
+      "path": "docs/performance/2026-10-20-desktop-default-layout/calibration-lichtblick/calibrated.png",
+      "projected_points": 360,
+      "cyan_pixel_hits": 360
+    }
+  }
+}

@@ -1,0 +1,5859 @@
+{
+  "status": "ok",
+  "app": "lichtblick",
+  "case": "raw",
+  "calibration": false,
+  "data_sha256": "9f31b9ad47758f2f2313b83b584240757241330e71060ba537b5a8716ceda07e",
+  "data_bytes": 14944878140,
+  "geometry": {
+    "layout": [
+      320,
+      44,
+      1600,
+      958
+    ],
+    "scene": [
+      320,
+      76,
+      1120,
+      926
+    ],
+    "canvas": [
+      1440,
+      76,
+      480,
+      255
+    ],
+    "camera": [
+      1453.333333,
+      76,
+      453.333333,
+      255
+    ],
+    "raw": [
+      1440,
+      363,
+      480,
+      639
+    ],
+    "camera_roi": [
+      1455,
+      78,
+      449,
+      251
+    ]
+  },
+  "harness_sha256": "245c3b45b5af6476f60bdc8adc1786984c66dc82d8c33273f0a304196b09242c",
+  "native_patch_sha256": "b83659b01d40cb12ae0ef4ca2238ecd54f29146e37087797d957438c94ceda29",
+  "source_commit": "8b1bfd742689e9025bb28444d246a33a5bf6f939",
+  "samples": [
+    {
+      "s": 0.0012029306963086128,
+      "valid_identity": true,
+      "forward_frame": 0,
+      "wall_lag_ms": 1.2029306963086128,
+      "scene_crc": 1406162386,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "resources": {
+        "pss_kib": 264721,
+        "summed_rss_kib": 483088,
+        "cpu_seconds_live_processes": 1.03,
+        "rchar_live_processes": 711038468,
+        "storage_read_bytes_live_processes": 655876096,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 111610,
+            "rss_kib": 193128
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 122079,
+            "rss_kib": 180912
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689600.000000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689600000000000,
+      "raw_lag_ms": 0.0,
+      "observer_work_ms": 13.675839640200138
+    },
+    {
+      "s": 0.05119842290878296,
+      "valid_identity": true,
+      "forward_frame": 0,
+      "wall_lag_ms": 51.19842290878296,
+      "scene_crc": 1406162386,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 3.548705019056797
+    },
+    {
+      "s": 0.10129158198833466,
+      "valid_identity": true,
+      "forward_frame": 0,
+      "wall_lag_ms": 101.29158198833466,
+      "scene_crc": 1406162386,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 3.4883301705121994
+    },
+    {
+      "s": 0.15129232686012983,
+      "valid_identity": true,
+      "forward_frame": 0,
+      "wall_lag_ms": 151.29232686012983,
+      "scene_crc": 831322401,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 3.41014564037323
+    },
+    {
+      "s": 0.20120215509086847,
+      "valid_identity": true,
+      "forward_frame": 1,
+      "wall_lag_ms": 101.20215509086847,
+      "scene_crc": 831322401,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 3.2552266493439674
+    },
+    {
+      "s": 0.2512540491297841,
+      "valid_identity": true,
+      "forward_frame": 1,
+      "wall_lag_ms": 151.2540491297841,
+      "scene_crc": 2677083614,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "resources": {
+        "pss_kib": 264709,
+        "summed_rss_kib": 483080,
+        "cpu_seconds_live_processes": 1.13,
+        "rchar_live_processes": 851277233,
+        "storage_read_bytes_live_processes": 794615808,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 111650,
+            "rss_kib": 193168
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 122027,
+            "rss_kib": 180864
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689600,
+          "nsec": 265079892
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689600.200000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689600200000000,
+      "raw_lag_ms": 65.079892,
+      "observer_work_ms": 13.412549160420895
+    },
+    {
+      "s": 0.3014160506427288,
+      "valid_identity": true,
+      "forward_frame": 2,
+      "wall_lag_ms": 101.41605064272879,
+      "scene_crc": 4017059194,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 3.412896767258644
+    },
+    {
+      "s": 0.3514482956379652,
+      "valid_identity": true,
+      "forward_frame": 3,
+      "wall_lag_ms": 51.44829563796516,
+      "scene_crc": 4017059194,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 3.408868797123432
+    },
+    {
+      "s": 0.40151806082576513,
+      "valid_identity": true,
+      "forward_frame": 3,
+      "wall_lag_ms": 101.51806082576509,
+      "scene_crc": 4171724244,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 3.416372463107109
+    },
+    {
+      "s": 0.4514914220198989,
+      "valid_identity": true,
+      "forward_frame": 3,
+      "wall_lag_ms": 151.49142201989883,
+      "scene_crc": 4171724244,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 3.154461272060871
+    },
+    {
+      "s": 0.5015693064779043,
+      "valid_identity": true,
+      "forward_frame": 4,
+      "wall_lag_ms": 101.56930647790429,
+      "scene_crc": 1242987476,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "resources": {
+        "pss_kib": 261871,
+        "summed_rss_kib": 480228,
+        "cpu_seconds_live_processes": 1.26,
+        "rchar_live_processes": 1000980834,
+        "storage_read_bytes_live_processes": 936579072,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 108822,
+            "rss_kib": 190340
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 122017,
+            "rss_kib": 180840
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689600,
+          "nsec": 518575552
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689600.500000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689600500000000,
+      "raw_lag_ms": 18.575552,
+      "observer_work_ms": 9.70650278031826
+    },
+    {
+      "s": 0.5516235195100307,
+      "valid_identity": true,
+      "forward_frame": 5,
+      "wall_lag_ms": 51.62351951003075,
+      "scene_crc": 1242987476,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 3.3643487840890884
+    },
+    {
+      "s": 0.60168397706002,
+      "valid_identity": true,
+      "forward_frame": 5,
+      "wall_lag_ms": 101.68397706001997,
+      "scene_crc": 2884261203,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 3.241755999624729
+    },
+    {
+      "s": 0.6517240302637219,
+      "valid_identity": true,
+      "forward_frame": 6,
+      "wall_lag_ms": 51.72403026372186,
+      "scene_crc": 2884261203,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 3.2559093087911606
+    },
+    {
+      "s": 0.7017897814512253,
+      "valid_identity": true,
+      "forward_frame": 6,
+      "wall_lag_ms": 101.7897814512252,
+      "scene_crc": 3477008774,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 3.280450589954853
+    },
+    {
+      "s": 0.7518637850880623,
+      "valid_identity": true,
+      "forward_frame": 7,
+      "wall_lag_ms": 51.86378508806222,
+      "scene_crc": 3477008774,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "resources": {
+        "pss_kib": 267875,
+        "summed_rss_kib": 486256,
+        "cpu_seconds_live_processes": 1.36,
+        "rchar_live_processes": 1150038736,
+        "storage_read_bytes_live_processes": 1081868288,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 114974,
+            "rss_kib": 196492
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 121869,
+            "rss_kib": 180716
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689600,
+          "nsec": 791610268
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689600.700000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689600700000000,
+      "raw_lag_ms": 91.610268,
+      "observer_work_ms": 9.701195172965527
+    },
+    {
+      "s": 0.8019289886578918,
+      "valid_identity": true,
+      "forward_frame": 7,
+      "wall_lag_ms": 101.92898865789168,
+      "scene_crc": 2888519577,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 3.3499635756015778
+    },
+    {
+      "s": 0.851940437220037,
+      "valid_identity": true,
+      "forward_frame": 8,
+      "wall_lag_ms": 51.94043722003694,
+      "scene_crc": 2888519577,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 2.9905596747994423
+    },
+    {
+      "s": 0.9019946977496147,
+      "valid_identity": true,
+      "forward_frame": 8,
+      "wall_lag_ms": 101.99469774961467,
+      "scene_crc": 1239205585,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 3.2623326405882835
+    },
+    {
+      "s": 0.9528659088537097,
+      "valid_identity": true,
+      "forward_frame": 9,
+      "wall_lag_ms": 52.865908853709676,
+      "scene_crc": 1239205585,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "observer_work_ms": 4.601991735398769
+    },
+    {
+      "s": 1.0021453835070133,
+      "valid_identity": true,
+      "forward_frame": 9,
+      "wall_lag_ms": 102.14538350701329,
+      "scene_crc": 3713163133,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "resources": {
+        "pss_kib": 264557,
+        "summed_rss_kib": 482940,
+        "cpu_seconds_live_processes": 1.42,
+        "rchar_live_processes": 1215819640,
+        "storage_read_bytes_live_processes": 1147457536,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 111654,
+            "rss_kib": 193172
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 121871,
+            "rss_kib": 180720
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689601,
+          "nsec": 60057768
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689601.000000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689601000000000,
+      "raw_lag_ms": 60.057768,
+      "observer_work_ms": 11.372657492756844
+    },
+    {
+      "s": 1.0528325019404292,
+      "valid_identity": true,
+      "forward_frame": 10,
+      "wall_lag_ms": 52.83250194042921,
+      "scene_crc": 3713163133,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "observer_work_ms": 4.374412819743156
+    },
+    {
+      "s": 1.102228557690978,
+      "valid_identity": true,
+      "forward_frame": 10,
+      "wall_lag_ms": 102.22855769097805,
+      "scene_crc": 2877940772,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "observer_work_ms": 3.118443302810192
+    },
+    {
+      "s": 1.1522922944277525,
+      "valid_identity": true,
+      "forward_frame": 11,
+      "wall_lag_ms": 52.29229442775241,
+      "scene_crc": 2877940772,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 3.1802700832486153
+    },
+    {
+      "s": 1.2024452583864331,
+      "valid_identity": true,
+      "forward_frame": 11,
+      "wall_lag_ms": 102.44525838643304,
+      "scene_crc": 4112040177,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 4.160822369158268
+    },
+    {
+      "s": 1.2526911748573184,
+      "valid_identity": true,
+      "forward_frame": 12,
+      "wall_lag_ms": 52.691174857318224,
+      "scene_crc": 4112040177,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "resources": {
+        "pss_kib": 274829,
+        "summed_rss_kib": 493216,
+        "cpu_seconds_live_processes": 1.46,
+        "rchar_live_processes": 1225230920,
+        "storage_read_bytes_live_processes": 1156857856,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 117826,
+            "rss_kib": 199344
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 125971,
+            "rss_kib": 184824
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689601,
+          "nsec": 293605940
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689601.300000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689601300000000,
+      "raw_lag_ms": -6.39406,
+      "observer_work_ms": 16.835084185004234
+    },
+    {
+      "s": 1.3025416377931833,
+      "valid_identity": true,
+      "forward_frame": 12,
+      "wall_lag_ms": 102.54163779318316,
+      "scene_crc": 2603859168,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.108939319849014
+    },
+    {
+      "s": 1.3527596648782492,
+      "valid_identity": true,
+      "forward_frame": 13,
+      "wall_lag_ms": 52.759664878249126,
+      "scene_crc": 2603859168,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.336664453148842
+    },
+    {
+      "s": 1.4026994332671165,
+      "valid_identity": true,
+      "forward_frame": 13,
+      "wall_lag_ms": 102.6994332671165,
+      "scene_crc": 3438604176,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.174983128905296
+    },
+    {
+      "s": 1.4527336694300175,
+      "valid_identity": true,
+      "forward_frame": 14,
+      "wall_lag_ms": 52.733669430017336,
+      "scene_crc": 3438604176,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "observer_work_ms": 4.100870341062546
+    },
+    {
+      "s": 1.5028043147176504,
+      "valid_identity": true,
+      "forward_frame": 14,
+      "wall_lag_ms": 102.80431471765029,
+      "scene_crc": 251544994,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "resources": {
+        "pss_kib": 284091,
+        "summed_rss_kib": 502484,
+        "cpu_seconds_live_processes": 1.51,
+        "rchar_live_processes": 1234682457,
+        "storage_read_bytes_live_processes": 1166286848,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 127114,
+            "rss_kib": 208632
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 125945,
+            "rss_kib": 184804
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689601,
+          "nsec": 559735445
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689601.500000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689601500000000,
+      "raw_lag_ms": 59.735445,
+      "observer_work_ms": 10.385182686150074
+    },
+    {
+      "s": 1.5528332041576505,
+      "valid_identity": true,
+      "forward_frame": 15,
+      "wall_lag_ms": 52.83320415765047,
+      "scene_crc": 251544994,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.073700867593288
+    },
+    {
+      "s": 1.6029201056808233,
+      "valid_identity": true,
+      "forward_frame": 15,
+      "wall_lag_ms": 102.92010568082333,
+      "scene_crc": 2103932068,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.090391099452972
+    },
+    {
+      "s": 1.652992133051157,
+      "valid_identity": true,
+      "forward_frame": 16,
+      "wall_lag_ms": 52.99213305115691,
+      "scene_crc": 2103932068,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.1427165269851685
+    },
+    {
+      "s": 1.7030456699430943,
+      "valid_identity": true,
+      "forward_frame": 16,
+      "wall_lag_ms": 103.04566994309417,
+      "scene_crc": 3291356709,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.224102944135666
+    },
+    {
+      "s": 1.753115501254797,
+      "valid_identity": true,
+      "forward_frame": 17,
+      "wall_lag_ms": 53.115501254796804,
+      "scene_crc": 3291356709,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "resources": {
+        "pss_kib": 262765,
+        "summed_rss_kib": 481160,
+        "cpu_seconds_live_processes": 1.58,
+        "rchar_live_processes": 1299761141,
+        "storage_read_bytes_live_processes": 1231020032,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 105786,
+            "rss_kib": 187304
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 125947,
+            "rss_kib": 184808
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689601,
+          "nsec": 795298439
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689601.800000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689601800000000,
+      "raw_lag_ms": -4.701561,
+      "observer_work_ms": 18.063112162053585
+    },
+    {
+      "s": 1.803177671507001,
+      "valid_identity": true,
+      "forward_frame": 17,
+      "wall_lag_ms": 103.17767150700075,
+      "scene_crc": 838924597,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "observer_work_ms": 4.2185913771390915
+    },
+    {
+      "s": 1.8532414995133877,
+      "valid_identity": true,
+      "forward_frame": 18,
+      "wall_lag_ms": 53.24149951338764,
+      "scene_crc": 838924597,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "observer_work_ms": 4.040037281811237
+    },
+    {
+      "s": 1.9032576028257608,
+      "valid_identity": true,
+      "forward_frame": 18,
+      "wall_lag_ms": 103.2576028257608,
+      "scene_crc": 1256490165,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "observer_work_ms": 4.069367423653603
+    },
+    {
+      "s": 1.9533983655273914,
+      "valid_identity": true,
+      "forward_frame": 19,
+      "wall_lag_ms": 53.3983655273913,
+      "scene_crc": 1256490165,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 4.194669425487518
+    },
+    {
+      "s": 2.003393020480871,
+      "valid_identity": true,
+      "forward_frame": 19,
+      "wall_lag_ms": 103.39302048087107,
+      "scene_crc": 1519723659,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "resources": {
+        "pss_kib": 276103,
+        "summed_rss_kib": 494484,
+        "cpu_seconds_live_processes": 1.65,
+        "rchar_live_processes": 1364861861,
+        "storage_read_bytes_live_processes": 1295388672,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 115042,
+            "rss_kib": 196560
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 130029,
+            "rss_kib": 188876
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689602,
+          "nsec": 60737649
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689602.000000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689602000000000,
+      "raw_lag_ms": 60.737649,
+      "observer_work_ms": 10.487335734069347
+    },
+    {
+      "s": 2.053621449507773,
+      "valid_identity": true,
+      "forward_frame": 20,
+      "wall_lag_ms": 53.62144950777292,
+      "scene_crc": 1519723659,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 4.3544769287109375
+    },
+    {
+      "s": 2.1035030260682106,
+      "valid_identity": true,
+      "forward_frame": 20,
+      "wall_lag_ms": 103.5030260682106,
+      "scene_crc": 4027688361,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 4.062521271407604
+    },
+    {
+      "s": 2.153767317533493,
+      "valid_identity": true,
+      "forward_frame": 21,
+      "wall_lag_ms": 53.76731753349296,
+      "scene_crc": 4027688361,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 4.487690515816212
+    },
+    {
+      "s": 2.20361434109509,
+      "valid_identity": true,
+      "forward_frame": 21,
+      "wall_lag_ms": 103.61434109508983,
+      "scene_crc": 2746318929,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 4.0666526183485985
+    },
+    {
+      "s": 2.253934536129236,
+      "valid_identity": true,
+      "forward_frame": 22,
+      "wall_lag_ms": 53.934536129236044,
+      "scene_crc": 2746318929,
+      "variant": 22,
+      "mae": 0.0,
+      "second_mae": 4.901818181818182,
+      "resources": {
+        "pss_kib": 282313,
+        "summed_rss_kib": 500716,
+        "cpu_seconds_live_processes": 1.69,
+        "rchar_live_processes": 1374275137,
+        "storage_read_bytes_live_processes": 1304702976,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 121230,
+            "rss_kib": 202748
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 130051,
+            "rss_kib": 188920
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689602,
+          "nsec": 294084901
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689602.300000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689602300000000,
+      "raw_lag_ms": -5.915099,
+      "observer_work_ms": 15.617144294083118
+    },
+    {
+      "s": 2.3037378238514066,
+      "valid_identity": true,
+      "forward_frame": 22,
+      "wall_lag_ms": 103.7378238514064,
+      "scene_crc": 3330891125,
+      "variant": 22,
+      "mae": 0.0,
+      "second_mae": 4.901818181818182,
+      "observer_work_ms": 4.055875353515148
+    },
+    {
+      "s": 2.3539584577083588,
+      "valid_identity": true,
+      "forward_frame": 23,
+      "wall_lag_ms": 53.958457708358495,
+      "scene_crc": 3330891125,
+      "variant": 23,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 4.307201132178307
+    },
+    {
+      "s": 2.4038561759516597,
+      "valid_identity": true,
+      "forward_frame": 23,
+      "wall_lag_ms": 103.85617595165941,
+      "scene_crc": 1793584294,
+      "variant": 23,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 4.096653312444687
+    },
+    {
+      "s": 2.454190301708877,
+      "valid_identity": true,
+      "forward_frame": 24,
+      "wall_lag_ms": 54.19030170887673,
+      "scene_crc": 1793584294,
+      "variant": 24,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 4.333555698394775
+    },
+    {
+      "s": 2.5040229549631476,
+      "valid_identity": true,
+      "forward_frame": 24,
+      "wall_lag_ms": 104.02295496314728,
+      "scene_crc": 1687339413,
+      "variant": 24,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "resources": {
+        "pss_kib": 266869,
+        "summed_rss_kib": 485276,
+        "cpu_seconds_live_processes": 1.73,
+        "rchar_live_processes": 1383730233,
+        "storage_read_bytes_live_processes": 1314045952,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 105782,
+            "rss_kib": 187300
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 130055,
+            "rss_kib": 188928
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689602,
+          "nsec": 561264093
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689602.500000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689602500000000,
+      "raw_lag_ms": 61.264093,
+      "observer_work_ms": 10.394752956926823
+    },
+    {
+      "s": 2.554714855737984,
+      "valid_identity": true,
+      "forward_frame": 25,
+      "wall_lag_ms": 54.71485573798418,
+      "scene_crc": 1687339413,
+      "variant": 25,
+      "mae": 0.0,
+      "second_mae": 4.68530303030303,
+      "observer_work_ms": 5.196021869778633
+    },
+    {
+      "s": 2.6042921636253595,
+      "valid_identity": true,
+      "forward_frame": 25,
+      "wall_lag_ms": 104.29216362535954,
+      "scene_crc": 227608725,
+      "variant": 25,
+      "mae": 0.0,
+      "second_mae": 4.68530303030303,
+      "observer_work_ms": 4.400852136313915
+    },
+    {
+      "s": 2.654376664198935,
+      "valid_identity": true,
+      "forward_frame": 26,
+      "wall_lag_ms": 54.37666419893495,
+      "scene_crc": 227608725,
+      "variant": 26,
+      "mae": 0.0,
+      "second_mae": 5.06590909090909,
+      "observer_work_ms": 4.413990303874016
+    },
+    {
+      "s": 2.704421952366829,
+      "valid_identity": true,
+      "forward_frame": 26,
+      "wall_lag_ms": 104.42195236682883,
+      "scene_crc": 438885551,
+      "variant": 26,
+      "mae": 0.0,
+      "second_mae": 5.06590909090909,
+      "observer_work_ms": 4.399077035486698
+    },
+    {
+      "s": 2.7546923169866204,
+      "valid_identity": true,
+      "forward_frame": 27,
+      "wall_lag_ms": 54.69231698662025,
+      "scene_crc": 438885551,
+      "variant": 27,
+      "mae": 0.0,
+      "second_mae": 5.034242424242423,
+      "resources": {
+        "pss_kib": 273077,
+        "summed_rss_kib": 491488,
+        "cpu_seconds_live_processes": 1.81,
+        "rchar_live_processes": 1393163271,
+        "storage_read_bytes_live_processes": 1323360256,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 111986,
+            "rss_kib": 193504
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 130059,
+            "rss_kib": 188936
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689602,
+          "nsec": 794978894
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689602.800000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689602800000000,
+      "raw_lag_ms": -5.021106,
+      "observer_work_ms": 15.248673968017101
+    },
+    {
+      "s": 2.8049816815182567,
+      "valid_identity": true,
+      "forward_frame": 27,
+      "wall_lag_ms": 104.9816815182565,
+      "scene_crc": 1486128376,
+      "variant": 27,
+      "mae": 0.0,
+      "second_mae": 5.034242424242423,
+      "observer_work_ms": 4.969791509211063
+    },
+    {
+      "s": 2.854631884023547,
+      "valid_identity": true,
+      "forward_frame": 28,
+      "wall_lag_ms": 54.6318840235469,
+      "scene_crc": 1486128376,
+      "variant": 28,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.337797872722149
+    },
+    {
+      "s": 2.904636730439961,
+      "valid_identity": true,
+      "forward_frame": 28,
+      "wall_lag_ms": 104.63673043996069,
+      "scene_crc": 2321437224,
+      "variant": 28,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.430385306477547
+    },
+    {
+      "s": 2.954758192412555,
+      "valid_identity": true,
+      "forward_frame": 29,
+      "wall_lag_ms": 54.75819241255486,
+      "scene_crc": 2321437224,
+      "variant": 29,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.344558343291283
+    },
+    {
+      "s": 3.0047691529616714,
+      "valid_identity": true,
+      "forward_frame": 29,
+      "wall_lag_ms": 104.769152961671,
+      "scene_crc": 394511390,
+      "variant": 29,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "resources": {
+        "pss_kib": 282405,
+        "summed_rss_kib": 500820,
+        "cpu_seconds_live_processes": 1.86,
+        "rchar_live_processes": 1411748360,
+        "storage_read_bytes_live_processes": 1341739008,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 121310,
+            "rss_kib": 202828
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 130063,
+            "rss_kib": 188944
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689603,
+          "nsec": 61992404
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689603.000000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689603000000000,
+      "raw_lag_ms": 61.992404,
+      "observer_work_ms": 37.46275696903467
+    },
+    {
+      "s": 3.0548613918945193,
+      "valid_identity": true,
+      "forward_frame": 30,
+      "wall_lag_ms": 54.86139189451933,
+      "scene_crc": 394511390,
+      "variant": 30,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 4.32120356708765
+    },
+    {
+      "s": 3.104905997402966,
+      "valid_identity": true,
+      "forward_frame": 30,
+      "wall_lag_ms": 104.90599740296602,
+      "scene_crc": 3396063092,
+      "variant": 30,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 4.308510571718216
+    },
+    {
+      "s": 3.1550027998164296,
+      "valid_identity": true,
+      "forward_frame": 31,
+      "wall_lag_ms": 55.00279981642953,
+      "scene_crc": 3396063092,
+      "variant": 31,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 4.299355670809746
+    },
+    {
+      "s": 3.2050378639250994,
+      "valid_identity": true,
+      "forward_frame": 31,
+      "wall_lag_ms": 105.03786392509929,
+      "scene_crc": 3703276562,
+      "variant": 31,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 4.351681098341942
+    },
+    {
+      "s": 3.255155454389751,
+      "valid_identity": true,
+      "forward_frame": 32,
+      "wall_lag_ms": 55.15545438975078,
+      "scene_crc": 3703276562,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "resources": {
+        "pss_kib": 292405,
+        "summed_rss_kib": 510824,
+        "cpu_seconds_live_processes": 1.93,
+        "rchar_live_processes": 1421153499,
+        "storage_read_bytes_live_processes": 1351311360,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 127210,
+            "rss_kib": 208728
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 134163,
+            "rss_kib": 193048
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689603,
+          "nsec": 306804269
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689603.300000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689603300000000,
+      "raw_lag_ms": 6.804269,
+      "observer_work_ms": 18.768317066133022
+    },
+    {
+      "s": 3.3052055221050978,
+      "valid_identity": true,
+      "forward_frame": 32,
+      "wall_lag_ms": 105.2055221050976,
+      "scene_crc": 1118579890,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 4.378954879939556
+    },
+    {
+      "s": 3.355308693833649,
+      "valid_identity": true,
+      "forward_frame": 33,
+      "wall_lag_ms": 55.30869383364889,
+      "scene_crc": 1118579890,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 4.403086379170418
+    },
+    {
+      "s": 3.405316272750497,
+      "valid_identity": true,
+      "forward_frame": 33,
+      "wall_lag_ms": 105.3162727504966,
+      "scene_crc": 2068948533,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 4.282964393496513
+    },
+    {
+      "s": 3.455448971129954,
+      "valid_identity": true,
+      "forward_frame": 34,
+      "wall_lag_ms": 55.448971129953506,
+      "scene_crc": 2068948533,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.345936700701714
+    },
+    {
+      "s": 3.505441836081445,
+      "valid_identity": true,
+      "forward_frame": 34,
+      "wall_lag_ms": 105.44183608144486,
+      "scene_crc": 4003969063,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "resources": {
+        "pss_kib": 271115,
+        "summed_rss_kib": 489528,
+        "cpu_seconds_live_processes": 2.01,
+        "rchar_live_processes": 1505036123,
+        "storage_read_bytes_live_processes": 1436680192,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 105926,
+            "rss_kib": 187444
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 134157,
+            "rss_kib": 193036
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689603,
+          "nsec": 545328356
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689603.500000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689603500000000,
+      "raw_lag_ms": 45.328356,
+      "observer_work_ms": 26.676001958549023
+    },
+    {
+      "s": 3.55551144387573,
+      "valid_identity": true,
+      "forward_frame": 35,
+      "wall_lag_ms": 55.51144387573004,
+      "scene_crc": 4003969063,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.349331371486187
+    },
+    {
+      "s": 3.6057076267898083,
+      "valid_identity": true,
+      "forward_frame": 35,
+      "wall_lag_ms": 105.70762678980827,
+      "scene_crc": 1422247546,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 5.1749106496572495
+    },
+    {
+      "s": 3.6557549834251404,
+      "valid_identity": true,
+      "forward_frame": 36,
+      "wall_lag_ms": 55.754983425140296,
+      "scene_crc": 1422247546,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 5.270620808005333
+    },
+    {
+      "s": 3.70577859506011,
+      "valid_identity": true,
+      "forward_frame": 36,
+      "wall_lag_ms": 105.77859506011,
+      "scene_crc": 1346596139,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 5.217390134930611
+    },
+    {
+      "s": 3.7579896030947566,
+      "valid_identity": true,
+      "forward_frame": 36,
+      "wall_lag_ms": 157.98960309475652,
+      "scene_crc": 1346596139,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "resources": {
+        "pss_kib": 277251,
+        "summed_rss_kib": 495664,
+        "cpu_seconds_live_processes": 2.12,
+        "rchar_live_processes": 1514526768,
+        "storage_read_bytes_live_processes": 1446383616,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 112090,
+            "rss_kib": 193608
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 134129,
+            "rss_kib": 193008
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689603,
+          "nsec": 780114121
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689603.700000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689603700000000,
+      "raw_lag_ms": 80.114121,
+      "observer_work_ms": 16.453461721539497
+    },
+    {
+      "s": 3.805724173784256,
+      "valid_identity": true,
+      "forward_frame": 37,
+      "wall_lag_ms": 105.72417378425581,
+      "scene_crc": 1346596139,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 4.268757998943329
+    },
+    {
+      "s": 3.862865097820759,
+      "valid_identity": true,
+      "forward_frame": 37,
+      "wall_lag_ms": 162.86509782075865,
+      "scene_crc": 2803167194,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 11.358586139976978
+    },
+    {
+      "s": 3.905852952040732,
+      "valid_identity": true,
+      "forward_frame": 38,
+      "wall_lag_ms": 105.85295204073164,
+      "scene_crc": 3150950381,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 4.280428402125835
+    },
+    {
+      "s": 3.9558433266356587,
+      "valid_identity": true,
+      "forward_frame": 39,
+      "wall_lag_ms": 55.843326635658386,
+      "scene_crc": 3150950381,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 4.020316526293755
+    },
+    {
+      "s": 4.005978058092296,
+      "valid_identity": true,
+      "forward_frame": 39,
+      "wall_lag_ms": 105.97805809229577,
+      "scene_crc": 395075329,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 4.17608767747879
+    },
+    {
+      "s": 4.055974001064897,
+      "valid_identity": true,
+      "forward_frame": 40,
+      "wall_lag_ms": 55.974001064896584,
+      "scene_crc": 395075329,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "resources": {
+        "pss_kib": 286213,
+        "summed_rss_kib": 504644,
+        "cpu_seconds_live_processes": 2.21,
+        "rchar_live_processes": 1533453299,
+        "storage_read_bytes_live_processes": 1465749504,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 121082,
+            "rss_kib": 202600
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 134099,
+            "rss_kib": 192996
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689604,
+          "nsec": 104330464
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689604.100000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689604100000000,
+      "raw_lag_ms": 4.330464,
+      "observer_work_ms": 15.570000745356083
+    },
+    {
+      "s": 4.106030440889299,
+      "valid_identity": true,
+      "forward_frame": 40,
+      "wall_lag_ms": 106.03044088929892,
+      "scene_crc": 1253296875,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 4.071618430316448
+    },
+    {
+      "s": 4.156112848781049,
+      "valid_identity": true,
+      "forward_frame": 41,
+      "wall_lag_ms": 56.11284878104872,
+      "scene_crc": 1253296875,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "observer_work_ms": 3.9988914504647255
+    },
+    {
+      "s": 4.206153581850231,
+      "valid_identity": true,
+      "forward_frame": 41,
+      "wall_lag_ms": 106.15358185023015,
+      "scene_crc": 962107617,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "observer_work_ms": 4.088204354047775
+    },
+    {
+      "s": 4.256237149238586,
+      "valid_identity": true,
+      "forward_frame": 42,
+      "wall_lag_ms": 56.23714923858625,
+      "scene_crc": 962107617,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "observer_work_ms": 3.9513185620307922
+    },
+    {
+      "s": 4.306276035495102,
+      "valid_identity": true,
+      "forward_frame": 42,
+      "wall_lag_ms": 106.27603549510224,
+      "scene_crc": 4223801866,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "resources": {
+        "pss_kib": 295465,
+        "summed_rss_kib": 513900,
+        "cpu_seconds_live_processes": 2.24,
+        "rchar_live_processes": 1542927159,
+        "storage_read_bytes_live_processes": 1475420160,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 130346,
+            "rss_kib": 211864
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 134087,
+            "rss_kib": 192988
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689604,
+          "nsec": 344041511
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689604.300000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689604300000000,
+      "raw_lag_ms": 44.041511,
+      "observer_work_ms": 10.426142252981663
+    },
+    {
+      "s": 4.356376668438315,
+      "valid_identity": true,
+      "forward_frame": 43,
+      "wall_lag_ms": 56.37666843831557,
+      "scene_crc": 4223801866,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 4.175305366516113
+    },
+    {
+      "s": 4.406437946483493,
+      "valid_identity": true,
+      "forward_frame": 43,
+      "wall_lag_ms": 106.43794648349302,
+      "scene_crc": 715478757,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 4.093550145626068
+    },
+    {
+      "s": 4.456470697186887,
+      "valid_identity": true,
+      "forward_frame": 44,
+      "wall_lag_ms": 56.47069718688691,
+      "scene_crc": 715478757,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.107539542019367
+    },
+    {
+      "s": 4.506547215394676,
+      "valid_identity": true,
+      "forward_frame": 44,
+      "wall_lag_ms": 106.54721539467538,
+      "scene_crc": 3321898719,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.147096537053585
+    },
+    {
+      "s": 4.556619479320943,
+      "valid_identity": true,
+      "forward_frame": 45,
+      "wall_lag_ms": 56.619479320943356,
+      "scene_crc": 3321898719,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "resources": {
+        "pss_kib": 271065,
+        "summed_rss_kib": 489504,
+        "cpu_seconds_live_processes": 2.35,
+        "rchar_live_processes": 1552366542,
+        "storage_read_bytes_live_processes": 1485082624,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 105942,
+            "rss_kib": 187460
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 134091,
+            "rss_kib": 192996
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689604,
+          "nsec": 580565432
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689604.500000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689604500000000,
+      "raw_lag_ms": 80.565432,
+      "observer_work_ms": 10.288815945386887
+    },
+    {
+      "s": 4.606753202155232,
+      "valid_identity": true,
+      "forward_frame": 45,
+      "wall_lag_ms": 106.75320215523243,
+      "scene_crc": 2321287316,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 5.027633160352707
+    },
+    {
+      "s": 4.662450942210853,
+      "valid_identity": true,
+      "forward_frame": 45,
+      "wall_lag_ms": 162.4509422108531,
+      "scene_crc": 2321287316,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 11.490619741380215
+    },
+    {
+      "s": 4.7068630969151855,
+      "valid_identity": true,
+      "forward_frame": 46,
+      "wall_lag_ms": 106.86309691518491,
+      "scene_crc": 2658023310,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "observer_work_ms": 5.045320838689804
+    },
+    {
+      "s": 4.757020328193903,
+      "valid_identity": true,
+      "forward_frame": 46,
+      "wall_lag_ms": 157.02032819390243,
+      "scene_crc": 2658023310,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "observer_work_ms": 5.533450283110142
+    },
+    {
+      "s": 4.806944536976516,
+      "valid_identity": true,
+      "forward_frame": 47,
+      "wall_lag_ms": 106.94453697651608,
+      "scene_crc": 2658023310,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "resources": {
+        "pss_kib": 284161,
+        "summed_rss_kib": 502600,
+        "cpu_seconds_live_processes": 2.48,
+        "rchar_live_processes": 1570433050,
+        "storage_read_bytes_live_processes": 1503571968,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 114942,
+            "rss_kib": 196460
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 138187,
+            "rss_kib": 197092
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689604,
+          "nsec": 829474203
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689604.800000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689604800000000,
+      "raw_lag_ms": 29.474203,
+      "observer_work_ms": 10.463401675224304
+    },
+    {
+      "s": 4.859920342452824,
+      "valid_identity": true,
+      "forward_frame": 47,
+      "wall_lag_ms": 159.92034245282395,
+      "scene_crc": 1109106805,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 10.940203443169594
+    },
+    {
+      "s": 4.907025513239205,
+      "valid_identity": true,
+      "forward_frame": 48,
+      "wall_lag_ms": 107.02551323920417,
+      "scene_crc": 1087879061,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 3.9833951741456985
+    },
+    {
+      "s": 4.957149729132652,
+      "valid_identity": true,
+      "forward_frame": 48,
+      "wall_lag_ms": 157.14972913265157,
+      "scene_crc": 1087879061,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.0300153195858
+    },
+    {
+      "s": 5.0073072174564,
+      "valid_identity": true,
+      "forward_frame": 49,
+      "wall_lag_ms": 107.30721745640004,
+      "scene_crc": 1087879061,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "observer_work_ms": 4.597119055688381
+    },
+    {
+      "s": 5.064099200069904,
+      "valid_identity": true,
+      "forward_frame": 49,
+      "wall_lag_ms": 164.099200069904,
+      "scene_crc": 3175215941,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "resources": {
+        "pss_kib": 290323,
+        "summed_rss_kib": 508764,
+        "cpu_seconds_live_processes": 2.59,
+        "rchar_live_processes": 1617380408,
+        "storage_read_bytes_live_processes": 1551454208,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 121102,
+            "rss_kib": 202620
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 138189,
+            "rss_kib": 197096
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689605,
+          "nsec": 88105918
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689605.000000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689605000000000,
+      "raw_lag_ms": 88.105918,
+      "observer_work_ms": 18.393762409687042
+    },
+    {
+      "s": 5.107325349934399,
+      "valid_identity": true,
+      "forward_frame": 50,
+      "wall_lag_ms": 107.32534993439913,
+      "scene_crc": 3982736501,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "observer_work_ms": 4.247380420565605
+    },
+    {
+      "s": 5.157553828321397,
+      "valid_identity": true,
+      "forward_frame": 50,
+      "wall_lag_ms": 157.5538283213973,
+      "scene_crc": 3982736501,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "observer_work_ms": 4.171351902186871
+    },
+    {
+      "s": 5.207835021428764,
+      "valid_identity": true,
+      "forward_frame": 51,
+      "wall_lag_ms": 107.83502142876333,
+      "scene_crc": 3982736501,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 4.852280020713806
+    },
+    {
+      "s": 5.260425517335534,
+      "valid_identity": true,
+      "forward_frame": 51,
+      "wall_lag_ms": 160.42551733553356,
+      "scene_crc": 1646025703,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 10.92623919248581
+    },
+    {
+      "s": 5.307706777006388,
+      "valid_identity": true,
+      "forward_frame": 52,
+      "wall_lag_ms": 107.70677700638754,
+      "scene_crc": 1031473275,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 4.326089285314083
+    },
+    {
+      "s": 5.357970838434994,
+      "valid_identity": true,
+      "forward_frame": 52,
+      "wall_lag_ms": 157.97083843499405,
+      "scene_crc": 1031473275,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "resources": {
+        "pss_kib": 299605,
+        "summed_rss_kib": 518052,
+        "cpu_seconds_live_processes": 2.7,
+        "rchar_live_processes": 1673671703,
+        "storage_read_bytes_live_processes": 1608835072,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 130378,
+            "rss_kib": 211896
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 138195,
+            "rss_kib": 197108
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689605,
+          "nsec": 379868459
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689605.300000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689605300000000,
+      "raw_lag_ms": 79.868459,
+      "observer_work_ms": 14.366141520440578
+    },
+    {
+      "s": 5.407876308076084,
+      "valid_identity": true,
+      "forward_frame": 53,
+      "wall_lag_ms": 107.87630807608295,
+      "scene_crc": 2441931843,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 4.356280900537968
+    },
+    {
+      "s": 5.460240039974451,
+      "valid_identity": true,
+      "forward_frame": 53,
+      "wall_lag_ms": 160.24003997445035,
+      "scene_crc": 2441931843,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 6.892813369631767
+    },
+    {
+      "s": 5.507997959852219,
+      "valid_identity": true,
+      "forward_frame": 54,
+      "wall_lag_ms": 107.99795985221827,
+      "scene_crc": 481369209,
+      "variant": 22,
+      "mae": 0.0,
+      "second_mae": 4.901818181818182,
+      "observer_work_ms": 4.331314004957676
+    },
+    {
+      "s": 5.558164423331618,
+      "valid_identity": true,
+      "forward_frame": 54,
+      "wall_lag_ms": 158.16442333161797,
+      "scene_crc": 481369209,
+      "variant": 22,
+      "mae": 0.0,
+      "second_mae": 4.901818181818182,
+      "observer_work_ms": 4.491820000112057
+    },
+    {
+      "s": 5.609242614358664,
+      "valid_identity": true,
+      "forward_frame": 55,
+      "wall_lag_ms": 109.24261435866356,
+      "scene_crc": 1892377886,
+      "variant": 23,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "resources": {
+        "pss_kib": 274949,
+        "summed_rss_kib": 493400,
+        "cpu_seconds_live_processes": 2.77,
+        "rchar_live_processes": 1683120500,
+        "storage_read_bytes_live_processes": 1618452480,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 111862,
+            "rss_kib": 193380
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 132055,
+            "rss_kib": 190972
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689605,
+          "nsec": 662733318
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689605.600000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689605600000000,
+      "raw_lag_ms": 62.733318,
+      "observer_work_ms": 27.067801915109158
+    },
+    {
+      "s": 5.658642985858023,
+      "valid_identity": true,
+      "forward_frame": 56,
+      "wall_lag_ms": 58.642985858022634,
+      "scene_crc": 1892377886,
+      "variant": 24,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 4.9857813864946365
+    },
+    {
+      "s": 5.708261250518262,
+      "valid_identity": true,
+      "forward_frame": 56,
+      "wall_lag_ms": 108.26125051826185,
+      "scene_crc": 2919170913,
+      "variant": 24,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 4.328679293394089
+    },
+    {
+      "s": 5.758367898873985,
+      "valid_identity": true,
+      "forward_frame": 57,
+      "wall_lag_ms": 58.367898873984636,
+      "scene_crc": 2919170913,
+      "variant": 25,
+      "mae": 0.0,
+      "second_mae": 4.68530303030303,
+      "observer_work_ms": 4.316228441894054
+    },
+    {
+      "s": 5.80895856115967,
+      "valid_identity": true,
+      "forward_frame": 57,
+      "wall_lag_ms": 108.95856115967018,
+      "scene_crc": 3163282776,
+      "variant": 25,
+      "mae": 0.0,
+      "second_mae": 4.68530303030303,
+      "observer_work_ms": 5.246642976999283
+    },
+    {
+      "s": 5.860699716955423,
+      "valid_identity": true,
+      "forward_frame": 57,
+      "wall_lag_ms": 160.69971695542318,
+      "scene_crc": 3163282776,
+      "variant": 25,
+      "mae": 0.0,
+      "second_mae": 4.68530303030303,
+      "resources": {
+        "pss_kib": 281109,
+        "summed_rss_kib": 499560,
+        "cpu_seconds_live_processes": 2.86,
+        "rchar_live_processes": 1692561715,
+        "storage_read_bytes_live_processes": 1628045312,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 118022,
+            "rss_kib": 199540
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 132055,
+            "rss_kib": 190972
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689605,
+          "nsec": 904950455
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689605.900000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689605900000000,
+      "raw_lag_ms": 4.950455,
+      "observer_work_ms": 18.022059462964535
+    },
+    {
+      "s": 5.908577202819288,
+      "valid_identity": true,
+      "forward_frame": 58,
+      "wall_lag_ms": 108.57720281928707,
+      "scene_crc": 3541269353,
+      "variant": 26,
+      "mae": 0.0,
+      "second_mae": 5.06590909090909,
+      "observer_work_ms": 4.501941613852978
+    },
+    {
+      "s": 5.958629192784429,
+      "valid_identity": true,
+      "forward_frame": 59,
+      "wall_lag_ms": 58.62919278442824,
+      "scene_crc": 3541269353,
+      "variant": 27,
+      "mae": 0.0,
+      "second_mae": 5.034242424242423,
+      "observer_work_ms": 4.322073422372341
+    },
+    {
+      "s": 6.009984492324293,
+      "valid_identity": true,
+      "forward_frame": 59,
+      "wall_lag_ms": 109.9844923242923,
+      "scene_crc": 666348855,
+      "variant": 27,
+      "mae": 0.0,
+      "second_mae": 5.034242424242423,
+      "observer_work_ms": 6.537720561027527
+    },
+    {
+      "s": 6.065288785845041,
+      "valid_identity": true,
+      "forward_frame": 59,
+      "wall_lag_ms": 165.28878584504093,
+      "scene_crc": 666348855,
+      "variant": 27,
+      "mae": 0.0,
+      "second_mae": 5.034242424242423,
+      "observer_work_ms": 12.395208701491356
+    },
+    {
+      "s": 6.110202591866255,
+      "valid_identity": true,
+      "forward_frame": 60,
+      "wall_lag_ms": 110.2025918662548,
+      "scene_crc": 3377257139,
+      "variant": 28,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 6.708092987537384
+    },
+    {
+      "s": 6.158975429832935,
+      "valid_identity": true,
+      "forward_frame": 61,
+      "wall_lag_ms": 58.9754298329348,
+      "scene_crc": 3377257139,
+      "variant": 29,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "resources": {
+        "pss_kib": 294473,
+        "summed_rss_kib": 512928,
+        "cpu_seconds_live_processes": 2.98,
+        "rchar_live_processes": 1710624591,
+        "storage_read_bytes_live_processes": 1646436352,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 127286,
+            "rss_kib": 208804
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136155,
+            "rss_kib": 195076
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689606,
+          "nsec": 192708337
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689606.200000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689606200000000,
+      "raw_lag_ms": -7.291663,
+      "observer_work_ms": 15.865028835833073
+    },
+    {
+      "s": 6.208933726884425,
+      "valid_identity": true,
+      "forward_frame": 61,
+      "wall_lag_ms": 108.93372688442415,
+      "scene_crc": 3168056193,
+      "variant": 29,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.291451536118984
+    },
+    {
+      "s": 6.25903198402375,
+      "valid_identity": true,
+      "forward_frame": 62,
+      "wall_lag_ms": 59.03198402374965,
+      "scene_crc": 3168056193,
+      "variant": 30,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 4.308409057557583
+    },
+    {
+      "s": 6.309097062796354,
+      "valid_identity": true,
+      "forward_frame": 62,
+      "wall_lag_ms": 109.09706279635412,
+      "scene_crc": 1263495462,
+      "variant": 30,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 4.2873164638876915
+    },
+    {
+      "s": 6.361281719058752,
+      "valid_identity": true,
+      "forward_frame": 62,
+      "wall_lag_ms": 161.2817190587519,
+      "scene_crc": 1263495462,
+      "variant": 30,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 7.135386578738689
+    },
+    {
+      "s": 6.409218404442072,
+      "valid_identity": true,
+      "forward_frame": 63,
+      "wall_lag_ms": 109.2184044420712,
+      "scene_crc": 4009981077,
+      "variant": 31,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "resources": {
+        "pss_kib": 303463,
+        "summed_rss_kib": 521920,
+        "cpu_seconds_live_processes": 3.09,
+        "rchar_live_processes": 1719763812,
+        "storage_read_bytes_live_processes": 1655754752,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 136274,
+            "rss_kib": 217792
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136157,
+            "rss_kib": 195080
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689606,
+          "nsec": 440228711
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689606.400000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689606400000000,
+      "raw_lag_ms": 40.228711,
+      "observer_work_ms": 28.678011149168015
+    },
+    {
+      "s": 6.46030362136662,
+      "valid_identity": true,
+      "forward_frame": 64,
+      "wall_lag_ms": 60.30362136661971,
+      "scene_crc": 4009981077,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 5.616954527795315
+    },
+    {
+      "s": 6.510773825459182,
+      "valid_identity": true,
+      "forward_frame": 64,
+      "wall_lag_ms": 110.77382545918191,
+      "scene_crc": 152211719,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 5.755579099059105
+    },
+    {
+      "s": 6.56159376911819,
+      "valid_identity": true,
+      "forward_frame": 64,
+      "wall_lag_ms": 161.59376911818947,
+      "scene_crc": 152211719,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 7.0784492418169975
+    },
+    {
+      "s": 6.611525284126401,
+      "valid_identity": true,
+      "forward_frame": 65,
+      "wall_lag_ms": 111.52528412640095,
+      "scene_crc": 3979480928,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 6.719888187944889
+    },
+    {
+      "s": 6.6616586577147245,
+      "valid_identity": true,
+      "forward_frame": 66,
+      "wall_lag_ms": 61.65865771472401,
+      "scene_crc": 3979480928,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "resources": {
+        "pss_kib": 276227,
+        "summed_rss_kib": 494688,
+        "cpu_seconds_live_processes": 3.17,
+        "rchar_live_processes": 1729250560,
+        "storage_read_bytes_live_processes": 1665372160,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 109034,
+            "rss_kib": 190552
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136161,
+            "rss_kib": 195088
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689606,
+          "nsec": 681780017
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689606.600000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689606600000000,
+      "raw_lag_ms": 81.780017,
+      "observer_work_ms": 15.28178434818983
+    },
+    {
+      "s": 6.70968749281019,
+      "valid_identity": true,
+      "forward_frame": 66,
+      "wall_lag_ms": 109.68749281018918,
+      "scene_crc": 286366283,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.497544839978218
+    },
+    {
+      "s": 6.759741593152285,
+      "valid_identity": true,
+      "forward_frame": 66,
+      "wall_lag_ms": 159.74159315228408,
+      "scene_crc": 286366283,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.449734464287758
+    },
+    {
+      "s": 6.809814331121743,
+      "valid_identity": true,
+      "forward_frame": 67,
+      "wall_lag_ms": 109.81433112174255,
+      "scene_crc": 2422673053,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.453646019101143
+    },
+    {
+      "s": 6.859847290441394,
+      "valid_identity": true,
+      "forward_frame": 68,
+      "wall_lag_ms": 59.84729044139314,
+      "scene_crc": 2422673053,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 4.330203868448734
+    },
+    {
+      "s": 6.909881867468357,
+      "valid_identity": true,
+      "forward_frame": 68,
+      "wall_lag_ms": 109.88186746835638,
+      "scene_crc": 349603781,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 4.312288016080856
+    },
+    {
+      "s": 6.959997299127281,
+      "valid_identity": true,
+      "forward_frame": 68,
+      "wall_lag_ms": 159.99729912728,
+      "scene_crc": 349603781,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "resources": {
+        "pss_kib": 285495,
+        "summed_rss_kib": 503960,
+        "cpu_seconds_live_processes": 3.31,
+        "rchar_live_processes": 1822701813,
+        "storage_read_bytes_live_processes": 1761021952,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 118298,
+            "rss_kib": 199816
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136165,
+            "rss_kib": 195096
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689607,
+          "nsec": 2394992
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689607.000000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689607000000000,
+      "raw_lag_ms": 2.394992,
+      "observer_work_ms": 15.740117989480495
+    },
+    {
+      "s": 7.010025067254901,
+      "valid_identity": true,
+      "forward_frame": 69,
+      "wall_lag_ms": 110.02506725490058,
+      "scene_crc": 3028981154,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 4.353427328169346
+    },
+    {
+      "s": 7.060107628814876,
+      "valid_identity": true,
+      "forward_frame": 70,
+      "wall_lag_ms": 60.10762881487608,
+      "scene_crc": 3028981154,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 4.308734089136124
+    },
+    {
+      "s": 7.11019644420594,
+      "valid_identity": true,
+      "forward_frame": 70,
+      "wall_lag_ms": 110.19644420593977,
+      "scene_crc": 2308030926,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 4.409322515130043
+    },
+    {
+      "s": 7.160271988250315,
+      "valid_identity": true,
+      "forward_frame": 70,
+      "wall_lag_ms": 160.2719882503152,
+      "scene_crc": 2308030926,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 4.652632400393486
+    },
+    {
+      "s": 7.210392693057656,
+      "valid_identity": true,
+      "forward_frame": 71,
+      "wall_lag_ms": 110.39269305765575,
+      "scene_crc": 3944495918,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "resources": {
+        "pss_kib": 294481,
+        "summed_rss_kib": 512948,
+        "cpu_seconds_live_processes": 3.41,
+        "rchar_live_processes": 1841600126,
+        "storage_read_bytes_live_processes": 1780346880,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 127282,
+            "rss_kib": 208800
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18058,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136167,
+            "rss_kib": 195100
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689607,
+          "nsec": 255522874
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689607.200000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689607200000000,
+      "raw_lag_ms": 55.522874,
+      "observer_work_ms": 34.89874396473169
+    },
+    {
+      "s": 7.26051236409694,
+      "valid_identity": true,
+      "forward_frame": 71,
+      "wall_lag_ms": 160.51236409693902,
+      "scene_crc": 3944495918,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 5.966535769402981
+    },
+    {
+      "s": 7.311210225336254,
+      "valid_identity": true,
+      "forward_frame": 72,
+      "wall_lag_ms": 111.21022533625347,
+      "scene_crc": 3944495918,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 6.412726826965809
+    },
+    {
+      "s": 7.360590662807226,
+      "valid_identity": true,
+      "forward_frame": 72,
+      "wall_lag_ms": 160.590662807226,
+      "scene_crc": 3102750599,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 5.340665578842163
+    },
+    {
+      "s": 7.410852312110364,
+      "valid_identity": true,
+      "forward_frame": 73,
+      "wall_lag_ms": 110.85231211036373,
+      "scene_crc": 3102750599,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "observer_work_ms": 5.977878347039223
+    },
+    {
+      "s": 7.466192349791527,
+      "valid_identity": true,
+      "forward_frame": 73,
+      "wall_lag_ms": 166.19234979152608,
+      "scene_crc": 4155252777,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "resources": {
+        "pss_kib": 273174,
+        "summed_rss_kib": 491656,
+        "cpu_seconds_live_processes": 3.56,
+        "rchar_live_processes": 1851003651,
+        "storage_read_bytes_live_processes": 1789988864,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 105973,
+            "rss_kib": 187500
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136171,
+            "rss_kib": 195108
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689607,
+          "nsec": 479202908
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689607.400000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689607400000000,
+      "raw_lag_ms": 79.202908,
+      "observer_work_ms": 26.69927477836609
+    },
+    {
+      "s": 7.510779314674437,
+      "valid_identity": true,
+      "forward_frame": 74,
+      "wall_lag_ms": 110.77931467443669,
+      "scene_crc": 4155252777,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "observer_work_ms": 5.315833725035191
+    },
+    {
+      "s": 7.5608338778838515,
+      "valid_identity": true,
+      "forward_frame": 74,
+      "wall_lag_ms": 160.8338778838512,
+      "scene_crc": 854458841,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "observer_work_ms": 5.2641090005636215
+    },
+    {
+      "s": 7.610835772939026,
+      "valid_identity": true,
+      "forward_frame": 75,
+      "wall_lag_ms": 110.83577293902636,
+      "scene_crc": 854458841,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 4.3671270832419395
+    },
+    {
+      "s": 7.6610250091180205,
+      "valid_identity": true,
+      "forward_frame": 75,
+      "wall_lag_ms": 161.02500911802053,
+      "scene_crc": 2104844343,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 4.340799525380135
+    },
+    {
+      "s": 7.710934662260115,
+      "valid_identity": true,
+      "forward_frame": 76,
+      "wall_lag_ms": 110.9346622601146,
+      "scene_crc": 768834494,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.308744333684444
+    },
+    {
+      "s": 7.761006301268935,
+      "valid_identity": true,
+      "forward_frame": 77,
+      "wall_lag_ms": 61.006301268935026,
+      "scene_crc": 768834494,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "resources": {
+        "pss_kib": 282414,
+        "summed_rss_kib": 500880,
+        "cpu_seconds_live_processes": 3.63,
+        "rchar_live_processes": 1860184592,
+        "storage_read_bytes_live_processes": 1799380992,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 115229,
+            "rss_kib": 196756
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136155,
+            "rss_kib": 195076
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689607,
+          "nsec": 785286536
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689607.800000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689607800000000,
+      "raw_lag_ms": -14.713464,
+      "observer_work_ms": 14.027305878698826
+    },
+    {
+      "s": 7.81109154690057,
+      "valid_identity": true,
+      "forward_frame": 77,
+      "wall_lag_ms": 111.09154690057022,
+      "scene_crc": 928504881,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.428691230714321
+    },
+    {
+      "s": 7.861120908521116,
+      "valid_identity": true,
+      "forward_frame": 78,
+      "wall_lag_ms": 61.12090852111507,
+      "scene_crc": 928504881,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "observer_work_ms": 4.330224357545376
+    },
+    {
+      "s": 7.911356991156936,
+      "valid_identity": true,
+      "forward_frame": 78,
+      "wall_lag_ms": 111.35699115693498,
+      "scene_crc": 2093235473,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "observer_work_ms": 4.563537426292896
+    },
+    {
+      "s": 7.961272496730089,
+      "valid_identity": true,
+      "forward_frame": 79,
+      "wall_lag_ms": 61.27249673008883,
+      "scene_crc": 2093235473,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.28064726293087
+    },
+    {
+      "s": 8.011447957716882,
+      "valid_identity": true,
+      "forward_frame": 79,
+      "wall_lag_ms": 111.44795771688187,
+      "scene_crc": 4077073776,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "resources": {
+        "pss_kib": 291432,
+        "summed_rss_kib": 509916,
+        "cpu_seconds_live_processes": 3.69,
+        "rchar_live_processes": 1879036461,
+        "storage_read_bytes_live_processes": 1818664960,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 124229,
+            "rss_kib": 205756
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136173,
+            "rss_kib": 195112
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689608,
+          "nsec": 62846528
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689608.000000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689608000000000,
+      "raw_lag_ms": 62.846528,
+      "observer_work_ms": 24.32387601584196
+    },
+    {
+      "s": 8.061375292949378,
+      "valid_identity": true,
+      "forward_frame": 80,
+      "wall_lag_ms": 61.37529294937849,
+      "scene_crc": 4077073776,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.321474581956863
+    },
+    {
+      "s": 8.11158402543515,
+      "valid_identity": true,
+      "forward_frame": 80,
+      "wall_lag_ms": 111.58402543514967,
+      "scene_crc": 4106251176,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.576725885272026
+    },
+    {
+      "s": 8.161486096680164,
+      "valid_identity": true,
+      "forward_frame": 81,
+      "wall_lag_ms": 61.48609668016469,
+      "scene_crc": 4106251176,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "observer_work_ms": 4.2822277173399925
+    },
+    {
+      "s": 8.211727732792497,
+      "valid_identity": true,
+      "forward_frame": 81,
+      "wall_lag_ms": 111.72773279249704,
+      "scene_crc": 3630766325,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "observer_work_ms": 4.646177403628826
+    },
+    {
+      "s": 8.261621659621596,
+      "valid_identity": true,
+      "forward_frame": 82,
+      "wall_lag_ms": 61.62165962159527,
+      "scene_crc": 3630766325,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "resources": {
+        "pss_kib": 297596,
+        "summed_rss_kib": 516084,
+        "cpu_seconds_live_processes": 3.73,
+        "rchar_live_processes": 1888481362,
+        "storage_read_bytes_live_processes": 1828298752,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 130389,
+            "rss_kib": 211916
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136177,
+            "rss_kib": 195120
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689608,
+          "nsec": 298789706
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689608.300000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689608300000000,
+      "raw_lag_ms": -1.210294,
+      "observer_work_ms": 13.14467005431652
+    },
+    {
+      "s": 8.311692266725004,
+      "valid_identity": true,
+      "forward_frame": 82,
+      "wall_lag_ms": 111.69226672500265,
+      "scene_crc": 1173461095,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "observer_work_ms": 4.343773238360882
+    },
+    {
+      "s": 8.361736366525292,
+      "valid_identity": true,
+      "forward_frame": 83,
+      "wall_lag_ms": 61.736366525291686,
+      "scene_crc": 1173461095,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 4.318030551075935
+    },
+    {
+      "s": 8.411958356387913,
+      "valid_identity": true,
+      "forward_frame": 83,
+      "wall_lag_ms": 111.95835638791252,
+      "scene_crc": 4207580693,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 4.672798328101635
+    },
+    {
+      "s": 8.461932744830847,
+      "valid_identity": true,
+      "forward_frame": 84,
+      "wall_lag_ms": 61.93274483084643,
+      "scene_crc": 4207580693,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 4.484429955482483
+    },
+    {
+      "s": 8.512001786381006,
+      "valid_identity": true,
+      "forward_frame": 84,
+      "wall_lag_ms": 112.00178638100589,
+      "scene_crc": 3963245301,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "resources": {
+        "pss_kib": 276270,
+        "summed_rss_kib": 494760,
+        "cpu_seconds_live_processes": 3.84,
+        "rchar_live_processes": 1981912351,
+        "storage_read_bytes_live_processes": 1923497984,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 109061,
+            "rss_kib": 190588
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136179,
+            "rss_kib": 195124
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689608,
+          "nsec": 567118192
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689608.500000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689608500000000,
+      "raw_lag_ms": 67.118192,
+      "observer_work_ms": 23.48287496715784
+    },
+    {
+      "s": 8.56205250043422,
+      "valid_identity": true,
+      "forward_frame": 85,
+      "wall_lag_ms": 62.05250043421984,
+      "scene_crc": 3963245301,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 4.737348295748234
+    },
+    {
+      "s": 8.61207333393395,
+      "valid_identity": true,
+      "forward_frame": 85,
+      "wall_lag_ms": 112.07333393394947,
+      "scene_crc": 2086011161,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 4.494985565543175
+    },
+    {
+      "s": 8.662204896099865,
+      "valid_identity": true,
+      "forward_frame": 86,
+      "wall_lag_ms": 62.20489609986579,
+      "scene_crc": 2086011161,
+      "variant": 22,
+      "mae": 0.0,
+      "second_mae": 4.901818181818182,
+      "observer_work_ms": 4.7765253111720085
+    },
+    {
+      "s": 8.712406858801842,
+      "valid_identity": true,
+      "forward_frame": 86,
+      "wall_lag_ms": 112.40685880184209,
+      "scene_crc": 3435676950,
+      "variant": 22,
+      "mae": 0.0,
+      "second_mae": 4.901818181818182,
+      "observer_work_ms": 4.615437239408493
+    },
+    {
+      "s": 8.76231268234551,
+      "valid_identity": true,
+      "forward_frame": 87,
+      "wall_lag_ms": 62.31268234550846,
+      "scene_crc": 3435676950,
+      "variant": 23,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "resources": {
+        "pss_kib": 285266,
+        "summed_rss_kib": 503760,
+        "cpu_seconds_live_processes": 3.9,
+        "rchar_live_processes": 1991392263,
+        "storage_read_bytes_live_processes": 1933230080,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 118053,
+            "rss_kib": 199580
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136183,
+            "rss_kib": 195132
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689608,
+          "nsec": 800748451
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689608.800000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689608800000000,
+      "raw_lag_ms": 0.748451,
+      "observer_work_ms": 13.694832101464272
+    },
+    {
+      "s": 8.812601992860436,
+      "valid_identity": true,
+      "forward_frame": 87,
+      "wall_lag_ms": 112.60199286043537,
+      "scene_crc": 3241114300,
+      "variant": 23,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 5.406486801803112
+    },
+    {
+      "s": 8.862541331909597,
+      "valid_identity": true,
+      "forward_frame": 88,
+      "wall_lag_ms": 62.54133190959621,
+      "scene_crc": 3241114300,
+      "variant": 24,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 5.404386669397354
+    },
+    {
+      "s": 8.912601307034492,
+      "valid_identity": true,
+      "forward_frame": 88,
+      "wall_lag_ms": 112.60130703449178,
+      "scene_crc": 1914898,
+      "variant": 24,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 5.356878042221069
+    },
+    {
+      "s": 8.962642448022962,
+      "valid_identity": true,
+      "forward_frame": 89,
+      "wall_lag_ms": 62.64244802296126,
+      "scene_crc": 1914898,
+      "variant": 25,
+      "mae": 0.0,
+      "second_mae": 4.68530303030303,
+      "observer_work_ms": 5.395935848355293
+    },
+    {
+      "s": 9.012596973218024,
+      "valid_identity": true,
+      "forward_frame": 89,
+      "wall_lag_ms": 112.59697321802342,
+      "scene_crc": 1141843378,
+      "variant": 25,
+      "mae": 0.0,
+      "second_mae": 4.68530303030303,
+      "resources": {
+        "pss_kib": 291424,
+        "summed_rss_kib": 509920,
+        "cpu_seconds_live_processes": 4.01,
+        "rchar_live_processes": 2000836239,
+        "storage_read_bytes_live_processes": 1942822912,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 124209,
+            "rss_kib": 205736
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136185,
+            "rss_kib": 195136
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689609,
+          "nsec": 38337057
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689609.000000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689609000000000,
+      "raw_lag_ms": 38.337057,
+      "observer_work_ms": 33.825237303972244
+    },
+    {
+      "s": 9.062674790620804,
+      "valid_identity": true,
+      "forward_frame": 90,
+      "wall_lag_ms": 62.67479062080383,
+      "scene_crc": 1141843378,
+      "variant": 26,
+      "mae": 0.0,
+      "second_mae": 5.06590909090909,
+      "observer_work_ms": 4.358823411166668
+    },
+    {
+      "s": 9.112730288878083,
+      "valid_identity": true,
+      "forward_frame": 90,
+      "wall_lag_ms": 112.73028887808323,
+      "scene_crc": 3330396477,
+      "variant": 26,
+      "mae": 0.0,
+      "second_mae": 5.06590909090909,
+      "observer_work_ms": 4.356426186859608
+    },
+    {
+      "s": 9.162817831151187,
+      "valid_identity": true,
+      "forward_frame": 91,
+      "wall_lag_ms": 62.817831151187775,
+      "scene_crc": 3330396477,
+      "variant": 27,
+      "mae": 0.0,
+      "second_mae": 5.034242424242423,
+      "observer_work_ms": 4.324751906096935
+    },
+    {
+      "s": 9.213052216917276,
+      "valid_identity": true,
+      "forward_frame": 91,
+      "wall_lag_ms": 113.05221691727674,
+      "scene_crc": 1440807020,
+      "variant": 27,
+      "mae": 0.0,
+      "second_mae": 5.034242424242423,
+      "observer_work_ms": 4.729576408863068
+    },
+    {
+      "s": 9.262977296486497,
+      "valid_identity": true,
+      "forward_frame": 92,
+      "wall_lag_ms": 62.97729648649586,
+      "scene_crc": 1440807020,
+      "variant": 28,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "resources": {
+        "pss_kib": 297568,
+        "summed_rss_kib": 516048,
+        "cpu_seconds_live_processes": 4.08,
+        "rchar_live_processes": 2009889870,
+        "storage_read_bytes_live_processes": 1952079872,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 130369,
+            "rss_kib": 211896
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136169,
+            "rss_kib": 195104
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689609,
+          "nsec": 291339684
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689609.300000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689609300000000,
+      "raw_lag_ms": -8.660316,
+      "observer_work_ms": 14.308571815490723
+    },
+    {
+      "s": 9.312993221916258,
+      "valid_identity": true,
+      "forward_frame": 92,
+      "wall_lag_ms": 112.99322191625727,
+      "scene_crc": 1566981368,
+      "variant": 28,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.418682307004929
+    },
+    {
+      "s": 9.36306906118989,
+      "valid_identity": true,
+      "forward_frame": 93,
+      "wall_lag_ms": 63.0690611898892,
+      "scene_crc": 1566981368,
+      "variant": 29,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.341255873441696
+    },
+    {
+      "s": 9.413349963724613,
+      "valid_identity": true,
+      "forward_frame": 93,
+      "wall_lag_ms": 113.34996372461248,
+      "scene_crc": 3570042141,
+      "variant": 29,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.900800064206123
+    },
+    {
+      "s": 9.463217672891915,
+      "valid_identity": true,
+      "forward_frame": 94,
+      "wall_lag_ms": 63.21767289191449,
+      "scene_crc": 3570042141,
+      "variant": 30,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 4.334362223744392
+    },
+    {
+      "s": 9.513324192725122,
+      "valid_identity": true,
+      "forward_frame": 94,
+      "wall_lag_ms": 113.32419272512162,
+      "scene_crc": 2573327699,
+      "variant": 30,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "resources": {
+        "pss_kib": 273190,
+        "summed_rss_kib": 491692,
+        "cpu_seconds_live_processes": 4.13,
+        "rchar_live_processes": 2028083152,
+        "storage_read_bytes_live_processes": 1970495488,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 105969,
+            "rss_kib": 187496
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136191,
+            "rss_kib": 195148
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689609,
+          "nsec": 565445974
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689609.500000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689609500000000,
+      "raw_lag_ms": 65.445974,
+      "observer_work_ms": 23.3199093490839
+    },
+    {
+      "s": 9.563345145434141,
+      "valid_identity": true,
+      "forward_frame": 95,
+      "wall_lag_ms": 63.34514543414116,
+      "scene_crc": 2573327699,
+      "variant": 31,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 4.3643563985824585
+    },
+    {
+      "s": 9.613639088347554,
+      "valid_identity": true,
+      "forward_frame": 95,
+      "wall_lag_ms": 113.6390883475542,
+      "scene_crc": 3885278660,
+      "variant": 31,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 4.718272015452385
+    },
+    {
+      "s": 9.66357539407909,
+      "valid_identity": true,
+      "forward_frame": 96,
+      "wall_lag_ms": 63.575394079087744,
+      "scene_crc": 3885278660,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 4.751156084239483
+    },
+    {
+      "s": 9.713579612784088,
+      "valid_identity": true,
+      "forward_frame": 96,
+      "wall_lag_ms": 113.57961278408624,
+      "scene_crc": 3854218917,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 4.407080821692944
+    },
+    {
+      "s": 9.763678290881217,
+      "valid_identity": true,
+      "forward_frame": 97,
+      "wall_lag_ms": 63.67829088121546,
+      "scene_crc": 3854218917,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "resources": {
+        "pss_kib": 282182,
+        "summed_rss_kib": 500688,
+        "cpu_seconds_live_processes": 4.21,
+        "rchar_live_processes": 2037535884,
+        "storage_read_bytes_live_processes": 1980194816,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 114957,
+            "rss_kib": 196484
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136195,
+            "rss_kib": 195156
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689609,
+          "nsec": 800512711
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689609.800000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689609800000000,
+      "raw_lag_ms": 0.512711,
+      "observer_work_ms": 13.54276854544878
+    },
+    {
+      "s": 9.813692252151668,
+      "valid_identity": true,
+      "forward_frame": 97,
+      "wall_lag_ms": 113.692252151667,
+      "scene_crc": 3372968901,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 5.26604987680912
+    },
+    {
+      "s": 9.863801488652825,
+      "valid_identity": true,
+      "forward_frame": 98,
+      "wall_lag_ms": 63.801488652824645,
+      "scene_crc": 3372968901,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.766603000462055
+    },
+    {
+      "s": 9.913928010500968,
+      "valid_identity": true,
+      "forward_frame": 98,
+      "wall_lag_ms": 113.92801050096679,
+      "scene_crc": 4128865988,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.457441158592701
+    },
+    {
+      "s": 9.963922590948641,
+      "valid_identity": true,
+      "forward_frame": 99,
+      "wall_lag_ms": 63.922590948640945,
+      "scene_crc": 4128865988,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.456557333469391
+    },
+    {
+      "s": 10.014081127010286,
+      "valid_identity": true,
+      "forward_frame": 99,
+      "wall_lag_ms": 114.0811270102855,
+      "scene_crc": 183255615,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "resources": {
+        "pss_kib": 288354,
+        "summed_rss_kib": 506860,
+        "cpu_seconds_live_processes": 4.27,
+        "rchar_live_processes": 2046953567,
+        "storage_read_bytes_live_processes": 1989750784,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 121129,
+            "rss_kib": 202656
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136195,
+            "rss_kib": 195156
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689610,
+          "nsec": 34070491
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689610.000000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689610000000000,
+      "raw_lag_ms": 34.070491,
+      "observer_work_ms": 16.861025243997574
+    },
+    {
+      "s": 10.064123642630875,
+      "valid_identity": true,
+      "forward_frame": 100,
+      "wall_lag_ms": 64.12364263087511,
+      "scene_crc": 183255615,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 5.396106280386448
+    },
+    {
+      "s": 10.114210372790694,
+      "valid_identity": true,
+      "forward_frame": 100,
+      "wall_lag_ms": 114.21037279069424,
+      "scene_crc": 1124870265,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 5.331289954483509
+    },
+    {
+      "s": 10.164345532655716,
+      "valid_identity": true,
+      "forward_frame": 100,
+      "wall_lag_ms": 164.34553265571594,
+      "scene_crc": 1124870265,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 6.0945674777030945
+    },
+    {
+      "s": 10.2142632342875,
+      "valid_identity": true,
+      "forward_frame": 101,
+      "wall_lag_ms": 114.26323428749896,
+      "scene_crc": 1124870265,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 4.49095293879509
+    },
+    {
+      "s": 10.264310449361801,
+      "valid_identity": true,
+      "forward_frame": 101,
+      "wall_lag_ms": 164.31044936179973,
+      "scene_crc": 2267204704,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "resources": {
+        "pss_kib": 294550,
+        "summed_rss_kib": 513060,
+        "cpu_seconds_live_processes": 4.43,
+        "rchar_live_processes": 2141045340,
+        "storage_read_bytes_live_processes": 2086141952,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 127321,
+            "rss_kib": 208848
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136199,
+            "rss_kib": 195164
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689610,
+          "nsec": 284189696
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689610.200000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689610200000000,
+      "raw_lag_ms": 84.189696,
+      "observer_work_ms": 17.000537365674973
+    },
+    {
+      "s": 10.314372858032584,
+      "valid_identity": true,
+      "forward_frame": 102,
+      "wall_lag_ms": 114.37285803258312,
+      "scene_crc": 2823194397,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 4.393355920910835
+    },
+    {
+      "s": 10.364447806030512,
+      "valid_identity": true,
+      "forward_frame": 103,
+      "wall_lag_ms": 64.44780603051115,
+      "scene_crc": 2823194397,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 4.4122375547885895
+    },
+    {
+      "s": 10.414502467028797,
+      "valid_identity": true,
+      "forward_frame": 103,
+      "wall_lag_ms": 114.50246702879596,
+      "scene_crc": 804649810,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 4.303905181586742
+    },
+    {
+      "s": 10.464789587073028,
+      "valid_identity": true,
+      "forward_frame": 103,
+      "wall_lag_ms": 164.78958707302738,
+      "scene_crc": 804649810,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 4.594381898641586
+    },
+    {
+      "s": 10.514618434011936,
+      "valid_identity": true,
+      "forward_frame": 104,
+      "wall_lag_ms": 114.61843401193583,
+      "scene_crc": 3971136711,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "resources": {
+        "pss_kib": 276060,
+        "summed_rss_kib": 494572,
+        "cpu_seconds_live_processes": 4.51,
+        "rchar_live_processes": 2150182818,
+        "storage_read_bytes_live_processes": 2095525888,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 108829,
+            "rss_kib": 190356
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136201,
+            "rss_kib": 195168
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689610,
+          "nsec": 543923433
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689610.500000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689610500000000,
+      "raw_lag_ms": 43.923433,
+      "observer_work_ms": 12.905806303024292
+    },
+    {
+      "s": 10.564857789315283,
+      "valid_identity": true,
+      "forward_frame": 104,
+      "wall_lag_ms": 164.85778931528296,
+      "scene_crc": 3971136711,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 8.33836942911148
+    },
+    {
+      "s": 10.614756842143834,
+      "valid_identity": true,
+      "forward_frame": 105,
+      "wall_lag_ms": 114.75684214383364,
+      "scene_crc": 682237291,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "observer_work_ms": 4.287105984985828
+    },
+    {
+      "s": 10.66483218036592,
+      "valid_identity": true,
+      "forward_frame": 106,
+      "wall_lag_ms": 64.83218036591865,
+      "scene_crc": 682237291,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "observer_work_ms": 4.2846668511629105
+    },
+    {
+      "s": 10.715174650773406,
+      "valid_identity": true,
+      "forward_frame": 106,
+      "wall_lag_ms": 115.17465077340461,
+      "scene_crc": 207419497,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "observer_work_ms": 4.695209674537182
+    },
+    {
+      "s": 10.764964713715017,
+      "valid_identity": true,
+      "forward_frame": 107,
+      "wall_lag_ms": 64.96471371501578,
+      "scene_crc": 207419497,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "resources": {
+        "pss_kib": 282254,
+        "summed_rss_kib": 500768,
+        "cpu_seconds_live_processes": 4.59,
+        "rchar_live_processes": 2159115481,
+        "storage_read_bytes_live_processes": 2104672256,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 115021,
+            "rss_kib": 196548
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136203,
+            "rss_kib": 195172
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689610,
+          "nsec": 794299476
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689610.800000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689610800000000,
+      "raw_lag_ms": -5.700524,
+      "observer_work_ms": 13.522249646484852
+    },
+    {
+      "s": 10.815015872940421,
+      "valid_identity": true,
+      "forward_frame": 107,
+      "wall_lag_ms": 115.01587294042004,
+      "scene_crc": 2651368316,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 4.330739378929138
+    },
+    {
+      "s": 10.865132000297308,
+      "valid_identity": true,
+      "forward_frame": 108,
+      "wall_lag_ms": 65.13200029730726,
+      "scene_crc": 2651368316,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.393786191940308
+    },
+    {
+      "s": 10.915364191867411,
+      "valid_identity": true,
+      "forward_frame": 108,
+      "wall_lag_ms": 115.36419186741043,
+      "scene_crc": 1996125524,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.878069274127483
+    },
+    {
+      "s": 10.965219670906663,
+      "valid_identity": true,
+      "forward_frame": 109,
+      "wall_lag_ms": 65.21967090666259,
+      "scene_crc": 1996125524,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.287092015147209
+    },
+    {
+      "s": 11.015282818116248,
+      "valid_identity": true,
+      "forward_frame": 109,
+      "wall_lag_ms": 115.2828181162473,
+      "scene_crc": 1073674406,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "resources": {
+        "pss_kib": 291508,
+        "summed_rss_kib": 510024,
+        "cpu_seconds_live_processes": 4.65,
+        "rchar_live_processes": 2177739518,
+        "storage_read_bytes_live_processes": 2123722752,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 124273,
+            "rss_kib": 205800
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136205,
+            "rss_kib": 195176
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689611,
+          "nsec": 67173947
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689611.000000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689611000000000,
+      "raw_lag_ms": 67.173947,
+      "observer_work_ms": 13.071943074464798
+    },
+    {
+      "s": 11.065372585318983,
+      "valid_identity": true,
+      "forward_frame": 110,
+      "wall_lag_ms": 65.3725853189826,
+      "scene_crc": 1073674406,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "observer_work_ms": 4.654857330024242
+    },
+    {
+      "s": 11.115561734884977,
+      "valid_identity": true,
+      "forward_frame": 110,
+      "wall_lag_ms": 115.56173488497734,
+      "scene_crc": 3162405052,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "observer_work_ms": 10.823285207152367
+    },
+    {
+      "s": 11.165506538935006,
+      "valid_identity": true,
+      "forward_frame": 111,
+      "wall_lag_ms": 65.50653893500424,
+      "scene_crc": 3162405052,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.551109857857227
+    },
+    {
+      "s": 11.21572473924607,
+      "valid_identity": true,
+      "forward_frame": 111,
+      "wall_lag_ms": 115.72473924606896,
+      "scene_crc": 1317037402,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 12.288798578083515
+    },
+    {
+      "s": 11.265585471875966,
+      "valid_identity": true,
+      "forward_frame": 112,
+      "wall_lag_ms": 65.58547187596453,
+      "scene_crc": 1317037402,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "resources": {
+        "pss_kib": 300480,
+        "summed_rss_kib": 519000,
+        "cpu_seconds_live_processes": 4.71,
+        "rchar_live_processes": 2187226443,
+        "storage_read_bytes_live_processes": 2133368832,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 133241,
+            "rss_kib": 214768
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136209,
+            "rss_kib": 195184
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689611,
+          "nsec": 302120095
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689611.300000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689611300000000,
+      "raw_lag_ms": 2.120095,
+      "observer_work_ms": 13.440984301269054
+    },
+    {
+      "s": 11.315693829208612,
+      "valid_identity": true,
+      "forward_frame": 112,
+      "wall_lag_ms": 115.69382920861138,
+      "scene_crc": 233263048,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.373085685074329
+    },
+    {
+      "s": 11.365985868498683,
+      "valid_identity": true,
+      "forward_frame": 113,
+      "wall_lag_ms": 65.98586849868227,
+      "scene_crc": 233263048,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "observer_work_ms": 4.6437811106443405
+    },
+    {
+      "s": 11.415997955948114,
+      "valid_identity": true,
+      "forward_frame": 113,
+      "wall_lag_ms": 115.99795594811368,
+      "scene_crc": 1782060853,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "observer_work_ms": 5.686392076313496
+    },
+    {
+      "s": 11.465970146469772,
+      "valid_identity": true,
+      "forward_frame": 114,
+      "wall_lag_ms": 65.9701464697715,
+      "scene_crc": 1782060853,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "observer_work_ms": 5.271063186228275
+    },
+    {
+      "s": 11.515993886627257,
+      "valid_identity": true,
+      "forward_frame": 114,
+      "wall_lag_ms": 115.99388662725651,
+      "scene_crc": 3119017063,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "resources": {
+        "pss_kib": 276380,
+        "summed_rss_kib": 494904,
+        "cpu_seconds_live_processes": 4.81,
+        "rchar_live_processes": 2196677450,
+        "storage_read_bytes_live_processes": 2143006720,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 109137,
+            "rss_kib": 190664
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136213,
+            "rss_kib": 195192
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689611,
+          "nsec": 545419183
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689611.500000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689611500000000,
+      "raw_lag_ms": 45.419183,
+      "observer_work_ms": 13.949260115623474
+    },
+    {
+      "s": 11.569674974307418,
+      "valid_identity": true,
+      "forward_frame": 114,
+      "wall_lag_ms": 169.67497430741753,
+      "scene_crc": 3119017063,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "observer_work_ms": 16.41873363405466
+    },
+    {
+      "s": 11.616166204214096,
+      "valid_identity": true,
+      "forward_frame": 115,
+      "wall_lag_ms": 116.16620421409607,
+      "scene_crc": 3119017063,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 5.6712934747338295
+    },
+    {
+      "s": 11.669691442511976,
+      "valid_identity": true,
+      "forward_frame": 115,
+      "wall_lag_ms": 169.69144251197577,
+      "scene_crc": 2033963189,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 16.274617053568363
+    },
+    {
+      "s": 11.71629245299846,
+      "valid_identity": true,
+      "forward_frame": 116,
+      "wall_lag_ms": 116.29245299845792,
+      "scene_crc": 2033963189,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 5.694234743714333
+    },
+    {
+      "s": 11.76956845074892,
+      "valid_identity": true,
+      "forward_frame": 116,
+      "wall_lag_ms": 169.56845074891902,
+      "scene_crc": 3223836815,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "resources": {
+        "pss_kib": 282540,
+        "summed_rss_kib": 501064,
+        "cpu_seconds_live_processes": 4.96,
+        "rchar_live_processes": 2206158272,
+        "storage_read_bytes_live_processes": 2152656896,
+        "pids": [
+          1976611,
+          1976614,
+          1976615,
+          1976644
+        ],
+        "processes": [
+          {
+            "pid": 1976611,
+            "role": "browser",
+            "pss_kib": 115297,
+            "rss_kib": 196824
+          },
+          {
+            "pid": 1976614,
+            "role": "zygote",
+            "pss_kib": 12974,
+            "rss_kib": 54344
+          },
+          {
+            "pid": 1976615,
+            "role": "zygote",
+            "pss_kib": 18056,
+            "rss_kib": 54704
+          },
+          {
+            "pid": 1976644,
+            "role": "gpu-process",
+            "pss_kib": 136213,
+            "rss_kib": 195192
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689611,
+          "nsec": 803597949
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689611.800000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+      },
+      "raw_log_ns": 1735689611800000000,
+      "raw_lag_ms": 3.597949,
+      "observer_work_ms": 23.415034636855125
+    },
+    {
+      "s": 11.816498283296824,
+      "valid_identity": true,
+      "forward_frame": 117,
+      "wall_lag_ms": 116.49828329682244,
+      "scene_crc": 3223836815,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 4.689749330282211
+    },
+    {
+      "s": 11.86987137235701,
+      "valid_identity": true,
+      "forward_frame": 117,
+      "wall_lag_ms": 169.87137235700976,
+      "scene_crc": 3605240461,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 8.030600845813751
+    },
+    {
+      "s": 11.9164484674111,
+      "valid_identity": true,
+      "forward_frame": 118,
+      "wall_lag_ms": 116.44846741110015,
+      "scene_crc": 1499571804,
+      "variant": 22,
+      "mae": 0.0,
+      "second_mae": 4.901818181818182,
+      "observer_work_ms": 4.443102516233921
+    },
+    {
+      "s": 11.966488690115511,
+      "valid_identity": true,
+      "forward_frame": 119,
+      "wall_lag_ms": 66.48869011551106,
+      "scene_crc": 1499571804,
+      "variant": 23,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 4.289302043616772
+    }
+  ],
+  "seeks": [
+    {
+      "offset_ns": 25310000000,
+      "latency_ms": 121.40663247555494,
+      "variant": 29,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454
+    },
+    {
+      "offset_ns": 48710000000,
+      "latency_ms": 132.44537822902203,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145
+    },
+    {
+      "offset_ns": 16110000000,
+      "latency_ms": 132.04147946089506,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298
+    },
+    {
+      "offset_ns": 0,
+      "latency_ms": 100.28030630201101,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298
+    }
+  ],
+  "cache": "cache-allowed; SHA256-read before launch",
+  "inspector_policy": "latest-before cursor, arrays/header collapsed; Native exact queries versus Lichtblick stream subscription",
+  "observation": "20 Hz image identity from 88 patch means; Scene CRC change is a lower bound, not a timestamp or GPU FPS",
+  "display_before": "Keyboard Control:\n  auto repeat:  on    key click percent:  0    LED mask:  00000000\n  XKB indicators:\n    00: Caps Lock:   off    01: Num Lock:    off    02: Scroll Lock: off\n    03: Compose:     off    04: Kana:        off    05: Sleep:       off\n    06: Suspend:     off    07: Mute:        off    08: Misc:        off\n    09: Mail:        off    10: Charging:    off    11: Shift Lock:  off\n    12: Group 2:     off    13: Mouse Keys:  off\n  auto repeat delay:  500    repeat rate:  33\n  auto repeating keys:  00ffffffdffffbbf\n                        fadfffefffedffff\n                        9fffffffffffffff\n                        fff7ffffffffffff\n  bell percent:  50    bell pitch:  400    bell duration:  100\nPointer Control:\n  acceleration:  2/1    threshold:  4\nScreen Saver:\n  prefer blanking:  yes    allow exposures:  yes\n  timeout:  0    cycle:  0\nColors:\n  default colormap:  0x20    BlackPixel:  0x0    WhitePixel:  0xffffff\nFont Path:\n  /usr/share/fonts/X11/misc,/usr/share/fonts/X11/Type1,built-ins\nDPMS (Display Power Management Signaling):\n  Standby: 0    Suspend: 0    Off: 0\n  DPMS is Enabled\n  Monitor is On\n",
+  "gpu_before": "Tue Oct 20 19:54:17 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 610.57.04              KMD Version: 610.57.04     CUDA UMD Version: 13.3     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 5070 Ti     On  |   00000000:02:00.0  On |                  N/A |\n|  0%   46C    P8             20W /  300W |   11351MiB /  16303MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A            4287      G   /usr/lib/xorg/Xorg                      354MiB |\n|    0   N/A  N/A            4482      G   /usr/bin/gnome-shell                     15MiB |\n|    0   N/A  N/A            4967      G   /usr/libexec/gnome-initial-setup         13MiB |\n|    0   N/A  N/A            5509      G   ...bin/snapd-desktop-integration          7MiB |\n|    0   N/A  N/A            5611      G   .../8736/usr/lib/firefox/firefox         10MiB |\n|    0   N/A  N/A            6736      G   /usr/bin/nautilus                        21MiB |\n|    0   N/A  N/A          603315      G   ...nap-store/1390/bin/snap-store         87MiB |\n|    0   N/A  N/A         3868901      C   ...-TTS-Server/.venv/bin/python3      10632MiB |\n|    0   N/A  N/A         4092338      G   ...rack-uuid=3190708988185955192         72MiB |\n+-----------------------------------------------------------------------------------------+\n",
+  "command": [
+    "/tmp/mcap-lichtblick-desktop/lichtblick-1.29.1-linux-x64/lichtblick",
+    "--no-sandbox",
+    "--force-multiple-windows",
+    "--user-data-dir=/tmp/mcap-layout-probe-cl99fj9h",
+    "--remote-debugging-port=9307"
+  ],
+  "binary_sha256": "180eea79cebc825a7e7291b8c5ef387760773f2b03596751bda8e6e532a8b6c8",
+  "pid": 1976611,
+  "window": "0x3600004",
+  "gpu": {
+    "devices": [
+      {
+        "vendorId": 4318,
+        "deviceId": 11269,
+        "vendorString": "Google Inc. (NVIDIA Corporation)",
+        "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+        "driverVendor": "Nvidia",
+        "driverVersion": "610.57.04"
+      }
+    ],
+    "auxAttributes": {
+      "amdSwitchable": false,
+      "canSupportThreadedTextureMailbox": false,
+      "directRenderingVersion": "",
+      "displayType": "ANGLE_OPENGL",
+      "glExtensions": "GL_AMD_performance_monitor GL_ANGLE_blob_cache GL_ANGLE_client_arrays GL_ANGLE_clip_cull_distance GL_ANGLE_depth_texture GL_ANGLE_framebuffer_blit GL_ANGLE_framebuffer_multisample GL_ANGLE_get_serialized_context_string GL_ANGLE_get_tex_level_parameter GL_ANGLE_instanced_arrays GL_ANGLE_logic_op GL_ANGLE_memory_size GL_ANGLE_multiview_multisample GL_ANGLE_polygon_mode GL_ANGLE_program_binary_readiness_query GL_ANGLE_program_cache_control GL_ANGLE_provoking_vertex GL_ANGLE_renderability_validation GL_ANGLE_request_extension GL_ANGLE_robust_client_memory GL_ANGLE_shader_pixel_local_storage GL_ANGLE_shader_pixel_local_storage_coherent GL_ANGLE_stencil_texturing GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ANGLE_texture_multisample GL_ANGLE_texture_rectangle GL_ANGLE_translated_shader_source GL_APPLE_clip_distance GL_ARM_rgba8 GL_CHROMIUM_bind_generates_resource GL_CHROMIUM_bind_uniform_location GL_CHROMIUM_copy_texture GL_CHROMIUM_framebuffer_mixed_samples GL_CHROMIUM_lose_context GL_EXT_blend_func_extended GL_EXT_blend_minmax GL_EXT_clear_texture GL_EXT_clip_control GL_EXT_clip_cull_distance GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_compressed_ETC1_RGB8_sub_texture GL_EXT_conservative_depth GL_EXT_debug_label GL_EXT_debug_marker GL_EXT_depth_clamp GL_EXT_discard_framebuffer GL_EXT_disjoint_timer_query GL_EXT_draw_buffers GL_EXT_draw_buffers_indexed GL_EXT_float_blend GL_EXT_frag_depth GL_EXT_instanced_arrays GL_EXT_map_buffer_range GL_EXT_memory_object GL_EXT_memory_object_fd GL_EXT_multisample_compatibility GL_EXT_occlusion_query_boolean GL_EXT_polygon_offset_clamp GL_EXT_read_format_bgra GL_EXT_render_snorm GL_EXT_robustness GL_EXT_sRGB GL_EXT_sRGB_write_control GL_EXT_semaphore GL_EXT_semaphore_fd GL_EXT_shader_texture_lod GL_EXT_shadow_samplers GL_EXT_texture_border_clamp GL_EXT_texture_compression_bptc GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc_srgb GL_EXT_texture_filter_anisotropic GL_EXT_texture_format_BGRA8888 GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_norm16 GL_EXT_texture_rg GL_EXT_texture_sRGB_R8 GL_EXT_texture_sRGB_decode GL_EXT_texture_shadow_lod GL_EXT_texture_storage GL_EXT_texture_type_2_10_10_10_REV GL_EXT_unpack_subimage GL_KHR_blend_equation_advanced GL_KHR_blend_equation_advanced_coherent GL_KHR_debug GL_KHR_parallel_shader_compile GL_KHR_robustness GL_NV_fence GL_NV_framebuffer_blit GL_NV_pack_subimage GL_NV_pixel_buffer_object GL_NV_polygon_mode GL_NV_read_depth GL_NV_read_stencil GL_NV_robustness_video_memory_purge GL_NV_shader_noperspective_interpolation GL_OES_compressed_ETC1_RGB8_texture GL_OES_depth24 GL_OES_depth32 GL_OES_depth_texture GL_OES_draw_buffers_indexed GL_OES_element_index_uint GL_OES_fbo_render_mipmap GL_OES_get_program_binary GL_OES_mapbuffer GL_OES_packed_depth_stencil GL_OES_required_internalformat GL_OES_rgb8_rgba8 GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_standard_derivatives GL_OES_surfaceless_context GL_OES_texture_3D GL_OES_texture_border_clamp GL_OES_texture_float GL_OES_texture_float_linear GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_texture_npot GL_OES_texture_stencil8 GL_OES_texture_storage_multisample_2d_array GL_OES_vertex_array_object GL_OVR_multiview GL_OVR_multiview2 ",
+      "glImplementationParts": "(gl=egl-angle,angle=opengl)",
+      "glRenderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+      "glResetNotificationStrategy": 33362,
+      "glVendor": "Google Inc. (NVIDIA Corporation)",
+      "glVersion": "OpenGL ES 3.0 (ANGLE 2.1 git hash: e68ad989e7b5)",
+      "glWsExtensions": "EGL_EXT_create_context_robustness EGL_KHR_create_context EGL_KHR_get_all_proc_addresses EGL_ANGLE_create_context_webgl_compatibility EGL_CHROMIUM_create_context_bind_generates_resource EGL_EXT_pixel_format_float EGL_KHR_surfaceless_context EGL_ANGLE_display_texture_share_group EGL_ANGLE_display_semaphore_share_group EGL_ANGLE_create_context_client_arrays EGL_ANGLE_program_cache_control EGL_ANGLE_robust_resource_initialization EGL_ANGLE_create_context_extensions_enabled EGL_ANDROID_blob_cache EGL_ANDROID_recordable EGL_ANGLE_create_context_backwards_compatible EGL_KHR_create_context_no_error EGL_NOK_texture_from_pixmap EGL_NV_robustness_video_memory_purge EGL_KHR_reusable_sync EGL_ANGLE_context_virtualization EGL_ANGLE_memory_usage_report ",
+      "glWsVendor": "Google Inc. (NVIDIA Corporation)",
+      "glWsVersion": "1.5 (ANGLE 2.1 git hash: e68ad989e7b5)",
+      "hardwareSupportsVulkan": false,
+      "inProcessGpu": false,
+      "initializationTime": 0.188405,
+      "isAsan": false,
+      "isClangCoverage": false,
+      "jpegDecodeAcceleratorSupported": false,
+      "maxMsaaSamples": "8",
+      "optimus": false,
+      "passthroughCmdDecoder": true,
+      "pixelShaderVersion": "3.00",
+      "processCrashCount": 0,
+      "sandboxed": false,
+      "skiaBackendType": "GaneshGL",
+      "subpixelFontRendering": true,
+      "targetCpuBits": 64,
+      "vertexShaderVersion": "3.00",
+      "visibilityCallbackCallCount": 0
+    },
+    "featureStatus": {
+      "2d_canvas": "enabled",
+      "direct_rendering_display_compositor": "disabled_off_ok",
+      "gpu_compositing": "enabled",
+      "multiple_raster_threads": "enabled_on",
+      "opengl": "enabled_on",
+      "rasterization": "enabled",
+      "raw_draw": "disabled_off_ok",
+      "skia_graphite": "disabled_off",
+      "trees_in_viz": "disabled_off",
+      "video_decode": "enabled",
+      "video_encode": "disabled_software",
+      "vulkan": "disabled_off",
+      "webgl": "enabled",
+      "webgpu": "enabled",
+      "webgpu_on_vk_via_gl_interop": "enabled",
+      "webnn": "disabled_off"
+    },
+    "driverBugWorkarounds": [
+      "disable_discard_framebuffer",
+      "disable_rgb_to_yuv_conversion",
+      "enable_webgl_timer_query_extensions",
+      "exit_on_context_lost",
+      "force_cube_complete",
+      "init_gl_position_in_vertex_shader",
+      "unpack_overlapping_rows_separately_unpack_buffer",
+      "disabled_extension_GL_KHR_blend_equation_advanced",
+      "disabled_extension_GL_KHR_blend_equation_advanced_coherent",
+      "disabled_extension_GL_MESA_framebuffer_flip_y"
+    ],
+    "videoDecoding": [],
+    "videoEncoding": []
+  },
+  "layout": {
+    "configById": {
+      "3D!18i6zy7": {
+        "layers": {
+          "845139cb-26bc-40b3-8161-8ab60af4baf5": {
+            "visible": true,
+            "frameLocked": true,
+            "label": "Grid",
+            "instanceId": "845139cb-26bc-40b3-8161-8ab60af4baf5",
+            "layerId": "foxglove.Grid",
+            "size": 10,
+            "divisions": 10,
+            "lineWidth": 1,
+            "color": "#248eff",
+            "position": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "order": 1
+          }
+        },
+        "cameraState": {
+          "distance": 20,
+          "perspective": true,
+          "phi": 60,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "targetOffset": [
+            0,
+            0,
+            0
+          ],
+          "targetOrientation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "thetaOffset": 45,
+          "fovy": 45,
+          "near": 0.5,
+          "far": 5000
+        },
+        "followMode": "follow-pose",
+        "scene": {
+          "transforms": {
+            "showLabel": false,
+            "axisScale": 0
+          }
+        },
+        "transforms": {
+          "base_scan": {
+            "visible": false
+          }
+        },
+        "topics": {
+          "/scan": {
+            "visible": true,
+            "frameLocked": false,
+            "pointSize": 5,
+            "pointShape": "circle",
+            "decayTime": 0,
+            "colorMode": "flat",
+            "flatColor": "rgba(51, 209, 255, 0.88)",
+            "colorField": "range"
+          }
+        },
+        "publish": {
+          "type": "point",
+          "poseTopic": "/move_base_simple/goal",
+          "pointTopic": "/clicked_point",
+          "poseEstimateTopic": "/initialpose",
+          "poseEstimateXDeviation": 0.5,
+          "poseEstimateYDeviation": 0.5,
+          "poseEstimateThetaDeviation": 0.26179939
+        },
+        "imageMode": {},
+        "followTf": "base_scan"
+      },
+      "RawMessagesVirtual!os6rgs": {
+        "diffEnabled": false,
+        "diffMethod": "custom",
+        "diffTopicPath": "",
+        "showFullMessageForDiff": false,
+        "topicPath": "/scan"
+      },
+      "Image!3mnp456": {
+        "cameraState": {
+          "distance": 20,
+          "perspective": true,
+          "phi": 60,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "targetOffset": [
+            0,
+            0,
+            0
+          ],
+          "targetOrientation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "thetaOffset": 45,
+          "fovy": 45,
+          "near": 0.5,
+          "far": 5000
+        },
+        "followMode": "follow-pose",
+        "scene": {},
+        "transforms": {},
+        "topics": {},
+        "layers": {},
+        "publish": {
+          "type": "point",
+          "poseTopic": "/move_base_simple/goal",
+          "pointTopic": "/clicked_point",
+          "poseEstimateTopic": "/initialpose",
+          "poseEstimateXDeviation": 0.5,
+          "poseEstimateYDeviation": 0.5,
+          "poseEstimateThetaDeviation": 0.26179939
+        },
+        "imageMode": {
+          "imageTopic": "/camera/0"
+        }
+      }
+    },
+    "globalVariables": {},
+    "userNodes": {},
+    "playbackConfig": {
+      "speed": 1
+    },
+    "layout": {
+      "first": "3D!18i6zy7",
+      "second": {
+        "first": "Image!3mnp456",
+        "second": "RawMessagesVirtual!os6rgs",
+        "direction": "column",
+        "splitPercentage": 30
+      },
+      "direction": "row",
+      "splitPercentage": 70
+    }
+  },
+  "subscriptions": [
+    {
+      "topic": "/scan",
+      "preloadType": "partial"
+    },
+    {
+      "topic": "/camera/0",
+      "preloadType": "partial"
+    }
+  ],
+  "selected_recording_topics": [
+    "/camera/0",
+    "/scan"
+  ],
+  "viewport": [
+    1920,
+    1080,
+    1
+  ],
+  "canvases": [
+    {
+      "width": 1120,
+      "height": 926,
+      "rect": {
+        "x": 319.984375,
+        "y": 76,
+        "width": 1120,
+        "height": 926,
+        "top": 76,
+        "right": 1439.984375,
+        "bottom": 1002,
+        "left": 319.984375
+      }
+    },
+    {
+      "width": 480,
+      "height": 255,
+      "rect": {
+        "x": 1439.984375,
+        "y": 76,
+        "width": 480,
+        "height": 255,
+        "top": 76,
+        "right": 1919.984375,
+        "bottom": 331,
+        "left": 1439.984375
+      }
+    }
+  ],
+  "gtk_frame_extents": "_GTK_FRAME_EXTENTS(CARDINAL) = 16, 16, 10, 32\n",
+  "references_sha256": "c0b7d6443331249c600dbf9dcd04d14a3efaecc7d5ed8bf8fef613aa18ff2fac",
+  "before_ui": {
+    "current": {
+      "sec": 1735689616,
+      "nsec": 110000000
+    },
+    "start": {
+      "sec": 1735689600,
+      "nsec": 0
+    },
+    "end": {
+      "sec": 1735689659,
+      "nsec": 900000000
+    },
+    "playing": false,
+    "visibility": "visible",
+    "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nsensor_msgs/msg/LaserScan @ 1735689600.000000000 sec\n\u25b6\nheader\nframe_id: base_scan\nangle_min\n0\nangle_max\n6.264549732208252\nangle_increment\n0.01744999922811985\ntime_increment\n0\nscan_time\n0\nrange_min\n0.11999999731779099\nrange_max\n3.5\n\u25b6\nranges\n{} 360 keys\nintensities\n{} 0 keys\nSync\noff\n1\u00d7"
+  },
+  "before_play": {
+    "pss_kib": 264721,
+    "summed_rss_kib": 483088,
+    "cpu_seconds_live_processes": 1.03,
+    "rchar_live_processes": 701651710,
+    "storage_read_bytes_live_processes": 646705152,
+    "pids": [
+      1976611,
+      1976614,
+      1976615,
+      1976644
+    ],
+    "processes": [
+      {
+        "pid": 1976611,
+        "role": "browser",
+        "pss_kib": 111610,
+        "rss_kib": 193128
+      },
+      {
+        "pid": 1976614,
+        "role": "zygote",
+        "pss_kib": 12974,
+        "rss_kib": 54344
+      },
+      {
+        "pid": 1976615,
+        "role": "zygote",
+        "pss_kib": 18058,
+        "rss_kib": 54704
+      },
+      {
+        "pid": 1976644,
+        "role": "gpu-process",
+        "pss_kib": 122079,
+        "rss_kib": 180912
+      }
+    ]
+  },
+  "after_play": {
+    "pss_kib": 291550,
+    "summed_rss_kib": 510080,
+    "cpu_seconds_live_processes": 5.08,
+    "rchar_live_processes": 2299479193,
+    "storage_read_bytes_live_processes": 2247565312,
+    "pids": [
+      1976611,
+      1976614,
+      1976615,
+      1976644
+    ],
+    "processes": [
+      {
+        "pid": 1976611,
+        "role": "browser",
+        "pss_kib": 124301,
+        "rss_kib": 205828
+      },
+      {
+        "pid": 1976614,
+        "role": "zygote",
+        "pss_kib": 12974,
+        "rss_kib": 54344
+      },
+      {
+        "pid": 1976615,
+        "role": "zygote",
+        "pss_kib": 18056,
+        "rss_kib": 54704
+      },
+      {
+        "pid": 1976644,
+        "role": "gpu-process",
+        "pss_kib": 136219,
+        "rss_kib": 195204
+      }
+    ]
+  },
+  "gpu_after": "Tue Oct 20 19:54:32 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 610.57.04              KMD Version: 610.57.04     CUDA UMD Version: 13.3     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 5070 Ti     On  |   00000000:02:00.0  On |                  N/A |\n|  0%   47C    P5             35W /  300W |   11559MiB /  16303MiB |     23%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A            4287      G   /usr/lib/xorg/Xorg                      338MiB |\n|    0   N/A  N/A            4482      G   /usr/bin/gnome-shell                     15MiB |\n|    0   N/A  N/A            4967      G   /usr/libexec/gnome-initial-setup         13MiB |\n|    0   N/A  N/A            5509      G   ...bin/snapd-desktop-integration          7MiB |\n|    0   N/A  N/A            5611      G   .../8736/usr/lib/firefox/firefox         10MiB |\n|    0   N/A  N/A            6736      G   /usr/bin/nautilus                        21MiB |\n|    0   N/A  N/A          603315      G   ...nap-store/1390/bin/snap-store         87MiB |\n|    0   N/A  N/A         1976644      G   ...rack-uuid=3190708988185955192        215MiB |\n|    0   N/A  N/A         3868901      C   ...-TTS-Server/.venv/bin/python3      10632MiB |\n|    0   N/A  N/A         4092338      G   ...rack-uuid=3190708988185955192         72MiB |\n+-----------------------------------------------------------------------------------------+\n",
+  "display_after": "Keyboard Control:\n  auto repeat:  on    key click percent:  0    LED mask:  00000000\n  XKB indicators:\n    00: Caps Lock:   off    01: Num Lock:    off    02: Scroll Lock: off\n    03: Compose:     off    04: Kana:        off    05: Sleep:       off\n    06: Suspend:     off    07: Mute:        off    08: Misc:        off\n    09: Mail:        off    10: Charging:    off    11: Shift Lock:  off\n    12: Group 2:     off    13: Mouse Keys:  off\n  auto repeat delay:  500    repeat rate:  33\n  auto repeating keys:  00ffffffdffffbbf\n                        fadfffefffedffff\n                        9fffffffffffffff\n                        fff7ffffffffffff\n  bell percent:  50    bell pitch:  400    bell duration:  100\nPointer Control:\n  acceleration:  2/1    threshold:  4\nScreen Saver:\n  prefer blanking:  yes    allow exposures:  yes\n  timeout:  0    cycle:  0\nColors:\n  default colormap:  0x20    BlackPixel:  0x0    WhitePixel:  0xffffff\nFont Path:\n  /usr/share/fonts/X11/misc,/usr/share/fonts/X11/Type1,built-ins\nDPMS (Display Power Management Signaling):\n  Standby: 0    Suspend: 0    Off: 0\n  DPMS is Enabled\n  Monitor is On\n",
+  "summary": {
+    "image_updates_hz": 9.945437358762778,
+    "progress_hz": 9.945437358762778,
+    "lag_median_ms": 106.09201136976453,
+    "lag_p95_ms": 162.86509782075865,
+    "scene_changes_hz": 9.945437358762778,
+    "peak_sampled_pss_mib": 296.3505859375,
+    "cpu_one_core_percent": 33.8445145011114,
+    "rejected_samples": 0,
+    "samples": 240,
+    "max_sample_gap_ms": 57.14092403650284,
+    "raw_lag_median_ms": 43.923433,
+    "raw_lag_p95_ms": 80.565432
+  },
+  "exit_code": 0,
+  "total_wall_s": 15.145582833327353
+}

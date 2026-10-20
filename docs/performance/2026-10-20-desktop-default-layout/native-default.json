@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "root": {
+    "kind": "split",
+    "direction": "row",
+    "children": [
+      {
+        "weight": 0.7,
+        "node": {
+          "kind": "panel",
+          "id": "scene",
+          "panelType": "scene-3d",
+          "configVersion": 1,
+          "config": {
+            "optionalData": true
+          }
+        }
+      },
+      {
+        "weight": 0.3,
+        "node": {
+          "kind": "split",
+          "direction": "column",
+          "children": [
+            {
+              "weight": 0.3,
+              "node": {
+                "kind": "panel",
+                "id": "camera",
+                "panelType": "camera",
+                "configVersion": 1,
+                "config": {
+                  "showThumbnails": false,
+                  "cameraTopic": "/camera/0",
+                  "showOverlay": false,
+                  "schedulerPriority": true
+                }
+              }
+            },
+            {
+              "weight": 0.7,
+              "node": {
+                "kind": "panel",
+                "id": "raw",
+                "panelType": "inspector",
+                "configVersion": 1,
+                "config": {
+                  "topic": "__unselected__"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

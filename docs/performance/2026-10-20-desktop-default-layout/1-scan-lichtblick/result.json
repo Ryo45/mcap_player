@@ -1,0 +1,5707 @@
+{
+  "status": "ok",
+  "app": "lichtblick",
+  "case": "scan",
+  "calibration": false,
+  "data_sha256": "9f31b9ad47758f2f2313b83b584240757241330e71060ba537b5a8716ceda07e",
+  "data_bytes": 14944878140,
+  "geometry": {
+    "layout": [
+      320,
+      44,
+      1600,
+      958
+    ],
+    "scene": [
+      320,
+      76,
+      1120,
+      926
+    ],
+    "canvas": [
+      1440,
+      76,
+      480,
+      255
+    ],
+    "camera": [
+      1453.333333,
+      76,
+      453.333333,
+      255
+    ],
+    "raw": [
+      1440,
+      363,
+      480,
+      639
+    ],
+    "camera_roi": [
+      1455,
+      78,
+      449,
+      251
+    ]
+  },
+  "harness_sha256": "245c3b45b5af6476f60bdc8adc1786984c66dc82d8c33273f0a304196b09242c",
+  "native_patch_sha256": "b83659b01d40cb12ae0ef4ca2238ecd54f29146e37087797d957438c94ceda29",
+  "source_commit": "8b1bfd742689e9025bb28444d246a33a5bf6f939",
+  "samples": [
+    {
+      "s": 0.0009355312213301659,
+      "valid_identity": true,
+      "forward_frame": 0,
+      "wall_lag_ms": 0.9355312213301659,
+      "scene_crc": 1406162386,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "resources": {
+        "pss_kib": 272011,
+        "summed_rss_kib": 489352,
+        "cpu_seconds_live_processes": 1.14,
+        "rchar_live_processes": 782799316,
+        "storage_read_bytes_live_processes": 734703616,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 104260,
+            "rss_kib": 186404
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 137632,
+            "rss_kib": 196472
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689616,
+          "nsec": 110000000
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": false,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 8.945398963987827
+    },
+    {
+      "s": 0.051096527837216854,
+      "valid_identity": true,
+      "forward_frame": 0,
+      "wall_lag_ms": 51.096527837216854,
+      "scene_crc": 1406162386,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 3.465987741947174
+    },
+    {
+      "s": 0.10104507580399513,
+      "valid_identity": true,
+      "forward_frame": 0,
+      "wall_lag_ms": 101.04507580399513,
+      "scene_crc": 1406162386,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 3.235381096601486
+    },
+    {
+      "s": 0.15113857854157686,
+      "valid_identity": true,
+      "forward_frame": 0,
+      "wall_lag_ms": 151.13857854157686,
+      "scene_crc": 831322401,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 3.3920686691999435
+    },
+    {
+      "s": 0.20120499469339848,
+      "valid_identity": true,
+      "forward_frame": 1,
+      "wall_lag_ms": 101.20499469339848,
+      "scene_crc": 831322401,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 3.313882276415825
+    },
+    {
+      "s": 0.2512561986222863,
+      "valid_identity": true,
+      "forward_frame": 1,
+      "wall_lag_ms": 151.25619862228632,
+      "scene_crc": 2677083614,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "resources": {
+        "pss_kib": 284065,
+        "summed_rss_kib": 500388,
+        "cpu_seconds_live_processes": 1.26,
+        "rchar_live_processes": 926116112,
+        "storage_read_bytes_live_processes": 873455616,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 112236,
+            "rss_kib": 193356
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 141710,
+            "rss_kib": 200556
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689600,
+          "nsec": 275099445
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 9.636924602091312
+    },
+    {
+      "s": 0.3013418521732092,
+      "valid_identity": true,
+      "forward_frame": 2,
+      "wall_lag_ms": 101.34185217320918,
+      "scene_crc": 2677083614,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 3.449144773185253
+    },
+    {
+      "s": 0.3513828832656145,
+      "valid_identity": true,
+      "forward_frame": 2,
+      "wall_lag_ms": 151.3828832656145,
+      "scene_crc": 4017059194,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 3.2978439703583717
+    },
+    {
+      "s": 0.4014479462057352,
+      "valid_identity": true,
+      "forward_frame": 3,
+      "wall_lag_ms": 101.44794620573516,
+      "scene_crc": 4171724244,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 3.266270272433758
+    },
+    {
+      "s": 0.4514917004853487,
+      "valid_identity": true,
+      "forward_frame": 4,
+      "wall_lag_ms": 51.49170048534868,
+      "scene_crc": 4171724244,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 3.2605789601802826
+    },
+    {
+      "s": 0.5015943953767419,
+      "valid_identity": true,
+      "forward_frame": 4,
+      "wall_lag_ms": 101.59439537674186,
+      "scene_crc": 1242987476,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "resources": {
+        "pss_kib": 283223,
+        "summed_rss_kib": 499548,
+        "cpu_seconds_live_processes": 1.4,
+        "rchar_live_processes": 1066317904,
+        "storage_read_bytes_live_processes": 1006387200,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 112508,
+            "rss_kib": 193628
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 140596,
+            "rss_kib": 199444
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689600,
+          "nsec": 525404946
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 9.813562966883183
+    },
+    {
+      "s": 0.5516488123685122,
+      "valid_identity": true,
+      "forward_frame": 5,
+      "wall_lag_ms": 51.648812368512154,
+      "scene_crc": 1242987476,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 3.4448355436325073
+    },
+    {
+      "s": 0.6016853973269463,
+      "valid_identity": true,
+      "forward_frame": 5,
+      "wall_lag_ms": 101.68539732694626,
+      "scene_crc": 2884261203,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 3.3174538984894753
+    },
+    {
+      "s": 0.6517413454130292,
+      "valid_identity": true,
+      "forward_frame": 6,
+      "wall_lag_ms": 51.74134541302911,
+      "scene_crc": 2884261203,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 3.3052805811166763
+    },
+    {
+      "s": 0.7018602509051561,
+      "valid_identity": true,
+      "forward_frame": 6,
+      "wall_lag_ms": 101.86025090515605,
+      "scene_crc": 3477008774,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 3.4445542842149734
+    },
+    {
+      "s": 0.751909944228828,
+      "valid_identity": true,
+      "forward_frame": 6,
+      "wall_lag_ms": 151.90994422882787,
+      "scene_crc": 3477008774,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "resources": {
+        "pss_kib": 278049,
+        "summed_rss_kib": 495400,
+        "cpu_seconds_live_processes": 1.54,
+        "rchar_live_processes": 1215882455,
+        "storage_read_bytes_live_processes": 1154772992,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 107332,
+            "rss_kib": 189476
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 140598,
+            "rss_kib": 199448
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689600,
+          "nsec": 795288904
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 9.754441678524017
+    },
+    {
+      "s": 0.8019135296344757,
+      "valid_identity": true,
+      "forward_frame": 7,
+      "wall_lag_ms": 101.91352963447564,
+      "scene_crc": 2888519577,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 3.2260017469525337
+    },
+    {
+      "s": 0.8524082032963634,
+      "valid_identity": true,
+      "forward_frame": 8,
+      "wall_lag_ms": 52.40820329636331,
+      "scene_crc": 2888519577,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 3.9021428674459457
+    },
+    {
+      "s": 0.9020018093287945,
+      "valid_identity": true,
+      "forward_frame": 8,
+      "wall_lag_ms": 102.00180932879444,
+      "scene_crc": 1239205585,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 3.103705123066902
+    },
+    {
+      "s": 0.9529100731015205,
+      "valid_identity": true,
+      "forward_frame": 9,
+      "wall_lag_ms": 52.91007310152052,
+      "scene_crc": 1239205585,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "observer_work_ms": 4.579821601510048
+    },
+    {
+      "s": 1.002129984088242,
+      "valid_identity": true,
+      "forward_frame": 9,
+      "wall_lag_ms": 102.12998408824203,
+      "scene_crc": 3713163133,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "resources": {
+        "pss_kib": 286015,
+        "summed_rss_kib": 502344,
+        "cpu_seconds_live_processes": 1.62,
+        "rchar_live_processes": 1244189045,
+        "storage_read_bytes_live_processes": 1182916608,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 115296,
+            "rss_kib": 196416
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 140600,
+            "rss_kib": 199452
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689601,
+          "nsec": 29566071
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 9.336382150650024
+    },
+    {
+      "s": 1.0526929199695587,
+      "valid_identity": true,
+      "forward_frame": 10,
+      "wall_lag_ms": 52.692919969558716,
+      "scene_crc": 3713163133,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "observer_work_ms": 3.997618332505226
+    },
+    {
+      "s": 1.1022397438064218,
+      "valid_identity": true,
+      "forward_frame": 10,
+      "wall_lag_ms": 102.23974380642176,
+      "scene_crc": 2877940772,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "observer_work_ms": 3.162848763167858
+    },
+    {
+      "s": 1.152350584976375,
+      "valid_identity": true,
+      "forward_frame": 11,
+      "wall_lag_ms": 52.35058497637502,
+      "scene_crc": 2877940772,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 3.4625492990016937
+    },
+    {
+      "s": 1.2024612119421363,
+      "valid_identity": true,
+      "forward_frame": 11,
+      "wall_lag_ms": 102.4612119421362,
+      "scene_crc": 4112040177,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 3.352203406393528
+    },
+    {
+      "s": 1.2524391459301114,
+      "valid_identity": true,
+      "forward_frame": 11,
+      "wall_lag_ms": 152.43914593011132,
+      "scene_crc": 4112040177,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "resources": {
+        "pss_kib": 277035,
+        "summed_rss_kib": 493368,
+        "cpu_seconds_live_processes": 1.68,
+        "rchar_live_processes": 1253600337,
+        "storage_read_bytes_live_processes": 1192316928,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 106352,
+            "rss_kib": 187472
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 140564,
+            "rss_kib": 199420
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689601,
+          "nsec": 267271004
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 9.082920849323273
+    },
+    {
+      "s": 1.3025129307061434,
+      "valid_identity": true,
+      "forward_frame": 12,
+      "wall_lag_ms": 102.51293070614321,
+      "scene_crc": 4112040177,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 3.38598620146513
+    },
+    {
+      "s": 1.352550070732832,
+      "valid_identity": true,
+      "forward_frame": 12,
+      "wall_lag_ms": 152.55007073283178,
+      "scene_crc": 2603859168,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 3.138849511742592
+    },
+    {
+      "s": 1.4026298765093088,
+      "valid_identity": true,
+      "forward_frame": 13,
+      "wall_lag_ms": 102.62987650930877,
+      "scene_crc": 2603859168,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 3.2845139503479004
+    },
+    {
+      "s": 1.452663468196988,
+      "valid_identity": true,
+      "forward_frame": 13,
+      "wall_lag_ms": 152.66346819698805,
+      "scene_crc": 3438604176,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 3.239256329834461
+    },
+    {
+      "s": 1.502698834054172,
+      "valid_identity": true,
+      "forward_frame": 14,
+      "wall_lag_ms": 102.69883405417191,
+      "scene_crc": 251544994,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "resources": {
+        "pss_kib": 286295,
+        "summed_rss_kib": 502632,
+        "cpu_seconds_live_processes": 1.74,
+        "rchar_live_processes": 1263051884,
+        "storage_read_bytes_live_processes": 1201745920,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 115608,
+            "rss_kib": 196728
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 140568,
+            "rss_kib": 199428
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689601,
+          "nsec": 523179852
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 9.372049942612648
+    },
+    {
+      "s": 1.553061991930008,
+      "valid_identity": true,
+      "forward_frame": 15,
+      "wall_lag_ms": 53.061991930007935,
+      "scene_crc": 251544994,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 3.7266071885824203
+    },
+    {
+      "s": 1.6028442233800888,
+      "valid_identity": true,
+      "forward_frame": 15,
+      "wall_lag_ms": 102.8442233800888,
+      "scene_crc": 2103932068,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 3.1769946217536926
+    },
+    {
+      "s": 1.653469136916101,
+      "valid_identity": true,
+      "forward_frame": 16,
+      "wall_lag_ms": 53.469136916100894,
+      "scene_crc": 2103932068,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.266669973731041
+    },
+    {
+      "s": 1.7030370393767953,
+      "valid_identity": true,
+      "forward_frame": 16,
+      "wall_lag_ms": 103.0370393767952,
+      "scene_crc": 3291356709,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 3.5079438239336014
+    },
+    {
+      "s": 1.7531089782714844,
+      "valid_identity": true,
+      "forward_frame": 17,
+      "wall_lag_ms": 53.1089782714842,
+      "scene_crc": 3291356709,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "resources": {
+        "pss_kib": 277047,
+        "summed_rss_kib": 493388,
+        "cpu_seconds_live_processes": 1.85,
+        "rchar_live_processes": 1328130594,
+        "storage_read_bytes_live_processes": 1266479104,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 106372,
+            "rss_kib": 187492
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 140556,
+            "rss_kib": 199420
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689601,
+          "nsec": 796520760
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 9.837605059146881
+    },
+    {
+      "s": 1.8030964639037848,
+      "valid_identity": true,
+      "forward_frame": 17,
+      "wall_lag_ms": 103.09646390378458,
+      "scene_crc": 838924597,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "observer_work_ms": 3.427007235586643
+    },
+    {
+      "s": 1.853209089487791,
+      "valid_identity": true,
+      "forward_frame": 18,
+      "wall_lag_ms": 53.20908948779102,
+      "scene_crc": 838924597,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "observer_work_ms": 3.119800239801407
+    },
+    {
+      "s": 1.9032482095062733,
+      "valid_identity": true,
+      "forward_frame": 18,
+      "wall_lag_ms": 103.24820950627323,
+      "scene_crc": 1256490165,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "observer_work_ms": 3.2883193343877792
+    },
+    {
+      "s": 1.953571481630206,
+      "valid_identity": true,
+      "forward_frame": 19,
+      "wall_lag_ms": 53.57148163020597,
+      "scene_crc": 1256490165,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 3.777838312089443
+    },
+    {
+      "s": 2.0034482767805457,
+      "valid_identity": true,
+      "forward_frame": 19,
+      "wall_lag_ms": 103.44827678054558,
+      "scene_crc": 1519723659,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "resources": {
+        "pss_kib": 286305,
+        "summed_rss_kib": 502648,
+        "cpu_seconds_live_processes": 1.93,
+        "rchar_live_processes": 1393231294,
+        "storage_read_bytes_live_processes": 1330933760,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 115628,
+            "rss_kib": 196748
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 140558,
+            "rss_kib": 199424
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689602,
+          "nsec": 31216991
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 9.852247312664986
+    },
+    {
+      "s": 2.053474262356758,
+      "valid_identity": true,
+      "forward_frame": 20,
+      "wall_lag_ms": 53.47426235675812,
+      "scene_crc": 1519723659,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 3.239915706217289
+    },
+    {
+      "s": 2.1034562550485134,
+      "valid_identity": true,
+      "forward_frame": 20,
+      "wall_lag_ms": 103.45625504851341,
+      "scene_crc": 4027688361,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 3.192571923136711
+    },
+    {
+      "s": 2.153624198399484,
+      "valid_identity": true,
+      "forward_frame": 21,
+      "wall_lag_ms": 53.62419839948407,
+      "scene_crc": 4027688361,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 3.5924995318055153
+    },
+    {
+      "s": 2.203600919805467,
+      "valid_identity": true,
+      "forward_frame": 21,
+      "wall_lag_ms": 103.60091980546704,
+      "scene_crc": 2746318929,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 3.2981103286147118
+    },
+    {
+      "s": 2.253994485363364,
+      "valid_identity": true,
+      "forward_frame": 22,
+      "wall_lag_ms": 53.99448536336404,
+      "scene_crc": 2746318929,
+      "variant": 22,
+      "mae": 0.0,
+      "second_mae": 4.901818181818182,
+      "resources": {
+        "pss_kib": 292499,
+        "summed_rss_kib": 508848,
+        "cpu_seconds_live_processes": 2.0,
+        "rchar_live_processes": 1402644586,
+        "storage_read_bytes_live_processes": 1340248064,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 121816,
+            "rss_kib": 202936
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 140564,
+            "rss_kib": 199436
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689602,
+          "nsec": 297476013
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 10.024549439549446
+    },
+    {
+      "s": 2.303710540756583,
+      "valid_identity": true,
+      "forward_frame": 22,
+      "wall_lag_ms": 103.71054075658304,
+      "scene_crc": 3330891125,
+      "variant": 22,
+      "mae": 0.0,
+      "second_mae": 4.901818181818182,
+      "observer_work_ms": 3.2715294510126114
+    },
+    {
+      "s": 2.3544141529127955,
+      "valid_identity": true,
+      "forward_frame": 23,
+      "wall_lag_ms": 54.414152912795274,
+      "scene_crc": 3330891125,
+      "variant": 23,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 3.8860971108078957
+    },
+    {
+      "s": 2.403805281035602,
+      "valid_identity": true,
+      "forward_frame": 23,
+      "wall_lag_ms": 103.80528103560182,
+      "scene_crc": 1793584294,
+      "variant": 23,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 3.198922611773014
+    },
+    {
+      "s": 2.4549102941527963,
+      "valid_identity": true,
+      "forward_frame": 24,
+      "wall_lag_ms": 54.91029415279591,
+      "scene_crc": 1793584294,
+      "variant": 24,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 4.980328492820263
+    },
+    {
+      "s": 2.504005496390164,
+      "valid_identity": true,
+      "forward_frame": 24,
+      "wall_lag_ms": 104.00549639016354,
+      "scene_crc": 1687339413,
+      "variant": 24,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "resources": {
+        "pss_kib": 301549,
+        "summed_rss_kib": 517904,
+        "cpu_seconds_live_processes": 2.07,
+        "rchar_live_processes": 1412099628,
+        "storage_read_bytes_live_processes": 1349591040,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 130860,
+            "rss_kib": 211980
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 140570,
+            "rss_kib": 199448
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689602,
+          "nsec": 563538285
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 12.398122809827328
+    },
+    {
+      "s": 2.554123659618199,
+      "valid_identity": true,
+      "forward_frame": 25,
+      "wall_lag_ms": 54.12365961819887,
+      "scene_crc": 1687339413,
+      "variant": 25,
+      "mae": 0.0,
+      "second_mae": 4.68530303030303,
+      "observer_work_ms": 4.121211357414722
+    },
+    {
+      "s": 2.604159263893962,
+      "valid_identity": true,
+      "forward_frame": 25,
+      "wall_lag_ms": 104.1592638939619,
+      "scene_crc": 227608725,
+      "variant": 25,
+      "mae": 0.0,
+      "second_mae": 4.68530303030303,
+      "observer_work_ms": 4.138571210205555
+    },
+    {
+      "s": 2.6541928723454475,
+      "valid_identity": true,
+      "forward_frame": 26,
+      "wall_lag_ms": 54.192872345447455,
+      "scene_crc": 227608725,
+      "variant": 26,
+      "mae": 0.0,
+      "second_mae": 5.06590909090909,
+      "observer_work_ms": 4.051405005156994
+    },
+    {
+      "s": 2.704261193983257,
+      "valid_identity": true,
+      "forward_frame": 26,
+      "wall_lag_ms": 104.26119398325673,
+      "scene_crc": 438885551,
+      "variant": 26,
+      "mae": 0.0,
+      "second_mae": 5.06590909090909,
+      "observer_work_ms": 4.096727818250656
+    },
+    {
+      "s": 2.755080887116492,
+      "valid_identity": true,
+      "forward_frame": 27,
+      "wall_lag_ms": 55.08088711649162,
+      "scene_crc": 438885551,
+      "variant": 27,
+      "mae": 0.0,
+      "second_mae": 5.034242424242423,
+      "resources": {
+        "pss_kib": 288459,
+        "summed_rss_kib": 504816,
+        "cpu_seconds_live_processes": 2.16,
+        "rchar_live_processes": 1421532749,
+        "storage_read_bytes_live_processes": 1358905344,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 109592,
+            "rss_kib": 190712
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 148748,
+            "rss_kib": 207628
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689602,
+          "nsec": 798552810
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 11.055776849389076
+    },
+    {
+      "s": 2.8043786250054836,
+      "valid_identity": true,
+      "forward_frame": 27,
+      "wall_lag_ms": 104.37862500548346,
+      "scene_crc": 1486128376,
+      "variant": 27,
+      "mae": 0.0,
+      "second_mae": 5.034242424242423,
+      "observer_work_ms": 4.137836396694183
+    },
+    {
+      "s": 2.8544617034494877,
+      "valid_identity": true,
+      "forward_frame": 27,
+      "wall_lag_ms": 154.46170344948752,
+      "scene_crc": 1486128376,
+      "variant": 27,
+      "mae": 0.0,
+      "second_mae": 5.034242424242423,
+      "observer_work_ms": 4.200716502964497
+    },
+    {
+      "s": 2.904514410533011,
+      "valid_identity": true,
+      "forward_frame": 28,
+      "wall_lag_ms": 104.51441053301069,
+      "scene_crc": 1486128376,
+      "variant": 28,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.18950617313385
+    },
+    {
+      "s": 2.9545626463368535,
+      "valid_identity": true,
+      "forward_frame": 28,
+      "wall_lag_ms": 154.56264633685325,
+      "scene_crc": 2321437224,
+      "variant": 28,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.103993996977806
+    },
+    {
+      "s": 3.0046347128227353,
+      "valid_identity": true,
+      "forward_frame": 29,
+      "wall_lag_ms": 104.63471282273495,
+      "scene_crc": 394511390,
+      "variant": 29,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.0658628568053246
+    },
+    {
+      "s": 3.0554920993745327,
+      "valid_identity": true,
+      "forward_frame": 30,
+      "wall_lag_ms": 55.4920993745327,
+      "scene_crc": 394511390,
+      "variant": 30,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "resources": {
+        "pss_kib": 297715,
+        "summed_rss_kib": 514076,
+        "cpu_seconds_live_processes": 2.23,
+        "rchar_live_processes": 1440117903,
+        "storage_read_bytes_live_processes": 1377284096,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 118844,
+            "rss_kib": 199964
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 148752,
+            "rss_kib": 207636
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689603,
+          "nsec": 108781012
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 19.18592769652605
+    },
+    {
+      "s": 3.104951271787286,
+      "valid_identity": true,
+      "forward_frame": 30,
+      "wall_lag_ms": 104.9512717872858,
+      "scene_crc": 3396063092,
+      "variant": 30,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 4.356062971055508
+    },
+    {
+      "s": 3.1555497711524367,
+      "valid_identity": true,
+      "forward_frame": 31,
+      "wall_lag_ms": 55.54977115243665,
+      "scene_crc": 3396063092,
+      "variant": 31,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 5.248928442597389
+    },
+    {
+      "s": 3.204917849972844,
+      "valid_identity": true,
+      "forward_frame": 31,
+      "wall_lag_ms": 104.91784997284404,
+      "scene_crc": 3703276562,
+      "variant": 31,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 4.131103865802288
+    },
+    {
+      "s": 3.2554547153413296,
+      "valid_identity": true,
+      "forward_frame": 32,
+      "wall_lag_ms": 55.4547153413294,
+      "scene_crc": 3703276562,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 4.90880012512207
+    },
+    {
+      "s": 3.3049965081736445,
+      "valid_identity": true,
+      "forward_frame": 32,
+      "wall_lag_ms": 104.99650817364437,
+      "scene_crc": 1118579890,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 4.079678095877171
+    },
+    {
+      "s": 3.355759690515697,
+      "valid_identity": true,
+      "forward_frame": 33,
+      "wall_lag_ms": 55.75969051569673,
+      "scene_crc": 1118579890,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "resources": {
+        "pss_kib": 306681,
+        "summed_rss_kib": 523048,
+        "cpu_seconds_live_processes": 2.32,
+        "rchar_live_processes": 1449523062,
+        "storage_read_bytes_live_processes": 1386856448,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 127804,
+            "rss_kib": 208924
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 148758,
+            "rss_kib": 207648
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689603,
+          "nsec": 413872083
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 17.350804060697556
+    },
+    {
+      "s": 3.4051526486873627,
+      "valid_identity": true,
+      "forward_frame": 33,
+      "wall_lag_ms": 105.1526486873624,
+      "scene_crc": 2068948533,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 4.188862629234791
+    },
+    {
+      "s": 3.4552254267036915,
+      "valid_identity": true,
+      "forward_frame": 34,
+      "wall_lag_ms": 55.22542670369113,
+      "scene_crc": 2068948533,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.2210109531879425
+    },
+    {
+      "s": 3.5052999407052994,
+      "valid_identity": true,
+      "forward_frame": 34,
+      "wall_lag_ms": 105.29994070529902,
+      "scene_crc": 4003969063,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.235519096255302
+    },
+    {
+      "s": 3.5553499311208725,
+      "valid_identity": true,
+      "forward_frame": 35,
+      "wall_lag_ms": 55.3499311208725,
+      "scene_crc": 4003969063,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.416434094309807
+    },
+    {
+      "s": 3.6054045083001256,
+      "valid_identity": true,
+      "forward_frame": 35,
+      "wall_lag_ms": 105.4045083001256,
+      "scene_crc": 1422247546,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.173302091658115
+    },
+    {
+      "s": 3.6559304259717464,
+      "valid_identity": true,
+      "forward_frame": 36,
+      "wall_lag_ms": 55.93042597174636,
+      "scene_crc": 1422247546,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "resources": {
+        "pss_kib": 285333,
+        "summed_rss_kib": 501704,
+        "cpu_seconds_live_processes": 2.45,
+        "rchar_live_processes": 1561821888,
+        "storage_read_bytes_live_processes": 1501294592,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 106468,
+            "rss_kib": 187588
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 148746,
+            "rss_kib": 207640
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689603,
+          "nsec": 682150921
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 10.843811556696892
+    },
+    {
+      "s": 3.705520397052169,
+      "valid_identity": true,
+      "forward_frame": 36,
+      "wall_lag_ms": 105.52039705216876,
+      "scene_crc": 1346596139,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 4.156811162829399
+    },
+    {
+      "s": 3.756039478816092,
+      "valid_identity": true,
+      "forward_frame": 37,
+      "wall_lag_ms": 56.03947881609184,
+      "scene_crc": 1346596139,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 4.884520545601845
+    },
+    {
+      "s": 3.805619889870286,
+      "valid_identity": true,
+      "forward_frame": 37,
+      "wall_lag_ms": 105.61988987028582,
+      "scene_crc": 2803167194,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 4.100514575839043
+    },
+    {
+      "s": 3.8563321819528937,
+      "valid_identity": true,
+      "forward_frame": 38,
+      "wall_lag_ms": 56.332181952893464,
+      "scene_crc": 2803167194,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 5.068639293313026
+    },
+    {
+      "s": 3.9057385493069887,
+      "valid_identity": true,
+      "forward_frame": 38,
+      "wall_lag_ms": 105.73854930698845,
+      "scene_crc": 3150950381,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 4.086589440703392
+    },
+    {
+      "s": 3.9564391933381557,
+      "valid_identity": true,
+      "forward_frame": 39,
+      "wall_lag_ms": 56.43919333815539,
+      "scene_crc": 3150950381,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "resources": {
+        "pss_kib": 294607,
+        "summed_rss_kib": 510984,
+        "cpu_seconds_live_processes": 2.56,
+        "rchar_live_processes": 1580734422,
+        "storage_read_bytes_live_processes": 1520627712,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 115736,
+            "rss_kib": 196856
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 148752,
+            "rss_kib": 207652
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689604,
+          "nsec": 15360974
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 17.925300635397434
+    },
+    {
+      "s": 4.005855277180672,
+      "valid_identity": true,
+      "forward_frame": 39,
+      "wall_lag_ms": 105.85527718067134,
+      "scene_crc": 395075329,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 4.071577452123165
+    },
+    {
+      "s": 4.056384750641882,
+      "valid_identity": true,
+      "forward_frame": 40,
+      "wall_lag_ms": 56.38475064188242,
+      "scene_crc": 395075329,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 4.834325052797794
+    },
+    {
+      "s": 4.10598433483392,
+      "valid_identity": true,
+      "forward_frame": 40,
+      "wall_lag_ms": 105.98433483392,
+      "scene_crc": 1253296875,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 4.087095148861408
+    },
+    {
+      "s": 4.156429695896804,
+      "valid_identity": true,
+      "forward_frame": 41,
+      "wall_lag_ms": 56.4296958968038,
+      "scene_crc": 1253296875,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "observer_work_ms": 4.762469790875912
+    },
+    {
+      "s": 4.206080524250865,
+      "valid_identity": true,
+      "forward_frame": 41,
+      "wall_lag_ms": 106.08052425086444,
+      "scene_crc": 962107617,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "observer_work_ms": 4.027955234050751
+    },
+    {
+      "s": 4.256132901646197,
+      "valid_identity": true,
+      "forward_frame": 42,
+      "wall_lag_ms": 56.132901646196665,
+      "scene_crc": 962107617,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "resources": {
+        "pss_kib": 303607,
+        "summed_rss_kib": 519988,
+        "cpu_seconds_live_processes": 2.63,
+        "rchar_live_processes": 1589663907,
+        "storage_read_bytes_live_processes": 1529757696,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 124732,
+            "rss_kib": 205852
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 148756,
+            "rss_kib": 207660
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689604,
+          "nsec": 282278028
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 10.074327699840069
+    },
+    {
+      "s": 4.3062922563403845,
+      "valid_identity": true,
+      "forward_frame": 42,
+      "wall_lag_ms": 106.29225634038431,
+      "scene_crc": 4223801866,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "observer_work_ms": 5.017807707190514
+    },
+    {
+      "s": 4.357008975930512,
+      "valid_identity": true,
+      "forward_frame": 43,
+      "wall_lag_ms": 57.00897593051213,
+      "scene_crc": 4223801866,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 5.677774548530579
+    },
+    {
+      "s": 4.406420247629285,
+      "valid_identity": true,
+      "forward_frame": 43,
+      "wall_lag_ms": 106.42024762928503,
+      "scene_crc": 715478757,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 4.97637502849102
+    },
+    {
+      "s": 4.457116455771029,
+      "valid_identity": true,
+      "forward_frame": 43,
+      "wall_lag_ms": 157.11645577102917,
+      "scene_crc": 715478757,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 6.224293261766434
+    },
+    {
+      "s": 4.506480293348432,
+      "valid_identity": true,
+      "forward_frame": 44,
+      "wall_lag_ms": 106.48029334843123,
+      "scene_crc": 715478757,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "resources": {
+        "pss_kib": 316961,
+        "summed_rss_kib": 533344,
+        "cpu_seconds_live_processes": 2.74,
+        "rchar_live_processes": 1607990733,
+        "storage_read_bytes_live_processes": 1548500992,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 133988,
+            "rss_kib": 215108
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 152854,
+            "rss_kib": 211760
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689604,
+          "nsec": 548610877
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 12.396915815770626
+    },
+    {
+      "s": 4.557212584652007,
+      "valid_identity": true,
+      "forward_frame": 44,
+      "wall_lag_ms": 157.21258465200629,
+      "scene_crc": 3321898719,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 5.236385390162468
+    },
+    {
+      "s": 4.606573826633394,
+      "valid_identity": true,
+      "forward_frame": 45,
+      "wall_lag_ms": 106.57382663339376,
+      "scene_crc": 2321287316,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.104867577552795
+    },
+    {
+      "s": 4.657195958308876,
+      "valid_identity": true,
+      "forward_frame": 46,
+      "wall_lag_ms": 57.19595830887503,
+      "scene_crc": 2321287316,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "observer_work_ms": 4.512517713010311
+    },
+    {
+      "s": 4.706865630112588,
+      "valid_identity": true,
+      "forward_frame": 46,
+      "wall_lag_ms": 106.86563011258787,
+      "scene_crc": 2321287316,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "observer_work_ms": 5.508692003786564
+    },
+    {
+      "s": 4.763768684118986,
+      "valid_identity": true,
+      "forward_frame": 46,
+      "wall_lag_ms": 163.7686841189856,
+      "scene_crc": 2658023310,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "resources": {
+        "pss_kib": 292581,
+        "summed_rss_kib": 508968,
+        "cpu_seconds_live_processes": 2.83,
+        "rchar_live_processes": 1617447921,
+        "storage_read_bytes_live_processes": 1558130688,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 109604,
+            "rss_kib": 190724
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 152858,
+            "rss_kib": 211768
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689604,
+          "nsec": 805420005
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 20.113740116357803
+    },
+    {
+      "s": 4.806981640867889,
+      "valid_identity": true,
+      "forward_frame": 47,
+      "wall_lag_ms": 106.98164086788876,
+      "scene_crc": 2658023310,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 5.735071375966072
+    },
+    {
+      "s": 4.865184873342514,
+      "valid_identity": true,
+      "forward_frame": 47,
+      "wall_lag_ms": 165.18487334251387,
+      "scene_crc": 1109106805,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 13.807825744152069
+    },
+    {
+      "s": 4.906961875967681,
+      "valid_identity": true,
+      "forward_frame": 48,
+      "wall_lag_ms": 106.9618759676807,
+      "scene_crc": 1109106805,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.07759752124548
+    },
+    {
+      "s": 4.956970642320812,
+      "valid_identity": true,
+      "forward_frame": 48,
+      "wall_lag_ms": 156.97064232081104,
+      "scene_crc": 1087879061,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 3.910154104232788
+    },
+    {
+      "s": 5.007097478955984,
+      "valid_identity": true,
+      "forward_frame": 49,
+      "wall_lag_ms": 107.09747895598376,
+      "scene_crc": 1087879061,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "observer_work_ms": 4.168529994785786
+    },
+    {
+      "s": 5.057122405618429,
+      "valid_identity": true,
+      "forward_frame": 49,
+      "wall_lag_ms": 157.12240561842884,
+      "scene_crc": 3175215941,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "resources": {
+        "pss_kib": 301577,
+        "summed_rss_kib": 517968,
+        "cpu_seconds_live_processes": 2.96,
+        "rchar_live_processes": 1626860774,
+        "storage_read_bytes_live_processes": 1567748096,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 118596,
+            "rss_kib": 199716
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 152862,
+            "rss_kib": 211776
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689605,
+          "nsec": 65312374
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 10.245020501315594
+    },
+    {
+      "s": 5.107349496334791,
+      "valid_identity": true,
+      "forward_frame": 50,
+      "wall_lag_ms": 107.34949633479118,
+      "scene_crc": 3982736501,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "observer_work_ms": 4.288589581847191
+    },
+    {
+      "s": 5.1580130234360695,
+      "valid_identity": true,
+      "forward_frame": 51,
+      "wall_lag_ms": 58.013023436068956,
+      "scene_crc": 3982736501,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 5.2601974457502365
+    },
+    {
+      "s": 5.207309052348137,
+      "valid_identity": true,
+      "forward_frame": 51,
+      "wall_lag_ms": 107.30905234813636,
+      "scene_crc": 1646025703,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 4.03517484664917
+    },
+    {
+      "s": 5.257948964834213,
+      "valid_identity": true,
+      "forward_frame": 52,
+      "wall_lag_ms": 57.94896483421308,
+      "scene_crc": 1646025703,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 5.003679543733597
+    },
+    {
+      "s": 5.307638758793473,
+      "valid_identity": true,
+      "forward_frame": 52,
+      "wall_lag_ms": 107.63875879347307,
+      "scene_crc": 1031473275,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "resources": {
+        "pss_kib": 310845,
+        "summed_rss_kib": 527228,
+        "cpu_seconds_live_processes": 3.06,
+        "rchar_live_processes": 1664325493,
+        "storage_read_bytes_live_processes": 1605951488,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 127872,
+            "rss_kib": 208992
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 152854,
+            "rss_kib": 211760
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689605,
+          "nsec": 347359013
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 28.551203198730946
+    },
+    {
+      "s": 5.357688521966338,
+      "valid_identity": true,
+      "forward_frame": 53,
+      "wall_lag_ms": 57.68852196633745,
+      "scene_crc": 1031473275,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 4.446438513696194
+    },
+    {
+      "s": 5.407720147632062,
+      "valid_identity": true,
+      "forward_frame": 53,
+      "wall_lag_ms": 107.72014763206172,
+      "scene_crc": 2441931843,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 4.326724447309971
+    },
+    {
+      "s": 5.457778783515096,
+      "valid_identity": true,
+      "forward_frame": 53,
+      "wall_lag_ms": 157.778783515095,
+      "scene_crc": 2441931843,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 4.360002465546131
+    },
+    {
+      "s": 5.507841404527426,
+      "valid_identity": true,
+      "forward_frame": 54,
+      "wall_lag_ms": 107.84140452742541,
+      "scene_crc": 481369209,
+      "variant": 22,
+      "mae": 0.0,
+      "second_mae": 4.901818181818182,
+      "observer_work_ms": 4.330255091190338
+    },
+    {
+      "s": 5.557882271707058,
+      "valid_identity": true,
+      "forward_frame": 55,
+      "wall_lag_ms": 57.88227170705795,
+      "scene_crc": 481369209,
+      "variant": 23,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "resources": {
+        "pss_kib": 316993,
+        "summed_rss_kib": 533376,
+        "cpu_seconds_live_processes": 3.14,
+        "rchar_live_processes": 1720930193,
+        "storage_read_bytes_live_processes": 1663586304,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 134020,
+            "rss_kib": 215140
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 152854,
+            "rss_kib": 211760
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689605,
+          "nsec": 616528213
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 16.324330121278763
+    },
+    {
+      "s": 5.607999792322516,
+      "valid_identity": true,
+      "forward_frame": 55,
+      "wall_lag_ms": 107.99979232251644,
+      "scene_crc": 1892377886,
+      "variant": 23,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 4.304881207644939
+    },
+    {
+      "s": 5.658091494813561,
+      "valid_identity": true,
+      "forward_frame": 56,
+      "wall_lag_ms": 58.09149481356091,
+      "scene_crc": 1892377886,
+      "variant": 24,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 4.324227571487427
+    },
+    {
+      "s": 5.708098602481186,
+      "valid_identity": true,
+      "forward_frame": 56,
+      "wall_lag_ms": 108.09860248118585,
+      "scene_crc": 2919170913,
+      "variant": 24,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 4.295718856155872
+    },
+    {
+      "s": 5.758241388946772,
+      "valid_identity": true,
+      "forward_frame": 57,
+      "wall_lag_ms": 58.241388946771444,
+      "scene_crc": 2919170913,
+      "variant": 25,
+      "mae": 0.0,
+      "second_mae": 4.68530303030303,
+      "observer_work_ms": 4.605330526828766
+    },
+    {
+      "s": 5.808420960791409,
+      "valid_identity": true,
+      "forward_frame": 57,
+      "wall_lag_ms": 108.42096079140885,
+      "scene_crc": 3163282776,
+      "variant": 25,
+      "mae": 0.0,
+      "second_mae": 4.68530303030303,
+      "resources": {
+        "pss_kib": 292607,
+        "summed_rss_kib": 509004,
+        "cpu_seconds_live_processes": 3.23,
+        "rchar_live_processes": 1738993395,
+        "storage_read_bytes_live_processes": 1681981440,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 109620,
+            "rss_kib": 190740
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 152868,
+            "rss_kib": 211788
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689605,
+          "nsec": 851223860
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 14.628205448389053
+    },
+    {
+      "s": 5.859081031754613,
+      "valid_identity": true,
+      "forward_frame": 58,
+      "wall_lag_ms": 59.08103175461221,
+      "scene_crc": 3163282776,
+      "variant": 26,
+      "mae": 0.0,
+      "second_mae": 5.06590909090909,
+      "observer_work_ms": 5.159501917660236
+    },
+    {
+      "s": 5.9082440519705415,
+      "valid_identity": true,
+      "forward_frame": 58,
+      "wall_lag_ms": 108.24405197054077,
+      "scene_crc": 3541269353,
+      "variant": 26,
+      "mae": 0.0,
+      "second_mae": 5.06590909090909,
+      "observer_work_ms": 4.113062284886837
+    },
+    {
+      "s": 5.958778607659042,
+      "valid_identity": true,
+      "forward_frame": 59,
+      "wall_lag_ms": 58.778607659041526,
+      "scene_crc": 3541269353,
+      "variant": 27,
+      "mae": 0.0,
+      "second_mae": 5.034242424242423,
+      "observer_work_ms": 4.809866659343243
+    },
+    {
+      "s": 6.008416042663157,
+      "valid_identity": true,
+      "forward_frame": 59,
+      "wall_lag_ms": 108.41604266315663,
+      "scene_crc": 666348855,
+      "variant": 27,
+      "mae": 0.0,
+      "second_mae": 5.034242424242423,
+      "observer_work_ms": 4.301667213439941
+    },
+    {
+      "s": 6.059440017677844,
+      "valid_identity": true,
+      "forward_frame": 60,
+      "wall_lag_ms": 59.44001767784357,
+      "scene_crc": 666348855,
+      "variant": 28,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "resources": {
+        "pss_kib": 301875,
+        "summed_rss_kib": 518276,
+        "cpu_seconds_live_processes": 3.3,
+        "rchar_live_processes": 1748132466,
+        "storage_read_bytes_live_processes": 1691299840,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 118884,
+            "rss_kib": 200004
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 152872,
+            "rss_kib": 211796
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689606,
+          "nsec": 117518883
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 12.610013596713543
+    },
+    {
+      "s": 6.108498093672097,
+      "valid_identity": true,
+      "forward_frame": 60,
+      "wall_lag_ms": 108.49809367209673,
+      "scene_crc": 3377257139,
+      "variant": 28,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.164962098002434
+    },
+    {
+      "s": 6.158569156192243,
+      "valid_identity": true,
+      "forward_frame": 61,
+      "wall_lag_ms": 58.569156192242566,
+      "scene_crc": 3377257139,
+      "variant": 29,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.342476837337017
+    },
+    {
+      "s": 6.208640184253454,
+      "valid_identity": true,
+      "forward_frame": 61,
+      "wall_lag_ms": 108.64018425345367,
+      "scene_crc": 3168056193,
+      "variant": 29,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.265382885932922
+    },
+    {
+      "s": 6.2593335546553135,
+      "valid_identity": true,
+      "forward_frame": 62,
+      "wall_lag_ms": 59.333554655313314,
+      "scene_crc": 3168056193,
+      "variant": 30,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 5.025224760174751
+    },
+    {
+      "s": 6.308834348805249,
+      "valid_identity": true,
+      "forward_frame": 62,
+      "wall_lag_ms": 108.83434880524857,
+      "scene_crc": 1263495462,
+      "variant": 30,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 5.165529437363148
+    },
+    {
+      "s": 6.3591234516352415,
+      "valid_identity": true,
+      "forward_frame": 63,
+      "wall_lag_ms": 59.1234516352408,
+      "scene_crc": 1263495462,
+      "variant": 31,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "resources": {
+        "pss_kib": 311893,
+        "summed_rss_kib": 529320,
+        "cpu_seconds_live_processes": 3.38,
+        "rchar_live_processes": 1767106086,
+        "storage_read_bytes_live_processes": 1710641152,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 128900,
+            "rss_kib": 211044
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 152874,
+            "rss_kib": 211800
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689606,
+          "nsec": 417278668
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 13.271346688270569
+    },
+    {
+      "s": 6.408927829936147,
+      "valid_identity": true,
+      "forward_frame": 63,
+      "wall_lag_ms": 108.92782993614603,
+      "scene_crc": 4009981077,
+      "variant": 31,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 5.121138878166676
+    },
+    {
+      "s": 6.459023002535105,
+      "valid_identity": true,
+      "forward_frame": 63,
+      "wall_lag_ms": 159.02300253510404,
+      "scene_crc": 4009981077,
+      "variant": 31,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 5.260766483843327
+    },
+    {
+      "s": 6.508974872529507,
+      "valid_identity": true,
+      "forward_frame": 64,
+      "wall_lag_ms": 108.97487252950633,
+      "scene_crc": 4009981077,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 4.186946898698807
+    },
+    {
+      "s": 6.559669324196875,
+      "valid_identity": true,
+      "forward_frame": 64,
+      "wall_lag_ms": 159.66932419687475,
+      "scene_crc": 152211719,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 4.64340765029192
+    },
+    {
+      "s": 6.609108231961727,
+      "valid_identity": true,
+      "forward_frame": 65,
+      "wall_lag_ms": 109.10823196172714,
+      "scene_crc": 3979480928,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 4.0852101519703865
+    },
+    {
+      "s": 6.6591754434630275,
+      "valid_identity": true,
+      "forward_frame": 65,
+      "wall_lag_ms": 159.17544346302748,
+      "scene_crc": 3979480928,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "resources": {
+        "pss_kib": 321121,
+        "summed_rss_kib": 537528,
+        "cpu_seconds_live_processes": 3.51,
+        "rchar_live_processes": 1776554845,
+        "storage_read_bytes_live_processes": 1720221696,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 134028,
+            "rss_kib": 215148
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 156974,
+            "rss_kib": 215904
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689606,
+          "nsec": 707012368
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 17.685651779174805
+    },
+    {
+      "s": 6.709390519186854,
+      "valid_identity": true,
+      "forward_frame": 66,
+      "wall_lag_ms": 109.39051918685382,
+      "scene_crc": 286366283,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.546354524791241
+    },
+    {
+      "s": 6.759534885175526,
+      "valid_identity": true,
+      "forward_frame": 67,
+      "wall_lag_ms": 59.534885175525964,
+      "scene_crc": 286366283,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.432555288076401
+    },
+    {
+      "s": 6.8093453254550695,
+      "valid_identity": true,
+      "forward_frame": 67,
+      "wall_lag_ms": 109.34532545506937,
+      "scene_crc": 2422673053,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.111539572477341
+    },
+    {
+      "s": 6.860031197778881,
+      "valid_identity": true,
+      "forward_frame": 68,
+      "wall_lag_ms": 60.031197778879886,
+      "scene_crc": 2422673053,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 4.985548555850983
+    },
+    {
+      "s": 6.909451278857887,
+      "valid_identity": true,
+      "forward_frame": 68,
+      "wall_lag_ms": 109.45127885788608,
+      "scene_crc": 349603781,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "resources": {
+        "pss_kib": 293687,
+        "summed_rss_kib": 510084,
+        "cpu_seconds_live_processes": 3.59,
+        "rchar_live_processes": 1786046373,
+        "storage_read_bytes_live_processes": 1729945600,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 112748,
+            "rss_kib": 193868
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150820,
+            "rss_kib": 209740
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689606,
+          "nsec": 948705167
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 11.459060944616795
+    },
+    {
+      "s": 6.960486804135144,
+      "valid_identity": true,
+      "forward_frame": 69,
+      "wall_lag_ms": 60.4868041351434,
+      "scene_crc": 349603781,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 5.349384620785713
+    },
+    {
+      "s": 7.009621364064515,
+      "valid_identity": true,
+      "forward_frame": 69,
+      "wall_lag_ms": 109.62136406451428,
+      "scene_crc": 3028981154,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 4.2510852217674255
+    },
+    {
+      "s": 7.059690899215639,
+      "valid_identity": true,
+      "forward_frame": 70,
+      "wall_lag_ms": 59.69089921563864,
+      "scene_crc": 3028981154,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 4.2790863662958145
+    },
+    {
+      "s": 7.109738759696484,
+      "valid_identity": true,
+      "forward_frame": 70,
+      "wall_lag_ms": 109.73875969648361,
+      "scene_crc": 2308030926,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 4.267092794179916
+    },
+    {
+      "s": 7.159760165028274,
+      "valid_identity": true,
+      "forward_frame": 71,
+      "wall_lag_ms": 59.760165028273526,
+      "scene_crc": 2308030926,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "resources": {
+        "pss_kib": 302677,
+        "summed_rss_kib": 519076,
+        "cpu_seconds_live_processes": 3.72,
+        "rchar_live_processes": 1879372367,
+        "storage_read_bytes_live_processes": 1824022528,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 121736,
+            "rss_kib": 202856
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150822,
+            "rss_kib": 209744
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689607,
+          "nsec": 217475186
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 12.70254421979189
+    },
+    {
+      "s": 7.209874083288014,
+      "valid_identity": true,
+      "forward_frame": 71,
+      "wall_lag_ms": 109.8740832880134,
+      "scene_crc": 3944495918,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 4.366595298051834
+    },
+    {
+      "s": 7.259989943355322,
+      "valid_identity": true,
+      "forward_frame": 72,
+      "wall_lag_ms": 59.98994335532171,
+      "scene_crc": 3944495918,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 4.419050179421902
+    },
+    {
+      "s": 7.309945421293378,
+      "valid_identity": true,
+      "forward_frame": 72,
+      "wall_lag_ms": 109.9454212933777,
+      "scene_crc": 3102750599,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 4.182438366115093
+    },
+    {
+      "s": 7.361467021517456,
+      "valid_identity": true,
+      "forward_frame": 73,
+      "wall_lag_ms": 61.46702151745487,
+      "scene_crc": 3102750599,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "observer_work_ms": 5.994756706058979
+    },
+    {
+      "s": 7.410286740399897,
+      "valid_identity": true,
+      "forward_frame": 73,
+      "wall_lag_ms": 110.28674039989639,
+      "scene_crc": 4155252777,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "resources": {
+        "pss_kib": 308853,
+        "summed_rss_kib": 525268,
+        "cpu_seconds_live_processes": 3.77,
+        "rchar_live_processes": 1888553296,
+        "storage_read_bytes_live_processes": 1833353216,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 127896,
+            "rss_kib": 209016
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150838,
+            "rss_kib": 209776
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689607,
+          "nsec": 451066148
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 13.567709363996983
+    },
+    {
+      "s": 7.46018389519304,
+      "valid_identity": true,
+      "forward_frame": 74,
+      "wall_lag_ms": 60.183895193040016,
+      "scene_crc": 4155252777,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "observer_work_ms": 4.332173615694046
+    },
+    {
+      "s": 7.510286748409271,
+      "valid_identity": true,
+      "forward_frame": 74,
+      "wall_lag_ms": 110.28674840927088,
+      "scene_crc": 854458841,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "observer_work_ms": 5.112718790769577
+    },
+    {
+      "s": 7.5608699740841985,
+      "valid_identity": true,
+      "forward_frame": 75,
+      "wall_lag_ms": 60.869974084198475,
+      "scene_crc": 854458841,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 5.584700033068657
+    },
+    {
+      "s": 7.6104034055024385,
+      "valid_identity": true,
+      "forward_frame": 75,
+      "wall_lag_ms": 110.40340550243855,
+      "scene_crc": 2104844343,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 5.10815903544426
+    },
+    {
+      "s": 7.6629178412258625,
+      "valid_identity": true,
+      "forward_frame": 75,
+      "wall_lag_ms": 162.9178412258625,
+      "scene_crc": 2104844343,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "resources": {
+        "pss_kib": 315015,
+        "summed_rss_kib": 531432,
+        "cpu_seconds_live_processes": 3.89,
+        "rchar_live_processes": 1897957726,
+        "storage_read_bytes_live_processes": 1842987008,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 134056,
+            "rss_kib": 215176
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150840,
+            "rss_kib": 209780
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689607,
+          "nsec": 688142127
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 18.669959157705307
+    },
+    {
+      "s": 7.7111676922068,
+      "valid_identity": true,
+      "forward_frame": 76,
+      "wall_lag_ms": 111.16769220679944,
+      "scene_crc": 2104844343,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 5.254413932561874
+    },
+    {
+      "s": 7.762744064442813,
+      "valid_identity": true,
+      "forward_frame": 76,
+      "wall_lag_ms": 162.74406444281286,
+      "scene_crc": 768834494,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 6.697935052216053
+    },
+    {
+      "s": 7.810684069059789,
+      "valid_identity": true,
+      "forward_frame": 77,
+      "wall_lag_ms": 110.68406905978901,
+      "scene_crc": 768834494,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.3043093755841255
+    },
+    {
+      "s": 7.860675630159676,
+      "valid_identity": true,
+      "forward_frame": 77,
+      "wall_lag_ms": 160.6756301596759,
+      "scene_crc": 928504881,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.1119493544101715
+    },
+    {
+      "s": 7.910719230771065,
+      "valid_identity": true,
+      "forward_frame": 78,
+      "wall_lag_ms": 110.71923077106405,
+      "scene_crc": 2093235473,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "observer_work_ms": 4.086300730705261
+    },
+    {
+      "s": 7.9615896716713905,
+      "valid_identity": true,
+      "forward_frame": 79,
+      "wall_lag_ms": 61.58967167139018,
+      "scene_crc": 2093235473,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "resources": {
+        "pss_kib": 293721,
+        "summed_rss_kib": 510140,
+        "cpu_seconds_live_processes": 4.0,
+        "rchar_live_processes": 1916850169,
+        "storage_read_bytes_live_processes": 1862275072,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 112760,
+            "rss_kib": 193880
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150842,
+            "rss_kib": 209784
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689607,
+          "nsec": 991746385
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 16.715877689421177
+    },
+    {
+      "s": 8.011031329631805,
+      "valid_identity": true,
+      "forward_frame": 79,
+      "wall_lag_ms": 111.03132963180506,
+      "scene_crc": 4077073776,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.3342988938093185
+    },
+    {
+      "s": 8.062276259064674,
+      "valid_identity": true,
+      "forward_frame": 80,
+      "wall_lag_ms": 62.27625906467438,
+      "scene_crc": 4077073776,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 5.787903442978859
+    },
+    {
+      "s": 8.11097744293511,
+      "valid_identity": true,
+      "forward_frame": 80,
+      "wall_lag_ms": 110.97744293510914,
+      "scene_crc": 4106251176,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.044037312269211
+    },
+    {
+      "s": 8.161874544806778,
+      "valid_identity": true,
+      "forward_frame": 81,
+      "wall_lag_ms": 61.874544806778786,
+      "scene_crc": 4106251176,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "observer_work_ms": 5.325659178197384
+    },
+    {
+      "s": 8.211087494157255,
+      "valid_identity": true,
+      "forward_frame": 81,
+      "wall_lag_ms": 111.08749415725505,
+      "scene_crc": 3630766325,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "observer_work_ms": 4.088489338755608
+    },
+    {
+      "s": 8.261209590360522,
+      "valid_identity": true,
+      "forward_frame": 82,
+      "wall_lag_ms": 61.209590360521204,
+      "scene_crc": 3630766325,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "resources": {
+        "pss_kib": 306849,
+        "summed_rss_kib": 524296,
+        "cpu_seconds_live_processes": 4.1,
+        "rchar_live_processes": 1935717707,
+        "storage_read_bytes_live_processes": 1881554944,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 125884,
+            "rss_kib": 208028
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150846,
+            "rss_kib": 209792
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689608,
+          "nsec": 300664210
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 12.998424470424652
+    },
+    {
+      "s": 8.311410472728312,
+      "valid_identity": true,
+      "forward_frame": 82,
+      "wall_lag_ms": 111.41047272831095,
+      "scene_crc": 1173461095,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "observer_work_ms": 4.461020231246948
+    },
+    {
+      "s": 8.361327701248229,
+      "valid_identity": true,
+      "forward_frame": 83,
+      "wall_lag_ms": 61.32770124822784,
+      "scene_crc": 1173461095,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 4.182932898402214
+    },
+    {
+      "s": 8.411340797320008,
+      "valid_identity": true,
+      "forward_frame": 83,
+      "wall_lag_ms": 111.34079732000757,
+      "scene_crc": 4207580693,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 4.1974373161792755
+    },
+    {
+      "s": 8.461426842957735,
+      "valid_identity": true,
+      "forward_frame": 84,
+      "wall_lag_ms": 61.426842957734706,
+      "scene_crc": 4207580693,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 4.209262318909168
+    },
+    {
+      "s": 8.511465351097286,
+      "valid_identity": true,
+      "forward_frame": 84,
+      "wall_lag_ms": 111.46535109728539,
+      "scene_crc": 3963245301,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "resources": {
+        "pss_kib": 311975,
+        "summed_rss_kib": 528388,
+        "cpu_seconds_live_processes": 4.18,
+        "rchar_live_processes": 1945159556,
+        "storage_read_bytes_live_processes": 1891184640,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 131020,
+            "rss_kib": 212140
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150836,
+            "rss_kib": 209772
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689608,
+          "nsec": 568800424
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 13.097834773361683
+    },
+    {
+      "s": 8.561773156747222,
+      "valid_identity": true,
+      "forward_frame": 85,
+      "wall_lag_ms": 61.77315674722195,
+      "scene_crc": 3963245301,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 4.617180675268173
+    },
+    {
+      "s": 8.611589160747826,
+      "valid_identity": true,
+      "forward_frame": 85,
+      "wall_lag_ms": 111.5891607478261,
+      "scene_crc": 2086011161,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "observer_work_ms": 4.231633618474007
+    },
+    {
+      "s": 8.661681619472802,
+      "valid_identity": true,
+      "forward_frame": 86,
+      "wall_lag_ms": 61.68161947280204,
+      "scene_crc": 2086011161,
+      "variant": 22,
+      "mae": 0.0,
+      "second_mae": 4.901818181818182,
+      "observer_work_ms": 4.3606748804450035
+    },
+    {
+      "s": 8.711846272461116,
+      "valid_identity": true,
+      "forward_frame": 86,
+      "wall_lag_ms": 111.84627246111667,
+      "scene_crc": 3435676950,
+      "variant": 22,
+      "mae": 0.0,
+      "second_mae": 4.901818181818182,
+      "observer_work_ms": 5.269918590784073
+    },
+    {
+      "s": 8.761964964680374,
+      "valid_identity": true,
+      "forward_frame": 87,
+      "wall_lag_ms": 61.9649646803726,
+      "scene_crc": 3435676950,
+      "variant": 23,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "resources": {
+        "pss_kib": 289387,
+        "summed_rss_kib": 507864,
+        "cpu_seconds_live_processes": 4.29,
+        "rchar_live_processes": 2010282220,
+        "storage_read_bytes_live_processes": 1957474304,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 108416,
+            "rss_kib": 191584
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150852,
+            "rss_kib": 209804
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689608,
+          "nsec": 803221688
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 12.133177369832993
+    },
+    {
+      "s": 8.811999436467886,
+      "valid_identity": true,
+      "forward_frame": 87,
+      "wall_lag_ms": 111.9994364678849,
+      "scene_crc": 3241114300,
+      "variant": 23,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 5.203227512538433
+    },
+    {
+      "s": 8.868046120740473,
+      "valid_identity": true,
+      "forward_frame": 87,
+      "wall_lag_ms": 168.0461207404722,
+      "scene_crc": 3241114300,
+      "variant": 23,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 11.638264171779156
+    },
+    {
+      "s": 8.911974180489779,
+      "valid_identity": true,
+      "forward_frame": 88,
+      "wall_lag_ms": 111.97418048977781,
+      "scene_crc": 3241114300,
+      "variant": 24,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 4.043532535433769
+    },
+    {
+      "s": 8.96201597340405,
+      "valid_identity": true,
+      "forward_frame": 88,
+      "wall_lag_ms": 162.01597340404916,
+      "scene_crc": 1914898,
+      "variant": 24,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 3.931247629225254
+    },
+    {
+      "s": 9.012100995518267,
+      "valid_identity": true,
+      "forward_frame": 89,
+      "wall_lag_ms": 112.1009955182668,
+      "scene_crc": 1914898,
+      "variant": 25,
+      "mae": 0.0,
+      "second_mae": 4.68530303030303,
+      "resources": {
+        "pss_kib": 293493,
+        "summed_rss_kib": 509924,
+        "cpu_seconds_live_processes": 4.43,
+        "rchar_live_processes": 2047271176,
+        "storage_read_bytes_live_processes": 1995149312,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 112520,
+            "rss_kib": 193640
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150854,
+            "rss_kib": 209808
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689609,
+          "nsec": 28549048
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 10.865997523069382
+    },
+    {
+      "s": 9.062161441892385,
+      "valid_identity": true,
+      "forward_frame": 89,
+      "wall_lag_ms": 162.16144189238514,
+      "scene_crc": 1141843378,
+      "variant": 25,
+      "mae": 0.0,
+      "second_mae": 4.68530303030303,
+      "observer_work_ms": 4.0748827159404755
+    },
+    {
+      "s": 9.112178818322718,
+      "valid_identity": true,
+      "forward_frame": 90,
+      "wall_lag_ms": 112.17881832271814,
+      "scene_crc": 3330396477,
+      "variant": 26,
+      "mae": 0.0,
+      "second_mae": 5.06590909090909,
+      "observer_work_ms": 4.004399292171001
+    },
+    {
+      "s": 9.162212737835944,
+      "valid_identity": true,
+      "forward_frame": 91,
+      "wall_lag_ms": 62.212737835944054,
+      "scene_crc": 3330396477,
+      "variant": 27,
+      "mae": 0.0,
+      "second_mae": 5.034242424242423,
+      "observer_work_ms": 3.835489973425865
+    },
+    {
+      "s": 9.212293464690447,
+      "valid_identity": true,
+      "forward_frame": 91,
+      "wall_lag_ms": 112.29346469044721,
+      "scene_crc": 1440807020,
+      "variant": 27,
+      "mae": 0.0,
+      "second_mae": 5.034242424242423,
+      "observer_work_ms": 3.975899890065193
+    },
+    {
+      "s": 9.26238672528416,
+      "valid_identity": true,
+      "forward_frame": 92,
+      "wall_lag_ms": 62.38672528415812,
+      "scene_crc": 1440807020,
+      "variant": 28,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "resources": {
+        "pss_kib": 299663,
+        "summed_rss_kib": 516096,
+        "cpu_seconds_live_processes": 4.51,
+        "rchar_live_processes": 2056451883,
+        "storage_read_bytes_live_processes": 2004471808,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 118688,
+            "rss_kib": 199808
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150856,
+            "rss_kib": 209812
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689609,
+          "nsec": 315172797
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 14.829695224761963
+    },
+    {
+      "s": 9.31243088375777,
+      "valid_identity": true,
+      "forward_frame": 92,
+      "wall_lag_ms": 112.430883757769,
+      "scene_crc": 1566981368,
+      "variant": 28,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.052797332406044
+    },
+    {
+      "s": 9.362520130351186,
+      "valid_identity": true,
+      "forward_frame": 93,
+      "wall_lag_ms": 62.52013035118509,
+      "scene_crc": 1566981368,
+      "variant": 29,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.263711161911488
+    },
+    {
+      "s": 9.412552556023002,
+      "valid_identity": true,
+      "forward_frame": 93,
+      "wall_lag_ms": 112.55255602300096,
+      "scene_crc": 3570042141,
+      "variant": 29,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454,
+      "observer_work_ms": 4.1748350486159325
+    },
+    {
+      "s": 9.46265900041908,
+      "valid_identity": true,
+      "forward_frame": 94,
+      "wall_lag_ms": 62.6590004190799,
+      "scene_crc": 3570042141,
+      "variant": 30,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 4.191650077700615
+    },
+    {
+      "s": 9.512639380060136,
+      "valid_identity": true,
+      "forward_frame": 94,
+      "wall_lag_ms": 112.63938006013596,
+      "scene_crc": 2573327699,
+      "variant": 30,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "resources": {
+        "pss_kib": 308915,
+        "summed_rss_kib": 525352,
+        "cpu_seconds_live_processes": 4.57,
+        "rchar_live_processes": 2065904617,
+        "storage_read_bytes_live_processes": 2014171136,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 127936,
+            "rss_kib": 209056
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150860,
+            "rss_kib": 209820
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689609,
+          "nsec": 551971381
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 12.658396735787392
+    },
+    {
+      "s": 9.562758160755038,
+      "valid_identity": true,
+      "forward_frame": 95,
+      "wall_lag_ms": 62.75816075503826,
+      "scene_crc": 2573327699,
+      "variant": 31,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 4.312388598918915
+    },
+    {
+      "s": 9.61276971641928,
+      "valid_identity": true,
+      "forward_frame": 95,
+      "wall_lag_ms": 112.76971641927958,
+      "scene_crc": 3885278660,
+      "variant": 31,
+      "mae": 0.0,
+      "second_mae": 5.0977272727272736,
+      "observer_work_ms": 4.170158877968788
+    },
+    {
+      "s": 9.66296842880547,
+      "valid_identity": true,
+      "forward_frame": 96,
+      "wall_lag_ms": 62.968428805469046,
+      "scene_crc": 3885278660,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 4.254649393260479
+    },
+    {
+      "s": 9.712870742194355,
+      "valid_identity": true,
+      "forward_frame": 96,
+      "wall_lag_ms": 112.87074219435311,
+      "scene_crc": 3854218917,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 4.120171070098877
+    },
+    {
+      "s": 9.763002597726882,
+      "valid_identity": true,
+      "forward_frame": 97,
+      "wall_lag_ms": 63.00259772688044,
+      "scene_crc": 3854218917,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "resources": {
+        "pss_kib": 317915,
+        "summed_rss_kib": 534356,
+        "cpu_seconds_live_processes": 4.66,
+        "rchar_live_processes": 2084778343,
+        "storage_read_bytes_live_processes": 2033422336,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 136932,
+            "rss_kib": 218052
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150864,
+            "rss_kib": 209828
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689609,
+          "nsec": 820176058
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 11.276713572442532
+    },
+    {
+      "s": 9.81302784383297,
+      "valid_identity": true,
+      "forward_frame": 97,
+      "wall_lag_ms": 113.0278438329686,
+      "scene_crc": 3372968901,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298,
+      "observer_work_ms": 4.312755540013313
+    },
+    {
+      "s": 9.86309911031276,
+      "valid_identity": true,
+      "forward_frame": 98,
+      "wall_lag_ms": 63.099110312759166,
+      "scene_crc": 3372968901,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.176246002316475
+    },
+    {
+      "s": 9.913156201131642,
+      "valid_identity": true,
+      "forward_frame": 98,
+      "wall_lag_ms": 113.15620113164115,
+      "scene_crc": 4128865988,
+      "variant": 2,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 3.9783045649528503
+    },
+    {
+      "s": 9.963265449739993,
+      "valid_identity": true,
+      "forward_frame": 99,
+      "wall_lag_ms": 63.26544973999226,
+      "scene_crc": 4128865988,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "observer_work_ms": 4.308377392590046
+    },
+    {
+      "s": 10.0133126238361,
+      "valid_identity": true,
+      "forward_frame": 99,
+      "wall_lag_ms": 113.31262383609975,
+      "scene_crc": 183255615,
+      "variant": 3,
+      "mae": 0.0,
+      "second_mae": 4.20560606060606,
+      "resources": {
+        "pss_kib": 290675,
+        "summed_rss_kib": 507104,
+        "cpu_seconds_live_processes": 4.72,
+        "rchar_live_processes": 2094208739,
+        "storage_read_bytes_live_processes": 2043101184,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 109704,
+            "rss_kib": 190824
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150852,
+            "rss_kib": 209804
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689610,
+          "nsec": 53970894
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 12.516124173998833
+    },
+    {
+      "s": 10.063376992940903,
+      "valid_identity": true,
+      "forward_frame": 100,
+      "wall_lag_ms": 63.37699294090271,
+      "scene_crc": 183255615,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 4.271773621439934
+    },
+    {
+      "s": 10.113495918922126,
+      "valid_identity": true,
+      "forward_frame": 100,
+      "wall_lag_ms": 113.4959189221263,
+      "scene_crc": 1124870265,
+      "variant": 4,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 5.041951313614845
+    },
+    {
+      "s": 10.163597264327109,
+      "valid_identity": true,
+      "forward_frame": 101,
+      "wall_lag_ms": 63.59726432710744,
+      "scene_crc": 1124870265,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 5.222118459641933
+    },
+    {
+      "s": 10.213627429679036,
+      "valid_identity": true,
+      "forward_frame": 101,
+      "wall_lag_ms": 113.62742967903472,
+      "scene_crc": 2267204704,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "observer_work_ms": 5.0255171954631805
+    },
+    {
+      "s": 10.263747671619058,
+      "valid_identity": true,
+      "forward_frame": 101,
+      "wall_lag_ms": 163.74767161905623,
+      "scene_crc": 2267204704,
+      "variant": 5,
+      "mae": 0.0,
+      "second_mae": 3.964545454545455,
+      "resources": {
+        "pss_kib": 296895,
+        "summed_rss_kib": 513340,
+        "cpu_seconds_live_processes": 4.83,
+        "rchar_live_processes": 2103625165,
+        "storage_read_bytes_live_processes": 2052771840,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 115908,
+            "rss_kib": 197028
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150868,
+            "rss_kib": 209836
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689610,
+          "nsec": 290219072
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 14.367378316819668
+    },
+    {
+      "s": 10.31385354977101,
+      "valid_identity": true,
+      "forward_frame": 102,
+      "wall_lag_ms": 113.85354977100981,
+      "scene_crc": 2267204704,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 4.494152031838894
+    },
+    {
+      "s": 10.363724115304649,
+      "valid_identity": true,
+      "forward_frame": 102,
+      "wall_lag_ms": 163.7241153046478,
+      "scene_crc": 2823194397,
+      "variant": 6,
+      "mae": 0.0,
+      "second_mae": 4.989848484848485,
+      "observer_work_ms": 4.081487655639648
+    },
+    {
+      "s": 10.413771726191044,
+      "valid_identity": true,
+      "forward_frame": 103,
+      "wall_lag_ms": 113.77172619104314,
+      "scene_crc": 2823194397,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 4.2259469628334045
+    },
+    {
+      "s": 10.4638601122424,
+      "valid_identity": true,
+      "forward_frame": 103,
+      "wall_lag_ms": 163.86011224239994,
+      "scene_crc": 804649810,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "observer_work_ms": 4.232863895595074
+    },
+    {
+      "s": 10.513890384696424,
+      "valid_identity": true,
+      "forward_frame": 104,
+      "wall_lag_ms": 113.89038469642365,
+      "scene_crc": 3971136711,
+      "variant": 8,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145,
+      "resources": {
+        "pss_kib": 306873,
+        "summed_rss_kib": 524344,
+        "cpu_seconds_live_processes": 4.98,
+        "rchar_live_processes": 2181894937,
+        "storage_read_bytes_live_processes": 2133143552,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 125884,
+            "rss_kib": 208028
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150870,
+            "rss_kib": 209840
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689610,
+          "nsec": 545010565
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 10.712886229157448
+    },
+    {
+      "s": 10.563976240344346,
+      "valid_identity": true,
+      "forward_frame": 105,
+      "wall_lag_ms": 63.97624034434557,
+      "scene_crc": 3971136711,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "observer_work_ms": 4.202799871563911
+    },
+    {
+      "s": 10.61396652366966,
+      "valid_identity": true,
+      "forward_frame": 105,
+      "wall_lag_ms": 113.96652366966009,
+      "scene_crc": 682237291,
+      "variant": 9,
+      "mae": 0.0,
+      "second_mae": 5.126212121212121,
+      "observer_work_ms": 4.003855399787426
+    },
+    {
+      "s": 10.664048120379448,
+      "valid_identity": true,
+      "forward_frame": 106,
+      "wall_lag_ms": 64.04812037944652,
+      "scene_crc": 682237291,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "observer_work_ms": 4.206803627312183
+    },
+    {
+      "s": 10.71412409003824,
+      "valid_identity": true,
+      "forward_frame": 106,
+      "wall_lag_ms": 114.12409003823853,
+      "scene_crc": 207419497,
+      "variant": 10,
+      "mae": 0.0,
+      "second_mae": 5.212575757575757,
+      "observer_work_ms": 4.175194539129734
+    },
+    {
+      "s": 10.765413392335176,
+      "valid_identity": true,
+      "forward_frame": 107,
+      "wall_lag_ms": 65.4133923351754,
+      "scene_crc": 207419497,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "resources": {
+        "pss_kib": 315113,
+        "summed_rss_kib": 531564,
+        "cpu_seconds_live_processes": 5.07,
+        "rchar_live_processes": 2215594537,
+        "storage_read_bytes_live_processes": 2167345152,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 134120,
+            "rss_kib": 215240
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150874,
+            "rss_kib": 209848
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689610,
+          "nsec": 819790279
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 14.599651098251343
+    },
+    {
+      "s": 10.81422751583159,
+      "valid_identity": true,
+      "forward_frame": 107,
+      "wall_lag_ms": 114.22751583158863,
+      "scene_crc": 2651368316,
+      "variant": 11,
+      "mae": 0.0,
+      "second_mae": 5.018636363636363,
+      "observer_work_ms": 4.096926189959049
+    },
+    {
+      "s": 10.864338506944478,
+      "valid_identity": true,
+      "forward_frame": 108,
+      "wall_lag_ms": 64.33850694447685,
+      "scene_crc": 2651368316,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.348610527813435
+    },
+    {
+      "s": 10.914348546415567,
+      "valid_identity": true,
+      "forward_frame": 108,
+      "wall_lag_ms": 114.34854641556669,
+      "scene_crc": 1996125524,
+      "variant": 12,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.1865091770887375
+    },
+    {
+      "s": 10.964523797854781,
+      "valid_identity": true,
+      "forward_frame": 109,
+      "wall_lag_ms": 64.5237978547808,
+      "scene_crc": 1996125524,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.315524362027645
+    },
+    {
+      "s": 11.0144734242931,
+      "valid_identity": true,
+      "forward_frame": 109,
+      "wall_lag_ms": 114.47342429310048,
+      "scene_crc": 1073674406,
+      "variant": 13,
+      "mae": 0.0,
+      "second_mae": 4.029242424242423,
+      "observer_work_ms": 4.152016714215279
+    },
+    {
+      "s": 11.064567024819553,
+      "valid_identity": true,
+      "forward_frame": 110,
+      "wall_lag_ms": 64.5670248195529,
+      "scene_crc": 1073674406,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "resources": {
+        "pss_kib": 297895,
+        "summed_rss_kib": 515372,
+        "cpu_seconds_live_processes": 5.16,
+        "rchar_live_processes": 2234525622,
+        "storage_read_bytes_live_processes": 2186633216,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 116900,
+            "rss_kib": 199044
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150876,
+            "rss_kib": 209852
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689611,
+          "nsec": 121375340
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 11.757333762943745
+    },
+    {
+      "s": 11.114592720754445,
+      "valid_identity": true,
+      "forward_frame": 110,
+      "wall_lag_ms": 114.5927207544446,
+      "scene_crc": 3162405052,
+      "variant": 14,
+      "mae": 0.0,
+      "second_mae": 4.884545454545456,
+      "observer_work_ms": 4.2604003101587296
+    },
+    {
+      "s": 11.164672791026533,
+      "valid_identity": true,
+      "forward_frame": 111,
+      "wall_lag_ms": 64.67279102653123,
+      "scene_crc": 3162405052,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.198415204882622
+    },
+    {
+      "s": 11.214737691916525,
+      "valid_identity": true,
+      "forward_frame": 111,
+      "wall_lag_ms": 114.73769191652394,
+      "scene_crc": 1317037402,
+      "variant": 15,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.2435405775904655
+    },
+    {
+      "s": 11.264831609092653,
+      "valid_identity": true,
+      "forward_frame": 112,
+      "wall_lag_ms": 64.83160909265173,
+      "scene_crc": 1317037402,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "observer_work_ms": 4.307106137275696
+    },
+    {
+      "s": 11.31490017939359,
+      "valid_identity": true,
+      "forward_frame": 112,
+      "wall_lag_ms": 114.90017939358843,
+      "scene_crc": 233263048,
+      "variant": 16,
+      "mae": 0.0,
+      "second_mae": 3.863181818181819,
+      "resources": {
+        "pss_kib": 302781,
+        "summed_rss_kib": 519236,
+        "cpu_seconds_live_processes": 5.23,
+        "rchar_live_processes": 2243998574,
+        "storage_read_bytes_live_processes": 2196271104,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 121784,
+            "rss_kib": 202904
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150878,
+            "rss_kib": 209856
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689611,
+          "nsec": 354557523
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 12.069771997630596
+    },
+    {
+      "s": 11.365184484049678,
+      "valid_identity": true,
+      "forward_frame": 113,
+      "wall_lag_ms": 65.18448404967714,
+      "scene_crc": 233263048,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "observer_work_ms": 4.430933855473995
+    },
+    {
+      "s": 11.414961782284081,
+      "valid_identity": true,
+      "forward_frame": 113,
+      "wall_lag_ms": 114.96178228408027,
+      "scene_crc": 1782060853,
+      "variant": 17,
+      "mae": 0.0,
+      "second_mae": 4.510000000000001,
+      "observer_work_ms": 3.933470696210861
+    },
+    {
+      "s": 11.465054622851312,
+      "valid_identity": true,
+      "forward_frame": 114,
+      "wall_lag_ms": 65.0546228513118,
+      "scene_crc": 1782060853,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "observer_work_ms": 4.25390899181366
+    },
+    {
+      "s": 11.515186183154583,
+      "valid_identity": true,
+      "forward_frame": 114,
+      "wall_lag_ms": 115.18618315458262,
+      "scene_crc": 3119017063,
+      "variant": 18,
+      "mae": 0.0,
+      "second_mae": 4.344545454545455,
+      "observer_work_ms": 5.084468051791191
+    },
+    {
+      "s": 11.565286608412862,
+      "valid_identity": true,
+      "forward_frame": 115,
+      "wall_lag_ms": 65.28660841286182,
+      "scene_crc": 3119017063,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "resources": {
+        "pss_kib": 312041,
+        "summed_rss_kib": 528500,
+        "cpu_seconds_live_processes": 5.31,
+        "rchar_live_processes": 2253451377,
+        "storage_read_bytes_live_processes": 2205888512,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 131040,
+            "rss_kib": 212160
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 150882,
+            "rss_kib": 209864
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689611,
+          "nsec": 621289732
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 11.88767608255148
+    },
+    {
+      "s": 11.61528455466032,
+      "valid_identity": true,
+      "forward_frame": 115,
+      "wall_lag_ms": 115.28455466032028,
+      "scene_crc": 2033963189,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 5.02972025424242
+    },
+    {
+      "s": 11.665433291345835,
+      "valid_identity": true,
+      "forward_frame": 115,
+      "wall_lag_ms": 165.43329134583473,
+      "scene_crc": 2033963189,
+      "variant": 19,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 5.332058295607567
+    },
+    {
+      "s": 11.715387552976608,
+      "valid_identity": true,
+      "forward_frame": 116,
+      "wall_lag_ms": 115.38755297660686,
+      "scene_crc": 2033963189,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 4.171040840446949
+    },
+    {
+      "s": 11.765413858927786,
+      "valid_identity": true,
+      "forward_frame": 116,
+      "wall_lag_ms": 165.41385892778493,
+      "scene_crc": 3223836815,
+      "variant": 20,
+      "mae": 0.0,
+      "second_mae": 2.7869696969696967,
+      "observer_work_ms": 4.140713252127171
+    },
+    {
+      "s": 11.815443564206362,
+      "valid_identity": true,
+      "forward_frame": 117,
+      "wall_lag_ms": 115.4435642063607,
+      "scene_crc": 3605240461,
+      "variant": 21,
+      "mae": 0.0,
+      "second_mae": 4.051363636363636,
+      "resources": {
+        "pss_kib": 322325,
+        "summed_rss_kib": 538784,
+        "cpu_seconds_live_processes": 5.45,
+        "rchar_live_processes": 2262360086,
+        "storage_read_bytes_live_processes": 2214965248,
+        "pids": [
+          1975508,
+          1975511,
+          1975512,
+          1975542
+        ],
+        "processes": [
+          {
+            "pid": 1975508,
+            "role": "browser",
+            "pss_kib": 137228,
+            "rss_kib": 218348
+          },
+          {
+            "pid": 1975511,
+            "role": "zygote",
+            "pss_kib": 12634,
+            "rss_kib": 53028
+          },
+          {
+            "pid": 1975512,
+            "role": "zygote",
+            "pss_kib": 17485,
+            "rss_kib": 53448
+          },
+          {
+            "pid": 1975542,
+            "role": "gpu-process",
+            "pss_kib": 154978,
+            "rss_kib": 213960
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689611,
+          "nsec": 838560469
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689659,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+      },
+      "observer_work_ms": 25.473393499851227
+    },
+    {
+      "s": 11.865534356795251,
+      "valid_identity": true,
+      "forward_frame": 118,
+      "wall_lag_ms": 65.53435679525066,
+      "scene_crc": 3605240461,
+      "variant": 22,
+      "mae": 0.0,
+      "second_mae": 4.901818181818182,
+      "observer_work_ms": 4.127558320760727
+    },
+    {
+      "s": 11.915578567422926,
+      "valid_identity": true,
+      "forward_frame": 118,
+      "wall_lag_ms": 115.57856742292572,
+      "scene_crc": 1499571804,
+      "variant": 22,
+      "mae": 0.0,
+      "second_mae": 4.901818181818182,
+      "observer_work_ms": 4.062805324792862
+    },
+    {
+      "s": 11.966106342151761,
+      "valid_identity": true,
+      "forward_frame": 119,
+      "wall_lag_ms": 66.1063421517607,
+      "scene_crc": 1499571804,
+      "variant": 23,
+      "mae": 0.0,
+      "second_mae": 4.517575757575757,
+      "observer_work_ms": 4.8273177817463875
+    }
+  ],
+  "seeks": [
+    {
+      "offset_ns": 25310000000,
+      "latency_ms": 147.3735524341464,
+      "variant": 29,
+      "mae": 0.0,
+      "second_mae": 4.624545454545454
+    },
+    {
+      "offset_ns": 48710000000,
+      "latency_ms": 126.05309393256903,
+      "variant": 7,
+      "mae": 0.0,
+      "second_mae": 3.9001515151515145
+    },
+    {
+      "offset_ns": 16110000000,
+      "latency_ms": 135.7334814965725,
+      "variant": 1,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298
+    },
+    {
+      "offset_ns": 0,
+      "latency_ms": 137.69594114273787,
+      "variant": 0,
+      "mae": 0.0,
+      "second_mae": 3.8253030303030298
+    }
+  ],
+  "cache": "cache-allowed; SHA256-read before launch",
+  "inspector_policy": "latest-before cursor, arrays/header collapsed; Native exact queries versus Lichtblick stream subscription",
+  "observation": "20 Hz image identity from 88 patch means; Scene CRC change is a lower bound, not a timestamp or GPU FPS",
+  "display_before": "Keyboard Control:\n  auto repeat:  on    key click percent:  0    LED mask:  00000000\n  XKB indicators:\n    00: Caps Lock:   off    01: Num Lock:    off    02: Scroll Lock: off\n    03: Compose:     off    04: Kana:        off    05: Sleep:       off\n    06: Suspend:     off    07: Mute:        off    08: Misc:        off\n    09: Mail:        off    10: Charging:    off    11: Shift Lock:  off\n    12: Group 2:     off    13: Mouse Keys:  off\n  auto repeat delay:  500    repeat rate:  33\n  auto repeating keys:  00ffffffdffffbbf\n                        fadfffefffedffff\n                        9fffffffffffffff\n                        fff7ffffffffffff\n  bell percent:  50    bell pitch:  400    bell duration:  100\nPointer Control:\n  acceleration:  2/1    threshold:  4\nScreen Saver:\n  prefer blanking:  yes    allow exposures:  yes\n  timeout:  0    cycle:  0\nColors:\n  default colormap:  0x20    BlackPixel:  0x0    WhitePixel:  0xffffff\nFont Path:\n  /usr/share/fonts/X11/misc,/usr/share/fonts/X11/Type1,built-ins\nDPMS (Display Power Management Signaling):\n  Standby: 0    Suspend: 0    Off: 0\n  DPMS is Enabled\n  Monitor is On\n",
+  "gpu_before": "Tue Oct 20 19:50:33 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 610.57.04              KMD Version: 610.57.04     CUDA UMD Version: 13.3     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 5070 Ti     On  |   00000000:02:00.0  On |                  N/A |\n|  0%   45C    P8             20W /  300W |   11351MiB /  16303MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A            4287      G   /usr/lib/xorg/Xorg                      354MiB |\n|    0   N/A  N/A            4482      G   /usr/bin/gnome-shell                     15MiB |\n|    0   N/A  N/A            4967      G   /usr/libexec/gnome-initial-setup         13MiB |\n|    0   N/A  N/A            5509      G   ...bin/snapd-desktop-integration          7MiB |\n|    0   N/A  N/A            5611      G   .../8736/usr/lib/firefox/firefox         10MiB |\n|    0   N/A  N/A            6736      G   /usr/bin/nautilus                        21MiB |\n|    0   N/A  N/A          603315      G   ...nap-store/1390/bin/snap-store         87MiB |\n|    0   N/A  N/A         3868901      C   ...-TTS-Server/.venv/bin/python3      10632MiB |\n|    0   N/A  N/A         4092338      G   ...rack-uuid=3190708988185955192         72MiB |\n+-----------------------------------------------------------------------------------------+\n",
+  "command": [
+    "/tmp/mcap-lichtblick-desktop/lichtblick-1.29.1-linux-x64/lichtblick",
+    "--no-sandbox",
+    "--force-multiple-windows",
+    "--user-data-dir=/tmp/mcap-layout-probe-6xdy9wcj",
+    "--remote-debugging-port=9298"
+  ],
+  "binary_sha256": "180eea79cebc825a7e7291b8c5ef387760773f2b03596751bda8e6e532a8b6c8",
+  "pid": 1975508,
+  "window": "0x3600004",
+  "gpu": {
+    "devices": [
+      {
+        "vendorId": 4318,
+        "deviceId": 11269,
+        "vendorString": "Google Inc. (NVIDIA Corporation)",
+        "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+        "driverVendor": "Nvidia",
+        "driverVersion": "610.57.04"
+      }
+    ],
+    "auxAttributes": {
+      "amdSwitchable": false,
+      "canSupportThreadedTextureMailbox": false,
+      "directRenderingVersion": "",
+      "displayType": "ANGLE_OPENGL",
+      "glExtensions": "GL_AMD_performance_monitor GL_ANGLE_blob_cache GL_ANGLE_client_arrays GL_ANGLE_clip_cull_distance GL_ANGLE_depth_texture GL_ANGLE_framebuffer_blit GL_ANGLE_framebuffer_multisample GL_ANGLE_get_serialized_context_string GL_ANGLE_get_tex_level_parameter GL_ANGLE_instanced_arrays GL_ANGLE_logic_op GL_ANGLE_memory_size GL_ANGLE_multiview_multisample GL_ANGLE_polygon_mode GL_ANGLE_program_binary_readiness_query GL_ANGLE_program_cache_control GL_ANGLE_provoking_vertex GL_ANGLE_renderability_validation GL_ANGLE_request_extension GL_ANGLE_robust_client_memory GL_ANGLE_shader_pixel_local_storage GL_ANGLE_shader_pixel_local_storage_coherent GL_ANGLE_stencil_texturing GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ANGLE_texture_multisample GL_ANGLE_texture_rectangle GL_ANGLE_translated_shader_source GL_APPLE_clip_distance GL_ARM_rgba8 GL_CHROMIUM_bind_generates_resource GL_CHROMIUM_bind_uniform_location GL_CHROMIUM_copy_texture GL_CHROMIUM_framebuffer_mixed_samples GL_CHROMIUM_lose_context GL_EXT_blend_func_extended GL_EXT_blend_minmax GL_EXT_clear_texture GL_EXT_clip_control GL_EXT_clip_cull_distance GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_compressed_ETC1_RGB8_sub_texture GL_EXT_conservative_depth GL_EXT_debug_label GL_EXT_debug_marker GL_EXT_depth_clamp GL_EXT_discard_framebuffer GL_EXT_disjoint_timer_query GL_EXT_draw_buffers GL_EXT_draw_buffers_indexed GL_EXT_float_blend GL_EXT_frag_depth GL_EXT_instanced_arrays GL_EXT_map_buffer_range GL_EXT_memory_object GL_EXT_memory_object_fd GL_EXT_multisample_compatibility GL_EXT_occlusion_query_boolean GL_EXT_polygon_offset_clamp GL_EXT_read_format_bgra GL_EXT_render_snorm GL_EXT_robustness GL_EXT_sRGB GL_EXT_sRGB_write_control GL_EXT_semaphore GL_EXT_semaphore_fd GL_EXT_shader_texture_lod GL_EXT_shadow_samplers GL_EXT_texture_border_clamp GL_EXT_texture_compression_bptc GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc_srgb GL_EXT_texture_filter_anisotropic GL_EXT_texture_format_BGRA8888 GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_norm16 GL_EXT_texture_rg GL_EXT_texture_sRGB_R8 GL_EXT_texture_sRGB_decode GL_EXT_texture_shadow_lod GL_EXT_texture_storage GL_EXT_texture_type_2_10_10_10_REV GL_EXT_unpack_subimage GL_KHR_blend_equation_advanced GL_KHR_blend_equation_advanced_coherent GL_KHR_debug GL_KHR_parallel_shader_compile GL_KHR_robustness GL_NV_fence GL_NV_framebuffer_blit GL_NV_pack_subimage GL_NV_pixel_buffer_object GL_NV_polygon_mode GL_NV_read_depth GL_NV_read_stencil GL_NV_robustness_video_memory_purge GL_NV_shader_noperspective_interpolation GL_OES_compressed_ETC1_RGB8_texture GL_OES_depth24 GL_OES_depth32 GL_OES_depth_texture GL_OES_draw_buffers_indexed GL_OES_element_index_uint GL_OES_fbo_render_mipmap GL_OES_get_program_binary GL_OES_mapbuffer GL_OES_packed_depth_stencil GL_OES_required_internalformat GL_OES_rgb8_rgba8 GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_standard_derivatives GL_OES_surfaceless_context GL_OES_texture_3D GL_OES_texture_border_clamp GL_OES_texture_float GL_OES_texture_float_linear GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_texture_npot GL_OES_texture_stencil8 GL_OES_texture_storage_multisample_2d_array GL_OES_vertex_array_object GL_OVR_multiview GL_OVR_multiview2 ",
+      "glImplementationParts": "(gl=egl-angle,angle=opengl)",
+      "glRenderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+      "glResetNotificationStrategy": 33362,
+      "glVendor": "Google Inc. (NVIDIA Corporation)",
+      "glVersion": "OpenGL ES 3.0 (ANGLE 2.1 git hash: e68ad989e7b5)",
+      "glWsExtensions": "EGL_EXT_create_context_robustness EGL_KHR_create_context EGL_KHR_get_all_proc_addresses EGL_ANGLE_create_context_webgl_compatibility EGL_CHROMIUM_create_context_bind_generates_resource EGL_EXT_pixel_format_float EGL_KHR_surfaceless_context EGL_ANGLE_display_texture_share_group EGL_ANGLE_display_semaphore_share_group EGL_ANGLE_create_context_client_arrays EGL_ANGLE_program_cache_control EGL_ANGLE_robust_resource_initialization EGL_ANGLE_create_context_extensions_enabled EGL_ANDROID_blob_cache EGL_ANDROID_recordable EGL_ANGLE_create_context_backwards_compatible EGL_KHR_create_context_no_error EGL_NOK_texture_from_pixmap EGL_NV_robustness_video_memory_purge EGL_KHR_reusable_sync EGL_ANGLE_context_virtualization EGL_ANGLE_memory_usage_report ",
+      "glWsVendor": "Google Inc. (NVIDIA Corporation)",
+      "glWsVersion": "1.5 (ANGLE 2.1 git hash: e68ad989e7b5)",
+      "hardwareSupportsVulkan": false,
+      "inProcessGpu": false,
+      "initializationTime": 0.188589,
+      "isAsan": false,
+      "isClangCoverage": false,
+      "jpegDecodeAcceleratorSupported": false,
+      "maxMsaaSamples": "8",
+      "optimus": false,
+      "passthroughCmdDecoder": true,
+      "pixelShaderVersion": "3.00",
+      "processCrashCount": 0,
+      "sandboxed": false,
+      "skiaBackendType": "GaneshGL",
+      "subpixelFontRendering": true,
+      "targetCpuBits": 64,
+      "vertexShaderVersion": "3.00",
+      "visibilityCallbackCallCount": 0
+    },
+    "featureStatus": {
+      "2d_canvas": "enabled",
+      "direct_rendering_display_compositor": "disabled_off_ok",
+      "gpu_compositing": "enabled",
+      "multiple_raster_threads": "enabled_on",
+      "opengl": "enabled_on",
+      "rasterization": "enabled",
+      "raw_draw": "disabled_off_ok",
+      "skia_graphite": "disabled_off",
+      "trees_in_viz": "disabled_off",
+      "video_decode": "enabled",
+      "video_encode": "disabled_software",
+      "vulkan": "disabled_off",
+      "webgl": "enabled",
+      "webgpu": "enabled",
+      "webgpu_on_vk_via_gl_interop": "enabled",
+      "webnn": "disabled_off"
+    },
+    "driverBugWorkarounds": [
+      "disable_discard_framebuffer",
+      "disable_rgb_to_yuv_conversion",
+      "enable_webgl_timer_query_extensions",
+      "exit_on_context_lost",
+      "force_cube_complete",
+      "init_gl_position_in_vertex_shader",
+      "unpack_overlapping_rows_separately_unpack_buffer",
+      "disabled_extension_GL_KHR_blend_equation_advanced",
+      "disabled_extension_GL_KHR_blend_equation_advanced_coherent",
+      "disabled_extension_GL_MESA_framebuffer_flip_y"
+    ],
+    "videoDecoding": [],
+    "videoEncoding": []
+  },
+  "layout": {
+    "configById": {
+      "3D!18i6zy7": {
+        "layers": {
+          "845139cb-26bc-40b3-8161-8ab60af4baf5": {
+            "visible": true,
+            "frameLocked": true,
+            "label": "Grid",
+            "instanceId": "845139cb-26bc-40b3-8161-8ab60af4baf5",
+            "layerId": "foxglove.Grid",
+            "size": 10,
+            "divisions": 10,
+            "lineWidth": 1,
+            "color": "#248eff",
+            "position": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "order": 1
+          }
+        },
+        "cameraState": {
+          "distance": 20,
+          "perspective": true,
+          "phi": 60,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "targetOffset": [
+            0,
+            0,
+            0
+          ],
+          "targetOrientation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "thetaOffset": 45,
+          "fovy": 45,
+          "near": 0.5,
+          "far": 5000
+        },
+        "followMode": "follow-pose",
+        "scene": {
+          "transforms": {
+            "showLabel": false,
+            "axisScale": 0
+          }
+        },
+        "transforms": {
+          "base_scan": {
+            "visible": false
+          }
+        },
+        "topics": {
+          "/scan": {
+            "visible": true,
+            "frameLocked": false,
+            "pointSize": 5,
+            "pointShape": "circle",
+            "decayTime": 0,
+            "colorMode": "flat",
+            "flatColor": "rgba(51, 209, 255, 0.88)",
+            "colorField": "range"
+          }
+        },
+        "publish": {
+          "type": "point",
+          "poseTopic": "/move_base_simple/goal",
+          "pointTopic": "/clicked_point",
+          "poseEstimateTopic": "/initialpose",
+          "poseEstimateXDeviation": 0.5,
+          "poseEstimateYDeviation": 0.5,
+          "poseEstimateThetaDeviation": 0.26179939
+        },
+        "imageMode": {},
+        "followTf": "base_scan"
+      },
+      "RawMessagesVirtual!os6rgs": {
+        "diffEnabled": false,
+        "diffMethod": "custom",
+        "diffTopicPath": "",
+        "showFullMessageForDiff": false,
+        "topicPath": ""
+      },
+      "Image!3mnp456": {
+        "cameraState": {
+          "distance": 20,
+          "perspective": true,
+          "phi": 60,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "targetOffset": [
+            0,
+            0,
+            0
+          ],
+          "targetOrientation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "thetaOffset": 45,
+          "fovy": 45,
+          "near": 0.5,
+          "far": 5000
+        },
+        "followMode": "follow-pose",
+        "scene": {},
+        "transforms": {},
+        "topics": {},
+        "layers": {},
+        "publish": {
+          "type": "point",
+          "poseTopic": "/move_base_simple/goal",
+          "pointTopic": "/clicked_point",
+          "poseEstimateTopic": "/initialpose",
+          "poseEstimateXDeviation": 0.5,
+          "poseEstimateYDeviation": 0.5,
+          "poseEstimateThetaDeviation": 0.26179939
+        },
+        "imageMode": {
+          "imageTopic": "/camera/0"
+        }
+      }
+    },
+    "globalVariables": {},
+    "userNodes": {},
+    "playbackConfig": {
+      "speed": 1
+    },
+    "layout": {
+      "first": "3D!18i6zy7",
+      "second": {
+        "first": "Image!3mnp456",
+        "second": "RawMessagesVirtual!os6rgs",
+        "direction": "column",
+        "splitPercentage": 30
+      },
+      "direction": "row",
+      "splitPercentage": 70
+    }
+  },
+  "subscriptions": [
+    {
+      "topic": "/camera/0",
+      "preloadType": "partial"
+    },
+    {
+      "topic": "/scan",
+      "preloadType": "partial"
+    }
+  ],
+  "selected_recording_topics": [
+    "/camera/0",
+    "/scan"
+  ],
+  "viewport": [
+    1920,
+    1080,
+    1
+  ],
+  "canvases": [
+    {
+      "width": 1120,
+      "height": 926,
+      "rect": {
+        "x": 319.984375,
+        "y": 76,
+        "width": 1120,
+        "height": 926,
+        "top": 76,
+        "right": 1439.984375,
+        "bottom": 1002,
+        "left": 319.984375
+      }
+    },
+    {
+      "width": 480,
+      "height": 255,
+      "rect": {
+        "x": 1439.984375,
+        "y": 76,
+        "width": 480,
+        "height": 255,
+        "top": 76,
+        "right": 1919.984375,
+        "bottom": 331,
+        "left": 1439.984375
+      }
+    }
+  ],
+  "gtk_frame_extents": "_GTK_FRAME_EXTENTS(CARDINAL) = 16, 16, 10, 32\n",
+  "references_sha256": "c0b7d6443331249c600dbf9dcd04d14a3efaecc7d5ed8bf8fef613aa18ff2fac",
+  "before_ui": {
+    "current": {
+      "sec": 1735689616,
+      "nsec": 110000000
+    },
+    "start": {
+      "sec": 1735689600,
+      "nsec": 0
+    },
+    "end": {
+      "sec": 1735689659,
+      "nsec": 900000000
+    },
+    "playing": false,
+    "visibility": "visible",
+    "text": "3840x2160-8cam-10hz-no\nne-8MiB-60s.mcap\nPanel\nTopics\nAlerts\nLayouts\nSelect a panel to edit its settings.\n3D\n3D\n/camera/0\nNo topic selected\nSync\noff\n1\u00d7"
+  },
+  "before_play": {
+    "pss_kib": 270983,
+    "summed_rss_kib": 487300,
+    "cpu_seconds_live_processes": 1.14,
+    "rchar_live_processes": 776834404,
+    "storage_read_bytes_live_processes": 728489984,
+    "pids": [
+      1975508,
+      1975511,
+      1975512,
+      1975542
+    ],
+    "processes": [
+      {
+        "pid": 1975508,
+        "role": "browser",
+        "pss_kib": 103232,
+        "rss_kib": 184352
+      },
+      {
+        "pid": 1975511,
+        "role": "zygote",
+        "pss_kib": 12634,
+        "rss_kib": 53028
+      },
+      {
+        "pid": 1975512,
+        "role": "zygote",
+        "pss_kib": 17485,
+        "rss_kib": 53448
+      },
+      {
+        "pid": 1975542,
+        "role": "gpu-process",
+        "pss_kib": 137632,
+        "rss_kib": 196472
+      }
+    ]
+  },
+  "after_play": {
+    "pss_kib": 294585,
+    "summed_rss_kib": 511048,
+    "cpu_seconds_live_processes": 5.5,
+    "rchar_live_processes": 2271517575,
+    "storage_read_bytes_live_processes": 2224295936,
+    "pids": [
+      1975508,
+      1975511,
+      1975512,
+      1975542
+    ],
+    "processes": [
+      {
+        "pid": 1975508,
+        "role": "browser",
+        "pss_kib": 109484,
+        "rss_kib": 190604
+      },
+      {
+        "pid": 1975511,
+        "role": "zygote",
+        "pss_kib": 12634,
+        "rss_kib": 53028
+      },
+      {
+        "pid": 1975512,
+        "role": "zygote",
+        "pss_kib": 17485,
+        "rss_kib": 53448
+      },
+      {
+        "pid": 1975542,
+        "role": "gpu-process",
+        "pss_kib": 154982,
+        "rss_kib": 213968
+      }
+    ]
+  },
+  "gpu_after": "Tue Oct 20 19:50:49 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 610.57.04              KMD Version: 610.57.04     CUDA UMD Version: 13.3     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 5070 Ti     On  |   00000000:02:00.0  On |                  N/A |\n|  0%   46C    P8             33W /  300W |   11560MiB /  16303MiB |     12%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A            4287      G   /usr/lib/xorg/Xorg                      338MiB |\n|    0   N/A  N/A            4482      G   /usr/bin/gnome-shell                     15MiB |\n|    0   N/A  N/A            4967      G   /usr/libexec/gnome-initial-setup         13MiB |\n|    0   N/A  N/A            5509      G   ...bin/snapd-desktop-integration          7MiB |\n|    0   N/A  N/A            5611      G   .../8736/usr/lib/firefox/firefox         10MiB |\n|    0   N/A  N/A            6736      G   /usr/bin/nautilus                        21MiB |\n|    0   N/A  N/A          603315      G   ...nap-store/1390/bin/snap-store         87MiB |\n|    0   N/A  N/A         1975542      G   ...rack-uuid=3190708988185955192        215MiB |\n|    0   N/A  N/A         3868901      C   ...-TTS-Server/.venv/bin/python3      10632MiB |\n|    0   N/A  N/A         4092338      G   ...rack-uuid=3190708988185955192         72MiB |\n+-----------------------------------------------------------------------------------------+\n",
+  "display_after": "Keyboard Control:\n  auto repeat:  on    key click percent:  0    LED mask:  00000000\n  XKB indicators:\n    00: Caps Lock:   off    01: Num Lock:    off    02: Scroll Lock: off\n    03: Compose:     off    04: Kana:        off    05: Sleep:       off\n    06: Suspend:     off    07: Mute:        off    08: Misc:        off\n    09: Mail:        off    10: Charging:    off    11: Shift Lock:  off\n    12: Group 2:     off    13: Mouse Keys:  off\n  auto repeat delay:  500    repeat rate:  33\n  auto repeating keys:  00ffffffdffffbbf\n                        fadfffefffedffff\n                        9fffffffffffffff\n                        fff7ffffffffffff\n  bell percent:  50    bell pitch:  400    bell duration:  100\nPointer Control:\n  acceleration:  2/1    threshold:  4\nScreen Saver:\n  prefer blanking:  yes    allow exposures:  yes\n  timeout:  0    cycle:  0\nColors:\n  default colormap:  0x20    BlackPixel:  0x0    WhitePixel:  0xffffff\nFont Path:\n  /usr/share/fonts/X11/misc,/usr/share/fonts/X11/Type1,built-ins\nDPMS (Display Power Management Signaling):\n  Standby: 0    Suspend: 0    Off: 0\n  DPMS is Enabled\n  Monitor is On\n",
+  "summary": {
+    "image_updates_hz": 9.945532903825413,
+    "progress_hz": 9.945532903825413,
+    "lag_median_ms": 105.35222450271232,
+    "lag_p95_ms": 162.01597340404916,
+    "scene_changes_hz": 9.945532903825413,
+    "peak_sampled_pss_mib": 314.7705078125,
+    "cpu_one_core_percent": 36.436246472601376,
+    "rejected_samples": 0,
+    "samples": 240,
+    "max_sample_gap_ms": 58.20323247462511
+  },
+  "exit_code": 0,
+  "total_wall_s": 15.391242104582489
+}
