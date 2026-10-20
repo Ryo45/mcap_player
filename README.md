@@ -32,7 +32,7 @@ topicを調べても、CameraやSceneの再生対象は変わりません。大�
 - 複数の JPEG カメラ（`sensor_msgs/msg/CompressedImage`）を一覧・フォーカス表示
 - カメラ画像上に計画経路を投影
 - BEV にグリッド、車両位置、計画経路を表示
-- 3D ビューに車両姿勢、軌跡、LaserScan を表示
+- 3D ビューに車両姿勢、軌跡、LaserScan / PointCloud2を表示
 - `/odom` の位置、向き、速度、ヨーレートを再生位置に同期して表示
 - `/tf` と `/tf_static` による座標変換
 
@@ -132,9 +132,23 @@ cargo run -p viewer-native --features ros2-live -- \
 - カメラ: JPEG の `sensor_msgs/msg/CompressedImage`
 - 計画経路: `/planning/path` の `nav_msgs/msg/Path`
 - 車両状態: `/odom`
-- 点群表示: `LaserScan`
+- 点群表示: LaserScan / PointCloud2（XYZ・RGB/RGBA・intensity着色。PointCloud2は記録入力）
 - カメラ内部パラメータ: `config/camera_calibration.json`
 - 未対応: Raw `sensor_msgs/msg/Image`、H.264、ブラウザでの live 入力
+
+### PointCloud2を表示する
+
+カメラを含まない点群記録は、Sceneだけのレイアウトで開けます。
+
+~~~sh
+cargo run -p viewer-native -- --mcap PATH --layout scene \
+  --point-cloud-topic /points --fixed-frame lidar --no-platform-geometry
+~~~
+
+--fixed-frameは記録のTFまたは点群headerに実在するframe名へ変更してください。
+Scene上部でAuto / Solid / RGB・RGBA / Intensityを選択でき、強度の表示範囲も指定できます。
+Webでは開く前にPhysical settingsのPoint cloud topicとWorld frameを設定します。
+[対応形式・リソース上限・着色のルール](docs/point_cloud2.md)を参照してください。
 
 ## 監視・解析用の画面
 
@@ -159,7 +173,7 @@ field Plotにアクセスできます。通常画面の追加sidebarとInspector
 現在値はcontinuous featureの共有状態から表示し、速度overviewの全記録読み込みは行いません。
 点群・TF・Odometry・Pathは存在する場合に使用します。フロントCameraは
 `/camera/front/image/compressed`、他のtopic bindingは`config/workspace_bindings.json`を使用します。
-点群入力は現在`LaserScan`です。軌跡overlayにはPath、TF、Camera calibrationが必要で、欠落時は状態を表示します。
+点群入力はLaserScan / PointCloud2です。軌跡overlayにはPath、TF、Camera calibrationが必要で、欠落時は状態を表示します。
 Generic Inspectorは記録のcursor query専用で、Liveの任意topic値閲覧は今後の対応です。
 このpresetはNativeのみです。
 

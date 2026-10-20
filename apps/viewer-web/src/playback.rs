@@ -18,8 +18,21 @@ use viewer_core::{PlaybackPerformance, StageTiming};
 const WEB_WORKSPACE_BINDINGS: &str = include_str!("../../../config/workspace_bindings.json");
 
 pub(crate) fn web_workspace_bindings() -> WorkspaceBindings {
-    serde_json::from_str(WEB_WORKSPACE_BINDINGS)
-        .expect("bundled Web workspace bindings must be valid")
+    #[allow(unused_mut)]
+    let mut bindings: WorkspaceBindings = serde_json::from_str(WEB_WORKSPACE_BINDINGS)
+        .expect("bundled Web workspace bindings must be valid");
+    #[cfg(target_arch = "wasm32")]
+    {
+        use wasm_bindgen::JsCast;
+        if let Some(input) = web_sys::window()
+            .and_then(|w| w.document())
+            .and_then(|d| d.get_element_by_id("point-cloud-topic"))
+            .and_then(|e| e.dyn_into::<web_sys::HtmlInputElement>().ok())
+        {
+            bindings.point_cloud_topic = input.value();
+        }
+    }
+    bindings
 }
 
 #[cfg(target_arch = "wasm32")]

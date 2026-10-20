@@ -209,6 +209,7 @@ impl App {
                 diagnostics,
                 focused_camera,
                 accumulate_points,
+                coloring: self.workspace.point_cloud_coloring(),
                 error,
             });
             let render_started = Instant::now();

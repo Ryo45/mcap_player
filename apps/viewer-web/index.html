@@ -40,13 +40,16 @@
         <h2>3D View · <span id="bev-status">WebGPU: waiting</span></h2>
         <select id="view-mode" aria-label="View mode"><option value="scene">3D Scene</option><option value="bev">BEV</option></select>
         <select id="scene-camera-mode" aria-label="3D camera mode"><option value="chase">Chase</option><option value="free">Free</option><option value="eye">Vehicle eye</option></select>
-        <label><input id="accumulate-scans" type="checkbox"> Accumulate scans</label>
+        <label><input id="accumulate-scans" type="checkbox"> Accumulate points</label>
+        <select id="point-cloud-color" aria-label="Point cloud color"><option value="auto">Auto color</option><option value="solid">Solid</option><option value="rgb">RGB / RGBA</option><option value="intensity">Intensity</option></select>
+        <label>Intensity range <input id="intensity-min" type="number" value="0" step="any" style="width:5em">–<input id="intensity-max" type="number" value="255" step="any" style="width:5em"></label>
         <button id="reset-scene" type="button">Reset view</button>
       </div>
       <details class="physical-settings">
         <summary id="platform-geometry-label">Platform geometry / path / calibration</summary>
         <label><input id="platform-enabled" type="checkbox" checked> Show configured physical body</label>
         <label>Platform geometry JSON <input id="platform-geometry-file" type="file" accept=".json"></label>
+        <label>Point cloud topic (before opening recording) <input id="point-cloud-topic" value="/scan" size="20" maxlength="1024"></label>
         <label>World frame <input id="fixed-frame" value="odom" size="12"></label>
         <label>Ground frame (empty = original Path z) <input id="ground-frame" value="" size="16"></label>
         <label>Camera calibration JSON <input id="camera-calibration-file" type="file" accept=".json"></label>

@@ -16,6 +16,8 @@ use viewer_core::{
 };
 use viewer_mcap::{FileMessageStream, LatestMessageReader, McapSource};
 
+mod geometry;
+
 const BASE: u64 = 1_735_689_600_000_000_000;
 
 #[derive(Clone, Copy)]
@@ -41,6 +43,9 @@ impl Default for CameraFixture {
 fn main() -> Result<()> {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
     match args.first().map(String::as_str) {
+        Some("generate-geometry") if args.len() == 5 => {
+            geometry::generate(&args[1], &args[2], args[3].parse()?, args[4].parse()?)
+        }
         Some("extract-jpeg") if args.len() == 5 => {
             extract_jpeg(&args[1], &args[2], &args[3], args[4].parse()?)
         }
@@ -83,7 +88,7 @@ fn main() -> Result<()> {
             args.get(6).map(String::as_str).unwrap_or("rgb"),
         ),
         _ => bail!(
-            "generate PATH none|zstd|lz4 CHUNK_BYTES mixed|grouped SECONDS jpeg|raw|scan [WIDTH HEIGHT [VARIANTS [CAMERA_HZ [CAMERAS]]]]\nrechunk INPUT OUTPUT none|zstd|lz4 CHUNK_BYTES\nextract-jpeg INPUT OUTPUT_DIR TOPIC COUNT\nrun PATH scan|all forward|indexed|seek|seek-cached|repeat|repeat-cached SEEK_COUNT [TICK_MS [rgb|rgba]]"
+            "generate-geometry PATH scan|cloud POINTS SECONDS\ngenerate PATH none|zstd|lz4 CHUNK_BYTES mixed|grouped SECONDS jpeg|raw|scan [WIDTH HEIGHT [VARIANTS [CAMERA_HZ [CAMERAS]]]]\nrechunk INPUT OUTPUT none|zstd|lz4 CHUNK_BYTES\nextract-jpeg INPUT OUTPUT_DIR TOPIC COUNT\nrun PATH scan|all forward|indexed|seek|seek-cached|repeat|repeat-cached SEEK_COUNT [TICK_MS [rgb|rgba]]"
         ),
     }
 }

@@ -70,7 +70,7 @@ impl Graphics {
         scene_renderer.render(&device, &queue, SceneFrame::default());
         let scene_texture_id = egui_renderer.register_native_texture(
             &device,
-            scene_renderer.view(),
+            &scene_renderer.encoded_view(),
             wgpu::FilterMode::Linear,
         );
         Ok(Self {

@@ -74,6 +74,18 @@ pub(super) fn update_scene_presentation(
         .point_cloud()
         .map_or(&empty, |scene| scene.point_cloud());
     let accumulate: HtmlInputElement = element("accumulate-scans");
+    let color: HtmlSelectElement = element("point-cloud-color");
+    let min: HtmlInputElement = element("intensity-min");
+    let max: HtmlInputElement = element("intensity-max");
+    let coloring = viewer_core::PointCloudColoring {
+        mode: match color.value().as_str() {
+            "solid" => viewer_core::PointCloudColorMode::Solid,
+            "rgb" => viewer_core::PointCloudColorMode::Rgb,
+            "intensity" => viewer_core::PointCloudColorMode::Intensity,
+            _ => viewer_core::PointCloudColorMode::Auto,
+        },
+        intensity_range: [min.value_as_number() as f32, max.value_as_number() as f32],
+    };
     let scene = view.scene.build(viewer_core::ScenePresentationInput {
         path: session.path().state(),
         telemetry: session.odometry().state(),
@@ -82,11 +94,12 @@ pub(super) fn update_scene_presentation(
         platform,
         path_projection: policy,
         accumulate: accumulate.checked(),
+        coloring,
     });
     let bev = scene.bev;
     let info: HtmlElement = element("scene-info");
     info.set_inner_text(&format!(
-        "Scan: {} visible points · {}",
+        "Point cloud: {} visible points · {}",
         scene.cloud.len(),
         scene.diagnostics.current_tf_error.as_ref().map_or_else(
             || scene
@@ -100,6 +113,9 @@ pub(super) fn update_scene_presentation(
             )
         )
     ));
+    if let Some(error) = scene.diagnostics.point_cloud_color_error {
+        info.set_inner_text(&format!("{} · {error}", info.inner_text()));
+    }
     for e in [
         &scene.diagnostics.path_tf_error,
         &scene.diagnostics.platform_tf_error,
@@ -135,6 +151,7 @@ pub(super) fn update_scene_presentation(
             platform: scene.platform,
             path: scene.path,
             cloud: scene.cloud,
+            cloud_colors: scene.cloud_colors,
         },
     );
 }

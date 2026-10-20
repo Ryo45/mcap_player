@@ -133,6 +133,16 @@ impl PanelRuntimeStore {
             .is_some_and(|panel| panel.set_accumulate_points(accumulate))
     }
 
+    pub(crate) fn first_point_cloud_coloring(&self) -> viewer_core::PointCloudColoring {
+        self.panels
+            .values()
+            .find_map(|panel| match panel {
+                NativePanel::Scene(panel) => Some(panel.state.coloring),
+                _ => None,
+            })
+            .unwrap_or_default()
+    }
+
     pub(crate) fn first_accumulate_points(&self) -> bool {
         self.panels
             .values()

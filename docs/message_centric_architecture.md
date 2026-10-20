@@ -370,7 +370,7 @@ source replacement/seek lifecycle and comparison with Inspector and Plot queries
 
 See [module_structure.md](module_structure.md) for current implementation owners.
 Path materialization uses `PathFrame`/`PathState` independently of its BEV/Scene
-views. `PointCloudController` owns LaserScan materialization; Scene presentation
+views. `PointCloudController` owns LaserScan / PointCloud2 materialization; Scene presentation
 retains TF projection and accumulation. Shared ROS schema and artifact identity
 are source-neutral core concepts. Module moves preserve playback/query contracts.
 
@@ -381,3 +381,5 @@ at measurement time and creates world Scene geometry, reference-frame BEV geomet
 and camera-time projection. Platform bounds are independent core facts, configured
 by the frontend; no physical feature has a renderer correction multiplier.
 See [physical_geometry.md](physical_geometry.md) for contracts and bounded TF limits.
+
+PointCloud2 XYZ and source RGBA/intensity attributes are decoded once in core; Scene presentation owns color mode and fixed intensity-range mapping. Native/Web use the same linear RGBA and existing TF/accumulation path. See [PointCloud2](point_cloud2.md).

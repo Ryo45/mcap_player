@@ -15,6 +15,8 @@ pub struct SceneFrame<'a> {
     /// ROS world-frame points: +x forward, +y left, +z up.
     /// The acquisition-time pose has already been applied.
     pub cloud: &'a [[f32; 3]],
+    /// Linear RGBA supplied by presentation, aligned with cloud.
+    pub cloud_colors: &'a [[f32; 4]],
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -68,6 +70,13 @@ impl Default for SceneCamera {
 struct Vertex {
     position: [f32; 3],
     color: [f32; 3],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Pod, Zeroable)]
+struct PointVertex {
+    position: [f32; 3],
+    color: [f32; 4],
 }
 
 #[repr(C)]
@@ -200,13 +209,20 @@ impl SceneRenderer {
                 module: &shader,
                 entry_point: Some("vs_point"),
                 buffers: &[wgpu::VertexBufferLayout {
-                    array_stride: std::mem::size_of::<[f32; 3]>() as u64,
+                    array_stride: std::mem::size_of::<PointVertex>() as u64,
                     step_mode: wgpu::VertexStepMode::Instance,
-                    attributes: &[wgpu::VertexAttribute {
-                        format: wgpu::VertexFormat::Float32x3,
-                        offset: 0,
-                        shader_location: 0,
-                    }],
+                    attributes: &[
+                        wgpu::VertexAttribute {
+                            format: wgpu::VertexFormat::Float32x3,
+                            offset: 0,
+                            shader_location: 0,
+                        },
+                        wgpu::VertexAttribute {
+                            format: wgpu::VertexFormat::Float32x4,
+                            offset: 12,
+                            shader_location: 1,
+                        },
+                    ],
                 }],
                 compilation_options: Default::default(),
             },
@@ -385,8 +401,18 @@ impl SceneRenderer {
         self.last_cloud_revision = None;
     }
 
+    /// Linear sampling view for color-managed presentation.
     pub fn view(&self) -> &wgpu::TextureView {
         &self.view
+    }
+
+    /// Encoded sRGB bytes without automatic decoding, for UI compositors such as egui
+    /// whose texture contract expects gamma-encoded values.
+    pub fn encoded_view(&self) -> wgpu::TextureView {
+        self.texture.create_view(&wgpu::TextureViewDescriptor {
+            format: Some(wgpu::TextureFormat::Rgba8Unorm),
+            ..Default::default()
+        })
     }
 
     pub fn metrics(&self) -> SceneMetrics {
@@ -483,11 +509,19 @@ fn camera_pose(
     }
 }
 
-fn world_cloud(frame: SceneFrame<'_>) -> impl Iterator<Item = [f32; 3]> + '_ {
+fn world_cloud(frame: SceneFrame<'_>) -> impl Iterator<Item = PointVertex> + '_ {
     frame
         .cloud
         .iter()
-        .map(|[forward, left, up]| [-left, *up, -*forward])
+        .enumerate()
+        .map(move |(index, [forward, left, up])| PointVertex {
+            position: [-left, *up, -*forward],
+            color: frame
+                .cloud_colors
+                .get(index)
+                .copied()
+                .unwrap_or([1.0, 1.0, 1.0, 1.0]),
+        })
 }
 
 fn make_grid() -> Vec<Vertex> {
@@ -590,7 +624,7 @@ fn make_empty_vertex_buffer(device: &wgpu::Device, label: &str, capacity: usize)
 fn make_empty_point_buffer(device: &wgpu::Device, capacity: usize) -> wgpu::Buffer {
     device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("3D point cloud"),
-        size: (capacity.max(1) * std::mem::size_of::<[f32; 3]>()) as u64,
+        size: (capacity.max(1) * std::mem::size_of::<PointVertex>()) as u64,
         usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
         mapped_at_creation: false,
     })
@@ -619,7 +653,7 @@ fn make_targets(
         dimension: wgpu::TextureDimension::D2,
         format: wgpu::TextureFormat::Rgba8UnormSrgb,
         usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
-        view_formats: &[],
+        view_formats: &[wgpu::TextureFormat::Rgba8Unorm],
     });
     let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
     let depth = device.create_texture(&wgpu::TextureDescriptor {
@@ -718,6 +752,7 @@ mod tests {
             platform: None,
             path: &path,
             cloud: &[],
+            cloud_colors: &[],
         });
         assert_eq!(vertices.len(), 4);
         assert!(vertices.iter().all(|vertex| {
@@ -726,6 +761,20 @@ mod tests {
                 .iter()
                 .all(|component| component.is_finite())
         }));
+    }
+
+    #[test]
+    fn world_mapping_preserves_per_point_linear_color() {
+        let colors = [[0.2, 0.4, 0.6, 0.5]];
+        let points = [[1.0, 2.0, 3.0]];
+        let frame = SceneFrame {
+            cloud: &points,
+            cloud_colors: &colors,
+            ..Default::default()
+        };
+        let vertex = world_cloud(frame).next().unwrap();
+        assert_eq!(vertex.position, [-2.0, 3.0, -1.0]);
+        assert_eq!(vertex.color, colors[0]);
     }
 
     #[test]

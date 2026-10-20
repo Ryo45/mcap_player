@@ -199,6 +199,7 @@ fn seven_camera_fixture_routes_exact_messages_to_concrete_controllers() {
         platform: None,
         path_projection: &viewer_core::PathProjectionPolicy::default(),
         accumulate: true,
+        coloring: Default::default(),
     });
 
     assert!(!snapshot.cloud.is_empty());

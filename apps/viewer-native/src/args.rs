@@ -25,6 +25,7 @@ pub(crate) struct Args {
     pub(crate) mode: SourceMode,
     pub(crate) layout: WorkspaceLayout,
     pub(crate) inspect_topic: Option<String>,
+    pub(crate) point_cloud_topic: Option<String>,
 }
 
 impl Args {
@@ -45,12 +46,20 @@ impl Args {
         let mut reliable = false;
         let mut layout = WorkspaceLayout::Standard;
         let mut inspect_topic = None;
+        let mut point_cloud_topic = None;
         let mut values = values.into_iter();
         while let Some(value) = values.next() {
             match value.as_str() {
                 "--mcap" => mcap = PathBuf::from(values.next().context("--mcap needs a path")?),
                 "--camera-topic" => {
                     topic = values.next().context("--camera-topic needs a topic")?
+                }
+                "--point-cloud-topic" => {
+                    let topic = values.next().context("--point-cloud-topic needs a topic")?;
+                    if topic.trim().is_empty() || topic.len() > 1024 {
+                        bail!("--point-cloud-topic must be nonempty and at most 1024 bytes");
+                    }
+                    point_cloud_topic = Some(topic);
                 }
                 "--inspect-topic" => {
                     let topic = values.next().context("--inspect-topic needs a topic")?;
@@ -79,12 +88,12 @@ impl Args {
                 }
                 "--layout" => {
                     layout = parse_layout(&values.next().context(
-                        "--layout needs standard, showcase, explore, monitor or health",
+                        "--layout needs standard, showcase, explore, monitor, health or scene",
                     )?)?
                 }
                 "--help" | "-h" => {
                     println!(
-                        "viewer-native [--mcap PATH] [--camera-topic TOPIC] [--camera-calibration JSON] [--platform-geometry JSON | --no-platform-geometry] [--fixed-frame FRAME] [--ground-frame FRAME] [--layout standard|showcase|explore|monitor|health] [--inspect-topic TOPIC] [--live [--reliable]]\n\nFiles can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
+                        "viewer-native [--mcap PATH] [--camera-topic TOPIC] [--camera-calibration JSON] [--platform-geometry JSON | --no-platform-geometry] [--fixed-frame FRAME] [--ground-frame FRAME] [--layout standard|showcase|explore|monitor|health|scene] [--inspect-topic TOPIC] [--point-cloud-topic TOPIC] [--live [--reliable]]\n\nFiles can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
                     );
                     std::process::exit(0);
                 }
@@ -115,6 +124,7 @@ impl Args {
             mode,
             layout,
             inspect_topic,
+            point_cloud_topic,
         })
     }
 }
@@ -147,9 +157,10 @@ fn parse_layout(value: &str) -> Result<WorkspaceLayout> {
         "explore" => Ok(WorkspaceLayout::Explore),
         "monitor" => Ok(WorkspaceLayout::Monitor),
         "health" => Ok(WorkspaceLayout::Health),
+        "scene" => Ok(WorkspaceLayout::Scene),
         value => {
             bail!(
-                "unsupported layout {value:?}; expected standard, showcase, explore, monitor or health"
+                "unsupported layout {value:?}; expected standard, showcase, explore, monitor, health or scene"
             )
         }
     }
@@ -171,12 +182,28 @@ mod tests {
     }
 
     #[test]
+    fn point_cloud_selection_requires_a_nonempty_bounded_topic() {
+        let parse = |values: &[&str]| Args::parse_from(values.iter().map(|v| (*v).to_owned()));
+        assert_eq!(
+            parse(&["--layout", "scene", "--point-cloud-topic", "/points"])
+                .unwrap()
+                .point_cloud_topic
+                .as_deref(),
+            Some("/points")
+        );
+        assert!(parse(&["--point-cloud-topic"]).is_err());
+        assert!(parse(&["--point-cloud-topic", " "]).is_err());
+        assert!(Args::parse_from(["--point-cloud-topic".to_owned(), "x".repeat(1025)]).is_err());
+    }
+
+    #[test]
     fn layout_config_accepts_the_bundled_views() {
         assert_eq!(parse_layout("standard").unwrap(), WorkspaceLayout::Standard);
         assert_eq!(parse_layout("showcase").unwrap(), WorkspaceLayout::Showcase);
         assert_eq!(parse_layout("explore").unwrap(), WorkspaceLayout::Explore);
         assert_eq!(parse_layout("monitor").unwrap(), WorkspaceLayout::Monitor);
         assert_eq!(parse_layout("health").unwrap(), WorkspaceLayout::Health);
+        assert_eq!(parse_layout("scene").unwrap(), WorkspaceLayout::Scene);
         assert!(parse_layout("dashboard").is_err());
     }
 

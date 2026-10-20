@@ -2,6 +2,8 @@ mod camera;
 mod diagnostics;
 mod metrics;
 mod path;
+mod point_cloud;
+pub use point_cloud::{PointCloudColorMode, PointCloudColoring};
 mod projection;
 pub use path::{FrameTransformError, PathProjectionPolicy};
 mod scene;

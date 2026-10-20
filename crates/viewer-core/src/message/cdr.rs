@@ -4,6 +4,7 @@ mod image;
 mod laser_scan;
 mod odometry;
 mod path;
+mod point_cloud2;
 mod transform;
 pub(crate) mod wire;
 
@@ -14,6 +15,10 @@ pub use image::{
 pub use laser_scan::{LaserScan, decode_laser_scan, encode_laser_scan_cdr};
 pub use odometry::{Odometry, decode_odometry, encode_odometry_cdr};
 pub use path::{PathMessage, decode_path, encode_path_cdr};
+pub use point_cloud2::{
+    DecodedPointCloud2, MAX_POINT_CLOUD2_MESSAGE_BYTES, MAX_POINT_CLOUD2_POINTS,
+    decode_point_cloud2,
+};
 pub use transform::{TransformStamped, decode_tf_message, encode_tf_message_cdr};
 pub use wire::DecodeError;
 

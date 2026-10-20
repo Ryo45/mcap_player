@@ -32,11 +32,13 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 struct PointOutput {
     @builtin(position) position: vec4<f32>,
     @location(0) offset: vec2<f32>,
+    @location(1) color: vec4<f32>,
 }
 
 @vertex
 fn vs_point(
     @location(0) point: vec3<f32>,
+    @location(1) color: vec4<f32>,
     @builtin(vertex_index) index: u32,
 ) -> PointOutput {
     let corners = array<vec2<f32>, 6>(
@@ -52,6 +54,7 @@ fn vs_point(
     ) * center.w;
     output.position = center + vec4(clip_offset, 0.0, 0.0);
     output.offset = offset;
+    output.color = color;
     return output;
 }
 
@@ -60,5 +63,5 @@ fn fs_point(input: PointOutput) -> @location(0) vec4<f32> {
     if length(input.offset) > 1.0 {
         discard;
     }
-    return vec4(0.20, 0.82, 1.0, 0.88);
+    return input.color;
 }

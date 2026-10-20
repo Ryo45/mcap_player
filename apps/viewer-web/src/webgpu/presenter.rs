@@ -59,7 +59,11 @@ impl WebTexturePresenter {
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
-                entry_point: Some("fs_main"),
+                entry_point: Some(if surface_format.is_srgb() {
+                    "fs_main"
+                } else {
+                    "fs_main_encoded"
+                }),
                 targets: &[Some(wgpu::ColorTargetState {
                     format: surface_format,
                     blend: Some(wgpu::BlendState::REPLACE),

@@ -8,7 +8,7 @@ use crate::{
 };
 use scene_renderer::SceneCameraMode;
 use serde::{Deserialize, Serialize};
-use viewer_core::SceneDiagnostics;
+use viewer_core::{PointCloudColorMode, PointCloudColoring, SceneDiagnostics};
 use viewer_layout::{PanelId, PanelNode};
 
 #[derive(Clone, Copy)]
@@ -34,6 +34,8 @@ pub(crate) struct ScenePanelConfig {
     show_telemetry: bool,
     #[serde(default)]
     optional_data: bool,
+    #[serde(default)]
+    coloring: PointCloudColoring,
 }
 
 pub(crate) struct ScenePanel {
@@ -52,11 +54,20 @@ impl ScenePanel {
             ));
         }
         match serde_json::from_value::<ScenePanelConfig>(node.config.clone()) {
+            Ok(config) if !config.coloring.is_valid() => {
+                NativePanel::Placeholder(PlaceholderPanel::invalid_config(
+                    node,
+                    "Invalid point cloud intensity range".into(),
+                ))
+            }
             Ok(config) => NativePanel::Scene(Self {
                 id: node.id.clone(),
                 title: node.title.clone(),
+                state: SceneViewState {
+                    coloring: config.coloring,
+                    ..Default::default()
+                },
                 config,
-                state: SceneViewState::default(),
             }),
             Err(error) => NativePanel::Placeholder(PlaceholderPanel::invalid_config(
                 node,
@@ -82,6 +93,32 @@ impl ScenePanel {
             if self.config.show_telemetry {
                 show_monitor_telemetry(ui, &input);
             }
+            ui.horizontal_wrapped(|ui| {
+                let mut coloring = self.state.coloring;
+                egui::ComboBox::from_id_salt("point-cloud-color")
+                    .selected_text(coloring.mode.label())
+                    .show_ui(ui, |ui| {
+                        for mode in [
+                            PointCloudColorMode::Auto,
+                            PointCloudColorMode::Solid,
+                            PointCloudColorMode::Rgb,
+                            PointCloudColorMode::Intensity,
+                        ] {
+                            ui.selectable_value(&mut coloring.mode, mode, mode.label());
+                        }
+                    });
+                if matches!(
+                    coloring.mode,
+                    PointCloudColorMode::Auto | PointCloudColorMode::Intensity
+                ) {
+                    ui.label("Intensity range");
+                    ui.add(egui::DragValue::new(&mut coloring.intensity_range[0]).speed(0.1));
+                    ui.add(egui::DragValue::new(&mut coloring.intensity_range[1]).speed(0.1));
+                }
+                if coloring.is_valid() {
+                    self.state.coloring = coloring;
+                }
+            });
             let output = show_scene_view(
                 ui,
                 SceneViewInput {

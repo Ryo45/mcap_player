@@ -34,15 +34,17 @@ pub use feature::{
     CameraController, CameraFrame, CameraFrameMetadata, CameraId, CameraState, CameraStatus,
     DYNAMIC_TF_HISTORY, FeatureRestoreError, FeatureRestoreErrorKind, FeatureRuntime,
     OdometryController, PathController, PathFrame, PathState, PlaybackPerformance,
-    PointCloudController, PointCloudFrame, PointCloudState, ProcessingCounters, TelemetryFrame,
-    TelemetryState, TransformBatch, TransformController, TransformState,
+    PointCloudAttributes, PointCloudController, PointCloudFrame, PointCloudState,
+    ProcessingCounters, TelemetryFrame, TelemetryState, TransformBatch, TransformController,
+    TransformState,
 };
 pub use message::{
-    ArrivalTime, CompressedImage, DecodeError, DecodedCompressedImage, LaserScan, MeasurementTime,
-    Odometry, PathMessage, TransformStamped, decode_compressed_image,
-    decode_compressed_image_bytes, decode_laser_scan, decode_odometry, decode_path,
-    decode_tf_message, encode_compressed_image_cdr, encode_laser_scan_cdr, encode_odometry_cdr,
-    encode_path_cdr, encode_tf_message_cdr,
+    ArrivalTime, CompressedImage, DecodeError, DecodedCompressedImage, DecodedPointCloud2,
+    LaserScan, MAX_POINT_CLOUD2_MESSAGE_BYTES, MAX_POINT_CLOUD2_POINTS, MeasurementTime, Odometry,
+    PathMessage, TransformStamped, decode_compressed_image, decode_compressed_image_bytes,
+    decode_laser_scan, decode_odometry, decode_path, decode_point_cloud2, decode_tf_message,
+    encode_compressed_image_cdr, encode_laser_scan_cdr, encode_odometry_cdr, encode_path_cdr,
+    encode_tf_message_cdr,
 };
 pub use playback::{
     DataWindowError, DataWindowTimeRange, FetchDemand, FetchIntent, FetchPlanner, FetchProfile,
@@ -52,9 +54,10 @@ pub use playback::{
 pub use presentation::{
     BevSnapshot, CalibrationError, CameraCalibration, CameraCalibrationSet, CameraPresentation,
     DiagnosticsPresentation, FrameTransformError, OverlayStatus, PathProjectionPolicy,
-    PresentationMetrics, PresentationSnapshot, ProjectedPlan, ProjectionError, SceneDiagnostics,
-    ScenePresentationInput, ScenePresentationState, SceneSnapshot, TelemetryPresentation,
-    ViewerPresentation, ViewerPresentationInput,
+    PointCloudColorMode, PointCloudColoring, PresentationMetrics, PresentationSnapshot,
+    ProjectedPlan, ProjectionError, SceneDiagnostics, ScenePresentationInput,
+    ScenePresentationState, SceneSnapshot, TelemetryPresentation, ViewerPresentation,
+    ViewerPresentationInput,
 };
 pub use recording::{
     CameraRoute, PlaybackRequirements, RawMessage, RecordingTimeRange, RestoreInput, RestorePlan,
