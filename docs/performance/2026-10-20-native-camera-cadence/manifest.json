@@ -1,0 +1,45 @@
+{
+  "status": "ok",
+  "jobs": [
+    {
+      "variant": "baseline",
+      "repeat": 0,
+      "exit_code": 0,
+      "output": "baseline-0"
+    },
+    {
+      "variant": "periodic",
+      "repeat": 0,
+      "exit_code": 0,
+      "output": "periodic-0"
+    },
+    {
+      "variant": "periodic",
+      "repeat": 1,
+      "exit_code": 0,
+      "output": "periodic-1"
+    },
+    {
+      "variant": "baseline",
+      "repeat": 1,
+      "exit_code": 0,
+      "output": "baseline-1"
+    },
+    {
+      "variant": "baseline",
+      "repeat": 2,
+      "exit_code": 0,
+      "output": "baseline-2"
+    },
+    {
+      "variant": "periodic",
+      "repeat": 2,
+      "exit_code": 0,
+      "output": "periodic-2"
+    }
+  ],
+  "started_unix": 1792487036.134791,
+  "cadence_change_sha256": "74bc5c83f4913dcdf662ea30516bd568f6229d18fd3f8392b66cd60b5c6398bd",
+  "runner_sha256": "f9fb1e3b9150164fdd94169f7a36d189210300b0cfc2d6e6a17fe62c5c3922d0",
+  "finished_unix": 1792487193.276301
+}

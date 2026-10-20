@@ -110,6 +110,8 @@ def window_for(pid, env):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--app', choices=['native', 'lichtblick'], required=True)
+    parser.add_argument('--camera-trace', action='store_true', help='enable temporary per-stage Native measurement hooks')
+    parser.add_argument('--native-patch', type=Path, default=HERE/'native-measurement.patch')
     parser.add_argument('--data', type=Path, required=True)
     parser.add_argument('--jpeg-dir', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
@@ -131,11 +133,13 @@ def main():
     result = {'app': args.app, 'status': 'running', 'dataset_sha256': digest(args.data),
               'dataset_bytes': args.data.stat().st_size, 'samples': [], 'seeks': [],
               'source_commit': subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
-              'harness_sha256': digest(__file__), 'native_patch_sha256': digest(HERE/'native-measurement.patch'),
+              'harness_sha256': digest(__file__), 'native_patch_sha256': digest(args.native_patch), 'camera_trace_enabled': args.camera_trace,
               'cache': 'cache-allowed; full SHA256 read before launch',
               'observer': 'XGetImage 960x540 BGRA; 88 RGB 5x5 patch means; 32 JPEG templates; 20 Hz target',
               'seek_boundary': 'existing UI action handler; no OS mouse/key latency; 10 ms target polling',
               'pss_limit_mib': 2048, 'wall_limit_seconds': 100}
+    if args.camera_trace:
+        env['MCAP_BENCH_TRACE']='1'
     process = x11 = cdp = browser = profile = None
     started = time.monotonic()
     try:

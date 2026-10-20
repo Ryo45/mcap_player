@@ -1,0 +1,140 @@
+--- a/apps/viewer-native/src/main.rs
++++ b/apps/viewer-native/src/main.rs
+@@ -33,7 +33,9 @@
+ fn main() -> Result<()> {
+     env_logger::init();
+     let args = Args::parse()?;
+-    let workspace = NativeWorkspace::load_bundled_or_fallback(args.layout);
++    let workspace = if let Ok(path) = std::env::var("MCAP_BENCH_LAYOUT") {
++        NativeWorkspace::from_json(&std::fs::read_to_string(path)?).map_err(anyhow::Error::msg)?
++    } else { NativeWorkspace::load_bundled_or_fallback(args.layout) };
+     let event_loop = EventLoop::new()?;
+     event_loop.set_control_flow(ControlFlow::Poll);
+     let mut app = App {
+--- a/apps/viewer-native/src/app.rs
++++ b/apps/viewer-native/src/app.rs
+@@ -112,6 +112,27 @@
+     fn redraw(&mut self, window: &Window, elapsed: Duration) -> Result<(), wgpu::SurfaceError> {
+         if self.session.is_none() {
+             return Ok(());
++        }
++
++        // Measurement-only command injection through the existing UI action handler.
++        static LAST: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
++        if let Ok(path) = std::env::var("MCAP_BENCH_CONTROL")
++            && let Ok(text) = std::fs::read_to_string(path)
++            && let Some((id, command)) = text.trim().split_once(' ')
++            && let Ok(id) = id.parse::<u64>()
++            && id > LAST.load(std::sync::atomic::Ordering::Relaxed)
++            && let Some(view) = self.session.as_ref().and_then(ViewerSession::playback_view)
++        {
++            let mut actions = Vec::new();
++            if let Some(offset) = command.strip_prefix("seek ").and_then(|v| v.parse::<i64>().ok()) {
++                if view.playing { actions.push(ViewerAction::Playback(viewer_core::PlaybackCommand::Toggle)); }
++                actions.push(ViewerAction::Playback(viewer_core::PlaybackCommand::Seek(viewer_core::ArrivalTime(view.start.0.saturating_add(offset)))));
++            } else if (command == "play" && !view.playing) || (command == "pause" && view.playing) {
++                actions.push(ViewerAction::Playback(viewer_core::PlaybackCommand::Toggle));
++            }
++            self.apply_frame_actions(actions);
++            LAST.store(id, std::sync::atomic::Ordering::Relaxed);
++            log::info!("GPU_BENCH_COMMAND id={id}");
+         }
+         self.advance_session(elapsed);
+         if self.graphics.is_none() {
+--- a/apps/viewer-native/src/graphics/views/camera.rs
++++ b/apps/viewer-native/src/graphics/views/camera.rs
+@@ -67,7 +67,9 @@
+     ui.separator();
+     let available = ui.available_size();
+     let thumbnail_reserve = if input.show_thumbnails { 70.0 } else { 0.0 };
+-    let focus_area = egui::vec2(available.x, (available.y - thumbnail_reserve).max(1.0));
++    let focus_area = if std::env::var_os("MCAP_BENCH_LAYOUT").is_some() {
++        egui::vec2(960.0, 540.0)
++    } else { egui::vec2(available.x, (available.y - thumbnail_reserve).max(1.0)) };
+     let density = ui.ctx().pixels_per_point();
+     if input.show_thumbnails {
+         for camera in input.cameras {
+@@ -179,6 +181,16 @@
+         return;
+     };
+     let image_rect = contain_image_rect(container, texture.size);
++    if std::env::var_os("MCAP_BENCH_LAYOUT").is_some() {
++        static LAST_FRAME: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(-1);
++        if LAST_FRAME.swap(texture.arrival_time.0, std::sync::atomic::Ordering::Relaxed) != texture.arrival_time.0 {
++
++        if std::env::var_os("MCAP_BENCH_TRACE").is_some() {
++            eprintln!("CAMERA_TRACE stage=painted wall_ns={} camera={} arrival={}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos(), texture.camera_id.0, texture.arrival_time.0);
++        }
++            log::info!("GPU_BENCH_FRAME arrival={} rect={:?}", texture.arrival_time.0, image_rect);
++        }
++    }
+     ui.put(
+         image_rect,
+         egui::Image::new((texture.texture_id, image_rect.size())).uv(egui::Rect::from_min_max(
+--- a/crates/viewer-core/src/feature/controllers/camera.rs
++++ b/crates/viewer-core/src/feature/controllers/camera.rs
+@@ -64,6 +64,10 @@
+         let Some(camera_id) = self.stream_to_camera.get(&message.stream_id).copied() else {
+             return false;
+         };
++
++        if std::env::var_os("MCAP_BENCH_TRACE").is_some() {
++            eprintln!("CAMERA_TRACE stage=received wall_ns={} camera={} arrival={}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos(), camera_id.0, message.arrival_time.0);
++        }
+         self.input_frames = self.input_frames.saturating_add(1);
+         if self.pending.insert(camera_id, message.clone()).is_some() {
+             self.counters.dropped = self.counters.dropped.saturating_add(1);
+@@ -84,6 +88,10 @@
+                 .pending
+                 .remove(&camera_id)
+                 .expect("due Camera came from the pending map");
++
++        if std::env::var_os("MCAP_BENCH_TRACE").is_some() {
++            eprintln!("CAMERA_TRACE stage=admitted wall_ns={} camera={} arrival={}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos(), camera_id.0, message.arrival_time.0);
++        }
+             let _ = self.decode_and_apply(camera_id, message);
+             // Keep the camera's phase instead of accumulating UI tick lateness.
+             // Skip missed periods: only the latest pending image is materialized above.
+--- a/crates/viewer-renderer/src/camera_decode.rs
++++ b/crates/viewer-renderer/src/camera_decode.rs
+@@ -155,8 +155,16 @@
+                                     state = shared.available.wait(state).unwrap();
+                                 }
+                             };
++
++        if std::env::var_os("MCAP_BENCH_TRACE").is_some() {
++            eprintln!("CAMERA_TRACE stage=started wall_ns={} camera={} arrival={}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos(), request.frame.camera_id.0, request.frame.arrival_time.0);
++        }
+                             let start = Instant::now();
+                             let image = decoder.decode(&request.frame.jpeg, request.target);
++
++        if std::env::var_os("MCAP_BENCH_TRACE").is_some() {
++            eprintln!("CAMERA_TRACE stage=decoded wall_ns={} camera={} arrival={}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos(), request.frame.camera_id.0, request.frame.arrival_time.0);
++        }
+                             let result = CameraDecodeResult {
+                                 frame: request.frame.into(),
+                                 image,
+@@ -229,6 +237,10 @@
+         self.outstanding.fetch_add(1, Ordering::Relaxed);
+         let generation = state.generation;
+         state.submitted.insert(frame.camera_id, key);
++
++        if std::env::var_os("MCAP_BENCH_TRACE").is_some() {
++            eprintln!("CAMERA_TRACE stage=submitted wall_ns={} camera={} arrival={}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos(), frame.camera_id.0, frame.arrival_time.0);
++        }
+         state.pending.insert(
+             frame.camera_id,
+             Request {
+--- a/apps/viewer-native/src/graphics/camera.rs
++++ b/apps/viewer-native/src/graphics/camera.rs
+@@ -136,6 +136,10 @@
+             self.camera_geometry.insert(camera_id, decoded.geometry);
+             self.camera_base_images
+                 .mark_updated(frame.camera_id, frame.arrival_time);
++
++        if std::env::var_os("MCAP_BENCH_TRACE").is_some() {
++            eprintln!("CAMERA_TRACE stage=uploaded wall_ns={} camera={} arrival={}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos(), camera_id.0, frame.arrival_time.0);
++        }
+             self.presented_camera_frames.insert(camera_id, frame);
+             updates.push(CameraBasePresentationUpdate {
+                 camera_id,

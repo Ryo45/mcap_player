@@ -18,21 +18,29 @@ fn bindings() -> WorkspaceBindings {
 }
 
 fn camera_plan() -> SessionPlan {
+    camera_plan_for_topics(&["/camera"])
+}
+
+fn camera_plan_for_topics(topics: &[&str]) -> SessionPlan {
     let catalog = SourceCatalog {
         time_range: None,
         capabilities: Default::default(),
-        streams: vec![StreamDescriptor {
-            schema_definition: None,
-            id: StreamId(7),
-            topic: "/camera".into(),
-            schema: "sensor_msgs/msg/CompressedImage".into(),
-            message_encoding: "cdr".into(),
-            timing: StreamTimingSummary::default(),
-        }],
+        streams: topics
+            .iter()
+            .enumerate()
+            .map(|(index, topic)| StreamDescriptor {
+                schema_definition: None,
+                id: StreamId(7 + index as u32),
+                topic: (*topic).into(),
+                schema: "sensor_msgs/msg/CompressedImage".into(),
+                message_encoding: "cdr".into(),
+                timing: StreamTimingSummary::default(),
+            })
+            .collect(),
     };
     let mut requirements = PlaybackRequirements::empty();
     requirements.require_all_cameras();
-    SessionPlan::build(&catalog, "/camera", &requirements, &bindings()).unwrap()
+    SessionPlan::build(&catalog, topics[0], &requirements, &bindings()).unwrap()
 }
 
 #[test]
@@ -106,6 +114,190 @@ fn camera_coalescing_discards_malformed_old_cdr_before_decode() {
             .arrival_time,
         ArrivalTime(2)
     );
+}
+
+fn scheduled_camera_message(time: i64) -> RawMessage {
+    RawMessage {
+        publish_time_ns: None,
+        sequence: None,
+        stream_id: StreamId(7),
+        arrival_time: ArrivalTime(time),
+        payload: crate::encode_compressed_image_cdr(&CompressedImage {
+            measurement_time: MeasurementTime(time),
+            frame_id: "camera".into(),
+            format: "jpeg".into(),
+            jpeg: vec![1, 2, 3],
+        })
+        .unwrap()
+        .into(),
+    }
+}
+
+#[test]
+fn camera_tick_jitter_does_not_delay_the_next_period() {
+    let mut controller = CameraController::new(&camera_plan());
+    controller.admit(&scheduled_camera_message(0));
+    controller.advance(Duration::ZERO);
+    controller.admit(&scheduled_camera_message(100));
+    controller.advance(Duration::from_millis(107));
+    controller.admit(&scheduled_camera_message(200));
+    controller.advance(Duration::from_millis(93));
+    assert_eq!(
+        controller
+            .state()
+            .latest_for(CameraId(0))
+            .unwrap()
+            .arrival_time,
+        ArrivalTime(200)
+    );
+    assert_eq!(controller.counters().decoded, 3);
+}
+
+#[test]
+fn camera_after_a_stall_keeps_latest_only_and_resumes_on_period() {
+    let mut controller = CameraController::new(&camera_plan());
+    controller.admit(&scheduled_camera_message(0));
+    controller.advance(Duration::ZERO);
+    for time in [100, 200, 300] {
+        controller.admit(&scheduled_camera_message(time));
+    }
+    controller.advance(Duration::from_millis(350));
+    assert_eq!(controller.counters().decoded, 2);
+    assert_eq!(controller.counters().dropped, 2);
+    assert_eq!(
+        controller
+            .state()
+            .latest_for(CameraId(0))
+            .unwrap()
+            .arrival_time,
+        ArrivalTime(300)
+    );
+    controller.admit(&scheduled_camera_message(351));
+    controller.advance(Duration::ZERO);
+    assert_eq!(controller.counters().decoded, 2);
+    controller.admit(&scheduled_camera_message(390));
+    controller.advance(Duration::from_millis(49));
+    assert_eq!(controller.counters().decoded, 2);
+    controller.advance(Duration::from_millis(1));
+    assert_eq!(
+        controller
+            .state()
+            .latest_for(CameraId(0))
+            .unwrap()
+            .arrival_time,
+        ArrivalTime(390)
+    );
+    assert_eq!(controller.counters().decoded, 3);
+    // No catch-up decoding on repeated ticks at the same time.
+    controller.advance(Duration::ZERO);
+    assert_eq!(controller.counters().decoded, 3);
+}
+
+#[test]
+fn camera_background_phases_survive_a_stall() {
+    let plan = camera_plan_for_topics(&["/camera/0", "/camera/1", "/camera/2"]);
+    let mut controller = CameraController::new(&plan);
+    for id in 0..3 {
+        let mut message = scheduled_camera_message(0);
+        message.stream_id = StreamId(7 + id);
+        controller.admit(&message);
+    }
+    controller.advance(Duration::from_millis(350));
+    assert_eq!(controller.counters().decoded, 3);
+    for id in 0..3 {
+        let mut message = scheduled_camera_message(400);
+        message.stream_id = StreamId(7 + id);
+        controller.admit(&message);
+    }
+    controller.advance(Duration::from_millis(50));
+    assert_eq!(
+        controller
+            .state()
+            .latest_for(CameraId(0))
+            .unwrap()
+            .arrival_time,
+        ArrivalTime(400)
+    );
+    assert_eq!(
+        controller
+            .state()
+            .latest_for(CameraId(1))
+            .unwrap()
+            .arrival_time,
+        ArrivalTime(400)
+    );
+    assert_eq!(
+        controller
+            .state()
+            .latest_for(CameraId(2))
+            .unwrap()
+            .arrival_time,
+        ArrivalTime(0)
+    );
+    assert_eq!(controller.counters().decoded, 5);
+    controller.advance(Duration::from_millis(100));
+    assert_eq!(
+        controller
+            .state()
+            .latest_for(CameraId(2))
+            .unwrap()
+            .arrival_time,
+        ArrivalTime(400)
+    );
+    assert_eq!(controller.counters().decoded, 6);
+}
+
+#[test]
+fn camera_focus_and_restore_reanchor_their_schedule() {
+    let plan = camera_plan_for_topics(&["/camera/0", "/camera/1"]);
+    let mut controller = CameraController::new(&plan);
+    controller.admit(&scheduled_camera_message(0));
+    controller.advance(Duration::from_millis(107));
+    controller.set_focused_camera(Some(CameraId(1)));
+    let mut focused = scheduled_camera_message(108);
+    focused.stream_id = StreamId(8);
+    controller.admit(&focused);
+    controller.admit(&scheduled_camera_message(108));
+    controller.advance(Duration::ZERO);
+    assert_eq!(
+        controller
+            .state()
+            .latest_for(CameraId(1))
+            .unwrap()
+            .arrival_time,
+        ArrivalTime(108)
+    );
+    assert_eq!(
+        controller
+            .state()
+            .latest_for(CameraId(0))
+            .unwrap()
+            .arrival_time,
+        ArrivalTime(0)
+    );
+    controller.reset_for_restore();
+    focused.arrival_time = ArrivalTime(1);
+    controller.admit(&focused);
+    controller.advance(Duration::ZERO);
+    assert_eq!(
+        controller
+            .state()
+            .latest_for(CameraId(1))
+            .unwrap()
+            .arrival_time,
+        ArrivalTime(1)
+    );
+    assert!(controller.state().latest_for(CameraId(0)).is_none());
+}
+
+#[test]
+fn camera_cadence_handles_saturated_elapsed_without_arithmetic_overflow() {
+    let mut controller = CameraController::new(&camera_plan());
+    controller.admit(&scheduled_camera_message(1));
+    controller.advance(Duration::MAX);
+    assert_eq!(controller.counters().decoded, 1);
+    controller.advance(Duration::from_nanos(1));
+    assert_eq!(controller.counters().decoded, 1);
 }
 
 #[test]
