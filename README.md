@@ -43,6 +43,7 @@ topicを調べても、CameraやSceneの再生対象は変わりません。大�
 [計測手順と指標の定義](docs/performance/README.md)に再現用コマンドと生データをまとめています。
 Native連続読み込みとindexed queryではI/O削減の効き方が異なるため、分けて評価します。
 [Lichtblick Desktopと表示内容を合わせた比較・スクリーンショット](docs/performance/2026-10-20-desktop-default-layout/README.md)も掲載しています。
+[カメラ台数・Raw展開・Scan／RGB PointCloud2の表示パターン別比較](docs/performance/2026-10-20-desktop-workloads/README.md)では、更新頻度とメモリ・CPUを条件ごとに調べています。
 
 ## Native で再生
 

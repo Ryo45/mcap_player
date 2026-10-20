@@ -1,0 +1,95 @@
+{
+  "reason": "External GPU work, confirmed by user; interrupted at user request; no performance conclusions use these runs.",
+  "records": [
+    {
+      "name": "0-camera-4-lichtblick",
+      "original_status": "ok",
+      "use_for_performance_comparison": false,
+      "files": {
+        "result.json": "ed821fd4d5d6bf132ec915888683d278837bf6531827c0f67bfb429f74753f12",
+        "app.log": "bf377a85215eb93a5111aca6fcb6dcfaa2631857a150a8ed67b55d3c2f812cdc"
+      }
+    },
+    {
+      "name": "0-camera-4-native",
+      "original_status": "ok",
+      "use_for_performance_comparison": false,
+      "files": {
+        "result.json": "6606834d2426247b30a8152ee0856ed18d719d5cfd82624a7207927b4175d38c",
+        "app.log": "86e63374c8abb507f7a00abe99ad94174d9b31e017c0f7b1e67b683ddcd6e781"
+      }
+    },
+    {
+      "name": "0-camera-8-lichtblick",
+      "original_status": "ok",
+      "use_for_performance_comparison": false,
+      "files": {
+        "result.json": "d411d283ec41d7e15f7ac7a3df173dbfaee476f69f869cc5c48c72df1a955002",
+        "app.log": "99f81ce5b2b1abf6cb2c30a51c7ccefef31212207f974dbf0c8a224b2c1eb5e1"
+      }
+    },
+    {
+      "name": "0-camera-8-native",
+      "original_status": "ok",
+      "use_for_performance_comparison": false,
+      "files": {
+        "result.json": "da677a9452e3faa5a11e7ce67fc33bd1e939a2ca5e38246965d21e96313a56e9",
+        "app.log": "45f7fb84ec01c7d25f02dfffb5fabc7b409d6ad870a420eeb0b33ea1fe1baf06"
+      }
+    },
+    {
+      "name": "0-camera-8-native-background5",
+      "original_status": "ok",
+      "use_for_performance_comparison": false,
+      "files": {
+        "result.json": "90f03b191955d0c2135d875f6b3d38cc017cb88edba3c4361a1ac18a9d9394b4",
+        "app.log": "fd96f3195f27aff73af8eaded6d68bebed663b97a9c4808a2120cf41a172d83b"
+      }
+    },
+    {
+      "name": "0-cloud-60000-lichtblick",
+      "original_status": "ok",
+      "use_for_performance_comparison": false,
+      "files": {
+        "result.json": "af688e18e089d56f36917a11fe952159c65be2916e687a3e50c55c5b3ba2369b",
+        "app.log": "03788619d20cb6d6ab5a17bf1bd9d3c1324d984cd2bc038ee34a550893b74af1"
+      }
+    },
+    {
+      "name": "0-cloud-60000-native",
+      "original_status": "ok",
+      "use_for_performance_comparison": false,
+      "files": {
+        "result.json": "42fa42035b9ccb8ea0174abcfffcae2ebafd796512d8ae27a108cef25fbe305d",
+        "app.log": "26d0696962796072c2568e8ded2d9b1d9a708a874df87093e4f12498a12dc8b1"
+      }
+    },
+    {
+      "name": "1-camera-4-lichtblick",
+      "original_status": "running",
+      "use_for_performance_comparison": false,
+      "files": {
+        "result.json": "b33239aa1cdb55e61224a12ed70a48987a6bc239593e1234040aea6ddc296fc2",
+        "app.log": "2fa9761932cc8d53f508432fa40e95072dc38930f89b265a5b682ea356b77cd9"
+      }
+    },
+    {
+      "name": "calibrate-camera-4-native",
+      "original_status": "ok",
+      "use_for_performance_comparison": false,
+      "files": {
+        "result.json": "d7781a178030f9f21b80d085d5e857575ead81356ae913528cdd68ddd4ddfa60",
+        "app.log": "fd4be49d658c41e37b09203b31f957ca611870a3920c32f0170c579276d935d6"
+      }
+    },
+    {
+      "name": "calibrate-camera-8-native",
+      "original_status": "ok",
+      "use_for_performance_comparison": false,
+      "files": {
+        "result.json": "38fd5768ebafcaec33088350a96cf30ba04a007be18eb7309598cdf4aab5c289",
+        "app.log": "a255f5b4d19fd9db282061d8eae2deaeb36be141c7f85b5ea7fa3befc365aa4c"
+      }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "source_commit": "59b24fa7e0b382ab21ec14a473a56d51d9f529df",
+  "binary_sha256": {
+    "lichtblick": "180eea79cebc825a7e7291b8c5ef387760773f2b03596751bda8e6e532a8b6c8",
+    "native": "92e83b7d2eb089132fb0ba14be544c9edb2b96b0cbbd324561997e0a7c84093e"
+  },
+  "native_cadence_patch_sha256": "6f14a8d89128ce86ef02b7c9eed6f33939541e0703b739b494681e9d92d737ee",
+  "scripts_sha256": {
+    "build_desktop_cadence_probe.py": "61715df67885188f0ad43bb3cc05c30f1cb647a39ff8143679235ce3e812c4eb",
+    "measure_desktop_cadence.py": "21635005dde93db4d96a4019a0b9db596dd573f14b78a336daa35061d01f6d00",
+    "run_desktop_cadence.py": "24fee043a21954441bfa1a6c26df6ab4d2d0f97031bab0d75aab4d7037f38a44",
+    "summarize_desktop_cadence.py": "4be29b093dbbc46c7fdb0c35b18edb458ab595f5f71d0d22c2e10b535175066b"
+  },
+  "successful_timed_runs": 21,
+  "successful_calibrations": 2,
+  "forced_scene_redraw": false,
+  "excluded": [
+    "../cadence-gpu-contended/manifest.json",
+    "../cadence-x11-failure/manifest.json"
+  ]
+}

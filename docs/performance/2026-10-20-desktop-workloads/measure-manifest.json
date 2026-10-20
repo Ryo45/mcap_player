@@ -1,0 +1,607 @@
+[
+  {
+    "name": "0-camera-1-native",
+    "repeat": 0,
+    "case": "camera-1",
+    "app": "native",
+    "start_unix": 1792508107.1632636,
+    "seconds": 26.10305905342102,
+    "exit_code": 0
+  },
+  {
+    "name": "0-camera-1-lichtblick",
+    "repeat": 0,
+    "case": "camera-1",
+    "app": "lichtblick",
+    "start_unix": 1792508133.2668478,
+    "seconds": 25.641555309295654,
+    "exit_code": 0
+  },
+  {
+    "name": "0-camera-4-native",
+    "repeat": 0,
+    "case": "camera-4",
+    "app": "native",
+    "start_unix": 1792508158.9086769,
+    "seconds": 26.98094606399536,
+    "exit_code": 0
+  },
+  {
+    "name": "0-camera-4-lichtblick",
+    "repeat": 0,
+    "case": "camera-4",
+    "app": "lichtblick",
+    "start_unix": 1792508185.8899174,
+    "seconds": 25.427101850509644,
+    "exit_code": 0
+  },
+  {
+    "name": "0-camera-8-native",
+    "repeat": 0,
+    "case": "camera-8",
+    "app": "native",
+    "start_unix": 1792508211.3173041,
+    "seconds": 26.890581130981445,
+    "exit_code": 0
+  },
+  {
+    "name": "0-camera-8-lichtblick",
+    "repeat": 0,
+    "case": "camera-8",
+    "app": "lichtblick",
+    "start_unix": 1792508238.2081695,
+    "seconds": 26.220312356948853,
+    "exit_code": 0
+  },
+  {
+    "name": "0-camera-focus-7-native",
+    "repeat": 0,
+    "case": "camera-focus-7",
+    "app": "native",
+    "start_unix": 1792508264.4288423,
+    "seconds": 26.43200707435608,
+    "exit_code": 0
+  },
+  {
+    "name": "0-camera-focus-7-lichtblick",
+    "repeat": 0,
+    "case": "camera-focus-7",
+    "app": "lichtblick",
+    "start_unix": 1792508290.8611495,
+    "seconds": 26.07623600959778,
+    "exit_code": 0
+  },
+  {
+    "name": "0-raw-closed-native",
+    "repeat": 0,
+    "case": "raw-closed",
+    "app": "native",
+    "start_unix": 1792508316.9377244,
+    "seconds": 15.653998613357544,
+    "exit_code": 0
+  },
+  {
+    "name": "0-raw-closed-lichtblick",
+    "repeat": 0,
+    "case": "raw-closed",
+    "app": "lichtblick",
+    "start_unix": 1792508332.5920558,
+    "seconds": 15.046862602233887,
+    "exit_code": 0
+  },
+  {
+    "name": "0-raw-open-native",
+    "repeat": 0,
+    "case": "raw-open",
+    "app": "native",
+    "start_unix": 1792508347.63921,
+    "seconds": 15.701874017715454,
+    "exit_code": 0
+  },
+  {
+    "name": "0-raw-open-lichtblick",
+    "repeat": 0,
+    "case": "raw-open",
+    "app": "lichtblick",
+    "start_unix": 1792508363.341829,
+    "seconds": 14.984184741973877,
+    "exit_code": 0
+  },
+  {
+    "name": "0-scan-360-native",
+    "repeat": 0,
+    "case": "scan-360",
+    "app": "native",
+    "start_unix": 1792508378.326769,
+    "seconds": 15.697631120681763,
+    "exit_code": 0
+  },
+  {
+    "name": "0-scan-360-lichtblick",
+    "repeat": 0,
+    "case": "scan-360",
+    "app": "lichtblick",
+    "start_unix": 1792508394.0247033,
+    "seconds": 15.568135499954224,
+    "exit_code": 0
+  },
+  {
+    "name": "0-scan-3600-native",
+    "repeat": 0,
+    "case": "scan-3600",
+    "app": "native",
+    "start_unix": 1792508409.593153,
+    "seconds": 15.698690176010132,
+    "exit_code": 0
+  },
+  {
+    "name": "0-scan-3600-lichtblick",
+    "repeat": 0,
+    "case": "scan-3600",
+    "app": "lichtblick",
+    "start_unix": 1792508425.292145,
+    "seconds": 15.56025767326355,
+    "exit_code": 0
+  },
+  {
+    "name": "0-scan-36000-native",
+    "repeat": 0,
+    "case": "scan-36000",
+    "app": "native",
+    "start_unix": 1792508440.852716,
+    "seconds": 15.733374118804932,
+    "exit_code": 0
+  },
+  {
+    "name": "0-scan-36000-lichtblick",
+    "repeat": 0,
+    "case": "scan-36000",
+    "app": "lichtblick",
+    "start_unix": 1792508456.5864093,
+    "seconds": 15.616506099700928,
+    "exit_code": 0
+  },
+  {
+    "name": "0-cloud-10000-native",
+    "repeat": 0,
+    "case": "cloud-10000",
+    "app": "native",
+    "start_unix": 1792508472.2034228,
+    "seconds": 15.745143175125122,
+    "exit_code": 0
+  },
+  {
+    "name": "0-cloud-10000-lichtblick",
+    "repeat": 0,
+    "case": "cloud-10000",
+    "app": "lichtblick",
+    "start_unix": 1792508487.9495845,
+    "seconds": 15.35741114616394,
+    "exit_code": 0
+  },
+  {
+    "name": "0-cloud-60000-native",
+    "repeat": 0,
+    "case": "cloud-60000",
+    "app": "native",
+    "start_unix": 1792508503.3073058,
+    "seconds": 15.932488441467285,
+    "exit_code": 0
+  },
+  {
+    "name": "0-cloud-60000-lichtblick",
+    "repeat": 0,
+    "case": "cloud-60000",
+    "app": "lichtblick",
+    "start_unix": 1792508519.2406523,
+    "seconds": 15.68395709991455,
+    "exit_code": 0
+  },
+  {
+    "name": "1-camera-1-lichtblick",
+    "repeat": 1,
+    "case": "camera-1",
+    "app": "lichtblick",
+    "start_unix": 1792508534.9249606,
+    "seconds": 25.8148410320282,
+    "exit_code": 0
+  },
+  {
+    "name": "1-camera-1-native",
+    "repeat": 1,
+    "case": "camera-1",
+    "app": "native",
+    "start_unix": 1792508560.7405138,
+    "seconds": 26.396156072616577,
+    "exit_code": 0
+  },
+  {
+    "name": "1-camera-4-lichtblick",
+    "repeat": 1,
+    "case": "camera-4",
+    "app": "lichtblick",
+    "start_unix": 1792508587.137019,
+    "seconds": 25.64640998840332,
+    "exit_code": 0
+  },
+  {
+    "name": "1-camera-4-native",
+    "repeat": 1,
+    "case": "camera-4",
+    "app": "native",
+    "start_unix": 1792508612.783769,
+    "seconds": 27.040937662124634,
+    "exit_code": 0
+  },
+  {
+    "name": "1-camera-8-lichtblick",
+    "repeat": 1,
+    "case": "camera-8",
+    "app": "lichtblick",
+    "start_unix": 1792508639.8256438,
+    "seconds": 26.454304218292236,
+    "exit_code": 0
+  },
+  {
+    "name": "1-camera-8-native",
+    "repeat": 1,
+    "case": "camera-8",
+    "app": "native",
+    "start_unix": 1792508666.280387,
+    "seconds": 26.18314027786255,
+    "exit_code": 0
+  },
+  {
+    "name": "1-camera-focus-7-lichtblick",
+    "repeat": 1,
+    "case": "camera-focus-7",
+    "app": "lichtblick",
+    "start_unix": 1792508692.4638915,
+    "seconds": 26.303415298461914,
+    "exit_code": 0
+  },
+  {
+    "name": "1-camera-focus-7-native",
+    "repeat": 1,
+    "case": "camera-focus-7",
+    "app": "native",
+    "start_unix": 1792508718.767716,
+    "seconds": 26.119162559509277,
+    "exit_code": 0
+  },
+  {
+    "name": "1-raw-closed-lichtblick",
+    "repeat": 1,
+    "case": "raw-closed",
+    "app": "lichtblick",
+    "start_unix": 1792508744.887826,
+    "seconds": 15.096818685531616,
+    "exit_code": 0
+  },
+  {
+    "name": "1-raw-closed-native",
+    "repeat": 1,
+    "case": "raw-closed",
+    "app": "native",
+    "start_unix": 1792508759.985603,
+    "seconds": 15.697489500045776,
+    "exit_code": 0
+  },
+  {
+    "name": "1-raw-open-lichtblick",
+    "repeat": 1,
+    "case": "raw-open",
+    "app": "lichtblick",
+    "start_unix": 1792508775.6846728,
+    "seconds": 15.02458381652832,
+    "exit_code": 0
+  },
+  {
+    "name": "1-raw-open-native",
+    "repeat": 1,
+    "case": "raw-open",
+    "app": "native",
+    "start_unix": 1792508790.7096207,
+    "seconds": 15.719492197036743,
+    "exit_code": 0
+  },
+  {
+    "name": "1-scan-360-lichtblick",
+    "repeat": 1,
+    "case": "scan-360",
+    "app": "lichtblick",
+    "start_unix": 1792508806.4301047,
+    "seconds": 15.412180423736572,
+    "exit_code": 0
+  },
+  {
+    "name": "1-scan-360-native",
+    "repeat": 1,
+    "case": "scan-360",
+    "app": "native",
+    "start_unix": 1792508821.8432577,
+    "seconds": 15.693163871765137,
+    "exit_code": 0
+  },
+  {
+    "name": "1-scan-3600-lichtblick",
+    "repeat": 1,
+    "case": "scan-3600",
+    "app": "lichtblick",
+    "start_unix": 1792508837.5373857,
+    "seconds": 15.333531141281128,
+    "exit_code": 0
+  },
+  {
+    "name": "1-scan-3600-native",
+    "repeat": 1,
+    "case": "scan-3600",
+    "app": "native",
+    "start_unix": 1792508852.8712742,
+    "seconds": 15.714465618133545,
+    "exit_code": 0
+  },
+  {
+    "name": "1-scan-36000-lichtblick",
+    "repeat": 1,
+    "case": "scan-36000",
+    "app": "lichtblick",
+    "start_unix": 1792508868.5861223,
+    "seconds": 15.593927383422852,
+    "exit_code": 0
+  },
+  {
+    "name": "1-scan-36000-native",
+    "repeat": 1,
+    "case": "scan-36000",
+    "app": "native",
+    "start_unix": 1792508884.1804163,
+    "seconds": 15.702677488327026,
+    "exit_code": 0
+  },
+  {
+    "name": "1-cloud-10000-lichtblick",
+    "repeat": 1,
+    "case": "cloud-10000",
+    "app": "lichtblick",
+    "start_unix": 1792508899.883474,
+    "seconds": 15.376531600952148,
+    "exit_code": 0
+  },
+  {
+    "name": "1-cloud-10000-native",
+    "repeat": 1,
+    "case": "cloud-10000",
+    "app": "native",
+    "start_unix": 1792508915.2604601,
+    "seconds": 15.70441198348999,
+    "exit_code": 0
+  },
+  {
+    "name": "1-cloud-60000-lichtblick",
+    "repeat": 1,
+    "case": "cloud-60000",
+    "app": "lichtblick",
+    "start_unix": 1792508930.9652846,
+    "seconds": 15.83137059211731,
+    "exit_code": 0
+  },
+  {
+    "name": "1-cloud-60000-native",
+    "repeat": 1,
+    "case": "cloud-60000",
+    "app": "native",
+    "start_unix": 1792508946.7970362,
+    "seconds": 15.77522325515747,
+    "exit_code": 0
+  },
+  {
+    "name": "2-camera-1-native",
+    "repeat": 2,
+    "case": "camera-1",
+    "app": "native",
+    "start_unix": 1792508962.5726695,
+    "seconds": 25.16777515411377,
+    "exit_code": 0
+  },
+  {
+    "name": "2-camera-1-lichtblick",
+    "repeat": 2,
+    "case": "camera-1",
+    "app": "lichtblick",
+    "start_unix": 1792508987.741575,
+    "seconds": 25.303625106811523,
+    "exit_code": 0
+  },
+  {
+    "name": "2-camera-4-native",
+    "repeat": 2,
+    "case": "camera-4",
+    "app": "native",
+    "start_unix": 1792509013.0455909,
+    "seconds": 26.711775064468384,
+    "exit_code": 0
+  },
+  {
+    "name": "2-camera-4-lichtblick",
+    "repeat": 2,
+    "case": "camera-4",
+    "app": "lichtblick",
+    "start_unix": 1792509039.7577672,
+    "seconds": 25.414594888687134,
+    "exit_code": 0
+  },
+  {
+    "name": "2-camera-8-native",
+    "repeat": 2,
+    "case": "camera-8",
+    "app": "native",
+    "start_unix": 1792509065.172785,
+    "seconds": 26.85097098350525,
+    "exit_code": 0
+  },
+  {
+    "name": "2-camera-8-lichtblick",
+    "repeat": 2,
+    "case": "camera-8",
+    "app": "lichtblick",
+    "start_unix": 1792509092.0241747,
+    "seconds": 26.378756284713745,
+    "exit_code": 0
+  },
+  {
+    "name": "2-camera-focus-7-native",
+    "repeat": 2,
+    "case": "camera-focus-7",
+    "app": "native",
+    "start_unix": 1792509118.4033544,
+    "seconds": 26.355552434921265,
+    "exit_code": 0
+  },
+  {
+    "name": "2-camera-focus-7-lichtblick",
+    "repeat": 2,
+    "case": "camera-focus-7",
+    "app": "lichtblick",
+    "start_unix": 1792509144.7600899,
+    "seconds": 26.173311233520508,
+    "exit_code": 0
+  },
+  {
+    "name": "2-raw-closed-native",
+    "repeat": 2,
+    "case": "raw-closed",
+    "app": "native",
+    "start_unix": 1792509170.9338574,
+    "seconds": 15.579653263092041,
+    "exit_code": 0
+  },
+  {
+    "name": "2-raw-closed-lichtblick",
+    "repeat": 2,
+    "case": "raw-closed",
+    "app": "lichtblick",
+    "start_unix": 1792509186.5139258,
+    "seconds": 14.986790657043457,
+    "exit_code": 0
+  },
+  {
+    "name": "2-raw-open-native",
+    "repeat": 2,
+    "case": "raw-open",
+    "app": "native",
+    "start_unix": 1792509201.5019202,
+    "seconds": 15.698705673217773,
+    "exit_code": 0
+  },
+  {
+    "name": "2-raw-open-lichtblick",
+    "repeat": 2,
+    "case": "raw-open",
+    "app": "lichtblick",
+    "start_unix": 1792509217.201838,
+    "seconds": 14.981753826141357,
+    "exit_code": 0
+  },
+  {
+    "name": "2-scan-360-native",
+    "repeat": 2,
+    "case": "scan-360",
+    "app": "native",
+    "start_unix": 1792509232.183978,
+    "seconds": 15.693414211273193,
+    "exit_code": 0
+  },
+  {
+    "name": "2-scan-360-lichtblick",
+    "repeat": 2,
+    "case": "scan-360",
+    "app": "lichtblick",
+    "start_unix": 1792509247.8787036,
+    "seconds": 15.56769585609436,
+    "exit_code": 0
+  },
+  {
+    "name": "excluded-dpms-2-scan-3600-native",
+    "repeat": 2,
+    "case": "scan-3600",
+    "app": "native",
+    "start_unix": 1792509263.4476187,
+    "seconds": 15.7241530418396,
+    "exit_code": 1,
+    "excluded": true,
+    "reason": "DPMS became Off; predeclared display condition invalid"
+  },
+  {
+    "name": "2-scan-3600-native",
+    "repeat": 2,
+    "case": "scan-3600",
+    "app": "native",
+    "start_unix": 1792509545.365787,
+    "seconds": 16.045634984970093,
+    "exit_code": 0
+  },
+  {
+    "name": "2-scan-3600-lichtblick",
+    "repeat": 2,
+    "case": "scan-3600",
+    "app": "lichtblick",
+    "start_unix": 1792509561.4124007,
+    "seconds": 15.549027919769287,
+    "exit_code": 0
+  },
+  {
+    "name": "2-scan-36000-native",
+    "repeat": 2,
+    "case": "scan-36000",
+    "app": "native",
+    "start_unix": 1792509576.9618347,
+    "seconds": 15.711565732955933,
+    "exit_code": 0
+  },
+  {
+    "name": "2-scan-36000-lichtblick",
+    "repeat": 2,
+    "case": "scan-36000",
+    "app": "lichtblick",
+    "start_unix": 1792509592.674832,
+    "seconds": 15.597757816314697,
+    "exit_code": 0
+  },
+  {
+    "name": "2-cloud-10000-native",
+    "repeat": 2,
+    "case": "cloud-10000",
+    "app": "native",
+    "start_unix": 1792509608.2729824,
+    "seconds": 15.711986780166626,
+    "exit_code": 0
+  },
+  {
+    "name": "2-cloud-10000-lichtblick",
+    "repeat": 2,
+    "case": "cloud-10000",
+    "app": "lichtblick",
+    "start_unix": 1792509623.986307,
+    "seconds": 15.595164060592651,
+    "exit_code": 0
+  },
+  {
+    "name": "2-cloud-60000-native",
+    "repeat": 2,
+    "case": "cloud-60000",
+    "app": "native",
+    "start_unix": 1792509639.5818815,
+    "seconds": 15.92634129524231,
+    "exit_code": 0
+  },
+  {
+    "name": "2-cloud-60000-lichtblick",
+    "repeat": 2,
+    "case": "cloud-60000",
+    "app": "lichtblick",
+    "start_unix": 1792509655.5086296,
+    "seconds": 15.674781799316406,
+    "exit_code": 0
+  }
+]

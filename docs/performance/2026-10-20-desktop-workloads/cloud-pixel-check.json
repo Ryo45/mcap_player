@@ -1,0 +1,48 @@
+{
+  "source_palette_rgb": [
+    [
+      255,
+      48,
+      32
+    ],
+    [
+      32,
+      255,
+      64
+    ],
+    [
+      48,
+      80,
+      255
+    ]
+  ],
+  "scope": "60000-point RGB calibration at 0.31s; no full-frame equality or continuous message-age claim",
+  "native": {
+    "source_palette_pixel_counts": [
+      40313,
+      36259,
+      35019
+    ],
+    "cloud_bounds_xyxy": [
+      792,
+      351,
+      1447,
+      718
+    ]
+  },
+  "lichtblick": {
+    "source_palette_pixel_counts": [
+      39067,
+      35101,
+      33857
+    ],
+    "cloud_bounds_xyxy": [
+      792,
+      351,
+      1447,
+      717
+    ]
+  },
+  "bounds_max_difference_px": 1,
+  "cloud_mask_intersection_over_union": 0.9680440178867471
+}
