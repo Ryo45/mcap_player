@@ -1,0 +1,442 @@
+{
+  "runs": [
+    {
+      "case": "1cam-20s",
+      "app": "native",
+      "repeat": 0,
+      "observed_updates_hz": 9.859656198819554,
+      "source_progress_hz": 9.859656198819554,
+      "lag_median_ms": 169.37842937186252,
+      "lag_p95_ms": 215.3499562293284,
+      "sampled_peak_pss_mib": 250.083984375,
+      "gpu_vram_after_play_mib": 25,
+      "cpu_one_core_percent": 32.666590524437375,
+      "seek_ms": [
+        107.6909126713872,
+        118.22110507637262,
+        94.32512987405062
+      ],
+      "rejected_samples": 0,
+      "samples": 240
+    },
+    {
+      "case": "1cam-20s",
+      "app": "lichtblick",
+      "repeat": 0,
+      "observed_updates_hz": 9.853990050909383,
+      "source_progress_hz": 9.853990050909383,
+      "lag_median_ms": 120.11722149327353,
+      "lag_p95_ms": 174.3240524083376,
+      "sampled_peak_pss_mib": 298.0810546875,
+      "gpu_vram_after_play_mib": 191,
+      "cpu_one_core_percent": 28.305185241826663,
+      "seek_ms": [
+        121.72850500792265,
+        85.51743347197771,
+        117.68598854541779
+      ],
+      "rejected_samples": 0,
+      "samples": 240
+    },
+    {
+      "case": "8cam-60s-one-selected",
+      "app": "native",
+      "repeat": 0,
+      "observed_updates_hz": 9.693295131280845,
+      "source_progress_hz": 9.860420909406377,
+      "lag_median_ms": 160.01471169292935,
+      "lag_p95_ms": 217.94585585594106,
+      "sampled_peak_pss_mib": 259.6201171875,
+      "gpu_vram_after_play_mib": 25,
+      "cpu_one_core_percent": 40.52285503641149,
+      "seek_ms": [
+        130.99341373890638,
+        119.47540380060673,
+        120.58049719780684
+      ],
+      "rejected_samples": 2,
+      "samples": 240
+    },
+    {
+      "case": "8cam-60s-one-selected",
+      "app": "lichtblick",
+      "repeat": 0,
+      "observed_updates_hz": 9.9440214796344,
+      "source_progress_hz": 9.9440214796344,
+      "lag_median_ms": 110.63832854852063,
+      "lag_p95_ms": 164.66928161680627,
+      "sampled_peak_pss_mib": 302.2822265625,
+      "gpu_vram_after_play_mib": 190,
+      "cpu_one_core_percent": 31.749688975316893,
+      "seek_ms": [
+        131.51867035776377,
+        109.51741598546505,
+        120.14600355178118
+      ],
+      "rejected_samples": 0,
+      "samples": 240
+    },
+    {
+      "case": "1cam-20s",
+      "app": "lichtblick",
+      "repeat": 1,
+      "observed_updates_hz": 9.945921441434882,
+      "source_progress_hz": 9.945921441434882,
+      "lag_median_ms": 114.10372806712843,
+      "lag_p95_ms": 165.6536916270852,
+      "sampled_peak_pss_mib": 289.5302734375,
+      "gpu_vram_after_play_mib": 190,
+      "cpu_one_core_percent": 24.401686781242404,
+      "seek_ms": [
+        94.78390030562878,
+        105.94352055341005,
+        105.93132860958576
+      ],
+      "rejected_samples": 0,
+      "samples": 240
+    },
+    {
+      "case": "1cam-20s",
+      "app": "native",
+      "repeat": 1,
+      "observed_updates_hz": 9.69250138822415,
+      "source_progress_hz": 9.776057434674359,
+      "lag_median_ms": 208.4312862716613,
+      "lag_p95_ms": 268.0809624493108,
+      "sampled_peak_pss_mib": 250.517578125,
+      "gpu_vram_after_play_mib": 25,
+      "cpu_one_core_percent": 34.504635411556094,
+      "seek_ms": [
+        119.28317882120609,
+        122.01954331248999,
+        118.66111308336258
+      ],
+      "rejected_samples": 0,
+      "samples": 240
+    },
+    {
+      "case": "8cam-60s-one-selected",
+      "app": "lichtblick",
+      "repeat": 1,
+      "observed_updates_hz": 9.944499555531255,
+      "source_progress_hz": 9.944499555531255,
+      "lag_median_ms": 113.12969643622672,
+      "lag_p95_ms": 170.54951861500632,
+      "sampled_peak_pss_mib": 296.6328125,
+      "gpu_vram_after_play_mib": 188,
+      "cpu_one_core_percent": 31.082455354884395,
+      "seek_ms": [
+        143.8860921189189,
+        128.61109524965286,
+        118.40506084263325
+      ],
+      "rejected_samples": 5,
+      "samples": 240
+    },
+    {
+      "case": "8cam-60s-one-selected",
+      "app": "native",
+      "repeat": 1,
+      "observed_updates_hz": 9.685597400007753,
+      "source_progress_hz": 9.852590458628576,
+      "lag_median_ms": 172.8916615247722,
+      "lag_p95_ms": 220.0852882117026,
+      "sampled_peak_pss_mib": 267.9150390625,
+      "gpu_vram_after_play_mib": 25,
+      "cpu_one_core_percent": 39.4054994110156,
+      "seek_ms": [
+        119.15952898561954,
+        118.69167070835829,
+        119.3802859634161
+      ],
+      "rejected_samples": 0,
+      "samples": 240
+    },
+    {
+      "case": "1cam-20s",
+      "app": "native",
+      "repeat": 2,
+      "observed_updates_hz": 9.692088435697201,
+      "source_progress_hz": 9.859193408726464,
+      "lag_median_ms": 162.00354387983663,
+      "lag_p95_ms": 213.7040114030242,
+      "sampled_peak_pss_mib": 246.833984375,
+      "gpu_vram_after_play_mib": 25,
+      "cpu_one_core_percent": 37.259922479467704,
+      "seek_ms": [
+        108.16710069775581,
+        119.3159343674779,
+        95.3082786872983
+      ],
+      "rejected_samples": 0,
+      "samples": 240
+    },
+    {
+      "case": "1cam-20s",
+      "app": "lichtblick",
+      "repeat": 2,
+      "observed_updates_hz": 9.94633945936213,
+      "source_progress_hz": 9.94633945936213,
+      "lag_median_ms": 114.66834517195767,
+      "lag_p95_ms": 170.1777121052146,
+      "sampled_peak_pss_mib": 300.9697265625,
+      "gpu_vram_after_play_mib": 191,
+      "cpu_one_core_percent": 27.578328988070652,
+      "seek_ms": [
+        96.55321016907692,
+        96.0407629609108,
+        106.00374080240726
+      ],
+      "rejected_samples": 0,
+      "samples": 240
+    },
+    {
+      "case": "8cam-60s-one-selected",
+      "app": "native",
+      "repeat": 2,
+      "observed_updates_hz": 9.850017667984952,
+      "source_progress_hz": 9.850017667984952,
+      "lag_median_ms": 192.0870508067306,
+      "lag_p95_ms": 229.56308349967003,
+      "sampled_peak_pss_mib": 259.7021484375,
+      "gpu_vram_after_play_mib": 25,
+      "cpu_one_core_percent": 40.14638221267994,
+      "seek_ms": [
+        119.0016558393836,
+        119.68419514596462,
+        119.33706235140562
+      ],
+      "rejected_samples": 0,
+      "samples": 240
+    },
+    {
+      "case": "8cam-60s-one-selected",
+      "app": "lichtblick",
+      "repeat": 2,
+      "observed_updates_hz": 9.86028876187482,
+      "source_progress_hz": 9.86028876187482,
+      "lag_median_ms": 135.34670127555694,
+      "lag_p95_ms": 170.93162350356562,
+      "sampled_peak_pss_mib": 295.705078125,
+      "gpu_vram_after_play_mib": 191,
+      "cpu_one_core_percent": 35.17461366045873,
+      "seek_ms": [
+        141.96115639060736,
+        128.4815650433302,
+        118.57258714735508
+      ],
+      "rejected_samples": 4,
+      "samples": 240
+    }
+  ],
+  "groups": [
+    {
+      "case": "1cam-20s",
+      "app": "native",
+      "runs": 3,
+      "medians": {
+        "observed_updates_hz": 9.69250138822415,
+        "source_progress_hz": 9.859193408726464,
+        "lag_median_ms": 169.37842937186252,
+        "lag_p95_ms": 215.3499562293284,
+        "sampled_peak_pss_mib": 250.083984375,
+        "gpu_vram_after_play_mib": 25,
+        "cpu_one_core_percent": 34.504635411556094
+      },
+      "ranges": {
+        "observed_updates_hz": [
+          9.692088435697201,
+          9.859656198819554
+        ],
+        "source_progress_hz": [
+          9.776057434674359,
+          9.859656198819554
+        ],
+        "lag_median_ms": [
+          162.00354387983663,
+          208.4312862716613
+        ],
+        "lag_p95_ms": [
+          213.7040114030242,
+          268.0809624493108
+        ],
+        "sampled_peak_pss_mib": [
+          246.833984375,
+          250.517578125
+        ],
+        "gpu_vram_after_play_mib": [
+          25,
+          25
+        ],
+        "cpu_one_core_percent": [
+          32.666590524437375,
+          37.259922479467704
+        ]
+      },
+      "rejected_samples": 0,
+      "samples": 720,
+      "seek_ms": {
+        "median": 118.22110507637262,
+        "min": 94.32512987405062,
+        "max": 122.01954331248999,
+        "n": 9
+      }
+    },
+    {
+      "case": "1cam-20s",
+      "app": "lichtblick",
+      "runs": 3,
+      "medians": {
+        "observed_updates_hz": 9.945921441434882,
+        "source_progress_hz": 9.945921441434882,
+        "lag_median_ms": 114.66834517195767,
+        "lag_p95_ms": 170.1777121052146,
+        "sampled_peak_pss_mib": 298.0810546875,
+        "gpu_vram_after_play_mib": 191,
+        "cpu_one_core_percent": 27.578328988070652
+      },
+      "ranges": {
+        "observed_updates_hz": [
+          9.853990050909383,
+          9.94633945936213
+        ],
+        "source_progress_hz": [
+          9.853990050909383,
+          9.94633945936213
+        ],
+        "lag_median_ms": [
+          114.10372806712843,
+          120.11722149327353
+        ],
+        "lag_p95_ms": [
+          165.6536916270852,
+          174.3240524083376
+        ],
+        "sampled_peak_pss_mib": [
+          289.5302734375,
+          300.9697265625
+        ],
+        "gpu_vram_after_play_mib": [
+          190,
+          191
+        ],
+        "cpu_one_core_percent": [
+          24.401686781242404,
+          28.305185241826663
+        ]
+      },
+      "rejected_samples": 0,
+      "samples": 720,
+      "seek_ms": {
+        "median": 105.93132860958576,
+        "min": 85.51743347197771,
+        "max": 121.72850500792265,
+        "n": 9
+      }
+    },
+    {
+      "case": "8cam-60s-one-selected",
+      "app": "native",
+      "runs": 3,
+      "medians": {
+        "observed_updates_hz": 9.693295131280845,
+        "source_progress_hz": 9.852590458628576,
+        "lag_median_ms": 172.8916615247722,
+        "lag_p95_ms": 220.0852882117026,
+        "sampled_peak_pss_mib": 259.7021484375,
+        "gpu_vram_after_play_mib": 25,
+        "cpu_one_core_percent": 40.14638221267994
+      },
+      "ranges": {
+        "observed_updates_hz": [
+          9.685597400007753,
+          9.850017667984952
+        ],
+        "source_progress_hz": [
+          9.850017667984952,
+          9.860420909406377
+        ],
+        "lag_median_ms": [
+          160.01471169292935,
+          192.0870508067306
+        ],
+        "lag_p95_ms": [
+          217.94585585594106,
+          229.56308349967003
+        ],
+        "sampled_peak_pss_mib": [
+          259.6201171875,
+          267.9150390625
+        ],
+        "gpu_vram_after_play_mib": [
+          25,
+          25
+        ],
+        "cpu_one_core_percent": [
+          39.4054994110156,
+          40.52285503641149
+        ]
+      },
+      "rejected_samples": 2,
+      "samples": 720,
+      "seek_ms": {
+        "median": 119.3802859634161,
+        "min": 118.69167070835829,
+        "max": 130.99341373890638,
+        "n": 9
+      }
+    },
+    {
+      "case": "8cam-60s-one-selected",
+      "app": "lichtblick",
+      "runs": 3,
+      "medians": {
+        "observed_updates_hz": 9.9440214796344,
+        "source_progress_hz": 9.9440214796344,
+        "lag_median_ms": 113.12969643622672,
+        "lag_p95_ms": 170.54951861500632,
+        "sampled_peak_pss_mib": 296.6328125,
+        "gpu_vram_after_play_mib": 190,
+        "cpu_one_core_percent": 31.749688975316893
+      },
+      "ranges": {
+        "observed_updates_hz": [
+          9.86028876187482,
+          9.944499555531255
+        ],
+        "source_progress_hz": [
+          9.86028876187482,
+          9.944499555531255
+        ],
+        "lag_median_ms": [
+          110.63832854852063,
+          135.34670127555694
+        ],
+        "lag_p95_ms": [
+          164.66928161680627,
+          170.93162350356562
+        ],
+        "sampled_peak_pss_mib": [
+          295.705078125,
+          302.2822265625
+        ],
+        "gpu_vram_after_play_mib": [
+          188,
+          191
+        ],
+        "cpu_one_core_percent": [
+          31.082455354884395,
+          35.17461366045873
+        ]
+      },
+      "rejected_samples": 9,
+      "samples": 720,
+      "seek_ms": {
+        "median": 128.4815650433302,
+        "min": 109.51741598546505,
+        "max": 143.8860921189189,
+        "n": 9
+      }
+    }
+  ]
+}

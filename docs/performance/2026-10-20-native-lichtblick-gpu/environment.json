@@ -1,0 +1,24 @@
+{
+  "native_source_baseline": "8ce2533",
+  "lichtblick_version": "1.29.1",
+  "lichtblick_source": "95713edb309d77589b130286642ab149995a5f7b",
+  "dataset_sha256": {
+    "1cam-20s": "fe2191b830a59e69fba52aec674ff4e7df2ad6d2d8104d995cb837a87cb89615",
+    "8cam-60s-one-selected": "9f31b9ad47758f2f2313b83b584240757241330e71060ba537b5a8716ceda07e"
+  },
+  "harness_sha256": [
+    "cf8d0460169b3e40e487387a9bdc56961340ba9c066eab0edc54aeda8f3493a2"
+  ],
+  "native_binary_sha256": [
+    "3c781fedf033dacfdabe056af94e24ca8b084f893212376687afab0f9055456c"
+  ],
+  "desktop_binary_sha256": [
+    "180eea79cebc825a7e7291b8c5ef387760773f2b03596751bda8e6e532a8b6c8"
+  ],
+  "retained_screenshots": "played.png for repeat 0 in every condition; ready.png for repeat 0 in the large recording; other screenshots remain in /tmp/mcap-native-desktop-gpu-final",
+  "native_absolute_texture_times": "all 24 Native Seek/restore predecessor timestamps found in app.log",
+  "verification": "12 successful fresh-process runs; 48 pixel-verified seek/restore actions; every run selected NVIDIA; source Rust diff empty",
+  "calibration_attempts": "Earlier /tmp/mcap-gpu-*-smoke* and /tmp/mcap-native-desktop-gpu-results used provisional probes. Excluded from results. Fixed unmapped auxiliary Electron window selection, GTK frame inset, DPMS, and confidence rejection during development.",
+  "run_native_desktop_comparison.py_sha256": "464cfecb0bb2cbbf10a78128c59940fc7b907ab982a9f6ab4b176839988e6854",
+  "summarize_native_desktop.py_sha256": "ed29a2f66d59f3dadd7d74c5e9c1cf093478c758922689dd376e6272c3c8c691"
+}

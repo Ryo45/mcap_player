@@ -1,0 +1,5510 @@
+{
+  "app": "lichtblick",
+  "status": "ok",
+  "dataset_sha256": "fe2191b830a59e69fba52aec674ff4e7df2ad6d2d8104d995cb837a87cb89615",
+  "dataset_bytes": 622973335,
+  "samples": [
+    {
+      "s": 0.0017166100442409515,
+      "valid_identity": true,
+      "capture_ms": 1.7148107290267944,
+      "forward_frame": 0,
+      "wall_lag_ms": 1.7166100442409515,
+      "variant": 0,
+      "mae": 2.640454545454545,
+      "second_mae": 6.576818181818182,
+      "resources": {
+        "pss_kib": 254920,
+        "summed_rss_kib": 472548,
+        "cpu_seconds_live_processes": 0.93,
+        "rchar_live_processes": 599236125,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 105794,
+            "rss_kib": 189088
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12577,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 119283,
+            "rss_kib": 178280
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689604,
+          "nsec": 110000000
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": false,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 0.0517920283600688,
+      "valid_identity": true,
+      "capture_ms": 1.7277449369430542,
+      "forward_frame": 0,
+      "wall_lag_ms": 51.7920283600688,
+      "variant": 0,
+      "mae": 2.640454545454545,
+      "second_mae": 6.576818181818182
+    },
+    {
+      "s": 0.10166040156036615,
+      "valid_identity": true,
+      "capture_ms": 1.534910872578621,
+      "forward_frame": 0,
+      "wall_lag_ms": 101.66040156036615,
+      "variant": 0,
+      "mae": 2.640454545454545,
+      "second_mae": 6.576818181818182
+    },
+    {
+      "s": 0.15164701454341412,
+      "valid_identity": true,
+      "capture_ms": 1.4657294377684593,
+      "forward_frame": 0,
+      "wall_lag_ms": 151.64701454341412,
+      "variant": 0,
+      "mae": 2.640454545454545,
+      "second_mae": 6.576818181818182
+    },
+    {
+      "s": 0.2018549544736743,
+      "valid_identity": true,
+      "capture_ms": 1.6159480437636375,
+      "forward_frame": 1,
+      "wall_lag_ms": 101.8549544736743,
+      "variant": 1,
+      "mae": 3.008484848484848,
+      "second_mae": 6.123787878787878
+    },
+    {
+      "s": 0.2517520980909467,
+      "valid_identity": true,
+      "capture_ms": 1.4570513740181923,
+      "forward_frame": 1,
+      "wall_lag_ms": 151.75209809094667,
+      "variant": 1,
+      "mae": 3.008484848484848,
+      "second_mae": 6.123787878787878,
+      "resources": {
+        "pss_kib": 260102,
+        "summed_rss_kib": 476708,
+        "cpu_seconds_live_processes": 1.01,
+        "rchar_live_processes": 645923795,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 110970,
+            "rss_kib": 193240
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12577,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 119289,
+            "rss_kib": 178288
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689600,
+          "nsec": 261937598
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 0.3020185446366668,
+      "valid_identity": true,
+      "capture_ms": 1.6651339828968048,
+      "forward_frame": 2,
+      "wall_lag_ms": 102.01854463666676,
+      "variant": 2,
+      "mae": 2.7151515151515153,
+      "second_mae": 4.835151515151515
+    },
+    {
+      "s": 0.3519802028313279,
+      "valid_identity": true,
+      "capture_ms": 1.5679774805903435,
+      "forward_frame": 2,
+      "wall_lag_ms": 151.98020283132792,
+      "variant": 2,
+      "mae": 2.7151515151515153,
+      "second_mae": 4.835151515151515
+    },
+    {
+      "s": 0.4019521549344063,
+      "valid_identity": true,
+      "capture_ms": 1.4817891642451286,
+      "forward_frame": 3,
+      "wall_lag_ms": 101.95215493440624,
+      "variant": 3,
+      "mae": 2.5824242424242425,
+      "second_mae": 4.814848484848485
+    },
+    {
+      "s": 0.45205114129930735,
+      "valid_identity": true,
+      "capture_ms": 1.5175417065620422,
+      "forward_frame": 3,
+      "wall_lag_ms": 152.0511412993073,
+      "variant": 3,
+      "mae": 2.5824242424242425,
+      "second_mae": 4.814848484848485
+    },
+    {
+      "s": 0.5021438095718622,
+      "valid_identity": true,
+      "capture_ms": 1.5441589057445526,
+      "forward_frame": 4,
+      "wall_lag_ms": 102.14380957186219,
+      "variant": 4,
+      "mae": 2.374393939393939,
+      "second_mae": 5.712575757575758,
+      "resources": {
+        "pss_kib": 269368,
+        "summed_rss_kib": 485976,
+        "cpu_seconds_live_processes": 1.06,
+        "rchar_live_processes": 655104494,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 120242,
+            "rss_kib": 202512
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12577,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 119283,
+            "rss_kib": 178284
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689600,
+          "nsec": 525096184
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 0.5523461876437068,
+      "valid_identity": true,
+      "capture_ms": 1.6808351501822472,
+      "forward_frame": 4,
+      "wall_lag_ms": 152.34618764370677,
+      "variant": 4,
+      "mae": 2.374393939393939,
+      "second_mae": 5.712575757575758
+    },
+    {
+      "s": 0.6023290399461985,
+      "valid_identity": true,
+      "capture_ms": 1.6005979850888252,
+      "forward_frame": 5,
+      "wall_lag_ms": 102.32903994619846,
+      "variant": 5,
+      "mae": 2.5692424242424243,
+      "second_mae": 6.359545454545454
+    },
+    {
+      "s": 0.6524053663015366,
+      "valid_identity": true,
+      "capture_ms": 1.6105901449918747,
+      "forward_frame": 5,
+      "wall_lag_ms": 152.40536630153656,
+      "variant": 5,
+      "mae": 2.5692424242424243,
+      "second_mae": 6.359545454545454
+    },
+    {
+      "s": 0.7024509264156222,
+      "valid_identity": true,
+      "capture_ms": 1.5908954665064812,
+      "forward_frame": 6,
+      "wall_lag_ms": 102.45092641562215,
+      "variant": 6,
+      "mae": 3.345757575757576,
+      "second_mae": 5.856818181818182
+    },
+    {
+      "s": 0.752656421624124,
+      "valid_identity": true,
+      "capture_ms": 1.732279546558857,
+      "forward_frame": 6,
+      "wall_lag_ms": 152.65642162412396,
+      "variant": 6,
+      "mae": 3.345757575757576,
+      "second_mae": 5.856818181818182,
+      "resources": {
+        "pss_kib": 254160,
+        "summed_rss_kib": 470772,
+        "cpu_seconds_live_processes": 1.1,
+        "rchar_live_processes": 664556151,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 105046,
+            "rss_kib": 187316
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12577,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 119271,
+            "rss_kib": 178276
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689600,
+          "nsec": 778188454
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 0.802586262114346,
+      "valid_identity": true,
+      "capture_ms": 1.6039060428738594,
+      "forward_frame": 7,
+      "wall_lag_ms": 102.58626211434596,
+      "variant": 7,
+      "mae": 3.368484848484848,
+      "second_mae": 5.481515151515151
+    },
+    {
+      "s": 0.8527156254276633,
+      "valid_identity": true,
+      "capture_ms": 1.6690241172909737,
+      "forward_frame": 7,
+      "wall_lag_ms": 152.71562542766327,
+      "variant": 7,
+      "mae": 3.368484848484848,
+      "second_mae": 5.481515151515151
+    },
+    {
+      "s": 0.9026235416531563,
+      "valid_identity": true,
+      "capture_ms": 1.5150466933846474,
+      "forward_frame": 8,
+      "wall_lag_ms": 102.62354165315624,
+      "variant": 8,
+      "mae": 2.2337878787878784,
+      "second_mae": 6.041363636363636
+    },
+    {
+      "s": 0.9530010130256414,
+      "valid_identity": true,
+      "capture_ms": 1.8304446712136269,
+      "forward_frame": 8,
+      "wall_lag_ms": 153.00101302564138,
+      "variant": 8,
+      "mae": 2.2337878787878784,
+      "second_mae": 6.041363636363636
+    },
+    {
+      "s": 1.0028365217149258,
+      "valid_identity": true,
+      "capture_ms": 1.6040680930018425,
+      "forward_frame": 9,
+      "wall_lag_ms": 102.83652171492574,
+      "variant": 9,
+      "mae": 2.534545454545455,
+      "second_mae": 4.114393939393938,
+      "resources": {
+        "pss_kib": 263034,
+        "summed_rss_kib": 479724,
+        "cpu_seconds_live_processes": 1.15,
+        "rchar_live_processes": 674003123,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 113979,
+            "rss_kib": 196312
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12577,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 119212,
+            "rss_kib": 178232
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689601,
+          "nsec": 18941642
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 1.0532144038006663,
+      "valid_identity": true,
+      "capture_ms": 1.9232891499996185,
+      "forward_frame": 9,
+      "wall_lag_ms": 153.2144038006663,
+      "variant": 9,
+      "mae": 2.534545454545455,
+      "second_mae": 4.114393939393938
+    },
+    {
+      "s": 1.1029206765815616,
+      "valid_identity": true,
+      "capture_ms": 1.5698093920946121,
+      "forward_frame": 10,
+      "wall_lag_ms": 102.92067658156157,
+      "variant": 10,
+      "mae": 2.583939393939394,
+      "second_mae": 4.539242424242425
+    },
+    {
+      "s": 1.1544728996232152,
+      "valid_identity": true,
+      "capture_ms": 3.061516210436821,
+      "forward_frame": 10,
+      "wall_lag_ms": 154.4728996232152,
+      "variant": 10,
+      "mae": 2.583939393939394,
+      "second_mae": 4.539242424242425
+    },
+    {
+      "s": 1.2029554899781942,
+      "valid_identity": true,
+      "capture_ms": 1.484973356127739,
+      "forward_frame": 11,
+      "wall_lag_ms": 102.95548997819415,
+      "variant": 11,
+      "mae": 2.835757575757576,
+      "second_mae": 5.4753030303030314
+    },
+    {
+      "s": 1.2533687427639961,
+      "valid_identity": true,
+      "capture_ms": 1.831376925110817,
+      "forward_frame": 11,
+      "wall_lag_ms": 153.36874276399604,
+      "variant": 11,
+      "mae": 2.835757575757576,
+      "second_mae": 5.4753030303030314,
+      "resources": {
+        "pss_kib": 269128,
+        "summed_rss_kib": 485820,
+        "cpu_seconds_live_processes": 1.19,
+        "rchar_live_processes": 674004010,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 120067,
+            "rss_kib": 202400
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12577,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 119218,
+            "rss_kib": 178240
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689601,
+          "nsec": 286882857
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 1.3032711585983634,
+      "valid_identity": true,
+      "capture_ms": 1.6733892261981964,
+      "forward_frame": 12,
+      "wall_lag_ms": 103.27115859836323,
+      "variant": 12,
+      "mae": 2.2571212121212127,
+      "second_mae": 6.122878787878788
+    },
+    {
+      "s": 1.3533032070845366,
+      "valid_identity": true,
+      "capture_ms": 1.6431333497166634,
+      "forward_frame": 12,
+      "wall_lag_ms": 153.30320708453638,
+      "variant": 12,
+      "mae": 2.2571212121212127,
+      "second_mae": 6.122878787878788
+    },
+    {
+      "s": 1.403396944515407,
+      "valid_identity": true,
+      "capture_ms": 1.6684886068105698,
+      "forward_frame": 13,
+      "wall_lag_ms": 103.39694451540704,
+      "variant": 13,
+      "mae": 2.6051515151515146,
+      "second_mae": 4.343787878787878
+    },
+    {
+      "s": 1.4533386370167136,
+      "valid_identity": true,
+      "capture_ms": 1.544642262160778,
+      "forward_frame": 13,
+      "wall_lag_ms": 153.33863701671356,
+      "variant": 13,
+      "mae": 2.6051515151515146,
+      "second_mae": 4.343787878787878
+    },
+    {
+      "s": 1.5034177005290985,
+      "valid_identity": true,
+      "capture_ms": 1.5655597671866417,
+      "forward_frame": 14,
+      "wall_lag_ms": 103.41770052909838,
+      "variant": 14,
+      "mae": 2.7625757575757572,
+      "second_mae": 4.833636363636363,
+      "resources": {
+        "pss_kib": 257128,
+        "summed_rss_kib": 473832,
+        "cpu_seconds_live_processes": 1.26,
+        "rchar_live_processes": 692612398,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 108067,
+            "rss_kib": 190400
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12577,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 119218,
+            "rss_kib": 178252
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689601,
+          "nsec": 521636253
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 1.5537126315757632,
+      "valid_identity": true,
+      "capture_ms": 1.7996365204453468,
+      "forward_frame": 14,
+      "wall_lag_ms": 153.71263157576308,
+      "variant": 14,
+      "mae": 2.7625757575757572,
+      "second_mae": 4.833636363636363
+    },
+    {
+      "s": 1.6036219140514731,
+      "valid_identity": true,
+      "capture_ms": 1.6447585076093674,
+      "forward_frame": 15,
+      "wall_lag_ms": 103.62191405147314,
+      "variant": 15,
+      "mae": 2.9369696969696966,
+      "second_mae": 5.732424242424242
+    },
+    {
+      "s": 1.6534776976332068,
+      "valid_identity": true,
+      "capture_ms": 1.4410549774765968,
+      "forward_frame": 15,
+      "wall_lag_ms": 153.47769763320684,
+      "variant": 15,
+      "mae": 2.9369696969696966,
+      "second_mae": 5.732424242424242
+    },
+    {
+      "s": 1.7035996718332171,
+      "valid_identity": true,
+      "capture_ms": 1.5073232352733612,
+      "forward_frame": 16,
+      "wall_lag_ms": 103.59967183321706,
+      "variant": 16,
+      "mae": 2.3701515151515156,
+      "second_mae": 6.256212121212121
+    },
+    {
+      "s": 1.7537488648667932,
+      "valid_identity": true,
+      "capture_ms": 1.5893811360001564,
+      "forward_frame": 16,
+      "wall_lag_ms": 153.74886486679307,
+      "variant": 16,
+      "mae": 2.3701515151515156,
+      "second_mae": 6.256212121212121,
+      "resources": {
+        "pss_kib": 263004,
+        "summed_rss_kib": 479712,
+        "cpu_seconds_live_processes": 1.3,
+        "rchar_live_processes": 692613147,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 113951,
+            "rss_kib": 196284
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12577,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 119210,
+            "rss_kib": 178248
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689601,
+          "nsec": 788448885
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 1.8037606431171298,
+      "valid_identity": true,
+      "capture_ms": 1.5420271083712578,
+      "forward_frame": 17,
+      "wall_lag_ms": 103.76064311712963,
+      "variant": 17,
+      "mae": 2.802424242424243,
+      "second_mae": 6.192878787878788
+    },
+    {
+      "s": 1.8542102640494704,
+      "valid_identity": true,
+      "capture_ms": 1.9305814057588577,
+      "forward_frame": 17,
+      "wall_lag_ms": 154.21026404947025,
+      "variant": 17,
+      "mae": 2.802424242424243,
+      "second_mae": 6.192878787878788
+    },
+    {
+      "s": 1.904231340624392,
+      "valid_identity": true,
+      "capture_ms": 1.8905559554696083,
+      "forward_frame": 18,
+      "wall_lag_ms": 104.23134062439199,
+      "variant": 18,
+      "mae": 3.308181818181818,
+      "second_mae": 6.88439393939394
+    },
+    {
+      "s": 1.9542538281530142,
+      "valid_identity": true,
+      "capture_ms": 1.8503367900848389,
+      "forward_frame": 18,
+      "wall_lag_ms": 154.25382815301413,
+      "variant": 18,
+      "mae": 3.308181818181818,
+      "second_mae": 6.88439393939394
+    },
+    {
+      "s": 2.0044414903968573,
+      "valid_identity": true,
+      "capture_ms": 1.9709570333361626,
+      "forward_frame": 19,
+      "wall_lag_ms": 104.44149039685713,
+      "variant": 19,
+      "mae": 3.7446969696969687,
+      "second_mae": 7.764393939393939,
+      "resources": {
+        "pss_kib": 276326,
+        "summed_rss_kib": 493036,
+        "cpu_seconds_live_processes": 1.38,
+        "rchar_live_processes": 702056898,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 123211,
+            "rss_kib": 205544
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12577,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 123272,
+            "rss_kib": 182312
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689602,
+          "nsec": 32498119
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 2.0544012393802404,
+      "valid_identity": true,
+      "capture_ms": 1.8743574619293213,
+      "forward_frame": 19,
+      "wall_lag_ms": 154.4012393802403,
+      "variant": 19,
+      "mae": 3.7446969696969687,
+      "second_mae": 7.764393939393939
+    },
+    {
+      "s": 2.1046886928379536,
+      "valid_identity": true,
+      "capture_ms": 2.1040616557002068,
+      "forward_frame": 20,
+      "wall_lag_ms": 104.68869283795357,
+      "variant": 20,
+      "mae": 2.600151515151515,
+      "second_mae": 6.486818181818181
+    },
+    {
+      "s": 2.1544053247198462,
+      "valid_identity": true,
+      "capture_ms": 1.7618760466575623,
+      "forward_frame": 20,
+      "wall_lag_ms": 154.40532471984625,
+      "variant": 20,
+      "mae": 2.600151515151515,
+      "second_mae": 6.486818181818181
+    },
+    {
+      "s": 2.2046805629506707,
+      "valid_identity": true,
+      "capture_ms": 1.9797645509243011,
+      "forward_frame": 21,
+      "wall_lag_ms": 104.68056295067063,
+      "variant": 21,
+      "mae": 3.869242424242424,
+      "second_mae": 5.672272727272727
+    },
+    {
+      "s": 2.2547659343108535,
+      "valid_identity": true,
+      "capture_ms": 2.0075924694538116,
+      "forward_frame": 21,
+      "wall_lag_ms": 154.7659343108534,
+      "variant": 21,
+      "mae": 3.869242424242424,
+      "second_mae": 5.672272727272727,
+      "resources": {
+        "pss_kib": 282508,
+        "summed_rss_kib": 499220,
+        "cpu_seconds_live_processes": 1.43,
+        "rchar_live_processes": 711245168,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 129391,
+            "rss_kib": 211724
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12577,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 123274,
+            "rss_kib": 182316
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689602,
+          "nsec": 273278436
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 2.3049098793417215,
+      "valid_identity": true,
+      "capture_ms": 2.094767987728119,
+      "forward_frame": 22,
+      "wall_lag_ms": 104.90987934172136,
+      "variant": 22,
+      "mae": 3.628030303030303,
+      "second_mae": 5.8130303030303025
+    },
+    {
+      "s": 2.354680179618299,
+      "valid_identity": true,
+      "capture_ms": 1.8056109547615051,
+      "forward_frame": 22,
+      "wall_lag_ms": 154.68017961829884,
+      "variant": 22,
+      "mae": 3.628030303030303,
+      "second_mae": 5.8130303030303025
+    },
+    {
+      "s": 2.405308499932289,
+      "valid_identity": true,
+      "capture_ms": 2.3737242445349693,
+      "forward_frame": 23,
+      "wall_lag_ms": 105.30849993228885,
+      "variant": 23,
+      "mae": 2.772424242424242,
+      "second_mae": 6.075909090909091
+    },
+    {
+      "s": 2.4549492243677378,
+      "valid_identity": true,
+      "capture_ms": 1.9535468891263008,
+      "forward_frame": 23,
+      "wall_lag_ms": 154.94922436773751,
+      "variant": 23,
+      "mae": 2.772424242424242,
+      "second_mae": 6.075909090909091
+    },
+    {
+      "s": 2.5050883758813143,
+      "valid_identity": true,
+      "capture_ms": 2.0263874903321266,
+      "forward_frame": 24,
+      "wall_lag_ms": 105.08837588131392,
+      "variant": 24,
+      "mae": 2.7733333333333334,
+      "second_mae": 4.569545454545454,
+      "resources": {
+        "pss_kib": 258092,
+        "summed_rss_kib": 474808,
+        "cpu_seconds_live_processes": 1.49,
+        "rchar_live_processes": 720703472,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 104971,
+            "rss_kib": 187304
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12577,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 123278,
+            "rss_kib": 182324
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689602,
+          "nsec": 524139143
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 2.561183698475361,
+      "valid_identity": true,
+      "capture_ms": 8.058760315179825,
+      "forward_frame": 24,
+      "wall_lag_ms": 161.18369847536053,
+      "variant": 24,
+      "mae": 2.7733333333333334,
+      "second_mae": 4.569545454545454
+    },
+    {
+      "s": 2.6051005236804485,
+      "valid_identity": true,
+      "capture_ms": 1.915808767080307,
+      "forward_frame": 25,
+      "wall_lag_ms": 105.10052368044853,
+      "variant": 25,
+      "mae": 2.8854545454545453,
+      "second_mae": 4.739848484848484
+    },
+    {
+      "s": 2.6550305522978306,
+      "valid_identity": true,
+      "capture_ms": 1.7882129177451134,
+      "forward_frame": 25,
+      "wall_lag_ms": 155.03055229783058,
+      "variant": 25,
+      "mae": 2.8854545454545453,
+      "second_mae": 4.739848484848484
+    },
+    {
+      "s": 2.7052556313574314,
+      "valid_identity": true,
+      "capture_ms": 1.952270045876503,
+      "forward_frame": 26,
+      "wall_lag_ms": 105.25563135743133,
+      "variant": 26,
+      "mae": 3.209242424242424,
+      "second_mae": 6.221515151515152
+    },
+    {
+      "s": 2.760435950011015,
+      "valid_identity": true,
+      "capture_ms": 7.075131870806217,
+      "forward_frame": 26,
+      "wall_lag_ms": 160.43595001101485,
+      "variant": 26,
+      "mae": 3.209242424242424,
+      "second_mae": 6.221515151515152,
+      "resources": {
+        "pss_kib": 268403,
+        "summed_rss_kib": 485128,
+        "cpu_seconds_live_processes": 1.57,
+        "rchar_live_processes": 729878408,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 111208,
+            "rss_kib": 193568
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12576,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 127353,
+            "rss_kib": 186380
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689602,
+          "nsec": 769064894
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 2.8055216930806637,
+      "valid_identity": true,
+      "capture_ms": 2.102126367390156,
+      "forward_frame": 27,
+      "wall_lag_ms": 105.52169308066351,
+      "variant": 27,
+      "mae": 3.2754545454545454,
+      "second_mae": 6.428787878787879
+    },
+    {
+      "s": 2.856056544929743,
+      "valid_identity": true,
+      "capture_ms": 2.578779123723507,
+      "forward_frame": 27,
+      "wall_lag_ms": 156.05654492974264,
+      "variant": 27,
+      "mae": 3.2754545454545454,
+      "second_mae": 6.428787878787879
+    },
+    {
+      "s": 2.9054783415049314,
+      "valid_identity": true,
+      "capture_ms": 1.9427891820669174,
+      "forward_frame": 28,
+      "wall_lag_ms": 105.47834150493118,
+      "variant": 28,
+      "mae": 2.7863636363636366,
+      "second_mae": 4.711060606060606
+    },
+    {
+      "s": 2.955529776401818,
+      "valid_identity": true,
+      "capture_ms": 1.9363807514309883,
+      "forward_frame": 28,
+      "wall_lag_ms": 155.52977640181754,
+      "variant": 28,
+      "mae": 2.7863636363636366,
+      "second_mae": 4.711060606060606
+    },
+    {
+      "s": 3.005667737685144,
+      "valid_identity": true,
+      "capture_ms": 2.017456106841564,
+      "forward_frame": 29,
+      "wall_lag_ms": 105.66773768514359,
+      "variant": 29,
+      "mae": 2.839545454545455,
+      "second_mae": 4.948484848484849
+    },
+    {
+      "s": 3.0560719510540366,
+      "valid_identity": true,
+      "capture_ms": 2.363874576985836,
+      "forward_frame": 29,
+      "wall_lag_ms": 156.07195105403628,
+      "variant": 29,
+      "mae": 2.839545454545455,
+      "second_mae": 4.948484848484849,
+      "resources": {
+        "pss_kib": 278713,
+        "summed_rss_kib": 496488,
+        "cpu_seconds_live_processes": 1.65,
+        "rchar_live_processes": 735516162,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 121492,
+            "rss_kib": 204876
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12576,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 127379,
+            "rss_kib": 186432
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689603,
+          "nsec": 71328868
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 3.1058600498363376,
+      "valid_identity": true,
+      "capture_ms": 2.0928112789988518,
+      "forward_frame": 30,
+      "wall_lag_ms": 105.86004983633757,
+      "variant": 30,
+      "mae": 3.4904545454545457,
+      "second_mae": 5.90090909090909
+    },
+    {
+      "s": 3.1616946700960398,
+      "valid_identity": true,
+      "capture_ms": 7.866802625358105,
+      "forward_frame": 30,
+      "wall_lag_ms": 161.69467009603977,
+      "variant": 30,
+      "mae": 3.4904545454545457,
+      "second_mae": 5.90090909090909
+    },
+    {
+      "s": 3.205729829147458,
+      "valid_identity": true,
+      "capture_ms": 1.8446743488311768,
+      "forward_frame": 31,
+      "wall_lag_ms": 105.72982914745799,
+      "variant": 31,
+      "mae": 3.2393939393939397,
+      "second_mae": 6.503030303030304
+    },
+    {
+      "s": 3.2557026110589504,
+      "valid_identity": true,
+      "capture_ms": 1.7617307603359222,
+      "forward_frame": 31,
+      "wall_lag_ms": 155.70261105895034,
+      "variant": 31,
+      "mae": 3.2393939393939397,
+      "second_mae": 6.503030303030304
+    },
+    {
+      "s": 3.305860976688564,
+      "valid_identity": true,
+      "capture_ms": 1.8631797283887863,
+      "forward_frame": 32,
+      "wall_lag_ms": 105.86097668856365,
+      "variant": 0,
+      "mae": 2.640454545454545,
+      "second_mae": 6.576818181818182
+    },
+    {
+      "s": 3.3618299635127187,
+      "valid_identity": true,
+      "capture_ms": 7.773200981318951,
+      "forward_frame": 32,
+      "wall_lag_ms": 161.8299635127185,
+      "variant": 0,
+      "mae": 2.640454545454545,
+      "second_mae": 6.576818181818182,
+      "resources": {
+        "pss_kib": 286651,
+        "summed_rss_kib": 503404,
+        "cpu_seconds_live_processes": 1.72,
+        "rchar_live_processes": 748782010,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 129428,
+            "rss_kib": 211788
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12576,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 127381,
+            "rss_kib": 186436
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689603,
+          "nsec": 350716977
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 3.406109475530684,
+      "valid_identity": true,
+      "capture_ms": 1.9960738718509674,
+      "forward_frame": 33,
+      "wall_lag_ms": 106.10947553068372,
+      "variant": 1,
+      "mae": 3.008484848484848,
+      "second_mae": 6.123787878787878
+    },
+    {
+      "s": 3.4559523425996304,
+      "valid_identity": true,
+      "capture_ms": 1.7823800444602966,
+      "forward_frame": 33,
+      "wall_lag_ms": 155.9523425996301,
+      "variant": 1,
+      "mae": 3.008484848484848,
+      "second_mae": 6.123787878787878
+    },
+    {
+      "s": 3.5063400948420167,
+      "valid_identity": true,
+      "capture_ms": 2.1014558151364326,
+      "forward_frame": 34,
+      "wall_lag_ms": 106.34009484201634,
+      "variant": 2,
+      "mae": 2.7151515151515153,
+      "second_mae": 4.835151515151515
+    },
+    {
+      "s": 3.556111183948815,
+      "valid_identity": true,
+      "capture_ms": 1.8121395260095596,
+      "forward_frame": 34,
+      "wall_lag_ms": 156.11118394881453,
+      "variant": 2,
+      "mae": 2.7151515151515153,
+      "second_mae": 4.835151515151515
+    },
+    {
+      "s": 3.606250263750553,
+      "valid_identity": true,
+      "capture_ms": 1.894610933959484,
+      "forward_frame": 35,
+      "wall_lag_ms": 106.25026375055313,
+      "variant": 3,
+      "mae": 2.5824242424242425,
+      "second_mae": 4.814848484848485
+    },
+    {
+      "s": 3.656203106045723,
+      "valid_identity": true,
+      "capture_ms": 1.790386624634266,
+      "forward_frame": 35,
+      "wall_lag_ms": 156.20310604572296,
+      "variant": 3,
+      "mae": 2.5824242424242425,
+      "second_mae": 4.814848484848485,
+      "resources": {
+        "pss_kib": 265361,
+        "summed_rss_kib": 482116,
+        "cpu_seconds_live_processes": 1.81,
+        "rchar_live_processes": 748782875,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 108136,
+            "rss_kib": 190496
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12576,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17266,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 127383,
+            "rss_kib": 186440
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689603,
+          "nsec": 676022708
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 3.706391856074333,
+      "valid_identity": true,
+      "capture_ms": 1.912110485136509,
+      "forward_frame": 36,
+      "wall_lag_ms": 106.3918560743331,
+      "variant": 4,
+      "mae": 2.374393939393939,
+      "second_mae": 5.712575757575758
+    },
+    {
+      "s": 3.762161402963102,
+      "valid_identity": true,
+      "capture_ms": 7.619761861860752,
+      "forward_frame": 36,
+      "wall_lag_ms": 162.16140296310178,
+      "variant": 4,
+      "mae": 2.374393939393939,
+      "second_mae": 5.712575757575758
+    },
+    {
+      "s": 3.806675593368709,
+      "valid_identity": true,
+      "capture_ms": 2.072235569357872,
+      "forward_frame": 37,
+      "wall_lag_ms": 106.67559336870892,
+      "variant": 5,
+      "mae": 2.5692424242424243,
+      "second_mae": 6.359545454545454
+    },
+    {
+      "s": 3.856850047595799,
+      "valid_identity": true,
+      "capture_ms": 2.1855030208826065,
+      "forward_frame": 37,
+      "wall_lag_ms": 156.8500475957988,
+      "variant": 5,
+      "mae": 2.5692424242424243,
+      "second_mae": 6.359545454545454
+    },
+    {
+      "s": 3.9068751921877265,
+      "valid_identity": true,
+      "capture_ms": 2.1466733887791634,
+      "forward_frame": 38,
+      "wall_lag_ms": 106.87519218772623,
+      "variant": 6,
+      "mae": 3.345757575757576,
+      "second_mae": 5.856818181818182,
+      "resources": {
+        "pss_kib": 274692,
+        "summed_rss_kib": 491376,
+        "cpu_seconds_live_processes": 1.86,
+        "rchar_live_processes": 767379312,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 117407,
+            "rss_kib": 199748
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 127407,
+            "rss_kib": 186448
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689603,
+          "nsec": 921056559
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 3.9570377245545387,
+      "valid_identity": true,
+      "capture_ms": 2.250922843813896,
+      "forward_frame": 38,
+      "wall_lag_ms": 157.03772455453847,
+      "variant": 6,
+      "mae": 3.345757575757576,
+      "second_mae": 5.856818181818182
+    },
+    {
+      "s": 4.006723632104695,
+      "valid_identity": true,
+      "capture_ms": 1.880480907857418,
+      "forward_frame": 39,
+      "wall_lag_ms": 106.72363210469449,
+      "variant": 7,
+      "mae": 3.368484848484848,
+      "second_mae": 5.481515151515151
+    },
+    {
+      "s": 4.056663041934371,
+      "valid_identity": true,
+      "capture_ms": 1.7638355493545532,
+      "forward_frame": 39,
+      "wall_lag_ms": 156.66304193437065,
+      "variant": 7,
+      "mae": 3.368484848484848,
+      "second_mae": 5.481515151515151
+    },
+    {
+      "s": 4.106817117892206,
+      "valid_identity": true,
+      "capture_ms": 1.8508043140172958,
+      "forward_frame": 40,
+      "wall_lag_ms": 106.81711789220572,
+      "variant": 8,
+      "mae": 2.2337878787878784,
+      "second_mae": 6.041363636363636
+    },
+    {
+      "s": 4.156791342422366,
+      "valid_identity": true,
+      "capture_ms": 1.7695985734462738,
+      "forward_frame": 40,
+      "wall_lag_ms": 156.79134242236614,
+      "variant": 8,
+      "mae": 2.2337878787878784,
+      "second_mae": 6.041363636363636
+    },
+    {
+      "s": 4.207567588426173,
+      "valid_identity": true,
+      "capture_ms": 2.487058751285076,
+      "forward_frame": 41,
+      "wall_lag_ms": 107.5675884261722,
+      "variant": 9,
+      "mae": 2.534545454545455,
+      "second_mae": 4.114393939393938,
+      "resources": {
+        "pss_kib": 283682,
+        "summed_rss_kib": 500368,
+        "cpu_seconds_live_processes": 1.94,
+        "rchar_live_processes": 767380117,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 126395,
+            "rss_kib": 208736
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 127409,
+            "rss_kib": 186452
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689604,
+          "nsec": 236329627
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 4.259592751041055,
+      "valid_identity": true,
+      "capture_ms": 4.454438574612141,
+      "forward_frame": 41,
+      "wall_lag_ms": 159.59275104105419,
+      "variant": 9,
+      "mae": 2.534545454545455,
+      "second_mae": 4.114393939393938
+    },
+    {
+      "s": 4.308553886599839,
+      "valid_identity": true,
+      "capture_ms": 3.356587141752243,
+      "forward_frame": 42,
+      "wall_lag_ms": 108.55388659983856,
+      "variant": 10,
+      "mae": 2.583939393939394,
+      "second_mae": 4.539242424242425
+    },
+    {
+      "s": 4.359008129686117,
+      "valid_identity": true,
+      "capture_ms": 3.750433214008808,
+      "forward_frame": 42,
+      "wall_lag_ms": 159.008129686117,
+      "variant": 10,
+      "mae": 2.583939393939394,
+      "second_mae": 4.539242424242425
+    },
+    {
+      "s": 4.40769746247679,
+      "valid_identity": true,
+      "capture_ms": 2.3828810080885887,
+      "forward_frame": 43,
+      "wall_lag_ms": 107.69746247679012,
+      "variant": 11,
+      "mae": 2.835757575757576,
+      "second_mae": 5.4753030303030314
+    },
+    {
+      "s": 4.4575351644307375,
+      "valid_identity": true,
+      "capture_ms": 2.1642474457621574,
+      "forward_frame": 43,
+      "wall_lag_ms": 157.53516443073767,
+      "variant": 11,
+      "mae": 2.835757575757576,
+      "second_mae": 5.4753030303030314
+    },
+    {
+      "s": 4.507514136843383,
+      "valid_identity": true,
+      "capture_ms": 2.087160013616085,
+      "forward_frame": 44,
+      "wall_lag_ms": 107.51413684338296,
+      "variant": 12,
+      "mae": 2.2571212121212127,
+      "second_mae": 6.122878787878788,
+      "resources": {
+        "pss_kib": 297052,
+        "summed_rss_kib": 513740,
+        "cpu_seconds_live_processes": 2.06,
+        "rchar_live_processes": 786015419,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 135663,
+            "rss_kib": 218004
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 131511,
+            "rss_kib": 190556
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689604,
+          "nsec": 541630259
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 4.558072603307664,
+      "valid_identity": true,
+      "capture_ms": 2.5888392701745033,
+      "forward_frame": 44,
+      "wall_lag_ms": 158.07260330766405,
+      "variant": 12,
+      "mae": 2.781818181818182,
+      "second_mae": 5.694545454545455
+    },
+    {
+      "s": 4.607932360842824,
+      "valid_identity": true,
+      "capture_ms": 2.391386777162552,
+      "forward_frame": 45,
+      "wall_lag_ms": 107.93236084282398,
+      "variant": 13,
+      "mae": 2.6051515151515146,
+      "second_mae": 4.343787878787878
+    },
+    {
+      "s": 4.657790578901768,
+      "valid_identity": true,
+      "capture_ms": 2.192120999097824,
+      "forward_frame": 45,
+      "wall_lag_ms": 157.79057890176773,
+      "variant": 13,
+      "mae": 2.8849999999999993,
+      "second_mae": 4.155757575757575
+    },
+    {
+      "s": 4.707841941155493,
+      "valid_identity": true,
+      "capture_ms": 2.1835044026374817,
+      "forward_frame": 46,
+      "wall_lag_ms": 107.84194115549272,
+      "variant": 14,
+      "mae": 2.7625757575757572,
+      "second_mae": 4.833636363636363
+    },
+    {
+      "s": 4.762474893592298,
+      "valid_identity": true,
+      "capture_ms": 6.757607683539391,
+      "forward_frame": 46,
+      "wall_lag_ms": 162.4748935922975,
+      "variant": 14,
+      "mae": 2.7625757575757572,
+      "second_mae": 4.833636363636363,
+      "resources": {
+        "pss_kib": 266464,
+        "summed_rss_kib": 483152,
+        "cpu_seconds_live_processes": 2.13,
+        "rchar_live_processes": 786016223,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 105075,
+            "rss_kib": 187416
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 131511,
+            "rss_kib": 190556
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689604,
+          "nsec": 777754070
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 4.807875285856426,
+      "valid_identity": true,
+      "capture_ms": 2.100314013659954,
+      "forward_frame": 47,
+      "wall_lag_ms": 107.87528585642559,
+      "variant": 15,
+      "mae": 2.9369696969696966,
+      "second_mae": 5.732424242424242
+    },
+    {
+      "s": 4.857747784815729,
+      "valid_identity": true,
+      "capture_ms": 1.91560760140419,
+      "forward_frame": 47,
+      "wall_lag_ms": 157.7477848157285,
+      "variant": 15,
+      "mae": 2.9369696969696966,
+      "second_mae": 5.732424242424242
+    },
+    {
+      "s": 4.90797508135438,
+      "valid_identity": true,
+      "capture_ms": 2.0862966775894165,
+      "forward_frame": 48,
+      "wall_lag_ms": 107.97508135437894,
+      "variant": 16,
+      "mae": 2.3701515151515156,
+      "second_mae": 6.256212121212121
+    },
+    {
+      "s": 4.9583141785115,
+      "valid_identity": true,
+      "capture_ms": 2.369672991335392,
+      "forward_frame": 48,
+      "wall_lag_ms": 158.31417851149965,
+      "variant": 16,
+      "mae": 3.507727272727273,
+      "second_mae": 5.541515151515153
+    },
+    {
+      "s": 5.008309654891491,
+      "valid_identity": true,
+      "capture_ms": 2.3080650717020035,
+      "forward_frame": 49,
+      "wall_lag_ms": 108.30965489149058,
+      "variant": 17,
+      "mae": 2.802424242424243,
+      "second_mae": 6.192878787878788
+    },
+    {
+      "s": 5.058425736613572,
+      "valid_identity": true,
+      "capture_ms": 2.3674285039305687,
+      "forward_frame": 49,
+      "wall_lag_ms": 158.4257366135713,
+      "variant": 17,
+      "mae": 2.802424242424243,
+      "second_mae": 6.192878787878788,
+      "resources": {
+        "pss_kib": 275470,
+        "summed_rss_kib": 492164,
+        "cpu_seconds_live_processes": 2.22,
+        "rchar_live_processes": 795473833,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 114075,
+            "rss_kib": 196416
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 131517,
+            "rss_kib": 190568
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689605,
+          "nsec": 88853878
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 5.108674849383533,
+      "valid_identity": true,
+      "capture_ms": 2.5585032999515533,
+      "forward_frame": 50,
+      "wall_lag_ms": 108.674849383533,
+      "variant": 18,
+      "mae": 3.308181818181818,
+      "second_mae": 6.88439393939394
+    },
+    {
+      "s": 5.158676522783935,
+      "valid_identity": true,
+      "capture_ms": 2.501625567674637,
+      "forward_frame": 50,
+      "wall_lag_ms": 158.67652278393507,
+      "variant": 18,
+      "mae": 3.308181818181818,
+      "second_mae": 6.88439393939394
+    },
+    {
+      "s": 5.208674043416977,
+      "valid_identity": true,
+      "capture_ms": 2.4420935660600662,
+      "forward_frame": 51,
+      "wall_lag_ms": 108.67404341697639,
+      "variant": 19,
+      "mae": 3.7446969696969687,
+      "second_mae": 7.764393939393939
+    },
+    {
+      "s": 5.258199564181268,
+      "valid_identity": true,
+      "capture_ms": 1.9116401672363281,
+      "forward_frame": 51,
+      "wall_lag_ms": 158.19956418126768,
+      "variant": 19,
+      "mae": 3.7446969696969687,
+      "second_mae": 7.764393939393939
+    },
+    {
+      "s": 5.3083556070923805,
+      "valid_identity": true,
+      "capture_ms": 2.0100269466638565,
+      "forward_frame": 52,
+      "wall_lag_ms": 108.35560709238035,
+      "variant": 20,
+      "mae": 2.600151515151515,
+      "second_mae": 6.486818181818181
+    },
+    {
+      "s": 5.358252536505461,
+      "valid_identity": true,
+      "capture_ms": 1.8492834642529488,
+      "forward_frame": 52,
+      "wall_lag_ms": 158.25253650546057,
+      "variant": 20,
+      "mae": 2.600151515151515,
+      "second_mae": 6.486818181818181,
+      "resources": {
+        "pss_kib": 284732,
+        "summed_rss_kib": 501428,
+        "cpu_seconds_live_processes": 2.32,
+        "rchar_live_processes": 804656866,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 123335,
+            "rss_kib": 205676
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 131519,
+            "rss_kib": 190572
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689605,
+          "nsec": 366998737
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 5.408652933314443,
+      "valid_identity": true,
+      "capture_ms": 2.191441133618355,
+      "forward_frame": 53,
+      "wall_lag_ms": 108.65293331444192,
+      "variant": 21,
+      "mae": 3.869242424242424,
+      "second_mae": 5.672272727272727
+    },
+    {
+      "s": 5.464449550956488,
+      "valid_identity": true,
+      "capture_ms": 7.929908111691475,
+      "forward_frame": 53,
+      "wall_lag_ms": 164.44955095648695,
+      "variant": 21,
+      "mae": 3.869242424242424,
+      "second_mae": 5.672272727272727
+    },
+    {
+      "s": 5.508618735708296,
+      "valid_identity": true,
+      "capture_ms": 2.0359819754958153,
+      "forward_frame": 54,
+      "wall_lag_ms": 108.61873570829594,
+      "variant": 22,
+      "mae": 3.628030303030303,
+      "second_mae": 5.8130303030303025
+    },
+    {
+      "s": 5.558488225564361,
+      "valid_identity": true,
+      "capture_ms": 1.8464000895619392,
+      "forward_frame": 54,
+      "wall_lag_ms": 158.48822556436028,
+      "variant": 22,
+      "mae": 3.628030303030303,
+      "second_mae": 5.8130303030303025
+    },
+    {
+      "s": 5.6086025489494205,
+      "valid_identity": true,
+      "capture_ms": 1.8985392525792122,
+      "forward_frame": 55,
+      "wall_lag_ms": 108.60254894942045,
+      "variant": 23,
+      "mae": 2.772424242424242,
+      "second_mae": 6.075909090909091,
+      "resources": {
+        "pss_kib": 293740,
+        "summed_rss_kib": 510440,
+        "cpu_seconds_live_processes": 2.38,
+        "rchar_live_processes": 814106947,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 132339,
+            "rss_kib": 214680
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 131523,
+            "rss_kib": 190580
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689605,
+          "nsec": 616674124
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 5.659985872916877,
+      "valid_identity": true,
+      "capture_ms": 3.219681791961193,
+      "forward_frame": 55,
+      "wall_lag_ms": 159.98587291687727,
+      "variant": 23,
+      "mae": 2.772424242424242,
+      "second_mae": 6.075909090909091
+    },
+    {
+      "s": 5.708881604485214,
+      "valid_identity": true,
+      "capture_ms": 2.0572347566485405,
+      "forward_frame": 56,
+      "wall_lag_ms": 108.88160448521322,
+      "variant": 24,
+      "mae": 2.7733333333333334,
+      "second_mae": 4.569545454545454
+    },
+    {
+      "s": 5.7644909508526325,
+      "valid_identity": true,
+      "capture_ms": 7.605217397212982,
+      "forward_frame": 56,
+      "wall_lag_ms": 164.49095085263198,
+      "variant": 24,
+      "mae": 2.7733333333333334,
+      "second_mae": 4.569545454545454
+    },
+    {
+      "s": 5.808832828886807,
+      "valid_identity": true,
+      "capture_ms": 1.886887475848198,
+      "forward_frame": 57,
+      "wall_lag_ms": 108.8328288868068,
+      "variant": 25,
+      "mae": 2.8854545454545453,
+      "second_mae": 4.739848484848484
+    },
+    {
+      "s": 5.858778997324407,
+      "valid_identity": true,
+      "capture_ms": 1.7755525186657906,
+      "forward_frame": 57,
+      "wall_lag_ms": 158.77899732440693,
+      "variant": 25,
+      "mae": 2.8854545454545453,
+      "second_mae": 4.739848484848484,
+      "resources": {
+        "pss_kib": 299894,
+        "summed_rss_kib": 516596,
+        "cpu_seconds_live_processes": 2.43,
+        "rchar_live_processes": 823554862,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 138491,
+            "rss_kib": 220832
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 131525,
+            "rss_kib": 190584
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689605,
+          "nsec": 863828949
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 5.909104036167264,
+      "valid_identity": true,
+      "capture_ms": 2.0415810868144035,
+      "forward_frame": 58,
+      "wall_lag_ms": 109.10403616726327,
+      "variant": 26,
+      "mae": 3.209242424242424,
+      "second_mae": 6.221515151515152
+    },
+    {
+      "s": 5.958919306285679,
+      "valid_identity": true,
+      "capture_ms": 1.8003545701503754,
+      "forward_frame": 58,
+      "wall_lag_ms": 158.91930628567863,
+      "variant": 26,
+      "mae": 3.209242424242424,
+      "second_mae": 6.221515151515152
+    },
+    {
+      "s": 6.009112743660808,
+      "valid_identity": true,
+      "capture_ms": 1.9340179860591888,
+      "forward_frame": 59,
+      "wall_lag_ms": 109.11274366080725,
+      "variant": 27,
+      "mae": 3.2754545454545454,
+      "second_mae": 6.428787878787879
+    },
+    {
+      "s": 6.05952805839479,
+      "valid_identity": true,
+      "capture_ms": 2.2927485406398773,
+      "forward_frame": 59,
+      "wall_lag_ms": 159.52805839478935,
+      "variant": 27,
+      "mae": 3.2754545454545454,
+      "second_mae": 6.428787878787879
+    },
+    {
+      "s": 6.109873039647937,
+      "valid_identity": true,
+      "capture_ms": 2.5755399838089943,
+      "forward_frame": 60,
+      "wall_lag_ms": 109.87303964793682,
+      "variant": 28,
+      "mae": 2.7863636363636366,
+      "second_mae": 4.711060606060606,
+      "resources": {
+        "pss_kib": 272676,
+        "summed_rss_kib": 489356,
+        "cpu_seconds_live_processes": 2.5,
+        "rchar_live_processes": 832699827,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 111295,
+            "rss_kib": 193636
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 131503,
+            "rss_kib": 190540
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689606,
+          "nsec": 116405793
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 6.159941520541906,
+      "valid_identity": true,
+      "capture_ms": 2.5880159810185432,
+      "forward_frame": 60,
+      "wall_lag_ms": 159.94152054190636,
+      "variant": 28,
+      "mae": 2.7863636363636366,
+      "second_mae": 4.711060606060606
+    },
+    {
+      "s": 6.2106152810156345,
+      "valid_identity": true,
+      "capture_ms": 3.1990744173526764,
+      "forward_frame": 61,
+      "wall_lag_ms": 110.615281015634,
+      "variant": 29,
+      "mae": 3.3087878787878786,
+      "second_mae": 4.380151515151516
+    },
+    {
+      "s": 6.259474002756178,
+      "valid_identity": true,
+      "capture_ms": 2.001124434173107,
+      "forward_frame": 61,
+      "wall_lag_ms": 159.47400275617784,
+      "variant": 29,
+      "mae": 2.839545454545455,
+      "second_mae": 4.948484848484849
+    },
+    {
+      "s": 6.309409591369331,
+      "valid_identity": true,
+      "capture_ms": 1.8759947270154953,
+      "forward_frame": 62,
+      "wall_lag_ms": 109.40959136933071,
+      "variant": 30,
+      "mae": 3.4904545454545457,
+      "second_mae": 5.90090909090909
+    },
+    {
+      "s": 6.3647335562855005,
+      "valid_identity": true,
+      "capture_ms": 7.140440866351128,
+      "forward_frame": 62,
+      "wall_lag_ms": 164.73355628550036,
+      "variant": 30,
+      "mae": 3.4904545454545457,
+      "second_mae": 5.90090909090909,
+      "resources": {
+        "pss_kib": 282918,
+        "summed_rss_kib": 499600,
+        "cpu_seconds_live_processes": 2.59,
+        "rchar_live_processes": 842152028,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 117439,
+            "rss_kib": 199780
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 135601,
+            "rss_kib": 194640
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689606,
+          "nsec": 377331603
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 6.409695307724178,
+      "valid_identity": true,
+      "capture_ms": 2.044077031314373,
+      "forward_frame": 63,
+      "wall_lag_ms": 109.69530772417713,
+      "variant": 31,
+      "mae": 3.2393939393939397,
+      "second_mae": 6.503030303030304
+    },
+    {
+      "s": 6.459555057808757,
+      "valid_identity": true,
+      "capture_ms": 1.8454594537615776,
+      "forward_frame": 63,
+      "wall_lag_ms": 159.55505780875612,
+      "variant": 31,
+      "mae": 3.2393939393939397,
+      "second_mae": 6.503030303030304
+    },
+    {
+      "s": 6.5097756097093225,
+      "valid_identity": true,
+      "capture_ms": 2.0037060603499413,
+      "forward_frame": 64,
+      "wall_lag_ms": 109.7756097093221,
+      "variant": 0,
+      "mae": 2.640454545454545,
+      "second_mae": 6.576818181818182
+    },
+    {
+      "s": 6.560048129409552,
+      "valid_identity": true,
+      "capture_ms": 2.217446453869343,
+      "forward_frame": 65,
+      "wall_lag_ms": 60.04812940955162,
+      "variant": 1,
+      "mae": 3.8736363636363635,
+      "second_mae": 5.948787878787879
+    },
+    {
+      "s": 6.6099053006619215,
+      "valid_identity": true,
+      "capture_ms": 2.0105773583054543,
+      "forward_frame": 65,
+      "wall_lag_ms": 109.9053006619215,
+      "variant": 1,
+      "mae": 3.008484848484848,
+      "second_mae": 6.123787878787878
+    },
+    {
+      "s": 6.659749659709632,
+      "valid_identity": true,
+      "capture_ms": 1.7945664003491402,
+      "forward_frame": 65,
+      "wall_lag_ms": 159.7496597096324,
+      "variant": 1,
+      "mae": 3.008484848484848,
+      "second_mae": 6.123787878787878,
+      "resources": {
+        "pss_kib": 291940,
+        "summed_rss_kib": 508648,
+        "cpu_seconds_live_processes": 2.66,
+        "rchar_live_processes": 842152844,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 126435,
+            "rss_kib": 208776
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 135627,
+            "rss_kib": 194692
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689606,
+          "nsec": 663310586
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 6.709972269833088,
+      "valid_identity": true,
+      "capture_ms": 1.9588833674788475,
+      "forward_frame": 66,
+      "wall_lag_ms": 109.97226983308738,
+      "variant": 2,
+      "mae": 2.7151515151515153,
+      "second_mae": 4.835151515151515
+    },
+    {
+      "s": 6.759766777977347,
+      "valid_identity": true,
+      "capture_ms": 1.6970084980130196,
+      "forward_frame": 66,
+      "wall_lag_ms": 159.76677797734683,
+      "variant": 2,
+      "mae": 2.7151515151515153,
+      "second_mae": 4.835151515151515
+    },
+    {
+      "s": 6.809939173050225,
+      "valid_identity": true,
+      "capture_ms": 1.8122000619769096,
+      "forward_frame": 67,
+      "wall_lag_ms": 109.93917305022461,
+      "variant": 3,
+      "mae": 2.5824242424242425,
+      "second_mae": 4.814848484848485
+    },
+    {
+      "s": 6.861123774200678,
+      "valid_identity": true,
+      "capture_ms": 2.9393918812274933,
+      "forward_frame": 68,
+      "wall_lag_ms": 61.12377420067716,
+      "variant": 4,
+      "mae": 2.7860606060606057,
+      "second_mae": 5.321212121212121
+    },
+    {
+      "s": 6.9108986696228385,
+      "valid_identity": true,
+      "capture_ms": 2.656524069607258,
+      "forward_frame": 68,
+      "wall_lag_ms": 110.89866962283779,
+      "variant": 4,
+      "mae": 2.374393939393939,
+      "second_mae": 5.712575757575758,
+      "resources": {
+        "pss_kib": 301210,
+        "summed_rss_kib": 517920,
+        "cpu_seconds_live_processes": 2.74,
+        "rchar_live_processes": 860833495,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 135703,
+            "rss_kib": 218044
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 135629,
+            "rss_kib": 194696
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689606,
+          "nsec": 941155390
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 6.9620548309758306,
+      "valid_identity": true,
+      "capture_ms": 3.754802979528904,
+      "forward_frame": 68,
+      "wall_lag_ms": 162.05483097582984,
+      "variant": 4,
+      "mae": 2.374393939393939,
+      "second_mae": 5.712575757575758
+    },
+    {
+      "s": 7.010489857755601,
+      "valid_identity": true,
+      "capture_ms": 2.1340353414416313,
+      "forward_frame": 69,
+      "wall_lag_ms": 110.48985775560105,
+      "variant": 5,
+      "mae": 2.5692424242424243,
+      "second_mae": 6.359545454545454
+    },
+    {
+      "s": 7.060294763185084,
+      "valid_identity": true,
+      "capture_ms": 1.8802108243107796,
+      "forward_frame": 70,
+      "wall_lag_ms": 60.294763185083866,
+      "variant": 6,
+      "mae": 3.345757575757576,
+      "second_mae": 5.856818181818182
+    },
+    {
+      "s": 7.110358847305179,
+      "valid_identity": true,
+      "capture_ms": 1.88378244638443,
+      "forward_frame": 70,
+      "wall_lag_ms": 110.35884730517864,
+      "variant": 6,
+      "mae": 3.345757575757576,
+      "second_mae": 5.856818181818182
+    },
+    {
+      "s": 7.163740390911698,
+      "valid_identity": true,
+      "capture_ms": 5.20485732704401,
+      "forward_frame": 70,
+      "wall_lag_ms": 163.74039091169834,
+      "variant": 6,
+      "mae": 3.345757575757576,
+      "second_mae": 5.856818181818182,
+      "resources": {
+        "pss_kib": 270610,
+        "summed_rss_kib": 487320,
+        "cpu_seconds_live_processes": 2.82,
+        "rchar_live_processes": 860834315,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 105103,
+            "rss_kib": 187444
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 135629,
+            "rss_kib": 194696
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689607,
+          "nsec": 179920348
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 7.210574549622834,
+      "valid_identity": true,
+      "capture_ms": 1.9821757450699806,
+      "forward_frame": 71,
+      "wall_lag_ms": 110.57454962283319,
+      "variant": 7,
+      "mae": 3.368484848484848,
+      "second_mae": 5.481515151515151
+    },
+    {
+      "s": 7.260413704439998,
+      "valid_identity": true,
+      "capture_ms": 1.765071414411068,
+      "forward_frame": 71,
+      "wall_lag_ms": 160.41370443999713,
+      "variant": 7,
+      "mae": 3.368484848484848,
+      "second_mae": 5.481515151515151
+    },
+    {
+      "s": 7.310537816956639,
+      "valid_identity": true,
+      "capture_ms": 1.8336959183216095,
+      "forward_frame": 72,
+      "wall_lag_ms": 110.53781695663912,
+      "variant": 8,
+      "mae": 2.2337878787878784,
+      "second_mae": 6.041363636363636
+    },
+    {
+      "s": 7.366081211715937,
+      "valid_identity": true,
+      "capture_ms": 7.315789349377155,
+      "forward_frame": 72,
+      "wall_lag_ms": 166.0812117159365,
+      "variant": 8,
+      "mae": 2.2337878787878784,
+      "second_mae": 6.041363636363636
+    },
+    {
+      "s": 7.4110353253781796,
+      "valid_identity": true,
+      "capture_ms": 2.2096168249845505,
+      "forward_frame": 73,
+      "wall_lag_ms": 111.03532537817884,
+      "variant": 9,
+      "mae": 2.534545454545455,
+      "second_mae": 4.114393939393938
+    },
+    {
+      "s": 7.460581076331437,
+      "valid_identity": true,
+      "capture_ms": 1.695246435701847,
+      "forward_frame": 73,
+      "wall_lag_ms": 160.58107633143592,
+      "variant": 9,
+      "mae": 2.534545454545455,
+      "second_mae": 4.114393939393938,
+      "resources": {
+        "pss_kib": 273457,
+        "summed_rss_kib": 490180,
+        "cpu_seconds_live_processes": 2.91,
+        "rchar_live_processes": 870291504,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 114093,
+            "rss_kib": 196444
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 129486,
+            "rss_kib": 188556
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689607,
+          "nsec": 490916219
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 7.5107884760946035,
+      "valid_identity": true,
+      "capture_ms": 1.8461020663380623,
+      "forward_frame": 74,
+      "wall_lag_ms": 110.78847609460318,
+      "variant": 10,
+      "mae": 2.583939393939394,
+      "second_mae": 4.539242424242425
+    },
+    {
+      "s": 7.565469905734062,
+      "valid_identity": true,
+      "capture_ms": 6.468078121542931,
+      "forward_frame": 74,
+      "wall_lag_ms": 165.46990573406185,
+      "variant": 10,
+      "mae": 2.583939393939394,
+      "second_mae": 4.539242424242425
+    },
+    {
+      "s": 7.611884604208171,
+      "valid_identity": true,
+      "capture_ms": 2.8261523693799973,
+      "forward_frame": 75,
+      "wall_lag_ms": 111.88460420817137,
+      "variant": 11,
+      "mae": 2.835757575757576,
+      "second_mae": 5.4753030303030314
+    },
+    {
+      "s": 7.6648976393043995,
+      "valid_identity": true,
+      "capture_ms": 5.782913416624069,
+      "forward_frame": 75,
+      "wall_lag_ms": 164.8976393043995,
+      "variant": 11,
+      "mae": 2.835757575757576,
+      "second_mae": 5.4753030303030314
+    },
+    {
+      "s": 7.710853964090347,
+      "valid_identity": true,
+      "capture_ms": 1.6830060631036758,
+      "forward_frame": 76,
+      "wall_lag_ms": 110.85396409034675,
+      "variant": 12,
+      "mae": 2.2571212121212127,
+      "second_mae": 6.122878787878788,
+      "resources": {
+        "pss_kib": 282711,
+        "summed_rss_kib": 499436,
+        "cpu_seconds_live_processes": 2.98,
+        "rchar_live_processes": 879474659,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 123345,
+            "rss_kib": 205696
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 129488,
+            "rss_kib": 188560
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689607,
+          "nsec": 737438772
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 7.761155588552356,
+      "valid_identity": true,
+      "capture_ms": 1.9281050190329552,
+      "forward_frame": 77,
+      "wall_lag_ms": 61.15558855235559,
+      "variant": 13,
+      "mae": 2.6051515151515146,
+      "second_mae": 4.343787878787878
+    },
+    {
+      "s": 7.812057132832706,
+      "valid_identity": true,
+      "capture_ms": 2.771172672510147,
+      "forward_frame": 77,
+      "wall_lag_ms": 112.0571328327058,
+      "variant": 13,
+      "mae": 2.6051515151515146,
+      "second_mae": 4.343787878787878
+    },
+    {
+      "s": 7.878239683806896,
+      "valid_identity": true,
+      "capture_ms": 18.89827661216259,
+      "forward_frame": 77,
+      "wall_lag_ms": 178.23968380689604,
+      "variant": 13,
+      "mae": 2.6051515151515146,
+      "second_mae": 4.343787878787878
+    },
+    {
+      "s": 7.9130073403939605,
+      "valid_identity": true,
+      "capture_ms": 3.609638661146164,
+      "forward_frame": 78,
+      "wall_lag_ms": 113.00734039395977,
+      "variant": 14,
+      "mae": 2.7625757575757572,
+      "second_mae": 4.833636363636363
+    },
+    {
+      "s": 7.961668753065169,
+      "valid_identity": true,
+      "capture_ms": 2.216567285358906,
+      "forward_frame": 78,
+      "wall_lag_ms": 161.66875306516815,
+      "variant": 14,
+      "mae": 2.7625757575757572,
+      "second_mae": 4.833636363636363,
+      "resources": {
+        "pss_kib": 288881,
+        "summed_rss_kib": 505604,
+        "cpu_seconds_live_processes": 3.06,
+        "rchar_live_processes": 888929939,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 129513,
+            "rss_kib": 211864
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 129490,
+            "rss_kib": 188560
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689607,
+          "nsec": 952874411
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 8.012722816318274,
+      "valid_identity": true,
+      "capture_ms": 3.2132966443896294,
+      "forward_frame": 79,
+      "wall_lag_ms": 112.72281631827319,
+      "variant": 15,
+      "mae": 2.9369696969696966,
+      "second_mae": 5.732424242424242
+    },
+    {
+      "s": 8.069418132305145,
+      "valid_identity": true,
+      "capture_ms": 9.852155111730099,
+      "forward_frame": 79,
+      "wall_lag_ms": 169.41813230514492,
+      "variant": 15,
+      "mae": 2.9369696969696966,
+      "second_mae": 5.732424242424242
+    },
+    {
+      "s": 8.111399137414992,
+      "valid_identity": true,
+      "capture_ms": 1.7748130485415459,
+      "forward_frame": 80,
+      "wall_lag_ms": 111.39913741499186,
+      "variant": 16,
+      "mae": 2.3701515151515156,
+      "second_mae": 6.256212121212121
+    },
+    {
+      "s": 8.165810164995492,
+      "valid_identity": true,
+      "capture_ms": 6.128908134996891,
+      "forward_frame": 80,
+      "wall_lag_ms": 165.8101649954915,
+      "variant": 16,
+      "mae": 2.3701515151515156,
+      "second_mae": 6.256212121212121
+    },
+    {
+      "s": 8.212383397854865,
+      "valid_identity": true,
+      "capture_ms": 2.645473927259445,
+      "forward_frame": 81,
+      "wall_lag_ms": 112.38339785486495,
+      "variant": 17,
+      "mae": 2.802424242424243,
+      "second_mae": 6.192878787878788,
+      "resources": {
+        "pss_kib": 297875,
+        "summed_rss_kib": 514600,
+        "cpu_seconds_live_processes": 3.14,
+        "rchar_live_processes": 898373428,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 138505,
+            "rss_kib": 220856
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 129492,
+            "rss_kib": 188564
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689608,
+          "nsec": 214591437
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 8.269782050512731,
+      "valid_identity": true,
+      "capture_ms": 9.98846534639597,
+      "forward_frame": 81,
+      "wall_lag_ms": 169.78205051273142,
+      "variant": 17,
+      "mae": 2.802424242424243,
+      "second_mae": 6.192878787878788
+    },
+    {
+      "s": 8.311688375659287,
+      "valid_identity": true,
+      "capture_ms": 1.83771550655365,
+      "forward_frame": 82,
+      "wall_lag_ms": 111.68837565928591,
+      "variant": 18,
+      "mae": 3.308181818181818,
+      "second_mae": 6.88439393939394
+    },
+    {
+      "s": 8.364616823382676,
+      "valid_identity": true,
+      "capture_ms": 4.7067273408174515,
+      "forward_frame": 82,
+      "wall_lag_ms": 164.61682338267457,
+      "variant": 18,
+      "mae": 3.308181818181818,
+      "second_mae": 6.88439393939394
+    },
+    {
+      "s": 8.41259663645178,
+      "valid_identity": true,
+      "capture_ms": 2.633127383887768,
+      "forward_frame": 83,
+      "wall_lag_ms": 112.59663645178009,
+      "variant": 19,
+      "mae": 3.7446969696969687,
+      "second_mae": 7.764393939393939
+    },
+    {
+      "s": 8.465851517394185,
+      "valid_identity": true,
+      "capture_ms": 5.833161063492298,
+      "forward_frame": 83,
+      "wall_lag_ms": 165.85151739418436,
+      "variant": 19,
+      "mae": 3.7446969696969687,
+      "second_mae": 7.764393939393939,
+      "resources": {
+        "pss_kib": 267611,
+        "summed_rss_kib": 484340,
+        "cpu_seconds_live_processes": 3.2,
+        "rchar_live_processes": 907528128,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 108229,
+            "rss_kib": 190580
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 129504,
+            "rss_kib": 188580
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689608,
+          "nsec": 465157550
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 8.511835660785437,
+      "valid_identity": true,
+      "capture_ms": 1.755845732986927,
+      "forward_frame": 84,
+      "wall_lag_ms": 111.83566078543627,
+      "variant": 20,
+      "mae": 2.600151515151515,
+      "second_mae": 6.486818181818181
+    },
+    {
+      "s": 8.562065029516816,
+      "valid_identity": true,
+      "capture_ms": 1.9224025309085846,
+      "forward_frame": 85,
+      "wall_lag_ms": 62.06502951681614,
+      "variant": 21,
+      "mae": 3.869242424242424,
+      "second_mae": 5.672272727272727
+    },
+    {
+      "s": 8.612756243906915,
+      "valid_identity": true,
+      "capture_ms": 2.5529982522130013,
+      "forward_frame": 85,
+      "wall_lag_ms": 112.75624390691519,
+      "variant": 21,
+      "mae": 3.869242424242424,
+      "second_mae": 5.672272727272727
+    },
+    {
+      "s": 8.670177712105215,
+      "valid_identity": true,
+      "capture_ms": 9.916441515088081,
+      "forward_frame": 85,
+      "wall_lag_ms": 170.1777121052146,
+      "variant": 21,
+      "mae": 3.869242424242424,
+      "second_mae": 5.672272727272727
+    },
+    {
+      "s": 8.712152525782585,
+      "valid_identity": true,
+      "capture_ms": 1.8296660855412483,
+      "forward_frame": 86,
+      "wall_lag_ms": 112.1525257825855,
+      "variant": 22,
+      "mae": 3.628030303030303,
+      "second_mae": 5.8130303030303025
+    },
+    {
+      "s": 8.762018207460642,
+      "valid_identity": true,
+      "capture_ms": 1.6381796449422836,
+      "forward_frame": 86,
+      "wall_lag_ms": 162.0182074606422,
+      "variant": 22,
+      "mae": 3.628030303030303,
+      "second_mae": 5.8130303030303025,
+      "resources": {
+        "pss_kib": 276857,
+        "summed_rss_kib": 493588,
+        "cpu_seconds_live_processes": 3.27,
+        "rchar_live_processes": 916978858,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 117473,
+            "rss_kib": 199824
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 129506,
+            "rss_kib": 188584
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689608,
+          "nsec": 787960538
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 8.812455447390676,
+      "valid_identity": true,
+      "capture_ms": 2.018275670707226,
+      "forward_frame": 87,
+      "wall_lag_ms": 112.45544739067448,
+      "variant": 23,
+      "mae": 2.772424242424242,
+      "second_mae": 6.075909090909091
+    },
+    {
+      "s": 8.862145650200546,
+      "valid_identity": true,
+      "capture_ms": 1.650751568377018,
+      "forward_frame": 88,
+      "wall_lag_ms": 62.14565020054508,
+      "variant": 24,
+      "mae": 2.7733333333333334,
+      "second_mae": 4.569545454545454
+    },
+    {
+      "s": 8.91222582012415,
+      "valid_identity": true,
+      "capture_ms": 1.6757547855377197,
+      "forward_frame": 88,
+      "wall_lag_ms": 112.22582012414861,
+      "variant": 24,
+      "mae": 2.7733333333333334,
+      "second_mae": 4.569545454545454
+    },
+    {
+      "s": 8.96240171790123,
+      "valid_identity": true,
+      "capture_ms": 1.794598065316677,
+      "forward_frame": 89,
+      "wall_lag_ms": 62.4017179012295,
+      "variant": 25,
+      "mae": 2.8854545454545453,
+      "second_mae": 4.739848484848484
+    },
+    {
+      "s": 9.012434540316463,
+      "valid_identity": true,
+      "capture_ms": 1.7705745995044708,
+      "forward_frame": 89,
+      "wall_lag_ms": 112.43454031646216,
+      "variant": 25,
+      "mae": 2.8854545454545453,
+      "second_mae": 4.739848484848484,
+      "resources": {
+        "pss_kib": 285867,
+        "summed_rss_kib": 502600,
+        "cpu_seconds_live_processes": 3.36,
+        "rchar_live_processes": 916979672,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 126481,
+            "rss_kib": 208832
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 129508,
+            "rss_kib": 188588
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689609,
+          "nsec": 26018973
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 9.06391354650259,
+      "valid_identity": true,
+      "capture_ms": 3.191721625626087,
+      "forward_frame": 89,
+      "wall_lag_ms": 163.91354650258984,
+      "variant": 25,
+      "mae": 2.8854545454545453,
+      "second_mae": 4.739848484848484
+    },
+    {
+      "s": 9.114722156897187,
+      "valid_identity": true,
+      "capture_ms": 3.939441405236721,
+      "forward_frame": 90,
+      "wall_lag_ms": 114.72215689718723,
+      "variant": 26,
+      "mae": 3.209242424242424,
+      "second_mae": 6.221515151515152
+    },
+    {
+      "s": 9.163567817769945,
+      "valid_identity": true,
+      "capture_ms": 2.7285870164632797,
+      "forward_frame": 90,
+      "wall_lag_ms": 163.56781776994467,
+      "variant": 26,
+      "mae": 3.209242424242424,
+      "second_mae": 6.221515151515152
+    },
+    {
+      "s": 9.213269781321287,
+      "valid_identity": true,
+      "capture_ms": 2.365429885685444,
+      "forward_frame": 91,
+      "wall_lag_ms": 113.26978132128751,
+      "variant": 27,
+      "mae": 3.2754545454545454,
+      "second_mae": 6.428787878787879
+    },
+    {
+      "s": 9.262730274349451,
+      "valid_identity": true,
+      "capture_ms": 1.7685126513242722,
+      "forward_frame": 91,
+      "wall_lag_ms": 162.7302743494514,
+      "variant": 27,
+      "mae": 3.2754545454545454,
+      "second_mae": 6.428787878787879,
+      "resources": {
+        "pss_kib": 296123,
+        "summed_rss_kib": 512856,
+        "cpu_seconds_live_processes": 3.45,
+        "rchar_live_processes": 935606164,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 132641,
+            "rss_kib": 214992
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 133604,
+            "rss_kib": 192684
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689609,
+          "nsec": 270007831
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 9.312718220055103,
+      "valid_identity": true,
+      "capture_ms": 1.698516309261322,
+      "forward_frame": 92,
+      "wall_lag_ms": 112.71822005510224,
+      "variant": 28,
+      "mae": 2.7863636363636366,
+      "second_mae": 4.711060606060606
+    },
+    {
+      "s": 9.366477437317371,
+      "valid_identity": true,
+      "capture_ms": 5.398600362241268,
+      "forward_frame": 92,
+      "wall_lag_ms": 166.4774373173703,
+      "variant": 28,
+      "mae": 2.7863636363636366,
+      "second_mae": 4.711060606060606
+    },
+    {
+      "s": 9.413578897714615,
+      "valid_identity": true,
+      "capture_ms": 2.4428730830550194,
+      "forward_frame": 93,
+      "wall_lag_ms": 113.57889771461416,
+      "variant": 29,
+      "mae": 2.839545454545455,
+      "second_mae": 4.948484848484849
+    },
+    {
+      "s": 9.466806155629456,
+      "valid_identity": true,
+      "capture_ms": 5.6107258424162865,
+      "forward_frame": 93,
+      "wall_lag_ms": 166.80615562945533,
+      "variant": 29,
+      "mae": 2.839545454545455,
+      "second_mae": 4.948484848484849
+    },
+    {
+      "s": 9.512952663004398,
+      "valid_identity": true,
+      "capture_ms": 1.6995789483189583,
+      "forward_frame": 94,
+      "wall_lag_ms": 112.95266300439799,
+      "variant": 30,
+      "mae": 3.4904545454545457,
+      "second_mae": 5.90090909090909,
+      "resources": {
+        "pss_kib": 260421,
+        "summed_rss_kib": 477144,
+        "cpu_seconds_live_processes": 3.53,
+        "rchar_live_processes": 935607069,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 105141,
+            "rss_kib": 187492
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 125402,
+            "rss_kib": 184472
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689609,
+          "nsec": 519112404
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 9.566350992769003,
+      "valid_identity": true,
+      "capture_ms": 5.038697272539139,
+      "forward_frame": 94,
+      "wall_lag_ms": 166.35099276900257,
+      "variant": 30,
+      "mae": 3.4904545454545457,
+      "second_mae": 5.90090909090909
+    },
+    {
+      "s": 9.613623776473105,
+      "valid_identity": true,
+      "capture_ms": 2.253803424537182,
+      "forward_frame": 95,
+      "wall_lag_ms": 113.62377647310495,
+      "variant": 31,
+      "mae": 3.2393939393939397,
+      "second_mae": 6.503030303030304
+    },
+    {
+      "s": 9.670967907644808,
+      "valid_identity": true,
+      "capture_ms": 9.539836086332798,
+      "forward_frame": 95,
+      "wall_lag_ms": 170.9679076448083,
+      "variant": 31,
+      "mae": 3.2393939393939397,
+      "second_mae": 6.503030303030304
+    },
+    {
+      "s": 9.713239252567291,
+      "valid_identity": true,
+      "capture_ms": 1.7543481662869453,
+      "forward_frame": 96,
+      "wall_lag_ms": 113.23925256728984,
+      "variant": 0,
+      "mae": 2.640454545454545,
+      "second_mae": 6.576818181818182
+    },
+    {
+      "s": 9.765797429718077,
+      "valid_identity": true,
+      "capture_ms": 4.25426010042429,
+      "forward_frame": 96,
+      "wall_lag_ms": 165.79742971807576,
+      "variant": 0,
+      "mae": 2.640454545454545,
+      "second_mae": 6.576818181818182,
+      "resources": {
+        "pss_kib": 266319,
+        "summed_rss_kib": 483044,
+        "cpu_seconds_live_processes": 3.59,
+        "rchar_live_processes": 945065124,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 111037,
+            "rss_kib": 193388
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 125404,
+            "rss_kib": 184476
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689609,
+          "nsec": 772019579
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 9.81389104295522,
+      "valid_identity": true,
+      "capture_ms": 2.2914689034223557,
+      "forward_frame": 97,
+      "wall_lag_ms": 113.89104295521868,
+      "variant": 1,
+      "mae": 3.008484848484848,
+      "second_mae": 6.123787878787878
+    },
+    {
+      "s": 9.880366233177483,
+      "valid_identity": true,
+      "capture_ms": 18.708675168454647,
+      "forward_frame": 97,
+      "wall_lag_ms": 180.366233177482,
+      "variant": 1,
+      "mae": 3.008484848484848,
+      "second_mae": 6.123787878787878
+    },
+    {
+      "s": 9.91411473788321,
+      "valid_identity": true,
+      "capture_ms": 2.39531509578228,
+      "forward_frame": 98,
+      "wall_lag_ms": 114.11473788320947,
+      "variant": 2,
+      "mae": 2.7151515151515153,
+      "second_mae": 4.835151515151515
+    },
+    {
+      "s": 9.96396996639669,
+      "valid_identity": true,
+      "capture_ms": 2.1934937685728073,
+      "forward_frame": 98,
+      "wall_lag_ms": 163.9699663966887,
+      "variant": 2,
+      "mae": 2.7151515151515153,
+      "second_mae": 4.835151515151515
+    },
+    {
+      "s": 10.015759879723191,
+      "valid_identity": true,
+      "capture_ms": 3.9249882102012634,
+      "forward_frame": 99,
+      "wall_lag_ms": 115.7598797231909,
+      "variant": 3,
+      "mae": 2.5824242424242425,
+      "second_mae": 4.814848484848485
+    },
+    {
+      "s": 10.072133339941502,
+      "valid_identity": true,
+      "capture_ms": 10.241257026791573,
+      "forward_frame": 99,
+      "wall_lag_ms": 172.13333994150128,
+      "variant": 3,
+      "mae": 2.5824242424242425,
+      "second_mae": 4.814848484848485,
+      "resources": {
+        "pss_kib": 283785,
+        "summed_rss_kib": 500524,
+        "cpu_seconds_live_processes": 3.73,
+        "rchar_live_processes": 951349108,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 120297,
+            "rss_kib": 202648
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 133610,
+            "rss_kib": 192696
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689610,
+          "nsec": 58372310
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 10.11400489602238,
+      "valid_identity": true,
+      "capture_ms": 2.0560650154948235,
+      "forward_frame": 100,
+      "wall_lag_ms": 114.0048960223794,
+      "variant": 4,
+      "mae": 2.374393939393939,
+      "second_mae": 5.712575757575758
+    },
+    {
+      "s": 10.163780161179602,
+      "valid_identity": true,
+      "capture_ms": 1.7752675339579582,
+      "forward_frame": 100,
+      "wall_lag_ms": 163.78016117960215,
+      "variant": 4,
+      "mae": 2.374393939393939,
+      "second_mae": 5.712575757575758
+    },
+    {
+      "s": 10.214107235893607,
+      "valid_identity": true,
+      "capture_ms": 2.0450977608561516,
+      "forward_frame": 101,
+      "wall_lag_ms": 114.10723589360572,
+      "variant": 5,
+      "mae": 2.5692424242424243,
+      "second_mae": 6.359545454545454
+    },
+    {
+      "s": 10.271549972705543,
+      "valid_identity": true,
+      "capture_ms": 9.428120218217373,
+      "forward_frame": 101,
+      "wall_lag_ms": 171.54997270554162,
+      "variant": 5,
+      "mae": 2.5692424242424243,
+      "second_mae": 6.359545454545454
+    },
+    {
+      "s": 10.314083961769938,
+      "valid_identity": true,
+      "capture_ms": 1.9015725702047348,
+      "forward_frame": 102,
+      "wall_lag_ms": 114.0839617699374,
+      "variant": 6,
+      "mae": 3.345757575757576,
+      "second_mae": 5.856818181818182
+    },
+    {
+      "s": 10.364046100527048,
+      "valid_identity": true,
+      "capture_ms": 1.806597225368023,
+      "forward_frame": 102,
+      "wall_lag_ms": 164.04610052704703,
+      "variant": 6,
+      "mae": 3.345757575757576,
+      "second_mae": 5.856818181818182,
+      "resources": {
+        "pss_kib": 293033,
+        "summed_rss_kib": 509772,
+        "cpu_seconds_live_processes": 3.77,
+        "rchar_live_processes": 951349874,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 129545,
+            "rss_kib": 211896
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 133610,
+            "rss_kib": 192696
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689610,
+          "nsec": 352742092
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 10.414437280036509,
+      "valid_identity": true,
+      "capture_ms": 2.1387850865721703,
+      "forward_frame": 103,
+      "wall_lag_ms": 114.43728003650833,
+      "variant": 7,
+      "mae": 3.368484848484848,
+      "second_mae": 5.481515151515151
+    },
+    {
+      "s": 10.471499713137746,
+      "valid_identity": true,
+      "capture_ms": 9.141833521425724,
+      "forward_frame": 103,
+      "wall_lag_ms": 171.49971313774515,
+      "variant": 7,
+      "mae": 3.368484848484848,
+      "second_mae": 5.481515151515151
+    },
+    {
+      "s": 10.514324091374874,
+      "valid_identity": true,
+      "capture_ms": 1.9046859815716743,
+      "forward_frame": 104,
+      "wall_lag_ms": 114.32409137487376,
+      "variant": 8,
+      "mae": 2.2337878787878784,
+      "second_mae": 6.041363636363636
+    },
+    {
+      "s": 10.568809605203569,
+      "valid_identity": true,
+      "capture_ms": 6.330340169370174,
+      "forward_frame": 104,
+      "wall_lag_ms": 168.8096052035686,
+      "variant": 8,
+      "mae": 2.2337878787878784,
+      "second_mae": 6.041363636363636
+    },
+    {
+      "s": 10.614466475322843,
+      "valid_identity": true,
+      "capture_ms": 1.9283061847090721,
+      "forward_frame": 105,
+      "wall_lag_ms": 114.4664753228426,
+      "variant": 9,
+      "mae": 2.534545454545455,
+      "second_mae": 4.114393939393938,
+      "resources": {
+        "pss_kib": 302031,
+        "summed_rss_kib": 518772,
+        "cpu_seconds_live_processes": 3.83,
+        "rchar_live_processes": 951350637,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 138541,
+            "rss_kib": 220892
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 133612,
+            "rss_kib": 192700
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689610,
+          "nsec": 640645084
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 10.664803743362427,
+      "valid_identity": true,
+      "capture_ms": 2.2081509232521057,
+      "forward_frame": 106,
+      "wall_lag_ms": 64.80374336242534,
+      "variant": 10,
+      "mae": 2.583939393939394,
+      "second_mae": 4.539242424242425
+    },
+    {
+      "s": 10.714329894632101,
+      "valid_identity": true,
+      "capture_ms": 1.677551306784153,
+      "forward_frame": 106,
+      "wall_lag_ms": 114.32989463209964,
+      "variant": 10,
+      "mae": 2.583939393939394,
+      "second_mae": 4.539242424242425
+    },
+    {
+      "s": 10.76445909217,
+      "valid_identity": true,
+      "capture_ms": 1.750539056956768,
+      "forward_frame": 107,
+      "wall_lag_ms": 64.45909216999901,
+      "variant": 11,
+      "mae": 2.835757575757576,
+      "second_mae": 5.4753030303030314
+    },
+    {
+      "s": 10.81461453344673,
+      "valid_identity": true,
+      "capture_ms": 1.8510380759835243,
+      "forward_frame": 107,
+      "wall_lag_ms": 114.61453344672812,
+      "variant": 11,
+      "mae": 2.835757575757576,
+      "second_mae": 5.4753030303030314
+    },
+    {
+      "s": 10.864977582357824,
+      "valid_identity": true,
+      "capture_ms": 2.154306508600712,
+      "forward_frame": 108,
+      "wall_lag_ms": 64.97758235782314,
+      "variant": 12,
+      "mae": 2.2571212121212127,
+      "second_mae": 6.122878787878788,
+      "resources": {
+        "pss_kib": 308193,
+        "summed_rss_kib": 524936,
+        "cpu_seconds_live_processes": 3.9,
+        "rchar_live_processes": 951351362,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 144701,
+            "rss_kib": 227052
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 133614,
+            "rss_kib": 192704
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689610,
+          "nsec": 877583846
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 10.914839556440711,
+      "valid_identity": true,
+      "capture_ms": 1.9592233002185822,
+      "forward_frame": 108,
+      "wall_lag_ms": 114.83955644071031,
+      "variant": 12,
+      "mae": 2.2571212121212127,
+      "second_mae": 6.122878787878788
+    },
+    {
+      "s": 10.964900681748986,
+      "valid_identity": true,
+      "capture_ms": 1.9624875858426094,
+      "forward_frame": 109,
+      "wall_lag_ms": 64.90068174898589,
+      "variant": 13,
+      "mae": 2.6051515151515146,
+      "second_mae": 4.343787878787878
+    },
+    {
+      "s": 11.01474901009351,
+      "valid_identity": true,
+      "capture_ms": 1.7541944980621338,
+      "forward_frame": 109,
+      "wall_lag_ms": 114.7490100935098,
+      "variant": 13,
+      "mae": 2.6051515151515146,
+      "second_mae": 4.343787878787878
+    },
+    {
+      "s": 11.072125913575292,
+      "valid_identity": true,
+      "capture_ms": 9.072927758097649,
+      "forward_frame": 109,
+      "wall_lag_ms": 172.1259135752913,
+      "variant": 13,
+      "mae": 2.6051515151515146,
+      "second_mae": 4.343787878787878
+    },
+    {
+      "s": 11.11514461133629,
+      "valid_identity": true,
+      "capture_ms": 2.034321427345276,
+      "forward_frame": 110,
+      "wall_lag_ms": 115.14461133629084,
+      "variant": 14,
+      "mae": 2.7625757575757572,
+      "second_mae": 4.833636363636363,
+      "resources": {
+        "pss_kib": 271735,
+        "summed_rss_kib": 488456,
+        "cpu_seconds_live_processes": 3.97,
+        "rchar_live_processes": 951352300,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 108265,
+            "rss_kib": 190616
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 133592,
+            "rss_kib": 192660
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689611,
+          "nsec": 116741093
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 11.168188800103962,
+      "valid_identity": true,
+      "capture_ms": 5.018666386604309,
+      "forward_frame": 110,
+      "wall_lag_ms": 168.18880010396242,
+      "variant": 14,
+      "mae": 2.7625757575757572,
+      "second_mae": 4.833636363636363
+    },
+    {
+      "s": 11.21501675620675,
+      "valid_identity": true,
+      "capture_ms": 1.7893733456730843,
+      "forward_frame": 111,
+      "wall_lag_ms": 115.01675620674945,
+      "variant": 15,
+      "mae": 2.9369696969696966,
+      "second_mae": 5.732424242424242
+    },
+    {
+      "s": 11.265811118297279,
+      "valid_identity": true,
+      "capture_ms": 2.526632510125637,
+      "forward_frame": 111,
+      "wall_lag_ms": 165.81111829727746,
+      "variant": 15,
+      "mae": 2.9369696969696966,
+      "second_mae": 5.732424242424242
+    },
+    {
+      "s": 11.315615421161056,
+      "valid_identity": true,
+      "capture_ms": 2.2704247385263443,
+      "forward_frame": 112,
+      "wall_lag_ms": 115.6154211610545,
+      "variant": 16,
+      "mae": 2.3701515151515156,
+      "second_mae": 6.256212121212121
+    },
+    {
+      "s": 11.381455186754465,
+      "valid_identity": true,
+      "capture_ms": 18.05152278393507,
+      "forward_frame": 112,
+      "wall_lag_ms": 181.45518675446402,
+      "variant": 16,
+      "mae": 2.3701515151515156,
+      "second_mae": 6.256212121212121,
+      "resources": {
+        "pss_kib": 277637,
+        "summed_rss_kib": 494360,
+        "cpu_seconds_live_processes": 4.05,
+        "rchar_live_processes": 951353081,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 114165,
+            "rss_kib": 196516
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 133594,
+            "rss_kib": 192664
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689611,
+          "nsec": 393972833
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 11.41699911095202,
+      "valid_identity": true,
+      "capture_ms": 3.5392511636018753,
+      "forward_frame": 113,
+      "wall_lag_ms": 116.99911095201898,
+      "variant": 17,
+      "mae": 2.802424242424243,
+      "second_mae": 6.192878787878788
+    },
+    {
+      "s": 11.472921315580606,
+      "valid_identity": true,
+      "capture_ms": 9.401186369359493,
+      "forward_frame": 113,
+      "wall_lag_ms": 172.92131558060575,
+      "variant": 17,
+      "mae": 2.802424242424243,
+      "second_mae": 6.192878787878788
+    },
+    {
+      "s": 11.515803360380232,
+      "valid_identity": true,
+      "capture_ms": 2.2269748151302338,
+      "forward_frame": 114,
+      "wall_lag_ms": 115.80336038023198,
+      "variant": 18,
+      "mae": 3.308181818181818,
+      "second_mae": 6.88439393939394
+    },
+    {
+      "s": 11.56816593464464,
+      "valid_identity": true,
+      "capture_ms": 4.531663842499256,
+      "forward_frame": 114,
+      "wall_lag_ms": 168.16593464463915,
+      "variant": 18,
+      "mae": 3.308181818181818,
+      "second_mae": 6.88439393939394
+    },
+    {
+      "s": 11.615910335443914,
+      "valid_identity": true,
+      "capture_ms": 2.2194189950823784,
+      "forward_frame": 115,
+      "wall_lag_ms": 115.91033544391394,
+      "variant": 19,
+      "mae": 3.7446969696969687,
+      "second_mae": 7.764393939393939
+    },
+    {
+      "s": 11.672774366103113,
+      "valid_identity": true,
+      "capture_ms": 9.026405401527882,
+      "forward_frame": 115,
+      "wall_lag_ms": 172.7743661031127,
+      "variant": 19,
+      "mae": 3.7446969696969687,
+      "second_mae": 7.764393939393939,
+      "resources": {
+        "pss_kib": 286927,
+        "summed_rss_kib": 503672,
+        "cpu_seconds_live_processes": 4.14,
+        "rchar_live_processes": 951353877,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 123433,
+            "rss_kib": 205784
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 133616,
+            "rss_kib": 192708
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689611,
+          "nsec": 669437216
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    },
+    {
+      "s": 11.71606382355094,
+      "valid_identity": true,
+      "capture_ms": 2.257252112030983,
+      "forward_frame": 116,
+      "wall_lag_ms": 116.06382355093814,
+      "variant": 20,
+      "mae": 2.600151515151515,
+      "second_mae": 6.486818181818181
+    },
+    {
+      "s": 11.76568399835378,
+      "valid_identity": true,
+      "capture_ms": 1.8199384212493896,
+      "forward_frame": 117,
+      "wall_lag_ms": 65.68399835377825,
+      "variant": 21,
+      "mae": 3.869242424242424,
+      "second_mae": 5.672272727272727
+    },
+    {
+      "s": 11.816162769682705,
+      "valid_identity": true,
+      "capture_ms": 2.2428426891565323,
+      "forward_frame": 117,
+      "wall_lag_ms": 116.16276968270434,
+      "variant": 21,
+      "mae": 3.869242424242424,
+      "second_mae": 5.672272727272727
+    },
+    {
+      "s": 11.872818221338093,
+      "valid_identity": true,
+      "capture_ms": 8.840716443955898,
+      "forward_frame": 117,
+      "wall_lag_ms": 172.8182213380922,
+      "variant": 21,
+      "mae": 3.869242424242424,
+      "second_mae": 5.672272727272727
+    },
+    {
+      "s": 11.915914015844464,
+      "valid_identity": true,
+      "capture_ms": 1.8816208466887474,
+      "forward_frame": 118,
+      "wall_lag_ms": 115.91401584446359,
+      "variant": 22,
+      "mae": 3.628030303030303,
+      "second_mae": 5.8130303030303025
+    },
+    {
+      "s": 11.965917157009244,
+      "valid_identity": true,
+      "capture_ms": 1.827535219490528,
+      "forward_frame": 119,
+      "wall_lag_ms": 65.91715700924361,
+      "variant": 23,
+      "mae": 2.772424242424242,
+      "second_mae": 6.075909090909091,
+      "resources": {
+        "pss_kib": 296161,
+        "summed_rss_kib": 512908,
+        "cpu_seconds_live_processes": 4.21,
+        "rchar_live_processes": 951354695,
+        "storage_read_bytes_live_processes": 28950528,
+        "pids": [
+          1933335,
+          1933338,
+          1933339,
+          1933366
+        ],
+        "processes": [
+          {
+            "pid": 1933335,
+            "role": "browser",
+            "pss_kib": 132681,
+            "rss_kib": 215032
+          },
+          {
+            "pid": 1933338,
+            "role": "zygote",
+            "pss_kib": 12594,
+            "rss_kib": 52584
+          },
+          {
+            "pid": 1933339,
+            "role": "zygote",
+            "pss_kib": 17284,
+            "rss_kib": 52596
+          },
+          {
+            "pid": 1933366,
+            "role": "gpu-process",
+            "pss_kib": 133602,
+            "rss_kib": 192696
+          }
+        ]
+      },
+      "ui": {
+        "current": {
+          "sec": 1735689611,
+          "nsec": 956182289
+        },
+        "start": {
+          "sec": 1735689600,
+          "nsec": 0
+        },
+        "end": {
+          "sec": 1735689619,
+          "nsec": 900000000
+        },
+        "playing": true,
+        "visibility": "visible",
+        "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+      }
+    }
+  ],
+  "seeks": [
+    {
+      "offset_ns": 310000000,
+      "expected_variant": 3,
+      "before": {
+        "variant": 0,
+        "mae": 2.640454545454545,
+        "second_mae": 6.576818181818182
+      },
+      "latency_ms": 96.55321016907692,
+      "observations": [
+        {
+          "s": 0.0027048885822296143,
+          "variant": 0,
+          "mae": 2.640454545454545,
+          "second_mae": 6.576818181818182
+        },
+        {
+          "s": 0.014810492284595966,
+          "variant": 0,
+          "mae": 2.640454545454545,
+          "second_mae": 6.576818181818182
+        },
+        {
+          "s": 0.026512752287089825,
+          "variant": 0,
+          "mae": 2.640454545454545,
+          "second_mae": 6.576818181818182
+        },
+        {
+          "s": 0.03823048435151577,
+          "variant": 0,
+          "mae": 2.640454545454545,
+          "second_mae": 6.576818181818182
+        },
+        {
+          "s": 0.049761151894927025,
+          "variant": 0,
+          "mae": 2.640454545454545,
+          "second_mae": 6.576818181818182
+        },
+        {
+          "s": 0.06116418540477753,
+          "variant": 0,
+          "mae": 2.640454545454545,
+          "second_mae": 6.576818181818182
+        },
+        {
+          "s": 0.07267013192176819,
+          "variant": 0,
+          "mae": 2.640454545454545,
+          "second_mae": 6.576818181818182
+        },
+        {
+          "s": 0.08501440938562155,
+          "variant": 0,
+          "mae": 2.640454545454545,
+          "second_mae": 6.576818181818182
+        },
+        {
+          "s": 0.09655321016907692,
+          "variant": 3,
+          "mae": 2.5824242424242425,
+          "second_mae": 4.814848484848485
+        }
+      ]
+    },
+    {
+      "offset_ns": 1710000000,
+      "expected_variant": 17,
+      "before": {
+        "variant": 3,
+        "mae": 2.5824242424242425,
+        "second_mae": 4.814848484848485
+      },
+      "latency_ms": 96.0407629609108,
+      "observations": [
+        {
+          "s": 0.014952627941966057,
+          "variant": 3,
+          "mae": 2.5824242424242425,
+          "second_mae": 4.814848484848485
+        },
+        {
+          "s": 0.026446672156453133,
+          "variant": 3,
+          "mae": 2.5824242424242425,
+          "second_mae": 4.814848484848485
+        },
+        {
+          "s": 0.03797284699976444,
+          "variant": 3,
+          "mae": 2.5824242424242425,
+          "second_mae": 4.814848484848485
+        },
+        {
+          "s": 0.0494229830801487,
+          "variant": 3,
+          "mae": 2.5824242424242425,
+          "second_mae": 4.814848484848485
+        },
+        {
+          "s": 0.0609620176255703,
+          "variant": 3,
+          "mae": 2.5824242424242425,
+          "second_mae": 4.814848484848485
+        },
+        {
+          "s": 0.07295775599777699,
+          "variant": 3,
+          "mae": 2.5824242424242425,
+          "second_mae": 4.814848484848485
+        },
+        {
+          "s": 0.08452955726534128,
+          "variant": 3,
+          "mae": 2.5824242424242425,
+          "second_mae": 4.814848484848485
+        },
+        {
+          "s": 0.0960407629609108,
+          "variant": 17,
+          "mae": 2.802424242424243,
+          "second_mae": 6.192878787878788
+        }
+      ]
+    },
+    {
+      "offset_ns": 4110000000,
+      "expected_variant": 9,
+      "before": {
+        "variant": 17,
+        "mae": 2.802424242424243,
+        "second_mae": 6.192878787878788
+      },
+      "latency_ms": 106.00374080240726,
+      "observations": [
+        {
+          "s": 0.0020528696477413177,
+          "variant": 17,
+          "mae": 2.802424242424243,
+          "second_mae": 6.192878787878788
+        },
+        {
+          "s": 0.013624759390950203,
+          "variant": 17,
+          "mae": 2.802424242424243,
+          "second_mae": 6.192878787878788
+        },
+        {
+          "s": 0.025233306922018528,
+          "variant": 17,
+          "mae": 2.802424242424243,
+          "second_mae": 6.192878787878788
+        },
+        {
+          "s": 0.036773801781237125,
+          "variant": 17,
+          "mae": 2.802424242424243,
+          "second_mae": 6.192878787878788
+        },
+        {
+          "s": 0.04828945733606815,
+          "variant": 17,
+          "mae": 2.802424242424243,
+          "second_mae": 6.192878787878788
+        },
+        {
+          "s": 0.059785558842122555,
+          "variant": 17,
+          "mae": 2.802424242424243,
+          "second_mae": 6.192878787878788
+        },
+        {
+          "s": 0.07136051636189222,
+          "variant": 17,
+          "mae": 2.802424242424243,
+          "second_mae": 6.192878787878788
+        },
+        {
+          "s": 0.08285094331949949,
+          "variant": 17,
+          "mae": 2.802424242424243,
+          "second_mae": 6.192878787878788
+        },
+        {
+          "s": 0.09448392037302256,
+          "variant": 17,
+          "mae": 2.802424242424243,
+          "second_mae": 6.192878787878788
+        },
+        {
+          "s": 0.10600374080240726,
+          "variant": 9,
+          "mae": 2.534545454545455,
+          "second_mae": 4.114393939393938
+        }
+      ]
+    },
+    {
+      "offset_ns": 0,
+      "expected_variant": 0,
+      "before": {
+        "variant": 9,
+        "mae": 2.534545454545455,
+        "second_mae": 4.114393939393938
+      },
+      "latency_ms": 129.55037504434586,
+      "observations": [
+        {
+          "s": 0.002056892029941082,
+          "variant": 9,
+          "mae": 2.534545454545455,
+          "second_mae": 4.114393939393938
+        },
+        {
+          "s": 0.013639494776725769,
+          "variant": 9,
+          "mae": 2.534545454545455,
+          "second_mae": 4.114393939393938
+        },
+        {
+          "s": 0.025178108364343643,
+          "variant": 9,
+          "mae": 2.534545454545455,
+          "second_mae": 4.114393939393938
+        },
+        {
+          "s": 0.037117840722203255,
+          "variant": 9,
+          "mae": 2.534545454545455,
+          "second_mae": 4.114393939393938
+        },
+        {
+          "s": 0.04873301740735769,
+          "variant": 9,
+          "mae": 2.534545454545455,
+          "second_mae": 4.114393939393938
+        },
+        {
+          "s": 0.0603010943159461,
+          "variant": 9,
+          "mae": 2.534545454545455,
+          "second_mae": 4.114393939393938
+        },
+        {
+          "s": 0.07181430701166391,
+          "variant": 9,
+          "mae": 2.534545454545455,
+          "second_mae": 4.114393939393938
+        },
+        {
+          "s": 0.08341425005346537,
+          "variant": 9,
+          "mae": 2.534545454545455,
+          "second_mae": 4.114393939393938
+        },
+        {
+          "s": 0.09486028831452131,
+          "variant": 9,
+          "mae": 2.534545454545455,
+          "second_mae": 4.114393939393938
+        },
+        {
+          "s": 0.10641195438802242,
+          "variant": 9,
+          "mae": 2.534545454545455,
+          "second_mae": 4.114393939393938
+        },
+        {
+          "s": 0.11793681047856808,
+          "variant": 9,
+          "mae": 2.534545454545455,
+          "second_mae": 4.114393939393938
+        },
+        {
+          "s": 0.12955037504434586,
+          "variant": 0,
+          "mae": 2.640454545454545,
+          "second_mae": 6.576818181818182
+        }
+      ]
+    }
+  ],
+  "source_commit": "8ce2533c47af5d74e76ec65b24149eb54ac6410b",
+  "harness_sha256": "cf8d0460169b3e40e487387a9bdc56961340ba9c066eab0edc54aeda8f3493a2",
+  "native_patch_sha256": "470d87ee5e7f18dcded15e6a73f61a6ce8dae97f61ec71ecc578f614e1c18a0e",
+  "cache": "cache-allowed; full SHA256 read before launch",
+  "observer": "XGetImage 960x540 BGRA; 88 RGB 5x5 patch means; 32 JPEG templates; 20 Hz target",
+  "seek_boundary": "existing UI action handler; no OS mouse/key latency; 10 ms target polling",
+  "pss_limit_mib": 2048,
+  "wall_limit_seconds": 100,
+  "display_initial": "Keyboard Control:\n  auto repeat:  on    key click percent:  0    LED mask:  00000000\n  XKB indicators:\n    00: Caps Lock:   off    01: Num Lock:    off    02: Scroll Lock: off\n    03: Compose:     off    04: Kana:        off    05: Sleep:       off\n    06: Suspend:     off    07: Mute:        off    08: Misc:        off\n    09: Mail:        off    10: Charging:    off    11: Shift Lock:  off\n    12: Group 2:     off    13: Mouse Keys:  off\n  auto repeat delay:  500    repeat rate:  33\n  auto repeating keys:  00ffffffdffffbbf\n                        fadfffefffedffff\n                        9fffffffffffffff\n                        fff7ffffffffffff\n  bell percent:  50    bell pitch:  400    bell duration:  100\nPointer Control:\n  acceleration:  2/1    threshold:  4\nScreen Saver:\n  prefer blanking:  yes    allow exposures:  yes\n  timeout:  0    cycle:  0\nColors:\n  default colormap:  0x20    BlackPixel:  0x0    WhitePixel:  0xffffff\nFont Path:\n  /usr/share/fonts/X11/misc,/usr/share/fonts/X11/Type1,built-ins\nDPMS (Display Power Management Signaling):\n  Standby: 0    Suspend: 0    Off: 0\n  DPMS is Enabled\n  Monitor is On\n",
+  "display_before": "Keyboard Control:\n  auto repeat:  on    key click percent:  0    LED mask:  00000000\n  XKB indicators:\n    00: Caps Lock:   off    01: Num Lock:    off    02: Scroll Lock: off\n    03: Compose:     off    04: Kana:        off    05: Sleep:       off\n    06: Suspend:     off    07: Mute:        off    08: Misc:        off\n    09: Mail:        off    10: Charging:    off    11: Shift Lock:  off\n    12: Group 2:     off    13: Mouse Keys:  off\n  auto repeat delay:  500    repeat rate:  33\n  auto repeating keys:  00ffffffdffffbbf\n                        fadfffefffedffff\n                        9fffffffffffffff\n                        fff7ffffffffffff\n  bell percent:  50    bell pitch:  400    bell duration:  100\nPointer Control:\n  acceleration:  2/1    threshold:  4\nScreen Saver:\n  prefer blanking:  yes    allow exposures:  yes\n  timeout:  0    cycle:  0\nColors:\n  default colormap:  0x20    BlackPixel:  0x0    WhitePixel:  0xffffff\nFont Path:\n  /usr/share/fonts/X11/misc,/usr/share/fonts/X11/Type1,built-ins\nDPMS (Display Power Management Signaling):\n  Standby: 0    Suspend: 0    Off: 0\n  DPMS is Enabled\n  Monitor is On\n",
+  "gpu_before": "Tue Oct 20 15:52:16 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 610.57.04              KMD Version: 610.57.04     CUDA UMD Version: 13.3     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 5070 Ti     On  |   00000000:02:00.0  On |                  N/A |\n|  0%   45C    P8             21W /  300W |   11381MiB /  16303MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A            4287      G   /usr/lib/xorg/Xorg                      348MiB |\n|    0   N/A  N/A            4482      G   /usr/bin/gnome-shell                     19MiB |\n|    0   N/A  N/A            4967      G   /usr/libexec/gnome-initial-setup         13MiB |\n|    0   N/A  N/A            5509      G   ...bin/snapd-desktop-integration          7MiB |\n|    0   N/A  N/A            5611      G   .../8736/usr/lib/firefox/firefox         40MiB |\n|    0   N/A  N/A            6736      G   /usr/bin/nautilus                        21MiB |\n|    0   N/A  N/A          603315      G   ...nap-store/1390/bin/snap-store         87MiB |\n|    0   N/A  N/A         3868901      C   ...-TTS-Server/.venv/bin/python3      10632MiB |\n|    0   N/A  N/A         4092338      G   ...rack-uuid=3190708988185955192         74MiB |\n+-----------------------------------------------------------------------------------------+\n",
+  "command": [
+    "/tmp/mcap-lichtblick-desktop/lichtblick-1.29.1-linux-x64/lichtblick",
+    "--no-sandbox",
+    "--force-multiple-windows",
+    "--user-data-dir=/tmp/mcap-desktop-compare-9gb6mvj8",
+    "--remote-debugging-port=9269"
+  ],
+  "binary_sha256": "180eea79cebc825a7e7291b8c5ef387760773f2b03596751bda8e6e532a8b6c8",
+  "pid": 1933335,
+  "window": "0x3600004",
+  "gpu": {
+    "devices": [
+      {
+        "vendorId": 4318,
+        "deviceId": 11269,
+        "vendorString": "Google Inc. (NVIDIA Corporation)",
+        "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+        "driverVendor": "Nvidia",
+        "driverVersion": "610.57.04"
+      }
+    ],
+    "auxAttributes": {
+      "amdSwitchable": false,
+      "canSupportThreadedTextureMailbox": false,
+      "directRenderingVersion": "",
+      "displayType": "ANGLE_OPENGL",
+      "glExtensions": "GL_AMD_performance_monitor GL_ANGLE_blob_cache GL_ANGLE_client_arrays GL_ANGLE_clip_cull_distance GL_ANGLE_depth_texture GL_ANGLE_framebuffer_blit GL_ANGLE_framebuffer_multisample GL_ANGLE_get_serialized_context_string GL_ANGLE_get_tex_level_parameter GL_ANGLE_instanced_arrays GL_ANGLE_logic_op GL_ANGLE_memory_size GL_ANGLE_multiview_multisample GL_ANGLE_polygon_mode GL_ANGLE_program_binary_readiness_query GL_ANGLE_program_cache_control GL_ANGLE_provoking_vertex GL_ANGLE_renderability_validation GL_ANGLE_request_extension GL_ANGLE_robust_client_memory GL_ANGLE_shader_pixel_local_storage GL_ANGLE_shader_pixel_local_storage_coherent GL_ANGLE_stencil_texturing GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ANGLE_texture_multisample GL_ANGLE_texture_rectangle GL_ANGLE_translated_shader_source GL_APPLE_clip_distance GL_ARM_rgba8 GL_CHROMIUM_bind_generates_resource GL_CHROMIUM_bind_uniform_location GL_CHROMIUM_copy_texture GL_CHROMIUM_framebuffer_mixed_samples GL_CHROMIUM_lose_context GL_EXT_blend_func_extended GL_EXT_blend_minmax GL_EXT_clear_texture GL_EXT_clip_control GL_EXT_clip_cull_distance GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_compressed_ETC1_RGB8_sub_texture GL_EXT_conservative_depth GL_EXT_debug_label GL_EXT_debug_marker GL_EXT_depth_clamp GL_EXT_discard_framebuffer GL_EXT_disjoint_timer_query GL_EXT_draw_buffers GL_EXT_draw_buffers_indexed GL_EXT_float_blend GL_EXT_frag_depth GL_EXT_instanced_arrays GL_EXT_map_buffer_range GL_EXT_memory_object GL_EXT_memory_object_fd GL_EXT_multisample_compatibility GL_EXT_occlusion_query_boolean GL_EXT_polygon_offset_clamp GL_EXT_read_format_bgra GL_EXT_render_snorm GL_EXT_robustness GL_EXT_sRGB GL_EXT_sRGB_write_control GL_EXT_semaphore GL_EXT_semaphore_fd GL_EXT_shader_texture_lod GL_EXT_shadow_samplers GL_EXT_texture_border_clamp GL_EXT_texture_compression_bptc GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc_srgb GL_EXT_texture_filter_anisotropic GL_EXT_texture_format_BGRA8888 GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_norm16 GL_EXT_texture_rg GL_EXT_texture_sRGB_R8 GL_EXT_texture_sRGB_decode GL_EXT_texture_shadow_lod GL_EXT_texture_storage GL_EXT_texture_type_2_10_10_10_REV GL_EXT_unpack_subimage GL_KHR_blend_equation_advanced GL_KHR_blend_equation_advanced_coherent GL_KHR_debug GL_KHR_parallel_shader_compile GL_KHR_robustness GL_NV_fence GL_NV_framebuffer_blit GL_NV_pack_subimage GL_NV_pixel_buffer_object GL_NV_polygon_mode GL_NV_read_depth GL_NV_read_stencil GL_NV_robustness_video_memory_purge GL_NV_shader_noperspective_interpolation GL_OES_compressed_ETC1_RGB8_texture GL_OES_depth24 GL_OES_depth32 GL_OES_depth_texture GL_OES_draw_buffers_indexed GL_OES_element_index_uint GL_OES_fbo_render_mipmap GL_OES_get_program_binary GL_OES_mapbuffer GL_OES_packed_depth_stencil GL_OES_required_internalformat GL_OES_rgb8_rgba8 GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_standard_derivatives GL_OES_surfaceless_context GL_OES_texture_3D GL_OES_texture_border_clamp GL_OES_texture_float GL_OES_texture_float_linear GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_texture_npot GL_OES_texture_stencil8 GL_OES_texture_storage_multisample_2d_array GL_OES_vertex_array_object GL_OVR_multiview GL_OVR_multiview2 ",
+      "glImplementationParts": "(gl=egl-angle,angle=opengl)",
+      "glRenderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+      "glResetNotificationStrategy": 33362,
+      "glVendor": "Google Inc. (NVIDIA Corporation)",
+      "glVersion": "OpenGL ES 3.0 (ANGLE 2.1 git hash: e68ad989e7b5)",
+      "glWsExtensions": "EGL_EXT_create_context_robustness EGL_KHR_create_context EGL_KHR_get_all_proc_addresses EGL_ANGLE_create_context_webgl_compatibility EGL_CHROMIUM_create_context_bind_generates_resource EGL_EXT_pixel_format_float EGL_KHR_surfaceless_context EGL_ANGLE_display_texture_share_group EGL_ANGLE_display_semaphore_share_group EGL_ANGLE_create_context_client_arrays EGL_ANGLE_program_cache_control EGL_ANGLE_robust_resource_initialization EGL_ANGLE_create_context_extensions_enabled EGL_ANDROID_blob_cache EGL_ANDROID_recordable EGL_ANGLE_create_context_backwards_compatible EGL_KHR_create_context_no_error EGL_NOK_texture_from_pixmap EGL_NV_robustness_video_memory_purge EGL_KHR_reusable_sync EGL_ANGLE_context_virtualization EGL_ANGLE_memory_usage_report ",
+      "glWsVendor": "Google Inc. (NVIDIA Corporation)",
+      "glWsVersion": "1.5 (ANGLE 2.1 git hash: e68ad989e7b5)",
+      "hardwareSupportsVulkan": false,
+      "inProcessGpu": false,
+      "initializationTime": 0.19424,
+      "isAsan": false,
+      "isClangCoverage": false,
+      "jpegDecodeAcceleratorSupported": false,
+      "maxMsaaSamples": "8",
+      "optimus": false,
+      "passthroughCmdDecoder": true,
+      "pixelShaderVersion": "3.00",
+      "processCrashCount": 0,
+      "sandboxed": false,
+      "skiaBackendType": "GaneshGL",
+      "subpixelFontRendering": true,
+      "targetCpuBits": 64,
+      "vertexShaderVersion": "3.00",
+      "visibilityCallbackCallCount": 0
+    },
+    "featureStatus": {
+      "2d_canvas": "enabled",
+      "direct_rendering_display_compositor": "disabled_off_ok",
+      "gpu_compositing": "enabled",
+      "multiple_raster_threads": "enabled_on",
+      "opengl": "enabled_on",
+      "rasterization": "enabled",
+      "raw_draw": "disabled_off_ok",
+      "skia_graphite": "disabled_off",
+      "trees_in_viz": "disabled_off",
+      "video_decode": "enabled",
+      "video_encode": "disabled_software",
+      "vulkan": "disabled_off",
+      "webgl": "enabled",
+      "webgpu": "enabled",
+      "webgpu_on_vk_via_gl_interop": "enabled",
+      "webnn": "disabled_off"
+    },
+    "driverBugWorkarounds": [
+      "disable_discard_framebuffer",
+      "disable_rgb_to_yuv_conversion",
+      "enable_webgl_timer_query_extensions",
+      "exit_on_context_lost",
+      "force_cube_complete",
+      "init_gl_position_in_vertex_shader",
+      "unpack_overlapping_rows_separately_unpack_buffer",
+      "disabled_extension_GL_KHR_blend_equation_advanced",
+      "disabled_extension_GL_KHR_blend_equation_advanced_coherent",
+      "disabled_extension_GL_MESA_framebuffer_flip_y"
+    ],
+    "videoDecoding": [],
+    "videoEncoding": []
+  },
+  "file_input_wall_s": 1.646102448925376,
+  "canvases": [
+    {
+      "width": 960,
+      "height": 540,
+      "rect": {
+        "x": 319.984375,
+        "y": 76,
+        "width": 960,
+        "height": 540,
+        "top": 76,
+        "right": 1279.984375,
+        "bottom": 616,
+        "left": 319.984375
+      }
+    }
+  ],
+  "web_viewport": {
+    "width": 1888,
+    "height": 1038,
+    "dpr": 1
+  },
+  "gtk_frame_extents": "_GTK_FRAME_EXTENTS(CARDINAL) = 16, 16, 10, 32\n",
+  "image_rect": [
+    336,
+    86,
+    960,
+    540
+  ],
+  "window_info": "\nxwininfo: Window id: 0x3600004 \"3840x2160-1cam-10hz-none-8MiB-20s.mcap \u2013 Lichtblick\"\n\n  Absolute upper-left X:  40\n  Absolute upper-left Y:  60\n  Relative upper-left X:  40\n  Relative upper-left Y:  60\n  Width: 1920\n  Height: 1080\n  Depth: 32\n  Visual: 0x82\n  Visual Class: TrueColor\n  Border width: 0\n  Class: InputOutput\n  Colormap: 0x3600003 (not installed)\n  Bit Gravity State: NorthWestGravity\n  Window Gravity State: NorthWestGravity\n  Backing Store State: NotUseful\n  Save Under State: no\n  Map State: IsViewable\n  Override Redirect State: no\n  Corners:  +40+60  -600+60  -600-300  +40-300\n  -geometry 1920x1080+40+60\n\n",
+  "ready_wall_s": 2.9193017901852727,
+  "before_play": {
+    "pss_kib": 253896,
+    "summed_rss_kib": 470500,
+    "cpu_seconds_live_processes": 0.93,
+    "rchar_live_processes": 589793230,
+    "storage_read_bytes_live_processes": 28950528,
+    "pids": [
+      1933335,
+      1933338,
+      1933339,
+      1933366
+    ],
+    "processes": [
+      {
+        "pid": 1933335,
+        "role": "browser",
+        "pss_kib": 104770,
+        "rss_kib": 187040
+      },
+      {
+        "pid": 1933338,
+        "role": "zygote",
+        "pss_kib": 12577,
+        "rss_kib": 52584
+      },
+      {
+        "pid": 1933339,
+        "role": "zygote",
+        "pss_kib": 17266,
+        "rss_kib": 52596
+      },
+      {
+        "pid": 1933366,
+        "role": "gpu-process",
+        "pss_kib": 119283,
+        "rss_kib": 178280
+      }
+    ]
+  },
+  "after_play": {
+    "pss_kib": 299081,
+    "summed_rss_kib": 515828,
+    "cpu_seconds_live_processes": 4.23,
+    "rchar_live_processes": 951355751,
+    "storage_read_bytes_live_processes": 28950528,
+    "pids": [
+      1933335,
+      1933338,
+      1933339,
+      1933366
+    ],
+    "processes": [
+      {
+        "pid": 1933335,
+        "role": "browser",
+        "pss_kib": 135601,
+        "rss_kib": 217952
+      },
+      {
+        "pid": 1933338,
+        "role": "zygote",
+        "pss_kib": 12594,
+        "rss_kib": 52584
+      },
+      {
+        "pid": 1933339,
+        "role": "zygote",
+        "pss_kib": 17284,
+        "rss_kib": 52596
+      },
+      {
+        "pid": 1933366,
+        "role": "gpu-process",
+        "pss_kib": 133602,
+        "rss_kib": 192696
+      }
+    ]
+  },
+  "final_ui": {
+    "current": {
+      "sec": 1735689612,
+      "nsec": 30282780
+    },
+    "start": {
+      "sec": 1735689600,
+      "nsec": 0
+    },
+    "end": {
+      "sec": 1735689619,
+      "nsec": 900000000
+    },
+    "playing": true,
+    "visibility": "visible",
+    "text": "3840x2160-1cam-10hz-no\nne-8MiB-20s.mcap\nPanel\nTopics\nAlerts\nLayouts\nImage panel\nTitle\nGeneral\nTopic\n/camera/0\nCalibration\nNone\nSync annotations\nOff\nOn\nFlip horizontal\nOff\nOn\nFlip vertical\nOff\nOn\nRotation\n0\u00b0\n90\u00b0\n180\u00b0\n270\u00b0\nBrightness\n50\nContrast\n50\nScene\nImage annotations\nTransforms (1)\nTopics\nFilter list\nList all\nFilter by text\n/scan\nCustom layers\n/camera/0\nSync\noff\n1\u00d7"
+  },
+  "gpu_after": "Tue Oct 20 15:52:31 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 610.57.04              KMD Version: 610.57.04     CUDA UMD Version: 13.3     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 5070 Ti     On  |   00000000:02:00.0  On |                  N/A |\n|  0%   46C    P5             33W /  300W |   11567MiB /  16303MiB |     13%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A            4287      G   /usr/lib/xorg/Xorg                      338MiB |\n|    0   N/A  N/A            4482      G   /usr/bin/gnome-shell                     15MiB |\n|    0   N/A  N/A            4967      G   /usr/libexec/gnome-initial-setup         13MiB |\n|    0   N/A  N/A            5509      G   ...bin/snapd-desktop-integration          7MiB |\n|    0   N/A  N/A            5611      G   .../8736/usr/lib/firefox/firefox         40MiB |\n|    0   N/A  N/A            6736      G   /usr/bin/nautilus                        21MiB |\n|    0   N/A  N/A          603315      G   ...nap-store/1390/bin/snap-store         87MiB |\n|    0   N/A  N/A         1933366      G   ...rack-uuid=3190708988185955192        191MiB |\n|    0   N/A  N/A         3868901      C   ...-TTS-Server/.venv/bin/python3      10632MiB |\n|    0   N/A  N/A         4092338      G   ...rack-uuid=3190708988185955192         74MiB |\n+-----------------------------------------------------------------------------------------+\n",
+  "display_after": "Keyboard Control:\n  auto repeat:  on    key click percent:  0    LED mask:  00000000\n  XKB indicators:\n    00: Caps Lock:   off    01: Num Lock:    off    02: Scroll Lock: off\n    03: Compose:     off    04: Kana:        off    05: Sleep:       off\n    06: Suspend:     off    07: Mute:        off    08: Misc:        off\n    09: Mail:        off    10: Charging:    off    11: Shift Lock:  off\n    12: Group 2:     off    13: Mouse Keys:  off\n  auto repeat delay:  500    repeat rate:  33\n  auto repeating keys:  00ffffffdffffbbf\n                        fadfffefffedffff\n                        9fffffffffffffff\n                        fff7ffffffffffff\n  bell percent:  50    bell pitch:  400    bell duration:  100\nPointer Control:\n  acceleration:  2/1    threshold:  4\nScreen Saver:\n  prefer blanking:  yes    allow exposures:  yes\n  timeout:  0    cycle:  0\nColors:\n  default colormap:  0x20    BlackPixel:  0x0    WhitePixel:  0xffffff\nFont Path:\n  /usr/share/fonts/X11/misc,/usr/share/fonts/X11/Type1,built-ins\nDPMS (Display Power Management Signaling):\n  Standby: 0    Suspend: 0    Off: 0\n  DPMS is Enabled\n  Monitor is On\n",
+  "summary": {
+    "observed_updates_hz": 9.94633945936213,
+    "source_progress_hz": 9.94633945936213,
+    "wall_lag_median_ms": 114.66834517195767,
+    "wall_lag_p95_ms": 170.1777121052146,
+    "peak_sampled_pss_mib": 300.9697265625,
+    "cpu_seconds": 3.3000000000000003,
+    "observation_seconds": 11.965917157009244,
+    "samples": 240,
+    "confident_samples": 240,
+    "rejected_samples": 0,
+    "max_template_mae": 3.8736363636363635,
+    "minimum_identity_margin": 1.0713636363636372,
+    "max_sample_gap_ms": 66.47519022226334
+  },
+  "exit_code": 0,
+  "total_wall_s": 15.192828358151019
+}

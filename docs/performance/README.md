@@ -14,6 +14,8 @@
 60秒・4K/8カメラで表示頻度・画像年齢・最低background頻度とメモリを比較する。
 [Nativeの実GPU環境確認](2026-10-19-native-hardware-gpu/README.md)では、
 ホストのNVIDIA VulkanによるCamera・BEV・Scene描画と、画面電源Off時のFIFO待ちを記録する。
+[Native / Lichtblick Desktopの実GPU比較](2026-10-20-native-lichtblick-gpu/README.md)では、
+同じ4K画像を表示し、画素で確認した更新・鮮度・Seekとプロセス全体のPSS / CPUを測る。
 
 ## 再現
 
