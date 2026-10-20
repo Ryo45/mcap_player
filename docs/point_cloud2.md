@@ -62,3 +62,9 @@ integration testはMCAP indexed latest-before、restore rollback、TF後の色�
 
 [ROS 2 Jazzy PointCloud2定義](https://github.com/ros2/common_interfaces/blob/jazzy/sensor_msgs/msg/PointCloud2.msg)と
 [PointField定義](https://github.com/ros2/common_interfaces/blob/jazzy/sensor_msgs/msg/PointField.msg)に従う。
+
+### Opaque depth
+
+Fully opaque point clouds write depth, so nearer points occlude farther points independently of input order. Clouds containing transparency retain alpha blending without depth writes; their overlapping transparent points are not depth sorted.
+
+The explicit GPU regression in scene-renderer, opaque_points_occlude_by_distance_in_both_orders, renders overlapping red/blue points in both input orders and reads back the centre pixel. It passed on NVIDIA GeForce RTX 5070 Ti / Vulkan / driver 610.57.04. Run it explicitly on a working GPU with cargo test -p scene-renderer -- --ignored --nocapture; ordinary workspace tests leave this hardware-dependent test ignored.
