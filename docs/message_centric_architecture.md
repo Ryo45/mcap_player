@@ -93,7 +93,12 @@ the selected plan. Push/live adapters use the same route resolution without pret
 recording restore operations.
 
 Controllers own feature-specific semantics. Camera admission and focused/background scheduling
-happen before JPEG decode. Dynamic TF retains ordered bounded history; static TF keeps a small exact
+happen before JPEG decode. Camera deadlines follow fixed 100 ms / 200 ms periods, preserving
+the existing camera phases rather than adding UI tick lateness to every deadline. A late tick
+skips missed periods and materializes only the latest pending message per camera; it does not
+replay a catch-up backlog. These are nominal periodic rates, not strict minimum spacing between
+two consecutive admissions. Focus changes and restore explicitly reanchor the schedule.
+Dynamic TF retains ordered bounded history; static TF keeps a small exact
 persistent message archive. Scene owns bounded point accumulation. A `ViewerPresentation` is only a
 read-only UI snapshot built from controller state each frame; it is not persistent truth, a temporal
 database, or a second global world model.

@@ -16,6 +16,8 @@
 ホストのNVIDIA VulkanによるCamera・BEV・Scene描画と、画面電源Off時のFIFO待ちを記録する。
 [Native / Lichtblick Desktopの実GPU比較](2026-10-20-native-lichtblick-gpu/README.md)では、
 同じ4K画像を表示し、画素で確認した更新・鮮度・Seekとプロセス全体のPSS / CPUを測る。
+[Native Cameraの固定周期化](2026-10-20-native-camera-cadence/README.md)では、
+画像受信から描画までの待ちを診断し、周期のずれを直した前後を実GPUで各3回比較する。
 
 ## 再現
 

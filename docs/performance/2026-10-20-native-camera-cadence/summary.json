@@ -1,0 +1,238 @@
+{
+  "groups": [
+    {
+      "variant": "baseline",
+      "runs": [
+        {
+          "repeat": 0,
+          "observed_hz": 9.859525824922908,
+          "progress_hz": 9.859525824922908,
+          "lag_median_ms": 160.6558772735296,
+          "lag_p95_ms": 216.64336398243833,
+          "sampled_peak_pss_mib": 260.05078125,
+          "cpu_one_core_percent": 40.7699725201368,
+          "rejected_samples": 0,
+          "samples": 240
+        },
+        {
+          "repeat": 1,
+          "observed_hz": 9.776297024191791,
+          "progress_hz": 9.859855118415654,
+          "lag_median_ms": 166.12208560109121,
+          "lag_p95_ms": 217.38434601575028,
+          "sampled_peak_pss_mib": 264.115234375,
+          "cpu_one_core_percent": 40.52025615219905,
+          "rejected_samples": 0,
+          "samples": 240
+        },
+        {
+          "repeat": 2,
+          "observed_hz": 9.775769195894162,
+          "progress_hz": 9.859322778765053,
+          "lag_median_ms": 165.40208598598838,
+          "lag_p95_ms": 217.53575857728612,
+          "sampled_peak_pss_mib": 260.2216796875,
+          "cpu_one_core_percent": 40.852729499706186,
+          "rejected_samples": 2,
+          "samples": 240
+        }
+      ],
+      "medians": {
+        "observed_hz": 9.776297024191791,
+        "progress_hz": 9.859525824922908,
+        "lag_median_ms": 165.40208598598838,
+        "lag_p95_ms": 217.38434601575028,
+        "sampled_peak_pss_mib": 260.2216796875,
+        "cpu_one_core_percent": 40.7699725201368
+      },
+      "ranges": {
+        "observed_hz": [
+          9.775769195894162,
+          9.859525824922908
+        ],
+        "progress_hz": [
+          9.859322778765053,
+          9.859855118415654
+        ],
+        "lag_median_ms": [
+          160.6558772735296,
+          166.12208560109121
+        ],
+        "lag_p95_ms": [
+          216.64336398243833,
+          217.53575857728612
+        ],
+        "sampled_peak_pss_mib": [
+          260.05078125,
+          264.115234375
+        ],
+        "cpu_one_core_percent": [
+          40.52025615219905,
+          40.852729499706186
+        ]
+      }
+    },
+    {
+      "variant": "periodic",
+      "runs": [
+        {
+          "repeat": 0,
+          "observed_hz": 9.859248459261153,
+          "progress_hz": 9.859248459261153,
+          "lag_median_ms": 156.70747458934775,
+          "lag_p95_ms": 169.51574534177638,
+          "sampled_peak_pss_mib": 269.533203125,
+          "cpu_one_core_percent": 40.35130556911968,
+          "rejected_samples": 2,
+          "samples": 240
+        },
+        {
+          "repeat": 1,
+          "observed_hz": 9.859191036586685,
+          "progress_hz": 9.859191036586685,
+          "lag_median_ms": 156.8257558159529,
+          "lag_p95_ms": 202.6859156787395,
+          "sampled_peak_pss_mib": 269.40234375,
+          "cpu_one_core_percent": 39.43215245840969,
+          "rejected_samples": 0,
+          "samples": 240
+        },
+        {
+          "repeat": 2,
+          "observed_hz": 9.861568842474407,
+          "progress_hz": 9.861568842474407,
+          "lag_median_ms": 156.93124476820208,
+          "lag_p95_ms": 167.36054494976926,
+          "sampled_peak_pss_mib": 254.236328125,
+          "cpu_one_core_percent": 39.77579939995569,
+          "rejected_samples": 0,
+          "samples": 240
+        }
+      ],
+      "medians": {
+        "observed_hz": 9.859248459261153,
+        "progress_hz": 9.859248459261153,
+        "lag_median_ms": 156.8257558159529,
+        "lag_p95_ms": 169.51574534177638,
+        "sampled_peak_pss_mib": 269.40234375,
+        "cpu_one_core_percent": 39.77579939995569
+      },
+      "ranges": {
+        "observed_hz": [
+          9.859191036586685,
+          9.861568842474407
+        ],
+        "progress_hz": [
+          9.859191036586685,
+          9.861568842474407
+        ],
+        "lag_median_ms": [
+          156.70747458934775,
+          156.93124476820208
+        ],
+        "lag_p95_ms": [
+          167.36054494976926,
+          202.6859156787395
+        ],
+        "sampled_peak_pss_mib": [
+          254.236328125,
+          269.533203125
+        ],
+        "cpu_one_core_percent": [
+          39.43215245840969,
+          40.35130556911968
+        ]
+      }
+    }
+  ],
+  "diagnostic_traces": {
+    "baseline": {
+      "received->admitted": {
+        "n": 109,
+        "median_ms": 0.025428,
+        "p95_ms": 50.086681,
+        "max_ms": 59.58175
+      },
+      "admitted->submitted": {
+        "n": 109,
+        "median_ms": 0.551906,
+        "p95_ms": 2.030589,
+        "max_ms": 4.880505
+      },
+      "submitted->started": {
+        "n": 109,
+        "median_ms": 0.028071,
+        "p95_ms": 0.037727,
+        "max_ms": 0.246235
+      },
+      "started->decoded": {
+        "n": 109,
+        "median_ms": 32.52764,
+        "p95_ms": 32.896267,
+        "max_ms": 32.959318
+      },
+      "decoded->uploaded": {
+        "n": 109,
+        "median_ms": 7.884226,
+        "p95_ms": 25.299736,
+        "max_ms": 36.265199
+      },
+      "uploaded->painted": {
+        "n": 109,
+        "median_ms": 0.254354,
+        "p95_ms": 1.083231,
+        "max_ms": 3.236866
+      },
+      "received->painted": {
+        "n": 109,
+        "median_ms": 50.46626,
+        "p95_ms": 93.216598,
+        "max_ms": 119.841454
+      }
+    },
+    "periodic": {
+      "received->admitted": {
+        "n": 109,
+        "median_ms": 0.019457,
+        "p95_ms": 0.025953,
+        "max_ms": 0.042854
+      },
+      "admitted->submitted": {
+        "n": 109,
+        "median_ms": 0.292966,
+        "p95_ms": 2.22202,
+        "max_ms": 4.912326
+      },
+      "submitted->started": {
+        "n": 109,
+        "median_ms": 0.016347,
+        "p95_ms": 0.033597,
+        "max_ms": 0.045965
+      },
+      "started->decoded": {
+        "n": 109,
+        "median_ms": 29.771713,
+        "p95_ms": 32.497284,
+        "max_ms": 32.875148
+      },
+      "decoded->uploaded": {
+        "n": 109,
+        "median_ms": 5.945002,
+        "p95_ms": 15.782397,
+        "max_ms": 16.803464
+      },
+      "uploaded->painted": {
+        "n": 109,
+        "median_ms": 0.074876,
+        "p95_ms": 0.092001,
+        "max_ms": 0.28507
+      },
+      "received->painted": {
+        "n": 109,
+        "median_ms": 35.663551,
+        "p95_ms": 50.03122,
+        "max_ms": 51.023907
+      }
+    }
+  }
+}

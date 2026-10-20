@@ -1,0 +1,20 @@
+{
+  "source_baseline": "4132f5d",
+  "binary_sha256": {
+    "baseline": "0472ef728843e898415f0bdb9d7ad54a01eb4d12beea34a2f027ef2cf9f54c3f",
+    "periodic": "b6bd89c65020861f798e81d7d0529970e01e3fef7ece3d244ba89a905098830e"
+  },
+  "harness_sha256": [
+    "6937568f53a2a649014a9ea221d48ab732d4e678586e3e6541c6dc3cf17f39ab"
+  ],
+  "performance_runs": 6,
+  "diagnostic_runs": 2,
+  "detailed_trace": "disabled for all six A/B performance runs; enabled only in the two separate diagnostic runs",
+  "retained_images": "played.png for baseline-0 and periodic-0; all other screenshots remain under /tmp/mcap-native-camera-cadence-ab and /tmp/mcap-cadence-*-trace",
+  "checks": "docker compose run --rm dev mcap-dev-check exited 0; original ignored tests remain ignored",
+  "regression_before_fix": "camera_tick_jitter_does_not_delay_the_next_period failed before implementation: actual ArrivalTime(100), expected ArrivalTime(200)",
+  "native_texture_timestamp_audit": "all 24 seek/restore predecessors in the six performance runs found in GPU_BENCH_FRAME logs",
+  "production_binary_sha256": "05bbc42d8bbeb595f687518c55e003325d8da516c9dfa3f0d51d26a7ca4c1329",
+  "production_smoke": "Uninstrumented release; NVIDIA Vulkan, Camera/BEV/Scene; manually inspected stable pause at 1.774s, resumed image/cursor, plus resize; no normal GUI Seek claim",
+  "checks_log_format": "trailing whitespace and empty EOF lines normalized; original /tmp/mcap-camera-cadence-checks.log retained"
+}

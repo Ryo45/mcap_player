@@ -1,0 +1,24 @@
+diff --git a/crates/viewer-core/src/feature/controllers/camera.rs b/crates/viewer-core/src/feature/controllers/camera.rs
+index e538b6f..4cecc54 100644
+--- a/crates/viewer-core/src/feature/controllers/camera.rs
++++ b/crates/viewer-core/src/feature/controllers/camera.rs
+@@ -85,10 +85,18 @@ impl CameraController {
+                 .remove(&camera_id)
+                 .expect("due Camera came from the pending map");
+             let _ = self.decode_and_apply(camera_id, message);
++            // Keep the camera's phase instead of accumulating UI tick lateness.
++            // Skip missed periods: only the latest pending image is materialized above.
++            let interval = self.interval(camera_id);
++            let deadline = self.next_presentation[&camera_id];
++            let lateness = self.presentation_elapsed.saturating_sub(deadline);
++            // Both intervals are <= 200 ms, so this remainder fits in u64 nanoseconds.
++            let remainder =
++                Duration::from_nanos((lateness.as_nanos() % interval.as_nanos()) as u64);
+             self.next_presentation.insert(
+                 camera_id,
+                 self.presentation_elapsed
+-                    .saturating_add(self.interval(camera_id)),
++                    .saturating_add(interval - remainder),
+             );
+             self.presented_frames = self.presented_frames.saturating_add(1);
+             let count = self.presented_by_id.entry(camera_id).or_default();
