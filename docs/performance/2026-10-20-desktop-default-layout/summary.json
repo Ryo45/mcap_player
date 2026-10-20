@@ -1,0 +1,785 @@
+{
+  "provenance": {
+    "data_sha256": "9f31b9ad47758f2f2313b83b584240757241330e71060ba537b5a8716ceda07e",
+    "harness_sha256": "245c3b45b5af6476f60bdc8adc1786984c66dc82d8c33273f0a304196b09242c",
+    "native_patch_sha256": "b83659b01d40cb12ae0ef4ca2238ecd54f29146e37087797d957438c94ceda29"
+  },
+  "binary_sha256": {
+    "native": "4d5e161935bf78ac3df05e8a6d5b1d4e9dada73ccc9a7bce3f5fb1aaf5078c04",
+    "lichtblick": "180eea79cebc825a7e7291b8c5ef387760773f2b03596751bda8e6e532a8b6c8"
+  },
+  "audits": [
+    {
+      "run": "0-default-native",
+      "pixel_confirmed_seeks": 4,
+      "absolute_texture_log_ns": [
+        1735689625300000000,
+        1735689648700000000,
+        1735689616100000000,
+        1735689600000000000
+      ],
+      "observer_work_median_ms": 6.0271006077528,
+      "observer_work_p95_ms": 9.625534527003765
+    },
+    {
+      "run": "0-default-lichtblick",
+      "pixel_confirmed_seeks": 4,
+      "observer_work_median_ms": 4.383415915071964,
+      "observer_work_p95_ms": 16.913259401917458
+    },
+    {
+      "run": "0-scan-native",
+      "pixel_confirmed_seeks": 4,
+      "absolute_texture_log_ns": [
+        1735689625300000000,
+        1735689648700000000,
+        1735689616100000000,
+        1735689600000000000
+      ],
+      "observer_work_median_ms": 5.943593569099903,
+      "observer_work_p95_ms": 9.960686787962914
+    },
+    {
+      "run": "0-scan-lichtblick",
+      "pixel_confirmed_seeks": 4,
+      "observer_work_median_ms": 4.522545728832483,
+      "observer_work_p95_ms": 15.448382124304771
+    },
+    {
+      "run": "0-raw-native",
+      "pixel_confirmed_seeks": 4,
+      "absolute_texture_log_ns": [
+        1735689625300000000,
+        1735689648700000000,
+        1735689616100000000,
+        1735689600000000000
+      ],
+      "distinct_observed_raw_timestamps": 42,
+      "observer_work_median_ms": 6.1312164179980755,
+      "observer_work_p95_ms": 9.828298352658749
+    },
+    {
+      "run": "0-raw-lichtblick",
+      "pixel_confirmed_seeks": 4,
+      "distinct_observed_raw_timestamps": 45,
+      "observer_work_median_ms": 4.564706701785326,
+      "observer_work_p95_ms": 15.033955685794353
+    },
+    {
+      "run": "1-default-lichtblick",
+      "pixel_confirmed_seeks": 4,
+      "observer_work_median_ms": 4.403189290314913,
+      "observer_work_p95_ms": 13.673316687345505
+    },
+    {
+      "run": "1-default-native",
+      "pixel_confirmed_seeks": 4,
+      "absolute_texture_log_ns": [
+        1735689625300000000,
+        1735689648700000000,
+        1735689616100000000,
+        1735689600000000000
+      ],
+      "observer_work_median_ms": 4.839709959924221,
+      "observer_work_p95_ms": 8.668694645166397
+    },
+    {
+      "run": "1-scan-lichtblick",
+      "pixel_confirmed_seeks": 4,
+      "observer_work_median_ms": 4.3029882945120335,
+      "observer_work_p95_ms": 14.599651098251343
+    },
+    {
+      "run": "1-scan-native",
+      "pixel_confirmed_seeks": 4,
+      "absolute_texture_log_ns": [
+        1735689625300000000,
+        1735689648700000000,
+        1735689616100000000,
+        1735689600000000000
+      ],
+      "observer_work_median_ms": 6.2038772739470005,
+      "observer_work_p95_ms": 9.340199641883373
+    },
+    {
+      "run": "1-raw-lichtblick",
+      "pixel_confirmed_seeks": 4,
+      "distinct_observed_raw_timestamps": 45,
+      "observer_work_median_ms": 4.529805388301611,
+      "observer_work_p95_ms": 15.315431170165539
+    },
+    {
+      "run": "1-raw-native",
+      "pixel_confirmed_seeks": 4,
+      "absolute_texture_log_ns": [
+        1735689625300000000,
+        1735689648700000000,
+        1735689616100000000,
+        1735689600000000000
+      ],
+      "distinct_observed_raw_timestamps": 43,
+      "observer_work_median_ms": 6.444402504712343,
+      "observer_work_p95_ms": 9.88305639475584
+    },
+    {
+      "run": "2-default-native",
+      "pixel_confirmed_seeks": 4,
+      "absolute_texture_log_ns": [
+        1735689625300000000,
+        1735689648700000000,
+        1735689616100000000,
+        1735689600000000000
+      ],
+      "observer_work_median_ms": 5.939760245382786,
+      "observer_work_p95_ms": 9.620115160942078
+    },
+    {
+      "run": "2-default-lichtblick",
+      "pixel_confirmed_seeks": 4,
+      "observer_work_median_ms": 4.501665942370892,
+      "observer_work_p95_ms": 14.404610730707645
+    },
+    {
+      "run": "2-scan-native",
+      "pixel_confirmed_seeks": 4,
+      "absolute_texture_log_ns": [
+        1735689625300000000,
+        1735689648700000000,
+        1735689616100000000,
+        1735689600000000000
+      ],
+      "observer_work_median_ms": 6.277823820710182,
+      "observer_work_p95_ms": 9.408210404217243
+    },
+    {
+      "run": "2-scan-lichtblick",
+      "pixel_confirmed_seeks": 4,
+      "observer_work_median_ms": 4.737533628940582,
+      "observer_work_p95_ms": 16.997475177049637
+    },
+    {
+      "run": "2-raw-native",
+      "pixel_confirmed_seeks": 4,
+      "absolute_texture_log_ns": [
+        1735689625300000000,
+        1735689648700000000,
+        1735689616100000000,
+        1735689600000000000
+      ],
+      "distinct_observed_raw_timestamps": 41,
+      "observer_work_median_ms": 6.221308372914791,
+      "observer_work_p95_ms": 10.794539004564285
+    },
+    {
+      "run": "2-raw-lichtblick",
+      "pixel_confirmed_seeks": 4,
+      "distinct_observed_raw_timestamps": 47,
+      "observer_work_median_ms": 4.493402782827616,
+      "observer_work_p95_ms": 18.393762409687042
+    }
+  ],
+  "conditions": {
+    "default-native": {
+      "runs": [
+        {
+          "run": "0-default-native",
+          "image_updates_hz": 9.859684100251133,
+          "progress_hz": 9.859684100251133,
+          "lag_median_ms": 135.75601056218113,
+          "lag_p95_ms": 167.87680722772967,
+          "scene_changes_hz": 0.0,
+          "peak_sampled_pss_mib": 253.2802734375,
+          "cpu_one_core_percent": 36.093498037564,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 53.79130970686674
+        },
+        {
+          "run": "1-default-native",
+          "image_updates_hz": 9.86239462854621,
+          "progress_hz": 9.86239462854621,
+          "lag_median_ms": 134.46588264778214,
+          "lag_p95_ms": 164.2598859965787,
+          "scene_changes_hz": 0.0,
+          "peak_sampled_pss_mib": 250.197265625,
+          "cpu_one_core_percent": 34.432305155808095,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 52.45089717209339
+        },
+        {
+          "run": "2-default-native",
+          "image_updates_hz": 9.859980180498662,
+          "progress_hz": 9.859980180498662,
+          "lag_median_ms": 136.3879919052124,
+          "lag_p95_ms": 166.8893937021494,
+          "scene_changes_hz": 0.0,
+          "peak_sampled_pss_mib": 250.42578125,
+          "cpu_one_core_percent": 36.67968826036624,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 53.79883386194706
+        }
+      ],
+      "statistics": {
+        "image_updates_hz": {
+          "median": 9.859980180498662,
+          "min": 9.859684100251133,
+          "max": 9.86239462854621
+        },
+        "progress_hz": {
+          "median": 9.859980180498662,
+          "min": 9.859684100251133,
+          "max": 9.86239462854621
+        },
+        "lag_median_ms": {
+          "median": 135.75601056218113,
+          "min": 134.46588264778214,
+          "max": 136.3879919052124
+        },
+        "lag_p95_ms": {
+          "median": 166.8893937021494,
+          "min": 164.2598859965787,
+          "max": 167.87680722772967
+        },
+        "scene_changes_hz": {
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "peak_sampled_pss_mib": {
+          "median": 250.42578125,
+          "min": 250.197265625,
+          "max": 253.2802734375
+        },
+        "cpu_one_core_percent": {
+          "median": 36.093498037564,
+          "min": 34.432305155808095,
+          "max": 36.67968826036624
+        },
+        "rejected_samples": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "samples": {
+          "median": 240,
+          "min": 240,
+          "max": 240
+        },
+        "max_sample_gap_ms": {
+          "median": 53.79130970686674,
+          "min": 52.45089717209339,
+          "max": 53.79883386194706
+        }
+      }
+    },
+    "default-lichtblick": {
+      "runs": [
+        {
+          "run": "0-default-lichtblick",
+          "image_updates_hz": 9.946134432827092,
+          "progress_hz": 9.946134432827092,
+          "lag_median_ms": 107.19471266493174,
+          "lag_p95_ms": 166.3097256794561,
+          "scene_changes_hz": 0.0,
+          "peak_sampled_pss_mib": 297.8837890625,
+          "cpu_one_core_percent": 30.922462070411658,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 58.49279370158911
+        },
+        {
+          "run": "1-default-lichtblick",
+          "image_updates_hz": 9.862509163824807,
+          "progress_hz": 9.862509163824807,
+          "lag_median_ms": 153.95312374457706,
+          "lag_p95_ms": 205.71605116128922,
+          "scene_changes_hz": 0.0,
+          "peak_sampled_pss_mib": 296.3623046875,
+          "cpu_one_core_percent": 34.181752181200594,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 55.88226392865181
+        },
+        {
+          "run": "2-default-lichtblick",
+          "image_updates_hz": 9.859028983476351,
+          "progress_hz": 9.859028983476351,
+          "lag_median_ms": 114.21080147847462,
+          "lag_p95_ms": 165.75987432151962,
+          "scene_changes_hz": 0.0,
+          "peak_sampled_pss_mib": 293.943359375,
+          "cpu_one_core_percent": 34.085938675852,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 57.63012915849686
+        }
+      ],
+      "statistics": {
+        "image_updates_hz": {
+          "median": 9.862509163824807,
+          "min": 9.859028983476351,
+          "max": 9.946134432827092
+        },
+        "progress_hz": {
+          "median": 9.862509163824807,
+          "min": 9.859028983476351,
+          "max": 9.946134432827092
+        },
+        "lag_median_ms": {
+          "median": 114.21080147847462,
+          "min": 107.19471266493174,
+          "max": 153.95312374457706
+        },
+        "lag_p95_ms": {
+          "median": 166.3097256794561,
+          "min": 165.75987432151962,
+          "max": 205.71605116128922
+        },
+        "scene_changes_hz": {
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "peak_sampled_pss_mib": {
+          "median": 296.3623046875,
+          "min": 293.943359375,
+          "max": 297.8837890625
+        },
+        "cpu_one_core_percent": {
+          "median": 34.085938675852,
+          "min": 30.922462070411658,
+          "max": 34.181752181200594
+        },
+        "rejected_samples": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "samples": {
+          "median": 240,
+          "min": 240,
+          "max": 240
+        },
+        "max_sample_gap_ms": {
+          "median": 57.63012915849686,
+          "min": 55.88226392865181,
+          "max": 58.49279370158911
+        }
+      }
+    },
+    "scan-native": {
+      "runs": [
+        {
+          "run": "0-scan-native",
+          "image_updates_hz": 9.860371876533536,
+          "progress_hz": 9.860371876533536,
+          "lag_median_ms": 152.42020385339856,
+          "lag_p95_ms": 166.75162948667932,
+          "scene_changes_hz": 9.943934350063483,
+          "peak_sampled_pss_mib": 262.5224609375,
+          "cpu_one_core_percent": 36.17969564688974,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 53.523825481534004
+        },
+        {
+          "run": "1-scan-native",
+          "image_updates_hz": 9.860143050630617,
+          "progress_hz": 9.860143050630617,
+          "lag_median_ms": 154.619518853724,
+          "lag_p95_ms": 166.97077713906694,
+          "scene_changes_hz": 9.943703584957994,
+          "peak_sampled_pss_mib": 262.681640625,
+          "cpu_one_core_percent": 37.098089913385806,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 52.49852407723665
+        },
+        {
+          "run": "2-scan-native",
+          "image_updates_hz": 9.860308523656096,
+          "progress_hz": 9.860308523656096,
+          "lag_median_ms": 154.50983326882124,
+          "lag_p95_ms": 166.98950100690092,
+          "scene_changes_hz": 9.943870460297248,
+          "peak_sampled_pss_mib": 262.48046875,
+          "cpu_one_core_percent": 36.848026222214095,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 52.542573772370815
+        }
+      ],
+      "statistics": {
+        "image_updates_hz": {
+          "median": 9.860308523656096,
+          "min": 9.860143050630617,
+          "max": 9.860371876533536
+        },
+        "progress_hz": {
+          "median": 9.860308523656096,
+          "min": 9.860143050630617,
+          "max": 9.860371876533536
+        },
+        "lag_median_ms": {
+          "median": 154.50983326882124,
+          "min": 152.42020385339856,
+          "max": 154.619518853724
+        },
+        "lag_p95_ms": {
+          "median": 166.97077713906694,
+          "min": 166.75162948667932,
+          "max": 166.98950100690092
+        },
+        "scene_changes_hz": {
+          "median": 9.943870460297248,
+          "min": 9.943703584957994,
+          "max": 9.943934350063483
+        },
+        "peak_sampled_pss_mib": {
+          "median": 262.5224609375,
+          "min": 262.48046875,
+          "max": 262.681640625
+        },
+        "cpu_one_core_percent": {
+          "median": 36.848026222214095,
+          "min": 36.17969564688974,
+          "max": 37.098089913385806
+        },
+        "rejected_samples": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "samples": {
+          "median": 240,
+          "min": 240,
+          "max": 240
+        },
+        "max_sample_gap_ms": {
+          "median": 52.542573772370815,
+          "min": 52.49852407723665,
+          "max": 53.523825481534004
+        }
+      }
+    },
+    "scan-lichtblick": {
+      "runs": [
+        {
+          "run": "0-scan-lichtblick",
+          "image_updates_hz": 9.862106035147221,
+          "progress_hz": 9.862106035147221,
+          "lag_median_ms": 106.77812928333852,
+          "lag_p95_ms": 165.14743361621953,
+          "scene_changes_hz": 9.945683204936604,
+          "peak_sampled_pss_mib": 297.095703125,
+          "cpu_one_core_percent": 32.34180748662256,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 57.67316464334726
+        },
+        {
+          "run": "1-scan-lichtblick",
+          "image_updates_hz": 9.945532903825413,
+          "progress_hz": 9.945532903825413,
+          "lag_median_ms": 105.35222450271232,
+          "lag_p95_ms": 162.01597340404916,
+          "scene_changes_hz": 9.945532903825413,
+          "peak_sampled_pss_mib": 314.7705078125,
+          "cpu_one_core_percent": 36.436246472601376,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 58.20323247462511
+        },
+        {
+          "run": "2-scan-lichtblick",
+          "image_updates_hz": 9.859574406680947,
+          "progress_hz": 9.859574406680947,
+          "lag_median_ms": 153.20214554667467,
+          "lag_p95_ms": 171.7111278325305,
+          "scene_changes_hz": 10.110241552613513,
+          "peak_sampled_pss_mib": 296.6640625,
+          "cpu_one_core_percent": 38.180906228157134,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 58.68789926171303
+        }
+      ],
+      "statistics": {
+        "image_updates_hz": {
+          "median": 9.862106035147221,
+          "min": 9.859574406680947,
+          "max": 9.945532903825413
+        },
+        "progress_hz": {
+          "median": 9.862106035147221,
+          "min": 9.859574406680947,
+          "max": 9.945532903825413
+        },
+        "lag_median_ms": {
+          "median": 106.77812928333852,
+          "min": 105.35222450271232,
+          "max": 153.20214554667467
+        },
+        "lag_p95_ms": {
+          "median": 165.14743361621953,
+          "min": 162.01597340404916,
+          "max": 171.7111278325305
+        },
+        "scene_changes_hz": {
+          "median": 9.945683204936604,
+          "min": 9.945532903825413,
+          "max": 10.110241552613513
+        },
+        "peak_sampled_pss_mib": {
+          "median": 297.095703125,
+          "min": 296.6640625,
+          "max": 314.7705078125
+        },
+        "cpu_one_core_percent": {
+          "median": 36.436246472601376,
+          "min": 32.34180748662256,
+          "max": 38.180906228157134
+        },
+        "rejected_samples": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "samples": {
+          "median": 240,
+          "min": 240,
+          "max": 240
+        },
+        "max_sample_gap_ms": {
+          "median": 58.20323247462511,
+          "min": 57.67316464334726,
+          "max": 58.68789926171303
+        }
+      }
+    },
+    "raw-native": {
+      "runs": [
+        {
+          "run": "0-raw-native",
+          "image_updates_hz": 9.849607440376753,
+          "progress_hz": 9.849607440376753,
+          "lag_median_ms": 153.44436997547746,
+          "lag_p95_ms": 179.50967717915665,
+          "scene_changes_hz": 9.933078689871472,
+          "peak_sampled_pss_mib": 284.8896484375,
+          "cpu_one_core_percent": 40.48052773490657,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 104.29734736680984,
+          "raw_lag_median_ms": 5.922169,
+          "raw_lag_p95_ms": 10.054036
+        },
+        {
+          "run": "1-raw-native",
+          "image_updates_hz": 9.859772991513193,
+          "progress_hz": 9.859772991513193,
+          "lag_median_ms": 154.27270159125322,
+          "lag_p95_ms": 167.5394156947725,
+          "scene_changes_hz": 9.943330389746356,
+          "peak_sampled_pss_mib": 285.7373046875,
+          "cpu_one_core_percent": 41.02344264034404,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 77.43600849062204,
+          "raw_lag_median_ms": 6.863558,
+          "raw_lag_p95_ms": 102.498035
+        },
+        {
+          "run": "2-raw-native",
+          "image_updates_hz": 9.859778108483509,
+          "progress_hz": 9.859778108483509,
+          "lag_median_ms": 154.67416020110238,
+          "lag_p95_ms": 167.1779004856937,
+          "scene_changes_hz": 9.943335550080826,
+          "peak_sampled_pss_mib": 281.1064453125,
+          "cpu_one_core_percent": 40.271776842084876,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 86.00692637264729,
+          "raw_lag_median_ms": 5.906675,
+          "raw_lag_p95_ms": 9.908886
+        }
+      ],
+      "statistics": {
+        "image_updates_hz": {
+          "median": 9.859772991513193,
+          "min": 9.849607440376753,
+          "max": 9.859778108483509
+        },
+        "progress_hz": {
+          "median": 9.859772991513193,
+          "min": 9.849607440376753,
+          "max": 9.859778108483509
+        },
+        "lag_median_ms": {
+          "median": 154.27270159125322,
+          "min": 153.44436997547746,
+          "max": 154.67416020110238
+        },
+        "lag_p95_ms": {
+          "median": 167.5394156947725,
+          "min": 167.1779004856937,
+          "max": 179.50967717915665
+        },
+        "scene_changes_hz": {
+          "median": 9.943330389746356,
+          "min": 9.933078689871472,
+          "max": 9.943335550080826
+        },
+        "peak_sampled_pss_mib": {
+          "median": 284.8896484375,
+          "min": 281.1064453125,
+          "max": 285.7373046875
+        },
+        "cpu_one_core_percent": {
+          "median": 40.48052773490657,
+          "min": 40.271776842084876,
+          "max": 41.02344264034404
+        },
+        "rejected_samples": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "samples": {
+          "median": 240,
+          "min": 240,
+          "max": 240
+        },
+        "max_sample_gap_ms": {
+          "median": 86.00692637264729,
+          "min": 77.43600849062204,
+          "max": 104.29734736680984
+        },
+        "raw_lag_median_ms": {
+          "median": 5.922169,
+          "min": 5.906675,
+          "max": 6.863558
+        },
+        "raw_lag_p95_ms": {
+          "median": 10.054036,
+          "min": 9.908886,
+          "max": 102.498035
+        }
+      }
+    },
+    "raw-lichtblick": {
+      "runs": [
+        {
+          "run": "0-raw-lichtblick",
+          "image_updates_hz": 9.944351744349273,
+          "progress_hz": 9.944351744349273,
+          "lag_median_ms": 104.59066769108172,
+          "lag_p95_ms": 159.13170911371654,
+          "scene_changes_hz": 9.944351744349273,
+          "peak_sampled_pss_mib": 293.162109375,
+          "cpu_one_core_percent": 35.84699657126325,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 54.938615299761295,
+          "raw_lag_median_ms": 9.630867,
+          "raw_lag_p95_ms": 87.413964
+        },
+        {
+          "run": "1-raw-lichtblick",
+          "image_updates_hz": 9.862019492200702,
+          "progress_hz": 9.862019492200702,
+          "lag_median_ms": 134.72767546772883,
+          "lag_p95_ms": 166.09304416924698,
+          "scene_changes_hz": 9.945595928575283,
+          "peak_sampled_pss_mib": 293.4765625,
+          "cpu_one_core_percent": 29.41643911193513,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 58.551969937980175,
+          "raw_lag_median_ms": 53.025031,
+          "raw_lag_p95_ms": 86.041953
+        },
+        {
+          "run": "2-raw-lichtblick",
+          "image_updates_hz": 9.945437358762778,
+          "progress_hz": 9.945437358762778,
+          "lag_median_ms": 106.09201136976453,
+          "lag_p95_ms": 162.86509782075865,
+          "scene_changes_hz": 9.945437358762778,
+          "peak_sampled_pss_mib": 296.3505859375,
+          "cpu_one_core_percent": 33.8445145011114,
+          "rejected_samples": 0,
+          "samples": 240,
+          "max_sample_gap_ms": 57.14092403650284,
+          "raw_lag_median_ms": 43.923433,
+          "raw_lag_p95_ms": 80.565432
+        }
+      ],
+      "statistics": {
+        "image_updates_hz": {
+          "median": 9.944351744349273,
+          "min": 9.862019492200702,
+          "max": 9.945437358762778
+        },
+        "progress_hz": {
+          "median": 9.944351744349273,
+          "min": 9.862019492200702,
+          "max": 9.945437358762778
+        },
+        "lag_median_ms": {
+          "median": 106.09201136976453,
+          "min": 104.59066769108172,
+          "max": 134.72767546772883
+        },
+        "lag_p95_ms": {
+          "median": 162.86509782075865,
+          "min": 159.13170911371654,
+          "max": 166.09304416924698
+        },
+        "scene_changes_hz": {
+          "median": 9.945437358762778,
+          "min": 9.944351744349273,
+          "max": 9.945595928575283
+        },
+        "peak_sampled_pss_mib": {
+          "median": 293.4765625,
+          "min": 293.162109375,
+          "max": 296.3505859375
+        },
+        "cpu_one_core_percent": {
+          "median": 33.8445145011114,
+          "min": 29.41643911193513,
+          "max": 35.84699657126325
+        },
+        "rejected_samples": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "samples": {
+          "median": 240,
+          "min": 240,
+          "max": 240
+        },
+        "max_sample_gap_ms": {
+          "median": 57.14092403650284,
+          "min": 54.938615299761295,
+          "max": 58.551969937980175
+        },
+        "raw_lag_median_ms": {
+          "median": 43.923433,
+          "min": 9.630867,
+          "max": 53.025031
+        },
+        "raw_lag_p95_ms": {
+          "median": 86.041953,
+          "min": 80.565432,
+          "max": 87.413964
+        }
+      }
+    }
+  }
+}

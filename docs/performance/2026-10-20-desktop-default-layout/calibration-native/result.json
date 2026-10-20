@@ -1,0 +1,73 @@
+{
+  "status": "ok",
+  "app": "native",
+  "case": "raw",
+  "calibration": true,
+  "data_sha256": "9f31b9ad47758f2f2313b83b584240757241330e71060ba537b5a8716ceda07e",
+  "data_bytes": 14944878140,
+  "geometry": {
+    "layout": [
+      320,
+      44,
+      1600,
+      958
+    ],
+    "scene": [
+      320,
+      76,
+      1120,
+      926
+    ],
+    "canvas": [
+      1440,
+      76,
+      480,
+      255
+    ],
+    "camera": [
+      1453.333333,
+      76,
+      453.333333,
+      255
+    ],
+    "raw": [
+      1440,
+      363,
+      480,
+      639
+    ],
+    "camera_roi": [
+      1455,
+      78,
+      449,
+      251
+    ]
+  },
+  "harness_sha256": "245c3b45b5af6476f60bdc8adc1786984c66dc82d8c33273f0a304196b09242c",
+  "native_patch_sha256": "b83659b01d40cb12ae0ef4ca2238ecd54f29146e37087797d957438c94ceda29",
+  "source_commit": "8b1bfd742689e9025bb28444d246a33a5bf6f939",
+  "samples": [],
+  "seeks": [],
+  "cache": "cache-allowed; SHA256-read before launch",
+  "inspector_policy": "latest-before cursor, arrays/header collapsed; Native exact queries versus Lichtblick stream subscription",
+  "observation": "20 Hz image identity from 88 patch means; Scene CRC change is a lower bound, not a timestamp or GPU FPS",
+  "display_before": "Keyboard Control:\n  auto repeat:  on    key click percent:  0    LED mask:  00000000\n  XKB indicators:\n    00: Caps Lock:   off    01: Num Lock:    off    02: Scroll Lock: off\n    03: Compose:     off    04: Kana:        off    05: Sleep:       off\n    06: Suspend:     off    07: Mute:        off    08: Misc:        off\n    09: Mail:        off    10: Charging:    off    11: Shift Lock:  off\n    12: Group 2:     off    13: Mouse Keys:  off\n  auto repeat delay:  500    repeat rate:  33\n  auto repeating keys:  00ffffffdffffbbf\n                        fadfffefffedffff\n                        9fffffffffffffff\n                        fff7ffffffffffff\n  bell percent:  50    bell pitch:  400    bell duration:  100\nPointer Control:\n  acceleration:  2/1    threshold:  4\nScreen Saver:\n  prefer blanking:  yes    allow exposures:  yes\n  timeout:  0    cycle:  0\nColors:\n  default colormap:  0x20    BlackPixel:  0x0    WhitePixel:  0xffffff\nFont Path:\n  /usr/share/fonts/X11/misc,/usr/share/fonts/X11/Type1,built-ins\nDPMS (Display Power Management Signaling):\n  Standby: 0    Suspend: 0    Off: 0\n  DPMS is Enabled\n  Monitor is On\n",
+  "gpu_before": "Tue Oct 20 19:45:51 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 610.57.04              KMD Version: 610.57.04     CUDA UMD Version: 13.3     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 5070 Ti     On  |   00000000:02:00.0  On |                  N/A |\n|  0%   43C    P8             19W /  300W |   11344MiB /  16303MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A            4287      G   /usr/lib/xorg/Xorg                      322MiB |\n|    0   N/A  N/A            4482      G   /usr/bin/gnome-shell                     10MiB |\n|    0   N/A  N/A            4967      G   /usr/libexec/gnome-initial-setup         13MiB |\n|    0   N/A  N/A            5509      G   ...bin/snapd-desktop-integration          7MiB |\n|    0   N/A  N/A            5611      G   .../8736/usr/lib/firefox/firefox         40MiB |\n|    0   N/A  N/A            6736      G   /usr/bin/nautilus                        21MiB |\n|    0   N/A  N/A          603315      G   ...nap-store/1390/bin/snap-store         87MiB |\n|    0   N/A  N/A         3868901      C   ...-TTS-Server/.venv/bin/python3      10632MiB |\n|    0   N/A  N/A         4092338      G   ...rack-uuid=3190708988185955192         72MiB |\n+-----------------------------------------------------------------------------------------+\n",
+  "command": [
+    "/home/ryo/development/mcap_player/target/gpu-native/viewer-native-default-layout",
+    "--mcap",
+    "/tmp/mcap-web-60s-data/3840x2160-8cam-10hz-none-8MiB-60s.mcap",
+    "--camera-topic",
+    "/camera/0",
+    "--no-platform-geometry",
+    "--fixed-frame",
+    "base_scan"
+  ],
+  "binary_sha256": "4d5e161935bf78ac3df05e8a6d5b1d4e9dada73ccc9a7bce3f5fb1aaf5078c04",
+  "pid": 1974299,
+  "window": "0x3c00002",
+  "selection": "[2026-10-20T10:45:52Z INFO  viewer_native::app] GPU_BENCH_SELECTION cameras=[(CameraId(0), \"/camera/0\")] cloud=Some(\"/scan\")",
+  "reference_minimum_pair_mae": 3.011818181818181,
+  "exit_code": -15,
+  "total_wall_s": 6.088446203619242
+}

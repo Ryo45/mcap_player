@@ -1,0 +1,265 @@
+[2026-10-20T10:51:00Z INFO  winit::platform_impl::linux::x11::window] Guessed window scale factor: 1
+[2026-10-20T10:51:00Z WARN  wgpu_hal::vulkan::instance] Unable to find extension: VK_EXT_physical_device_drm
+[2026-10-20T10:51:00Z DEBUG wgpu_core::instance] Instance::new: created Vulkan backend
+[2026-10-20T10:51:00Z DEBUG wgpu_core::instance] Found 1 compatible adapters. Sorted by preference:
+[2026-10-20T10:51:00Z DEBUG wgpu_core::instance] * AdapterInfo { name: "NVIDIA GeForce RTX 5070 Ti", vendor: 4318, device: 11269, device_type: DiscreteGpu, driver: "NVIDIA", driver_info: "610.57.04", backend: Vulkan }
+[2026-10-20T10:51:00Z DEBUG wgpu_core::instance] Request adapter result AdapterInfo { name: "NVIDIA GeForce RTX 5070 Ti", vendor: 4318, device: 11269, device_type: DiscreteGpu, driver: "NVIDIA", driver_info: "610.57.04", backend: Vulkan }
+[2026-10-20T10:51:00Z WARN  egui_wgpu::renderer] Detected a linear (sRGBA aware) framebuffer Bgra8UnormSrgb. egui prefers Rgba8Unorm or Bgra8Unorm
+[2026-10-20T10:51:00Z INFO  viewer_native::app] GPU_BENCH_SELECTION cameras=[(CameraId(0), "/camera/0")] cloud=Some("/scan")
+[2026-10-20T10:51:00Z INFO  viewer_native::app] GPU_BENCH_COMMAND id=1
+[2026-10-20T10:51:00Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689600000000000
+[2026-10-20T10:51:00Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689600000000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:00Z INFO  viewer_native::app] GPU_BENCH_COMMAND id=2
+[2026-10-20T10:51:00Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689625310000000
+[2026-10-20T10:51:00Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689625300000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:00Z INFO  viewer_native::app] GPU_BENCH_COMMAND id=3
+[2026-10-20T10:51:00Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689648710000000
+[2026-10-20T10:51:00Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689648700000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:00Z INFO  viewer_native::app] GPU_BENCH_COMMAND id=4
+[2026-10-20T10:51:00Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689616110000000
+[2026-10-20T10:51:00Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689616100000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:00Z INFO  viewer_native::app] GPU_BENCH_COMMAND id=5
+[2026-10-20T10:51:00Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689600000000000
+[2026-10-20T10:51:00Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689600000000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:00Z INFO  viewer_native::app] GPU_BENCH_COMMAND id=6
+[2026-10-20T10:51:01Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689600100333389
+[2026-10-20T10:51:01Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689600100000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:01Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689600200461861
+[2026-10-20T10:51:01Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689600200000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:01Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689600300483780
+[2026-10-20T10:51:01Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689600300000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:01Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689600400577790
+[2026-10-20T10:51:01Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689600400000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:01Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689600500661770
+[2026-10-20T10:51:01Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689600500000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:01Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689600600730656
+[2026-10-20T10:51:01Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689600600000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:01Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689600700813041
+[2026-10-20T10:51:01Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689600700000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:01Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689600800923744
+[2026-10-20T10:51:01Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689600800000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:01Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689600900978807
+[2026-10-20T10:51:01Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689600900000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:01Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689601001047060
+[2026-10-20T10:51:02Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689601000000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:02Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689601101142909
+[2026-10-20T10:51:02Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689601100000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:02Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689601201218947
+[2026-10-20T10:51:02Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689601200000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:02Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689601301287032
+[2026-10-20T10:51:02Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689601300000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:02Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689601401383771
+[2026-10-20T10:51:02Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689601400000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:02Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689601501464606
+[2026-10-20T10:51:02Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689601500000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:02Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689601601538563
+[2026-10-20T10:51:02Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689601600000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:02Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689601701651963
+[2026-10-20T10:51:02Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689601700000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:02Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689601801679726
+[2026-10-20T10:51:02Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689601800000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:02Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689601901785589
+[2026-10-20T10:51:02Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689601900000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:02Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689602001874508
+[2026-10-20T10:51:02Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689602000000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:03Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689602101968036
+[2026-10-20T10:51:03Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689602100000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:03Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689602202053033
+[2026-10-20T10:51:03Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689602200000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:03Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689602302165942
+[2026-10-20T10:51:03Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689602300000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:03Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689602402218177
+[2026-10-20T10:51:03Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689602400000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:03Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689602502301911
+[2026-10-20T10:51:03Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689602500000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:03Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689602602356059
+[2026-10-20T10:51:03Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689602600000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:03Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689602702449939
+[2026-10-20T10:51:03Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689602700000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:03Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689602802552953
+[2026-10-20T10:51:03Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689602800000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:03Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689602902632606
+[2026-10-20T10:51:03Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689602900000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:03Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689603002665441
+[2026-10-20T10:51:04Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689603000000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:04Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689603102786289
+[2026-10-20T10:51:04Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689603100000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:04Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689603202926474
+[2026-10-20T10:51:04Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689603200000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:04Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689603303022879
+[2026-10-20T10:51:04Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689603300000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:04Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689603403139832
+[2026-10-20T10:51:04Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689603400000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:04Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689603503189317
+[2026-10-20T10:51:04Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689603500000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:04Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689603603258399
+[2026-10-20T10:51:04Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689603600000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:04Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689603703368163
+[2026-10-20T10:51:04Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689603700000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:04Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689603803409778
+[2026-10-20T10:51:04Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689603800000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:04Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689603903544514
+[2026-10-20T10:51:04Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689603900000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:04Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689604003581377
+[2026-10-20T10:51:05Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689604000000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:05Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689604103658280
+[2026-10-20T10:51:05Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689604100000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:05Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689604203749575
+[2026-10-20T10:51:05Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689604200000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:05Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689604304005997
+[2026-10-20T10:51:05Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689604300000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:05Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689604404097647
+[2026-10-20T10:51:05Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689604400000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:05Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689604504176855
+[2026-10-20T10:51:05Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689604500000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:05Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689604604219179
+[2026-10-20T10:51:05Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689604600000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:05Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689604704312158
+[2026-10-20T10:51:05Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689604700000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:05Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689604804426721
+[2026-10-20T10:51:05Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689604800000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:05Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689604904487016
+[2026-10-20T10:51:05Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689604900000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:05Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689605004559325
+[2026-10-20T10:51:06Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689605000000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:06Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689605104644865
+[2026-10-20T10:51:06Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689605100000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:06Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689605204734501
+[2026-10-20T10:51:06Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689605200000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:06Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689605304831265
+[2026-10-20T10:51:06Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689605300000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:06Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689605404930865
+[2026-10-20T10:51:06Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689605400000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:06Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689605504984816
+[2026-10-20T10:51:06Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689605500000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:06Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689605605096543
+[2026-10-20T10:51:06Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689605600000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:06Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689605705168630
+[2026-10-20T10:51:06Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689605700000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:06Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689605805229071
+[2026-10-20T10:51:06Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689605800000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:06Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689605905346596
+[2026-10-20T10:51:06Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689605900000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:06Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689606005190296
+[2026-10-20T10:51:07Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689606000000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:07Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689606105470743
+[2026-10-20T10:51:07Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689606100000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:07Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689606205596902
+[2026-10-20T10:51:07Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689606200000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:07Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689606305667433
+[2026-10-20T10:51:07Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689606300000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:07Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689606405743467
+[2026-10-20T10:51:07Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689606400000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:07Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689606505802045
+[2026-10-20T10:51:07Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689606500000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:07Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689606605914255
+[2026-10-20T10:51:07Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689606600000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:07Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689606705960775
+[2026-10-20T10:51:07Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689606700000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:07Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689606806135783
+[2026-10-20T10:51:07Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689606800000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:07Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689606906224625
+[2026-10-20T10:51:07Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689606900000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:07Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689607006323869
+[2026-10-20T10:51:08Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689607000000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:08Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689607106399466
+[2026-10-20T10:51:08Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689607100000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:08Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689607206464645
+[2026-10-20T10:51:08Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689607200000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:08Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689607306517954
+[2026-10-20T10:51:08Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689607300000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:08Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689607406602557
+[2026-10-20T10:51:08Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689607400000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:08Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689607506713698
+[2026-10-20T10:51:08Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689607500000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:08Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689607606803013
+[2026-10-20T10:51:08Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689607600000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:08Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689607706877480
+[2026-10-20T10:51:08Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689607700000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:08Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689607806938307
+[2026-10-20T10:51:08Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689607800000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:08Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689607907022096
+[2026-10-20T10:51:08Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689607900000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:08Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689608007108159
+[2026-10-20T10:51:09Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689608000000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:09Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689608107199018
+[2026-10-20T10:51:09Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689608100000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:09Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689608207259655
+[2026-10-20T10:51:09Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689608200000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:09Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689608307360007
+[2026-10-20T10:51:09Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689608300000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:09Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689608407479506
+[2026-10-20T10:51:09Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689608400000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:09Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689608507551088
+[2026-10-20T10:51:09Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689608500000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:09Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689608607629200
+[2026-10-20T10:51:09Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689608600000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:09Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689608707668504
+[2026-10-20T10:51:09Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689608700000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:09Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689608807788898
+[2026-10-20T10:51:09Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689608800000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:09Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689608907860146
+[2026-10-20T10:51:09Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689608900000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:09Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689609007949983
+[2026-10-20T10:51:10Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689609000000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:10Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689609108023149
+[2026-10-20T10:51:10Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689609100000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:10Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689609208096249
+[2026-10-20T10:51:10Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689609200000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:10Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689609308195018
+[2026-10-20T10:51:10Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689609300000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:10Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689609408265484
+[2026-10-20T10:51:10Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689609400000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:10Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689609508343745
+[2026-10-20T10:51:10Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689609500000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:10Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689609608473445
+[2026-10-20T10:51:10Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689609600000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:10Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689609708559772
+[2026-10-20T10:51:10Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689609700000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:10Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689609808620766
+[2026-10-20T10:51:10Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689609800000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:10Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689609908740999
+[2026-10-20T10:51:10Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689609900000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:10Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689610008792124
+[2026-10-20T10:51:11Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689610000000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:11Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689610108868616
+[2026-10-20T10:51:11Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689610100000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:11Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689610208955360
+[2026-10-20T10:51:11Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689610200000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:11Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689610309044976
+[2026-10-20T10:51:11Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689610300000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:11Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689610409143496
+[2026-10-20T10:51:11Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689610400000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:11Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689610509257595
+[2026-10-20T10:51:11Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689610500000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:11Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689610609337221
+[2026-10-20T10:51:11Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689610600000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:11Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689610709366607
+[2026-10-20T10:51:11Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689610700000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:11Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689610809502509
+[2026-10-20T10:51:11Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689610800000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:11Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689610909604435
+[2026-10-20T10:51:11Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689610900000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:11Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689611009621536
+[2026-10-20T10:51:12Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689611000000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:12Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689611109767580
+[2026-10-20T10:51:12Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689611100000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:12Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689611209787756
+[2026-10-20T10:51:12Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689611200000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:12Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689611309854473
+[2026-10-20T10:51:12Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689611300000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:12Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689611409912140
+[2026-10-20T10:51:12Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689611400000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:12Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689611509997034
+[2026-10-20T10:51:12Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689611500000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:12Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689611610114295
+[2026-10-20T10:51:12Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689611600000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:12Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689611710174260
+[2026-10-20T10:51:12Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689611700000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:12Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689611810246198
+[2026-10-20T10:51:12Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689611800000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:12Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689611910316277
+[2026-10-20T10:51:12Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689611900000000 rect=[[1453.3 76.0] - [1906.7 331.0]]
+[2026-10-20T10:51:12Z INFO  viewer_native::app] GPU_BENCH_CURSOR cursor=1735689612010424934
+[2026-10-20T10:51:12Z INFO  viewer_native::app] GPU_BENCH_COMMAND id=7
+[2026-10-20T10:51:13Z INFO  viewer_native::graphics::views::camera] GPU_BENCH_FRAME arrival=1735689612000000000 rect=[[1453.3 76.0] - [1906.7 331.0]]

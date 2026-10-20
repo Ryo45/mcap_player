@@ -18,6 +18,8 @@
 同じ4K画像を表示し、画素で確認した更新・鮮度・Seekとプロセス全体のPSS / CPUを測る。
 [Native Cameraの固定周期化](2026-10-20-native-camera-cadence/README.md)では、
 画像受信から描画までの待ちを診断し、周期のずれを直した前後を実GPUで各3回比較する。
+[Lichtblickのデフォルト構成に合わせた比較](2026-10-20-desktop-default-layout/README.md)では、
+同じ表示領域・視点でgrid / Image / Scan / Raw Messagesの負荷を分け、比較スクリーンショットも保存する。
 
 ## 再現
 
