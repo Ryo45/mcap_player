@@ -13,10 +13,11 @@ const BACKGROUND_CAMERA_INTERVAL: Duration = Duration::from_millis(200);
 
 /// Shared Camera capability used by all Camera panels for one session.
 ///
-/// Admission/coalescing happens on serialized messages. JPEG decoding remains a presentation
-/// concern and the retained JPEG is a `Bytes` slice of the admitted CDR payload.
+/// Admission/coalescing happens on serialized messages. Pixel decoding remains a presentation
+/// concern and the retained image data is a `Bytes` slice of the admitted CDR payload.
 #[derive(Clone)]
 pub struct CameraController {
+    raw_streams: std::collections::HashSet<StreamId>,
     stream_to_camera: HashMap<StreamId, CameraId>,
     topics: Vec<(CameraId, String)>,
     state: CameraState,
@@ -43,6 +44,12 @@ impl CameraController {
             .collect();
         let topics = plan.camera_topics();
         let mut controller = Self {
+            raw_streams: plan
+                .camera_routes()
+                .iter()
+                .filter(|r| r.stream.schema == "sensor_msgs/msg/Image")
+                .map(|r| r.stream.id)
+                .collect(),
             stream_to_camera,
             topics,
             state: CameraState::default(),
@@ -223,15 +230,32 @@ impl CameraController {
         camera_id: CameraId,
         message: RawMessage,
     ) -> Result<(), crate::DecodeError> {
-        match decode_compressed_image_bytes(message.payload) {
+        let decoded = if self.raw_streams.contains(&message.stream_id) {
+            crate::decode_raw_image_bytes(message.payload).map(|image| CameraFrame {
+                camera_id,
+                arrival_time: message.arrival_time,
+                measurement_time: image.measurement_time,
+                frame_id: image.frame_id,
+                format: crate::CameraImageFormat::Raw(image.layout),
+                data: image.data,
+            })
+        } else {
+            decode_compressed_image_bytes(message.payload).map(|image| CameraFrame {
+                camera_id,
+                arrival_time: message.arrival_time,
+                measurement_time: image.measurement_time,
+                frame_id: image.frame_id,
+                format: if image.format == "png" {
+                    crate::CameraImageFormat::Png
+                } else {
+                    crate::CameraImageFormat::Jpeg
+                },
+                data: image.data,
+            })
+        };
+        match decoded {
             Ok(image) => {
-                self.state.apply(CameraFrame {
-                    camera_id,
-                    measurement_time: image.measurement_time,
-                    arrival_time: message.arrival_time,
-                    frame_id: image.frame_id,
-                    jpeg: image.jpeg,
-                });
+                self.state.apply(image);
                 self.counters.decoded = self.counters.decoded.saturating_add(1);
                 Ok(())
             }

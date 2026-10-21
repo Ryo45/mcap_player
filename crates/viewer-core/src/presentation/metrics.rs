@@ -5,7 +5,7 @@ use std::{collections::BTreeMap, time::Duration};
 pub struct PresentationSnapshot {
     pub camera_fps: BTreeMap<CameraId, f64>,
     pub total_camera_fps: f64,
-    pub jpeg_decode_ms: f64,
+    pub camera_decode_ms: f64,
     pub upload_ms: f64,
     pub render_ms: f64,
 }
@@ -15,7 +15,7 @@ pub struct PresentationSnapshot {
 pub struct PresentationMetrics {
     elapsed: Duration,
     camera_frames: BTreeMap<CameraId, u64>,
-    jpeg_decode_time: Duration,
+    camera_decode_time: Duration,
     upload_time: Duration,
     render_time: Duration,
     camera_samples: u64,
@@ -27,11 +27,11 @@ impl PresentationMetrics {
     pub fn record_camera(
         &mut self,
         camera_id: CameraId,
-        jpeg_decode_time: Duration,
+        camera_decode_time: Duration,
         upload_time: Duration,
     ) {
         *self.camera_frames.entry(camera_id).or_default() += 1;
-        self.jpeg_decode_time = self.jpeg_decode_time.saturating_add(jpeg_decode_time);
+        self.camera_decode_time = self.camera_decode_time.saturating_add(camera_decode_time);
         self.upload_time = self.upload_time.saturating_add(upload_time);
         self.camera_samples = self.camera_samples.saturating_add(1);
     }
@@ -54,14 +54,14 @@ impl PresentationMetrics {
             .map(|(camera_id, frames)| (*camera_id, *frames as f64 / seconds))
             .collect();
         self.snapshot.total_camera_fps = self.camera_frames.values().sum::<u64>() as f64 / seconds;
-        self.snapshot.jpeg_decode_ms =
-            average_milliseconds(self.jpeg_decode_time, self.camera_samples);
+        self.snapshot.camera_decode_ms =
+            average_milliseconds(self.camera_decode_time, self.camera_samples);
         self.snapshot.upload_ms = average_milliseconds(self.upload_time, self.camera_samples);
         self.snapshot.render_ms = average_milliseconds(self.render_time, self.render_samples);
 
         self.elapsed = Duration::ZERO;
         self.camera_frames.clear();
-        self.jpeg_decode_time = Duration::ZERO;
+        self.camera_decode_time = Duration::ZERO;
         self.upload_time = Duration::ZERO;
         self.render_time = Duration::ZERO;
         self.camera_samples = 0;
@@ -113,7 +113,7 @@ mod tests {
         assert_eq!(snapshot.camera_fps.get(&CameraId(0)), Some(&10.0));
         assert_eq!(snapshot.camera_fps.get(&CameraId(1)), Some(&5.0));
         assert_eq!(snapshot.total_camera_fps, 15.0);
-        assert!((snapshot.jpeg_decode_ms - 2.666_666).abs() < 0.001);
+        assert!((snapshot.camera_decode_ms - 2.666_666).abs() < 0.001);
         assert!((snapshot.upload_ms - 1.333_333).abs() < 0.001);
         assert_eq!(snapshot.render_ms, 8.0);
     }

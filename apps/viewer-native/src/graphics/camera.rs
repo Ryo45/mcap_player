@@ -2,12 +2,12 @@ use super::Graphics;
 use crate::presentation::CameraBasePresentationUpdate;
 use std::{fmt, time::Instant};
 use viewer_core::{ArrivalTime, CameraId, CameraPreviewFrame, CameraState};
-use viewer_renderer::NativeJpegError;
+use viewer_renderer::NativeImageError;
 
 #[derive(Debug)]
 pub(crate) struct CameraUploadError {
     camera_id: CameraId,
-    source: NativeJpegError,
+    source: NativeImageError,
 }
 
 impl fmt::Display for CameraUploadError {
@@ -108,7 +108,7 @@ impl Graphics {
             {
                 error = Some(CameraUploadError {
                     camera_id,
-                    source: NativeJpegError::Limit("GPU texture dimensions"),
+                    source: NativeImageError::Limit("GPU texture dimensions"),
                 });
                 continue;
             }
@@ -139,7 +139,7 @@ impl Graphics {
             self.presented_camera_frames.insert(camera_id, frame);
             updates.push(CameraBasePresentationUpdate {
                 camera_id,
-                jpeg_decode_time: decode_elapsed,
+                camera_decode_time: decode_elapsed,
                 upload_time: upload_started.elapsed(),
             });
         }

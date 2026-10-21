@@ -9,13 +9,13 @@ fn round_trip_and_normalizes_format() {
         measurement_time: MeasurementTime(12_345_000_006),
         frame_id: "front".into(),
         format: "JPEG compressed bgr8".into(),
-        jpeg: vec![0xff, 0xd8, 0xff, 0xd9],
+        data: vec![0xff, 0xd8, 0xff, 0xd9],
     };
     let decoded =
         decode_compressed_image(&encode_compressed_image_cdr(&original).unwrap()).unwrap();
     assert_eq!(decoded.measurement_time, original.measurement_time);
     assert_eq!(decoded.format, "jpeg");
-    assert_eq!(decoded.jpeg, original.jpeg);
+    assert_eq!(decoded.data, original.data);
 
     let mut cdr = original;
     cdr.format = "rgb8; jpeg compressed bgr8".into();
@@ -34,7 +34,7 @@ fn bytes_decoder_retains_jpeg_in_the_cdr_backing_allocation() {
             measurement_time: MeasurementTime(12_345_000_006),
             frame_id: "front".into(),
             format: "jpeg".into(),
-            jpeg: vec![0xff, 0xd8, 0x01, 0x02, 0xff, 0xd9],
+            data: vec![0xff, 0xd8, 0x01, 0x02, 0xff, 0xd9],
         })
         .unwrap(),
     );
@@ -42,11 +42,11 @@ fn bytes_decoder_retains_jpeg_in_the_cdr_backing_allocation() {
     let payload_end = payload_start + payload.len();
 
     let decoded = decode_compressed_image_bytes(payload.clone()).unwrap();
-    let jpeg_start = decoded.jpeg.as_ptr() as usize;
+    let jpeg_start = decoded.data.as_ptr() as usize;
 
-    assert_eq!(decoded.jpeg.as_ref(), [0xff, 0xd8, 0x01, 0x02, 0xff, 0xd9]);
+    assert_eq!(decoded.data.as_ref(), [0xff, 0xd8, 0x01, 0x02, 0xff, 0xd9]);
     assert!(jpeg_start >= payload_start);
-    assert!(jpeg_start + decoded.jpeg.len() <= payload_end);
+    assert!(jpeg_start + decoded.data.len() <= payload_end);
 }
 
 #[test]
@@ -106,7 +106,7 @@ fn rejects_truncation_format_and_huge_lengths() {
         measurement_time: MeasurementTime(0),
         frame_id: "f".into(),
         format: "jpeg".into(),
-        jpeg: vec![1],
+        data: vec![1],
     })
     .unwrap();
     assert_eq!(
@@ -119,8 +119,8 @@ fn rejects_truncation_format_and_huge_lengths() {
     let unsupported = encode_compressed_image_cdr(&CompressedImage {
         measurement_time: MeasurementTime(0),
         frame_id: "f".into(),
-        format: "png".into(),
-        jpeg: vec![],
+        format: "16UC1; compressedDepth png".into(),
+        data: vec![],
     })
     .unwrap();
     assert!(matches!(
@@ -240,4 +240,89 @@ fn decodes_tf_message() {
     assert_eq!(transforms[0].frame_id, "base_link");
     assert_eq!(transforms[0].child_frame_id, "base_scan");
     assert_eq!(transforms[0].translation, [0.1, 0.0, 0.2]);
+}
+
+#[test]
+fn raw_images_preserve_stride_time_and_shared_backing() {
+    use crate::{RawImageEncoding, decode_raw_image_bytes};
+    use bytes::Bytes;
+    for (name, channels, expected) in [
+        ("rgb8", 3, RawImageEncoding::Rgb8),
+        ("bgr8", 3, RawImageEncoding::Bgr8),
+        ("rgba8", 4, RawImageEncoding::Rgba8),
+        ("bgra8", 4, RawImageEncoding::Bgra8),
+        ("mono8", 1, RawImageEncoding::Mono8),
+    ] {
+        for endian in [0, 1] {
+            let mut bytes = vec![0, 1, 0, 0];
+            push_u32(&mut bytes, u32::MAX);
+            push_u32(&mut bytes, 123);
+            push_string(&mut bytes, "optical").unwrap();
+            push_u32(&mut bytes, 2);
+            push_u32(&mut bytes, 3);
+            push_string(&mut bytes, name).unwrap();
+            bytes.push(endian);
+            let step = 3 * channels + 2;
+            push_u32(&mut bytes, step);
+            push_u32(&mut bytes, step * 2);
+            let start = bytes.len();
+            bytes.resize(start + step as usize * 2, 42);
+            let bytes = Bytes::from(bytes);
+            let image = decode_raw_image_bytes(bytes.clone()).unwrap();
+            assert_eq!(image.measurement_time, MeasurementTime(-999_999_877));
+            assert_eq!(image.layout.encoding, expected);
+            assert_eq!(image.layout.step, step);
+            assert_eq!(image.data.as_ptr(), bytes.slice(start..).as_ptr());
+            for length in 0..bytes.len() {
+                assert!(decode_raw_image_bytes(bytes.slice(..length)).is_err());
+            }
+        }
+    }
+}
+
+#[test]
+fn raw_image_layout_rejects_bad_lengths_overflow_and_excessive_sizes() {
+    use crate::{RawImageEncoding, RawImageLayout};
+    let good = RawImageLayout {
+        width: 2,
+        height: 2,
+        step: 8,
+        encoding: RawImageEncoding::Rgb8,
+    };
+    assert!(good.validate(16).is_ok());
+    for bad in [
+        RawImageLayout { width: 0, ..good },
+        RawImageLayout { step: 5, ..good },
+        RawImageLayout {
+            width: u32::MAX,
+            ..good
+        },
+        RawImageLayout {
+            height: u32::MAX,
+            ..good
+        },
+    ] {
+        assert!(bad.validate(16).is_err());
+    }
+    for len in [0, 15, 17, usize::MAX] {
+        assert!(good.validate(len).is_err());
+    }
+}
+
+#[test]
+fn compressed_png_and_empty_jpeg_format_share_the_codec_boundary() {
+    for (format, expected) in [
+        ("rgb8; png compressed bgr8", "png"),
+        ("PNG", "png"),
+        ("", "jpeg"),
+    ] {
+        let bytes = encode_compressed_image_cdr(&CompressedImage {
+            measurement_time: MeasurementTime(0),
+            frame_id: "optical".into(),
+            format: format.into(),
+            data: vec![1, 2],
+        })
+        .unwrap();
+        assert_eq!(decode_compressed_image(&bytes).unwrap().format, expected);
+    }
 }

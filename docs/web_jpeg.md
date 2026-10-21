@@ -68,3 +68,13 @@ Native/WASM/Web release/ROS 2の全ゲートに加えて、WASM targetのclippy�
 [createImageBitmap](https://developer.mozilla.org/en-US/docs/Web/API/Window/createImageBitmap)、
 [WorkerでのcreateImageBitmap](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)、
 [ImageDecoder constructor](https://developer.mozilla.org/en-US/docs/Web/API/ImageDecoder/ImageDecoder)。
+
+
+## Raw Image / PNG入力の追加（2026-10-21）
+
+同じCameraFrame、2-worker queue、世代管理、64 MiBの入力コピー予算を共用する。
+`rgb8 / bgr8 / rgba8 / bgra8 / mono8`はWorker内で行幅を尊重し、表示サイズのRGBAへ直接nearest samplingする。
+PNGはIHDRだけをRust側で読み、画素デコードはWorkerの`createImageBitmap`へ渡す。
+16bit PNGとcompressedDepthには対応しない。JPEGのEXIF除去とIDCT相当のブラウザ縮小経路は維持する。
+入力形式ごとのパネルや履歴は追加していない。
+[対応範囲・制限・回帰確認](issue/016-camera-image-formats/README.md)を参照。

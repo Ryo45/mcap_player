@@ -289,7 +289,7 @@ mod tests {
                             measurement_time: MeasurementTime(arrival),
                             frame_id: "camera".into(),
                             format: "jpeg".into(),
-                            jpeg: vec![marker],
+                            data: vec![marker],
                         })
                         .unwrap()
                         .into(),
@@ -319,7 +319,7 @@ mod tests {
 
         let latest = cameras.state().latest_for(CameraId(0)).unwrap();
         assert_eq!(latest.arrival_time, ArrivalTime(200));
-        assert_eq!(latest.jpeg.as_ref(), [2]);
+        assert_eq!(latest.data.as_ref(), [2]);
         assert_eq!(admission.diagnostics().coalesced_messages, 1);
         assert_eq!(cameras.counters().decoded, 1);
     }

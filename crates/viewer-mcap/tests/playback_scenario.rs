@@ -199,7 +199,7 @@ fn camera_message(stream_id: StreamId, arrival_time: i64, marker: u8) -> RawMess
             measurement_time: MeasurementTime(measurement_time),
             frame_id: "camera_front_optical_frame".into(),
             format: "jpeg".into(),
-            jpeg: vec![marker],
+            data: vec![marker],
         })
         .unwrap()
         .into(),
@@ -264,7 +264,7 @@ fn supplied_elapsed_and_commands_control_cursor_and_message_cutoff() {
     assert_eq!(outcome.counters.decoded, 3);
     let latest = outcome.camera_state.latest_for(CameraId(0)).unwrap();
     assert_eq!(latest.arrival_time, ArrivalTime(START + 500_000_000));
-    assert_eq!(latest.jpeg, vec![2]);
+    assert_eq!(latest.data, vec![2]);
 }
 
 #[test]
@@ -339,7 +339,7 @@ fn focused_camera_is_presented_at_ten_hz_and_background_cameras_at_five_hz() {
         focused_frame.arrival_time,
         ArrivalTime(START + 1_000_000_000)
     );
-    assert_eq!(focused_frame.jpeg, vec![50]);
+    assert_eq!(focused_frame.data, vec![50]);
 }
 
 #[test]
@@ -400,7 +400,7 @@ fn seek_restores_the_latest_camera_predecessor_before_committing() {
 
     let latest = outcome.camera_state.latest_for(CameraId(0)).unwrap();
     assert_eq!(latest.arrival_time, ArrivalTime(START + 750_000_000));
-    assert_eq!(latest.jpeg, vec![2]);
+    assert_eq!(latest.data, vec![2]);
 }
 
 #[test]

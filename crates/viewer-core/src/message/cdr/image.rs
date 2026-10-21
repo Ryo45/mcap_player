@@ -8,7 +8,7 @@ pub struct CompressedImage {
     pub measurement_time: MeasurementTime,
     pub frame_id: String,
     pub format: String,
-    pub jpeg: Vec<u8>,
+    pub data: Vec<u8>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -16,16 +16,27 @@ pub struct DecodedCompressedImage {
     pub measurement_time: MeasurementTime,
     pub frame_id: String,
     pub format: String,
-    pub jpeg: Bytes,
+    pub data: Bytes,
 }
 
 fn normalize_format(value: &str) -> Result<String, DecodeError> {
     let normalized = value.trim().to_ascii_lowercase();
+    if normalized.contains("compresseddepth") {
+        return Err(DecodeError::UnsupportedFormat(value.to_owned()));
+    }
+    if normalized.is_empty() {
+        return Ok("jpeg".into());
+    }
     if normalized
         .split(|character: char| character == ';' || character.is_whitespace())
         .any(|token| matches!(token, "jpeg" | "jpg"))
     {
         Ok("jpeg".to_owned())
+    } else if normalized
+        .split(|c: char| c == ';' || c.is_whitespace())
+        .any(|t| t == "png")
+    {
+        Ok("png".into())
     } else {
         Err(DecodeError::UnsupportedFormat(value.to_owned()))
     }
@@ -35,7 +46,7 @@ struct CompressedImageParts {
     measurement_time: MeasurementTime,
     frame_id: String,
     format: String,
-    jpeg_range: Range<usize>,
+    data_range: Range<usize>,
 }
 
 fn compressed_image_parts(bytes: &[u8]) -> Result<CompressedImageParts, DecodeError> {
@@ -50,16 +61,22 @@ fn compressed_image_parts(bytes: &[u8]) -> Result<CompressedImageParts, DecodeEr
         .and_then(|v| v.checked_add(i64::from(nanoseconds)))
         .ok_or(DecodeError::InvalidTimestamp)?;
     let frame_id = reader.string()?;
+    if frame_id.len() > 4096 {
+        return Err(DecodeError::InvalidLength);
+    }
     let format = normalize_format(&reader.string()?)?;
-    let jpeg_length = reader.length()?;
-    let jpeg_start = reader.position();
-    reader.take(jpeg_length)?;
-    let jpeg_range = jpeg_start..reader.position();
+    let data_length = reader.length()?;
+    if data_length > 32 * 1024 * 1024 {
+        return Err(DecodeError::InvalidLength);
+    }
+    let data_start = reader.position();
+    reader.take(data_length)?;
+    let data_range = data_start..reader.position();
     Ok(CompressedImageParts {
         measurement_time: MeasurementTime(measurement),
         frame_id,
         format,
-        jpeg_range,
+        data_range,
     })
 }
 
@@ -69,18 +86,18 @@ pub fn decode_compressed_image(bytes: &[u8]) -> Result<CompressedImage, DecodeEr
         measurement_time: parts.measurement_time,
         frame_id: parts.frame_id,
         format: parts.format,
-        jpeg: bytes[parts.jpeg_range].to_vec(),
+        data: bytes[parts.data_range].to_vec(),
     })
 }
 
-/// Decodes metadata while retaining the JPEG as a shared slice of the CDR payload.
+/// Decodes metadata while retaining encoded pixels as a shared slice of the CDR payload.
 pub fn decode_compressed_image_bytes(bytes: Bytes) -> Result<DecodedCompressedImage, DecodeError> {
     let parts = compressed_image_parts(&bytes)?;
     Ok(DecodedCompressedImage {
         measurement_time: parts.measurement_time,
         frame_id: parts.frame_id,
         format: parts.format,
-        jpeg: bytes.slice(parts.jpeg_range),
+        data: bytes.slice(parts.data_range),
     })
 }
 
@@ -95,8 +112,61 @@ pub fn encode_compressed_image_cdr(image: &CompressedImage) -> Result<Vec<u8>, D
     push_string(&mut output, &image.format)?;
     push_u32(
         &mut output,
-        u32::try_from(image.jpeg.len()).map_err(|_| DecodeError::InvalidLength)?,
+        u32::try_from(image.data.len()).map_err(|_| DecodeError::InvalidLength)?,
     );
-    output.extend_from_slice(&image.jpeg);
+    output.extend_from_slice(&image.data);
     Ok(output)
+}
+
+/// Decodes sensor_msgs/msg/Image without converting or copying its pixels.
+pub fn decode_raw_image_bytes(bytes: Bytes) -> Result<DecodedRawImage, DecodeError> {
+    use crate::{RawImageEncoding, RawImageLayout};
+    let mut r = Reader::new(&bytes)?;
+    let seconds = r.i32()?;
+    let nanos = r.u32()?;
+    if nanos >= 1_000_000_000 {
+        return Err(DecodeError::InvalidTimestamp);
+    }
+    let frame_id = r.string()?;
+    if frame_id.len() > 4096 {
+        return Err(DecodeError::InvalidLength);
+    }
+    let height = r.u32()?;
+    let width = r.u32()?;
+    let encoding = match r.string()?.as_str() {
+        "rgb8" => RawImageEncoding::Rgb8,
+        "bgr8" => RawImageEncoding::Bgr8,
+        "rgba8" => RawImageEncoding::Rgba8,
+        "bgra8" => RawImageEncoding::Bgra8,
+        "mono8" => RawImageEncoding::Mono8,
+        other => return Err(DecodeError::UnsupportedFormat(other.into())),
+    };
+    if r.take(1)?[0] > 1 {
+        return Err(DecodeError::InvalidLength);
+    }
+    let step = r.u32()?;
+    let len = r.length()?;
+    let layout = RawImageLayout {
+        width,
+        height,
+        step,
+        encoding,
+    };
+    layout.validate(len)?;
+    let start = r.position();
+    r.take(len)?;
+    Ok(DecodedRawImage {
+        measurement_time: MeasurementTime(i64::from(seconds) * 1_000_000_000 + i64::from(nanos)),
+        frame_id,
+        layout,
+        data: bytes.slice(start..start + len),
+    })
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct DecodedRawImage {
+    pub measurement_time: MeasurementTime,
+    pub frame_id: String,
+    pub layout: crate::RawImageLayout,
+    pub data: Bytes,
 }

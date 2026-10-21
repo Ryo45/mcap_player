@@ -69,10 +69,10 @@ decoded-message history or additional renderer instance.
 `FeatureRuntime` owns the continuous materialization boundary, not just controller aggregation.
 Controllers implement its concrete feature-specific admission, decode and history policies. Panels,
 Camera overlays, Scene and diagnostics borrow shared materialized state. They do not decode their
-own Camera/TF/PointCloud copies. Camera compressed-image materialization lives here; expensive
-JPEG pixel decode belongs to presentation, with GPU resources owned by renderers.
-Native uses `CameraDecodeQueue`: two TurboJPEG workers, one coalesced pending image per camera,
-a two-result completion channel, and at most 32 camera identities. JPEG inputs are compact owned
+own Camera/TF/PointCloud copies. Camera CDR metadata/payload materialization lives here; expensive
+image pixel decode/Raw conversion belongs to presentation, with GPU resources owned by renderers.
+Native uses `CameraDecodeQueue`: two shared image workers (TurboJPEG for JPEG), one coalesced pending image per camera,
+a two-result completion channel, and at most 32 camera identities. Image inputs are compact owned
 copies under a shared 64 MiB limit for pending/active input; completed results and displayed
 state retain only CameraFrameMetadata plus pixels, releasing encoded copies at decode completion. Workers do not
 pin MCAP Chunk backing. Successful seek/source transitions invalidate old generations. Failed
@@ -383,3 +383,5 @@ by the frontend; no physical feature has a renderer correction multiplier.
 See [physical_geometry.md](physical_geometry.md) for contracts and bounded TF limits.
 
 PointCloud2 XYZ and source RGBA/intensity attributes are decoded once in core; Scene presentation owns color mode and fixed intensity-range mapping. Native/Web use the same linear RGBA and existing TF/accumulation path. See [PointCloud2](point_cloud2.md).
+
+Camera also accepts PNG CompressedImage and 8-bit ROS Image in the same routes/state/queues. Raw layout retains width, height, step and channel encoding; payload bytes remain shared until presentation admission. Raw conversion samples directly into display-sized RGBA, preserving row padding semantics without a full-size RGBA intermediate. PNG requires full codec reconstruction before resizing; its source work is bounded but not reduced by a smaller target. See [Camera image formats](issue/016-camera-image-formats/README.md) for limits and verification.

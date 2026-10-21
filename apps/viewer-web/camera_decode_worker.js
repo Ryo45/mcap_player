@@ -36,9 +36,39 @@ self.onmessage = async ({data}) => {
         || data.width * data.height > 32 * 1024 * 1024) {
       throw new Error('invalid camera bitmap request');
     }
-    const blob = new Blob(opticalJpegParts(data.bytes), {type: 'image/jpeg'});
+    let input;
+    if (data.format === 'jpeg' || data.format === 'png') {
+      input = new Blob(data.format === 'jpeg' ? opticalJpegParts(data.bytes) : [data.bytes],
+        {type: data.format === 'jpeg' ? 'image/jpeg' : 'image/png'});
+    } else {
+      const channels = {rgb8:3, bgr8:3, rgba8:4, bgra8:4, mono8:1}[data.format];
+      if (!channels || !Number.isInteger(data.sourceWidth) || !Number.isInteger(data.sourceHeight)
+          || data.sourceWidth <= 0 || data.sourceHeight <= 0
+          || data.sourceWidth * data.sourceHeight > 32*1024*1024
+          || !Number.isInteger(data.step) || data.step < data.sourceWidth*channels
+          || data.step * data.sourceHeight !== data.bytes.byteLength
+          || data.width > data.sourceWidth || data.height > data.sourceHeight) {
+        throw new Error('invalid raw image layout');
+      }
+      const source = new Uint8Array(data.bytes);
+      const rgba = new Uint8ClampedArray(data.width * data.height * 4);
+      for (let y=0; y<data.height; y++) {
+        const row = Math.floor(y*data.sourceHeight/data.height)*data.step;
+        for (let x=0; x<data.width; x++) {
+          const i = row + Math.floor(x*data.sourceWidth/data.width)*channels;
+          const o = (y*data.width+x)*4;
+          const mono = data.format === 'mono8';
+          const bgr = data.format === 'bgr8' || data.format === 'bgra8';
+          rgba[o] = source[i+(bgr ? 2 : 0)];
+          rgba[o+1] = source[i+(mono ? 0 : 1)];
+          rgba[o+2] = source[i+(mono ? 0 : bgr ? 0 : 2)];
+          rgba[o+3] = channels === 4 ? source[i+3] : 255;
+        }
+      }
+      input = new ImageData(rgba, data.width, data.height);
+    }
     data.bytes = null;
-    bitmap = await createImageBitmap(blob, {
+    bitmap = await createImageBitmap(input, {
       resizeWidth: data.width, resizeHeight: data.height, resizeQuality: 'low',
       imageOrientation: 'none', colorSpaceConversion: 'none', premultiplyAlpha: 'none',
     });

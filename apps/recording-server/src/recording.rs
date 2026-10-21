@@ -495,7 +495,7 @@ path = "{}"
                 measurement_time: viewer_core::MeasurementTime(90),
                 frame_id: "camera".into(),
                 format: "jpeg".into(),
-                jpeg: vec![0xff, 0xd8, 0xff, 0xd9],
+                data: vec![0xff, 0xd8, 0xff, 0xd9],
             })
             .unwrap();
             for sequence in 0..2 {

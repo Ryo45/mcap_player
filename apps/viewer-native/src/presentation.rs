@@ -10,7 +10,7 @@ use viewer_renderer::CameraOverlayState;
 
 pub(crate) struct CameraBasePresentationUpdate {
     pub(crate) camera_id: CameraId,
-    pub(crate) jpeg_decode_time: Duration,
+    pub(crate) camera_decode_time: Duration,
     pub(crate) upload_time: Duration,
 }
 
@@ -158,7 +158,7 @@ impl PresentationState {
         for update in updates {
             self.metrics.record_camera(
                 update.camera_id,
-                update.jpeg_decode_time,
+                update.camera_decode_time,
                 update.upload_time,
             );
         }
@@ -225,7 +225,7 @@ mod tests {
         let mut presentation = PresentationState::default();
         presentation.record_camera_updates([CameraBasePresentationUpdate {
             camera_id: CameraId(0),
-            jpeg_decode_time: Duration::from_millis(2),
+            camera_decode_time: Duration::from_millis(2),
             upload_time: Duration::from_millis(1),
         }]);
         presentation.advance_metrics(Duration::from_secs(1));

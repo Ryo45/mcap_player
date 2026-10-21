@@ -29,7 +29,7 @@ topicを調べても、CameraやSceneの再生対象は変わりません。大�
 
 ## 主な機能
 
-- 複数の JPEG カメラ（`sensor_msgs/msg/CompressedImage`）を一覧・フォーカス表示
+- 複数のカメラ（JPEG/PNG `CompressedImage`、8bit Raw `Image`）を一覧・フォーカス表示
 - カメラ画像上に計画経路を投影
 - BEV にグリッド、車両位置、計画経路を表示
 - 3D ビューに車両姿勢、軌跡、LaserScan / PointCloud2を表示
@@ -141,12 +141,12 @@ cargo run -p viewer-native --features ros2-live -- \
 
 ## 対応データと制約
 
-- カメラ: JPEG の `sensor_msgs/msg/CompressedImage`
+- カメラ: JPEG/PNG の `sensor_msgs/msg/CompressedImage`、`sensor_msgs/msg/Image` の `rgb8 / bgr8 / rgba8 / bgra8 / mono8`
 - 計画経路: `/planning/path` の `nav_msgs/msg/Path`
 - 車両状態: `/odom`
 - 点群表示: LaserScan / PointCloud2（XYZ・RGB/RGBA・intensity着色。PointCloud2は記録入力）
 - カメラ内部パラメータ: `config/camera_calibration.json`
-- 未対応: Raw `sensor_msgs/msg/Image`、H.264、ブラウザでの live 入力
+- 未対応: 16bit・深度画像・compressedDepth、H.264/H.265、Raw Image の ROS live 入力、ブラウザでの live 入力
 
 ### PointCloud2を表示する
 
@@ -245,5 +245,5 @@ Diagnostics（producer が報告した DiagnosticArray の level）を別 Panel 
 
 Rustの責務別配置と命名方針は[module structure](docs/module_structure.md)を参照してください。
 
-Webのカメラ表示は2本のWeb WorkerでJPEGをデコードし、表示サイズに合わせたImageBitmapをCanvasへ渡します。
-[設計・制限と検証](docs/web_jpeg.md)、[4K JPEGのFHD基準比較](docs/performance/2026-10-15-web-jpeg/README.md)を参照してください。
+Webのカメラ表示は2本のWeb WorkerでJPEG/PNGのデコードとRaw画像の変換を行い、表示サイズに合わせたImageBitmapをCanvasへ渡します。
+[Raw/PNG対応と検証](docs/issue/016-camera-image-formats/README.md)、[設計・制限と検証](docs/web_jpeg.md)、[4K JPEGのFHD基準比較](docs/performance/2026-10-15-web-jpeg/README.md)を参照してください。

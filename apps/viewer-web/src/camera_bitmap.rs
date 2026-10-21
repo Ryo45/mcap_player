@@ -26,28 +26,24 @@ fn next_camera(
 }
 
 fn image_size(source: (u32, u32), target: (u32, u32)) -> (u32, u32) {
-    let ratio = (target.0.max(1) as f64 / source.0 as f64)
-        .min(target.1.max(1) as f64 / source.1 as f64)
-        .min(1.0);
-    (
-        (source.0 as f64 * ratio).round().max(1.0) as u32,
-        (source.1 as f64 * ratio).round().max(1.0) as u32,
-    )
+    viewer_renderer::camera_target_size(source, target)
 }
-fn source_size(jpeg: &[u8]) -> Result<(u32, u32), String> {
-    if jpeg.len() > 32 * 1024 * 1024 {
-        return Err("camera JPEG exceeds 32 MiB".into());
-    }
-    let size = viewer_renderer::jpeg_dimensions(jpeg).map_err(|e| e.to_string())?;
-    if size.0 == 0 || size.1 == 0 || u64::from(size.0) * u64::from(size.1) > 32 * 1024 * 1024 {
-        return Err("camera JPEG exceeds 32 megapixel source limit".into());
-    }
-    Ok(size)
+#[cfg(test)]
+fn source_size(data: &[u8]) -> Result<(u32, u32), String> {
+    viewer_renderer::camera_dimensions(&viewer_core::CameraFrame {
+        camera_id: viewer_core::CameraId(0),
+        arrival_time: viewer_core::ArrivalTime(0),
+        measurement_time: viewer_core::MeasurementTime(0),
+        frame_id: String::new(),
+        format: viewer_core::CameraImageFormat::Jpeg,
+        data: bytes::Bytes::copy_from_slice(data),
+    })
+    .map_err(|e| e.to_string())
 }
 
 #[cfg(target_arch = "wasm32")]
 mod browser {
-    use super::{image_size, source_size};
+    use super::image_size;
     use bytes::Bytes;
     use js_sys::{Date, Promise};
     use std::{
@@ -68,7 +64,15 @@ mod browser {
     #[wasm_bindgen(module = "/camera_bitmap.js")]
     extern "C" {
         #[wasm_bindgen(js_name = decodeCameraBitmap)]
-        fn decode_bitmap(bytes: &[u8], width: u32, height: u32) -> Promise;
+        fn decode_bitmap(
+            bytes: &[u8],
+            width: u32,
+            height: u32,
+            format: &str,
+            source_width: u32,
+            source_height: u32,
+            step: u32,
+        ) -> Promise;
     }
     struct EncodedImage {
         data: Vec<u8>,
@@ -134,7 +138,7 @@ mod browser {
             if !state.submitted.contains_key(&frame.camera_id) && state.submitted.len() >= 32 {
                 return Err("camera pixel queue exceeds 32 camera identities".into());
             }
-            let source = source_size(&frame.jpeg)?;
+            let source = viewer_renderer::camera_dimensions(frame).map_err(|e| e.to_string())?;
             let pixels = image_size(source, target);
             let key = (frame.arrival_time, pixels);
             if state.submitted.get(&frame.camera_id) == Some(&key) {
@@ -144,7 +148,7 @@ mod browser {
                 return Err("camera frame identifier exceeds 4096 bytes".into());
             }
             state.pending.remove(&frame.camera_id);
-            let len = frame.jpeg.len();
+            let len = frame.data.len();
             if self
                 .encoded_bytes
                 .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |bytes| {
@@ -159,9 +163,9 @@ mod browser {
                 self.encoded_bytes.fetch_sub(len, Ordering::Relaxed);
                 return Err(e.to_string());
             }
-            data.extend_from_slice(&frame.jpeg);
+            data.extend_from_slice(&frame.data);
             let mut frame = frame.clone();
-            frame.jpeg = Bytes::from_owner(EncodedImage {
+            frame.data = Bytes::from_owner(EncodedImage {
                 data,
                 bytes: Arc::clone(&self.encoded_bytes),
             });
@@ -205,10 +209,28 @@ mod browser {
                 let state = Rc::clone(&self.state);
                 spawn_local(async move {
                     let started = Date::now();
+                    let (format, step) = match request.frame.format {
+                        viewer_core::CameraImageFormat::Jpeg => ("jpeg", 0),
+                        viewer_core::CameraImageFormat::Png => ("png", 0),
+                        viewer_core::CameraImageFormat::Raw(layout) => (
+                            match layout.encoding {
+                                viewer_core::RawImageEncoding::Rgb8 => "rgb8",
+                                viewer_core::RawImageEncoding::Bgr8 => "bgr8",
+                                viewer_core::RawImageEncoding::Rgba8 => "rgba8",
+                                viewer_core::RawImageEncoding::Bgra8 => "bgra8",
+                                viewer_core::RawImageEncoding::Mono8 => "mono8",
+                            },
+                            layout.step,
+                        ),
+                    };
                     let image = JsFuture::from(decode_bitmap(
-                        &request.frame.jpeg,
+                        &request.frame.data,
                         request.pixels.0,
                         request.pixels.1,
+                        format,
+                        request.source.0,
+                        request.source.1,
+                        step,
                     ))
                     .await
                     .map_err(|e| format!("camera bitmap decode: {e:?}"))
@@ -252,7 +274,8 @@ mod browser {
             arrival_time: ArrivalTime(1),
             measurement_time: viewer_core::MeasurementTime(0),
             frame_id: "camera_optical".into(),
-            jpeg: bytes.into(),
+            format: viewer_core::CameraImageFormat::Jpeg,
+            data: bytes.into(),
         };
         queue
             .submit(&frame, (1920, 1080))
@@ -313,9 +336,9 @@ mod browser {
         // Saturate the encoded budget with valid padded JPEGs, then retain displayed
         // metadata across completion and verify that another camera can still advance.
         queue.reset();
-        let mut padded = frame.jpeg.to_vec();
+        let mut padded = frame.data.to_vec();
         padded.resize(32 * 1024 * 1024, 0);
-        frame.jpeg = padded.into();
+        frame.data = padded.into();
         frame.arrival_time = ArrivalTime(123456789);
         frame.measurement_time = viewer_core::MeasurementTime(987654321);
         for id in 0..2 {

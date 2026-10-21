@@ -88,7 +88,7 @@ fn main() -> Result<()> {
             args.get(6).map(String::as_str).unwrap_or("rgb"),
         ),
         _ => bail!(
-            "generate-geometry PATH scan|cloud POINTS SECONDS\ngenerate PATH none|zstd|lz4 CHUNK_BYTES mixed|grouped SECONDS jpeg|raw|scan [WIDTH HEIGHT [VARIANTS [CAMERA_HZ [CAMERAS]]]]\nrechunk INPUT OUTPUT none|zstd|lz4 CHUNK_BYTES\nextract-jpeg INPUT OUTPUT_DIR TOPIC COUNT\nrun PATH scan|all forward|indexed|seek|seek-cached|repeat|repeat-cached SEEK_COUNT [TICK_MS [rgb|rgba]]"
+            "generate-geometry PATH scan|cloud POINTS SECONDS\ngenerate PATH none|zstd|lz4 CHUNK_BYTES mixed|grouped SECONDS jpeg|png|raw|scan [WIDTH HEIGHT [VARIANTS [CAMERA_HZ [CAMERAS]]]]\nrechunk INPUT OUTPUT none|zstd|lz4 CHUNK_BYTES\nextract-jpeg INPUT OUTPUT_DIR TOPIC COUNT\nrun PATH scan|all forward|indexed|seek|seek-cached|repeat|repeat-cached SEEK_COUNT [TICK_MS [rgb|rgba]]"
         ),
     }
 }
@@ -117,7 +117,7 @@ fn extract_jpeg(input: &str, output: &str, topic: &str, count: usize) -> Result<
         let image = viewer_core::decode_compressed_image(&message.data)?;
         let path = Path::new(output).join(format!("{written:02}.jpg"));
         use std::io::Write;
-        fs::File::create_new(path)?.write_all(&image.jpeg)?;
+        fs::File::create_new(path)?.write_all(&image.data)?;
         written += 1;
         if written == count {
             break;
@@ -198,7 +198,7 @@ fn generate(
     );
     ensure!(matches!(layout, "mixed" | "grouped"), "invalid layout");
     ensure!(
-        matches!(encoding, "jpeg" | "raw" | "scan"),
+        matches!(encoding, "jpeg" | "png" | "raw" | "scan"),
         "invalid encoding"
     );
     let compression = match compression {
@@ -258,6 +258,10 @@ fn generate(
         });
         if encoding == "raw" {
             images.push(image.into_raw());
+        } else if encoding == "png" {
+            let mut bytes = std::io::Cursor::new(Vec::new());
+            image.write_to(&mut bytes, image::ImageFormat::Png)?;
+            images.push(bytes.into_inner());
         } else {
             let mut jpeg = Vec::new();
             image::codecs::jpeg::JpegEncoder::new_with_quality(&mut jpeg, 85)
@@ -301,8 +305,8 @@ fn generate(
                     encode_compressed_image_cdr(&CompressedImage {
                         measurement_time: MeasurementTime(time as i64),
                         frame_id: "optical".into(),
-                        format: "jpeg".into(),
-                        jpeg: bytes.clone(),
+                        format: encoding.into(),
+                        data: bytes.clone(),
                     })?
                 }
             } else {
@@ -351,7 +355,7 @@ fn generate(
     Ok(())
 }
 
-// Minimal standard little-endian CDR Image encoding, only for unselected background traffic.
+// Minimal standard little-endian CDR Image encoding, for raw camera fixtures.
 fn raw_image(time: u64, pixels: &[u8], spec: CameraFixture) -> Vec<u8> {
     fn u32_field(out: &mut Vec<u8>, n: u32) {
         while !(out.len() - 4).is_multiple_of(4) {
@@ -441,11 +445,12 @@ fn run(
     let mut requirements = PlaybackRequirements::empty();
     requirements.require_point_cloud();
     if selection == "all"
-        && source
-            .catalog()
-            .streams
-            .iter()
-            .any(|s| s.schema == "sensor_msgs/msg/CompressedImage")
+        && source.catalog().streams.iter().any(|s| {
+            matches!(
+                s.schema.as_str(),
+                "sensor_msgs/msg/CompressedImage" | "sensor_msgs/msg/Image"
+            )
+        })
     {
         requirements.require_all_cameras();
     }
@@ -486,7 +491,7 @@ fn run(
     let mut runtime = FeatureRuntime::new(&plan, true);
     let mut pixels: BTreeMap<CameraId, Vec<u8>> = BTreeMap::new();
     let mut native_decoder = if pixel_format.starts_with("native-") {
-        Some(viewer_renderer::NativeJpegDecoder::new()?)
+        Some(viewer_renderer::NativeCameraDecoder::new()?)
     } else {
         None
     };
@@ -497,6 +502,7 @@ fn run(
     };
     let mut versions = BTreeMap::new();
     let mut jpeg_decodes = 0u64;
+    let mut camera_pixel_decodes = 0u64;
     let range = source.time_range();
     let mut delivered = 0u64;
     let mut payload_bytes = 0u64;
@@ -605,20 +611,32 @@ fn run(
                                     _ if Some(id) == plan.primary_camera() => (1920, 1080),
                                     _ => (96, 72),
                                 };
-                                decoder.decode(&frame.jpeg, target)?.image.rgba
+                                decoder.decode_frame(frame, target)?.image.rgba
                             } else if pixel_format == "rgba" {
-                                viewer_renderer::decode_jpeg(&frame.jpeg)?.rgba
+                                viewer_renderer::decode_camera_frame(frame)?.rgba
                             } else {
-                                image::load_from_memory_with_format(
-                                    &frame.jpeg,
-                                    image::ImageFormat::Jpeg,
-                                )?
-                                .into_bytes()
+                                match frame.format {
+                                    viewer_core::CameraImageFormat::Raw(_) => {
+                                        viewer_renderer::decode_camera_frame(frame)?.rgba
+                                    }
+                                    format => image::load_from_memory_with_format(
+                                        &frame.data,
+                                        if format == viewer_core::CameraImageFormat::Png {
+                                            image::ImageFormat::Png
+                                        } else {
+                                            image::ImageFormat::Jpeg
+                                        },
+                                    )?
+                                    .into_bytes(),
+                                }
                             },
                         );
                     }
                     versions.insert(id, frame.arrival_time);
-                    jpeg_decodes += 1;
+                    camera_pixel_decodes += 1;
+                    if frame.format == viewer_core::CameraImageFormat::Jpeg {
+                        jpeg_decodes += 1;
+                    }
                 }
             }
             // Barrier keeps exactly the same admitted JPEG count as the serial modes.
@@ -654,7 +672,7 @@ fn run(
         .cameras()
         .state()
         .frames()
-        .map(|(_, f)| f.jpeg.len())
+        .map(|(_, f)| f.data.len())
         .sum();
     let point_count = runtime
         .point_cloud()
@@ -666,7 +684,7 @@ fn run(
         "open_ms":open_ms,"workload_ms":workload.elapsed().as_secs_f64()*1000.0,"read_ms":read_ms,"feature_ms":feature_ms,"jpeg_ms":jpeg_ms,
         "delivered_messages":delivered,"expected_messages":expected_messages,"payload_bytes":payload_bytes,
         "feature_decoded":counters.decoded,"feature_dropped":counters.dropped,"unknown_messages":counters.unknown_streams,
-        "jpeg_decodes":jpeg_decodes,"retained_camera_logical_bytes":camera_bytes,"retained_pixel_bytes":pixels.values().map(Vec::len).sum::<usize>(),
+        "jpeg_decodes":jpeg_decodes,"camera_pixel_decodes":camera_pixel_decodes,"retained_camera_logical_bytes":camera_bytes,"retained_pixel_bytes":pixels.values().map(Vec::len).sum::<usize>(),
         "retained_scan_points":point_count,"chunk_count":chunk_count,"largest_chunk_bytes":largest_chunk,"total_chunk_bytes":total_expanded,"message_index_bytes":index_bytes,
         "initial_memory":initial_memory,"open_memory":open_memory,"final_memory":memory(),"seek_live_memory":seek_live_memory,"open_io":open_io,"io":io(&source),"samples":samples,"seek_samples":seek_samples,
         "os_storage_read_bytes":disk_after.get("read_bytes").copied().unwrap_or(0).saturating_sub(disk_before.get("read_bytes").copied().unwrap_or(0))})

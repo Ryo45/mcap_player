@@ -69,3 +69,5 @@ mcap recover input.mcap -o indexed.mcap
 ヘッドレスのアクセラレートCanvasで透明な画像が残る事例も見つかった。通常ビルド＋ソフトウェアCanvasでは3回成功したが、原因と実GPUでの再現性は未検証。詳細と失敗記録は下のverificationに分けて残す。
 
 結果は[verification](../../verification/2026-10-21-split-mcap/)へ保存する。
+
+後続のRaw Image/PNG対応は[016 Camera入力形式](../016-camera-image-formats/README.md)で実施した。

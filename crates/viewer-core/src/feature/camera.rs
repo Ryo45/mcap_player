@@ -13,13 +13,67 @@ use std::collections::BTreeMap;
 )]
 pub struct CameraId(pub u16);
 
+/// Encoding facts; pixel conversion belongs to presentation.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CameraImageFormat {
+    Jpeg,
+    Png,
+    Raw(RawImageLayout),
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum RawImageEncoding {
+    Rgb8,
+    Bgr8,
+    Rgba8,
+    Bgra8,
+    Mono8,
+}
+
+impl RawImageEncoding {
+    pub fn channels(self) -> u32 {
+        match self {
+            Self::Rgb8 | Self::Bgr8 => 3,
+            Self::Rgba8 | Self::Bgra8 => 4,
+            Self::Mono8 => 1,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct RawImageLayout {
+    pub width: u32,
+    pub height: u32,
+    pub step: u32,
+    pub encoding: RawImageEncoding,
+}
+impl RawImageLayout {
+    /// Includes row padding. All supported channels are single bytes, so endianness is irrelevant.
+    pub fn validate(self, data_len: usize) -> Result<(), crate::DecodeError> {
+        if self.width == 0
+            || self.height == 0
+            || u64::from(self.width) * u64::from(self.height) > 32 * 1024 * 1024
+            || self
+                .width
+                .checked_mul(self.encoding.channels())
+                .is_none_or(|n| self.step < n)
+            || u64::from(self.step) * u64::from(self.height) != data_len as u64
+            || data_len > 32 * 1024 * 1024
+        {
+            return Err(crate::DecodeError::InvalidLength);
+        }
+        Ok(())
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CameraFrame {
     pub camera_id: CameraId,
     pub measurement_time: MeasurementTime,
     pub arrival_time: ArrivalTime,
     pub frame_id: String,
-    pub jpeg: Bytes,
+    pub format: CameraImageFormat,
+    pub data: Bytes,
 }
 
 /// Frame identity and projection facts, independent of the encoded image backing.
@@ -128,7 +182,8 @@ mod tests {
             measurement_time: MeasurementTime(0),
             arrival_time: ArrivalTime(arrival),
             frame_id: String::new(),
-            jpeg: Bytes::new(),
+            format: crate::CameraImageFormat::Jpeg,
+            data: Bytes::new(),
         }
     }
 
@@ -154,7 +209,7 @@ mod tests {
         source.camera_id = CameraId(7);
         source.measurement_time = MeasurementTime(987654321);
         source.frame_id = "camera_optical".into();
-        source.jpeg = Bytes::from_owner(Backing(vec![0; 1024 * 1024], Arc::clone(&released)));
+        source.data = Bytes::from_owner(Backing(vec![0; 1024 * 1024], Arc::clone(&released)));
         let borrowed = CameraFrameMetadata::from(&source);
         let owned = CameraFrameMetadata::from(source);
         assert!(released.load(Ordering::SeqCst));

@@ -1117,7 +1117,7 @@ mod tests {
                         measurement_time: viewer_core::MeasurementTime(1_000 + i64::from(sequence)),
                         frame_id: "camera".to_owned(),
                         format: "jpeg".to_owned(),
-                        jpeg: vec![0xff, 0xd8, sequence as u8, 0xff, 0xd9],
+                        data: vec![0xff, 0xd8, sequence as u8, 0xff, 0xd9],
                     })
                     .unwrap();
                 writer
@@ -1444,12 +1444,12 @@ mod tests {
         let raw_start = raw.as_ptr() as usize;
         let raw_end = raw_start + raw.len();
         let image = viewer_core::decode_compressed_image_bytes(raw).unwrap();
-        let jpeg_start = image.jpeg.as_ptr() as usize;
+        let jpeg_start = image.data.as_ptr() as usize;
 
         assert!(raw_start >= parsed.backing.as_ptr() as usize);
         assert!(raw_end <= parsed.backing.as_ptr() as usize + parsed.backing.len());
         assert!(jpeg_start >= raw_start);
-        assert!(jpeg_start + image.jpeg.len() <= raw_end);
+        assert!(jpeg_start + image.data.len() <= raw_end);
     }
 
     #[test]

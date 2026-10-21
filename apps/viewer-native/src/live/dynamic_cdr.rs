@@ -34,7 +34,7 @@ fn extract_compressed_image(message: &DynamicMessage) -> Result<CompressedImage,
         measurement_time,
         frame_id,
         format,
-        jpeg,
+        data: jpeg,
     })
 }
 

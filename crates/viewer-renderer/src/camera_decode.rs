@@ -1,5 +1,5 @@
 //! Bounded native camera pixel work. GPU uploads remain on the UI thread.
-use crate::{NativeImage, NativeJpegDecoder, NativeJpegError};
+use crate::{NativeCameraDecoder, NativeImage, NativeImageError};
 use bytes::Bytes;
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -47,7 +47,7 @@ struct Request {
 
 pub struct CameraDecodeResult {
     pub frame: CameraFrameMetadata,
-    pub image: Result<NativeImage, NativeJpegError>,
+    pub image: Result<NativeImage, NativeImageError>,
     pub decode_time: Duration,
     generation: u64,
     _lease: WorkLease,
@@ -69,7 +69,7 @@ struct Shared {
 #[derive(Debug)]
 pub enum CameraDecodeStartError {
     WorkerCount,
-    Codec(NativeJpegError),
+    Codec(NativeImageError),
     Thread(std::io::Error),
 }
 impl std::fmt::Display for CameraDecodeStartError {
@@ -92,7 +92,7 @@ impl std::error::Error for CameraDecodeStartError {
 }
 
 /// One pending image per camera, at most one active decode per camera, and a
-/// completion channel bounded by worker count. Owned JPEG copies do not retain
+/// completion channel bounded by worker count. Owned image copies do not retain
 /// MCAP chunk backing. The 64 MiB budget covers pending/active input; completed
 /// results retain metadata and pixels only.
 pub struct CameraDecodeQueue {
@@ -119,7 +119,7 @@ impl CameraDecodeQueue {
             outstanding: Arc::new(AtomicUsize::new(0)),
         };
         for index in 0..worker_count {
-            let mut decoder = NativeJpegDecoder::new().map_err(CameraDecodeStartError::Codec)?;
+            let mut decoder = NativeCameraDecoder::new().map_err(CameraDecodeStartError::Codec)?;
             let shared = Arc::clone(&queue.shared);
             let sender = sender.clone();
             queue.workers.push(
@@ -156,7 +156,7 @@ impl CameraDecodeQueue {
                                 }
                             };
                             let start = Instant::now();
-                            let image = decoder.decode(&request.frame.jpeg, request.target);
+                            let image = decoder.decode_frame(&request.frame, request.target);
                             let result = CameraDecodeResult {
                                 frame: request.frame.into(),
                                 image,
@@ -189,23 +189,23 @@ impl CameraDecodeQueue {
         &mut self,
         frame: &CameraFrame,
         target: (u32, u32),
-    ) -> Result<bool, NativeJpegError> {
+    ) -> Result<bool, NativeImageError> {
         let mut state = self.shared.state.lock().unwrap();
         let key = (frame.arrival_time, target);
         if state.submitted.get(&frame.camera_id) == Some(&key) {
             return Ok(false);
         }
         if !state.submitted.contains_key(&frame.camera_id) && state.submitted.len() >= MAX_CAMERAS {
-            return Err(NativeJpegError::Limit("32 camera identities"));
+            return Err(NativeImageError::Limit("32 camera identities"));
         }
-        if frame.jpeg.len() > 32 * 1024 * 1024 || frame.frame_id.len() > 4096 {
-            return Err(NativeJpegError::Limit(
-                "32 MiB JPEG / 4096 byte frame identifier",
+        if frame.data.len() > 32 * 1024 * 1024 || frame.frame_id.len() > 4096 {
+            return Err(NativeImageError::Limit(
+                "32 MiB image / 4096 byte frame identifier",
             ));
         }
         // Free the superseded pending copy before reserving its replacement.
         state.pending.remove(&frame.camera_id);
-        let len = frame.jpeg.len();
+        let len = frame.data.len();
         if self
             .encoded_bytes
             .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |bytes| {
@@ -218,11 +218,11 @@ impl CameraDecodeQueue {
         let mut data = Vec::new();
         if let Err(error) = data.try_reserve_exact(len) {
             self.encoded_bytes.fetch_sub(len, Ordering::Relaxed);
-            return Err(NativeJpegError::Allocation(error));
+            return Err(NativeImageError::Allocation(error));
         }
-        data.extend_from_slice(&frame.jpeg);
+        data.extend_from_slice(&frame.data);
         let mut frame = frame.clone();
-        frame.jpeg = Bytes::from_owner(EncodedImage {
+        frame.data = Bytes::from_owner(EncodedImage {
             data,
             bytes: Arc::clone(&self.encoded_bytes),
         });
@@ -299,7 +299,8 @@ mod tests {
             arrival_time: ArrivalTime(time),
             measurement_time: MeasurementTime(time - 1),
             frame_id: "camera_optical".into(),
-            jpeg: jpeg.into(),
+            format: viewer_core::CameraImageFormat::Jpeg,
+            data: jpeg.into(),
         }
     }
     fn complete(queue: &mut CameraDecodeQueue) -> CameraDecodeResult {
@@ -327,7 +328,7 @@ mod tests {
             assert!(queue.submit(&frame(0, time), (32, 24)).unwrap());
         }
         assert_eq!(queue.outstanding.load(Ordering::Relaxed), 1);
-        assert_eq!(queue.encoded_bytes(), frame(0, 0).jpeg.len());
+        assert_eq!(queue.encoded_bytes(), frame(0, 0).data.len());
         queue.clear();
         assert_eq!(queue.encoded_bytes(), 0);
         // Backward seek permits an older log time in the new generation.
@@ -350,10 +351,10 @@ mod tests {
         let mut queue = CameraDecodeQueue::new(2).unwrap();
         let mut good = frame(1, 1);
         let mut backing = vec![0; 1024 * 1024];
-        backing[..good.jpeg.len()].copy_from_slice(&good.jpeg);
-        good.jpeg = Bytes::from(backing).slice(..good.jpeg.len());
+        backing[..good.data.len()].copy_from_slice(&good.data);
+        good.data = Bytes::from(backing).slice(..good.data.len());
         let mut bad = frame(0, 1);
-        bad.jpeg = Bytes::from_static(b"not jpeg");
+        bad.data = Bytes::from_static(b"not jpeg");
         {
             queue
                 .shared
@@ -365,8 +366,8 @@ mod tests {
             queue.submit(&good, (32, 24)).unwrap();
             let mut state = queue.shared.state.lock().unwrap();
             let pending = &state.pending[&good.camera_id].frame;
-            assert_ne!(pending.jpeg.as_ptr(), good.jpeg.as_ptr());
-            assert_eq!(pending.jpeg, good.jpeg);
+            assert_ne!(pending.data.as_ptr(), good.data.as_ptr());
+            assert_eq!(pending.data, good.data);
             state.active.remove(&good.camera_id);
         }
         queue.shared.available.notify_all();
@@ -404,7 +405,7 @@ mod tests {
             .active
             .extend([CameraId(0), CameraId(1), CameraId(2)]);
         let mut huge = frame(0, 0);
-        huge.jpeg = Bytes::from(vec![0; 32 * 1024 * 1024]);
+        huge.data = Bytes::from(vec![0; 32 * 1024 * 1024]);
         assert!(queue.submit(&huge, (32, 24)).unwrap());
         huge.camera_id = CameraId(1);
         assert!(queue.submit(&huge, (32, 24)).unwrap());
@@ -425,10 +426,10 @@ mod tests {
             .active
             .extend([CameraId(0), CameraId(1)]);
         let mut large = frame(0, 123456789);
-        let mut jpeg = large.jpeg.to_vec();
+        let mut jpeg = large.data.to_vec();
         // Valid JPEG with trailing padding: exercise the encoded limit without giant pixels.
         jpeg.resize(32 * 1024 * 1024, 0);
-        large.jpeg = jpeg.into();
+        large.data = jpeg.into();
         assert!(queue.submit(&large, (32, 24)).unwrap());
         large.camera_id = CameraId(1);
         assert!(queue.submit(&large, (32, 24)).unwrap());
@@ -468,7 +469,7 @@ mod tests {
         sender
             .send(CameraDecodeResult {
                 frame: frame(0, 0).into(),
-                image: Err(NativeJpegError::Limit("test")),
+                image: Err(NativeImageError::Limit("test")),
                 decode_time: Duration::ZERO,
                 generation: 0,
                 _lease: WorkLease(Arc::clone(&queue.outstanding)),

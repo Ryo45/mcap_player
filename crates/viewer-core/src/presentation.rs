@@ -112,7 +112,8 @@ mod tests {
             measurement_time: MeasurementTime(1),
             arrival_time: ArrivalTime(2),
             frame_id: "rear".into(),
-            jpeg: vec![].into(),
+            format: crate::CameraImageFormat::Jpeg,
+            data: vec![].into(),
         });
         let mut telemetry = TelemetryState::default();
         telemetry.apply(TelemetryFrame {

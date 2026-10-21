@@ -7,6 +7,6 @@ license.workspace = true
 [dependencies]
 viewer-mcap = { path = "../../crates/viewer-mcap" }
 anyhow.workspace = true
-image.workspace = true
+image = { workspace = true, features = ["png"] }
 mcap = { workspace = true, features = ["lz4", "zstd"] }
 viewer-core = { path = "../../crates/viewer-core" }

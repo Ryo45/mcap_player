@@ -51,7 +51,7 @@ pub(crate) fn playback_controls(ui: &mut egui::Ui, view: PlaybackView) -> Playba
 
 pub(crate) fn source_status(ui: &mut egui::Ui, model: &ViewerPresentation) {
     let diagnostics = &model.diagnostics;
-    ui.heading("JPEG Camera");
+    ui.heading("Camera");
     ui.label(format!("Source: {}", diagnostics.source));
     ui.label(format!("Topic: {}", diagnostics.primary_topic));
     let status = match model
@@ -88,8 +88,8 @@ pub(crate) fn source_status(ui: &mut egui::Ui, model: &ViewerPresentation) {
         ui.monospace(format!("Focus {focused_fps:>5.1} Hz"));
     }
     ui.monospace(format!(
-        "JPEG {:>5.2} ms · upload {:>5.2} ms",
-        diagnostics.performance.jpeg_decode_ms, diagnostics.performance.upload_ms
+        "image {:>5.2} ms · upload {:>5.2} ms",
+        diagnostics.performance.camera_decode_ms, diagnostics.performance.upload_ms
     ));
     ui.monospace(format!(
         "UI/render {:>5.2} ms",

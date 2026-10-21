@@ -50,7 +50,7 @@ fn camera_admission_coalesces_before_decode_and_keeps_bytes_slice() {
             measurement_time: MeasurementTime(1),
             frame_id: "camera".into(),
             format: "jpeg".into(),
-            jpeg: vec![1, 2, 3, 4],
+            data: vec![1, 2, 3, 4],
         })
         .unwrap(),
     );
@@ -69,9 +69,9 @@ fn camera_admission_coalesces_before_decode_and_keeps_bytes_slice() {
     assert_eq!(frame.arrival_time, ArrivalTime(2));
     assert_eq!(controller.counters().dropped, 1);
     let payload_start = payload.as_ptr() as usize;
-    let jpeg_start = frame.jpeg.as_ptr() as usize;
+    let jpeg_start = frame.data.as_ptr() as usize;
     assert!(jpeg_start >= payload_start);
-    assert!(jpeg_start + frame.jpeg.len() <= payload_start + payload.len());
+    assert!(jpeg_start + frame.data.len() <= payload_start + payload.len());
 }
 
 #[test]
@@ -81,7 +81,7 @@ fn camera_coalescing_discards_malformed_old_cdr_before_decode() {
             measurement_time: MeasurementTime(2),
             frame_id: "camera".into(),
             format: "jpeg".into(),
-            jpeg: vec![1, 2, 3],
+            data: vec![1, 2, 3],
         })
         .unwrap(),
     );
@@ -126,7 +126,7 @@ fn scheduled_camera_message(time: i64) -> RawMessage {
             measurement_time: MeasurementTime(time),
             frame_id: "camera".into(),
             format: "jpeg".into(),
-            jpeg: vec![1, 2, 3],
+            data: vec![1, 2, 3],
         })
         .unwrap()
         .into(),
@@ -332,7 +332,7 @@ fn camera_restore_bypasses_playback_scheduler_for_every_selected_camera() {
                 measurement_time: MeasurementTime(time),
                 frame_id: "camera".into(),
                 format: "jpeg".into(),
-                jpeg: vec![time as u8],
+                data: vec![time as u8],
             })
             .unwrap(),
         )
@@ -423,4 +423,57 @@ fn repeated_static_transforms_restore_only_updates_valid_at_target() {
             .unwrap(),
         vec![[2.0, 0.0, 0.0]]
     );
+}
+
+#[test]
+fn raw_camera_selection_coalescing_and_failed_restore_preserve_current_frame() {
+    use crate::message::cdr::wire::{push_string, push_u32};
+    let catalog = SourceCatalog {
+        time_range: None,
+        capabilities: Default::default(),
+        streams: vec![StreamDescriptor {
+            id: StreamId(7),
+            topic: "/raw".into(),
+            schema: "sensor_msgs/msg/Image".into(),
+            message_encoding: "cdr".into(),
+            schema_definition: None,
+            timing: Default::default(),
+        }],
+    };
+    let mut requirements = PlaybackRequirements::empty();
+    requirements.require_camera_topic("/raw");
+    let plan = SessionPlan::build(&catalog, "/raw", &requirements, &bindings()).unwrap();
+    let mut controller = CameraController::new(&plan);
+    let mut bytes = vec![0, 1, 0, 0];
+    push_u32(&mut bytes, 0);
+    push_u32(&mut bytes, 1);
+    push_string(&mut bytes, "optical").unwrap();
+    push_u32(&mut bytes, 1);
+    push_u32(&mut bytes, 2);
+    push_string(&mut bytes, "bgr8").unwrap();
+    bytes.push(0);
+    push_u32(&mut bytes, 8);
+    push_u32(&mut bytes, 8);
+    bytes.extend_from_slice(&[1, 2, 3, 4, 5, 6, 0, 0]);
+    let mut message = RawMessage {
+        stream_id: StreamId(7),
+        arrival_time: ArrivalTime(1),
+        publish_time_ns: None,
+        sequence: None,
+        payload: Bytes::from_static(b"bad"),
+    };
+    controller.admit(&message);
+    message.arrival_time = ArrivalTime(2);
+    message.payload = bytes.into();
+    controller.admit(&message);
+    controller.advance(Duration::ZERO);
+    let before = controller.state().latest_for(CameraId(0)).unwrap().clone();
+    assert_eq!(before.arrival_time, ArrivalTime(2));
+    assert!(matches!(before.format, crate::CameraImageFormat::Raw(_)));
+    assert_eq!(controller.counters().errors, 0);
+    assert_eq!(controller.counters().dropped, 1);
+    message.payload = Bytes::from_static(b"bad");
+    message.arrival_time = ArrivalTime(3);
+    assert!(controller.restore(&message).is_err());
+    assert_eq!(controller.state().latest_for(CameraId(0)), Some(&before));
 }

@@ -6,10 +6,10 @@ mod time;
 pub use schema::RosMessageSchema;
 
 pub use cdr::{
-    CompressedImage, DecodeError, DecodedCompressedImage, DecodedPointCloud2, LaserScan,
-    MAX_POINT_CLOUD2_MESSAGE_BYTES, MAX_POINT_CLOUD2_POINTS, Odometry, PathMessage,
+    CompressedImage, DecodeError, DecodedCompressedImage, DecodedPointCloud2, DecodedRawImage,
+    LaserScan, MAX_POINT_CLOUD2_MESSAGE_BYTES, MAX_POINT_CLOUD2_POINTS, Odometry, PathMessage,
     TransformStamped, decode_compressed_image, decode_compressed_image_bytes, decode_laser_scan,
-    decode_odometry, decode_path, decode_point_cloud2, decode_tf_message,
+    decode_odometry, decode_path, decode_point_cloud2, decode_raw_image_bytes, decode_tf_message,
     encode_compressed_image_cdr, encode_laser_scan_cdr, encode_odometry_cdr, encode_path_cdr,
     encode_tf_message_cdr,
 };

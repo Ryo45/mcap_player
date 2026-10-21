@@ -21,7 +21,7 @@ function slot(index) {
   slots[index] = state;
   return state;
 }
-export function decodeCameraBitmap(bytes, width, height) {
+export function decodeCameraBitmap(bytes, width, height, format, sourceWidth, sourceHeight, step) {
   return new Promise((resolve, reject) => {
     let index = slots.findIndex(state => !state || !state.job);
     if (index < 0) { reject(new Error('camera worker admission exceeded')); return; }
@@ -29,7 +29,7 @@ export function decodeCameraBitmap(bytes, width, height) {
     // Copy out of WASM before returning, then transfer rather than cloning to worker.
     const input = new Uint8Array(bytes);
     state.job = {resolve, reject};
-    try { state.worker.postMessage({bytes: input.buffer, width, height}, [input.buffer]); }
+    try { state.worker.postMessage({bytes: input.buffer, width, height, format, sourceWidth, sourceHeight, step}, [input.buffer]); }
     catch (error) { state.job = null; reject(error); }
   });
 }
