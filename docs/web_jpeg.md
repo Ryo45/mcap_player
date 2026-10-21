@@ -78,3 +78,6 @@ PNGはIHDRだけをRust側で読み、画素デコードはWorkerの`createImage
 16bit PNGとcompressedDepthには対応しない。JPEGのEXIF除去とIDCT相当のブラウザ縮小経路は維持する。
 入力形式ごとのパネルや履歴は追加していない。
 [対応範囲・制限・回帰確認](issue/016-camera-image-formats/README.md)を参照。
+
+透明なRaw/PNGでも前frameや旧overlayが残らないよう、base・focus・thumbnailのCanvasは各合成前にclearする。
+[透明画像の連続更新試験](verification/2026-10-21-self-review/README.md)でalpha蓄積を確認する。

@@ -74,3 +74,11 @@ Chunk展開とI/Oも残るため、TurboJPEGだけであらゆる記録が実時
 [libjpeg-turbo](https://github.com/libjpeg-turbo/libjpeg-turbo)、
 [rust-turbojpeg](https://github.com/honzasp/rust-turbojpeg)、
 [Decompressor API](https://docs.rs/turbojpeg/1.5.1/turbojpeg/struct.Decompressor.html)。
+
+
+## Alphaの契約（Raw/PNG入力）
+
+共通decoder出力はstraight RGBAであり、Camera stateのpixel値は変更しない。
+Native frontendはPNG/RGBA/BGRAの所有upload bufferだけをeguiのpremultiplied sRGBAへin-place変換する。
+JPEG/RGB/monoは不透明なので追加の変換走査を行わない。変換時間はupload準備の時間に含める。
+[セルフレビューと回帰確認](verification/2026-10-21-self-review/README.md)を参照。

@@ -455,3 +455,42 @@ fn ambiguous_incompatible_and_unindexed_parts_fail_explicitly() {
     assert!(McapSource::open_files(&[]).is_err());
     assert!(McapSource::open_files(std::slice::from_ref(&f.0)).is_err());
 }
+
+#[test]
+fn schema_only_part_does_not_extend_the_recording_to_time_zero() {
+    let f = Fixture::new();
+    let populated = f.part("messages.mcap", false, &[(100, 1), (200, 2)], true);
+    let empty = f.0.join("empty.mcap");
+    let mut writer = Writer::with_options(
+        std::fs::File::create(&empty).unwrap(),
+        WriteOptions::new().compression(None),
+    )
+    .unwrap();
+    writer
+        .add_schema("Unused", "ros2msg", b"uint8 unused")
+        .unwrap();
+    writer.flush().unwrap();
+    writer.finish().unwrap();
+    let summary = mcap::Summary::read(&std::fs::read(&empty).unwrap())
+        .unwrap()
+        .unwrap();
+    assert_eq!(summary.stats.as_ref().unwrap().message_count, 0);
+    assert!(
+        !summary.chunk_indexes.is_empty(),
+        "fixture must include a schema-only chunk"
+    );
+    for paths in [
+        vec![empty.clone(), populated.clone()],
+        vec![populated, empty.clone()],
+    ] {
+        let source = McapSource::open_files(&paths).unwrap();
+        assert_eq!(source.time_range().start, ArrivalTime(100));
+        assert_eq!(source.time_range().end_inclusive(), ArrivalTime(200));
+        assert_eq!(source.summary().stats.as_ref().unwrap().message_count, 3);
+    }
+    let second_empty = f.0.join("second-empty.mcap");
+    std::fs::copy(&empty, &second_empty).unwrap();
+    let empty_source = McapSource::open_files(&[empty, second_empty]).unwrap();
+    assert_eq!(empty_source.time_range().start, ArrivalTime(0));
+    assert_eq!(empty_source.time_range().end_inclusive(), ArrivalTime(0));
+}

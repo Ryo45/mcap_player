@@ -27,7 +27,7 @@ visibility are independent of this physical naming choice.
 | Change | Owner |
 | --- | --- |
 | Browser event wiring and committed frame order | `viewer-web/app.rs` |
-| Browser camera canvases, thumbnails, JPEG preparation, overlays | `viewer-web/app/camera.rs` |
+| Browser camera canvases, thumbnails, image composition, overlays | `viewer-web/app/camera.rs` |
 | Browser source opening/replacement and its generation | `viewer-web/app/source.rs` |
 | Remote source selection UI | `viewer-web/app/source/remote.rs` |
 | Remote HTTP / Local file access | `viewer-web/remote`, `viewer-web/local` |
@@ -48,6 +48,13 @@ visibility are independent of this physical naming choice.
 | Source-neutral derived artifact identity | `viewer-core/derived/source_fingerprint.rs` |
 | Preview build information and products | `viewer-core/derived/preview.rs` |
 | Bookmark documents | `viewer-core/derived/bookmark.rs` |
+| Camera image CDR / shared Raw layout validation | `viewer-core/message/cdr/image.rs`, `feature/camera.rs` |
+| Camera admission / canonical image state | `viewer-core/feature/controllers/camera.rs`, `feature/camera.rs` |
+| Pixel decode / source and output image geometry | `viewer-renderer/image.rs`, `native_image.rs` |
+| Native egui texture alpha convention | `viewer-native/graphics/camera.rs` |
+| ROS topic/schema declaration / latest-only input queue | `viewer-native/live/catalog.rs`, `admission.rs` |
+| ROS DynamicMessage to CDR reconstruction | `viewer-native/live/dynamic_cdr.rs` |
+| Split recording's part addresses / logical channels | `viewer-mcap/recording/segments.rs` |
 | Native builtin Odometry overview worker/request | `viewer-native/odometry_signals.rs` |
 | Native borrowed signal display inputs | `viewer-native/signal_view.rs` |
 
@@ -58,7 +65,7 @@ build its own lazy view. `SourceFingerprintValidationError` and
 using bookmark errors. MCAP open/read/query failures use `McapSourceError`.
 
 `PathFrame`/`PathState` describe path data used by both BEV and Scene;
-`PointCloudController` describes LaserScan materialization, while Scene
+`PointCloudController` describes LaserScan/PointCloud2 materialization, while Scene
 presentation still owns transforms and accumulation. The existing controller
 hierarchy remains explicit; this change introduces no new controller abstraction.
 
@@ -103,3 +110,13 @@ crate's entire API. Local public surface exports remain explicit.
 projection. Controllers retain canonical xyz. `viewer-web/app/physical_settings.rs`
 loads independent geometry/calibration inputs and projection settings. Renderers
 consume already-placed geometry. See [physical_geometry.md](physical_geometry.md).
+
+
+## Architecture review after input-format additions
+
+The [2026-10-21 review](verification/2026-10-21-self-review/README.md) checks the
+current dependency direction and layer ownership after split recordings, PNG/Raw
+Camera input and Raw ROS Live. No crate reorganization is currently required.
+Camera decoder pixels use straight RGBA; Native prepares egui's premultiplied
+texture representation at upload, while Web replaces Canvas contents before
+composing each frame. Platform rendering conventions do not change canonical data.
