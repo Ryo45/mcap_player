@@ -158,7 +158,7 @@ fn decode_chunk_backing(
     compressed: Bytes,
 ) -> Result<(Bytes, usize), DataLoadError> {
     // Browser support is a source policy, independent of Cargo feature unification.
-    if !matches!(request.compression.as_str(), "" | "zstd") {
+    if !matches!(request.compression.as_str(), "" | "zstd" | "lz4") {
         return Err(viewer_mcap::McapChunkError::UnsupportedCompression(
             request.compression.clone(),
         )
@@ -956,7 +956,7 @@ async fn read_browser_summary(
     }
     let summary = reader
         .finish()
-        .ok_or_else(|| DataLoadError::invalid_record("MCAP has no Summary section"))?;
+        .ok_or_else(|| DataLoadError::invalid_record("MCAP has no Summary section; explicitly reindex or convert the recording before opening it (automatic full-file scanning is disabled)"))?;
     Ok((summary, reads, bytes_read))
 }
 
@@ -1034,15 +1034,15 @@ mod tests {
     use std::{collections::BTreeMap, io::Cursor};
 
     #[test]
-    fn browser_compression_policy_stays_zstd_only_when_core_supports_lz4() {
+    fn browser_compression_policy_rejects_unknown_formats() {
         let request = ChunkReadRequest {
             offset: 0,
             length: 0,
-            compression: "lz4".into(),
+            compression: "unknown".into(),
             uncompressed_size: 0,
         };
         assert!(
-            matches!(decode_chunk_backing(&request, Bytes::new()), Err(DataLoadError::Chunk(error)) if matches!(error.as_ref(), viewer_mcap::McapChunkError::UnsupportedCompression(format) if format == "lz4"))
+            matches!(decode_chunk_backing(&request, Bytes::new()), Err(DataLoadError::Chunk(error)) if matches!(error.as_ref(), viewer_mcap::McapChunkError::UnsupportedCompression(format) if format == "unknown"))
         );
     }
 
@@ -1198,6 +1198,80 @@ mod tests {
             loaded.window.resident_bytes,
             loaded.diagnostics.decompressed_bytes
         );
+    }
+
+    #[test]
+    fn lz4_windows_and_exact_restore_share_one_decompressed_backing() {
+        // Rust-only compression also runs when testing this package without the native workspace features.
+        let bytes = recording(Some(Compression::Zstd));
+        let summary = Summary::read(&bytes).unwrap().unwrap();
+        let chunk = summary
+            .chunk_indexes
+            .iter()
+            .find(|c| !c.message_index_offsets.is_empty())
+            .unwrap();
+        let range = DataWindowTimeRange::new(ArrivalTime(1000), ArrivalTime(1031)).unwrap();
+        let start = chunk.compressed_data_offset().unwrap() as usize;
+        let raw = viewer_mcap::decode_mcap_chunk(
+            "zstd",
+            Bytes::copy_from_slice(&bytes[start..start + chunk.compressed_size as usize]),
+            chunk.uncompressed_size as usize,
+        )
+        .unwrap();
+        use std::io::Write;
+        let mut encoder = lz4_flex::frame::FrameEncoder::new(Vec::new());
+        encoder.write_all(&raw).unwrap();
+        let encoded = Bytes::from(encoder.finish().unwrap());
+        let request = ChunkReadRequest {
+            offset: 0,
+            length: encoded.len(),
+            compression: "lz4".into(),
+            uncompressed_size: raw.len(),
+        };
+        let (backing, decompressed) = decode_chunk_backing(&request, encoded).unwrap();
+        assert_eq!(decompressed, raw.len());
+        let parsed = parse_chunk_backing(
+            backing.clone(),
+            &summary.channels.keys().copied().collect(),
+            range,
+            |_, _| Ok(true),
+        )
+        .unwrap();
+        assert!(!parsed.messages.is_empty());
+        assert_eq!(parsed.backing.as_ptr(), backing.as_ptr());
+        assert!(
+            parsed
+                .messages
+                .iter()
+                .all(|m| m.payload.as_ptr() >= backing.as_ptr()
+                    && m.payload.as_ptr() < backing.as_ptr().wrapping_add(backing.len()))
+        );
+        let message = &parsed.messages[0];
+        let selection = RestoreChunkSelection {
+            exact: vec![(
+                message.stream_id.0 as u16,
+                message.arrival_time.0 as u64,
+                parsed.message_offsets[0],
+            )],
+            ..Default::default()
+        };
+        let mut work = RestoreWork::new(std::rc::Rc::new(std::cell::Cell::new(0)), 0);
+        let restored = parse_chunk_backing(
+            backing,
+            &summary.channels.keys().copied().collect(),
+            range,
+            |message, offset| {
+                if selection.contains(message, offset, ArrivalTime(1030)) {
+                    work.admit_message()?;
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            },
+        )
+        .unwrap();
+        assert_eq!(restored.messages.len(), 1);
+        assert_eq!(restored.messages[0].arrival_time, message.arrival_time);
     }
 
     fn first_parsed_chunk(bytes: &[u8]) -> ParsedChunk {

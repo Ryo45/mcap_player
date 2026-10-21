@@ -1,0 +1,784 @@
+{
+  "status": "failed",
+  "purpose": "functional check; SwiftShader, not hardware performance",
+  "data_sha256": "417f4193a2ced38f4a9a38a2dd68c023aa75977c3ff4f288703fb006eb172eb1",
+  "script_sha256": "0d89106869a73205df28e8758c92f1140fe7317d7dc0d07cc0b531fa1b37704b",
+  "seeks": [
+    {
+      "target_fraction": 0.8,
+      "thumbnails": [
+        {
+          "size": [
+            89,
+            67
+          ],
+          "alpha": 255,
+          "sha256": "3298ccc95a4bb06fc7090306178ff37b8370704ac28545318a9a7de6444ac622"
+        },
+        {
+          "size": [
+            89,
+            67
+          ],
+          "alpha": 255,
+          "sha256": "07925e61b986771bdcbb2ca5e65699dd001d323d25e92b15f75f7c3d417fda29"
+        },
+        {
+          "size": [
+            89,
+            67
+          ],
+          "alpha": 255,
+          "sha256": "1046dc71d5d421ef2aa7a6d4c40150647de0bd84de97029a3ee62cdc6afd7197"
+        },
+        {
+          "size": [
+            89,
+            67
+          ],
+          "alpha": 255,
+          "sha256": "be21e32bc87d19380b136e0f208c17ee2bc5f74352b4061db38f0b50063b580a"
+        },
+        {
+          "size": [
+            89,
+            67
+          ],
+          "alpha": 255,
+          "sha256": "b3d44e9c71e5871276477cd86bacf74e3b2975e21ea781fa279f5dd1437ccd12"
+        },
+        {
+          "size": [
+            89,
+            67
+          ],
+          "alpha": 255,
+          "sha256": "eaad8f80bcefbdfdb7a3e324f395719db95060408c410c5ed1fdd3b815cf6227"
+        },
+        {
+          "size": [
+            89,
+            67
+          ],
+          "alpha": 255,
+          "sha256": "cc9d02211b7cb23a4dbbb584b0418cfb34ec4fcb939876ec8fa1be0839c17a58"
+        }
+      ],
+      "status": "Ready \u00b7 73 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 31 pts \u00b7 scan 360 pts \u00b7 4.01s"
+    }
+  ],
+  "environment": {
+    "version": {
+      "Browser": "Chrome/143.0.7499.192",
+      "Protocol-Version": "1.3",
+      "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.0.0 Safari/537.36",
+      "V8-Version": "14.3.127.17",
+      "WebKit-Version": "537.36 (@be2c1f4fd451578a9ada68a0ac12d659362b44bf)",
+      "webSocketDebuggerUrl": "ws://127.0.0.1:39709/devtools/browser/793b7f82-16ef-46af-a4d6-1dfc962c066e"
+    },
+    "gpu": {
+      "gpu": {
+        "devices": [
+          {
+            "vendorId": 65535,
+            "deviceId": 65535,
+            "vendorString": "Google Inc. (Google)",
+            "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+            "driverVendor": "SwANGLE",
+            "driverVersion": "5.0.0"
+          }
+        ],
+        "auxAttributes": {
+          "amdSwitchable": false,
+          "canSupportThreadedTextureMailbox": false,
+          "directRenderingVersion": "",
+          "displayType": "ANGLE_SWIFTSHADER",
+          "glExtensions": "GL_AMD_performance_monitor GL_ANGLE_base_vertex_base_instance_shader_builtin GL_ANGLE_blob_cache GL_ANGLE_client_arrays GL_ANGLE_clip_cull_distance GL_ANGLE_compressed_texture_etc GL_ANGLE_copy_texture_3d GL_ANGLE_depth_texture GL_ANGLE_framebuffer_blit GL_ANGLE_framebuffer_multisample GL_ANGLE_get_image GL_ANGLE_get_serialized_context_string GL_ANGLE_get_tex_level_parameter GL_ANGLE_instanced_arrays GL_ANGLE_memory_object_flags GL_ANGLE_memory_size GL_ANGLE_multi_draw GL_ANGLE_pack_reverse_row_order GL_ANGLE_polygon_mode GL_ANGLE_program_binary_readiness_query GL_ANGLE_program_cache_control GL_ANGLE_read_only_depth_stencil_feedback_loops GL_ANGLE_relaxed_vertex_attribute_type GL_ANGLE_renderability_validation GL_ANGLE_request_extension GL_ANGLE_rgbx_internal_format GL_ANGLE_robust_client_memory GL_ANGLE_robust_fragment_shader_output GL_ANGLE_robust_resource_initialization GL_ANGLE_shader_pixel_local_storage GL_ANGLE_shader_pixel_local_storage_coherent GL_ANGLE_stencil_texturing GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ANGLE_texture_multisample GL_ANGLE_texture_usage GL_ANGLE_translated_shader_source GL_ANGLE_vulkan_image GL_ANGLE_yuv_internal_format GL_APPLE_clip_distance GL_ARM_rgba8 GL_ARM_shader_framebuffer_fetch GL_ARM_shader_framebuffer_fetch_depth_stencil GL_CHROMIUM_bind_generates_resource GL_CHROMIUM_bind_uniform_location GL_CHROMIUM_copy_compressed_texture GL_CHROMIUM_copy_texture GL_CHROMIUM_lose_context GL_EXT_EGL_image_array GL_EXT_EGL_image_external_wrap_modes GL_EXT_EGL_image_storage GL_EXT_base_instance GL_EXT_blend_minmax GL_EXT_buffer_storage GL_EXT_clear_texture GL_EXT_clip_control GL_EXT_clip_cull_distance GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_compressed_ETC1_RGB8_sub_texture GL_EXT_conservative_depth GL_EXT_copy_image GL_EXT_debug_label GL_EXT_debug_marker GL_EXT_depth_clamp GL_EXT_discard_framebuffer GL_EXT_disjoint_timer_query GL_EXT_draw_buffers GL_EXT_draw_buffers_indexed GL_EXT_draw_elements_base_vertex GL_EXT_float_blend GL_EXT_frag_depth GL_EXT_instanced_arrays GL_EXT_map_buffer_range GL_EXT_memory_object GL_EXT_memory_object_fd GL_EXT_occlusion_query_boolean GL_EXT_polygon_offset_clamp GL_EXT_read_format_bgra GL_EXT_robustness GL_EXT_sRGB GL_EXT_sRGB_write_control GL_EXT_semaphore GL_EXT_semaphore_fd GL_EXT_separate_shader_objects GL_EXT_shader_framebuffer_fetch GL_EXT_shader_framebuffer_fetch_non_coherent GL_EXT_shader_non_constant_global_initializers GL_EXT_shader_texture_lod GL_EXT_shadow_samplers GL_EXT_texture_border_clamp GL_EXT_texture_compression_bptc GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc_srgb GL_EXT_texture_cube_map_array GL_EXT_texture_filter_anisotropic GL_EXT_texture_format_BGRA8888 GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_rg GL_EXT_texture_sRGB_R8 GL_EXT_texture_sRGB_RG8 GL_EXT_texture_sRGB_decode GL_EXT_texture_shadow_lod GL_EXT_texture_storage GL_EXT_texture_type_2_10_10_10_REV GL_EXT_unpack_subimage GL_KHR_blend_equation_advanced GL_KHR_debug GL_KHR_robust_buffer_access_behavior GL_KHR_robustness GL_KHR_texture_compression_astc_ldr GL_NV_depth_buffer_float2 GL_NV_fence GL_NV_framebuffer_blit GL_NV_pack_subimage GL_NV_pixel_buffer_object GL_NV_polygon_mode GL_NV_read_depth GL_NV_read_depth_stencil GL_NV_read_stencil GL_NV_shader_noperspective_interpolation GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_EGL_image_external_essl3 GL_OES_EGL_sync GL_OES_compressed_EAC_R11_signed_texture GL_OES_compressed_EAC_R11_unsigned_texture GL_OES_compressed_EAC_RG11_signed_texture GL_OES_compressed_EAC_RG11_unsigned_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_compressed_ETC2_RGB8_texture GL_OES_compressed_ETC2_RGBA8_texture GL_OES_compressed_ETC2_punchthroughA_RGBA8_texture GL_OES_compressed_ETC2_punchthroughA_sRGB8_alpha_texture GL_OES_compressed_ETC2_sRGB8_alpha8_texture GL_OES_compressed_ETC2_sRGB8_texture GL_OES_copy_image GL_OES_depth24 GL_OES_depth32 GL_OES_depth_texture GL_OES_depth_texture_cube_map GL_OES_draw_buffers_indexed GL_OES_draw_elements_base_vertex GL_OES_element_index_uint GL_OES_fbo_render_mipmap GL_OES_get_program_binary GL_OES_mapbuffer GL_OES_packed_depth_stencil GL_OES_required_internalformat GL_OES_rgb8_rgba8 GL_OES_sample_shading GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_standard_derivatives GL_OES_surfaceless_context GL_OES_texture_3D GL_OES_texture_border_clamp GL_OES_texture_cube_map_array GL_OES_texture_float GL_OES_texture_float_linear GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_texture_npot GL_OES_texture_stencil8 GL_OES_texture_storage_multisample_2d_array GL_OES_vertex_array_object GL_OES_vertex_half_float GL_OES_vertex_type_10_10_10_2 GL_OVR_multiview GL_OVR_multiview2 ",
+          "glImplementationParts": "(gl=egl-angle,angle=swiftshader)",
+          "glRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "glResetNotificationStrategy": 33362,
+          "glVendor": "Google Inc. (Google)",
+          "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.26423 git hash: 2dfb5b7603d0)",
+          "glWsExtensions": "EGL_EXT_create_context_robustness EGL_ANGLE_surface_orientation EGL_KHR_create_context EGL_KHR_image EGL_KHR_image_base EGL_EXT_image_gl_colorspace EGL_KHR_gl_colorspace EGL_KHR_gl_texture_2D_image EGL_KHR_gl_texture_cubemap_image EGL_KHR_gl_renderbuffer_image EGL_KHR_get_all_proc_addresses EGL_KHR_fence_sync EGL_KHR_wait_sync EGL_ANGLE_create_context_webgl_compatibility EGL_CHROMIUM_create_context_bind_generates_resource EGL_KHR_swap_buffers_with_damage EGL_EXT_pixel_format_float EGL_KHR_surfaceless_context EGL_ANGLE_display_texture_share_group EGL_ANGLE_display_semaphore_share_group EGL_ANGLE_create_context_client_arrays EGL_ANGLE_program_cache_control EGL_ANGLE_robust_resource_initialization EGL_ANGLE_create_context_extensions_enabled EGL_ANDROID_blob_cache EGL_ANDROID_recordable EGL_ANGLE_create_context_backwards_compatible EGL_KHR_no_config_context EGL_IMG_context_priority EGL_KHR_create_context_no_error EGL_KHR_reusable_sync EGL_EXT_buffer_age EGL_ANGLE_create_surface_swap_interval EGL_ANGLE_vulkan_image EGL_KHR_partial_update EGL_ANGLE_global_fence_sync EGL_ANGLE_memory_usage_report ",
+          "glWsVendor": "Google Inc. (Google)",
+          "glWsVersion": "1.5 (ANGLE 2.1.26423 git hash: 2dfb5b7603d0)",
+          "hardwareSupportsVulkan": false,
+          "inProcessGpu": false,
+          "initializationTime": 0.108343,
+          "isAsan": false,
+          "isClangCoverage": false,
+          "jpegDecodeAcceleratorSupported": false,
+          "maxMsaaSamples": "4",
+          "optimus": false,
+          "passthroughCmdDecoder": true,
+          "pixelShaderVersion": "3.00",
+          "processCrashCount": 0,
+          "sandboxed": false,
+          "skiaBackendType": "GaneshGL",
+          "subpixelFontRendering": true,
+          "targetCpuBits": 64,
+          "vertexShaderVersion": "3.00",
+          "visibilityCallbackCallCount": 0
+        },
+        "featureStatus": {
+          "2d_canvas": "enabled",
+          "direct_rendering_display_compositor": "disabled_off_ok",
+          "gpu_compositing": "enabled",
+          "multiple_raster_threads": "enabled_on",
+          "opengl": "enabled_on",
+          "rasterization": "enabled",
+          "raw_draw": "disabled_off_ok",
+          "skia_graphite": "disabled_off",
+          "trees_in_viz": "disabled_off",
+          "video_decode": "enabled",
+          "video_encode": "disabled_software",
+          "vulkan": "disabled_off",
+          "webgl": "enabled",
+          "webgpu": "unavailable_software",
+          "webnn": "disabled_off"
+        },
+        "driverBugWorkarounds": [
+          "enable_webgl_timer_query_extensions",
+          "exit_on_context_lost",
+          "disabled_extension_GL_KHR_blend_equation_advanced",
+          "disabled_extension_GL_KHR_blend_equation_advanced_coherent"
+        ],
+        "videoDecoding": [],
+        "videoEncoding": [],
+        "imageDecoding": []
+      },
+      "modelName": "",
+      "modelVersion": "",
+      "commandLine": "/usr/bin/google-chrome --headless --no-sandbox --enable-unsafe-webgpu --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader --remote-debugging-port=39709 --user-data-dir=/tmp/mcap-camera-stress-e5605fzu --noerrdialogs --no-first-run --ozone-platform=headless --ozone-override-screen-size=800,600 --flag-switches-begin --flag-switches-end --enable-unsafe-swiftshader about:blank"
+    },
+    "command": [
+      "google-chrome",
+      "--headless",
+      "--no-sandbox",
+      "--enable-unsafe-webgpu",
+      "--enable-unsafe-swiftshader",
+      "--use-gl=angle",
+      "--use-angle=swiftshader",
+      "--remote-debugging-port=39709",
+      "--user-data-dir=/tmp/mcap-camera-stress-e5605fzu",
+      "about:blank"
+    ]
+  },
+  "failed_pixels": [
+    {
+      "size": [
+        89,
+        67
+      ],
+      "alpha": 0,
+      "sha256": "dd63f96f8f6fb46972295c2c4b0a145bf751f3cc3929626187a7fb662712737c"
+    },
+    {
+      "size": [
+        89,
+        67
+      ],
+      "alpha": 0,
+      "sha256": "dd63f96f8f6fb46972295c2c4b0a145bf751f3cc3929626187a7fb662712737c"
+    },
+    {
+      "size": [
+        89,
+        67
+      ],
+      "alpha": 255,
+      "sha256": "1f81fa56c14541e2c2cca5c247019bf0380ca5fb7f9f71fb96c1f94865ffcffc"
+    },
+    {
+      "size": [
+        89,
+        67
+      ],
+      "alpha": 255,
+      "sha256": "f179b22c573b42d5cc82d01e77ac6683db2c3d1b658ed751cfeaac102a4f1357"
+    },
+    {
+      "size": [
+        89,
+        67
+      ],
+      "alpha": 255,
+      "sha256": "39089d5239a1a5de0311f3e5438f0b84d239f919b3d332aa9173dda4504d5a0f"
+    },
+    {
+      "size": [
+        89,
+        67
+      ],
+      "alpha": 255,
+      "sha256": "7797f06a2053bf6aaa3ab205b0b8cd1e5ac6016725e1c8cdaa0860fdd890cb89"
+    },
+    {
+      "size": [
+        89,
+        67
+      ],
+      "alpha": 255,
+      "sha256": "429f63d61cde4163be6c09f47e285fcbfde2fe86e423783a11e99bd6a3352fcc"
+    }
+  ],
+  "rust_debug": {
+    "queue": "gen=3 active={} ready=0 pending=[] submitted={CameraId(0): (ArrivalTime(1768724926157727347), (320, 240)), CameraId(1): (ArrivalTime(1768724926157727347), (89, 67)), CameraId(2): (ArrivalTime(1768724926157727347), (89, 67)), CameraId(3): (ArrivalTime(1768724926157727347), (89, 67)), CameraId(4): (ArrivalTime(1768724926157727347), (89, 67)), CameraId(5): (ArrivalTime(1768724926157727347), (89, 67)), CameraId(6): (ArrivalTime(1768724926157727347), (89, 67))}",
+    "frames": "frames=[(0, 1768724926157727347, 6315), (1, 1768724926157727347, 6302), (2, 1768724926157727347, 6327), (3, 1768724926157727347, 6313), (4, 1768724926157727347, 6305), (5, 1768724926157727347, 6228), (6, 1768724926157727347, 6327)] base=[(0, 320, 240), (1, 89, 67), (2, 89, 67), (3, 89, 67), (4, 89, 67), (5, 89, 67), (6, 89, 67)] presented=[CameraId(0), CameraId(1), CameraId(2), CameraId(3), CameraId(4), CameraId(5), CameraId(6)]"
+  },
+  "failed_ui": "Open MCAP\nPlay\n0.25x\n0.5x\n1x\n2x\nReady \u00b7 142 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 31 pts \u00b7 scan 360 pts \u00b7 1.00s\nFocus 0.0/10 Hz \u00b7 others \u22645 Hz \u00b7 JPEG 0.00 ms \u00b7 canvas 0.00 ms \u00b7 tick 1.00 ms \u00b7 source/controller 0.00/0.00 ms \u00b7 Browser file 3 loads/60 reads \u00b7 1.8 MiB loaded/3.8 MiB decompressed \u00b7 1 windows/1.3 MiB logical/1.4 MiB RAM (1.08x) \u00b7 copied 0.0 MiB \u00b7 ahead 1.00/2.00s actual/target \u00b7 0 evicted \u00b7 last 25.0 ms (MCAP 2.0 ms) \u00b7 underruns 0 \u00b7 stale 0\nx +0.11 m \u00b7 y +0.65 m \u00b7 yaw +171.4\u00b0 \u00b7 0.07 m/s \u00b7 yaw rate +3.7\u00b0/s\nTOPICS / MESSAGES\n/camera/front/image/compressed\n/camera/front_left/image/compressed\n/camera/front_right/image/compressed\n/camera/left/image/compressed\n/camera/rear/image/compressed\n/camera/rear_left/image/compressed\n/camera/right/image/compressed\n/odom\n/planning/path\n/scan\n/tf\n/tf_static\nSelect a topic to see its schema and message count.\nRefresh message\n Follow cursor (250 ms)\nWaiting for a message at the committed cursor.\n3D VIEW \u00b7 WebGPU ready\n3D Scene\nBEV\nChase\nFree\nVehicle eye\n Accumulate points\nAuto color\nSolid\nRGB / RGBA\nIntensity\nIntensity range \u2013\nReset view\nbase_link \u00b7 0.283 \u00d7 0.306 \u00d7 0.141 m \u00b7 Path: original xyz \u00b7 bundled demo calibration (not measured)\nPoint cloud: 360 visible points \u00b7 base_scan \u2192 odom\nJPEG CAMERA FOCUS \u00b7 /CAMERA/FRONT/IMAGE/COMPRESSED \u00b7 PLAN 30 VISIBLE PTS \u00b7 BUNDLED DEMO CALIBRATION (NOT MEASURED)\n/camera/front/image/compressed \u00b7 0.0 Hz\n/camera/rear/image/compressed \u00b7 0.0 Hz\n/camera/left/image/compressed \u00b7 0.0 Hz\n/camera/right/image/compressed \u00b7 0.0 Hz\n/camera/front_left/image/compressed \u00b7 0.0 Hz\n/camera/front_right/image/compressed \u00b7 0.0 Hz\n/camera/rear_left/image/compressed \u00b7 0.0 Hz\nRemote Recording Server",
+  "errors": [],
+  "workers": [
+    {
+      "event": "created",
+      "url": "http://127.0.0.1:39205/camera_decode_worker.js"
+    },
+    {
+      "event": "submitted",
+      "width": 320,
+      "height": 240,
+      "bytes": 6156
+    },
+    {
+      "event": "created",
+      "url": "http://127.0.0.1:39205/camera_decode_worker.js"
+    },
+    {
+      "event": "submitted",
+      "width": 89,
+      "height": 67,
+      "bytes": 6140
+    },
+    {
+      "event": "completed",
+      "width": 320,
+      "height": 240
+    },
+    {
+      "event": "completed",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "event": "submitted",
+      "width": 89,
+      "height": 67,
+      "bytes": 6150
+    },
+    {
+      "event": "submitted",
+      "width": 89,
+      "height": 67,
+      "bytes": 6143
+    },
+    {
+      "event": "completed",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "event": "completed",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "event": "submitted",
+      "width": 89,
+      "height": 67,
+      "bytes": 6150
+    },
+    {
+      "event": "submitted",
+      "width": 89,
+      "height": 67,
+      "bytes": 6131
+    },
+    {
+      "event": "completed",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "event": "completed",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "event": "submitted",
+      "width": 89,
+      "height": 67,
+      "bytes": 6148
+    },
+    {
+      "event": "completed",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "event": "submitted",
+      "width": 320,
+      "height": 240,
+      "bytes": 6315
+    },
+    {
+      "event": "submitted",
+      "width": 89,
+      "height": 67,
+      "bytes": 6302
+    },
+    {
+      "event": "completed",
+      "width": 320,
+      "height": 240
+    },
+    {
+      "event": "completed",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "event": "submitted",
+      "width": 89,
+      "height": 67,
+      "bytes": 6327
+    },
+    {
+      "event": "submitted",
+      "width": 89,
+      "height": 67,
+      "bytes": 6313
+    },
+    {
+      "event": "completed",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "event": "completed",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "event": "submitted",
+      "width": 89,
+      "height": 67,
+      "bytes": 6305
+    },
+    {
+      "event": "submitted",
+      "width": 89,
+      "height": 67,
+      "bytes": 6228
+    },
+    {
+      "event": "completed",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "event": "completed",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "event": "submitted",
+      "width": 89,
+      "height": 67,
+      "bytes": 6327
+    },
+    {
+      "event": "completed",
+      "width": 89,
+      "height": 67
+    }
+  ],
+  "draws": [
+    {
+      "canvas": "",
+      "width": 320,
+      "height": 240
+    },
+    {
+      "canvas": "",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "camera-thumb-0",
+      "width": 320,
+      "height": 240
+    },
+    {
+      "canvas": "camera-thumb-1",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "camera",
+      "width": 320,
+      "height": 240
+    },
+    {
+      "canvas": "",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "camera-thumb-2",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "camera-thumb-3",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "camera-thumb-4",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "camera-thumb-5",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "camera-thumb-6",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "",
+      "width": 320,
+      "height": 240
+    },
+    {
+      "canvas": "",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "camera-thumb-0",
+      "width": 320,
+      "height": 240
+    },
+    {
+      "canvas": "camera-thumb-1",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "camera",
+      "width": 320,
+      "height": 240
+    },
+    {
+      "canvas": "",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "camera-thumb-2",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "camera-thumb-3",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "camera-thumb-4",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "camera-thumb-5",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "",
+      "width": 89,
+      "height": 67
+    },
+    {
+      "canvas": "camera-thumb-6",
+      "width": 89,
+      "height": 67
+    }
+  ],
+  "clears": [
+    {
+      "canvas": "camera"
+    },
+    {
+      "canvas": "camera"
+    },
+    {
+      "canvas": "camera-thumb-0",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-1",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-2",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-3",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-4",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-5",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-6",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-0",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-1",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-2",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-3",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-4",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-5",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-6",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-0",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-1",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-2",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-3",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-4",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-5",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-6",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-0",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-1",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-2",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-3",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-4",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-5",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera-thumb-6",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera",
+      "frames": "frames=[] base=[] presented=[]"
+    },
+    {
+      "canvas": "camera",
+      "frames": "frames=[(0, 1768724929197632296, 6156), (1, 1768724929197632296, 6140), (2, 1768724929197632296, 6150), (3, 1768724929197632296, 6143), (4, 1768724929197632296, 6150), (5, 1768724929197632296, 6131), (6, 1768724929197632296, 6148)] base=[(0, 320, 240), (1, 89, 67), (2, 89, 67), (3, 89, 67), (4, 89, 67), (5, 89, 67), (6, 89, 67)] presented=[CameraId(0), CameraId(1), CameraId(2), CameraId(3), CameraId(4), CameraId(5), CameraId(6)]"
+    },
+    {
+      "canvas": "camera",
+      "frames": "frames=[(0, 1768724929197632296, 6156), (1, 1768724929197632296, 6140), (2, 1768724929197632296, 6150), (3, 1768724929197632296, 6143), (4, 1768724929197632296, 6150), (5, 1768724929197632296, 6131), (6, 1768724929197632296, 6148)] base=[(0, 320, 240), (1, 89, 67), (2, 89, 67), (3, 89, 67), (4, 89, 67), (5, 89, 67), (6, 89, 67)] presented=[CameraId(0), CameraId(1), CameraId(2), CameraId(3), CameraId(4), CameraId(5), CameraId(6)]"
+    }
+  ],
+  "base_pixels": [
+    {
+      "size": [
+        0,
+        0
+      ],
+      "alpha": null
+    },
+    {
+      "size": [
+        0,
+        0
+      ],
+      "alpha": null
+    },
+    {
+      "size": [
+        0,
+        0
+      ],
+      "alpha": null
+    },
+    {
+      "size": [
+        0,
+        0
+      ],
+      "alpha": null
+    },
+    {
+      "size": [
+        0,
+        0
+      ],
+      "alpha": null
+    },
+    {
+      "size": [
+        0,
+        0
+      ],
+      "alpha": null
+    },
+    {
+      "size": [
+        0,
+        0
+      ],
+      "alpha": null
+    },
+    {
+      "size": [
+        320,
+        240
+      ],
+      "alpha": 0
+    },
+    {
+      "size": [
+        89,
+        67
+      ],
+      "alpha": 0
+    },
+    {
+      "size": [
+        89,
+        67
+      ],
+      "alpha": 255
+    },
+    {
+      "size": [
+        89,
+        67
+      ],
+      "alpha": 255
+    },
+    {
+      "size": [
+        89,
+        67
+      ],
+      "alpha": 255
+    },
+    {
+      "size": [
+        89,
+        67
+      ],
+      "alpha": 255
+    },
+    {
+      "size": [
+        89,
+        67
+      ],
+      "alpha": 255
+    }
+  ],
+  "error": "RuntimeError('camera pixels did not change after seek')"
+}

@@ -1,0 +1,45 @@
+{
+  "baseline_commit": "ef2455fc9b5ad7bae3ab22aeb83236149e9431ec",
+  "files_sha256": {
+    "Cargo.lock": "d8df22aa710db18a5bc0b286857c8ccb1d63407bab9498ea409b85763cd091e0",
+    "Cargo.toml": "65ed391b3470ee23dad01e06be20b634eda72383405d8e01198478e78fc3f570",
+    "apps/viewer-native/src/args.rs": "93ef8fb7cb3e6f58b077623a80d68ad86aa9aa334951db7a3b67d6d27477491c",
+    "apps/viewer-native/src/bookmarks.rs": "3ad048d71ea55981575c5dabf672fe2c39b109cee7140502caa543278cd74167",
+    "apps/viewer-native/src/preview.rs": "083406a456ee6aad300e511886b72f5dda4e2cdec4b9073b338fe19f941ca45f",
+    "apps/viewer-web/Cargo.toml": "87908c572e0ed39b2bd7ec13d32d3465e283452258b42f8b2c1b8585d9487b70",
+    "apps/viewer-web/src/local/catalog.rs": "f71332fd9ab450ea83b6473901982655224176dbac6fe8d4f06c11648d07f3be",
+    "apps/viewer-web/src/local/loader.rs": "771c1b97adf95dcddd4b84fede5c4735134f4198f0c507d5ba66adf032d87910",
+    "crates/viewer-mcap/Cargo.toml": "a6267222bf120f14a3131024d070ae3e7a214f6abb7d09bf95237fa2c364c9ec",
+    "crates/viewer-mcap/src/recording.rs": "4dcc9a75f8181f59207a0a9232d0e7b89b5ea177e669a09f1ec49732dfb7ea50",
+    "crates/viewer-mcap/src/recording/backing.rs": "f80fed5313a6a9a24d5e19affa31b7166faf4ce2c73858d8c8a33d3815be26e9",
+    "crates/viewer-mcap/src/recording/chunk.rs": "09ed1cb65bd09fedbd70768c4f491d0264584a918ace4e6da2d069294483a4d1",
+    "crates/viewer-mcap/src/recording/error.rs": "a872481a3662e9b79a73d1fde3a130f554f4352805f9ba83e62a1ce5ff907b92",
+    "crates/viewer-mcap/src/recording/file_messages.rs": "15788459a1f111079723b68e4a0ca7390ea297efed638d9ae4d4b0fa4ef683ca",
+    "crates/viewer-mcap/src/recording/source.rs": "2fdb78e057cf0059e5af0231a54ffdefdd3e3ad4403d28375ef562a115640308",
+    "crates/viewer-mcap/src/recording/source/index.rs": "da9b0572e2fae99ecafd1ba392e44df3ba5c1a8298899e264d2b70e976649f48",
+    "crates/viewer-mcap/src/recording/segments.rs": "56a78a69ec1b82589747282cfb9d3f2d9ce8e119976c9c562db79b2573558495",
+    "crates/viewer-mcap/src/recording/segments_tests.rs": "085b009b951b993a783fcc3ba597b144f384d0e7edd3e734fa8cc62b0936047b",
+    "tools/performance-probe/check_web_lz4.py": "b44af2a49108cb17f210fefdcf6168dff28a2d9c161f5a8f330779d20717d88e",
+    "tools/performance-probe/measure_web_camera_stress.py": "f6d4ecce37e73a3cef91e12c860b4c43d8291ca73566f5544ec39698b1533e58"
+  },
+  "browser_results": [
+    {
+      "file": "web-lz4-final-0.json",
+      "sha256": "0b01c92b404ca78d0986df9a2552d259e007391bcfc9746133ec10e591171934"
+    },
+    {
+      "file": "web-lz4-final-1.json",
+      "sha256": "8e4062b57842df8afd4ace568db0454d69ca2cad2cee05328fc3f3e2678da8a9"
+    },
+    {
+      "file": "web-lz4-final-2.json",
+      "sha256": "eafe21d536cc9a93a544f6ad73de8a24c9d42f8a873ff023fd9e5e63c33c6cc2"
+    }
+  ],
+  "wasm": {
+    "viewer-web-2ae6eb3f1ac3262d_bg.wasm": "ed458786ed39fe9e8e37fdc99dda94620156bd945e3e9f9d1c298abcd5bdd525"
+  },
+  "fixture_sha256": "417f4193a2ced38f4a9a38a2dd68c023aa75977c3ff4f288703fb006eb172eb1",
+  "fixture_encoder_binary_sha256": "bfc432c53d8cb6eb1c61d16f1ce68d109eb4c7df0f5d0b33e6846203afb45b0a",
+  "hardware_canvas_validation": "not established; headless accelerated Canvas readback was intermittently transparent; final functional runs use software Canvas2D"
+}

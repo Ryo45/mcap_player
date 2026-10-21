@@ -235,7 +235,7 @@ impl McapSource {
             else {
                 return Err(mcap::McapError::BadIndex.into());
             };
-            if index.channel_id != *channel {
+            if self.backing.channel_id(chunk_index, index.channel_id)? != *channel {
                 return Err(mcap::McapError::BadIndex.into());
             }
             let mut records = index.records;

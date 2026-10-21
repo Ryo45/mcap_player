@@ -49,10 +49,20 @@ behavior are unchanged. A foreign crate cannot add an inherent method to the
 core-owned schema type. No compatibility facade or reverse re-export is retained.
 
 Compression features `mcap-zstd` and `mcap-lz4` now belong to `viewer-mcap`, with
-the same default codec set. Browser Local explicitly enables only `mcap-zstd` and
-keeps its existing compression acceptance policy. Existing specialized MCAP
+the same default codec set. Browser Local enables `mcap-zstd` and `mcap-lz4-rust`;
+the latter uses a portable LZ4 frame decoder without the native LZ4 C dependency.
+Native keeps its C decoder. Both reject size mismatches and truncated LZ4 frames.
+Existing specialized MCAP
 readers/writers in the server and preview crate keep their direct format-library
 dependencies; this step does not redesign those implementations.
+
+Native `McapSource::open_file` also accepts a directory of indexed MCAP parts;
+`open_files` accepts an explicit list. `recording::segments` combines metadata into
+one internal address space and maps physical channel IDs to logical recording IDs.
+The existing traversal, query budgets, caches and transactional `McapPlayback` work
+across parts. Core/controllers/renderers have no part concept. The combined
+`summary()` contains internal read addresses, not an on-disk MCAP image. Summary
+facts and channel maps are shared across independent readers.
 
 ## Verification
 
