@@ -17,7 +17,7 @@ workspaceのfeature統合でNativeのC decoderが選ばれる場合と分け、p
 ~~~sh
 target/gpu-native/performance-probe rechunk \
   tests/fixtures/camera-jpeg/camera_7_5s.mcap /tmp/camera-lz4.mcap lz4 65536
-python3 tools/performance-probe/check_web_lz4.py \
+python3 tools/performance-probe/check_web_camera.py \
   --data /tmp/camera-lz4.mcap --output /tmp/web-lz4-new.json
 ~~~
 

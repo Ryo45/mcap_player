@@ -9,7 +9,7 @@ native-jpeg = ["dep:turbojpeg"]
 
 [dependencies]
 bytes.workspace = true
-image.workspace = true
+image = { workspace = true, features = ["png"] }
 viewer-core = { path = "../viewer-core" }
 wgpu.workspace = true
 

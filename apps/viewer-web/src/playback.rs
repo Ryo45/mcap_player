@@ -520,7 +520,11 @@ pub(crate) fn web_session_plan(
         .streams
         .iter()
         .filter(|stream| {
-            stream.message_encoding == "cdr" && stream.schema == "sensor_msgs/msg/CompressedImage"
+            stream.message_encoding == "cdr"
+                && matches!(
+                    stream.schema.as_str(),
+                    "sensor_msgs/msg/CompressedImage" | "sensor_msgs/msg/Image"
+                )
         })
         .collect::<Vec<_>>();
     for camera in &cameras {
@@ -681,7 +685,7 @@ mod tests {
                     measurement_time: MeasurementTime(time),
                     frame_id: "camera".into(),
                     format: "jpeg".into(),
-                    jpeg: vec![1, 2, 3],
+                    data: vec![1, 2, 3],
                 })
                 .unwrap(),
             ),
@@ -1231,7 +1235,7 @@ mod tests {
         let local_cameras = &local_state.cameras;
         let remote_cameras = &remote_state.cameras;
         assert_eq!(local_cameras, remote_cameras);
-        let retained_jpeg = &local_cameras.first().unwrap().1.jpeg;
+        let retained_jpeg = &local_cameras.first().unwrap().1.data;
         let jpeg_start = retained_jpeg.as_ptr() as usize;
         assert!(camera_payload_ranges.iter().any(|payload| {
             jpeg_start >= payload.start && jpeg_start + retained_jpeg.len() <= payload.end

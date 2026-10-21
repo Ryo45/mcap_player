@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Functional Browser Local LZ4 smoke: real file input, seven cameras, both seek directions."""
+"""Functional Browser Local Camera smoke: file input, pixels, and both seek directions."""
 import argparse
 import base64
 from functools import partial
@@ -16,6 +16,7 @@ from measure_web_camera_stress import browser
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--camera-formats', action='store_true', help='check known colors from ros-fixture camera-formats')
     parser.add_argument('--data',type=Path,required=True)
     parser.add_argument('--dist',type=Path,default=Path('apps/viewer-web/dist'))
     parser.add_argument('--output',type=Path,required=True)
@@ -26,7 +27,7 @@ def main():
     server=ThreadingHTTPServer(('127.0.0.1',0),partial(QuietHandler,directory=str(args.dist.resolve())))
     thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
     result={'status':'running','purpose':'functional check; SwiftShader + software Canvas2D, not hardware performance',
-            'data_sha256':hashlib.sha256(args.data.read_bytes()).hexdigest(),'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'seeks':[]}
+            'known_camera_colors':args.camera_formats,'data_sha256':hashlib.sha256(args.data.read_bytes()).hexdigest(),'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'seeks':[]}
     def wait(page,expression,label):
         deadline=time.monotonic()+20
         while time.monotonic()<deadline:
@@ -50,7 +51,7 @@ def main():
             wait(page,ready,'recording did not become ready')
             pixels="""(async()=>{const values=[];for(const c of document.querySelectorAll('.camera-card canvas')){
               const ctx=c.getContext('2d');const pixels=ctx.getImageData(0,0,c.width,c.height).data;
-              values.push({size:[c.width,c.height],alpha:pixels[(Math.floor(c.height/2)*c.width+Math.floor(c.width/2))*4+3],
+              values.push({topic:c.closest('.camera-card').textContent,pixel:Array.from(pixels.slice((Math.floor(c.height/2)*c.width+Math.floor(c.width/2))*4,(Math.floor(c.height/2)*c.width+Math.floor(c.width/2))*4+4)),size:[c.width,c.height],alpha:pixels[(Math.floor(c.height/2)*c.width+Math.floor(c.width/2))*4+3],
                 sha256:[...new Uint8Array(await crypto.subtle.digest('SHA-256',pixels))].map(v=>v.toString(16).padStart(2,'0')).join('')});}
               return values})()"""
             last=None
@@ -64,7 +65,14 @@ def main():
                     evaluation=page.call('Runtime.evaluate',{'expression':pixels,'returnByValue':True,'awaitPromise':True})
                     if 'exceptionDetails' in evaluation:raise RuntimeError(evaluation['exceptionDetails'])
                     current=evaluation['result']['value']
-                    if len(current)==7 and all(v['alpha']==255 for v in current) and (last is None or current[0]['sha256']!=last[0]['sha256']):break
+                    colors_ok=True
+                    if args.camera_formats:
+                        red=20+int(target*29)*3
+                        for value in current:
+                            expected=[red,red,red,255] if '/camera/mono8' in value['topic'] else [red,80,160,255]
+                            tolerance=3 if '/camera/jpeg' in value['topic'] else 0
+                            colors_ok &= all(abs(a-b)<=tolerance for a,b in zip(value['pixel'],expected))
+                    if len(current)==7 and colors_ok and all(v['alpha']==255 for v in current) and (last is None or current[0]['sha256']!=last[0]['sha256']):break
                     if time.monotonic()>deadline:
                         result['failed_pixels']=current
                         result['failed_ui']=page.evaluate('document.body.innerText')

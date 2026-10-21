@@ -71,7 +71,7 @@ pub(crate) struct Graphics {
     camera_slots: BTreeMap<CameraId, CameraTextureSlot>,
     camera_texture_ids: BTreeMap<CameraId, egui::TextureId>,
     camera_base_images: CameraBaseImageTracker,
-    jpeg_decoder: viewer_renderer::NativeJpegDecoder,
+    jpeg_decoder: viewer_renderer::NativeCameraDecoder,
     camera_decode: viewer_renderer::CameraDecodeQueue,
     presented_camera_frames: BTreeMap<CameraId, viewer_core::CameraFrameMetadata>,
     camera_decode_sizes: BTreeMap<CameraId, (u32, u32)>,

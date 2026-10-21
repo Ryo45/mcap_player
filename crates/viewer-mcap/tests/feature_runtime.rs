@@ -220,7 +220,7 @@ mod sharing_tests {
             // Camera panels/overlays, Scene and diagnostics borrow the very same feature states.
             let first = runtime.cameras().state().latest_for(CameraId(0)).unwrap();
             let second = runtime.cameras().state().latest_for(CameraId(0)).unwrap();
-            assert_eq!(first.jpeg.as_ptr(), second.jpeg.as_ptr());
+            assert_eq!(first.data.as_ptr(), second.data.as_ptr());
             assert!(std::ptr::eq(
                 runtime.transforms().state(),
                 runtime.transforms().state()

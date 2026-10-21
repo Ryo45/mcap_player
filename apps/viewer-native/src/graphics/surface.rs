@@ -84,7 +84,7 @@ impl Graphics {
             camera_slots: BTreeMap::new(),
             camera_texture_ids: BTreeMap::new(),
             camera_base_images: Default::default(),
-            jpeg_decoder: viewer_renderer::NativeJpegDecoder::new()?,
+            jpeg_decoder: viewer_renderer::NativeCameraDecoder::new()?,
             camera_decode: viewer_renderer::CameraDecodeQueue::new(2)?,
             presented_camera_frames: Default::default(),
             camera_decode_sizes: BTreeMap::new(),

@@ -1,6 +1,6 @@
 # リリース前アーキテクチャ課題
 
-追加対応: [015 分割MCAPの時間軸とWeb LZ4](015-split-mcap-and-web-lz4/README.md)。Nativeのディレクトリ入力とBrowser LocalのLZ4を実装。Raw Image/PNGは次段階。
+追加対応: [015 分割MCAPの時間軸とWeb LZ4](015-split-mcap-and-web-lz4/README.md)。Nativeのディレクトリ入力とBrowser LocalのLZ4を実装。Raw Image/PNGは[016 Camera入力形式](016-camera-image-formats/README.md)で対応。
 
 調査対象HEAD: `f16cd90da2e62c8ef0481d126ef87beca9e26161`
 

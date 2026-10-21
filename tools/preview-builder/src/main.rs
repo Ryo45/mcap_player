@@ -95,7 +95,7 @@ fn main() -> Result<()> {
             ArrivalTime(i64::try_from(message.log_time).context("message timestamp exceeds i64")?);
         if let Some(camera_id) = camera_ids.get(&message.channel.id).copied() {
             match decode_compressed_image(&message.data) {
-                Ok(image) => {
+                Ok(image) if image.format == "jpeg" => {
                     let bucket = arrival.0.div_euclid(CAMERA_BUCKET_NS);
                     if pending_cameras
                         .get(&camera_id)
@@ -119,7 +119,7 @@ fn main() -> Result<()> {
                         },
                     );
                 }
-                Err(_) => report.skipped_camera_frames += 1,
+                Ok(_) | Err(_) => report.skipped_camera_frames += 1,
             }
         } else if message.channel.topic == bindings.odometry_topic {
             let Ok(odometry) = decode_odometry(&message.data) else {
@@ -240,7 +240,7 @@ fn flush_camera<W: std::io::Write + std::io::Seek>(
     quality: u8,
     report: &mut Report,
 ) -> Result<()> {
-    let decoded = match image::load_from_memory(&pending.image.jpeg) {
+    let decoded = match image::load_from_memory(&pending.image.data) {
         Ok(decoded) => decoded,
         Err(_) => {
             report.skipped_camera_frames += 1;

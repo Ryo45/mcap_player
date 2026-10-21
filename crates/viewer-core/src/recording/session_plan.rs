@@ -7,6 +7,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeSet, fmt};
 
+const RAW_IMAGE_SCHEMA: &str = "sensor_msgs/msg/Image";
 const COMPRESSED_IMAGE_SCHEMA: &str = "sensor_msgs/msg/CompressedImage";
 const PATH_SCHEMA: &str = "nav_msgs/msg/Path";
 const ODOMETRY_SCHEMA: &str = "nav_msgs/msg/Odometry";
@@ -149,7 +150,9 @@ impl SessionPlan {
         let available_cameras = catalog
             .streams
             .iter()
-            .filter(|stream| accepts(stream, COMPRESSED_IMAGE_SCHEMA))
+            .filter(|stream| {
+                accepts(stream, COMPRESSED_IMAGE_SCHEMA) || accepts(stream, RAW_IMAGE_SCHEMA)
+            })
             .cloned()
             .collect::<Vec<_>>();
 
@@ -164,7 +167,7 @@ impl SessionPlan {
                 return Err(SessionPlanError::MissingRequiredStream {
                     feature: "Camera",
                     topic: topic.clone(),
-                    expected_schemas: &[COMPRESSED_IMAGE_SCHEMA],
+                    expected_schemas: &[COMPRESSED_IMAGE_SCHEMA, RAW_IMAGE_SCHEMA],
                 });
             }
         }
@@ -470,7 +473,7 @@ impl fmt::Display for SessionPlanError {
             ),
             Self::MissingPriorityCamera { topic } => write!(
                 f,
-                "priority Camera topic {topic} is not a selected CDR CompressedImage stream"
+                "priority Camera topic {topic} is not a selected CDR Image or CompressedImage stream"
             ),
             Self::MissingTransforms {
                 dynamic_topic,

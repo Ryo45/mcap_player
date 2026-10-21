@@ -645,7 +645,7 @@ mod tests {
             .latest_for(session.default_focused_camera().unwrap())
             .unwrap();
         assert_eq!(restored.arrival_time, expected.arrival_time);
-        assert_eq!(restored.jpeg, expected_image.jpeg);
+        assert_eq!(restored.data, expected_image.data);
         assert_eq!(session.playback_view().unwrap().cursor, target);
         assert!(diagnostics.message(&[]).is_none());
     }

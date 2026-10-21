@@ -1,3 +1,4 @@
+mod camera_formats;
 use anyhow::{Context, Result, anyhow, bail, ensure};
 use image::{
     ImageBuffer, Rgb, RgbImage,
@@ -50,6 +51,11 @@ fn main() -> Result<()> {
     let mut args = std::env::args().skip(1);
     let command = args.next().unwrap_or_else(|| "generate".to_owned());
     match command.as_str() {
+        "camera-formats" => {
+            let output = args.next().map(PathBuf::from).ok_or_else(usage)?;
+            ensure_no_more_args(args)?;
+            camera_formats::generate(&output)?;
+        }
         "generate" => {
             let output = PathBuf::from(args.next().unwrap_or_else(|| DEFAULT_OUTPUT.to_owned()));
             ensure_no_more_args(args)?;
@@ -127,7 +133,7 @@ fn main() -> Result<()> {
 
 fn usage() -> anyhow::Error {
     anyhow!(
-        "usage:\n  cargo run -p ros-fixture -- generate [output.mcap]\n  cargo run -p ros-fixture -- convert <input.mcap> <output.mcap> [duration-seconds]\n  cargo run -p ros-fixture -- verify <input.mcap>\n  cargo run -p ros-fixture -- inspect-camera <input.mcap>"
+        "usage:\n  cargo run -p ros-fixture -- camera-formats <output.mcap>\n  cargo run -p ros-fixture -- generate [output.mcap]\n  cargo run -p ros-fixture -- convert <input.mcap> <output.mcap> [duration-seconds]\n  cargo run -p ros-fixture -- verify <input.mcap>\n  cargo run -p ros-fixture -- inspect-camera <input.mcap>"
     )
 }
 
@@ -212,7 +218,7 @@ fn generate(output: &PathBuf) -> Result<()> {
             measurement_time: MeasurementTime(i64::try_from(measurement)?),
             frame_id: "camera_front_optical_frame".to_owned(),
             format: "jpeg compressed rgb8".to_owned(),
-            jpeg,
+            data: jpeg,
         })?;
         writer.write_to_known_channel(
             &MessageHeader {
@@ -529,7 +535,7 @@ fn convert_stream(
                 measurement_time: measurement,
                 frame_id: (*frame_id).to_owned(),
                 format: "jpeg compressed rgb8".to_owned(),
-                jpeg: camera_variant_jpeg(&jpeg, index)?,
+                data: camera_variant_jpeg(&jpeg, index)?,
             })?;
             writer.write_to_known_channel(
                 &MessageHeader {
@@ -1026,10 +1032,10 @@ fn verify_jpeg_mcap(input: &Path) -> Result<VerificationStats> {
         );
         let frame_index = camera_frames[camera_index];
         ensure!(
-            compressed.jpeg.starts_with(&[0xff, 0xd8]) && compressed.jpeg.ends_with(&[0xff, 0xd9]),
+            compressed.data.starts_with(&[0xff, 0xd8]) && compressed.data.ends_with(&[0xff, 0xd9]),
             "frame {frame_index} does not have JPEG markers"
         );
-        let decoded = image::load_from_memory(&compressed.jpeg)
+        let decoded = image::load_from_memory(&compressed.data)
             .with_context(|| format!("decode JPEG frame {frame_index}"))?;
         let frame_dimensions = (decoded.width(), decoded.height());
         if let Some(expected) = dimensions[camera_index] {

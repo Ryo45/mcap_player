@@ -173,7 +173,7 @@ fn eight_cameras_at_ten_hz_use_real_rgba_decode_and_keep_latest_pixels() {
 }
 
 #[test]
-fn raw_background_is_valid_ros_image_cdr_and_not_reported_as_decoded_camera() {
+fn raw_images_are_valid_ros_cdr_and_use_the_shared_camera_feature() {
     let path = fixture("raw");
     let mut source = McapSource::open_file(&path).unwrap();
     let image = source
@@ -206,8 +206,9 @@ fn raw_background_is_valid_ros_image_cdr_and_not_reported_as_decoded_camera() {
     let data = page.fields.iter().find(|f| f.name == "data").unwrap();
     assert!(matches!(&data.value, InspectorValue::Container(c) if c.len() == 320*240*3));
     let all = command(&["run", path.to_str().unwrap(), "all", "forward", "0"]);
-    assert_eq!(all["unknown_messages"], 20);
-    assert_eq!(all["feature_decoded"], 10);
+    assert_eq!(all["unknown_messages"], 0);
+    // The 200 ms probe tick coalesces the four 5 Hz Camera streams.
+    assert_eq!(all["feature_decoded"], 14);
     assert_eq!(all["jpeg_decodes"], 0);
     std::fs::remove_file(path).unwrap();
 }
