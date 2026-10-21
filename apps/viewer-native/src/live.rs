@@ -201,6 +201,10 @@ mod ros {
                 qos_for(LiveStreamRole::Camera, false),
                 QOS_PROFILE_SENSOR_DATA
             );
+            assert_eq!(
+                qos_for(LiveStreamRole::RawCamera, false),
+                QOS_PROFILE_SENSOR_DATA
+            );
             let reliable = qos_for(LiveStreamRole::DynamicTf, true);
             assert_eq!(reliable.reliability, QoSReliabilityPolicy::Reliable);
             assert_eq!(reliable.durability, QoSDurabilityPolicy::Volatile);
@@ -332,6 +336,7 @@ mod tests {
             "/camera/front/image/compressed",
             &requirements,
             &bindings,
+            &Default::default(),
         )
         .unwrap();
         let plan = SessionPlan::build(
@@ -419,6 +424,7 @@ mod tests {
             "/camera/front/image/compressed",
             &requirements,
             &bindings,
+            &Default::default(),
         )
         .unwrap();
         let plan = SessionPlan::build(
@@ -470,6 +476,166 @@ mod tests {
         assert_eq!(runtime.path().counters().errors, 1);
     }
 
+    #[test]
+    fn raw_live_admission_keeps_one_unconverted_latest_frame() {
+        use viewer_core::{
+            CameraImageFormat, RawImageEncoding, RawImageLayout, encode_raw_image_cdr,
+        };
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_all_cameras();
+        let catalog = super::catalog::live_catalog(
+            "/raw",
+            &requirements,
+            &bindings(),
+            &std::collections::BTreeSet::from(["/raw".into()]),
+        )
+        .unwrap();
+        let plan = SessionPlan::build(&catalog, "/raw", &requirements, &bindings()).unwrap();
+        let admission =
+            LiveAdmission::new(super::catalog::selected_stream_specs(&plan), 4).unwrap();
+        let stream = plan.camera_routes()[0].stream.id;
+        let layout = RawImageLayout {
+            width: 1,
+            height: 1,
+            step: 4,
+            encoding: RawImageEncoding::Bgr8,
+        };
+        for time in 0..100 {
+            let payload = encode_raw_image_cdr(
+                MeasurementTime(time),
+                "optical",
+                layout,
+                &[time as u8, 2, 3, 222],
+            )
+            .unwrap();
+            admission
+                .admit(
+                    RawMessage {
+                        stream_id: stream,
+                        arrival_time: ArrivalTime(time),
+                        publish_time_ns: None,
+                        sequence: None,
+                        payload: payload.into(),
+                    },
+                    0,
+                )
+                .unwrap();
+        }
+        assert_eq!(admission.diagnostics().resident_messages, 1);
+        assert_eq!(admission.diagnostics().coalesced_messages, 99);
+        let mut controller = CameraController::new(&plan);
+        for message in admission.take_ready() {
+            controller.admit(&message);
+        }
+        controller.advance(std::time::Duration::ZERO);
+        let frame = controller.state().latest_for(CameraId(0)).unwrap();
+        assert_eq!(frame.measurement_time, MeasurementTime(99));
+        assert_eq!(frame.format, CameraImageFormat::Raw(layout));
+        assert_eq!(frame.data.as_ref(), [99, 2, 3, 222]);
+        assert_eq!(controller.counters().decoded, 1);
+    }
+
+    #[cfg(feature = "ros2-live")]
+    #[test]
+    #[ignore = "requires ROS 2 Jazzy and ros2 bag; exercises real DDS Camera input"]
+    fn rosbag_raw_and_compressed_camera_smoke() {
+        use std::{
+            collections::BTreeSet,
+            process::Command,
+            thread,
+            time::{Duration, Instant},
+        };
+        let raw = BTreeSet::from(
+            ["rgb8", "bgr8", "rgba8", "bgra8", "mono8"].map(|name| format!("/camera/{name}")),
+        );
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_all_cameras();
+        for name in ["png", "jpeg"] {
+            requirements.require_camera_topic(format!("/camera/{name}"));
+        }
+        let catalog =
+            super::catalog::live_catalog("/camera/rgb8", &requirements, &bindings(), &raw).unwrap();
+        let plan =
+            SessionPlan::build(&catalog, "/camera/rgb8", &requirements, &bindings()).unwrap();
+        assert_eq!(plan.camera_routes().len(), 7);
+        let handle =
+            super::RosLiveHandle::start(super::catalog::selected_stream_specs(&plan), false)
+                .unwrap();
+        let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/fixtures/camera-formats/camera_formats.mcap");
+        let mut player = Command::new("ros2")
+            .args([
+                "bag",
+                "play",
+                "--input",
+                fixture.to_str().unwrap(),
+                "mcap",
+                "--delay",
+                "2",
+                "--disable-keyboard-controls",
+            ])
+            .spawn()
+            .unwrap();
+        let deadline = Instant::now() + Duration::from_secs(15);
+        let mut runtime = FeatureRuntime::new(&plan, true);
+        let mut seen = BTreeSet::new();
+        while Instant::now() < deadline {
+            thread::sleep(Duration::from_millis(50));
+            let messages = handle.take_ready();
+            seen.extend(messages.iter().map(|m| m.stream_id));
+            runtime.process_messages(Duration::from_millis(50), &messages);
+            if player.try_wait().unwrap().is_some() {
+                break;
+            }
+        }
+        if player.try_wait().unwrap().is_none() {
+            player.kill().unwrap();
+            player.wait().unwrap();
+        }
+        thread::sleep(Duration::from_millis(100));
+        let messages = handle.take_ready();
+        seen.extend(messages.iter().map(|m| m.stream_id));
+        runtime.process_messages(Duration::from_millis(250), &messages);
+        assert!(handle.error().is_none(), "{:?}", handle.error());
+        assert_eq!(seen.len(), 7);
+        assert_eq!(handle.diagnostics().adapter_errors, 0);
+        assert!(handle.diagnostics().queue_high_water_mark <= 7);
+        assert_eq!(runtime.cameras().counters().errors, 0);
+        for route in plan.camera_routes() {
+            let frame = runtime
+                .cameras()
+                .state()
+                .latest_for(route.camera_id)
+                .expect("camera received a valid ROS frame");
+            let sequence = (frame.measurement_time.0 - 1_735_689_600_000_000_000) / 100_000_000;
+            assert!((0..30).contains(&sequence));
+            let image = viewer_renderer::NativeCameraDecoder::new()
+                .unwrap()
+                .decode_frame(frame, (160, 120))
+                .unwrap();
+            let red = 20 + sequence as u8 * 3;
+            let expected = if route.stream.topic.ends_with("mono8") {
+                [red, red, red, 255]
+            } else {
+                [red, 80, 160, 255]
+            };
+            let tolerance = if route.stream.topic.ends_with("jpeg") {
+                3
+            } else {
+                0
+            };
+            for (actual, expected) in image.image.rgba[..4].iter().zip(expected) {
+                assert!(
+                    actual.abs_diff(expected) <= tolerance,
+                    "{}: {:?}",
+                    route.stream.topic,
+                    &image.image.rgba[..4]
+                );
+            }
+        }
+        eprintln!("Raw/PNG/JPEG DDS Camera smoke: {:?}", handle.diagnostics());
+    }
+
     #[cfg(feature = "ros2-live")]
     #[test]
     #[ignore = "requires a sourced ROS 2 installation"]
@@ -489,6 +655,7 @@ mod tests {
             "/camera/front/image/compressed",
             &requirements,
             &bindings,
+            &Default::default(),
         )
         .unwrap();
         let plan = SessionPlan::build(

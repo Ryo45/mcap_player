@@ -11,6 +11,7 @@ pub(super) fn encode_dynamic_message(
     message: &DynamicMessage,
 ) -> Result<Vec<u8>, String> {
     let encoded = match role {
+        LiveStreamRole::RawCamera => return encode_raw_image(message),
         LiveStreamRole::Camera => encode_compressed_image_cdr(&extract_compressed_image(message)?),
         LiveStreamRole::Path => encode_path_cdr(&extract_path(message)?),
         LiveStreamRole::Odometry => encode_odometry_cdr(&extract_odometry(message)?),
@@ -214,5 +215,31 @@ fn double(value: Option<Value<'_>>, name: &str) -> Result<f64, String> {
     match value {
         Some(Value::Simple(SimpleValue::Double(value))) => Ok(*value),
         _ => Err(format!("{name} has the wrong type")),
+    }
+}
+
+fn encode_raw_image(message: &DynamicMessage) -> Result<Vec<u8>, String> {
+    use viewer_core::{RawImageEncoding, RawImageLayout, encode_raw_image_cdr};
+    let (measurement_time, frame_id) = header(message.get("header"), "header")?;
+    let encoding =
+        RawImageEncoding::from_ros_encoding(&string(message.get("encoding"), "encoding")?)
+            .map_err(|e| e.to_string())?;
+    match message.get("is_bigendian") {
+        Some(Value::Simple(SimpleValue::Uint8(flag))) if *flag <= 1 => {}
+        _ => return Err("is_bigendian must be 0 or 1".into()),
+    }
+    let layout = RawImageLayout {
+        width: uint32(message.get("width"), "width")?,
+        height: uint32(message.get("height"), "height")?,
+        step: uint32(message.get("step"), "step")?,
+        encoding,
+    };
+    match message.get("data") {
+        Some(Value::Sequence(SequenceValue::Uint8Sequence(value)))
+        | Some(Value::Sequence(SequenceValue::OctetSequence(value))) => {
+            encode_raw_image_cdr(measurement_time, &frame_id, layout, value.as_slice())
+                .map_err(|e| e.to_string())
+        }
+        _ => Err("data has the wrong type".into()),
     }
 }

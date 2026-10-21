@@ -1,4 +1,8 @@
-use std::{collections::BTreeMap, error::Error, fmt};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    error::Error,
+    fmt,
+};
 use viewer_core::{
     PlaybackRequirements, SessionPlan, SourceCapabilities, SourceCatalog, StreamDescriptor,
     StreamId, StreamTimingSummary, WorkspaceBindings,
@@ -7,6 +11,7 @@ use viewer_core::{
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(crate) enum LiveStreamRole {
     Camera,
+    RawCamera,
     Path,
     Odometry,
     LaserScan,
@@ -18,6 +23,7 @@ impl LiveStreamRole {
     pub(crate) fn schema(self) -> &'static str {
         match self {
             Self::Camera => "sensor_msgs/msg/CompressedImage",
+            Self::RawCamera => "sensor_msgs/msg/Image",
             Self::Path => "nav_msgs/msg/Path",
             Self::Odometry => "nav_msgs/msg/Odometry",
             Self::LaserScan => "sensor_msgs/msg/LaserScan",
@@ -42,7 +48,7 @@ pub(crate) struct LiveStreamSpec {
 impl LiveStreamSpec {
     pub(crate) fn new(stream: &StreamDescriptor, role: LiveStreamRole) -> Self {
         let delivery = match role {
-            LiveStreamRole::Camera => LiveDeliveryClass::Latest,
+            LiveStreamRole::Camera | LiveStreamRole::RawCamera => LiveDeliveryClass::Latest,
             LiveStreamRole::Path
             | LiveStreamRole::Odometry
             | LiveStreamRole::LaserScan
@@ -76,18 +82,33 @@ impl Error for LiveCatalogError {}
 
 /// Builds the source facts that the concrete ROS adapter will subscribe to.
 ///
-/// The CLI-selected Camera remains the only discovery input for an `all cameras` panel. Fixed
+/// The primary Camera and explicitly declared Raw cameras supply topics for an `all cameras` panel. Fixed
 /// Camera panels contribute their explicit topics. Feature inputs come from the closed workspace
 /// bindings and have concrete schemas derived from their roles.
 pub(crate) fn live_catalog(
     primary_camera_topic: &str,
     requirements: &PlaybackRequirements,
     bindings: &WorkspaceBindings,
+    raw_camera_topics: &BTreeSet<String>,
 ) -> Result<SourceCatalog, LiveCatalogError> {
     let mut topics = BTreeMap::<String, LiveStreamRole>::new();
-    insert_topic(&mut topics, primary_camera_topic, LiveStreamRole::Camera)?;
+    let camera_role = |topic: &str| {
+        if raw_camera_topics.contains(topic) {
+            LiveStreamRole::RawCamera
+        } else {
+            LiveStreamRole::Camera
+        }
+    };
+    insert_topic(
+        &mut topics,
+        primary_camera_topic,
+        camera_role(primary_camera_topic),
+    )?;
+    for topic in raw_camera_topics {
+        insert_topic(&mut topics, topic, LiveStreamRole::RawCamera)?;
+    }
     for topic in requirements.explicit_camera_topics() {
-        insert_topic(&mut topics, topic, LiveStreamRole::Camera)?;
+        insert_topic(&mut topics, topic, camera_role(topic))?;
     }
     for (topic, role) in [
         (&bindings.path_topic, LiveStreamRole::Path),
@@ -148,7 +169,16 @@ pub(crate) fn selected_stream_specs(plan: &SessionPlan) -> Vec<LiveStreamSpec> {
     let mut specs = plan
         .camera_routes()
         .iter()
-        .map(|route| LiveStreamSpec::new(&route.stream, LiveStreamRole::Camera))
+        .map(|route| {
+            LiveStreamSpec::new(
+                &route.stream,
+                if route.stream.schema == "sensor_msgs/msg/Image" {
+                    LiveStreamRole::RawCamera
+                } else {
+                    LiveStreamRole::Camera
+                },
+            )
+        })
         .chain(
             plan.path_stream()
                 .map(|stream| LiveStreamSpec::new(stream, LiveStreamRole::Path)),
@@ -201,10 +231,20 @@ mod tests {
         requirements.require_odometry();
         requirements.require_point_cloud();
         requirements.require_transforms();
-        let catalog =
-            live_catalog("/camera/front/image/compressed", &requirements, &bindings()).unwrap();
-        let second =
-            live_catalog("/camera/front/image/compressed", &requirements, &bindings()).unwrap();
+        let catalog = live_catalog(
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings(),
+            &Default::default(),
+        )
+        .unwrap();
+        let second = live_catalog(
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings(),
+            &Default::default(),
+        )
+        .unwrap();
         assert_eq!(catalog.streams, second.streams);
 
         let plan = SessionPlan::build(
@@ -237,8 +277,13 @@ mod tests {
         requirements.require_camera_topic("/camera/front_left/image/compressed");
         requirements.require_camera_topic("/camera/front/image/compressed");
         requirements.require_camera_topic("/camera/front_right/image/compressed");
-        let catalog =
-            live_catalog("/camera/front/image/compressed", &requirements, &bindings()).unwrap();
+        let catalog = live_catalog(
+            "/camera/front/image/compressed",
+            &requirements,
+            &bindings(),
+            &Default::default(),
+        )
+        .unwrap();
         let plan = SessionPlan::build(
             &catalog,
             "/camera/front/image/compressed",
@@ -250,6 +295,57 @@ mod tests {
     }
 
     #[test]
+    fn raw_and_compressed_cameras_share_latest_delivery_and_fixed_panel_selection() {
+        let raw = BTreeSet::from(["/raw".to_owned(), "/unused_raw".to_owned()]);
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_camera_topic("/raw");
+        requirements.require_camera_topic("/compressed");
+        let catalog = live_catalog("/raw", &requirements, &bindings(), &raw).unwrap();
+        let plan = SessionPlan::build(&catalog, "/raw", &requirements, &bindings()).unwrap();
+        let specs = selected_stream_specs(&plan);
+        assert_eq!(specs.len(), 2);
+        assert!(
+            specs
+                .iter()
+                .all(|s| s.delivery == LiveDeliveryClass::Latest)
+        );
+        assert_eq!(
+            specs
+                .iter()
+                .find(|s| s.stream.topic == "/raw")
+                .unwrap()
+                .role,
+            LiveStreamRole::RawCamera
+        );
+        assert_eq!(
+            specs
+                .iter()
+                .find(|s| s.stream.topic == "/compressed")
+                .unwrap()
+                .role,
+            LiveStreamRole::Camera
+        );
+        assert!(!specs.iter().any(|s| s.stream.topic == "/unused_raw"));
+        requirements.require_all_cameras();
+        assert_eq!(
+            SessionPlan::build(&catalog, "/raw", &requirements, &bindings())
+                .unwrap()
+                .camera_routes()
+                .len(),
+            3
+        );
+        assert!(
+            live_catalog(
+                "/raw",
+                &requirements,
+                &bindings(),
+                &BTreeSet::from(["/odom".into()])
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
     fn one_topic_cannot_claim_two_live_roles() {
         let mut duplicate = bindings();
         duplicate.odometry_topic = duplicate.path_topic.clone();
@@ -258,6 +354,7 @@ mod tests {
                 "/camera/front/image/compressed",
                 &PlaybackRequirements::empty(),
                 &duplicate,
+                &Default::default()
             )
             .unwrap_err()
             .to_string()

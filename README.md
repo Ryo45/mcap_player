@@ -137,6 +137,19 @@ cargo run -p viewer-native --features ros2-live -- \
   --live --camera-topic /camera/front/image/compressed
 ```
 
+Raw `sensor_msgs/msg/Image` はtopicを明示して購読します（`rgb8 / bgr8 / rgba8 / bgra8 / mono8`）。
+
+```bash
+cargo run -p viewer-native --features ros2-live -- \
+  --live --live-raw-camera-topic /camera/image_raw
+```
+
+`--live-raw-camera-topic`は複数回指定でき、JPEG/PNGのCompressedImageとも混在できます。
+`--camera-topic`未指定時は、Raw topicの辞書順先頭を優先Cameraにします。優先Cameraは`--camera-topic`で指定できます。
+固定topicのCameraパネルはlayout側のtopicに従い、表示するものだけを購読します。
+ROSグラフからの型の自動判定は行わないため、publisherの起動前にも購読できます。
+[実DDSでの検証結果](docs/verification/2026-10-21-camera-formats/raw-live.md)を参照してください。
+
 既定の QoS は best effort / volatile です。Reliable にする場合は `--reliable` を追加してください。動作確認用データの生成手順は [ROS fixture](tools/ros-fixture/README.md) を参照してください。
 
 ## 対応データと制約
@@ -146,7 +159,7 @@ cargo run -p viewer-native --features ros2-live -- \
 - 車両状態: `/odom`
 - 点群表示: LaserScan / PointCloud2（XYZ・RGB/RGBA・intensity着色。PointCloud2は記録入力）
 - カメラ内部パラメータ: `config/camera_calibration.json`
-- 未対応: 16bit・深度画像・compressedDepth、H.264/H.265、Raw Image の ROS live 入力、ブラウザでの live 入力
+- 未対応: 16bit・深度画像・compressedDepth、H.264/H.265、ブラウザでの live 入力
 
 ### PointCloud2を表示する
 

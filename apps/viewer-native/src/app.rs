@@ -429,17 +429,21 @@ impl ApplicationHandler for App {
             }
         }
         self.window = Some(window);
-        match self.args.mode {
+        match &self.args.mode {
             SourceMode::Mcap => {
                 let path = self.args.mcap.clone();
                 self.load(&path);
             }
             #[cfg(feature = "ros2-live")]
-            SourceMode::Ros { reliable } => {
+            SourceMode::Ros {
+                reliable,
+                raw_camera_topics,
+            } => {
                 let requirements = self.workspace.data_requirements();
                 let session = ViewerSession::open_live(
                     self.args.topic.clone(),
-                    reliable,
+                    *reliable,
+                    raw_camera_topics,
                     &requirements.playback,
                     self.workspace.bindings(),
                 );

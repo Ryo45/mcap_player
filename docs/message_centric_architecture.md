@@ -385,3 +385,11 @@ See [physical_geometry.md](physical_geometry.md) for contracts and bounded TF li
 PointCloud2 XYZ and source RGBA/intensity attributes are decoded once in core; Scene presentation owns color mode and fixed intensity-range mapping. Native/Web use the same linear RGBA and existing TF/accumulation path. See [PointCloud2](point_cloud2.md).
 
 Camera also accepts PNG CompressedImage and 8-bit ROS Image in the same routes/state/queues. Raw layout retains width, height, step and channel encoding; payload bytes remain shared until presentation admission. Raw conversion samples directly into display-sized RGBA, preserving row padding semantics without a full-size RGBA intermediate. PNG requires full codec reconstruction before resizing; its source work is bounded but not reduced by a smaller target. See [Camera image formats](issue/016-camera-image-formats/README.md) for limits and verification.
+
+Native ROS Live explicitly declares Image topics with repeatable `--live-raw-camera-topic`.
+Other configured Camera topics use CompressedImage. These source facts resolve before SessionPlan,
+so subscriptions work before publishers start and selected Raw/Compressed cameras share the
+same latest-only admission, feature state and bounded pixel workers. The adapter serializes borrowed
+8-bit Raw pixels directly into CDR without a temporary pixel Vec. Shared encoding/layout validation
+rejects unsupported encodings, malformed stride/data lengths and excessive payloads before admission.
+DDS deserialization/QoS buffers remain outside the viewer's own latest-only mailbox budget.

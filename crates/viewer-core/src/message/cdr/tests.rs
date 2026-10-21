@@ -326,3 +326,44 @@ fn compressed_png_and_empty_jpeg_format_share_the_codec_boundary() {
         assert_eq!(decode_compressed_image(&bytes).unwrap().format, expected);
     }
 }
+
+#[test]
+fn raw_image_encoder_round_trips_all_supported_layouts_and_rejects_invalid_input() {
+    use crate::{RawImageEncoding, RawImageLayout, decode_raw_image_bytes, encode_raw_image_cdr};
+    for encoding in [
+        RawImageEncoding::Rgb8,
+        RawImageEncoding::Bgr8,
+        RawImageEncoding::Rgba8,
+        RawImageEncoding::Bgra8,
+        RawImageEncoding::Mono8,
+    ] {
+        let layout = RawImageLayout {
+            width: 3,
+            height: 2,
+            step: 3 * encoding.channels() + 2,
+            encoding,
+        };
+        let data = vec![17; layout.step as usize * 2];
+        let encoded = encode_raw_image_cdr(MeasurementTime(-1), "optical", layout, &data).unwrap();
+        let decoded = decode_raw_image_bytes(encoded.into()).unwrap();
+        assert_eq!(decoded.measurement_time, MeasurementTime(-1));
+        assert_eq!(decoded.frame_id, "optical");
+        assert_eq!(decoded.layout, layout);
+        assert_eq!(decoded.data, data);
+        assert!(
+            encode_raw_image_cdr(
+                MeasurementTime(0),
+                "optical",
+                layout,
+                &data[..data.len() - 1]
+            )
+            .is_err()
+        );
+        assert!(
+            encode_raw_image_cdr(MeasurementTime(0), &"x".repeat(4097), layout, &data).is_err()
+        );
+    }
+    for unsupported in ["mono16", "16UC1", "32FC1", "rgb16", ""] {
+        assert!(RawImageEncoding::from_ros_encoding(unsupported).is_err());
+    }
+}

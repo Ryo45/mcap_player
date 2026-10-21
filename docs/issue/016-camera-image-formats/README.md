@@ -36,10 +36,13 @@ Native PNGのdecoder allocation budgetは256 MiB/ジョブ。縮小後のpixel�
 PNGの圧縮によるI/O削減とcodecコストは別のトレードオフであり、今回の機能テストから高速化率は主張しない。
 Rawのnearest samplingには細線や模様のaliasingがある。より高品質な縮小は必要性を測って別途検討する。
 
+## Raw ROS live入力の追加
+
+Raw ROS live入力は後続変更で対応済み。`--live-raw-camera-topic TOPIC`を繰り返してImageのsource factを宣言する。グラフからの自動型判定は行わない。[実DDS検証](../../verification/2026-10-21-camera-formats/raw-live.md)を参照。
+
 ## 今回含めないもの
 
 mono16、16UC1、32FC1、16bit PNG、compressedDepth、H.264/H.265、CameraInfo対応。
-ROS liveのCamera schema指定・発見は引き続きCompressedImage用（JPEG/PNG）で、Raw liveのdiscoveryは別課題。
 preview-builderのsidecar画像生成は引き続きJPEG入力のみ。Raw/PNGの再生用Camera表示と別に、preview workloadとして後で拡張する。
 巨大なprofile、formatごとのパネル、manager/provider抽象は追加していない。
 
