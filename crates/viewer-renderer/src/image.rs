@@ -1,5 +1,7 @@
 use std::fmt;
 
+/// Unmultiplied (straight) RGBA in source color order. Frontends prepare their
+/// own blend/texture convention without modifying canonical Camera data.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DecodedImage {
     pub width: u32,

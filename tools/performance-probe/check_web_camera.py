@@ -14,14 +14,35 @@ import time
 from measure_web_camera_stress import browser
 
 
+# Compare each real Camera draw with its source. The fixture is spatially uniform,
+# so resizing preserves the sample. This observer is functional-test-only.
+ALPHA_OBSERVER = r"""
+window.alphaCheck={draws:0,levels:new Set(),mismatches:[]};
+const original=CanvasRenderingContext2D.prototype.drawImage;
+CanvasRenderingContext2D.prototype.drawImage=function(source,...args) {
+  const result=original.call(this,source,...args);
+  if (!(source instanceof ImageBitmap || source instanceof HTMLCanvasElement) || !source.width || !source.height || !this.canvas.width || !this.canvas.height) return result;
+  const sample=document.createElement('canvas');sample.width=sample.height=1;const ctx=sample.getContext('2d',{willReadFrequently:true});
+  original.call(ctx,source,Math.floor(source.width/2),Math.floor(source.height/2),1,1,0,0,1,1);
+  const expected=[...ctx.getImageData(0,0,1,1).data];
+  const actual=[...this.getImageData(Math.floor(this.canvas.width/2),Math.floor(this.canvas.height/2),1,1).data];
+  alphaCheck.draws++;alphaCheck.levels.add(expected[3]);
+  if(actual.some((v,i)=>Math.abs(v-expected[i])>2) && alphaCheck.mismatches.length<16)alphaCheck.mismatches.push({canvas:this.canvas.id,expected,actual});
+  return result;
+};
+"""
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--camera-formats', action='store_true', help='check known colors from ros-fixture camera-formats')
+    mode=parser.add_mutually_exclusive_group()
+    mode.add_argument('--camera-alpha', action='store_true', help='check repeated alpha draws from ros-fixture camera-alpha')
+    mode.add_argument('--camera-formats', action='store_true', help='check known colors from ros-fixture camera-formats')
     parser.add_argument('--data',type=Path,required=True)
     parser.add_argument('--dist',type=Path,default=Path('apps/viewer-web/dist'))
     parser.add_argument('--output',type=Path,required=True)
     args=parser.parse_args()
     if args.output.exists():parser.error('new output required')
+    args.output.parent.mkdir(parents=True,exist_ok=True)
     class QuietHandler(SimpleHTTPRequestHandler):
         def log_message(self,*_args):pass
     server=ThreadingHTTPServer(('127.0.0.1',0),partial(QuietHandler,directory=str(args.dist.resolve())))
@@ -41,14 +62,26 @@ def main():
         with browser(port,extra_flags=['--disable-accelerated-2d-canvas']) as (_,page,environment):
             result['environment']=environment
             page.call('Page.addScriptToEvaluateOnNewDocument',{'source':"window.smokeErrors=[];addEventListener('error',e=>smokeErrors.push(e.message));addEventListener('unhandledrejection',e=>smokeErrors.push(String(e.reason)))"})
+            if args.camera_alpha:
+                page.call('Page.addScriptToEvaluateOnNewDocument',{'source':ALPHA_OBSERVER})
             page.call('Page.navigate',{'url':f'http://127.0.0.1:{server.server_port}/'})
             wait(page,"!!window.wasmBindings && !!document.querySelector('#mcap-file')",'WASM application unavailable')
             page.call('DOM.enable')
             doc=page.call('DOM.getDocument')['root']['nodeId']
             node=page.call('DOM.querySelector',{'nodeId':doc,'selector':'#mcap-file'})['nodeId']
             page.call('DOM.setFileInputFiles',{'nodeId':node,'files':[str(args.data.resolve())]})
-            ready="document.querySelector('#status').textContent.startsWith('Ready') && document.querySelectorAll('.camera-card canvas').length===7"
+            count=3 if args.camera_alpha else 7
+            ready=f"document.querySelector('#status').textContent.startsWith('Ready') && document.querySelectorAll('.camera-card canvas').length==={count}"
             wait(page,ready,'recording did not become ready')
+            if args.camera_alpha:
+                page.evaluate("document.querySelector('#play').click()")
+                time.sleep(2)
+                result['alpha']=page.evaluate('({draws:alphaCheck.draws,levels:[...alphaCheck.levels],mismatches:alphaCheck.mismatches})')
+                result['errors']=page.evaluate('window.smokeErrors')
+                result['status']='ok' if result['alpha']['draws']>=30 and set(result['alpha']['levels'])=={0,128,255} and not result['alpha']['mismatches'] and not result['errors'] else 'failed'
+                args.output.with_suffix('.png').write_bytes(base64.b64decode(page.call('Page.captureScreenshot',{'format':'png'})['data']))
+                if result['status']!='ok':raise RuntimeError('transparent Camera composition failed')
+                return
             pixels="""(async()=>{const values=[];for(const c of document.querySelectorAll('.camera-card canvas')){
               const ctx=c.getContext('2d');const pixels=ctx.getImageData(0,0,c.width,c.height).data;
               values.push({topic:c.closest('.camera-card').textContent,pixel:Array.from(pixels.slice((Math.floor(c.height/2)*c.width+Math.floor(c.width/2))*4,(Math.floor(c.height/2)*c.width+Math.floor(c.width/2))*4+4)),size:[c.width,c.height],alpha:pixels[(Math.floor(c.height/2)*c.width+Math.floor(c.width/2))*4+3],

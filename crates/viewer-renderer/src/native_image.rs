@@ -70,6 +70,8 @@ impl NativeImageGeometry {
 #[derive(Debug)]
 pub struct NativeImage {
     pub image: DecodedImage,
+    /// Source can carry alpha. Pixels remain straight RGBA until the UI upload boundary.
+    pub has_alpha: bool,
     pub geometry: NativeImageGeometry,
 }
 
@@ -93,6 +95,11 @@ impl NativeCameraDecoder {
         let source_size = crate::camera_dimensions(frame).map_err(NativeImageError::Image)?;
         let image = crate::decode_camera_image(frame, target).map_err(NativeImageError::Image)?;
         Ok(NativeImage {
+            has_alpha: match frame.format {
+                viewer_core::CameraImageFormat::Raw(layout) => layout.encoding.channels() == 4,
+                viewer_core::CameraImageFormat::Png => true,
+                viewer_core::CameraImageFormat::Jpeg => false,
+            },
             geometry: NativeImageGeometry {
                 source_size,
                 pixel_size: (image.width, image.height),
@@ -125,6 +132,7 @@ impl NativeCameraDecoder {
         if matches!(header.colorspace, Colorspace::CMYK | Colorspace::YCCK) {
             let image = decode_jpeg(bytes).map_err(NativeImageError::Image)?;
             return Ok(NativeImage {
+                has_alpha: false,
                 geometry: NativeImageGeometry {
                     source_size,
                     pixel_size: (image.width, image.height),
@@ -160,6 +168,7 @@ impl NativeCameraDecoder {
         )?;
         let ratio = factor.num() as f32 / factor.denom() as f32;
         Ok(NativeImage {
+            has_alpha: false,
             image: DecodedImage {
                 width: width as u32,
                 height: height as u32,
@@ -214,6 +223,7 @@ mod tests {
     fn idct_scaling_keeps_source_geometry_and_alpha() {
         let mut decoder = NativeCameraDecoder::new().unwrap();
         let decoded = decoder.decode(&jpeg(641, 479), (100, 100)).unwrap();
+        assert!(!decoded.has_alpha);
         assert_eq!(decoded.geometry.source_size, (641, 479));
         assert_eq!(decoded.geometry.pixel_size, (161, 120));
         assert_eq!(decoded.image.rgba.len(), 161 * 120 * 4);
@@ -226,6 +236,51 @@ mod tests {
         assert_eq!(full.geometry.pixel_size, (641, 479));
         assert_eq!(full.geometry.uv_max, [1.; 2]);
     }
+    #[test]
+    fn alpha_metadata_preserves_straight_pixels_for_frontend_preparation() {
+        use viewer_core::{
+            ArrivalTime, CameraFrame, CameraId, CameraImageFormat, MeasurementTime,
+            RawImageEncoding, RawImageLayout,
+        };
+        for (encoding, pixels, expected) in [
+            (
+                RawImageEncoding::Rgb8,
+                vec![200, 100, 50],
+                vec![200, 100, 50, 255],
+            ),
+            (
+                RawImageEncoding::Rgba8,
+                vec![200, 100, 50, 128],
+                vec![200, 100, 50, 128],
+            ),
+            (
+                RawImageEncoding::Bgra8,
+                vec![50, 100, 200, 0],
+                vec![200, 100, 50, 0],
+            ),
+        ] {
+            let frame = CameraFrame {
+                camera_id: CameraId(0),
+                arrival_time: ArrivalTime(0),
+                measurement_time: MeasurementTime(0),
+                frame_id: String::new(),
+                format: CameraImageFormat::Raw(RawImageLayout {
+                    width: 1,
+                    height: 1,
+                    step: encoding.channels(),
+                    encoding,
+                }),
+                data: pixels.into(),
+            };
+            let image = NativeCameraDecoder::new()
+                .unwrap()
+                .decode_frame(&frame, (1, 1))
+                .unwrap();
+            assert_eq!(image.has_alpha, encoding.channels() == 4);
+            assert_eq!(image.image.rgba, expected);
+        }
+    }
+
     #[test]
     fn malformed_and_oversized_input_are_errors() {
         let mut decoder = NativeCameraDecoder::new().unwrap();
