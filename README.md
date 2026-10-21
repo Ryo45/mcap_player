@@ -256,7 +256,7 @@ Diagnostics（producer が報告した DiagnosticArray の level）を別 Panel 
 デフォルトは直近10秒、Diagnostics topic は `/diagnostics` です。
 詳細と設定は [Native recording health panels](docs/native_recording_health.md) を参照してください。
 
-Rustの責務別配置と命名方針は[module structure](docs/module_structure.md)を参照してください。
+Rustの責務別配置と命名方針は[module structure](docs/module_structure.md)、現在の依存・責務の評価は[セルフレビュー](docs/verification/2026-10-21-self-review/README.md)を参照してください。
 
 Webのカメラ表示は2本のWeb WorkerでJPEG/PNGのデコードとRaw画像の変換を行い、表示サイズに合わせたImageBitmapをCanvasへ渡します。
 [Raw/PNG対応と検証](docs/issue/016-camera-image-formats/README.md)、[設計・制限と検証](docs/web_jpeg.md)、[4K JPEGのFHD基準比較](docs/performance/2026-10-15-web-jpeg/README.md)を参照してください。

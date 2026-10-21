@@ -168,8 +168,12 @@ impl SegmentedBacking {
                     .metadata_count
                     .checked_add(part.metadata_count)
                     .ok_or(McapSourceError::ReadOverflow)?;
-                total.message_start_time = total.message_start_time.min(part.message_start_time);
-                total.message_end_time = total.message_end_time.max(part.message_end_time);
+                // Empty parts conventionally report [0,0]; they carry no timeline facts.
+                if part.message_count != 0 {
+                    total.message_start_time =
+                        total.message_start_time.min(part.message_start_time);
+                    total.message_end_time = total.message_end_time.max(part.message_end_time);
+                }
                 for (local, count) in &part.channel_message_counts {
                     let global = channels
                         .get(local)
@@ -254,6 +258,10 @@ impl SegmentedBacking {
             parts.push((base, backing));
         }
         if all_stats && let Some(mut stats) = stats {
+            if stats.message_count == 0 {
+                stats.message_start_time = 0;
+                stats.message_end_time = 0;
+            }
             stats.schema_count =
                 u16::try_from(merged.schemas.len()).map_err(|_| invalid("too many schemas"))?;
             stats.channel_count =
