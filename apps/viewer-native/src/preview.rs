@@ -31,10 +31,12 @@ impl PreviewCoordinator {
 
     pub(crate) fn load_for_source(&mut self, source_path: &Path, expected: &SourceFingerprint) {
         self.clear();
-        let preview_path = source_path
-            .parent()
-            .unwrap_or_else(|| Path::new("."))
-            .join("preview.mcap");
+        let directory = if source_path.is_dir() {
+            source_path
+        } else {
+            source_path.parent().unwrap_or_else(|| Path::new("."))
+        };
+        let preview_path = directory.join("preview.mcap");
         if !preview_path.exists() {
             self.status = PreviewStatus::Warning(format!(
                 "Preview unavailable: {} was not found",

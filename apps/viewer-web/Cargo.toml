@@ -11,7 +11,7 @@ crate-type = ["cdylib", "rlib"]
 jpeg-benchmark = []
 
 [dependencies]
-viewer-mcap = { path = "../../crates/viewer-mcap", default-features = false, features = ["mcap-zstd"] }
+viewer-mcap = { path = "../../crates/viewer-mcap", default-features = false, features = ["mcap-zstd", "mcap-lz4-rust"] }
 bev-renderer = { path = "../../crates/bev-renderer" }
 scene-renderer = { path = "../../crates/scene-renderer" }
 bytes.workspace = true
@@ -32,3 +32,6 @@ web-sys = { workspace = true, features = [
     "HtmlInputElement", "HtmlSelectElement", "ImageData", "ImageBitmap", "Request", "RequestInit", "RequestMode",
     "Response", "Url", "UrlSearchParams", "Window", "MouseEvent", "WheelEvent",
 ] }
+
+[dev-dependencies]
+lz4_flex.workspace = true

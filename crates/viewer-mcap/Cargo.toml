@@ -7,12 +7,14 @@ license.workspace = true
 [features]
 default = ["mcap-lz4", "mcap-zstd"]
 mcap-lz4 = ["dep:lz4", "mcap/lz4"]
+mcap-lz4-rust = ["dep:lz4_flex"]
 mcap-zstd = ["dep:zstd", "mcap/zstd"]
 
 [dependencies]
 bytes.workspace = true
 crc32fast.workspace = true
 lz4 = { workspace = true, optional = true }
+lz4_flex = { workspace = true, optional = true }
 mcap.workspace = true
 viewer-core = { path = "../viewer-core" }
 web-time.workspace = true

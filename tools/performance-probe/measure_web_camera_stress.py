@@ -17,12 +17,12 @@ from measure_viewer_pilot import process_sample, ROOT
 
 
 @contextmanager
-def browser(port):
+def browser(port, *, extra_flags=()):
     with socket.socket() as check:
         check.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         check.bind(('127.0.0.1', port))
     with tempfile.TemporaryDirectory(prefix='mcap-camera-stress-') as profile, tempfile.TemporaryFile() as log:
-        command=['google-chrome','--headless','--no-sandbox','--enable-unsafe-webgpu',
+        command=['google-chrome',*extra_flags,'--headless','--no-sandbox','--enable-unsafe-webgpu',
                  '--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader',
                  f'--remote-debugging-port={port}',f'--user-data-dir={profile}','about:blank']
         process=subprocess.Popen(command,stdout=log,stderr=log)

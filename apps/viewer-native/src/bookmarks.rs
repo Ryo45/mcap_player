@@ -55,16 +55,43 @@ impl BookmarkState {
 }
 
 fn bookmark_path(source_path: &Path) -> PathBuf {
-    source_path
-        .parent()
-        .unwrap_or_else(|| Path::new("."))
-        .join("bookmarks.json")
+    let directory = if source_path.is_dir() {
+        source_path
+    } else {
+        source_path.parent().unwrap_or_else(|| Path::new("."))
+    };
+    directory.join("bookmarks.json")
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use viewer_core::{ArrivalTime, BookmarkId};
+
+    #[test]
+    fn directory_sources_use_their_own_bookmarks_sidecar() {
+        let directory =
+            std::env::temp_dir().join(format!("mcap-directory-bookmarks-{}", std::process::id()));
+        fs::create_dir(&directory).unwrap();
+        let source = SourceFingerprint::new("test", "split-recording").unwrap();
+        let bookmark =
+            Bookmark::point(BookmarkId::new("one").unwrap(), ArrivalTime(10), "A", None).unwrap();
+        let document = BookmarkDocument::new(source.clone(), vec![bookmark]).unwrap();
+        fs::write(
+            directory.join("bookmarks.json"),
+            document.to_json_pretty().unwrap(),
+        )
+        .unwrap();
+        let mut state = BookmarkState::default();
+        state.load_for_source(&directory, &source);
+        assert_eq!(state.bookmarks().len(), 1);
+        assert!(state.warning().is_none());
+        assert_eq!(
+            bookmark_path(&directory.join("part.mcap")),
+            directory.join("bookmarks.json")
+        );
+        fs::remove_dir_all(directory).unwrap();
+    }
 
     #[test]
     fn bookmarks_are_exposed_in_time_order_from_valid_documents() {

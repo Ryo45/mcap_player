@@ -1,5 +1,7 @@
 # リリース前アーキテクチャ課題
 
+追加対応: [015 分割MCAPの時間軸とWeb LZ4](015-split-mcap-and-web-lz4/README.md)。Nativeのディレクトリ入力とBrowser LocalのLZ4を実装。Raw Image/PNGは次段階。
+
 調査対象HEAD: `f16cd90da2e62c8ef0481d126ef87beca9e26161`
 
 ## 次の開発候補（2026-10-12 調査）

@@ -103,8 +103,24 @@ impl McapSource {
     }
     #[cfg(not(target_arch = "wasm32"))]
     pub fn open_file(path: &std::path::Path) -> Result<Self, McapSourceError> {
+        if path.is_dir() {
+            return Self::open_files(&super::segments::directory_paths(path)?);
+        }
         Self::from_backing(super::backing::Backing::File(std::sync::Arc::new(
             super::backing::FileRanges::open(path)?,
+        )))
+    }
+    /// Open indexed parts as one log-time ordered recording. Payloads remain in their files.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn open_files(paths: &[std::path::PathBuf]) -> Result<Self, McapSourceError> {
+        if paths.len() == 1 {
+            return Self::from_backing(super::backing::Backing::File(std::sync::Arc::new(
+                super::backing::FileRanges::open(&paths[0])?,
+            )));
+        }
+        let parts = super::segments::SegmentedBacking::open(paths)?;
+        Self::from_backing(super::backing::Backing::Segments(std::sync::Arc::new(
+            parts,
         )))
     }
     fn from_backing(backing: super::backing::Backing) -> Result<Self, McapSourceError> {
@@ -222,7 +238,7 @@ impl McapSource {
             all_prefix_max_end,
             forward: Default::default(),
             backing,
-            summary: std::sync::Arc::new(summary),
+            summary,
             catalog: std::sync::Arc::new(catalog),
             range,
 
@@ -342,6 +358,7 @@ impl McapSource {
         &self,
         cursor: ArrivalTime,
     ) -> Result<McapSourcePosition, McapSourceError> {
+        self.backing.validate()?;
         let mut state = McapSourcePosition {
             lower: Some(cursor),
             next: self
@@ -359,6 +376,7 @@ impl McapSource {
                 self.stage_forward_chunk(&mut state, index)?;
             }
         }
+        self.backing.validate()?;
         Ok(state)
     }
 
@@ -516,6 +534,7 @@ impl McapSource {
     ) -> Result<IndexedMessages, McapSourceError> {
         let mut budget = crate::LatestQueryBudget::new(limits);
         budget.streams(streams.len())?;
+        self.backing.validate()?;
         self.indexed_summary(streams)?;
         let target = u64::try_from(target.0).map_err(|_| McapSourceError::TimestampOverflow)?;
         let mut index_cache = HashMap::new();
@@ -554,6 +573,7 @@ impl McapSource {
         }
         let mut messages = selected.into_values().collect::<Vec<_>>();
         messages.sort_by_key(|message| (message.arrival_time, message.stream_id.0));
+        self.backing.validate()?;
         Ok(IndexedMessages {
             messages,
             diagnostics: IndexedReadDiagnostics {
@@ -702,7 +722,13 @@ impl McapSource {
                 "uncompressed CRC does not match Chunk header".into(),
             ));
         }
-        parse_chunk_backing(backing, cancelled)
+        let mut messages = parse_chunk_backing(backing, cancelled)?;
+        for parsed in &mut messages {
+            let local =
+                u16::try_from(parsed.message.stream_id.0).map_err(|_| mcap::McapError::BadIndex)?;
+            parsed.message.stream_id = StreamId(u32::from(self.backing.channel_id(index, local)?));
+        }
+        Ok(messages)
     }
 
     fn chunk_uncompressed_crc(
@@ -1301,6 +1327,7 @@ mod tests {
         assert!(last - first <= chunk_size);
     }
 
+    #[cfg(feature = "mcap-lz4")]
     #[test]
     fn native_lz4_messages_share_one_decompressed_chunk_backing() {
         let mut source =

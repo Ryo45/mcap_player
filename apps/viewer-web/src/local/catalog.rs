@@ -25,7 +25,10 @@ impl fmt::Display for LocalCatalogError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::MissingChunkIndex => {
-                write!(f, "browser lazy playback requires MCAP Chunk Index records")
+                write!(
+                    f,
+                    "browser lazy playback requires MCAP Chunk Index records; explicitly reindex or convert the recording before opening it (automatic full-file scanning is disabled)"
+                )
             }
             Self::MissingTimeRange => write!(f, "MCAP contains no indexed time range"),
             Self::EndTimeOverflow => write!(f, "MCAP end time cannot be made exclusive"),

@@ -35,6 +35,8 @@ topicを調べても、CameraやSceneの再生対象は変わりません。大�
 - 3D ビューに車両姿勢、軌跡、LaserScan / PointCloud2を表示
 - `/odom` の位置、向き、速度、ヨーレートを再生位置に同期して表示
 - `/tf` と `/tf_static` による座標変換
+- Nativeで分割MCAPを1本の時間軸として再生・Seek
+- Browser Localで非圧縮・Zstd・LZ4のMCAPを必要な範囲だけ読み込み
 
 ## 性能検証
 
@@ -62,6 +64,15 @@ cargo run -p viewer-native -- \
 ```
 
 起動中のウィンドウへ `.mcap` ファイルをドロップして開くこともできます。カメラキャリブレーションを変更する場合は `--camera-calibration FILE` を指定してください。
+
+分割MCAPは各partが入ったディレクトリを指定します。直下の`.mcap`を索引のlog timeで統合し、時間の隙間は保持します。
+
+```bash
+cargo run -p viewer-native -- --mcap /path/to/rosbag_directory --layout monitor
+```
+
+Summary・Chunk Index・選択streamのMessage Indexが必要です。索引のない記録を自動で全走査することはありません。
+対象範囲、制限、明示的な変換方法は[分割MCAPと入力互換性](docs/issue/015-split-mcap-and-web-lz4/README.md)を参照してください。
 
 `standard` / `showcase` / `explore` / `monitor` のLayout JSONは0.1では同梱された内部presetです。外部向けの保存形式や
 backward compatibilityは保証しません。`schemaVersion` / `configVersion` は同梱presetの開発時検証と

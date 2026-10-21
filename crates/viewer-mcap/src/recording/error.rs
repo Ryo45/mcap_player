@@ -42,9 +42,15 @@ impl fmt::Display for McapSourceError {
                 write!(f, "query exceeds {resource} limit ({maximum})")
             }
             Self::Mcap(error) => write!(f, "MCAP error: {error}"),
-            Self::SummaryRequired => write!(f, "MCAP Summary is required for indexed playback"),
+            Self::SummaryRequired => write!(
+                f,
+                "MCAP Summary is required for indexed playback; explicitly reindex or convert the recording before opening it (automatic full-file scanning is disabled)"
+            ),
             Self::ChunkIndexRequired => {
-                write!(f, "MCAP Chunk Index is required for indexed playback")
+                write!(
+                    f,
+                    "MCAP Chunk Index is required for indexed playback; explicitly reindex or convert the recording before opening it (automatic full-file scanning is disabled)"
+                )
             }
             Self::Io(error) => write!(f, "source I/O: {error}"),
             Self::SourceChanged => write!(f, "recording changed after open"),

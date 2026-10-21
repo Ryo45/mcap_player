@@ -128,7 +128,7 @@ underruns, evictions, stale results, load latency, and MCAP Chunk processing/dec
 Copies are:
 
 - Browser `Blob.arrayBuffer()` to the WASM range `Vec<u8>` (one copy per requested range).
-- Zstd input to one decompressed `Vec<u8>` backing when the Chunk is compressed.
+- Zstd or LZ4 input to one decompressed `Vec<u8>` backing when the Chunk is compressed.
 - Remote HTTP `ArrayBuffer` to one `Bytes` allocation for the batch body.
 
 The range/decompressed `Vec<u8>` moves into `Bytes` without copying. Every retained Local message
@@ -152,6 +152,11 @@ The measured debug-build load/Chunk-processing times were 45.05/6.44 ms for Zstd
 42.18/0.75 ms for uncompressed. These values are diagnostic baselines, not performance targets.
 
 ## Compression toolchain
+
+Browser Local also supports LZ4 through `viewer-mcap`'s `mcap-lz4-rust` feature
+and the portable `lz4_flex` frame decoder. It uses the same bounded shared-backing
+window and restore paths as Zstd. Truncated frames and declared-size mismatches
+are errors; the native LZ4 C dependency is not needed by the Browser build.
 
 `viewer-web` uses the same Zstd implementation already selected by the `mcap` dependency and
 decompresses each selected compressed Chunk exactly once into its final shared backing.

@@ -43,6 +43,7 @@ bytes = "1.10"
 crc32fast = "1.5"
 zstd = "0.13"
 lz4 = "1.28.1"
+lz4_flex = "0.13.1"
 bytemuck = { version = "1.24", features = ["derive"] }
 egui = "0.33.2"
 egui_plot = "0.34.1"

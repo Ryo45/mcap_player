@@ -50,7 +50,7 @@ impl FileMessageStream {
             channel_count: stats.channel_count,
             chunk_count: summary.chunk_indexes.len(),
         };
-        Ok((summary, identity))
+        Ok((std::sync::Arc::unwrap_or_clone(summary), identity))
     }
     fn next_message(&mut self) -> Result<Option<Message<'static>>, McapSourceError> {
         while let Some(event) = self.reader.next_event() {

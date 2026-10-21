@@ -6,6 +6,10 @@ mod error;
 mod file_messages;
 mod latest_limits;
 mod message_index;
+#[cfg(not(target_arch = "wasm32"))]
+mod segments;
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod segments_tests;
 mod source;
 mod source_identity;
 pub use chunk::{McapChunkError, decode_mcap_chunk, visit_mcap_chunk_records};

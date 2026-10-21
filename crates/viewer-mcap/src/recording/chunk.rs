@@ -3,10 +3,27 @@
 use bytes::Bytes;
 use mcap::records::op;
 use std::fmt;
-#[cfg(feature = "mcap-lz4")]
+#[cfg(any(feature = "mcap-lz4", feature = "mcap-lz4-rust"))]
 use std::io::Read;
 use viewer_core::ArrivalTime;
 use viewer_core::{RawMessage, StreamId};
+
+// FrameDecoder tolerates EOF before EndMark. An MCAP Chunk must contain a complete frame.
+#[cfg(all(feature = "mcap-lz4-rust", not(feature = "mcap-lz4")))]
+struct Lz4FrameInput<'a>(&'a [u8]);
+
+#[cfg(all(feature = "mcap-lz4-rust", not(feature = "mcap-lz4")))]
+impl Read for Lz4FrameInput<'_> {
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        if !buffer.is_empty() && self.0.is_empty() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "truncated LZ4 frame",
+            ));
+        }
+        self.0.read(buffer)
+    }
+}
 
 #[derive(Debug)]
 pub enum McapChunkError {
@@ -67,24 +84,42 @@ pub fn decode_mcap_chunk(
                 source,
             },
         )?),
-        #[cfg(feature = "mcap-lz4")]
+        #[cfg(any(feature = "mcap-lz4", feature = "mcap-lz4-rust"))]
         "lz4" => {
             let limit = u64::try_from(expected_size)
                 .ok()
                 .and_then(|size| size.checked_add(1))
                 .ok_or(McapChunkError::InvalidRecord("decompressed size overflow"))?;
             let mut output = Vec::with_capacity(expected_size);
-            lz4::Decoder::new(std::io::Cursor::new(compressed))
-                .map_err(|source| McapChunkError::Decompression {
-                    format: "lz4",
-                    source,
-                })?
+            // Keep the native backend; Browser builds use the portable frame decoder.
+            #[cfg(feature = "mcap-lz4")]
+            let mut decoder =
+                lz4::Decoder::new(std::io::Cursor::new(compressed)).map_err(|source| {
+                    McapChunkError::Decompression {
+                        format: "lz4",
+                        source,
+                    }
+                })?;
+            #[cfg(not(feature = "mcap-lz4"))]
+            let mut decoder = lz4_flex::frame::FrameDecoder::new(Lz4FrameInput(&compressed));
+            decoder
+                .by_ref()
                 .take(limit)
                 .read_to_end(&mut output)
                 .map_err(|source| McapChunkError::Decompression {
                     format: "lz4",
                     source,
                 })?;
+            #[cfg(feature = "mcap-lz4")]
+            if output.len() == expected_size {
+                decoder
+                    .finish()
+                    .1
+                    .map_err(|source| McapChunkError::Decompression {
+                        format: "lz4",
+                        source,
+                    })?;
+            }
             Bytes::from(output)
         }
         value => return Err(McapChunkError::UnsupportedCompression(value.into())),
@@ -334,5 +369,34 @@ mod tests {
             decode_mcap_chunk("lz4", Bytes::from(compressed), 16),
             Err(McapChunkError::InvalidRecord(_))
         ));
+    }
+
+    #[cfg(feature = "mcap-lz4-rust")]
+    #[test]
+    fn portable_lz4_frames_validate_output_and_truncation() {
+        use std::io::Write;
+        let bytes = vec![7_u8; 4096];
+        let mut encoder = lz4_flex::frame::FrameEncoder::new(Vec::new());
+        encoder.write_all(&bytes).unwrap();
+        let encoded = encoder.finish().unwrap();
+        assert_eq!(
+            decode_mcap_chunk("lz4", Bytes::from(encoded.clone()), bytes.len())
+                .unwrap()
+                .as_ref(),
+            bytes
+        );
+        assert!(decode_mcap_chunk("lz4", Bytes::from(encoded.clone()), 16).is_err());
+        assert!(decode_mcap_chunk("lz4", Bytes::from(encoded.clone()), bytes.len() + 1).is_err());
+        assert!(
+            decode_mcap_chunk(
+                "lz4",
+                Bytes::copy_from_slice(&encoded[..encoded.len() - 2]),
+                bytes.len()
+            )
+            .is_err()
+        );
+        let mut damaged = encoded;
+        damaged[0] ^= 1;
+        assert!(decode_mcap_chunk("lz4", Bytes::from(damaged), bytes.len()).is_err());
     }
 }

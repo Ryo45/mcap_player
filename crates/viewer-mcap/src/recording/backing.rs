@@ -14,8 +14,23 @@ pub(super) enum Backing {
     Bytes(Bytes),
     #[cfg(not(target_arch = "wasm32"))]
     File(std::sync::Arc<FileRanges>),
+    #[cfg(not(target_arch = "wasm32"))]
+    Segments(std::sync::Arc<super::segments::SegmentedBacking>),
 }
 impl Backing {
+    pub fn channel_id(&self, chunk: usize, local: u16) -> Result<u16, McapSourceError> {
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Self::Segments(parts) = self {
+            return parts
+                .chunk_channels
+                .get(chunk)
+                .and_then(|map| map.get(&local))
+                .copied()
+                .ok_or(mcap::McapError::BadIndex.into());
+        }
+        let _ = chunk;
+        Ok(local)
+    }
     pub fn file_read_totals(&self) -> (u64, u64) {
         match self {
             Self::Bytes(_) => (0, 0),
@@ -24,6 +39,8 @@ impl Backing {
                 file.read_calls.load(std::sync::atomic::Ordering::Relaxed),
                 file.read_bytes.load(std::sync::atomic::Ordering::Relaxed),
             ),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::Segments(parts) => parts.read_totals(),
         }
     }
     pub fn validate(&self) -> Result<(), McapSourceError> {
@@ -31,6 +48,8 @@ impl Backing {
             Self::Bytes(_) => Ok(()),
             #[cfg(not(target_arch = "wasm32"))]
             Self::File(file) => file.check(),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::Segments(parts) => parts.validate(),
         }
     }
     pub fn len(&self) -> u64 {
@@ -38,6 +57,8 @@ impl Backing {
             Self::Bytes(bytes) => bytes.len() as u64,
             #[cfg(not(target_arch = "wasm32"))]
             Self::File(file) => file.metadata.len(),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::Segments(parts) => parts.length,
         }
     }
     pub fn read(&self, offset: u64, length: usize) -> Result<Bytes, McapSourceError> {
@@ -61,13 +82,19 @@ impl Backing {
             Self::Bytes(bytes) => Ok(bytes.slice(offset as usize..end as usize)),
             #[cfg(not(target_arch = "wasm32"))]
             Self::File(file) => file.read(offset, length),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::Segments(parts) => parts.read(offset, length),
         }
     }
-    pub fn summary(&self) -> Result<Summary, McapSourceError> {
+    pub fn summary(&self) -> Result<std::sync::Arc<Summary>, McapSourceError> {
         match self {
-            Self::Bytes(bytes) => Summary::read(bytes)?.ok_or(McapSourceError::SummaryRequired),
+            Self::Bytes(bytes) => Summary::read(bytes)?
+                .ok_or(McapSourceError::SummaryRequired)
+                .map(std::sync::Arc::new),
             #[cfg(not(target_arch = "wasm32"))]
-            Self::File(_) => self.summary_from_ranges(),
+            Self::File(_) => self.summary_from_ranges().map(std::sync::Arc::new),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::Segments(parts) => Ok(parts.summary.clone()),
         }
     }
     #[cfg(not(target_arch = "wasm32"))]
@@ -109,6 +136,11 @@ impl Backing {
         reader.finish().ok_or(McapSourceError::SummaryRequired)
     }
     pub fn summary_crc(&self) -> Result<u32, McapSourceError> {
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Self::Segments(parts) = self {
+            parts.validate()?;
+            return Ok(parts.summary_crc);
+        }
         let offset = self
             .len()
             .checked_sub(37)
