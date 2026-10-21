@@ -90,6 +90,13 @@ fn draw_base_image(canvas: &HtmlCanvasElement, image: &ImageBitmap) -> Result<()
         .ok_or("camera 2d context unavailable")?
         .dyn_into()
         .map_err(|_| "invalid camera 2d context")?;
+    // Each frame replaces the previous pixels, including transparent regions.
+    context.clear_rect(
+        0.0,
+        0.0,
+        f64::from(canvas.width()),
+        f64::from(canvas.height()),
+    );
     context
         .draw_image_with_image_bitmap(image, 0.0, 0.0)
         .map_err(|e| format!("camera upload: {e:?}"))
@@ -115,6 +122,8 @@ fn compose_camera_canvas(
         .expect("2d context")
         .dyn_into()
         .expect("canvas 2d");
+    // Recompose from the base; old pixels and overlays must not accumulate.
+    context.clear_rect(0.0, 0.0, f64::from(size.0), f64::from(size.1));
     context
         .draw_image_with_html_canvas_element_and_dw_and_dh(
             base,

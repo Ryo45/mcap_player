@@ -51,6 +51,11 @@ fn main() -> Result<()> {
     let mut args = std::env::args().skip(1);
     let command = args.next().unwrap_or_else(|| "generate".to_owned());
     match command.as_str() {
+        "camera-alpha" => {
+            let output = args.next().map(PathBuf::from).ok_or_else(usage)?;
+            ensure_no_more_args(args)?;
+            camera_formats::generate_alpha(&output)?;
+        }
         "camera-formats" => {
             let output = args.next().map(PathBuf::from).ok_or_else(usage)?;
             ensure_no_more_args(args)?;
@@ -133,7 +138,7 @@ fn main() -> Result<()> {
 
 fn usage() -> anyhow::Error {
     anyhow!(
-        "usage:\n  cargo run -p ros-fixture -- camera-formats <output.mcap>\n  cargo run -p ros-fixture -- generate [output.mcap]\n  cargo run -p ros-fixture -- convert <input.mcap> <output.mcap> [duration-seconds]\n  cargo run -p ros-fixture -- verify <input.mcap>\n  cargo run -p ros-fixture -- inspect-camera <input.mcap>"
+        "usage:\n  cargo run -p ros-fixture -- camera-alpha <output.mcap>\n  cargo run -p ros-fixture -- camera-formats <output.mcap>\n  cargo run -p ros-fixture -- generate [output.mcap]\n  cargo run -p ros-fixture -- convert <input.mcap> <output.mcap> [duration-seconds]\n  cargo run -p ros-fixture -- verify <input.mcap>\n  cargo run -p ros-fixture -- inspect-camera <input.mcap>"
     )
 }
 

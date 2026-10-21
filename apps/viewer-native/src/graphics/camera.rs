@@ -112,9 +112,12 @@ impl Graphics {
                 });
                 continue;
             }
-            let image = decoded.image;
             let decode_elapsed = result.decode_time;
             let upload_started = Instant::now();
+            let mut image = decoded.image;
+            if decoded.has_alpha {
+                premultiply_camera_rgba(&mut image.rgba);
+            }
             let slot = self.camera_slots.entry(camera_id).or_default();
             let recreated = slot.update(&self.device, &self.queue, &image);
             if recreated {
@@ -207,5 +210,27 @@ impl Graphics {
             arrival,
             self.preview_camera_slots.get(&camera_id)?.size()?,
         ))
+    }
+}
+
+// egui's texture shader/blend state consumes premultiplied sRGBA. Keep source and
+// decoder pixels straight, and convert this owned upload buffer in place.
+fn premultiply_camera_rgba(pixels: &mut [u8]) {
+    for pixel in pixels.chunks_exact_mut(4) {
+        pixel.copy_from_slice(
+            &egui::Color32::from_rgba_unmultiplied(pixel[0], pixel[1], pixel[2], pixel[3])
+                .to_array(),
+        );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::premultiply_camera_rgba;
+    #[test]
+    fn camera_upload_alpha_matches_egui_and_clears_fully_transparent_rgb() {
+        let mut pixels = vec![200, 100, 50, 128, 255, 99, 17, 0, 30, 60, 90, 255];
+        premultiply_camera_rgba(&mut pixels);
+        assert_eq!(pixels, vec![100, 50, 25, 128, 0, 0, 0, 0, 30, 60, 90, 255]);
     }
 }
