@@ -31,6 +31,26 @@ pub enum RawImageEncoding {
 }
 
 impl RawImageEncoding {
+    pub fn from_ros_encoding(value: &str) -> Result<Self, crate::DecodeError> {
+        match value {
+            "rgb8" => Ok(Self::Rgb8),
+            "bgr8" => Ok(Self::Bgr8),
+            "rgba8" => Ok(Self::Rgba8),
+            "bgra8" => Ok(Self::Bgra8),
+            "mono8" => Ok(Self::Mono8),
+            other => Err(crate::DecodeError::UnsupportedFormat(other.into())),
+        }
+    }
+    pub fn as_ros_encoding(self) -> &'static str {
+        match self {
+            Self::Rgb8 => "rgb8",
+            Self::Bgr8 => "bgr8",
+            Self::Rgba8 => "rgba8",
+            Self::Bgra8 => "bgra8",
+            Self::Mono8 => "mono8",
+        }
+    }
+
     pub fn channels(self) -> u32 {
         match self {
             Self::Rgb8 | Self::Bgr8 => 3,

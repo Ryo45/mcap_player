@@ -87,4 +87,27 @@ python3 tools/ros-fixture/camera_fixture.py bridge \
   --output-topic /camera/front/image/compressed
 ```
 
-The MVP does not subscribe to `/odom`, `/scan` or TF during this smoke test.
+The current viewer also subscribes to `/odom`, `/scan` and TF when required by the selected workspace bindings.
+
+
+## Raw ROS live（JPEG変換bridge不要）
+
+```bash
+source /opt/ros/jazzy/setup.bash
+cargo run -p viewer-native --features ros2-live -- \
+  --live --live-raw-camera-topic /camera/image_raw
+```
+
+`rgb8 / bgr8 / rgba8 / bgra8 / mono8`に対応する。CompressedImage（JPEG/PNG）と混在させる場合は、
+Raw topicごとに`--live-raw-camera-topic`を追加し、必要なら`--camera-topic`で優先Cameraを選ぶ。
+固定topicのパネルはlayoutで対応するtopicを指定する。
+既存のbridgeコマンドはJPEG変換を試したい場合に利用できるが、Raw表示には必要ない。
+
+実DDSからの7形式混在テスト:
+
+```bash
+docker compose run --rm dev cargo test -p viewer-native --features ros2-live \
+  rosbag_raw_and_compressed_camera_smoke -- --ignored --nocapture
+```
+
+テストはbundled `camera-formats/camera_formats.mcap`を同じコンテナのrosbag2から再生し、受信と縮小後の色を確認する。

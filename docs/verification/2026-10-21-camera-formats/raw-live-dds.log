@@ -1,0 +1,16 @@
+time="2026-10-21T20:15:50+09:00" level=warning msg="No services to build"
+time="2026-10-21T20:15:50+09:00" level=warning msg="No services to build"
+ Container mcap_player-dev-run-32d9aef96629 Creating
+ Container mcap_player-dev-run-32d9aef96629 Created
+   Compiling viewer-native v0.1.0 (/workspace/mcap_player/apps/viewer-native)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.17s
+     Running unittests src/main.rs (/home/dev/target/debug/deps/viewer_native-fde6bddc37be8e42)
+
+running 1 test
+[INFO] [1792581354.360748163] [rosbag2_player]: Set rate to 1
+[INFO] [1792581354.371604684] [rosbag2_player]: Playback until timestamp: -1
+[INFO] [1792581354.371684936] [rosbag2_player]: Sleep 2000000000 ns
+Raw/PNG/JPEG DDS Camera smoke: LiveDiagnostics { received_messages: 207, received_serialized_bytes: 33970765, payload_copy_bytes: 33970765, adapter_errors: 0, coalesced_messages: 0, coalesced_payload_bytes: 0, ordered_queue_overflows: 0, queue_high_water_mark: 7, resident_messages: 0, latest_arrival: Some(ArrivalTime(1792581359375275654)) }
+test live::tests::rosbag_raw_and_compressed_camera_smoke ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 85 filtered out; finished in 5.68s

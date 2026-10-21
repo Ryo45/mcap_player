@@ -87,10 +87,11 @@ impl ViewerSession {
     pub(crate) fn open_live(
         topic: String,
         reliable: bool,
+        raw_camera_topics: &std::collections::BTreeSet<String>,
         requirements: &PlaybackRequirements,
         bindings: &WorkspaceBindings,
     ) -> Result<Self> {
-        let catalog = live::live_catalog(&topic, requirements, bindings)?;
+        let catalog = live::live_catalog(&topic, requirements, bindings, raw_camera_topics)?;
         let plan = SessionPlan::build(&catalog, &topic, requirements, bindings)?;
         let specs = live::selected_stream_specs(&plan);
         let handle = live::RosLiveHandle::start(specs, reliable).map_err(anyhow::Error::msg)?;

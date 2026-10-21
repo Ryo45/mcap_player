@@ -1,6 +1,6 @@
 use crate::workspace::WorkspaceLayout;
 use anyhow::{Context, Result, bail};
-use std::path::PathBuf;
+use std::{collections::BTreeSet, path::PathBuf};
 
 const DEFAULT_FIXTURE: &str = "tests/fixtures/camera-jpeg/camera_7_5s.mcap";
 const DEFAULT_TOPIC: &str = "/camera/front/image/compressed";
@@ -12,6 +12,7 @@ pub(crate) enum SourceMode {
     #[cfg(feature = "ros2-live")]
     Ros {
         reliable: bool,
+        raw_camera_topics: BTreeSet<String>,
     },
 }
 
@@ -36,6 +37,8 @@ impl Args {
     fn parse_from(values: impl IntoIterator<Item = String>) -> Result<Self> {
         let mut mcap = PathBuf::from(DEFAULT_FIXTURE);
         let mut topic = DEFAULT_TOPIC.to_owned();
+        let mut explicit_camera_topic = false;
+        let mut raw_camera_topics = BTreeSet::new();
         let mut calibration = PathBuf::from(DEFAULT_CALIBRATION);
         let mut platform_geometry = Some(PathBuf::from(
             "config/platform_geometry/turtlebot3_waffle_pi.json",
@@ -52,7 +55,20 @@ impl Args {
             match value.as_str() {
                 "--mcap" => mcap = PathBuf::from(values.next().context("--mcap needs a path")?),
                 "--camera-topic" => {
-                    topic = values.next().context("--camera-topic needs a topic")?
+                    topic = values.next().context("--camera-topic needs a topic")?;
+                    explicit_camera_topic = true;
+                }
+                "--live-raw-camera-topic" => {
+                    let topic = values
+                        .next()
+                        .context("--live-raw-camera-topic needs a topic")?;
+                    if topic.trim().is_empty() || topic.len() > 1024 {
+                        bail!("--live-raw-camera-topic must be nonempty and at most 1024 bytes");
+                    }
+                    raw_camera_topics.insert(topic);
+                    if raw_camera_topics.len() > 32 {
+                        bail!("at most 32 Raw Live camera topics are supported");
+                    }
                 }
                 "--point-cloud-topic" => {
                     let topic = values.next().context("--point-cloud-topic needs a topic")?;
@@ -93,7 +109,7 @@ impl Args {
                 }
                 "--help" | "-h" => {
                     println!(
-                        "viewer-native [--mcap FILE_OR_DIRECTORY] [--camera-topic TOPIC] [--camera-calibration JSON] [--platform-geometry JSON | --no-platform-geometry] [--fixed-frame FRAME] [--ground-frame FRAME] [--layout standard|showcase|explore|monitor|health|scene] [--inspect-topic TOPIC] [--point-cloud-topic TOPIC] [--live [--reliable]]\n\nFiles or directories containing indexed MCAP parts can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
+                        "viewer-native [--mcap FILE_OR_DIRECTORY] [--camera-topic TOPIC] [--camera-calibration JSON] [--platform-geometry JSON | --no-platform-geometry] [--fixed-frame FRAME] [--ground-frame FRAME] [--layout standard|showcase|explore|monitor|health|scene] [--inspect-topic TOPIC] [--point-cloud-topic TOPIC] [--live [--reliable] [--live-raw-camera-topic TOPIC]...]\n\nFiles or directories containing indexed MCAP parts can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
                     );
                     std::process::exit(0);
                 }
@@ -113,7 +129,10 @@ impl Args {
         {
             bail!("world/ground frame names must be nonempty and at most 256 bytes");
         }
-        let mode = source_mode(live, reliable)?;
+        if !explicit_camera_topic && let Some(first) = raw_camera_topics.first() {
+            topic = first.clone();
+        }
+        let mode = source_mode(live, reliable, raw_camera_topics)?;
         Ok(Self {
             mcap,
             topic,
@@ -129,14 +148,24 @@ impl Args {
     }
 }
 
-fn source_mode(live: bool, reliable: bool) -> Result<SourceMode> {
+fn source_mode(
+    live: bool,
+    reliable: bool,
+    raw_camera_topics: BTreeSet<String>,
+) -> Result<SourceMode> {
+    if !live && !raw_camera_topics.is_empty() {
+        bail!("--live-raw-camera-topic requires --live");
+    }
     if reliable && !live {
         bail!("--reliable requires --live");
     }
     #[cfg(feature = "ros2-live")]
     {
         Ok(if live {
-            SourceMode::Ros { reliable }
+            SourceMode::Ros {
+                reliable,
+                raw_camera_topics,
+            }
         } else {
             SourceMode::Mcap
         })
@@ -169,6 +198,56 @@ fn parse_layout(value: &str) -> Result<WorkspaceLayout> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn raw_live_topics_are_explicit_bounded_and_live_only() {
+        let parse = |values: &[&str]| Args::parse_from(values.iter().map(|s| (*s).to_owned()));
+        for args in [
+            vec!["--live-raw-camera-topic"],
+            vec!["--live-raw-camera-topic", " "],
+            vec!["--live-raw-camera-topic", "/raw"],
+        ] {
+            assert!(parse(&args).is_err());
+        }
+        assert!(
+            Args::parse_from([
+                "--live".into(),
+                "--live-raw-camera-topic".into(),
+                "x".repeat(1025)
+            ])
+            .is_err()
+        );
+        #[cfg(feature = "ros2-live")]
+        {
+            let args = parse(&[
+                "--live",
+                "--live-raw-camera-topic",
+                "/raw_b",
+                "--live-raw-camera-topic",
+                "/raw_a",
+                "--live-raw-camera-topic",
+                "/raw_a",
+            ])
+            .unwrap();
+            assert_eq!(args.topic, "/raw_a");
+            let SourceMode::Ros {
+                raw_camera_topics, ..
+            } = args.mode
+            else {
+                panic!("expected ROS mode")
+            };
+            assert_eq!(raw_camera_topics.len(), 2);
+            let explicit = parse(&[
+                "--live-raw-camera-topic",
+                "/raw",
+                "--camera-topic",
+                "/compressed",
+                "--live",
+            ])
+            .unwrap();
+            assert_eq!(explicit.topic, "/compressed");
+        }
+    }
 
     #[test]
     fn initial_inspector_selection_is_recording_only_and_requires_a_topic() {
@@ -209,6 +288,6 @@ mod tests {
 
     #[test]
     fn reliability_is_not_silently_ignored_without_live_mode() {
-        assert!(source_mode(false, true).is_err());
+        assert!(source_mode(false, true, BTreeSet::new()).is_err());
     }
 }

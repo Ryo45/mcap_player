@@ -133,14 +133,7 @@ pub fn decode_raw_image_bytes(bytes: Bytes) -> Result<DecodedRawImage, DecodeErr
     }
     let height = r.u32()?;
     let width = r.u32()?;
-    let encoding = match r.string()?.as_str() {
-        "rgb8" => RawImageEncoding::Rgb8,
-        "bgr8" => RawImageEncoding::Bgr8,
-        "rgba8" => RawImageEncoding::Rgba8,
-        "bgra8" => RawImageEncoding::Bgra8,
-        "mono8" => RawImageEncoding::Mono8,
-        other => return Err(DecodeError::UnsupportedFormat(other.into())),
-    };
+    let encoding = RawImageEncoding::from_ros_encoding(&r.string()?)?;
     if r.take(1)?[0] > 1 {
         return Err(DecodeError::InvalidLength);
     }
@@ -169,4 +162,33 @@ pub struct DecodedRawImage {
     pub frame_id: String,
     pub layout: crate::RawImageLayout,
     pub data: Bytes,
+}
+
+/// Serializes the supported 8-bit ROS Image inputs directly from borrowed pixels.
+/// The endian flag is normalized to zero: each supported channel occupies one byte.
+pub fn encode_raw_image_cdr(
+    measurement_time: MeasurementTime,
+    frame_id: &str,
+    layout: crate::RawImageLayout,
+    data: &[u8],
+) -> Result<Vec<u8>, DecodeError> {
+    layout.validate(data.len())?;
+    if frame_id.len() > 4096 {
+        return Err(DecodeError::InvalidLength);
+    }
+    let seconds = i32::try_from(measurement_time.0.div_euclid(1_000_000_000))
+        .map_err(|_| DecodeError::InvalidTimestamp)?;
+    let nanos = measurement_time.0.rem_euclid(1_000_000_000) as u32;
+    let mut output = vec![0, 1, 0, 0];
+    push_u32(&mut output, seconds as u32);
+    push_u32(&mut output, nanos);
+    push_string(&mut output, frame_id)?;
+    push_u32(&mut output, layout.height);
+    push_u32(&mut output, layout.width);
+    push_string(&mut output, layout.encoding.as_ros_encoding())?;
+    output.push(0);
+    push_u32(&mut output, layout.step);
+    push_u32(&mut output, data.len() as u32);
+    output.extend_from_slice(data);
+    Ok(output)
 }
