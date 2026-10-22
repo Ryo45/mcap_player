@@ -85,7 +85,8 @@ impl McapPlayback {
     pub fn query_source(&self) -> McapSource {
         self.source.fork_reader()
     }
-    fn from_source(source: McapSource) -> Result<Self, McapPlaybackError> {
+    fn from_source(mut source: McapSource) -> Result<Self, McapPlaybackError> {
+        source.enable_seek_cache();
         let range = source.time_range();
         Ok(Self {
             source,

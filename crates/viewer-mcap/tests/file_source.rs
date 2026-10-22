@@ -259,3 +259,48 @@ fn opening_and_seeking_a_gigabyte_sparse_recording_reads_only_indexed_ranges() {
         .unwrap();
     assert_eq!(current.value, 30.0);
 }
+
+#[test]
+fn cached_seek_still_rejects_a_changed_file_before_restoring_state() {
+    use std::io::Write;
+    let (file, _) = fixture();
+    let mut playback = McapPlayback::open_file(&file.0).unwrap();
+    playback.select_streams([StreamId(1)]).unwrap();
+    let plan = RestorePlanner::new(playback.catalog())
+        .plan(
+            ArrivalTime(10),
+            [RestoreInput {
+                stream_id: StreamId(1),
+                semantics: RestoreSemantics::LatestBefore,
+            }],
+        )
+        .unwrap();
+    playback
+        .seek_with(&plan, |_, _| Ok::<_, std::convert::Infallible>(()))
+        .unwrap();
+    assert!(
+        playback
+            .recording_source()
+            .read_diagnostics()
+            .seek_cache_backing_bytes
+            > 0
+    );
+    let before = playback.clock().view();
+    std::fs::OpenOptions::new()
+        .append(true)
+        .open(&file.0)
+        .unwrap()
+        .write_all(&[0])
+        .unwrap();
+    let mut restored = false;
+    let result = playback.seek_with(&plan, |_, _| {
+        restored = true;
+        Ok::<_, std::convert::Infallible>(())
+    });
+    assert!(matches!(
+        result,
+        Err(McapSeekError::Source(McapSourceError::SourceChanged))
+    ));
+    assert!(!restored);
+    assert_eq!(playback.clock().view(), before);
+}

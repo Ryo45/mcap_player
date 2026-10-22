@@ -8,7 +8,7 @@ use std::sync::{
 pub(super) struct ChunkPrefetch {
     pub index: usize,
     cancelled: Arc<AtomicBool>,
-    task: Option<std::thread::JoinHandle<Result<Vec<ParsedChunkMessage>, McapSourceError>>>,
+    task: Option<std::thread::JoinHandle<Result<Arc<[ParsedChunkMessage]>, McapSourceError>>>,
 }
 impl ChunkPrefetch {
     pub fn start(source: McapSource, index: usize) -> Option<Self> {
@@ -29,7 +29,7 @@ impl ChunkPrefetch {
     pub fn is_ready(&self) -> bool {
         self.task.as_ref().is_some_and(|task| task.is_finished())
     }
-    pub fn finish(mut self) -> Result<Vec<ParsedChunkMessage>, McapSourceError> {
+    pub fn finish(mut self) -> Result<Arc<[ParsedChunkMessage]>, McapSourceError> {
         self.task
             .take()
             .expect("unconsumed prefetch task")
@@ -273,6 +273,6 @@ mod tests {
             latest.messages[0].payload.as_ptr(),
             position.active[0].messages[0].payload.as_ptr()
         );
-        assert!(source.restore_chunk.is_none());
+        assert!(source.seek_chunks.is_none());
     }
 }
