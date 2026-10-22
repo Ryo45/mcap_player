@@ -1,0 +1,31 @@
+{
+  "runs": [
+    {
+      "run": "0-forward-native",
+      "status": "ok",
+      "updates_hz": 9.731600772939146,
+      "peak_pss_mib": 1226.2861328125,
+      "cpu_one_core_percent": 45.10438406360026
+    },
+    {
+      "run": "1-forward-native",
+      "status": "ok",
+      "updates_hz": 9.731699107834318,
+      "peak_pss_mib": 1225.7705078125,
+      "cpu_one_core_percent": 44.765831844218916
+    },
+    {
+      "run": "2-forward-native",
+      "status": "ok",
+      "updates_hz": 9.734727765650426,
+      "peak_pss_mib": 1236.564453125,
+      "cpu_one_core_percent": 45.10058939326254
+    }
+  ],
+  "median": {
+    "updates_hz": 9.731699107834318,
+    "peak_pss_mib": 1226.2861328125,
+    "cpu_one_core_percent": 45.10058939326254
+  },
+  "prior_control": "../2026-10-22-raw-storage/prefetch/summary.json; raw-prefetch-zstd-256m-camera-1"
+}

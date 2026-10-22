@@ -11,12 +11,13 @@ REPORT = ROOT / 'docs/performance/2026-10-22-raw-storage'
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--variant', choices=['storage', 'prefetch'], default='storage')
+    parser.add_argument('--variant', choices=['storage', 'prefetch', 'seek-cache'], default='storage')
     args = parser.parse_args()
+    report = ROOT / 'docs/performance/2026-10-22-seek-revisit' if args.variant == 'seek-cache' else REPORT
     patch = ROOT / 'docs/performance/2026-10-20-desktop-workloads/native-measurement.patch'
     clean_paths = [line[6:] for line in patch.read_text().splitlines() if line.startswith('+++ b/')]
     clean_paths += ['crates/viewer-core/src/feature/controllers/camera.rs']
-    paths = clean_paths + (['crates/viewer-mcap/src/playback.rs'] if args.variant == 'prefetch' else [])
+    paths = clean_paths + (['crates/viewer-mcap/src/playback.rs'] if args.variant != 'storage' else [])
     original = {p: (ROOT / p).read_text() for p in paths}
     try:
         subprocess.run(['git', 'diff', '--exit-code', '--', *clean_paths], cwd=ROOT, check=True)
@@ -27,7 +28,7 @@ def main():
         old = 'const BACKGROUND_CAMERA_INTERVAL: Duration = Duration::from_millis(200);'
         assert text.count(old) == 1
         camera.write_text(text.replace(old, 'const BACKGROUND_CAMERA_INTERVAL: Duration = Duration::from_millis(100);'))
-        if args.variant == 'prefetch':
+        if args.variant != 'storage':
             playback = ROOT / 'crates/viewer-mcap/src/playback.rs'
             text = playback.read_text()
             anchor = '        self.source_read.record(read_started.elapsed());'
@@ -40,8 +41,8 @@ def main():
             eprintln!("GPU_BENCH_IO expanded={} ready={} waits={} wait_ns={} active={} prepared_estimate={}", d.chunks_expanded, d.prefetch_ready_hits, d.prefetch_waits, d.prefetch_wait_ns, d.sequential_cache_backing_bytes, d.prefetch_estimated_bytes);
         }''')
             playback.write_text(text)
-        REPORT.mkdir(parents=True, exist_ok=True)
-        (REPORT / f'native-{args.variant}.patch').write_text(''.join(
+        report.mkdir(parents=True, exist_ok=True)
+        (report / f'native-{args.variant}.patch').write_text(''.join(
             ''.join(difflib.unified_diff(original[p].splitlines(True), (ROOT / p).read_text().splitlines(True), fromfile='a/' + p, tofile='b/' + p))
             for p in paths))
         build = ('cargo build --release -p viewer-native -p performance-probe --locked '

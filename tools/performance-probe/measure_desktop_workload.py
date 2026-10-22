@@ -45,6 +45,15 @@ def distribution(values):
     return {'median':statistics.median(values),'p95':values[int((len(values)-1)*.95)],'min':values[0],'max':values[-1]}
 
 
+def wait_seek(predicate, timeout, label):
+    # Fast restoration should not be hidden by the general 50 ms startup poll.
+    end=time.monotonic()+timeout
+    while time.monotonic()<end:
+        if predicate():return
+        time.sleep(.005)
+    raise RuntimeError('timeout: '+label)
+
+
 class PssSampler:
     """One in-flight /proc read; slow smaps_rollup must not stop pixel observation."""
     def __init__(self, pid, origin):
@@ -96,6 +105,7 @@ def main():
     parser.add_argument('--jpeg-dir',type=Path)
     parser.add_argument('--references',type=Path)
     parser.add_argument('--seconds',type=float,default=12)
+    parser.add_argument('--seek-only',action='store_true',help='Measure verified seeks without starting playback')
     parser.add_argument('--port',type=int,default=9370)
     args=parser.parse_args()
     case=json.loads(args.case.read_text());data=Path(case['data']);kind=case['kind'];raw_camera=case.get('encoding')=='raw'
@@ -303,20 +313,24 @@ def main():
                 if reference.get('color_profile')!=result['color_profile']:raise RuntimeError('reference color profile mismatch')
                 refs=reference['references'];result['references_sha256']=digest(args.references)
             offsets=case.get('seek_offsets_ns', [25310000000,48710000000,16110000000,0]if kind=='camera'else[13310000000,18710000000,6110000000,0])
+            if args.seek_only:
+                seek_origin=time.monotonic()
+                pss_sampler=PssSampler(process.pid,seek_origin)
             for ns in offsets:
                 begin=time.monotonic();send('seek',ns)
                 if args.app=='native':
-                    wait_for(lambda:f'GPU_BENCH_COMMAND id={request}\n' in (args.output/'app.log').read_text(),30,'Native seek command completed')
+                    wait_seek(lambda:f'GPU_BENCH_COMMAND id={request}\n' in (args.output/'app.log').read_text(),30,'Native seek command completed')
                 if cdp:
                     target={'sec':1735689600+ns//1000000000,'nsec':ns%1000000000}
-                    wait_for(lambda:cdp.evaluate(STATE)['current']==target,6,'committed seek cursor')
+                    wait_seek(lambda:cdp.evaluate(STATE)['current']==target,6,'committed seek cursor')
+                committed_ms=(time.monotonic()-begin)*1000
                 if refs:
                     while time.monotonic()-begin<6:
                         matches=[identify(v,r)for v,r in zip(samples(),refs)]
                         if all(m['variant']==(ns//100000000+i*7)%32 and m['mae']<18 and m['second_mae']-m['mae']>1 for i,m in enumerate(matches)):break
                         time.sleep(.01)
                     else:raise RuntimeError('seek pixels mismatch')
-                    seek_result={'offset_ns':ns,'latency_ms':(time.monotonic()-begin)*1000,'images':matches}
+                    seek_result={'offset_ns':ns,'latency_ms':(time.monotonic()-begin)*1000,'control_completed_ms':committed_ms,'images':matches}
                     if args.app=='native':
                         expected=BASE+ns//100000000*100000000
                         def exact_textures():
@@ -326,12 +340,26 @@ def main():
                         wait_for(exact_textures,2,'exact Native seek texture log times')
                         seek_result['native_texture_log_ns']=[expected]*case['cameras']
                     result['seeks'].append(seek_result)
+                    if args.seek_only:
+                        result['pss_samples'].extend(pss_sampler.drain())
                     # Let the player finish resetting its forward iterator after emit.
                     # This settling interval is outside the measured seek latency.
                     time.sleep(.3)
                 else:
                     time.sleep(.25)
                     result['seeks'].append({'offset_ns':ns,'note':'command issued; message metadata audited, not pixel-identity seek latency'})
+            if args.seek_only:
+                if not refs or not result['seeks']:raise RuntimeError('seek-only requires verified camera images')
+                pss_sampler.stop_event.set();pss_sampler.thread.join(timeout=1)
+                result['pss_samples'].extend(pss_sampler.drain())
+                if any('error'in row for row in result['pss_samples']):raise RuntimeError('seek PSS sampler failed')
+                result['after_seek']=process_sample(process.pid)
+                result['seek_only']=True
+                result['seek_completion_poll_ms']=5
+                result['summary']={'seek_ms':distribution([row['latency_ms']for row in result['seeks']]),
+                    'after_first_two_seek_ms':distribution([row['latency_ms']for row in result['seeks'][2:]]),
+                    'peak_sampled_pss_mib':max([row['resources']['pss_kib']/1024 for row in result['pss_samples']]+[result['after_seek']['pss_kib']/1024])}
+                screenshot('seeked.png');result['status']='ok';return
             if cdp:
                 result['before_ui']=cdp.evaluate(STATE)
                 if result['before_ui']['current']!={'sec':1735689600,'nsec':0}:raise RuntimeError('playback did not return to start')

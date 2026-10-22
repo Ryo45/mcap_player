@@ -1,0 +1,45 @@
+{
+  "before_product_commit": "e81a0be",
+  "after_product_commit": "dfea770",
+  "binaries": {
+    "viewer-native-prefetch": {
+      "sha256": "5af4888c6724b4a4b428a740c7eef8c09272ecb9b56b7531600e35e0df18cebf",
+      "bytes": 23164928
+    },
+    "viewer-native-seek-cache": {
+      "sha256": "2fa603257bf5e59cc8c38d939458c9a6201dde1f9cb1bfcef4054cdf5fb7f876",
+      "bytes": 23198096
+    },
+    "performance-probe-seek-before": {
+      "sha256": "2537b4a9b7aec3c6f73408b26e101695cb08b4418d2a08eb0df56fbab5603439",
+      "bytes": 4922616
+    },
+    "performance-probe-seek-cache": {
+      "sha256": "065a3bf8d47100c3e57e04a33fa213d209379738d9e9dbf68759a43a474a5483",
+      "bytes": 4928816
+    }
+  },
+  "verification_logs": [
+    {
+      "file": "build-seek-cache.log.gz",
+      "original_sha256": "190499c35d32f024d700cd924b305dec18c60af994d0d5392f0492a99c1ae84c"
+    },
+    {
+      "file": "seek-cache-tests.log.gz",
+      "original_sha256": "7beee25cbc81d827a7c51f612942b7ea77b0712c8200c9d535faae91fc30d6be"
+    },
+    {
+      "file": "seek-revisit-final-checks.log.gz",
+      "original_sha256": "1681721b57591992881382f052b08a771ca6eee09f0d6130dca33710f9a22535"
+    },
+    {
+      "file": "seek-probe-final-checks.log.gz",
+      "original_sha256": "2d3e61cc805f31581e18fdc90c2dc88b8935d671d1500f83b5f271bd2c293363"
+    }
+  ],
+  "product_sources": {
+    "crates/viewer-mcap/src/playback.rs": "aaeffbc41d395239eb8655525f088bde96518e54a3bd34d792e98a16170f3ecc",
+    "crates/viewer-mcap/src/recording/source.rs": "1ac66563c2af67b547e6019bedd2a68a9ff32651f7796acc68ede8c2bbac2227",
+    "crates/viewer-mcap/src/recording/source/seek_chunks.rs": "0a69901c7feb7a1212e753d9bdb844b389aa6633d321640250e0155c3adeec29"
+  }
+}
