@@ -1,0 +1,510 @@
+[
+  {
+    "case": "raw-lz4-single-4s-camera-1",
+    "app": "lichtblick",
+    "runs": 1,
+    "successes": 0,
+    "failures": [
+      "ConnectionResetError(104, 'Connection reset by peer')"
+    ]
+  },
+  {
+    "case": "raw-lz4-single-4s-camera-1",
+    "app": "native",
+    "runs": 1,
+    "successes": 0,
+    "failures": [
+      "RuntimeError('timeout: Native seek command completed')"
+    ]
+  },
+  {
+    "case": "raw-lz4-single-4s-camera-4",
+    "app": "lichtblick",
+    "runs": 1,
+    "successes": 0,
+    "failures": [
+      "ConnectionResetError(104, 'Connection reset by peer')"
+    ]
+  },
+  {
+    "case": "raw-lz4-single-4s-camera-4",
+    "app": "native",
+    "runs": 1,
+    "successes": 0,
+    "failures": [
+      "RuntimeError('timeout: Native seek command completed')"
+    ]
+  },
+  {
+    "case": "raw-none-single-4s-camera-1",
+    "app": "lichtblick",
+    "runs": 2,
+    "successes": 2,
+    "failures": [],
+    "metrics": {
+      "cpu_percent": {
+        "median": 74.77848810060107,
+        "min": 66.92942052876332,
+        "max": 82.62755567243883
+      },
+      "peak_pss_mib": {
+        "median": 2970.40380859375,
+        "min": 2960.423828125,
+        "max": 2980.3837890625
+      },
+      "focus_updates_hz": {
+        "median": 9.815307870748484,
+        "min": 9.81426509379025,
+        "max": 9.816350647706718
+      },
+      "minimum_updates_hz": {
+        "median": 9.815307870748484,
+        "min": 9.81426509379025,
+        "max": 9.816350647706718
+      },
+      "minimum_progress_hz": {
+        "median": 9.815307870748484,
+        "min": 9.81426509379025,
+        "max": 9.816350647706718
+      },
+      "opening_ready_ms": {
+        "median": 2439.1845976933837,
+        "min": 2418.1642457842827,
+        "max": 2460.2049496024847
+      },
+      "after_pause_pss_mib": {
+        "median": 2751.68017578125,
+        "min": 2718.1181640625,
+        "max": 2785.2421875
+      },
+      "worst_lag_p95_ms": {
+        "median": 107.63413319364167,
+        "min": 105.65407965332253,
+        "max": 109.61418673396084
+      }
+    }
+  },
+  {
+    "case": "raw-none-single-4s-camera-1",
+    "app": "native",
+    "runs": 2,
+    "successes": 2,
+    "failures": [],
+    "metrics": {
+      "cpu_percent": {
+        "median": 11.979601216953963,
+        "min": 11.978237890686218,
+        "max": 11.980964543221708
+      },
+      "peak_pss_mib": {
+        "median": 2081.65625,
+        "min": 2081.1796875,
+        "max": 2082.1328125
+      },
+      "focus_updates_hz": {
+        "median": 9.470423209371123,
+        "min": 9.469700656961493,
+        "max": 9.471145761780754
+      },
+      "minimum_updates_hz": {
+        "median": 9.470423209371123,
+        "min": 9.469700656961493,
+        "max": 9.471145761780754
+      },
+      "minimum_progress_hz": {
+        "median": 9.470423209371123,
+        "min": 9.469700656961493,
+        "max": 9.471145761780754
+      },
+      "opening_ready_ms": {
+        "median": 914.5910502411425,
+        "min": 914.3916955217719,
+        "max": 914.7904049605131
+      },
+      "after_pause_pss_mib": {
+        "median": 1140.498046875,
+        "min": 1140.4111328125,
+        "max": 1140.5849609375
+      },
+      "worst_lag_p95_ms": {
+        "median": 159.7433156333863,
+        "min": 159.66808758676044,
+        "max": 159.81854368001214
+      }
+    }
+  },
+  {
+    "case": "raw-none-single-4s-camera-4",
+    "app": "lichtblick",
+    "runs": 2,
+    "successes": 0,
+    "failures": [
+      "PermissionError(13, 'Permission denied')",
+      "RuntimeError('4 GiB PSS guard; not a product limit')"
+    ]
+  },
+  {
+    "case": "raw-none-single-4s-camera-4",
+    "app": "native",
+    "runs": 2,
+    "successes": 2,
+    "failures": [],
+    "metrics": {
+      "cpu_percent": {
+        "median": 27.257282304903256,
+        "min": 27.2200410164121,
+        "max": 27.294523593394413
+      },
+      "peak_pss_mib": {
+        "median": 2092.4248046875,
+        "min": 2075.7890625,
+        "max": 2109.060546875
+      },
+      "focus_updates_hz": {
+        "median": 9.62452984256546,
+        "min": 9.469735766859708,
+        "max": 9.779323918271212
+      },
+      "minimum_updates_hz": {
+        "median": 9.455920809491818,
+        "min": 9.442105852123928,
+        "max": 9.469735766859708
+      },
+      "minimum_progress_hz": {
+        "median": 9.455920809491818,
+        "min": 9.442105852123928,
+        "max": 9.469735766859708
+      },
+      "opening_ready_ms": {
+        "median": 988.5372463613749,
+        "min": 913.9953851699829,
+        "max": 1063.0791075527668
+      },
+      "after_pause_pss_mib": {
+        "median": 1153.8056640625,
+        "min": 1127.2109375,
+        "max": 1180.400390625
+      },
+      "worst_lag_p95_ms": {
+        "median": 165.46286717057222,
+        "min": 161.2860020250082,
+        "max": 169.63973231613627
+      }
+    }
+  },
+  {
+    "case": "raw-zstd-8m-4s-camera-1",
+    "app": "lichtblick",
+    "runs": 2,
+    "successes": 2,
+    "failures": [],
+    "metrics": {
+      "cpu_percent": {
+        "median": 78.62050670446303,
+        "min": 74.8157821327347,
+        "max": 82.42523127619137
+      },
+      "peak_pss_mib": {
+        "median": 1160.419921875,
+        "min": 1126.740234375,
+        "max": 1194.099609375
+      },
+      "focus_updates_hz": {
+        "median": 9.810477446035016,
+        "min": 9.80993440589454,
+        "max": 9.81102048617549
+      },
+      "minimum_updates_hz": {
+        "median": 9.810477446035016,
+        "min": 9.80993440589454,
+        "max": 9.81102048617549
+      },
+      "minimum_progress_hz": {
+        "median": 9.810477446035016,
+        "min": 9.80993440589454,
+        "max": 9.81102048617549
+      },
+      "opening_ready_ms": {
+        "median": 2087.2601023875177,
+        "min": 2072.675392962992,
+        "max": 2101.844811812043
+      },
+      "after_pause_pss_mib": {
+        "median": 955.865234375,
+        "min": 931.4384765625,
+        "max": 980.2919921875
+      },
+      "worst_lag_p95_ms": {
+        "median": 109.0735719539222,
+        "min": 108.46013147383893,
+        "max": 109.68701243400547
+      }
+    }
+  },
+  {
+    "case": "raw-zstd-8m-4s-camera-1",
+    "app": "native",
+    "runs": 2,
+    "successes": 2,
+    "failures": [],
+    "metrics": {
+      "cpu_percent": {
+        "median": 22.467351447277515,
+        "min": 22.300946967889278,
+        "max": 22.633755926665753
+      },
+      "peak_pss_mib": {
+        "median": 269.10205078125,
+        "min": 268.916015625,
+        "max": 269.2880859375
+      },
+      "focus_updates_hz": {
+        "median": 9.476435310036464,
+        "min": 9.472555857301213,
+        "max": 9.480314762771718
+      },
+      "minimum_updates_hz": {
+        "median": 9.476435310036464,
+        "min": 9.472555857301213,
+        "max": 9.480314762771718
+      },
+      "minimum_progress_hz": {
+        "median": 9.476435310036464,
+        "min": 9.472555857301213,
+        "max": 9.480314762771718
+      },
+      "opening_ready_ms": {
+        "median": 211.43254218623042,
+        "min": 209.02834925800562,
+        "max": 213.83673511445522
+      },
+      "after_pause_pss_mib": {
+        "median": 257.34423828125,
+        "min": 257.158203125,
+        "max": 257.5302734375
+      },
+      "worst_lag_p95_ms": {
+        "median": 159.21589219942666,
+        "min": 159.1835852712391,
+        "max": 159.24819912761424
+      }
+    }
+  },
+  {
+    "case": "raw-zstd-8m-4s-camera-4",
+    "app": "lichtblick",
+    "runs": 2,
+    "successes": 2,
+    "failures": [],
+    "metrics": {
+      "cpu_percent": {
+        "median": 236.71730933312176,
+        "min": 230.13913086491223,
+        "max": 243.29548780133126
+      },
+      "peak_pss_mib": {
+        "median": 2430.25048828125,
+        "min": 2330.1552734375,
+        "max": 2530.345703125
+      },
+      "focus_updates_hz": {
+        "median": 9.817509382949225,
+        "min": 9.81302226741186,
+        "max": 9.82199649848659
+      },
+      "minimum_updates_hz": {
+        "median": 9.817509382949225,
+        "min": 9.81302226741186,
+        "max": 9.82199649848659
+      },
+      "minimum_progress_hz": {
+        "median": 9.817509382949225,
+        "min": 9.81302226741186,
+        "max": 9.82199649848659
+      },
+      "opening_ready_ms": {
+        "median": 2702.5523628108203,
+        "min": 2607.496206648648,
+        "max": 2797.608518972993
+      },
+      "after_pause_pss_mib": {
+        "median": 1296.5703125,
+        "min": 1239.6533203125,
+        "max": 1353.4873046875
+      },
+      "worst_lag_p95_ms": {
+        "median": 111.37852249667036,
+        "min": 109.46761686354867,
+        "max": 113.28942812979204
+      }
+    }
+  },
+  {
+    "case": "raw-zstd-8m-4s-camera-4",
+    "app": "native",
+    "runs": 2,
+    "successes": 2,
+    "failures": [],
+    "metrics": {
+      "cpu_percent": {
+        "median": 35.28043157920739,
+        "min": 35.278752118527784,
+        "max": 35.282111039887
+      },
+      "peak_pss_mib": {
+        "median": 287.48583984375,
+        "min": 287.318359375,
+        "max": 287.6533203125
+      },
+      "focus_updates_hz": {
+        "median": 9.476148740353157,
+        "min": 9.47479610921804,
+        "max": 9.477501371488271
+      },
+      "minimum_updates_hz": {
+        "median": 9.476148740353157,
+        "min": 9.47479610921804,
+        "max": 9.477501371488271
+      },
+      "minimum_progress_hz": {
+        "median": 9.476148740353157,
+        "min": 9.47479610921804,
+        "max": 9.477501371488271
+      },
+      "opening_ready_ms": {
+        "median": 211.21358079835773,
+        "min": 209.81737226247787,
+        "max": 212.60978933423758
+      },
+      "after_pause_pss_mib": {
+        "median": 287.54052734375,
+        "min": 287.369140625,
+        "max": 287.7119140625
+      },
+      "worst_lag_p95_ms": {
+        "median": 160.5299058370291,
+        "min": 160.5094049125908,
+        "max": 160.55040676146737
+      }
+    }
+  },
+  {
+    "case": "raw-zstd-single-4s-camera-1",
+    "app": "lichtblick",
+    "runs": 2,
+    "successes": 0,
+    "failures": [
+      "RuntimeError('CDP socket closed')",
+      "RuntimeError('CDP socket closed')"
+    ]
+  },
+  {
+    "case": "raw-zstd-single-4s-camera-1",
+    "app": "native",
+    "runs": 2,
+    "successes": 1,
+    "failures": [
+      "RuntimeError('timeout: Native seek command completed')"
+    ],
+    "metrics": {
+      "cpu_percent": {
+        "median": 11.313280978823068,
+        "min": 11.313280978823068,
+        "max": 11.313280978823068
+      },
+      "peak_pss_mib": {
+        "median": 2112.203125,
+        "min": 2112.203125,
+        "max": 2112.203125
+      },
+      "focus_updates_hz": {
+        "median": 9.469905121862022,
+        "min": 9.469905121862022,
+        "max": 9.469905121862022
+      },
+      "minimum_updates_hz": {
+        "median": 9.469905121862022,
+        "min": 9.469905121862022,
+        "max": 9.469905121862022
+      },
+      "minimum_progress_hz": {
+        "median": 9.469905121862022,
+        "min": 9.469905121862022,
+        "max": 9.469905121862022
+      },
+      "opening_ready_ms": {
+        "median": 2672.303494066,
+        "min": 2672.303494066,
+        "max": 2672.303494066
+      },
+      "after_pause_pss_mib": {
+        "median": 1171.15234375,
+        "min": 1171.15234375,
+        "max": 1171.15234375
+      },
+      "worst_lag_p95_ms": {
+        "median": 160.20434759557213,
+        "min": 160.20434759557213,
+        "max": 160.20434759557213
+      }
+    }
+  },
+  {
+    "case": "raw-zstd-single-4s-camera-4",
+    "app": "lichtblick",
+    "runs": 1,
+    "successes": 0,
+    "failures": [
+      "RuntimeError('CDP socket closed')"
+    ]
+  },
+  {
+    "case": "raw-zstd-single-4s-camera-4",
+    "app": "native",
+    "runs": 1,
+    "successes": 1,
+    "failures": [],
+    "metrics": {
+      "cpu_percent": {
+        "median": 21.966340375122286,
+        "min": 21.966340375122286,
+        "max": 21.966340375122286
+      },
+      "peak_pss_mib": {
+        "median": 2110.5107421875,
+        "min": 2110.5107421875,
+        "max": 2110.5107421875
+      },
+      "focus_updates_hz": {
+        "median": 9.4688887993886,
+        "min": 9.4688887993886,
+        "max": 9.4688887993886
+      },
+      "minimum_updates_hz": {
+        "median": 9.4688887993886,
+        "min": 9.4688887993886,
+        "max": 9.4688887993886
+      },
+      "minimum_progress_hz": {
+        "median": 9.4688887993886,
+        "min": 9.4688887993886,
+        "max": 9.4688887993886
+      },
+      "opening_ready_ms": {
+        "median": 2767.4650298431516,
+        "min": 2767.4650298431516,
+        "max": 2767.4650298431516
+      },
+      "after_pause_pss_mib": {
+        "median": 1176.71484375,
+        "min": 1176.71484375,
+        "max": 1176.71484375
+      },
+      "worst_lag_p95_ms": {
+        "median": 161.86802498996224,
+        "min": 161.86802498996224,
+        "max": 161.86802498996224
+      }
+    }
+  }
+]

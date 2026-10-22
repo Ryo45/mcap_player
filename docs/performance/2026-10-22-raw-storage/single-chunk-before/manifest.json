@@ -1,0 +1,812 @@
+[
+  {
+    "name": "0-lz4-single-4s-1-lichtblick",
+    "final_matrix": true,
+    "status": "failed",
+    "error": "ConnectionResetError(104, 'Connection reset by peer')",
+    "resource_guard": [
+      "4 GiB application PSS guard during opening/calibration/playback"
+    ],
+    "files": [
+      {
+        "file": "runs/0-lz4-single-4s-1-lichtblick-result.json.gz",
+        "original_sha256": "d0e792ccc68e4c3723eabc46483e0014edecc6e0eda17135234721ffdfe54876",
+        "original_bytes": 12169
+      },
+      {
+        "file": "runs/0-lz4-single-4s-1-lichtblick-app.log.gz",
+        "original_sha256": "40a1a026306a477d0d8680223a699d993c9cbc4cbfd55d90fc8ce813216b4daf",
+        "original_bytes": 1662
+      },
+      {
+        "file": "runs/0-lz4-single-4s-1-lichtblick-running.json.gz",
+        "original_sha256": "a6a96509fb200df3cb8542a35c7420c9785a163b7048547ba05ce26464b0a4d3",
+        "original_bytes": 5020
+      },
+      {
+        "file": "runs/0-lz4-single-4s-1-lichtblick-resource-guard.json.gz",
+        "original_sha256": "5038beb3472f1dbe8871ab32045478e8ce51d7435f7f862e8432171e3da52145",
+        "original_bytes": 1148
+      }
+    ]
+  },
+  {
+    "name": "0-lz4-single-4s-1-native",
+    "final_matrix": true,
+    "status": "failed",
+    "error": "RuntimeError('timeout: Native seek command completed')",
+    "resource_guard": [
+      "4 GiB application PSS guard during opening/calibration/playback"
+    ],
+    "files": [
+      {
+        "file": "runs/0-lz4-single-4s-1-native-result.json.gz",
+        "original_sha256": "731b629b8fb105043e885bfb12cd35db38a7c18c8e8a998bdd4f8fcb5bca97c6",
+        "original_bytes": 5899
+      },
+      {
+        "file": "runs/0-lz4-single-4s-1-native-app.log.gz",
+        "original_sha256": "18efb80f366064b75792d0d62a93a0b216e20d53aceef8d80f8d0e71561843db",
+        "original_bytes": 1280
+      },
+      {
+        "file": "runs/0-lz4-single-4s-1-native-running.json.gz",
+        "original_sha256": "6219bb192735139b8d98d598cf3d84d7b7f4c2c3d4ba2b4871738b1ba1c18c10",
+        "original_bytes": 5072
+      },
+      {
+        "file": "runs/0-lz4-single-4s-1-native-resource-guard.json.gz",
+        "original_sha256": "3eb74d89d01a8bae154079d982ecb4346be4626bc272196ecb718307d72b580f",
+        "original_bytes": 472
+      }
+    ]
+  },
+  {
+    "name": "0-lz4-single-4s-4-lichtblick",
+    "final_matrix": true,
+    "status": "failed",
+    "error": "ConnectionResetError(104, 'Connection reset by peer')",
+    "resource_guard": [
+      "4 GiB application PSS guard during opening/calibration/playback"
+    ],
+    "files": [
+      {
+        "file": "runs/0-lz4-single-4s-4-lichtblick-result.json.gz",
+        "original_sha256": "2efe2da63df0e4db86df8003d07f0dfffbb02ecd1ccf1b86357e52f44a53fd85",
+        "original_bytes": 12169
+      },
+      {
+        "file": "runs/0-lz4-single-4s-4-lichtblick-app.log.gz",
+        "original_sha256": "15ab6e3480df1af9fe5c012f0e2a496fd0ede171149d0c0c96601b09150d14a4",
+        "original_bytes": 1662
+      },
+      {
+        "file": "runs/0-lz4-single-4s-4-lichtblick-running.json.gz",
+        "original_sha256": "46440450df98b18941f40cf4b27705418075730223ec81e165cd9bbabaaab924",
+        "original_bytes": 5020
+      },
+      {
+        "file": "runs/0-lz4-single-4s-4-lichtblick-resource-guard.json.gz",
+        "original_sha256": "0928c4047a328b9cde744b5d2bdef7353df1b5387d0a0c9d62e8ecbc82e64dc6",
+        "original_bytes": 1147
+      }
+    ]
+  },
+  {
+    "name": "0-lz4-single-4s-4-native",
+    "final_matrix": true,
+    "status": "failed",
+    "error": "RuntimeError('timeout: Native seek command completed')",
+    "resource_guard": [
+      "4 GiB application PSS guard during opening/calibration/playback"
+    ],
+    "files": [
+      {
+        "file": "runs/0-lz4-single-4s-4-native-result.json.gz",
+        "original_sha256": "f88f5fa0a3dc6b44da99746864a20ae7e86259808e38b52a0e6ff6fbbc16b6d1",
+        "original_bytes": 6273
+      },
+      {
+        "file": "runs/0-lz4-single-4s-4-native-app.log.gz",
+        "original_sha256": "d9372c5472499fe2285c5c84c412b972ad6de302cbc8e0caeb13bc8a5f769cb2",
+        "original_bytes": 1364
+      },
+      {
+        "file": "runs/0-lz4-single-4s-4-native-running.json.gz",
+        "original_sha256": "c6fc93aa1e00c8689c5531275ac3054cadda7b7eca5edbb0bebb4379346bf877",
+        "original_bytes": 5072
+      },
+      {
+        "file": "runs/0-lz4-single-4s-4-native-resource-guard.json.gz",
+        "original_sha256": "06548fa7cfa8495f160738e630fc9cd669fcd64e3f2873e82252004a1c2e9c67",
+        "original_bytes": 472
+      }
+    ]
+  },
+  {
+    "name": "0-none-single-4s-1-lichtblick",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/0-none-single-4s-1-lichtblick-result.json.gz",
+        "original_sha256": "d2b39c0d7ec862289298ec951fdc35e2c9d55a95ae5b607e8b8573b8252f98ae",
+        "original_bytes": 74806
+      },
+      {
+        "file": "runs/0-none-single-4s-1-lichtblick-app.log.gz",
+        "original_sha256": "ea07cd95d310870c141d0f11e795970ebf2a576e8bcc65c85697cb6b31a0f6d4",
+        "original_bytes": 501
+      },
+      {
+        "file": "runs/0-none-single-4s-1-lichtblick-running.json.gz",
+        "original_sha256": "4fcc6715c9162f8c4abdbc268ead3e15b5bb8872a4ffce9e5013c07e0ccdc728",
+        "original_bytes": 5115
+      }
+    ]
+  },
+  {
+    "name": "0-none-single-4s-1-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/0-none-single-4s-1-native-result.json.gz",
+        "original_sha256": "69d25264a9b2e61ec92a37e8752653499fb3e0574fc63b99601f38729947cefd",
+        "original_bytes": 45727
+      },
+      {
+        "file": "runs/0-none-single-4s-1-native-app.log.gz",
+        "original_sha256": "9c0160f723b1ef3bbd5a5bf61e7415f76a9131caaddee7cb2791b2786386e3f1",
+        "original_bytes": 23509
+      },
+      {
+        "file": "runs/0-none-single-4s-1-native-running.json.gz",
+        "original_sha256": "4cdac224e8174ebdb6c0a2937b035c11437add49108e5640ed1613e7b06e9783",
+        "original_bytes": 5168
+      }
+    ]
+  },
+  {
+    "name": "0-none-single-4s-4-lichtblick",
+    "final_matrix": true,
+    "status": "failed",
+    "error": "PermissionError(13, 'Permission denied')",
+    "resource_guard": [
+      "4 GiB application PSS guard during opening/calibration/playback"
+    ],
+    "files": [
+      {
+        "file": "runs/0-none-single-4s-4-lichtblick-result.json.gz",
+        "original_sha256": "e27b65b0611b65c43c55b9f871f38d0ee7a95196c8b7f83f4f09fba5d6160568",
+        "original_bytes": 42092
+      },
+      {
+        "file": "runs/0-none-single-4s-4-lichtblick-app.log.gz",
+        "original_sha256": "4f2504be2c3c07113de53c966a2aee3d182b07dd79af6b0266930d33a1e449cb",
+        "original_bytes": 1662
+      },
+      {
+        "file": "runs/0-none-single-4s-4-lichtblick-running.json.gz",
+        "original_sha256": "d725ae0f2600e616e422cab6261826e046b2b1091df4c4851bef91cfe3f50e75",
+        "original_bytes": 5115
+      },
+      {
+        "file": "runs/0-none-single-4s-4-lichtblick-resource-guard.json.gz",
+        "original_sha256": "2ed765d7babd48c1d38690a0fab98f6955f56c5a34b7c69c4a822853500ea10d",
+        "original_bytes": 1149
+      }
+    ]
+  },
+  {
+    "name": "0-none-single-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/0-none-single-4s-4-native-result.json.gz",
+        "original_sha256": "83c58572629222d8a4ee5e3e44234456d35a91c9c29f82d7d1cc840a6a2a50f4",
+        "original_bytes": 89663
+      },
+      {
+        "file": "runs/0-none-single-4s-4-native-app.log.gz",
+        "original_sha256": "25b45912364bceabf806f7f501b5f4740e8429a5d2a77d29126cc1e1dfc39e4b",
+        "original_bytes": 40055
+      },
+      {
+        "file": "runs/0-none-single-4s-4-native-running.json.gz",
+        "original_sha256": "dafb89a1bc56da37def567f48d01aeee73b4d179aae96893a84b786cb3711239",
+        "original_bytes": 5168
+      }
+    ]
+  },
+  {
+    "name": "0-zstd-8m-4s-1-lichtblick",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/0-zstd-8m-4s-1-lichtblick-result.json.gz",
+        "original_sha256": "c474222143b7eb1a2240d4d6726ed2e0de15d658f0d9bfda4b5385694676e833",
+        "original_bytes": 74773
+      },
+      {
+        "file": "runs/0-zstd-8m-4s-1-lichtblick-app.log.gz",
+        "original_sha256": "bf1f3b08eaf35e07b78276b8319c0143d4e3c210637f27a16c31be3127daee5a",
+        "original_bytes": 501
+      },
+      {
+        "file": "runs/0-zstd-8m-4s-1-lichtblick-running.json.gz",
+        "original_sha256": "7ccfa65321ad108b2be16ad5e3d131f80dbdf78b546bb90deaff6f5a1447ddf7",
+        "original_bytes": 5119
+      }
+    ]
+  },
+  {
+    "name": "0-zstd-8m-4s-1-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/0-zstd-8m-4s-1-native-result.json.gz",
+        "original_sha256": "e96332967b88898d982b03556b489aaeaa96881eed1c060fe255d1d741fd8e57",
+        "original_bytes": 44938
+      },
+      {
+        "file": "runs/0-zstd-8m-4s-1-native-app.log.gz",
+        "original_sha256": "2504ccda0c0ab5e463a4eff2c0086734843b6d35e36e4385a3f6a14e5e6a7261",
+        "original_bytes": 23509
+      },
+      {
+        "file": "runs/0-zstd-8m-4s-1-native-running.json.gz",
+        "original_sha256": "a3270b87ff89cc561dfea0e61324c1f747778f811bde64edd3223176204c5f13",
+        "original_bytes": 5180
+      }
+    ]
+  },
+  {
+    "name": "0-zstd-8m-4s-4-lichtblick",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/0-zstd-8m-4s-4-lichtblick-result.json.gz",
+        "original_sha256": "d99018a48e4c63821c0c253228373c28ef88aeee2b9d868a20c630cdb710db0b",
+        "original_bytes": 120669
+      },
+      {
+        "file": "runs/0-zstd-8m-4s-4-lichtblick-app.log.gz",
+        "original_sha256": "7e3f7b58c023f3355cc5e70d26bbaee9fdf09c6394f5aae93662f01f1e2e9893",
+        "original_bytes": 501
+      },
+      {
+        "file": "runs/0-zstd-8m-4s-4-lichtblick-running.json.gz",
+        "original_sha256": "ed629646c7f5b3b8e67bda99fcf6eadca3ed6e0df4de95fecda054815d6f6061",
+        "original_bytes": 5119
+      }
+    ]
+  },
+  {
+    "name": "0-zstd-8m-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/0-zstd-8m-4s-4-native-result.json.gz",
+        "original_sha256": "41889d61d1d106791d1f3ee6005ee9337c81dfd42b4aeab7f29618166cbebd1e",
+        "original_bytes": 89400
+      },
+      {
+        "file": "runs/0-zstd-8m-4s-4-native-app.log.gz",
+        "original_sha256": "892c264e9c12a74e8ad5371389a194b1073e329d696c422fecf0c993bf0c7951",
+        "original_bytes": 40147
+      },
+      {
+        "file": "runs/0-zstd-8m-4s-4-native-running.json.gz",
+        "original_sha256": "c16126871b9cb34f13ffe100ef4e77d2bd8642db379a4913504fb78862134abb",
+        "original_bytes": 5180
+      }
+    ]
+  },
+  {
+    "name": "0-zstd-single-4s-1-lichtblick",
+    "final_matrix": true,
+    "status": "failed",
+    "error": "RuntimeError('CDP socket closed')",
+    "resource_guard": [
+      "4 GiB application PSS guard during opening/calibration/playback"
+    ],
+    "files": [
+      {
+        "file": "runs/0-zstd-single-4s-1-lichtblick-result.json.gz",
+        "original_sha256": "3a48e26b3b01b014198f09499136f693bf4d43258d0b6a9b68b165cd3ba8919e",
+        "original_bytes": 12245
+      },
+      {
+        "file": "runs/0-zstd-single-4s-1-lichtblick-app.log.gz",
+        "original_sha256": "3bc57114b1252663ce8f2575c41b815097ce0ab9e293072dba9bb2a8b2204588",
+        "original_bytes": 1662
+      },
+      {
+        "file": "runs/0-zstd-single-4s-1-lichtblick-running.json.gz",
+        "original_sha256": "3baad59b3110cdf4f4dc747860fe2750738321721a2a1686febe4c4168c9e456",
+        "original_bytes": 5115
+      },
+      {
+        "file": "runs/0-zstd-single-4s-1-lichtblick-resource-guard.json.gz",
+        "original_sha256": "6769c48790d5e56c31336f712b78edf62a260debb528358dc46c9ce318c781b3",
+        "original_bytes": 1144
+      }
+    ]
+  },
+  {
+    "name": "0-zstd-single-4s-1-native",
+    "final_matrix": true,
+    "status": "failed",
+    "error": "RuntimeError('timeout: Native seek command completed')",
+    "resource_guard": [
+      "4 GiB application PSS guard during opening/calibration/playback"
+    ],
+    "files": [
+      {
+        "file": "runs/0-zstd-single-4s-1-native-result.json.gz",
+        "original_sha256": "4934ea32401b5f4e2eb0a81c6f6492ec28c51708462a8e0e9880e54488073f19",
+        "original_bytes": 5995
+      },
+      {
+        "file": "runs/0-zstd-single-4s-1-native-app.log.gz",
+        "original_sha256": "a7bd33f293153fe7ebf134dc5df2ed329477abdebc24f7b2fe85479e05dfd2d5",
+        "original_bytes": 1456
+      },
+      {
+        "file": "runs/0-zstd-single-4s-1-native-running.json.gz",
+        "original_sha256": "5be1d8aa469312ba8abb467aed9ded250e3232d3ca7119f572140a9e8439f335",
+        "original_bytes": 5168
+      },
+      {
+        "file": "runs/0-zstd-single-4s-1-native-resource-guard.json.gz",
+        "original_sha256": "d04872fd08c9f1e8a96255e4d2cf9b7a873a493d2eb4da51577b322eb4b4eaea",
+        "original_bytes": 473
+      }
+    ]
+  },
+  {
+    "name": "0-zstd-single-4s-4-lichtblick",
+    "final_matrix": true,
+    "status": "failed",
+    "error": "RuntimeError('CDP socket closed')",
+    "resource_guard": [
+      "4 GiB application PSS guard during opening/calibration/playback"
+    ],
+    "files": [
+      {
+        "file": "runs/0-zstd-single-4s-4-lichtblick-result.json.gz",
+        "original_sha256": "4114daba815001013231ccc8ffa1bbf195cacead79def191799b7c2d5124207e",
+        "original_bytes": 12151
+      },
+      {
+        "file": "runs/0-zstd-single-4s-4-lichtblick-app.log.gz",
+        "original_sha256": "49585632e26365a10241a45a1183a98a3b7d456a59382321c4a5bfcd52beba40",
+        "original_bytes": 1662
+      },
+      {
+        "file": "runs/0-zstd-single-4s-4-lichtblick-running.json.gz",
+        "original_sha256": "2731c93f8158fe38387a39ff4d8aa0e8fccc1d6b6696244f1ae68bfc4d9d619f",
+        "original_bytes": 5022
+      },
+      {
+        "file": "runs/0-zstd-single-4s-4-lichtblick-resource-guard.json.gz",
+        "original_sha256": "a06947fc9b6fa327c4167413db5e68b485ee7a5ebf82641ffca23a95b7c7f72f",
+        "original_bytes": 1145
+      }
+    ]
+  },
+  {
+    "name": "0-zstd-single-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/0-zstd-single-4s-4-native-result.json.gz",
+        "original_sha256": "c810d2135542b535f849b5b71fbeb665bd1d078b2c5a4d61b0ad3faa19576770",
+        "original_bytes": 89480
+      },
+      {
+        "file": "runs/0-zstd-single-4s-4-native-app.log.gz",
+        "original_sha256": "33a68f99a04eb40f02d2ba81c2cde874d298a757f30cca7dee969903a890489b",
+        "original_bytes": 40147
+      },
+      {
+        "file": "runs/0-zstd-single-4s-4-native-running.json.gz",
+        "original_sha256": "efd030ec543430ab1b3002734b8f2784572f8969c5dd00feb4440d20c0572f4f",
+        "original_bytes": 5075
+      }
+    ]
+  },
+  {
+    "name": "1-none-single-4s-1-lichtblick",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/1-none-single-4s-1-lichtblick-result.json.gz",
+        "original_sha256": "df851b5021013f23711b4ef4f5b1fff0af78c9ca99a2353a8fb1be3e9dbe5764",
+        "original_bytes": 75730
+      },
+      {
+        "file": "runs/1-none-single-4s-1-lichtblick-app.log.gz",
+        "original_sha256": "6c10892cff5c24f14e639c94e34e6206f55b9042416805ce219c3aeae5b81994",
+        "original_bytes": 501
+      },
+      {
+        "file": "runs/1-none-single-4s-1-lichtblick-running.json.gz",
+        "original_sha256": "e831456f4c8988ca4b7459d77179b6277d74dc5f686c577a160a78c2c33d6dd6",
+        "original_bytes": 5022
+      }
+    ]
+  },
+  {
+    "name": "1-none-single-4s-1-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/1-none-single-4s-1-native-result.json.gz",
+        "original_sha256": "c5a4e55aa8d9360679f82edee9df1b4ef4b91b4bf50ef377170a7b016ef2b3fc",
+        "original_bytes": 45498
+      },
+      {
+        "file": "runs/1-none-single-4s-1-native-app.log.gz",
+        "original_sha256": "05e489b927e236c7c0b3a1656eeee13a0b0f4375f851797425ddfdb7ac0a95a2",
+        "original_bytes": 23509
+      },
+      {
+        "file": "runs/1-none-single-4s-1-native-running.json.gz",
+        "original_sha256": "207cc1585bbf19e5157c9bfa6828bd55e5c687e4d3a9cd1f7774919c50cc7167",
+        "original_bytes": 5075
+      }
+    ]
+  },
+  {
+    "name": "1-none-single-4s-4-lichtblick",
+    "final_matrix": true,
+    "status": "failed",
+    "error": "RuntimeError('4 GiB PSS guard; not a product limit')",
+    "resource_guard": [
+      "4 GiB application PSS guard during opening/calibration/playback"
+    ],
+    "files": [
+      {
+        "file": "runs/1-none-single-4s-4-lichtblick-result.json.gz",
+        "original_sha256": "caea1c4802638d3e3d67e7bf1dc6732c037c04a50bcfd73eeb0a3bdb7fb8d66f",
+        "original_bytes": 35486
+      },
+      {
+        "file": "runs/1-none-single-4s-4-lichtblick-app.log.gz",
+        "original_sha256": "3d5ff498c7a3c6888116c6989048e651454a2ea87a8cf7fddd3c3c2a591dd031",
+        "original_bytes": 1662
+      },
+      {
+        "file": "runs/1-none-single-4s-4-lichtblick-running.json.gz",
+        "original_sha256": "3fcc3edd7bc8b1821aba2fe973a829f173aacdb058033144f1dcade82ab97493",
+        "original_bytes": 5022
+      },
+      {
+        "file": "runs/1-none-single-4s-4-lichtblick-resource-guard.json.gz",
+        "original_sha256": "12e82cbc74c1d0e18d5a19405b970791804aa754ab67b3834ac6cddaefd6cb18",
+        "original_bytes": 1148
+      }
+    ]
+  },
+  {
+    "name": "1-none-single-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/1-none-single-4s-4-native-result.json.gz",
+        "original_sha256": "3c9f432f654c3b08901e178212e8df765dc3ec919dc92cf128667229f5c51a43",
+        "original_bytes": 89505
+      },
+      {
+        "file": "runs/1-none-single-4s-4-native-app.log.gz",
+        "original_sha256": "5479924d999aa23de83f14c352ee7dd9571adefa2e78f74dc57e151ffd091674",
+        "original_bytes": 39963
+      },
+      {
+        "file": "runs/1-none-single-4s-4-native-running.json.gz",
+        "original_sha256": "d6ed38bb15c860fbff09a86cb75d2e679b000308b707cac6b29c7051137ad6fd",
+        "original_bytes": 5075
+      }
+    ]
+  },
+  {
+    "name": "1-zstd-8m-4s-1-lichtblick",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/1-zstd-8m-4s-1-lichtblick-result.json.gz",
+        "original_sha256": "fa3fb93837f37d597cb617049498d3e71786f4f8075ef705a23bbdf05e9bae17",
+        "original_bytes": 75693
+      },
+      {
+        "file": "runs/1-zstd-8m-4s-1-lichtblick-app.log.gz",
+        "original_sha256": "c1817f51e453c963cd4261f13d7fb6a51d01da65c5f56eda3c94f3679f5b5fcc",
+        "original_bytes": 501
+      },
+      {
+        "file": "runs/1-zstd-8m-4s-1-lichtblick-running.json.gz",
+        "original_sha256": "c2e6b7360d4bf8f3015591e101ca7c75ab9c7dfa3f08ac40cdd309a390dcdec6",
+        "original_bytes": 5026
+      }
+    ]
+  },
+  {
+    "name": "1-zstd-8m-4s-1-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/1-zstd-8m-4s-1-native-result.json.gz",
+        "original_sha256": "ce81e7aebd7f9a8c69287382eaf707eebc44cad3df6a5aaa7b17a294b2c75313",
+        "original_bytes": 44724
+      },
+      {
+        "file": "runs/1-zstd-8m-4s-1-native-app.log.gz",
+        "original_sha256": "1e254cf7bc60913f37dd332ba4da760bf8cf183441795fd49272d58d73f0bdaf",
+        "original_bytes": 23509
+      },
+      {
+        "file": "runs/1-zstd-8m-4s-1-native-running.json.gz",
+        "original_sha256": "9782e972779d250d16d56d2e420ed9b21d528e0d703ba20fb58a60133e63345d",
+        "original_bytes": 5087
+      }
+    ]
+  },
+  {
+    "name": "1-zstd-8m-4s-4-lichtblick",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/1-zstd-8m-4s-4-lichtblick-result.json.gz",
+        "original_sha256": "becf34d713447fd9768c6fc0bc37654bd05e12463f0d46d134a29a310619eb70",
+        "original_bytes": 120551
+      },
+      {
+        "file": "runs/1-zstd-8m-4s-4-lichtblick-app.log.gz",
+        "original_sha256": "8282a026b543dafad66aee6055f2a6d747ff49aeac95a027fcb162f79ba38d0a",
+        "original_bytes": 501
+      },
+      {
+        "file": "runs/1-zstd-8m-4s-4-lichtblick-running.json.gz",
+        "original_sha256": "bd4df39e51e63eb34072b67e514dce29c689df016c37fd517fe07baf8e8e847f",
+        "original_bytes": 5026
+      }
+    ]
+  },
+  {
+    "name": "1-zstd-8m-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/1-zstd-8m-4s-4-native-result.json.gz",
+        "original_sha256": "4208c7441d9b51659738ff50525fb499fc425250e36d15c43b182bdd0649ce4d",
+        "original_bytes": 89167
+      },
+      {
+        "file": "runs/1-zstd-8m-4s-4-native-app.log.gz",
+        "original_sha256": "0fbd32f1d63cee505cb9dea5f3e595ff80c75e7f7d7765824778ea8aa06ed77b",
+        "original_bytes": 40147
+      },
+      {
+        "file": "runs/1-zstd-8m-4s-4-native-running.json.gz",
+        "original_sha256": "e10204ce8ecdfac8c47c1dd83a839b64ba7eff1861ad755c4115a6c4c6fd3e83",
+        "original_bytes": 5087
+      }
+    ]
+  },
+  {
+    "name": "1-zstd-single-4s-1-lichtblick",
+    "final_matrix": true,
+    "status": "failed",
+    "error": "RuntimeError('CDP socket closed')",
+    "resource_guard": [
+      "4 GiB application PSS guard during opening/calibration/playback"
+    ],
+    "files": [
+      {
+        "file": "runs/1-zstd-single-4s-1-lichtblick-result.json.gz",
+        "original_sha256": "236e466e3da3856833452c2e460f8a62a53396c23aa792f56a35816ca4780b9e",
+        "original_bytes": 12151
+      },
+      {
+        "file": "runs/1-zstd-single-4s-1-lichtblick-app.log.gz",
+        "original_sha256": "2239494f8e5ef04ca4c532f7c7674263a2f8ac9c25b70d7ac218f09eaf92ff07",
+        "original_bytes": 1662
+      },
+      {
+        "file": "runs/1-zstd-single-4s-1-lichtblick-running.json.gz",
+        "original_sha256": "a5a09a66e4ef28d6f9c226882963319071c19b58a1d8b0949b0fd4b301f71c3e",
+        "original_bytes": 5022
+      },
+      {
+        "file": "runs/1-zstd-single-4s-1-lichtblick-resource-guard.json.gz",
+        "original_sha256": "2726f618738a833800926c88b65be5f8a8d83337fdde1e836141da006df68594",
+        "original_bytes": 1145
+      }
+    ]
+  },
+  {
+    "name": "1-zstd-single-4s-1-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/1-zstd-single-4s-1-native-result.json.gz",
+        "original_sha256": "415de16b019b367f2a5596647a453ffd122e5b250f80c1f0f358c37010f93d87",
+        "original_bytes": 45482
+      },
+      {
+        "file": "runs/1-zstd-single-4s-1-native-app.log.gz",
+        "original_sha256": "071377a22353c20afa49f9ecc529da43be53b7db1fc7a75e907f164f4ad714d0",
+        "original_bytes": 23509
+      },
+      {
+        "file": "runs/1-zstd-single-4s-1-native-running.json.gz",
+        "original_sha256": "160fa1fb14db79d8a80a20cd678aa97f5bddaf991b4b5a08a279c97e98b120c0",
+        "original_bytes": 5075
+      }
+    ]
+  },
+  {
+    "name": "calibrate-1-lichtblick",
+    "final_matrix": false,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/calibrate-1-lichtblick-result.json.gz",
+        "original_sha256": "669d001a33e074a7bed8538bf0255b17d8424a6b6119daed83e0942e8f97b1cb",
+        "original_bytes": 12980
+      },
+      {
+        "file": "runs/calibrate-1-lichtblick-app.log.gz",
+        "original_sha256": "ae70bec3502a0c8bcd65bdce45893354ea8ca6c50e0974323fec66179efa2dce",
+        "original_bytes": 501
+      },
+      {
+        "file": "runs/calibrate-1-lichtblick-references.json.gz",
+        "original_sha256": "00260d3dfe389655c4fa13af731cf14f3063eab31aa24698203a8dcef2981fc1",
+        "original_bytes": 63394
+      },
+      {
+        "file": "runs/calibrate-1-lichtblick-running.json.gz",
+        "original_sha256": "6ecfaacbeae492ba6c2d8fc1dbcd3b9e30d9fb66c14c19bd7ca2de10e9d5ccf2",
+        "original_bytes": 5109
+      }
+    ]
+  },
+  {
+    "name": "calibrate-1-native",
+    "final_matrix": false,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/calibrate-1-native-result.json.gz",
+        "original_sha256": "84ce127940dae4d4851c73e1abea33424cac495b009371ee6ff4be0d80a57b0a",
+        "original_bytes": 5785
+      },
+      {
+        "file": "runs/calibrate-1-native-app.log.gz",
+        "original_sha256": "2556bb6380472079c0c3d12ea7f2b11150df5e4c613ec4b55085214f16239045",
+        "original_bytes": 12152
+      },
+      {
+        "file": "runs/calibrate-1-native-references.json.gz",
+        "original_sha256": "1b24cb709c86120989066fa05aa2ffae46604a4445b2a2f07413a86bf629a857",
+        "original_bytes": 63406
+      },
+      {
+        "file": "runs/calibrate-1-native-running.json.gz",
+        "original_sha256": "f5c5bce3ba48549dbc3df718a094537a6f736cf20e3c05619bf47184334250cb",
+        "original_bytes": 5178
+      }
+    ]
+  },
+  {
+    "name": "calibrate-4-lichtblick",
+    "final_matrix": false,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/calibrate-4-lichtblick-result.json.gz",
+        "original_sha256": "448c99088e17ca432efa5b40763db44e56b2dce1fe932c83dd1acc7d5e1061b2",
+        "original_bytes": 14312
+      },
+      {
+        "file": "runs/calibrate-4-lichtblick-app.log.gz",
+        "original_sha256": "a7a919955cb5bf286e558b9877bbfc6bbcd32a084c9b2036f67a92a8870d21eb",
+        "original_bytes": 501
+      },
+      {
+        "file": "runs/calibrate-4-lichtblick-references.json.gz",
+        "original_sha256": "07081f2d19d9280f50f15a55ef7c4fffd87693c69c5cad9b347ec37ac797fb4f",
+        "original_bytes": 251852
+      },
+      {
+        "file": "runs/calibrate-4-lichtblick-running.json.gz",
+        "original_sha256": "c0ea03f16d937f5618b499416d9243e955ed38b60254806eea023258c0ea2579",
+        "original_bytes": 5117
+      }
+    ]
+  },
+  {
+    "name": "calibrate-4-native",
+    "final_matrix": false,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/calibrate-4-native-result.json.gz",
+        "original_sha256": "0fc6fa893fc2143fc90b15a138fe5cfc30ee33ab3f97bf661db5a366314bb056",
+        "original_bytes": 6160
+      },
+      {
+        "file": "runs/calibrate-4-native-app.log.gz",
+        "original_sha256": "c9101eed5bec24187aafcca4bf3db8accf5f7ac38e03895924ecb37b5b46334b",
+        "original_bytes": 29324
+      },
+      {
+        "file": "runs/calibrate-4-native-references.json.gz",
+        "original_sha256": "568544ec0f1258bb3ffcc83cf0d99a190a3dcd4fffef0175374e819ef64a6b40",
+        "original_bytes": 251814
+      },
+      {
+        "file": "runs/calibrate-4-native-running.json.gz",
+        "original_sha256": "b27ea8aedecd751d4a957bb950d0a4167793af82c3d3b2353ef2f256677dabde",
+        "original_bytes": 5178
+      }
+    ]
+  }
+]

@@ -1,0 +1,92 @@
+{
+  "baseline_product_commit": "1bb3a9d",
+  "improved_product_commit": "e7ab10f",
+  "product_source_sha256": {
+    "crates/viewer-mcap/src/playback.rs": "c0885d48db98cbb7442a0b4b10659ca0607c5b78d9ad0636104ead2ed3f0403e",
+    "crates/viewer-mcap/src/recording/source.rs": "bef353390e83a3f346be80b59eb20d6bda1b9b30302ca2d8ec98e17457648634",
+    "crates/viewer-mcap/src/recording/source/prefetch.rs": "0883734e6a1767a43a7d8dbb001f88461f2adeccc7b6f9312737af203720a655",
+    "crates/viewer-mcap/src/recording/backing.rs": "2368ed0847eeef31ed07d7b7b86ece7de4c1ac2ae1a1968cf293b53fcf3423b6"
+  },
+  "binaries": {
+    "storage": {
+      "sha256": "f021e36c292d4a6cccc9b5754a0f353131f96c5780f6940648a1683809a224ce",
+      "bytes": 23128576,
+      "measurement_patch_sha256": "ace3886c1f16c23b08e4386198056c7adb76517840a0eff192f70b1ffb8c14b6"
+    },
+    "prefetch": {
+      "sha256": "5af4888c6724b4a4b428a740c7eef8c09272ecb9b56b7531600e35e0df18cebf",
+      "bytes": 23164928,
+      "measurement_patch_sha256": "a97b230afda38e5a087efdc863f82d92383f85884d1ae8a4793c5b4c6998468a"
+    }
+  },
+  "prefetch_observations": [
+    {
+      "run": "0-prefetch-zstd-256m-1-native",
+      "expanded": 8,
+      "ready_hits": 5,
+      "waits": 0,
+      "wait_ns": 0,
+      "active_bytes": 273735737,
+      "prepared_estimated_bytes": 538441777
+    },
+    {
+      "run": "0-prefetch-zstd-256m-4-native",
+      "expanded": 8,
+      "ready_hits": 5,
+      "waits": 0,
+      "wait_ns": 0,
+      "active_bytes": 273735737,
+      "prepared_estimated_bytes": 538441777
+    },
+    {
+      "run": "1-prefetch-zstd-256m-1-native",
+      "expanded": 8,
+      "ready_hits": 5,
+      "waits": 0,
+      "wait_ns": 0,
+      "active_bytes": 273735737,
+      "prepared_estimated_bytes": 538441777
+    },
+    {
+      "run": "1-prefetch-zstd-256m-4-native",
+      "expanded": 8,
+      "ready_hits": 5,
+      "waits": 0,
+      "wait_ns": 0,
+      "active_bytes": 273735737,
+      "prepared_estimated_bytes": 538441777
+    },
+    {
+      "run": "2-prefetch-zstd-256m-1-native",
+      "expanded": 8,
+      "ready_hits": 5,
+      "waits": 0,
+      "wait_ns": 0,
+      "active_bytes": 273735737,
+      "prepared_estimated_bytes": 538441777
+    },
+    {
+      "run": "2-prefetch-zstd-256m-4-native",
+      "expanded": 8,
+      "ready_hits": 5,
+      "waits": 0,
+      "wait_ns": 0,
+      "active_bytes": 273735737,
+      "prepared_estimated_bytes": 273735737
+    }
+  ],
+  "verification": [
+    {
+      "file": "chunk-preparation-final-checks.log.gz",
+      "original_sha256": "920ed145438b77131abdcd35db91e42ff0c3fe93db8bbe372cfea41f70b2b641"
+    },
+    {
+      "file": "chunk-prefetch-final-tests.log.gz",
+      "original_sha256": "81c162b919322e41b523fbd4aa1d9c68c4edad7bcf7577383b7d3ef3706f7326"
+    },
+    {
+      "file": "build-prefetch-probe.log.gz",
+      "original_sha256": "2c41fd739d23e7177b3cdfd359470a2da5825cc21287dd913fc2c3693ba97778"
+    }
+  ]
+}

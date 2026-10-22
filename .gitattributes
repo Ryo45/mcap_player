@@ -1,3 +1,5 @@
+# Unified diffs represent empty context lines with one required space.
+docs/performance/**/*.patch whitespace=-blank-at-eol
 docs/performance/2026-10-14-4k-large-chunks/runs.jsonl filter=lfs diff=lfs merge=lfs -text
 docs/performance/2026-10-14-forward-pruning/runs.jsonl filter=lfs diff=lfs merge=lfs -text
 docs/performance/2026-10-14-headless/runs.jsonl filter=lfs diff=lfs merge=lfs -text

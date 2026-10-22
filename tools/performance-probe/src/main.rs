@@ -17,6 +17,7 @@ use viewer_core::{
 use viewer_mcap::{FileMessageStream, LatestMessageReader, McapSource};
 
 mod geometry;
+mod storage;
 
 const BASE: u64 = 1_735_689_600_000_000_000;
 
@@ -49,6 +50,13 @@ fn main() -> Result<()> {
         Some("extract-jpeg") if args.len() == 5 => {
             extract_jpeg(&args[1], &args[2], &args[3], args[4].parse()?)
         }
+        Some("storage") if args.len() == 6 => storage::rewrite(
+            &args[1],
+            &args[2],
+            &args[3],
+            args[4].parse()?,
+            args[5].parse()?,
+        ),
         Some("rechunk") if args.len() == 5 => {
             rechunk(&args[1], &args[2], &args[3], args[4].parse()?)
         }
@@ -88,7 +96,7 @@ fn main() -> Result<()> {
             args.get(6).map(String::as_str).unwrap_or("rgb"),
         ),
         _ => bail!(
-            "generate-geometry PATH scan|cloud POINTS SECONDS\ngenerate PATH none|zstd|lz4 CHUNK_BYTES mixed|grouped SECONDS jpeg|png|raw|scan [WIDTH HEIGHT [VARIANTS [CAMERA_HZ [CAMERAS]]]]\nrechunk INPUT OUTPUT none|zstd|lz4 CHUNK_BYTES\nextract-jpeg INPUT OUTPUT_DIR TOPIC COUNT\nrun PATH scan|all forward|indexed|seek|seek-cached|repeat|repeat-cached SEEK_COUNT [TICK_MS [rgb|rgba]]"
+            "generate-geometry PATH scan|cloud POINTS SECONDS\ngenerate PATH none|zstd|lz4 CHUNK_BYTES mixed|grouped SECONDS jpeg|png|raw|scan [WIDTH HEIGHT [VARIANTS [CAMERA_HZ [CAMERAS]]]]\nrechunk INPUT OUTPUT none|zstd|lz4 CHUNK_BYTES\nextract-jpeg INPUT OUTPUT_DIR TOPIC COUNT\nstorage INPUT OUTPUT none|zstd|lz4 CHUNK_BYTES PART_SECONDS (0 chunk bytes = no Chunk records)\nrun PATH scan|all forward|indexed|seek|seek-cached|repeat|repeat-cached SEEK_COUNT [TICK_MS [rgb|rgba]]"
         ),
     }
 }
@@ -402,7 +410,7 @@ fn memory() -> Value {
 fn io(source: &McapSource) -> Value {
     let d = source.read_diagnostics();
     json!({"read_calls":d.file_read_calls,"requested_bytes":d.file_read_bytes,"chunks_expanded":d.chunks_expanded,
-        "expanded_bytes":d.expanded_bytes,"decompressed_bytes":d.decompressed_bytes,"source_cache_backing_bytes":d.sequential_cache_backing_bytes})
+        "expanded_bytes":d.expanded_bytes,"decompressed_bytes":d.decompressed_bytes,"source_cache_backing_bytes":d.sequential_cache_backing_bytes,"prefetch_ready_hits":d.prefetch_ready_hits,"prefetch_waits":d.prefetch_waits,"prefetch_wait_ns":d.prefetch_wait_ns,"prefetch_estimated_bytes":d.prefetch_estimated_bytes})
 }
 
 fn run(

@@ -1,0 +1,468 @@
+[
+  {
+    "name": "0-prefetch-lz4-single-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/0-prefetch-lz4-single-4s-4-native-result.json.gz",
+        "original_sha256": "4a8584d2e0d1ef1026b582788a6a7e336d3a450e6b11c30eafff3425bc404635",
+        "original_bytes": 89327
+      },
+      {
+        "file": "runs/0-prefetch-lz4-single-4s-4-native-app.log.gz",
+        "original_sha256": "77cb2c0c26d61918ceaafd735a958806ea409f9e838d77111db5e42fcaf5dbfd",
+        "original_bytes": 40321
+      },
+      {
+        "file": "runs/0-prefetch-lz4-single-4s-4-native-running.json.gz",
+        "original_sha256": "3e96e05d102cb3d42cc51c82cf691bcb2f68b013a89f6374450db6650b868f6d",
+        "original_bytes": 5082
+      }
+    ]
+  },
+  {
+    "name": "0-prefetch-none-single-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/0-prefetch-none-single-4s-4-native-result.json.gz",
+        "original_sha256": "1ccb28ba624a5354b74d32ecf741c8b8119e74b7f33d59d2c06101e05e7f45d2",
+        "original_bytes": 89330
+      },
+      {
+        "file": "runs/0-prefetch-none-single-4s-4-native-app.log.gz",
+        "original_sha256": "836d6af2ca381123c6508882fefc00b527e402269e5e9c61e6b9030214c4de17",
+        "original_bytes": 40321
+      },
+      {
+        "file": "runs/0-prefetch-none-single-4s-4-native-running.json.gz",
+        "original_sha256": "2c7034eb8eab0c9f9cce834f74f253fb169b0046fea4e8b421d631f1aa109bf8",
+        "original_bytes": 5085
+      }
+    ]
+  },
+  {
+    "name": "0-prefetch-zstd-8m-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/0-prefetch-zstd-8m-4s-4-native-result.json.gz",
+        "original_sha256": "ff219a208aad07a774782fdbbb0538a712c18be80523883020134ffb2707fa26",
+        "original_bytes": 89252
+      },
+      {
+        "file": "runs/0-prefetch-zstd-8m-4s-4-native-app.log.gz",
+        "original_sha256": "53b9f3208a8aae334a75d70f88e63b21aa204ec7afdca835356bbd0642cce169",
+        "original_bytes": 45432
+      },
+      {
+        "file": "runs/0-prefetch-zstd-8m-4s-4-native-running.json.gz",
+        "original_sha256": "5c5c8ed778166d9034537256d7a5a1576c4cf7e1733beeb7bf6a34da904910c3",
+        "original_bytes": 5097
+      }
+    ]
+  },
+  {
+    "name": "0-prefetch-zstd-single-4s-1-native",
+    "final_matrix": true,
+    "status": "failed",
+    "error": "RuntimeError('unreliable camera identity')",
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/0-prefetch-zstd-single-4s-1-native-result.json.gz",
+        "original_sha256": "908d802d3c8f731f286e3df4f308e82a7816d54225394c0655c8b2ef70889d4c",
+        "original_bytes": 45575
+      },
+      {
+        "file": "runs/0-prefetch-zstd-single-4s-1-native-app.log.gz",
+        "original_sha256": "691758446304caa275280f3955766db7f3f7a198444ffe45070af6be9802c912",
+        "original_bytes": 23683
+      },
+      {
+        "file": "runs/0-prefetch-zstd-single-4s-1-native-running.json.gz",
+        "original_sha256": "9d71c70fc0acf2995842dd35231c4f1898b511bdff855311524e57be8a389055",
+        "original_bytes": 5085
+      }
+    ]
+  },
+  {
+    "name": "0-prefetch-zstd-single-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/0-prefetch-zstd-single-4s-4-native-result.json.gz",
+        "original_sha256": "2b0db52317c1358a3cdbee7ce1dd8f1ff4fe9945bc46d98a56829dbcd34b6960",
+        "original_bytes": 89493
+      },
+      {
+        "file": "runs/0-prefetch-zstd-single-4s-4-native-app.log.gz",
+        "original_sha256": "eb25b3d5223af54403b59a578f2e0ef05c3da1b28cdb02566de9e25f458e725f",
+        "original_bytes": 40321
+      },
+      {
+        "file": "runs/0-prefetch-zstd-single-4s-4-native-running.json.gz",
+        "original_sha256": "d20a46b120027c9bcff95b43f05db62459dc77ccb0a61e445cd8475361c93d35",
+        "original_bytes": 5085
+      }
+    ]
+  },
+  {
+    "name": "1-prefetch-lz4-single-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/1-prefetch-lz4-single-4s-4-native-result.json.gz",
+        "original_sha256": "a6ee402cd9b45c9cdd3ea313b95a4ebb1ab3ee9f5b9423a224062b830d205ea0",
+        "original_bytes": 89385
+      },
+      {
+        "file": "runs/1-prefetch-lz4-single-4s-4-native-app.log.gz",
+        "original_sha256": "d1668fa255849ab80f65b11a5b3341499181c2a276c4631f1aaab97dc21cab2f",
+        "original_bytes": 40137
+      },
+      {
+        "file": "runs/1-prefetch-lz4-single-4s-4-native-running.json.gz",
+        "original_sha256": "4ccdf8f4bcab271424eeed4e5b90d20541f0254ee09d6c37eb84e1d20e6a9752",
+        "original_bytes": 5082
+      }
+    ]
+  },
+  {
+    "name": "1-prefetch-none-single-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/1-prefetch-none-single-4s-4-native-result.json.gz",
+        "original_sha256": "b446053ed895eee65652615edb0dd5060270b9554049b4cb75a94e90c52d9565",
+        "original_bytes": 89465
+      },
+      {
+        "file": "runs/1-prefetch-none-single-4s-4-native-app.log.gz",
+        "original_sha256": "181d1129df04fbdf7f76a7f899d2568bf3cedfd03860be6ea47fe39a0020ce3a",
+        "original_bytes": 40321
+      },
+      {
+        "file": "runs/1-prefetch-none-single-4s-4-native-running.json.gz",
+        "original_sha256": "518a5b3fc79b693979ca6d4bd5ecef3c08aa12d167e92bfd3bdb1f8c977f1af9",
+        "original_bytes": 5085
+      }
+    ]
+  },
+  {
+    "name": "1-prefetch-zstd-8m-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/1-prefetch-zstd-8m-4s-4-native-result.json.gz",
+        "original_sha256": "d68313a1146ad2ebe0a49981a9ffedcb78789e30f1f570c0da8ec7e7c35c7874",
+        "original_bytes": 89364
+      },
+      {
+        "file": "runs/1-prefetch-zstd-8m-4s-4-native-app.log.gz",
+        "original_sha256": "2b09b80abbf240f4b3c0fc58b3b843e0ab7cae1b0a33ab51ad9198274d3f0428",
+        "original_bytes": 45531
+      },
+      {
+        "file": "runs/1-prefetch-zstd-8m-4s-4-native-running.json.gz",
+        "original_sha256": "15d8ac25d4955f06131b2825f7c6bf6fe6e622a365230941d4d33ba8c2c11db6",
+        "original_bytes": 5097
+      }
+    ]
+  },
+  {
+    "name": "1-prefetch-zstd-single-4s-1-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/1-prefetch-zstd-single-4s-1-native-result.json.gz",
+        "original_sha256": "40c32a9d134ffcf5b240f1536093fe1f406c83e3d21e3d732d004458d2e94285",
+        "original_bytes": 45291
+      },
+      {
+        "file": "runs/1-prefetch-zstd-single-4s-1-native-app.log.gz",
+        "original_sha256": "2e6247531f0b885ebcfd957feed73645649193985d8fdd124f805ea7a7ecf953",
+        "original_bytes": 23775
+      },
+      {
+        "file": "runs/1-prefetch-zstd-single-4s-1-native-running.json.gz",
+        "original_sha256": "ae2279aaa01b25db52e458c3bfcf9b1d8c6fe255724289407a782e30d471093f",
+        "original_bytes": 5085
+      }
+    ]
+  },
+  {
+    "name": "1-prefetch-zstd-single-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/1-prefetch-zstd-single-4s-4-native-result.json.gz",
+        "original_sha256": "af46b631cebfd083b0dfd4d57f23c624b2ebba4600ec6f019dfcb92dabbd57f8",
+        "original_bytes": 89290
+      },
+      {
+        "file": "runs/1-prefetch-zstd-single-4s-4-native-app.log.gz",
+        "original_sha256": "a55f5971c603604ed4e4728b9dc2f11e74bc7f4cd6754c18303ceed461ec8ee3",
+        "original_bytes": 40413
+      },
+      {
+        "file": "runs/1-prefetch-zstd-single-4s-4-native-running.json.gz",
+        "original_sha256": "2194b1c5693e3e4e1189d75b77e33eadd5c6e77e076517261f67816dbed940f7",
+        "original_bytes": 5085
+      }
+    ]
+  },
+  {
+    "name": "2-prefetch-lz4-single-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/2-prefetch-lz4-single-4s-4-native-result.json.gz",
+        "original_sha256": "86031d6c80ea94b4a324efa7999470f6dda358a3dde4b9cdd8369b54494dd1f3",
+        "original_bytes": 89792
+      },
+      {
+        "file": "runs/2-prefetch-lz4-single-4s-4-native-app.log.gz",
+        "original_sha256": "1745c9c42cfa643a5cee55f0f5156435135cf2cb596681f46b247fd7c9b0596d",
+        "original_bytes": 40137
+      },
+      {
+        "file": "runs/2-prefetch-lz4-single-4s-4-native-running.json.gz",
+        "original_sha256": "4dc1086191c0961d135c7e11e86a5bb059db767fb7dc7216e24ecda0645b0271",
+        "original_bytes": 5082
+      }
+    ]
+  },
+  {
+    "name": "2-prefetch-none-single-4s-4-native",
+    "final_matrix": true,
+    "status": "failed",
+    "error": "RuntimeError('unreliable camera identity')",
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/2-prefetch-none-single-4s-4-native-result.json.gz",
+        "original_sha256": "03f2fea8481e78a74ac0a3708c5fa4e1adb862906fcf52f21359e7b5ca70983b",
+        "original_bytes": 88753
+      },
+      {
+        "file": "runs/2-prefetch-none-single-4s-4-native-app.log.gz",
+        "original_sha256": "48ba2622594e30015c5ddbbba460fa555949e6b3a850d4cd8a3bca01ae4b214b",
+        "original_bytes": 40321
+      },
+      {
+        "file": "runs/2-prefetch-none-single-4s-4-native-running.json.gz",
+        "original_sha256": "7e6f710d9c6ba2801ed42267ed6fc39697e8adec62d0662c4d187771ee44daf7",
+        "original_bytes": 5085
+      }
+    ]
+  },
+  {
+    "name": "2-prefetch-zstd-8m-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/2-prefetch-zstd-8m-4s-4-native-result.json.gz",
+        "original_sha256": "f2aa0c34b368c2d898fa7a77ac3c1c8d41f7e233df23db4a044b0f29f63426ae",
+        "original_bytes": 89654
+      },
+      {
+        "file": "runs/2-prefetch-zstd-8m-4s-4-native-app.log.gz",
+        "original_sha256": "3219e1aa43bd8c67678d8cfdecd05817f4011198ab0d7c60d22254b5aa570f13",
+        "original_bytes": 45432
+      },
+      {
+        "file": "runs/2-prefetch-zstd-8m-4s-4-native-running.json.gz",
+        "original_sha256": "6d95fc0aed8a0e64231b221f010e9f669bc46dcd0808e66c629bd9aea080fc16",
+        "original_bytes": 5097
+      }
+    ]
+  },
+  {
+    "name": "2-prefetch-zstd-single-4s-1-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/2-prefetch-zstd-single-4s-1-native-result.json.gz",
+        "original_sha256": "4d42cc3b8de357eefc812918c536e801aa560dacc1a5c213b953b393ea101667",
+        "original_bytes": 45323
+      },
+      {
+        "file": "runs/2-prefetch-zstd-single-4s-1-native-app.log.gz",
+        "original_sha256": "0e2764ac2d7f093508791e3514f675dbc6e22a43cf9ccb1eb2b6e4ce86d57030",
+        "original_bytes": 23683
+      },
+      {
+        "file": "runs/2-prefetch-zstd-single-4s-1-native-running.json.gz",
+        "original_sha256": "62974083a57003acce2d2dfa83aeb151ae48a5d11b5684546ce1023325ad7052",
+        "original_bytes": 5085
+      }
+    ]
+  },
+  {
+    "name": "2-prefetch-zstd-single-4s-4-native",
+    "final_matrix": true,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/2-prefetch-zstd-single-4s-4-native-result.json.gz",
+        "original_sha256": "f0d323604aaf8a87927dabd20f7c50b3bc9ed2c2b1de2f3c43466bdf1ab8f20d",
+        "original_bytes": 89262
+      },
+      {
+        "file": "runs/2-prefetch-zstd-single-4s-4-native-app.log.gz",
+        "original_sha256": "0dcc282a3102f191e94e451300595017cd16ba0b5e620170f24514d96dd040e5",
+        "original_bytes": 40413
+      },
+      {
+        "file": "runs/2-prefetch-zstd-single-4s-4-native-running.json.gz",
+        "original_sha256": "12a197cffc82e0da8acda1834e0a2333b7509781725bdcb6d2ff710195cd997f",
+        "original_bytes": 5085
+      }
+    ]
+  },
+  {
+    "name": "calibrate-1-native",
+    "final_matrix": false,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/calibrate-1-native-result.json.gz",
+        "original_sha256": "a8abc4afabaaf178a36a3128e250ecfd9770f83ad1c108e51f0122d0ea153c2f",
+        "original_bytes": 5702
+      },
+      {
+        "file": "runs/calibrate-1-native-app.log.gz",
+        "original_sha256": "ecfc4a44359af105c95578d47026cae2bd59893fe353021436ff42fb70fec983",
+        "original_bytes": 14783
+      },
+      {
+        "file": "runs/calibrate-1-native-references.json.gz",
+        "original_sha256": "12a78bf762bd735a272db040c41db8e162f81f4409794311672795f977c1ddf2",
+        "original_bytes": 63406
+      },
+      {
+        "file": "runs/calibrate-1-native-running.json.gz",
+        "original_sha256": "1047af662c0bfb7d577775f5430aa1eba5fe0fe3b077e9c4bfa31241dfc0ff09",
+        "original_bytes": 5095
+      }
+    ]
+  },
+  {
+    "name": "calibrate-4-native",
+    "final_matrix": false,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/calibrate-4-native-result.json.gz",
+        "original_sha256": "9d376e64428d9053177cfd6e83fe31938198cbda9ace4b6c256c278bdde003a2",
+        "original_bytes": 6077
+      },
+      {
+        "file": "runs/calibrate-4-native-app.log.gz",
+        "original_sha256": "1657d29bb20a7afd458e037844ef5cde46f912e7711e7b29308c62c8d4cde4e0",
+        "original_bytes": 31960
+      },
+      {
+        "file": "runs/calibrate-4-native-references.json.gz",
+        "original_sha256": "7dbc2febe54431babe6c44e0cf01bcbd41fd0557334860a583eee0906a4ed402",
+        "original_bytes": 251814
+      },
+      {
+        "file": "runs/calibrate-4-native-running.json.gz",
+        "original_sha256": "eccbaa4a150ba43e4d30e203ebe04f153b6c679e4d880bcfa514e096417a532a",
+        "original_bytes": 5095
+      }
+    ]
+  },
+  {
+    "name": "smoke-prefetch-lz4-single-4s-4-native",
+    "final_matrix": false,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/smoke-prefetch-lz4-single-4s-4-native-result.json.gz",
+        "original_sha256": "461791f4d8663c632f67c0a60a720cd4791172cbdf1b62e36804df9a06a0e4d6",
+        "original_bytes": 89490
+      },
+      {
+        "file": "runs/smoke-prefetch-lz4-single-4s-4-native-app.log.gz",
+        "original_sha256": "09f3896c2dc82f42c1dfad8f08a809a346bac5b378bb17881ee2265c98cdfe8e",
+        "original_bytes": 40321
+      },
+      {
+        "file": "runs/smoke-prefetch-lz4-single-4s-4-native-running.json.gz",
+        "original_sha256": "5d36596b8568c78a5e95ae27a441fb467d379c72d72726a1792cb7386b66ffd0",
+        "original_bytes": 5082
+      }
+    ]
+  },
+  {
+    "name": "smoke-prefetch-zstd-single-4s-4-native",
+    "final_matrix": false,
+    "status": "ok",
+    "error": null,
+    "resource_guard": null,
+    "files": [
+      {
+        "file": "runs/smoke-prefetch-zstd-single-4s-4-native-result.json.gz",
+        "original_sha256": "7ae76442f8c4a56c09f46b87adc736c2ab556340aea1483e537569526a311b7b",
+        "original_bytes": 89305
+      },
+      {
+        "file": "runs/smoke-prefetch-zstd-single-4s-4-native-app.log.gz",
+        "original_sha256": "a1e774f3d5efd8bb40fde7a148b4a298198ff02b73f7da7e4ad84bc304b54f91",
+        "original_bytes": 40321
+      },
+      {
+        "file": "runs/smoke-prefetch-zstd-single-4s-4-native-running.json.gz",
+        "original_sha256": "5e4f52f60a72e13879b48e8f820feb5bbdd59f25826d5e70c116f2c3b17fa113",
+        "original_bytes": 5085
+      }
+    ]
+  }
+]

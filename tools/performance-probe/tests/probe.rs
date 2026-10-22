@@ -212,3 +212,109 @@ fn raw_images_are_valid_ros_cdr_and_use_the_shared_camera_feature() {
     assert_eq!(all["jpeg_decodes"], 0);
     std::fs::remove_file(path).unwrap();
 }
+
+#[test]
+fn storage_variants_keep_payloads_and_timestamps_and_unchunked_is_explicit() {
+    let source = fixture("raw");
+    let output = source.with_extension("direct.mcap");
+    let facts = command(&[
+        "storage",
+        source.to_str().unwrap(),
+        output.to_str().unwrap(),
+        "none",
+        "0",
+        "0",
+    ]);
+    assert_eq!(facts["files"][0]["chunks"], 0);
+    assert!(
+        McapSource::open_file(&output)
+            .err()
+            .unwrap()
+            .to_string()
+            .contains("Chunk")
+    );
+    let original = FileMessageStream::open(&source)
+        .unwrap()
+        .map(|m| {
+            let m = m.unwrap();
+            (
+                m.channel.topic.clone(),
+                m.log_time,
+                m.sequence,
+                m.data.to_vec(),
+            )
+        })
+        .collect::<Vec<_>>();
+    let repacked = FileMessageStream::open(&output)
+        .unwrap()
+        .map(|m| {
+            let m = m.unwrap();
+            (
+                m.channel.topic.clone(),
+                m.log_time,
+                m.sequence,
+                m.data.to_vec(),
+            )
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(original, repacked);
+    std::fs::remove_file(source).unwrap();
+    std::fs::remove_file(output).unwrap();
+}
+
+#[test]
+fn storage_split_compression_preserves_every_message() {
+    let input = fixture("raw");
+    let source = input.with_extension("two-seconds.mcap");
+    command(&[
+        "generate",
+        source.to_str().unwrap(),
+        "none",
+        "1048576",
+        "mixed",
+        "2",
+        "raw",
+    ]);
+    let expected = FileMessageStream::open(&source)
+        .unwrap()
+        .map(|m| m.unwrap())
+        .collect::<Vec<_>>();
+    for codec in ["none", "zstd", "lz4"] {
+        let directory = input.with_extension(format!("{codec}-parts"));
+        let facts = command(&[
+            "storage",
+            source.to_str().unwrap(),
+            directory.to_str().unwrap(),
+            codec,
+            "1048576",
+            "1",
+        ]);
+        assert_eq!(facts["files"].as_array().unwrap().len(), 2);
+        let actual = facts["files"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .flat_map(|part| {
+                FileMessageStream::open(std::path::Path::new(part["path"].as_str().unwrap()))
+                    .unwrap()
+                    .map(|m| m.unwrap())
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(actual.len(), expected.len());
+        for (actual, expected) in actual.iter().zip(&expected) {
+            assert_eq!(actual.channel, expected.channel);
+            assert_eq!(actual.log_time, expected.log_time);
+            assert_eq!(actual.publish_time, expected.publish_time);
+            assert_eq!(actual.sequence, expected.sequence);
+            assert_eq!(actual.data, expected.data);
+        }
+        let source = McapSource::open_file(&directory).unwrap();
+        assert_eq!(source.time_range().start.0, expected[0].log_time as i64);
+        for part in facts["files"].as_array().unwrap() {
+            std::fs::remove_file(part["path"].as_str().unwrap()).unwrap();
+        }
+        std::fs::remove_dir(directory).unwrap();
+    }
+    std::fs::remove_file(input).unwrap();
+    std::fs::remove_file(source).unwrap();
+}

@@ -23,6 +23,10 @@ GUI比較の旧process_sampleには、別スレッドから起動した子プロ
 [Lichtblickのデフォルト構成に合わせた比較](2026-10-20-desktop-default-layout/README.md)では、
 同じ表示領域・視点でgrid / Image / Scan / Raw Messagesの負荷を分け、比較スクリーンショットも保存する。
 
+[Raw Image・複数MCAP・巨大ChunkのDesktop比較](2026-10-22-raw-storage/README.md)では、
+FHDのRaw画像を1台／4台表示し、none / Zstd / LZ4、3分割、最大約1GBの単一Chunkを比較する。
+Nativeの固定256 MiBゲートを見直し、Chunk先読みとSeek内の展開共有による更新頻度・メモリの変化も記録した。Chunkレコードなしの補助検証は分けて保存する。
+
 ## 再現
 
 Linux、Rust toolchain、Python 3.11以上（stdlibのみ）。計測中は他のビルドや
@@ -73,8 +77,9 @@ Chunkが小さくなる。混在度とサイズは完全に直交しないため
 
 比較対象は同じ製品経路のScan-onlyとall。allは選択を広げた条件であり、
 全履歴常駐する仮想的な競合製品ではない。いずれも同じbounded feature stateを使う。
-raw Imageは現在のfeatureでdecode非対応なので、raw/allは読み込み・保持の比較であり
-JPEG/allとのdecode時間の公平な比較には使わない。unknown counterを残す。
+2026-10-14の初回計測時はraw Imageのfeature decodeが未対応だったため、そのraw/allは
+読み込み・保持の比較であり、JPEG/allとのdecode時間の比較には使わない。unknown counterを残す。
+現在はRaw表示に対応しており、後続のRaw Image Desktop比較はpixel変換・描画も含む。
 
 ## 測る経路
 

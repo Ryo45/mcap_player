@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Actual Desktop workloads: matched viewports, per-camera pixels, bounded fresh processes."""
 import argparse
+import ctypes
 import json
 import math
 import os
@@ -36,7 +37,7 @@ let f=e?.[Object.keys(e).find(k=>k.startsWith('__reactFiber'))];
 for(;f;f=f.return){const v=f.memoizedProps?.value;if(typeof v?.getState==='function'){
 const p=v.getState().public;if(p?.playerState?.activeData)return p;}}return null})()"""
 STATE = f"""(()=>{{const p={PUBLIC};const a=p?.playerState.activeData;return a?{{current:a.currentTime,start:a.startTime,end:a.endTime,
-playing:a.isPlaying,visibility:document.visibilityState,text:document.body.innerText}}:null}})()"""
+presence:p.playerState.presence,playing:a.isPlaying,visibility:document.visibilityState,text:document.body.innerText}}:null}})()"""
 
 
 def distribution(values):
@@ -97,23 +98,27 @@ def main():
     parser.add_argument('--seconds',type=float,default=12)
     parser.add_argument('--port',type=int,default=9370)
     args=parser.parse_args()
-    case=json.loads(args.case.read_text());data=Path(case['data']);kind=case['kind']
-    if args.output.exists() or not 3<=args.seconds<=15 or (args.calibrate and kind=='camera'and not args.jpeg_dir):
+    case=json.loads(args.case.read_text());data=Path(case['data']);kind=case['kind'];raw_camera=case.get('encoding')=='raw'
+    files=[Path(v) for v in case.get('data_files',[str(data)])]
+    data_facts=[{'path':str(v),'sha256':digest(v),'bytes':v.stat().st_size} for v in files]
+    data_sha=data_facts[0]['sha256'] if len(files)==1 else __import__('hashlib').sha256(json.dumps(data_facts,sort_keys=True).encode()).hexdigest()
+    if args.output.exists() or not 3<=args.seconds<=15 or (args.calibrate and kind=='camera'and not raw_camera and not args.jpeg_dir):
         parser.error('new output, 3..15 seconds, and JPEG directory for camera calibration required')
     if not args.calibrate and kind=='camera'and not args.references:parser.error('camera references required')
     if args.app=='native'and not case.get('images')and kind=='camera':parser.error('Lichtblick calibration must resolve geometry first')
     args.output=args.output.resolve();args.output.mkdir(parents=True)
     result={'status':'running','app':args.app,'case':case['name'],'kind':kind,'calibration':args.calibrate,
-            'data_sha256':digest(data),'data_bytes':data.stat().st_size,'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
-            'harness_sha256':digest(__file__),'native_patch_sha256':digest(REPORT/'native-measurement.patch'),
+            'data_sha256':data_sha,'data_files':data_facts,'data_bytes':sum(v['bytes']for v in data_facts),'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
+            'harness_sha256':digest(__file__),'native_patch_sha256':digest(Path(case.get('native_patch',REPORT/'native-measurement.patch'))),
             'cache':'cache-allowed; SHA256 read before launch','samples':[],'seeks':[],'pss_samples':[],
             'resource_sampler_sha256':digest(Path(__file__).with_name('measure_viewer_pilot.py')),
             'limits':{'timed_pss_mib':4096,'timed_summed_rss_mib':16384,'timed_seconds':args.seconds,'wall_seconds':180},
-            'camera_policy':'Native focus 10Hz/background <=5Hz; Lichtblick receives all displayed 10Hz streams',
+            'camera_policy':case.get('camera_policy','Native focus 10Hz/background <=5Hz; Lichtblick receives all displayed 10Hz streams'),
             'color_profile':'srgb'if args.app=='lichtblick'else'Native source sRGB'}
     env=os.environ|{'DISPLAY':':1','XAUTHORITY':'/run/user/1000/gdm/Xauthority','VK_DRIVER_FILES':'/usr/share/vulkan/icd.d/nvidia_icd.json',
                     'RUST_LOG':'info,wgpu_core::instance=debug,wgpu_hal::vulkan=info','MCAP_BENCH_GEOMETRY':str(args.case.resolve()),
                     'MCAP_BENCH_RAW_EXPAND':'1'if case.get('expanded')else'0'}
+    guard_stop=threading.Event();guard_errors=[]
     processes=[];pss_sampler=None;cdp=browser=x11=window=None;profile=None;started=time.monotonic();request=1;inset=[0,0]
     control=args.output/'control.txt';control.write_text('1 seek 0\n')
     layout=args.output/'native-layout.json';layout.write_text(json.dumps(case['native_layout']))
@@ -127,7 +132,7 @@ def main():
         if 'Monitor is On'not in result['display_before']:raise RuntimeError('DPMS not On')
         profile=tempfile.mkdtemp(prefix='mcap-desktop-workload-')
         if args.app=='native':
-            command=[str(ROOT/'target/gpu-native/viewer-native-workloads'),'--mcap',str(data.resolve()),
+            command=[str(case.get('native_binary',ROOT/'target/gpu-native/viewer-native-workloads')),'--mcap',str(data.resolve()),
                      '--camera-topic','/camera/0','--fixed-frame','base_scan','--no-platform-geometry',
                      '--point-cloud-topic',case['topics'][0]if kind=='scene'else'/scan']
         else:
@@ -137,7 +142,32 @@ def main():
         with (args.output/'app.log').open('w')as log:
             process=subprocess.Popen(command,cwd=ROOT,env=env,stdout=log,stderr=log,start_new_session=True);processes.append(process)
             result['pid']=process.pid
+            (args.output/'running.json').write_text(json.dumps(result,indent=2)+'\n')
+            launched=time.monotonic()
+            def guard():
+                while not guard_stop.wait(1):
+                    if process.poll() is not None:return
+                    try:
+                        usage=process_sample(process.pid)
+                        if usage['pss_kib']>4096*1024:
+                            guard_errors.append('4 GiB application PSS guard during opening/calibration/playback')
+                            (args.output/'resource-guard.json').write_text(json.dumps({'reason':guard_errors[-1],'resources':usage},indent=2)+'\n')
+                            os.killpg(process.pid,signal.SIGTERM)
+                            return
+                    except (OSError,ProcessLookupError):return
+            guard_thread=threading.Thread(target=guard,daemon=True);guard_thread.start()
             window=wait_for(lambda:window_for(process.pid,env),15,'owned mapped window');x11=X11(':1')
+            # A resource-guarded application may close its window during capture.
+            # Xlib's default handler exits the whole harness before finally runs.
+            x_errors=[]
+            callback_type=ctypes.CFUNCTYPE(ctypes.c_int,ctypes.c_void_p,ctypes.c_void_p)
+            def on_x_error(display,event):
+                x_errors.append('X11 protocol error (window may have closed)')
+                return 0
+            x_error_handler=callback_type(on_x_error)
+            x11.x.XSetErrorHandler.argtypes=[callback_type]
+            x11.x.XSetErrorHandler.restype=ctypes.c_void_p
+            x11.x.XSetErrorHandler(x_error_handler)
             size=[1920,1080]if args.app=='native'else[1952,1122]
             x11.x.XMoveResizeWindow(x11.display,window,40,60,*size);x11.x.XFlush(x11.display);result['window']=hex(window)
             if args.app=='lichtblick':
@@ -153,8 +183,15 @@ def main():
                     cdp.evaluate("window.workloadHashes=[];window.workloadDraws=[];const bitmap=createImageBitmap;window.createImageBitmap=async function(b,...a){const image=await bitmap.call(this,b,...a);if(b instanceof Blob&&b.type.includes('jpeg')){const h=await crypto.subtle.digest('SHA-256',await b.arrayBuffer());window.workloadHashes.push([...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join(''));}return image};for(const C of [WebGLRenderingContext,WebGL2RenderingContext]){const f=C.prototype.drawArrays;C.prototype.drawArrays=function(m,s,n){if(m===0)window.workloadDraws.push(n);return f.call(this,m,s,n)}}")
                 import_layout(cdp,case['lichtblick_layout']);time.sleep(.3)
                 doc=cdp.call('DOM.getDocument')['root']['nodeId'];node=cdp.call('DOM.querySelector',{'nodeId':doc,'selector':'input[type=file]'})['nodeId']
-                cdp.call('DOM.setFileInputFiles',{'nodeId':node,'files':[str(data.resolve())]})
-                wait_for(lambda:cdp.evaluate(STATE),20,'recording ready');time.sleep(.5)
+                cdp.call('DOM.setFileInputFiles',{'nodeId':node,'files':[str(v.resolve())for v in files]})
+                wait_for(lambda:cdp.evaluate(STATE),20,'recording opened')
+                # Initial MCAP loading emits the start cursor before the first read.
+                # A seek to start at that point is ignored as already-at-target;
+                # initial loading later moves the cursor to start + 99 ms.
+                def initial_ready():
+                    state=cdp.evaluate(STATE)
+                    return state and state['presence']=='PRESENT' and state['current']!=state['start']
+                wait_for(initial_ready,45,'initial recording read completed');time.sleep(.3)
                 result['subscriptions']=cdp.evaluate(SUBSCRIPTIONS)
                 if result['subscriptions']is None:raise RuntimeError('cannot audit subscriptions')
                 selected=sorted({v['topic']for v in result['subscriptions']if re.fullmatch(r'/camera/[0-7]|/scan|/points',v['topic'])})
@@ -190,6 +227,7 @@ def main():
                 if cloud:selected.append(cloud[1])
                 result['selected_stream_topics']=sorted(selected)
                 if kind!='raw'and sorted(selected)!=sorted(case['topics']):raise RuntimeError('Native selection mismatch: '+str(selected))
+            result['opening_to_ready_ms']=(time.monotonic()-launched)*1000
             result['case_sha256']=digest(args.case);result['geometry']=case['rects']
 
             def send(verb,ns=0):
@@ -218,12 +256,13 @@ def main():
             if args.calibrate:
                 if kind=='camera':
                     refs=[[None]*32 for _ in range(case['cameras'])]
-                    hashes=[digest(args.jpeg_dir/f'{i:02}.jpg')for i in range(32)]
+                    hashes=[] if raw_camera else [digest(args.jpeg_dir/f'{i:02}.jpg')for i in range(32)]
                     for index in range(32):
                         send('seek',index*100000000+10000000);time.sleep(.15)
                         if cdp:
-                            expected={hashes[(index+i*7)%32]for i in range(case['cameras'])}
-                            wait_for(lambda:expected.issubset(set(cdp.evaluate('window.workloadHashes'))),5,'JPEG input hashes')
+                            if hashes:
+                                expected={hashes[(index+i*7)%32]for i in range(case['cameras'])}
+                                wait_for(lambda:expected.issubset(set(cdp.evaluate('window.workloadHashes'))),5,'JPEG input hashes')
                             target={'sec':1735689600+index//10,'nsec':index%10*100000000+10000000}
                             wait_for(lambda:cdp.evaluate(STATE)['current']==target,5,'completed calibration seek')
                             time.sleep(.2)
@@ -238,10 +277,10 @@ def main():
                         for i,vector in enumerate(current):refs[i][(index+i*7)%32]=vector
                     minimum=min(identify(ref,[v for j,v in enumerate(per_camera)if j!=i])['mae']for per_camera in refs for i,ref in enumerate(per_camera))
                     result['minimum_pair_mae']=minimum
-                    (args.output/'diagnostic-references.json').write_text(json.dumps(refs)+'\\n')
+                    (args.output/'diagnostic-references.json').write_text(json.dumps(refs)+'\n')
                     if minimum<=1:raise RuntimeError('nonunique calibration')
                     reference={'app':args.app,'binary_sha256':result['binary_sha256'],'case_sha256':result['case_sha256'],'dataset_sha256':result['data_sha256'],
-                               'references':refs,'minimum_pair_mae':minimum,'color_profile':result['color_profile'],'source_jpeg_sha256':hashes}
+                               'reference_group':case.get('reference_group'),'logical_crc32':case.get('logical_crc32'),'geometry':case['rects'],'references':refs,'minimum_pair_mae':minimum,'color_profile':result['color_profile'],'source_jpeg_sha256':hashes,'raw_calibration_note':'cursor and independent per-app pixel identities; Native exact texture timestamps; no JPEG Blob hash for Raw' if raw_camera else None}
                     (args.output/'references.json').write_text(json.dumps(reference)+'\n')
                     result['minimum_pair_mae']=minimum
                 else:
@@ -254,13 +293,23 @@ def main():
             refs=None
             if kind=='camera':
                 reference=json.loads(args.references.read_text())
-                for key,expected in [('app',args.app),('binary_sha256',result['binary_sha256']),('case_sha256',result['case_sha256']),('dataset_sha256',result['data_sha256'])]:
+                checks=[('app',args.app),('binary_sha256',result['binary_sha256'])]
+                if case.get('reference_group'):
+                    checks += [('reference_group',case['reference_group']),('logical_crc32',case['logical_crc32']),('geometry',case['rects'])]
+                else:
+                    checks += [('case_sha256',result['case_sha256']),('dataset_sha256',result['data_sha256'])]
+                for key,expected in checks:
                     if reference[key]!=expected:raise RuntimeError('reference provenance mismatch: '+key)
                 if reference.get('color_profile')!=result['color_profile']:raise RuntimeError('reference color profile mismatch')
                 refs=reference['references'];result['references_sha256']=digest(args.references)
-            offsets=[25310000000,48710000000,16110000000,0]if kind=='camera'else[13310000000,18710000000,6110000000,0]
+            offsets=case.get('seek_offsets_ns', [25310000000,48710000000,16110000000,0]if kind=='camera'else[13310000000,18710000000,6110000000,0])
             for ns in offsets:
                 begin=time.monotonic();send('seek',ns)
+                if args.app=='native':
+                    wait_for(lambda:f'GPU_BENCH_COMMAND id={request}\n' in (args.output/'app.log').read_text(),30,'Native seek command completed')
+                if cdp:
+                    target={'sec':1735689600+ns//1000000000,'nsec':ns%1000000000}
+                    wait_for(lambda:cdp.evaluate(STATE)['current']==target,6,'committed seek cursor')
                 if refs:
                     while time.monotonic()-begin<6:
                         matches=[identify(v,r)for v,r in zip(samples(),refs)]
@@ -277,6 +326,9 @@ def main():
                         wait_for(exact_textures,2,'exact Native seek texture log times')
                         seek_result['native_texture_log_ns']=[expected]*case['cameras']
                     result['seeks'].append(seek_result)
+                    # Let the player finish resetting its forward iterator after emit.
+                    # This settling interval is outside the measured seek latency.
+                    time.sleep(.3)
                 else:
                     time.sleep(.25)
                     result['seeks'].append({'offset_ns':ns,'note':'command issued; message metadata audited, not pixel-identity seek latency'})
@@ -370,13 +422,22 @@ def main():
             result['status']='ok'
     except Exception as error:
         result.update(status='failed',error=repr(error))
-        if x11 and window:
-            try:screenshot('failed.png')
+        if x11 and window and all(p.poll() is None for p in processes):
+            try:
+                raw,stride=capture(x11,window,[inset[0],inset[1],1920,1080])
+                Image.frombytes('RGB',(1920,1080),raw,'raw','BGRX',stride,1).save(args.output/'failed.png')
             except Exception:pass
         if cdp:
-            try:result['failed_ui']=cdp.evaluate(STATE)
+            try:
+                result['failed_ui']=cdp.evaluate(STATE)
+                result['failed_body_text']=cdp.evaluate('document.body.innerText')
+                cdp.evaluate("[...document.querySelectorAll('[role=tab]')].find(e=>e.textContent.trim().startsWith('Alerts'))?.click()")
+                time.sleep(.3)
+                result['failed_alerts_text']=cdp.evaluate('document.body.innerText')
             except Exception:pass
     finally:
+        guard_stop.set()
+        if guard_errors:result.update(status='failed',resource_guard=guard_errors)
         if pss_sampler:pss_sampler.stop_event.set()
         if browser:
             try:browser.sock.settimeout(2);browser.call('Browser.close')

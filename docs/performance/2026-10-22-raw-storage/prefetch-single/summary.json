@@ -1,0 +1,251 @@
+[
+  {
+    "case": "raw-prefetch-lz4-single-4s-camera-4",
+    "app": "native",
+    "runs": 3,
+    "successes": 3,
+    "failures": [],
+    "metrics": {
+      "cpu_percent": {
+        "median": 22.965806891738968,
+        "min": 17.946593517256453,
+        "max": 26.62334819671942
+      },
+      "peak_pss_mib": {
+        "median": 1169.4033203125,
+        "min": 1169.369140625,
+        "max": 1185.564453125
+      },
+      "focus_updates_hz": {
+        "median": 9.473604780270973,
+        "min": 9.468129502774273,
+        "max": 9.479096764600703
+      },
+      "minimum_updates_hz": {
+        "median": 9.473604780270973,
+        "min": 9.468129502774273,
+        "max": 9.479096764600703
+      },
+      "minimum_progress_hz": {
+        "median": 9.473604780270973,
+        "min": 9.468129502774273,
+        "max": 9.479096764600703
+      },
+      "opening_ready_ms": {
+        "median": 1265.8003577962518,
+        "min": 1262.4119622632861,
+        "max": 1266.0652874037623
+      },
+      "after_pause_pss_mib": {
+        "median": 1180.048828125,
+        "min": 1171.833984375,
+        "max": 1181.1689453125
+      },
+      "worst_lag_p95_ms": {
+        "median": 161.33761890232546,
+        "min": 160.17217990010968,
+        "max": 162.19383087009166
+      }
+    }
+  },
+  {
+    "case": "raw-prefetch-none-single-4s-camera-4",
+    "app": "native",
+    "runs": 3,
+    "successes": 2,
+    "failures": [
+      "RuntimeError('unreliable camera identity')"
+    ],
+    "metrics": {
+      "cpu_percent": {
+        "median": 25.295672238754953,
+        "min": 25.29501237579334,
+        "max": 25.29633210171657
+      },
+      "peak_pss_mib": {
+        "median": 1170.68310546875,
+        "min": 1169.400390625,
+        "max": 1171.9658203125
+      },
+      "focus_updates_hz": {
+        "median": 9.475899660361875,
+        "min": 9.474257406642996,
+        "max": 9.477541914080756
+      },
+      "minimum_updates_hz": {
+        "median": 9.475899660361875,
+        "min": 9.474257406642996,
+        "max": 9.477541914080756
+      },
+      "minimum_progress_hz": {
+        "median": 9.475899660361875,
+        "min": 9.474257406642996,
+        "max": 9.477541914080756
+      },
+      "opening_ready_ms": {
+        "median": 591.3950074464083,
+        "min": 564.987980760634,
+        "max": 617.8020341321826
+      },
+      "after_pause_pss_mib": {
+        "median": 1178.95263671875,
+        "min": 1177.119140625,
+        "max": 1180.7861328125
+      },
+      "worst_lag_p95_ms": {
+        "median": 160.3921730071305,
+        "min": 160.17908621579392,
+        "max": 160.60525979846707
+      }
+    }
+  },
+  {
+    "case": "raw-prefetch-zstd-8m-4s-camera-4",
+    "app": "native",
+    "runs": 3,
+    "successes": 3,
+    "failures": [],
+    "metrics": {
+      "cpu_percent": {
+        "median": 35.928024184437234,
+        "min": 33.941058191781124,
+        "max": 37.242158666727924
+      },
+      "peak_pss_mib": {
+        "median": 325.75390625,
+        "min": 324.6015625,
+        "max": 327.0810546875
+      },
+      "focus_updates_hz": {
+        "median": 9.470256426707717,
+        "min": 9.469336971195677,
+        "max": 9.470401400874332
+      },
+      "minimum_updates_hz": {
+        "median": 9.470256426707717,
+        "min": 9.469336971195677,
+        "max": 9.470401400874332
+      },
+      "minimum_progress_hz": {
+        "median": 9.470256426707717,
+        "min": 9.469336971195677,
+        "max": 9.470401400874332
+      },
+      "opening_ready_ms": {
+        "median": 260.764597915113,
+        "min": 260.62153466045856,
+        "max": 263.6231053620577
+      },
+      "after_pause_pss_mib": {
+        "median": 301.6689453125,
+        "min": 297.2001953125,
+        "max": 303.89453125
+      },
+      "worst_lag_p95_ms": {
+        "median": 161.432775110006,
+        "min": 161.3681023940443,
+        "max": 161.468533053994
+      }
+    }
+  },
+  {
+    "case": "raw-prefetch-zstd-single-4s-camera-1",
+    "app": "native",
+    "runs": 3,
+    "successes": 2,
+    "failures": [
+      "RuntimeError('unreliable camera identity')"
+    ],
+    "metrics": {
+      "cpu_percent": {
+        "median": 10.814650393065602,
+        "min": 10.648411571835114,
+        "max": 10.980889214296088
+      },
+      "peak_pss_mib": {
+        "median": 1179.3310546875,
+        "min": 1179.2568359375,
+        "max": 1179.4052734375
+      },
+      "focus_updates_hz": {
+        "median": 9.641637635941315,
+        "min": 9.474792648508723,
+        "max": 9.808482623373909
+      },
+      "minimum_updates_hz": {
+        "median": 9.641637635941315,
+        "min": 9.474792648508723,
+        "max": 9.808482623373909
+      },
+      "minimum_progress_hz": {
+        "median": 9.641637635941315,
+        "min": 9.474792648508723,
+        "max": 9.808482623373909
+      },
+      "opening_ready_ms": {
+        "median": 1415.2841423638165,
+        "min": 1414.0710765495896,
+        "max": 1416.4972081780434
+      },
+      "after_pause_pss_mib": {
+        "median": 1179.3388671875,
+        "min": 1179.2646484375,
+        "max": 1179.4130859375
+      },
+      "worst_lag_p95_ms": {
+        "median": 135.04350353032345,
+        "min": 110.08469816297284,
+        "max": 160.00230889767408
+      }
+    }
+  },
+  {
+    "case": "raw-prefetch-zstd-single-4s-camera-4",
+    "app": "native",
+    "runs": 3,
+    "successes": 3,
+    "failures": [],
+    "metrics": {
+      "cpu_percent": {
+        "median": 24.298329253858704,
+        "min": 17.307584088990478,
+        "max": 25.962604690670386
+      },
+      "peak_pss_mib": {
+        "median": 1191.7275390625,
+        "min": 1168.2392578125,
+        "max": 1192.8408203125
+      },
+      "focus_updates_hz": {
+        "median": 9.471770244035348,
+        "min": 9.468367618979228,
+        "max": 9.80238510496127
+      },
+      "minimum_updates_hz": {
+        "median": 9.471770244035348,
+        "min": 9.468367618979228,
+        "max": 9.80238510496127
+      },
+      "minimum_progress_hz": {
+        "median": 9.471770244035348,
+        "min": 9.468367618979228,
+        "max": 9.80238510496127
+      },
+      "opening_ready_ms": {
+        "median": 1412.2852319851518,
+        "min": 1411.3770835101604,
+        "max": 1414.555737748742
+      },
+      "after_pause_pss_mib": {
+        "median": 1169.2509765625,
+        "min": 1168.3134765625,
+        "max": 1169.6650390625
+      },
+      "worst_lag_p95_ms": {
+        "median": 159.57208238542074,
+        "min": 109.74487252533427,
+        "max": 161.84232253581277
+      }
+    }
+  }
+]

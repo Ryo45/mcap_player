@@ -2394,6 +2394,7 @@ name = "performance-probe"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "crc32fast",
  "image",
  "mcap",
  "serde_json",

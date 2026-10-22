@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+crc32fast.workspace = true
 image.workspace = true
 mcap = { workspace = true, features = ["lz4", "zstd"] }
 serde_json.workspace = true
