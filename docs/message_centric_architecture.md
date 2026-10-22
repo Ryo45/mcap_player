@@ -8,10 +8,18 @@ Native forward traversal prunes chunks using selected channel facts before readi
 Chunk start times define traversal order; overlapping chunks are merged by log time, stream ID,
 physical chunk index, then record order. Chunk end times need not be monotonic. Seek uses a
 prefix maximum of end times to locate possible overlaps, stages reads before committing, and
-skips messages strictly before the requested forward position. Active serialized chunk backings
-are capped at 256 MiB; an excessive overlap produces an explicit error instead of unbounded
-retention. Consumed chunks are released. Transaction staging and the caller's returned batch
-can temporarily retain additional backings; the cap is not a total RSS limit.
+skips messages strictly before the requested forward position. Active serialized Chunk backings
+are allocated only as required by the selected streams' chronological merge, with a 4 GiB
+emergency ceiling on 64-bit platforms. There is no fixed 256 MiB admission gate or preallocation;
+large Chunks and time-overlapping parts can use more backing when needed. Individual compressed
+and expanded Chunk payloads are capped at 2 GiB; metadata and other source records keep their 256 MiB bound. An
+excessive overlap still produces an explicit error instead of unbounded retention. Consumed
+Chunks are released. Transaction staging and the caller's returned batch
+can temporarily retain additional backings; the allowance is not a total RSS limit. Playback
+latest-before restore allows up to 8 GiB of cumulative compressed-plus-expanded Chunk work on
+64-bit platforms, separately from query defaults and the resident forward backing allowance.
+These are ceilings, not promises to fit a memory-constrained host; large Chunks increase seek
+latency and transient memory as well as retained backing.
 
 ## Ownership and data flow
 

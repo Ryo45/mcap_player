@@ -7,7 +7,10 @@ use mcap::sans_io::{SummaryReadEvent, SummaryReader, SummaryReaderOptions};
 #[cfg(not(target_arch = "wasm32"))]
 use std::io::{self, SeekFrom};
 
+// Metadata and individual records retain the smaller bound. Chunk payloads have
+// a separate ceiling so large camera chunks need not fit the metadata budget.
 pub const MAX_SOURCE_RECORD_BYTES: usize = 256 * 1024 * 1024;
+pub(super) const MAX_CHUNK_BYTES: usize = 2 * 1024 * 1024 * 1024;
 
 #[derive(Clone)]
 pub(super) enum Backing {
@@ -62,10 +65,21 @@ impl Backing {
         }
     }
     pub fn read(&self, offset: u64, length: usize) -> Result<Bytes, McapSourceError> {
-        if length > MAX_SOURCE_RECORD_BYTES {
+        self.read_with_limit(offset, length, MAX_SOURCE_RECORD_BYTES)
+    }
+    pub fn read_chunk(&self, offset: u64, length: usize) -> Result<Bytes, McapSourceError> {
+        self.read_with_limit(offset, length, MAX_CHUNK_BYTES)
+    }
+    pub(super) fn read_with_limit(
+        &self,
+        offset: u64,
+        length: usize,
+        maximum: usize,
+    ) -> Result<Bytes, McapSourceError> {
+        if length > maximum {
             return Err(McapSourceError::ReadLimit {
                 requested: length,
-                maximum: MAX_SOURCE_RECORD_BYTES,
+                maximum,
             });
         }
         let end = offset
@@ -83,7 +97,7 @@ impl Backing {
             #[cfg(not(target_arch = "wasm32"))]
             Self::File(file) => file.read(offset, length),
             #[cfg(not(target_arch = "wasm32"))]
-            Self::Segments(parts) => parts.read(offset, length),
+            Self::Segments(parts) => parts.read(offset, length, maximum),
         }
     }
     pub fn summary(&self) -> Result<std::sync::Arc<Summary>, McapSourceError> {

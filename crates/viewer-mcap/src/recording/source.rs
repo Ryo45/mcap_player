@@ -395,10 +395,13 @@ impl McapSource {
             .iter()
             .map(|c| self.summary.chunk_indexes[c.index].uncompressed_size)
             .sum::<u64>();
-        if size.saturating_add(retained) > super::backing::MAX_SOURCE_RECORD_BYTES as u64 {
+        // Allocate only required active backings. The old 256 MiB cache-sized
+        // gate rejected otherwise valid large chunks and overlapping recordings.
+        let maximum = maximum_forward_backing_bytes();
+        if size.saturating_add(retained) > maximum as u64 {
             return Err(McapSourceError::QueryLimit {
                 resource: "forward overlapping chunk backing bytes",
-                maximum: super::backing::MAX_SOURCE_RECORD_BYTES,
+                maximum,
             });
         }
         let messages = self.read_chunk(index)?;
@@ -458,7 +461,8 @@ impl McapSource {
 
     /// Inclusive, chronological delivery; equal times use stream then physical record order.
     /// All fallible work is staged before committing traversal. Overlapping chunk backings are
-    /// bounded to 256 MiB; consumed chunks are released instead of accumulating a history.
+    /// allocated on demand, up to 4 GiB on 64-bit platforms. Consumed chunks
+    /// are released rather than cached indefinitely.
     pub fn read_through(
         &mut self,
         cursor: ArrivalTime,
@@ -690,19 +694,20 @@ impl McapSource {
             .chunk_indexes
             .get(index)
             .ok_or(mcap::McapError::BadIndex)?;
+        // Reject impossible declared sizes before allocating/reading compressed input.
+        let expected_size = usize::try_from(chunk.uncompressed_size)
+            .map_err(|_| McapSourceError::InvalidChunk("uncompressed size is too large".into()))?;
+        if expected_size > super::backing::MAX_CHUNK_BYTES {
+            return Err(McapSourceError::ReadLimit {
+                requested: expected_size,
+                maximum: super::backing::MAX_CHUNK_BYTES,
+            });
+        }
         let uncompressed_crc = self.chunk_uncompressed_crc(chunk)?;
-        let compressed = self.backing.read(
+        let compressed = self.backing.read_chunk(
             chunk.compressed_data_offset()?,
             usize::try_from(chunk.compressed_size).map_err(|_| McapSourceError::ReadOverflow)?,
         )?;
-        let expected_size = usize::try_from(chunk.uncompressed_size)
-            .map_err(|_| McapSourceError::InvalidChunk("uncompressed size is too large".into()))?;
-        if expected_size > super::backing::MAX_SOURCE_RECORD_BYTES {
-            return Err(McapSourceError::ReadLimit {
-                requested: expected_size,
-                maximum: super::backing::MAX_SOURCE_RECORD_BYTES,
-            });
-        }
         let backing = super::decode_mcap_chunk(&chunk.compression, compressed, expected_size)?;
         use std::sync::atomic::Ordering::Relaxed;
         self.read_metrics.chunks.fetch_add(1, Relaxed);
@@ -784,6 +789,12 @@ fn parse_chunk_backing(
     Ok(messages)
 }
 
+// This is an emergency ceiling, not a preallocated cache. A recording uses only
+// the backings required for the selected streams' current chronological merge.
+fn maximum_forward_backing_bytes() -> usize {
+    ((super::backing::MAX_CHUNK_BYTES as u64) * 2).min(usize::MAX as u64) as usize
+}
+
 fn forward_prefix_max_end(summary: &Summary, chunks: &[usize]) -> Vec<ArrivalTime> {
     let mut max = ArrivalTime(i64::MIN);
     chunks
@@ -811,11 +822,26 @@ mod tests {
     use std::{collections::BTreeMap, io::Cursor};
 
     #[test]
+    fn oversized_expansion_is_rejected_before_compressed_input_is_read() {
+        let mut source = no_predecessor_fixture(1);
+        let chunk = &mut std::sync::Arc::make_mut(&mut source.summary).chunk_indexes[0];
+        chunk.uncompressed_size = super::super::backing::MAX_CHUNK_BYTES as u64 + 1;
+        chunk.compressed_size = u64::MAX;
+        assert!(matches!(
+            source.parse_chunk(0),
+            Err(McapSourceError::ReadLimit { .. })
+        ));
+        assert_eq!(source.read_diagnostics().chunks_expanded, 0);
+    }
+
+    #[test]
     fn forward_overlap_budget_rejects_before_reading_and_preserves_position() {
         let mut source = no_predecessor_fixture(2);
-        // Model a fully occupied active backing without allocating 256 MiB in a unit test.
+        // Model three 2 GiB overlaps without allocating their backings.
         std::sync::Arc::make_mut(&mut source.summary).chunk_indexes[0].uncompressed_size =
-            super::super::backing::MAX_SOURCE_RECORD_BYTES as u64;
+            super::super::backing::MAX_CHUNK_BYTES as u64;
+        std::sync::Arc::make_mut(&mut source.summary).chunk_indexes[1].uncompressed_size =
+            super::super::backing::MAX_CHUNK_BYTES as u64;
         source.forward.next = 1;
         source.forward.active.push(ActiveChunk {
             index: 0,
@@ -829,6 +855,7 @@ mod tests {
             .into(),
             position: 0,
         });
+        source.forward.active.push(source.forward.active[0].clone());
         assert!(matches!(
             source.read_through(ArrivalTime(200)),
             Err(McapSourceError::QueryLimit {

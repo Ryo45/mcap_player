@@ -11,6 +11,16 @@ pub struct LatestQueryLimits {
     pub max_index_bytes: usize,
     pub max_chunk_bytes: usize,
 }
+impl LatestQueryLimits {
+    /// Playback restoration may need several large chunks. This is cumulative
+    /// compressed + expanded work, not a cache reservation or a resident-memory cap.
+    pub(crate) fn playback() -> Self {
+        Self {
+            max_chunk_bytes: super::backing::MAX_CHUNK_BYTES.saturating_mul(4),
+            ..Self::default()
+        }
+    }
+}
 impl Default for LatestQueryLimits {
     fn default() -> Self {
         Self {
@@ -112,5 +122,21 @@ impl LatestQueryBudget {
             self.limits.max_chunk_bytes,
             "latest chunk bytes",
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn playback_allows_large_restore_without_relaxing_explicit_query_limits() {
+        let bytes = 300 * 1024 * 1024;
+        assert!(
+            LatestQueryBudget::new(LatestQueryLimits::playback())
+                .chunk(bytes, bytes)
+                .is_ok()
+        );
+        assert!(LatestQueryBudget::default().chunk(bytes, bytes).is_err());
     }
 }
