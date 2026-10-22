@@ -79,9 +79,8 @@ pub(crate) fn source_status(ui: &mut egui::Ui, model: &ViewerPresentation) {
     ));
     if let Some(performance) = &diagnostics.playback_performance {
         ui.monospace(format!(
-            "Focus {:>5.1}/{:.0} Hz · others ≤{:.0} Hz",
+            "Focus {:>5.1} Hz · follows input · others ≤{:.0} Hz",
             focused_fps,
-            performance.focused_camera_hz(),
             performance.background_camera_hz()
         ));
     } else {

@@ -8,13 +8,13 @@ use std::{
     time::Duration,
 };
 
-const FOCUSED_CAMERA_INTERVAL: Duration = Duration::from_millis(100);
 const BACKGROUND_CAMERA_INTERVAL: Duration = Duration::from_millis(200);
 
 /// Shared Camera capability used by all Camera panels for one session.
 ///
 /// Admission/coalescing happens on serialized messages. Pixel decoding remains a presentation
 /// concern and the retained image data is a `Bytes` slice of the admitted CDR payload.
+/// Focus materializes the latest pending frame on each advance; only backgrounds have a rate limit.
 #[derive(Clone)]
 pub struct CameraController {
     raw_streams: std::collections::HashSet<StreamId>,
@@ -92,19 +92,19 @@ impl CameraController {
                 .remove(&camera_id)
                 .expect("due Camera came from the pending map");
             let _ = self.decode_and_apply(camera_id, message);
-            // Keep the camera's phase instead of accumulating UI tick lateness.
-            // Skip missed periods: only the latest pending image is materialized above.
-            let interval = self.interval(camera_id);
-            let deadline = self.next_presentation[&camera_id];
-            let lateness = self.presentation_elapsed.saturating_sub(deadline);
-            // Both intervals are <= 200 ms, so this remainder fits in u64 nanoseconds.
-            let remainder =
-                Duration::from_nanos((lateness.as_nanos() % interval.as_nanos()) as u64);
-            self.next_presentation.insert(
-                camera_id,
-                self.presentation_elapsed
-                    .saturating_add(interval - remainder),
-            );
+            if Some(camera_id) != self.focused_camera {
+                // Keep background phases; missed periods do not trigger catch-up decoding.
+                let deadline = self.next_presentation[&camera_id];
+                let lateness = self.presentation_elapsed.saturating_sub(deadline);
+                let remainder = Duration::from_nanos(
+                    (lateness.as_nanos() % BACKGROUND_CAMERA_INTERVAL.as_nanos()) as u64,
+                );
+                self.next_presentation.insert(
+                    camera_id,
+                    self.presentation_elapsed
+                        .saturating_add(BACKGROUND_CAMERA_INTERVAL - remainder),
+                );
+            }
             self.presented_frames = self.presented_frames.saturating_add(1);
             let count = self.presented_by_id.entry(camera_id).or_default();
             *count = count.saturating_add(1);
@@ -150,8 +150,7 @@ impl CameraController {
         }
         self.focused_camera = focused_camera;
         if let Some(camera_id) = focused_camera {
-            self.next_presentation
-                .insert(camera_id, self.presentation_elapsed);
+            self.next_presentation.remove(&camera_id);
         }
     }
 
@@ -183,26 +182,16 @@ impl CameraController {
         &self.presented_by_id
     }
 
-    pub fn focused_hz() -> f64 {
-        1.0 / FOCUSED_CAMERA_INTERVAL.as_secs_f64()
-    }
-
     pub fn background_hz() -> f64 {
         1.0 / BACKGROUND_CAMERA_INTERVAL.as_secs_f64()
     }
 
     fn is_due(&self, camera_id: CameraId) -> bool {
-        self.next_presentation
-            .get(&camera_id)
-            .is_none_or(|deadline| self.presentation_elapsed >= *deadline)
-    }
-
-    fn interval(&self, camera_id: CameraId) -> Duration {
-        if Some(camera_id) == self.focused_camera {
-            FOCUSED_CAMERA_INTERVAL
-        } else {
-            BACKGROUND_CAMERA_INTERVAL
-        }
+        Some(camera_id) == self.focused_camera
+            || self
+                .next_presentation
+                .get(&camera_id)
+                .is_none_or(|deadline| self.presentation_elapsed >= *deadline)
     }
 
     fn reset_schedule(&mut self) {
@@ -219,9 +208,6 @@ impl CameraController {
                 BACKGROUND_CAMERA_INTERVAL.as_secs_f64() * index as f64 / background_count,
             );
             self.next_presentation.insert(camera_id, phase);
-        }
-        if let Some(camera_id) = self.focused_camera {
-            self.next_presentation.insert(camera_id, Duration::ZERO);
         }
     }
 

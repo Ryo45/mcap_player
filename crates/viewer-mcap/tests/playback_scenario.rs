@@ -268,7 +268,7 @@ fn supplied_elapsed_and_commands_control_cursor_and_message_cutoff() {
 }
 
 #[test]
-fn focused_camera_is_presented_at_ten_hz_and_background_cameras_at_five_hz() {
+fn focused_camera_follows_input_while_background_cameras_stay_at_five_hz() {
     let topics = [
         CAMERA_TOPIC,
         "/camera/rear/image/compressed",
@@ -294,7 +294,7 @@ fn focused_camera_is_presented_at_ten_hz_and_background_cameras_at_five_hz() {
         PlaybackStep::Elapse(Duration::ZERO),
         PlaybackStep::Command(PlaybackCommand::Toggle),
     ];
-    steps.extend((0..10).map(|_| PlaybackStep::Elapse(Duration::from_millis(100))));
+    steps.extend((0..50).map(|_| PlaybackStep::Elapse(Duration::from_millis(20))));
 
     let outcome = PlaybackScenario {
         streams,
@@ -308,7 +308,7 @@ fn focused_camera_is_presented_at_ten_hz_and_background_cameras_at_five_hz() {
     let after_first_burst = outcome.observations[2];
     assert_eq!(
         after_first_burst.latest_camera_arrival,
-        Some(ArrivalTime(START + 100_000_000)),
+        Some(ArrivalTime(START + 20_000_000)),
         "the focused camera must select the newest pending message"
     );
 
@@ -318,7 +318,7 @@ fn focused_camera_is_presented_at_ten_hz_and_background_cameras_at_five_hz() {
         .get(&CameraId(0))
         .copied()
         .unwrap_or_default();
-    assert_eq!(focused, 11);
+    assert_eq!(focused, 51);
     for camera_id in 1..7 {
         let presented = outcome
             .performance
@@ -367,7 +367,10 @@ fn seek_restores_the_latest_camera_predecessor_before_committing() {
     .run();
 
     let before_seek = outcome.observations[2];
-    assert_eq!(before_seek.latest_camera_arrival, Some(ArrivalTime(START)));
+    assert_eq!(
+        before_seek.latest_camera_arrival,
+        Some(ArrivalTime(START + 50_000_000))
+    );
     assert_eq!(before_seek.camera_status, CameraStatus::Ready);
 
     let immediately_after_seek = outcome.observations[3];

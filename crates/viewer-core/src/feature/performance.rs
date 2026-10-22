@@ -25,10 +25,6 @@ impl PlaybackPerformance {
         }
     }
 
-    pub fn focused_camera_hz(&self) -> f64 {
-        CameraController::focused_hz()
-    }
-
     pub fn background_camera_hz(&self) -> f64 {
         CameraController::background_hz()
     }
