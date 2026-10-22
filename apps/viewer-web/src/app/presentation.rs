@@ -119,8 +119,7 @@ pub(super) fn update_dom_diagnostics(presentation: &ViewerPresentation, session:
         metrics.stale_results_discarded,
     );
     performance.set_inner_text(&format!(
-        "Focus {focused_fps:.1}/{:.0} Hz · others ≤{:.0} Hz · image {:.2} ms · canvas {:.2} ms · tick {:.2} ms · source/controller {:.2}/{:.2} ms{data_plane}",
-        playback_performance.focused_camera_hz(),
+        "Focus {focused_fps:.1} Hz · follows input · others ≤{:.0} Hz · image {:.2} ms · canvas {:.2} ms · tick {:.2} ms · source/controller {:.2}/{:.2} ms{data_plane}",
         playback_performance.background_camera_hz(),
         diagnostics.performance.camera_decode_ms,
         diagnostics.performance.upload_ms,

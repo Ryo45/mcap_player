@@ -125,7 +125,8 @@ the selected plan. Push/live adapters use the same route resolution without pret
 recording restore operations.
 
 Controllers own feature-specific semantics. Camera admission and focused/background scheduling
-happen before JPEG decode. Camera deadlines follow fixed 100 ms / 200 ms periods, preserving
+happen before JPEG decode. The focused Camera follows input on each frontend tick, coalescing to the newest pending frame
+without a fixed rate gate. Background deadlines follow fixed 200 ms periods, preserving
 the existing camera phases rather than adding UI tick lateness to every deadline. A late tick
 skips missed periods and materializes only the latest pending message per camera; it does not
 replay a catch-up backlog. These are nominal periodic rates, not strict minimum spacing between

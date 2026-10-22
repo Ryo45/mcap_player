@@ -134,14 +134,14 @@ fn scheduled_camera_message(time: i64) -> RawMessage {
 }
 
 #[test]
-fn camera_tick_jitter_does_not_delay_the_next_period() {
+fn focused_camera_follows_irregular_input_without_a_fixed_deadline() {
     let mut controller = CameraController::new(&camera_plan());
     controller.admit(&scheduled_camera_message(0));
     controller.advance(Duration::ZERO);
     controller.admit(&scheduled_camera_message(100));
-    controller.advance(Duration::from_millis(107));
+    controller.advance(Duration::from_millis(33));
     controller.admit(&scheduled_camera_message(200));
-    controller.advance(Duration::from_millis(93));
+    controller.advance(Duration::from_millis(17));
     assert_eq!(
         controller
             .state()
@@ -154,7 +154,7 @@ fn camera_tick_jitter_does_not_delay_the_next_period() {
 }
 
 #[test]
-fn camera_after_a_stall_keeps_latest_only_and_resumes_on_period() {
+fn focused_camera_after_a_stall_keeps_latest_and_accepts_the_next_input() {
     let mut controller = CameraController::new(&camera_plan());
     controller.admit(&scheduled_camera_message(0));
     controller.advance(Duration::ZERO);
@@ -174,10 +174,10 @@ fn camera_after_a_stall_keeps_latest_only_and_resumes_on_period() {
     );
     controller.admit(&scheduled_camera_message(351));
     controller.advance(Duration::ZERO);
-    assert_eq!(controller.counters().decoded, 2);
+    assert_eq!(controller.counters().decoded, 3);
     controller.admit(&scheduled_camera_message(390));
     controller.advance(Duration::from_millis(49));
-    assert_eq!(controller.counters().decoded, 2);
+    assert_eq!(controller.counters().decoded, 4);
     controller.advance(Duration::from_millis(1));
     assert_eq!(
         controller
@@ -187,10 +187,10 @@ fn camera_after_a_stall_keeps_latest_only_and_resumes_on_period() {
             .arrival_time,
         ArrivalTime(390)
     );
-    assert_eq!(controller.counters().decoded, 3);
+    assert_eq!(controller.counters().decoded, 4);
     // No catch-up decoding on repeated ticks at the same time.
     controller.advance(Duration::ZERO);
-    assert_eq!(controller.counters().decoded, 3);
+    assert_eq!(controller.counters().decoded, 4);
 }
 
 #[test]
@@ -301,8 +301,7 @@ fn camera_cadence_handles_saturated_elapsed_without_arithmetic_overflow() {
 }
 
 #[test]
-fn camera_rates_preserve_the_existing_policy() {
-    assert_eq!(CameraController::focused_hz(), 10.0);
+fn background_camera_rate_remains_five_hz() {
     assert_eq!(CameraController::background_hz(), 5.0);
 }
 
@@ -476,4 +475,40 @@ fn raw_camera_selection_coalescing_and_failed_restore_preserve_current_frame() {
     message.arrival_time = ArrivalTime(3);
     assert!(controller.restore(&message).is_err());
     assert_eq!(controller.state().latest_for(CameraId(0)), Some(&before));
+}
+
+#[test]
+fn focused_camera_tracks_thirty_hz_then_slower_irregular_input_without_repeats() {
+    let mut controller = CameraController::new(&camera_plan());
+    let mut previous = 0;
+    for index in 0..30 {
+        let time = index * 1_000_000_000 / 30;
+        controller.admit(&scheduled_camera_message(time));
+        controller.advance(Duration::from_nanos((time - previous) as u64));
+        assert_eq!(
+            controller
+                .state()
+                .latest_for(CameraId(0))
+                .unwrap()
+                .arrival_time,
+            ArrivalTime(time)
+        );
+        previous = time;
+    }
+    for time in [1_100_000_000, 1_270_000_000, 1_310_000_000] {
+        controller.admit(&scheduled_camera_message(time));
+        controller.advance(Duration::from_nanos((time - previous) as u64));
+        assert_eq!(
+            controller
+                .state()
+                .latest_for(CameraId(0))
+                .unwrap()
+                .arrival_time,
+            ArrivalTime(time)
+        );
+        previous = time;
+    }
+    assert_eq!(controller.counters().decoded, 33);
+    controller.advance(Duration::from_secs(1));
+    assert_eq!(controller.counters().decoded, 33);
 }
