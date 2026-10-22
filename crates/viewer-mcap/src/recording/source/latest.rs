@@ -16,7 +16,7 @@ pub struct LatestQueryDiagnostics {
 pub struct LatestMessageReader {
     source: McapSource,
     indexes: HashMap<usize, ChunkMessageIndexes>,
-    chunk: Option<(usize, Vec<ParsedChunkMessage>)>,
+    chunk: Option<(usize, std::sync::Arc<[ParsedChunkMessage]>)>,
     diagnostics: LatestQueryDiagnostics,
 }
 impl LatestMessageReader {

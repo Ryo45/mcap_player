@@ -13,8 +13,8 @@ are allocated only as required by the selected streams' chronological merge, wit
 emergency ceiling on 64-bit platforms. There is no fixed 256 MiB admission gate or preallocation;
 large Chunks and time-overlapping parts can use more backing when needed. Individual compressed
 and expanded Chunk payloads are capped at 2 GiB; metadata and other source records keep their 256 MiB bound. An
-excessive overlap still produces an explicit error instead of unbounded retention. Consumed
-Chunks are released. Transaction staging and the caller's returned batch
+excessive overlap still produces an explicit error instead of unbounded retention. Forward-only
+Chunks are released when consumed; recent restore Chunks may remain in the bounded seek cache. Transaction staging and the caller's returned batch
 can temporarily retain additional backings; the allowance is not a total RSS limit. Playback
 latest-before restore allows up to 8 GiB of cumulative compressed-plus-expanded Chunk work on
 64-bit platforms, separately from query defaults and the resident forward backing allowance.
@@ -30,11 +30,20 @@ PSS bound. Queries and paused playback do not start read-ahead. Pause, seek, sel
 and source drop cancel and join retired work before replacing it; late work cannot enter a new
 traversal. A missed preparation deadline still waits rather than exposing missing messages.
 
-Playback restore uses a short-lived reader retaining one parsed Chunk across latest-before and
-forward-position staging. Both returned messages and the staged forward cursor share its `Bytes`
-backing, avoiding a second expansion for a shared Chunk. The scratch cache is dropped before
-restored feature state commits; ordinary query readers do not inherit this cache. Failed reads or
-feature restoration still leave the visible source position and clock unchanged.
+Playback restore and subsequent seeks share a source-owned physical Chunk cache. It admits
+only Chunks parsed by restoration, never every forward or query read. The serialized byte budget
+is twice the largest selected Chunk, clamped to 64 MiB..2 GiB; at most 16 Chunks are retained.
+These are ceilings, not preallocations. Least-recently-used entries are evicted when either limit
+is reached. Small-Chunks scrubbing can retain several positions; an A/B pair of large Chunks can
+be reused when it fits the ceiling. Parsed records are shared through `Arc` and payloads through
+`Bytes`, including restore messages and the staged forward position. No decoded feature history
+is cached. Selection changes adjust the budget; source replacement drops the cache. File identity
+is validated even on hits. Ordinary query forks do not inherit or populate this playback cache.
+Forward and preparation readers may reuse it, but do not populate it. Read-ahead admission counts
+cached plus active serialized backings without counting a shared Chunk twice, in addition to
+preparation input/output. Transaction staging and feature memory remain outside this estimate.
+Failed reads or feature restoration leave the visible source position and clock unchanged;
+physical cache warming is allowed during a failed transaction.
 
 ## Ownership and data flow
 
