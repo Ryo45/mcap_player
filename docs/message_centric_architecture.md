@@ -21,6 +21,21 @@ latest-before restore allows up to 8 GiB of cumulative compressed-plus-expanded 
 These are ceilings, not promises to fit a memory-constrained host; large Chunks increase seek
 latency and transient memory as well as retained backing.
 
+Native playback prepares at most one next selected Chunk on a `mcap-chunk` worker while
+playing. Preparation overlaps file I/O, CRC validation, decompression and physical record parsing
+with current display work; it does not decode ROS features. Admission accounts for active
+serialized backings and the next Chunk's compressed input plus expanded output (uncompressed
+input is already its output). This estimate excludes feature/UI/GPU memory and is not a process
+PSS bound. Queries and paused playback do not start read-ahead. Pause, seek, selection changes
+and source drop cancel and join retired work before replacing it; late work cannot enter a new
+traversal. A missed preparation deadline still waits rather than exposing missing messages.
+
+Playback restore uses a short-lived reader retaining one parsed Chunk across latest-before and
+forward-position staging. Both returned messages and the staged forward cursor share its `Bytes`
+backing, avoiding a second expansion for a shared Chunk. The scratch cache is dropped before
+restored feature state commits; ordinary query readers do not inherit this cache. Failed reads or
+feature restoration still leave the visible source position and clock unchanged.
+
 ## Ownership and data flow
 
 ```text
