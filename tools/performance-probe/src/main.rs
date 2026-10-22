@@ -17,6 +17,7 @@ use viewer_core::{
 use viewer_mcap::{FileMessageStream, LatestMessageReader, McapSource};
 
 mod geometry;
+mod seek;
 mod storage;
 
 const BASE: u64 = 1_735_689_600_000_000_000;
@@ -44,6 +45,9 @@ impl Default for CameraFixture {
 fn main() -> Result<()> {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
     match args.first().map(String::as_str) {
+        Some("seek-workload") if args.len() == 4 => {
+            seek::measure(&args[1], &args[2], args[3].parse()?)
+        }
         Some("generate-geometry") if args.len() == 5 => {
             geometry::generate(&args[1], &args[2], args[3].parse()?, args[4].parse()?)
         }
@@ -96,7 +100,7 @@ fn main() -> Result<()> {
             args.get(6).map(String::as_str).unwrap_or("rgb"),
         ),
         _ => bail!(
-            "generate-geometry PATH scan|cloud POINTS SECONDS\ngenerate PATH none|zstd|lz4 CHUNK_BYTES mixed|grouped SECONDS jpeg|png|raw|scan [WIDTH HEIGHT [VARIANTS [CAMERA_HZ [CAMERAS]]]]\nrechunk INPUT OUTPUT none|zstd|lz4 CHUNK_BYTES\nextract-jpeg INPUT OUTPUT_DIR TOPIC COUNT\nstorage INPUT OUTPUT none|zstd|lz4 CHUNK_BYTES PART_SECONDS (0 chunk bytes = no Chunk records)\nrun PATH scan|all forward|indexed|seek|seek-cached|repeat|repeat-cached SEEK_COUNT [TICK_MS [rgb|rgba]]"
+            "seek-workload PATH same|alternating|scrub COUNT\ngenerate-geometry PATH scan|cloud POINTS SECONDS\ngenerate PATH none|zstd|lz4 CHUNK_BYTES mixed|grouped SECONDS jpeg|png|raw|scan [WIDTH HEIGHT [VARIANTS [CAMERA_HZ [CAMERAS]]]]\nrechunk INPUT OUTPUT none|zstd|lz4 CHUNK_BYTES\nextract-jpeg INPUT OUTPUT_DIR TOPIC COUNT\nstorage INPUT OUTPUT none|zstd|lz4 CHUNK_BYTES PART_SECONDS (0 chunk bytes = no Chunk records)\nrun PATH scan|all forward|indexed|seek|seek-cached|repeat|repeat-cached SEEK_COUNT [TICK_MS [rgb|rgba]]"
         ),
     }
 }
@@ -410,7 +414,7 @@ fn memory() -> Value {
 fn io(source: &McapSource) -> Value {
     let d = source.read_diagnostics();
     json!({"read_calls":d.file_read_calls,"requested_bytes":d.file_read_bytes,"chunks_expanded":d.chunks_expanded,
-        "expanded_bytes":d.expanded_bytes,"decompressed_bytes":d.decompressed_bytes,"source_cache_backing_bytes":d.sequential_cache_backing_bytes,"prefetch_ready_hits":d.prefetch_ready_hits,"prefetch_waits":d.prefetch_waits,"prefetch_wait_ns":d.prefetch_wait_ns,"prefetch_estimated_bytes":d.prefetch_estimated_bytes})
+        "expanded_bytes":d.expanded_bytes,"decompressed_bytes":d.decompressed_bytes,"source_cache_backing_bytes":d.sequential_cache_backing_bytes,"seek_cache_hits":d.seek_cache_hits,"seek_cache_backing_bytes":d.seek_cache_backing_bytes,"prefetch_ready_hits":d.prefetch_ready_hits,"prefetch_waits":d.prefetch_waits,"prefetch_wait_ns":d.prefetch_wait_ns,"prefetch_estimated_bytes":d.prefetch_estimated_bytes})
 }
 
 fn run(

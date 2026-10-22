@@ -318,3 +318,32 @@ fn storage_split_compression_preserves_every_message() {
     std::fs::remove_file(input).unwrap();
     std::fs::remove_file(source).unwrap();
 }
+
+#[test]
+fn repeated_full_seek_reuses_chunks_without_changing_the_restored_frame() {
+    let original = fixture("raw");
+    let path = original.with_extension("seek-revisit.mcap");
+    command(&[
+        "generate",
+        path.to_str().unwrap(),
+        "zstd",
+        "4096",
+        "mixed",
+        "2",
+        "raw",
+        "64",
+        "36",
+        "32",
+        "10",
+        "1",
+    ]);
+    let result = command(&["seek-workload", path.to_str().unwrap(), "same", "6"]);
+    let samples = result["samples"].as_array().unwrap();
+    assert_eq!(samples.len(), 6);
+    assert!(samples[0]["chunks_expanded"].as_u64().unwrap() > 0);
+    assert!(samples[1]["chunks_expanded"].as_u64().unwrap() > 0);
+    assert!(samples[2..].iter().all(|row| row["chunks_expanded"] == 0));
+    assert!(result["io"]["seek_cache_backing_bytes"].as_u64().unwrap() > 0);
+    std::fs::remove_file(path).unwrap();
+    std::fs::remove_file(original).unwrap();
+}

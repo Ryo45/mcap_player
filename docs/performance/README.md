@@ -27,6 +27,8 @@ GUI比較の旧process_sampleには、別スレッドから起動した子プロ
 FHDのRaw画像を1台／4台表示し、none / Zstd / LZ4、3分割、最大約1GBの単一Chunkを比較する。
 Nativeの固定256 MiBゲートを見直し、Chunk先読みとSeek内の展開共有による更新頻度・メモリの変化も記録した。Chunkレコードなしの補助検証は分けて保存する。
 
+[同じシーンを往復するSeekの計測と改善](2026-10-22-seek-revisit/README.md)では、大Chunkの再訪で残っていた再展開を解消した。画面反映の改善、連続再生時の追加メモリ、小ChunkでLichtblickに残る差を分けて記録する。
+
 ## 再現
 
 Linux、Rust toolchain、Python 3.11以上（stdlibのみ）。計測中は他のビルドや
