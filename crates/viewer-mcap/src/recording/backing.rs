@@ -10,7 +10,12 @@ use std::io::{self, SeekFrom};
 // Metadata and individual records retain the smaller bound. Chunk payloads have
 // a separate ceiling so large camera chunks need not fit the metadata budget.
 pub const MAX_SOURCE_RECORD_BYTES: usize = 256 * 1024 * 1024;
-pub(super) const MAX_CHUNK_BYTES: usize = 2 * 1024 * 1024 * 1024;
+pub(super) const MAX_CHUNK_BYTES: usize = if isize::BITS == 32 {
+    // Vec allocations cannot exceed isize::MAX even when usize holds 2 GiB.
+    isize::MAX as usize
+} else {
+    2 * 1024 * 1024 * 1024
+};
 
 #[derive(Clone)]
 pub(super) enum Backing {

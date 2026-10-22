@@ -134,6 +134,11 @@ impl McapPlayback {
         self.source_read.record(read_started.elapsed());
         process(elapsed, messages);
         self.clock.commit_cursor(candidate);
+        if self.clock.is_playing() {
+            self.source.prefetch_next();
+        } else {
+            self.source.cancel_prefetch();
+        }
         Ok(())
     }
 
@@ -147,8 +152,9 @@ impl McapPlayback {
         plan: &RestorePlan,
         restore: impl FnOnce(viewer_core::ArrivalTime, Vec<RawMessage>) -> Result<(), E>,
     ) -> Result<(), McapSeekError<E>> {
-        let mut messages = self
-            .source
+        self.source.cancel_prefetch();
+        let reader = self.source.restore_reader();
+        let mut messages = reader
             .latest_before_with_limits(
                 &plan.latest_before,
                 plan.target,
@@ -156,11 +162,7 @@ impl McapPlayback {
             )?
             .messages;
         for read in &plan.histories {
-            messages.extend(
-                self.source
-                    .indexed_range(&read.streams, read.range)?
-                    .messages,
-            );
+            messages.extend(reader.indexed_range(&read.streams, read.range)?.messages);
         }
         let persistent = plan
             .persistent
@@ -178,7 +180,8 @@ impl McapPlayback {
         messages.sort_by_key(|message| (message.arrival_time, message.stream_id.0));
 
         let after_target = viewer_core::ArrivalTime(plan.target.0.saturating_add(1));
-        let source_position = self.source.prepare_seek(after_target)?;
+        let source_position = reader.prepare_seek(after_target)?;
+        drop(reader);
         restore(plan.target, messages).map_err(McapSeekError::Restore)?;
         self.source.commit_seek(source_position);
         self.clock.seek(plan.target);

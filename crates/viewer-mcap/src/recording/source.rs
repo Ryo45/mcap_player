@@ -1,6 +1,8 @@
 //! Native indexed MCAP source: metadata and forward traversal.
 mod index;
 mod latest;
+#[cfg(not(target_arch = "wasm32"))]
+mod prefetch;
 mod range;
 #[cfg(test)]
 use index::IndexReadMetrics;
@@ -29,6 +31,10 @@ struct CachedMessage {
 }
 
 pub struct McapSource {
+    #[cfg(not(target_arch = "wasm32"))]
+    prefetch: std::sync::Mutex<Option<prefetch::ChunkPrefetch>>,
+    // Only a short-lived playback restore reader retains this physical parse.
+    restore_chunk: Option<std::sync::Mutex<Option<RestoreChunk>>>,
     backing: super::backing::Backing,
     summary: std::sync::Arc<Summary>,
     catalog: std::sync::Arc<SourceCatalog>,
@@ -51,6 +57,9 @@ struct ChunkReadMetrics {
     chunks: std::sync::atomic::AtomicU64,
     expanded_bytes: std::sync::atomic::AtomicU64,
     decompressed_bytes: std::sync::atomic::AtomicU64,
+    prefetch_ready_hits: std::sync::atomic::AtomicU64,
+    prefetch_waits: std::sync::atomic::AtomicU64,
+    prefetch_wait_ns: std::sync::atomic::AtomicU64,
 }
 
 /// Cumulative work shared by file/source forks. File bytes count successful positional
@@ -65,6 +74,12 @@ pub struct SourceReadDiagnostics {
     pub decompressed_bytes: u64,
     /// Sum of active overlapping sequential chunk backings, excluding feature/output memory.
     pub sequential_cache_backing_bytes: u64,
+    pub prefetch_ready_hits: u64,
+    pub prefetch_waits: u64,
+    pub prefetch_wait_ns: u64,
+    /// Serialized preparation estimate: input + output while running, output only when ready.
+    /// Metadata vectors, feature state and returned batches are outside this estimate.
+    pub prefetch_estimated_bytes: u64,
 }
 
 #[derive(Clone, Default)]
@@ -73,6 +88,11 @@ pub(crate) struct McapSourcePosition {
     active: Vec<ActiveChunk>,
     lower: Option<ArrivalTime>,
 }
+struct RestoreChunk {
+    index: usize,
+    messages: Vec<ParsedChunkMessage>,
+}
+
 #[derive(Clone)]
 struct ActiveChunk {
     index: usize,
@@ -237,6 +257,9 @@ impl McapSource {
             all_chunks,
             all_prefix_max_end,
             forward: Default::default(),
+            #[cfg(not(target_arch = "wasm32"))]
+            prefetch: Default::default(),
+            restore_chunk: None,
             backing,
             summary,
             catalog: std::sync::Arc::new(catalog),
@@ -254,6 +277,9 @@ impl McapSource {
     /// Independent traversal over the same bytes/file handle and summary facts.
     pub fn fork_reader(&self) -> Self {
         Self {
+            #[cfg(not(target_arch = "wasm32"))]
+            prefetch: Default::default(),
+            restore_chunk: None,
             backing: self.backing.clone(),
             summary: self.summary.clone(),
             catalog: self.catalog.clone(),
@@ -271,6 +297,60 @@ impl McapSource {
             index_metrics: self.index_metrics.clone(),
         }
     }
+    pub(crate) fn restore_reader(&self) -> Self {
+        let mut reader = self.fork_reader();
+        reader.forward_chunks = self.forward_chunks.clone();
+        reader.forward_prefix_max_end = self.forward_prefix_max_end.clone();
+        reader.selected_streams = self.selected_streams.clone();
+        reader.restore_chunk = Some(Default::default());
+        reader
+    }
+
+    pub(crate) fn cancel_prefetch(&self) {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let job = self.prefetch.lock().expect("prefetch slot poisoned").take();
+            drop(job);
+        }
+    }
+
+    /// At most one selected future Chunk; no read-ahead work for query forks.
+    pub(crate) fn prefetch_next(&mut self) {
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(&index) = self.forward_chunks.get(self.forward.next) {
+            if self
+                .prefetch
+                .lock()
+                .expect("prefetch slot poisoned")
+                .as_ref()
+                .is_some_and(|job| job.index == index)
+            {
+                return;
+            }
+            self.cancel_prefetch();
+            let chunk = &self.summary.chunk_indexes[index];
+            let retained: u64 = self
+                .forward
+                .active
+                .iter()
+                .map(|active| self.summary.chunk_indexes[active.index].uncompressed_size)
+                .sum();
+            let preparation =
+                chunk
+                    .uncompressed_size
+                    .saturating_add(if chunk.compression.is_empty() {
+                        0
+                    } else {
+                        chunk.compressed_size
+                    });
+            if retained.saturating_add(preparation) > maximum_forward_backing_bytes() as u64 {
+                return;
+            }
+            let job = prefetch::ChunkPrefetch::start(self.fork_reader(), index);
+            *self.prefetch.lock().expect("prefetch slot poisoned") = job;
+        }
+    }
+
     pub fn summary(&self) -> &Summary {
         &self.summary
     }
@@ -298,9 +378,31 @@ impl McapSource {
     pub fn read_diagnostics(&self) -> SourceReadDiagnostics {
         use std::sync::atomic::Ordering::Relaxed;
         let (file_read_calls, file_read_bytes) = self.backing.file_read_totals();
+        #[cfg(not(target_arch = "wasm32"))]
+        let prefetch_estimated_bytes = self
+            .prefetch
+            .lock()
+            .expect("prefetch slot poisoned")
+            .as_ref()
+            .map_or(0, |job| {
+                let chunk = &self.summary.chunk_indexes[job.index];
+                chunk.uncompressed_size.saturating_add(
+                    if job.is_ready() || chunk.compression.is_empty() {
+                        0
+                    } else {
+                        chunk.compressed_size
+                    },
+                )
+            });
+        #[cfg(target_arch = "wasm32")]
+        let prefetch_estimated_bytes = 0;
         SourceReadDiagnostics {
             file_read_calls,
             file_read_bytes,
+            prefetch_estimated_bytes,
+            prefetch_ready_hits: self.read_metrics.prefetch_ready_hits.load(Relaxed),
+            prefetch_waits: self.read_metrics.prefetch_waits.load(Relaxed),
+            prefetch_wait_ns: self.read_metrics.prefetch_wait_ns.load(Relaxed),
             chunks_expanded: self.read_metrics.chunks.load(Relaxed),
             expanded_bytes: self.read_metrics.expanded_bytes.load(Relaxed),
             decompressed_bytes: self.read_metrics.decompressed_bytes.load(Relaxed),
@@ -320,6 +422,7 @@ impl McapSource {
         &mut self,
         streams: impl IntoIterator<Item = StreamId>,
     ) -> Result<(), McapSourceError> {
+        self.cancel_prefetch();
         let selected = streams.into_iter().collect::<HashSet<_>>();
         for stream in &selected {
             let descriptor = self
@@ -358,6 +461,7 @@ impl McapSource {
         &self,
         cursor: ArrivalTime,
     ) -> Result<McapSourcePosition, McapSourceError> {
+        self.cancel_prefetch();
         self.backing.validate()?;
         let mut state = McapSourcePosition {
             lower: Some(cursor),
@@ -656,7 +760,38 @@ impl McapSource {
 
     fn read_chunk(&self, index: usize) -> Result<Vec<CachedMessage>, McapSourceError> {
         let mut cache = Vec::new();
-        for message in self.parse_chunk(index)? {
+        #[cfg(not(target_arch = "wasm32"))]
+        let prepared = {
+            let mut slot = self.prefetch.lock().expect("prefetch slot poisoned");
+            if slot.as_ref().is_some_and(|job| job.index == index) {
+                slot.take()
+            } else {
+                None
+            }
+        };
+        #[cfg(not(target_arch = "wasm32"))]
+        let messages = if let Some(job) = prepared {
+            use std::sync::atomic::Ordering::Relaxed;
+            let ready = job.is_ready();
+            let started = std::time::Instant::now();
+            let messages = job.finish()?;
+            self.backing.validate()?;
+            if ready {
+                self.read_metrics.prefetch_ready_hits.fetch_add(1, Relaxed);
+            } else {
+                self.read_metrics.prefetch_waits.fetch_add(1, Relaxed);
+                self.read_metrics.prefetch_wait_ns.fetch_add(
+                    started.elapsed().as_nanos().min(u64::MAX as u128) as u64,
+                    Relaxed,
+                );
+            }
+            messages
+        } else {
+            self.parse_chunk(index)?
+        };
+        #[cfg(target_arch = "wasm32")]
+        let messages = self.parse_chunk(index)?;
+        for message in messages {
             let stream_id = message.message.stream_id;
             if self
                 .selected_streams
@@ -688,6 +823,12 @@ impl McapSource {
     ) -> Result<Vec<ParsedChunkMessage>, McapSourceError> {
         if cancelled() {
             return Err(McapSourceError::QueryCancelled);
+        }
+        if let Some(cache) = &self.restore_chunk
+            && let Some(cached) = cache.lock().expect("restore cache poisoned").as_ref()
+            && cached.index == index
+        {
+            return Ok(cached.messages.clone());
         }
         let chunk = self
             .summary
@@ -733,6 +874,12 @@ impl McapSource {
                 u16::try_from(parsed.message.stream_id.0).map_err(|_| mcap::McapError::BadIndex)?;
             parsed.message.stream_id = StreamId(u32::from(self.backing.channel_id(index, local)?));
         }
+        if let Some(cache) = &self.restore_chunk {
+            *cache.lock().expect("restore cache poisoned") = Some(RestoreChunk {
+                index,
+                messages: messages.clone(),
+            });
+        }
         Ok(messages)
     }
 
@@ -767,6 +914,7 @@ impl McapSource {
     }
 }
 
+#[derive(Clone)]
 struct ParsedChunkMessage {
     offset: u64,
     message: RawMessage,
@@ -787,6 +935,12 @@ fn parse_chunk_backing(
         Ok(())
     })?;
     Ok(messages)
+}
+
+impl Drop for McapSource {
+    fn drop(&mut self) {
+        self.cancel_prefetch();
+    }
 }
 
 // This is an emergency ceiling, not a preallocated cache. A recording uses only
