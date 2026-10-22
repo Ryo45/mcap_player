@@ -1,0 +1,59 @@
+{
+  "none-single-4s": {
+    "chunk_bytes": 1073741824,
+    "codec": "none",
+    "files": [
+      {
+        "bytes": 995408749,
+        "chunks": 1,
+        "end": 1735689603900000000,
+        "max_chunk_bytes": 995403840,
+        "messages": 200,
+        "path": "/tmp/mcap-raw-storage-data/raw-none-single-4s.mcap",
+        "start": 1735689600000000000
+      }
+    ],
+    "input": "/tmp/mcap-raw-storage-data/raw-split-zstd-8m/part-000.mcap",
+    "logical_crc32": 3089428338,
+    "messages": 200,
+    "part_seconds": 0
+  },
+  "zstd-single-4s": {
+    "chunk_bytes": 1073741824,
+    "codec": "zstd",
+    "files": [
+      {
+        "bytes": 962555045,
+        "chunks": 1,
+        "end": 1735689603900000000,
+        "max_chunk_bytes": 995403840,
+        "messages": 200,
+        "path": "/tmp/mcap-raw-storage-data/raw-zstd-single-4s.mcap",
+        "start": 1735689600000000000
+      }
+    ],
+    "input": "/tmp/mcap-raw-storage-data/raw-split-zstd-8m/part-000.mcap",
+    "logical_crc32": 3089428338,
+    "messages": 200,
+    "part_seconds": 0
+  },
+  "lz4-single-4s": {
+    "chunk_bytes": 1073741824,
+    "codec": "lz4",
+    "files": [
+      {
+        "bytes": 995320044,
+        "chunks": 1,
+        "end": 1735689603900000000,
+        "max_chunk_bytes": 995403840,
+        "messages": 200,
+        "path": "/tmp/mcap-raw-storage-data/raw-lz4-single-4s.mcap",
+        "start": 1735689600000000000
+      }
+    ],
+    "input": "/tmp/mcap-raw-storage-data/raw-split-zstd-8m/part-000.mcap",
+    "logical_crc32": 3089428338,
+    "messages": 200,
+    "part_seconds": 0
+  }
+}

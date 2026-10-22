@@ -1,0 +1,24 @@
+{
+  "method": "production McapSource::open_file via performance-probe; no GUI startup or file hashing inside timed interval",
+  "bytes": 2488509296,
+  "runs": [
+    {
+      "seconds": 0.008091336116194725,
+      "exit_code": 1,
+      "stderr": "Error: MCAP Chunk Index is required for indexed playback; explicitly reindex or convert the recording before opening it (automatic full-file scanning is disabled)\n",
+      "stdout": ""
+    },
+    {
+      "seconds": 0.0009297775104641914,
+      "exit_code": 1,
+      "stderr": "Error: MCAP Chunk Index is required for indexed playback; explicitly reindex or convert the recording before opening it (automatic full-file scanning is disabled)\n",
+      "stdout": ""
+    },
+    {
+      "seconds": 0.0007675113156437874,
+      "exit_code": 1,
+      "stderr": "Error: MCAP Chunk Index is required for indexed playback; explicitly reindex or convert the recording before opening it (automatic full-file scanning is disabled)\n",
+      "stdout": ""
+    }
+  ]
+}
