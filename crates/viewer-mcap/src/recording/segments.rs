@@ -281,14 +281,19 @@ impl SegmentedBacking {
         Ok(result)
     }
 
-    pub(super) fn read(&self, offset: u64, length: usize) -> Result<Bytes, McapSourceError> {
+    pub(super) fn read(
+        &self,
+        offset: u64,
+        length: usize,
+        maximum: usize,
+    ) -> Result<Bytes, McapSourceError> {
         let i = self
             .parts
             .partition_point(|(start, _)| *start <= offset)
             .checked_sub(1)
             .ok_or(McapSourceError::ReadOverflow)?;
         let (start, part) = &self.parts[i];
-        part.read(offset - *start, length)
+        part.read_with_limit(offset - *start, length, maximum)
     }
     pub(super) fn validate(&self) -> Result<(), McapSourceError> {
         for (_, part) in &self.parts {

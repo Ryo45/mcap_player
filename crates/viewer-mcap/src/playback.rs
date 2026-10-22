@@ -149,7 +149,11 @@ impl McapPlayback {
     ) -> Result<(), McapSeekError<E>> {
         let mut messages = self
             .source
-            .latest_before(&plan.latest_before, plan.target)?
+            .latest_before_with_limits(
+                &plan.latest_before,
+                plan.target,
+                crate::LatestQueryLimits::playback(),
+            )?
             .messages;
         for read in &plan.histories {
             messages.extend(
