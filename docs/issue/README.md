@@ -2,7 +2,7 @@
 
 追加対応: [015 分割MCAPの時間軸とWeb LZ4](015-split-mcap-and-web-lz4/README.md)。Nativeのディレクトリ入力とBrowser LocalのLZ4を実装。Raw Image/PNGは[016 Camera入力形式](016-camera-image-formats/README.md)で対応。
 
-性能調査の追加候補: [017 NativeのSeek後の画面反映latency](017-native-seek-presentation/README.md)。Chunk再利用後も小Chunkで残る差を、decode／upload／presentまで分けて調査する。
+性能の改善候補: [017 NativeのSeek後の画面反映latency](017-native-seek-presentation/README.md)。段階別計測を実施済み。Chunk再利用後に残るUIの結果回収・surface取得待ちを減らす変更は未実装。
 
 調査対象HEAD: `f16cd90da2e62c8ef0481d126ef87beca9e26161`
 
