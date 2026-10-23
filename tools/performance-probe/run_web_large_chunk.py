@@ -1,92 +1,42 @@
 #!/usr/bin/env python3
-"""Watch Chrome independently of CDP while a large local Chunk can block its main thread."""
+"""Repeat a large-Chunk Web workload with the current production-source-free harness."""
 import argparse
-import json
-import os
 from pathlib import Path
 import subprocess
 import sys
-import time
 
-from measure_viewer_pilot import ROOT, process_sample
-
-
-def run(args):
-    output = args.output.resolve()
-    output.mkdir(parents=True)
-    child_output = output / 'browser.json'
-    group = f'mcap-web-large-chunk-{os.getpid()}.scope'
-    command = ['systemd-run', '--user', '--scope', '--unit=' + group.removesuffix('.scope'),
-               '-p', 'MemoryMax=3G', '-p', 'MemorySwapMax=0', sys.executable,
-               str(ROOT / 'tools/performance-probe/diagnose_web_camera.py'),
-               '--data', str(args.data.resolve()), '--mode', 'light',
-               '--play-timeout', '180', '--output', str(child_output)]
-    result = {'command': command, 'chrome_pss_limit_kib': 2 * 1024 * 1024,
-              'cgroup_memory_max_bytes': 3 * 2**30, 'samples': [], 'status': 'running'}
-    started = time.monotonic()
-    chrome_pid = None
-    cgroup = None
-    with (output / 'process.log').open('w') as log:
-        process = subprocess.Popen(command, cwd=ROOT, stdout=log, stderr=log)
-        try:
-            while process.poll() is None:
-                if cgroup is None:
-                    path = subprocess.run(
-                        ['systemctl', '--user', 'show', group, '-p', 'ControlGroup', '--value'],
-                        text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                        check=False).stdout.strip()
-                    if path:
-                        cgroup = Path('/sys/fs/cgroup' + path)
-                sample = {'wall_seconds': time.monotonic() - started}
-                if cgroup is not None:
-                    try:
-                        sample['cgroup_memory_current'] = int((cgroup / 'memory.current').read_text())
-                        sample['cgroup_memory_events'] = dict(
-                            (key, int(value)) for key, value in
-                            (line.split() for line in (cgroup / 'memory.events').read_text().splitlines()))
-                        if chrome_pid is None:
-                            for pid in (cgroup / 'cgroup.procs').read_text().split():
-                                try:
-                                    cmd = Path(f'/proc/{pid}/cmdline').read_bytes().replace(b'\0', b' ')
-                                except (FileNotFoundError, ProcessLookupError):
-                                    continue
-                                if b'--remote-debugging-port=9241' in cmd and b'--type=' not in cmd:
-                                    chrome_pid = int(pid)
-                                    break
-                    except FileNotFoundError:
-                        pass
-                if chrome_pid is not None:
-                    sample['chrome'] = process_sample(chrome_pid)
-                result['samples'].append(sample)
-                over_budget = sample.get('chrome', {}).get('pss_kib', 0) > result['chrome_pss_limit_kib']
-                if over_budget or sample['wall_seconds'] > 240:
-                    result['status'] = 'external-pss-limit' if over_budget else 'external-timeout'
-                    subprocess.run(['systemctl', '--user', 'kill', group], check=False,
-                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    break
-                time.sleep(.1)
-            result['returncode'] = process.wait(timeout=30)
-        finally:
-            subprocess.run(['systemctl', '--user', 'kill', group], check=False,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            if process.poll() is None:
-                process.terminate()
-                process.wait(timeout=10)
-            if result['status'] == 'running':
-                result['status'] = 'finished' if result.get('returncode') == 0 else 'process-failed'
-            if child_output.exists():
-                result['browser_status'] = json.loads(child_output.read_text())['status']
-            result['peak_sampled_chrome_pss_kib'] = max(
-                (s.get('chrome', {}).get('pss_kib', 0) for s in result['samples']), default=0)
-            (output / 'external.json').write_text(json.dumps(result, indent=2) + '\n')
-    print(json.dumps({key: value for key, value in result.items() if key not in ['command', 'samples']}))
+from measure_viewer_pilot import ROOT
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--data', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--duration-seconds', type=float, required=True)
+    parser.add_argument('--cameras', type=int, default=8)
+    parser.add_argument('--seconds', type=float, default=10)
+    parser.add_argument('--repeats', type=int, default=3)
+    parser.add_argument('--gpu', choices=['hardware', 'software'], default='hardware')
+    parser.add_argument('--wake-display', action='store_true')
+    parser.add_argument('--vulkan-icd', type=Path)
+    parser.add_argument('--dist', type=Path, default=ROOT / 'apps/viewer-web/dist')
     args = parser.parse_args()
-    if args.output.exists():
-        parser.error('use a new output directory')
-    run(args)
+    if args.output.exists() or args.repeats < 1:
+        parser.error('use a new output directory and positive repeat count')
+    args.output.mkdir(parents=True)
+    failed = False
+    for repeat in range(args.repeats):
+        command = [sys.executable, str(Path(__file__).with_name('measure_web_recording.py')),
+                   '--data', str(args.data.resolve()), '--output', str((args.output / f'run-{repeat}').resolve()),
+                   '--dist', str(args.dist.resolve()), '--gpu', args.gpu, '--duration-seconds', str(args.duration_seconds),
+                   '--seconds', str(args.seconds), '--cameras', str(args.cameras)]
+        if args.wake_display:
+            command.append('--wake-display')
+        if args.vulkan_icd:
+            command += ['--vulkan-icd', str(args.vulkan_icd)]
+        failed = subprocess.run(command, timeout=240, check=False).returncode != 0 or failed
+    return 1 if failed else 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

@@ -3,7 +3,7 @@ use bytes::Bytes;
 use mcap::records::ChunkIndex;
 #[cfg(target_arch = "wasm32")]
 use mcap::records::{Record, op};
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(test, target_arch = "wasm32"))]
 use std::collections::BTreeMap;
 use std::collections::{BTreeSet, VecDeque};
 #[cfg(target_arch = "wasm32")]
@@ -44,9 +44,22 @@ impl ByteRange {
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct ChunkReadRequest {
     offset: u64,
-    length: usize,
+    length: u64,
     compression: String,
-    uncompressed_size: usize,
+    uncompressed_size: u64,
+}
+
+impl ChunkReadRequest {
+    fn bulk_length(&self) -> Result<usize, DataLoadError> {
+        usize::try_from(self.length)
+            .map_err(|_| DataLoadError::invalid_record("compressed Chunk exceeds address space"))
+    }
+
+    #[cfg(any(test, target_arch = "wasm32"))]
+    fn stream(&self) -> bool {
+        self.uncompressed_size > 64 * 1024 * 1024
+            && matches!(self.compression.as_str(), "" | "zstd")
+    }
 }
 
 struct OwnedWindowCollector {
@@ -55,7 +68,8 @@ struct OwnedWindowCollector {
     range: DataWindowTimeRange,
     messages: Vec<RawMessage>,
     resident_bytes: usize,
-    decompressed_bytes: usize,
+    decompressed_bytes: u64,
+    copied_bytes: usize,
 }
 
 impl OwnedWindowCollector {
@@ -99,6 +113,7 @@ impl OwnedWindowCollector {
             messages: Vec::new(),
             resident_bytes: 0,
             decompressed_bytes: 0,
+            copied_bytes: 0,
         })
     }
 
@@ -111,7 +126,7 @@ impl OwnedWindowCollector {
         request: &ChunkReadRequest,
         compressed: Bytes,
     ) -> Result<(), DataLoadError> {
-        if compressed.len() != request.length {
+        if compressed.len() as u64 != request.length {
             return Err(DataLoadError::invalid_record(
                 "browser MCAP chunk range is truncated",
             ));
@@ -119,7 +134,7 @@ impl OwnedWindowCollector {
         let (backing, decompressed_bytes) = decode_chunk_backing(request, compressed)?;
         self.decompressed_bytes = self
             .decompressed_bytes
-            .checked_add(decompressed_bytes)
+            .checked_add(decompressed_bytes as u64)
             .ok_or_else(|| DataLoadError::invalid_record("decompressed byte count overflow"))?;
         let parsed = parse_chunk_backing(backing, &self.selected_channels, self.range, |_, _| {
             Ok(true)
@@ -136,6 +151,45 @@ impl OwnedWindowCollector {
         Ok(())
     }
 
+    // Large Chunk records borrow a small reusable decode buffer. Retain only the
+    // selected window's payloads, rather than pinning the entire physical Chunk.
+    #[cfg(any(test, target_arch = "wasm32"))]
+    fn insert_streamed_record(&mut self, opcode: u8, data: &[u8]) -> Result<(), DataLoadError> {
+        if opcode != mcap::records::op::MESSAGE {
+            return Ok(());
+        }
+        let mcap::records::Record::Message { header, data } = mcap::parse_record(opcode, data)?
+        else {
+            unreachable!("MESSAGE opcode parses as Message");
+        };
+        let arrival_time = ArrivalTime(i64::try_from(header.log_time).map_err(|_| {
+            DataLoadError::invalid_record("MCAP timestamp exceeds signed nanosecond range")
+        })?);
+        if !self.range.contains(arrival_time)
+            || !self.selected_channels.contains(&header.channel_id)
+        {
+            return Ok(());
+        }
+        const MAX_WINDOW_PAYLOAD: usize = 1024 * 1024 * 1024;
+        if data.len() > MAX_WINDOW_PAYLOAD.saturating_sub(self.resident_bytes)
+            || self.messages.len() >= 200_000
+        {
+            return Err(DataLoadError::invalid_record(
+                "browser window exceeds payload/message budget",
+            ));
+        }
+        self.messages.push(RawMessage {
+            stream_id: viewer_core::StreamId(u32::from(header.channel_id)),
+            arrival_time,
+            publish_time_ns: Some(header.publish_time),
+            sequence: Some(header.sequence),
+            payload: Bytes::copy_from_slice(&data),
+        });
+        self.resident_bytes += data.len();
+        self.copied_bytes += data.len();
+        Ok(())
+    }
+
     fn finish(
         mut self,
         mut diagnostics: WindowLoadDiagnostics,
@@ -143,7 +197,7 @@ impl OwnedWindowCollector {
         self.messages
             .sort_by_key(|message| (message.arrival_time, message.stream_id.0));
         diagnostics.decompressed_bytes = self.decompressed_bytes;
-        diagnostics.per_message_copied_bytes = 0;
+        diagnostics.per_message_copied_bytes = self.copied_bytes;
         let window = SerializedWindow::new(self.range, self.messages, self.resident_bytes)
             .map_err(DataLoadError::from)?;
         Ok(LoadedWindow {
@@ -167,7 +221,8 @@ fn decode_chunk_backing(
     let backing = viewer_mcap::decode_mcap_chunk(
         &request.compression,
         compressed,
-        request.uncompressed_size,
+        usize::try_from(request.uncompressed_size)
+            .map_err(|_| DataLoadError::invalid_record("expanded Chunk exceeds address space"))?,
     )?;
     let decompressed_bytes = if request.compression.is_empty() {
         0
@@ -182,11 +237,9 @@ fn chunk_request(index: &ChunkIndex) -> Result<ChunkReadRequest, DataLoadError> 
         offset: index
             .compressed_data_offset()
             .map_err(DataLoadError::from)?,
-        length: usize::try_from(index.compressed_size)
-            .map_err(|_| DataLoadError::invalid_record("compressed MCAP chunk is too large"))?,
+        length: index.compressed_size,
         compression: index.compression.clone(),
-        uncompressed_size: usize::try_from(index.uncompressed_size)
-            .map_err(|_| DataLoadError::invalid_record("uncompressed MCAP chunk is too large"))?,
+        uncompressed_size: index.uncompressed_size,
     })
 }
 
@@ -258,7 +311,7 @@ pub(crate) fn collect_window_from_bytes_for_test(
     let mut source_bytes = 0_usize;
     let mut source_reads = 0_u64;
     while let Some(request) = collector.next_read() {
-        let range = validate_range(bytes.len() as u64, request.offset, request.length)?;
+        let range = validate_range(bytes.len() as u64, request.offset, request.bulk_length()?)?;
         let chunk = &bytes[range.offset as usize..range.end() as usize];
         source_bytes = source_bytes
             .checked_add(chunk.len())
@@ -268,7 +321,7 @@ pub(crate) fn collect_window_from_bytes_for_test(
     }
     collector.finish(WindowLoadDiagnostics {
         source_reads,
-        source_bytes,
+        source_bytes: source_bytes as u64,
         decompressed_bytes: 0,
         per_message_copied_bytes: 0,
         latency_ms: 0.0,
@@ -296,12 +349,18 @@ struct LocalFetchResult {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub(crate) struct BrowserMcapWindowLoader {
+struct BrowserWindowSource {
     file: File,
     file_size: u64,
     summary: Rc<mcap::Summary>,
     selected_topics: Vec<String>,
-    generation: u64,
+    chunk_cursor: RefCell<Option<BrowserChunkCursor>>,
+}
+
+#[cfg(target_arch = "wasm32")]
+pub(crate) struct BrowserMcapWindowLoader {
+    source: Rc<BrowserWindowSource>,
+    generation: Rc<Cell<u64>>,
     state: LocalLoadState,
     inbox: Rc<RefCell<VecDeque<LocalFetchResult>>>,
     metrics: WindowLoaderMetrics,
@@ -319,11 +378,14 @@ impl BrowserMcapWindowLoader {
         catalog_latency_ms: f64,
     ) -> Self {
         Self {
-            file,
-            file_size,
-            summary,
-            selected_topics,
-            generation: 0,
+            source: Rc::new(BrowserWindowSource {
+                file,
+                file_size,
+                summary,
+                selected_topics,
+                chunk_cursor: RefCell::new(None),
+            }),
+            generation: Rc::new(Cell::new(0)),
             state: LocalLoadState::Idle,
             inbox: Rc::new(RefCell::new(VecDeque::new())),
             metrics: WindowLoaderMetrics {
@@ -344,18 +406,15 @@ impl WindowLoader for BrowserMcapWindowLoader {
                 "browser MCAP window loader is not idle",
             ));
         }
-        self.generation = self.generation.wrapping_add(1);
-        let generation = self.generation;
+        self.generation.set(self.generation.get().wrapping_add(1));
+        let generation = self.generation.get();
+        let cancellation = self.generation.clone();
         self.state = LocalLoadState::Loading { generation, range };
         self.metrics.load_requests = self.metrics.load_requests.saturating_add(1);
-        let file = self.file.clone();
-        let file_size = self.file_size;
-        let summary = Rc::clone(&self.summary);
-        let selected_topics = self.selected_topics.clone();
+        let source = self.source.clone();
         let inbox = Rc::clone(&self.inbox);
         spawn_local(async move {
-            let result =
-                load_browser_window(&file, file_size, &summary, &selected_topics, range).await;
+            let result = load_browser_window(&source, range, &cancellation, generation).await;
             inbox.borrow_mut().push_back(LocalFetchResult {
                 generation,
                 range,
@@ -376,7 +435,7 @@ impl WindowLoader for BrowserMcapWindowLoader {
                 LocalLoadState::Loading { generation, range }
                     if generation == result.generation && range == result.range
             );
-            if result.generation != self.generation || !current {
+            if result.generation != self.generation.get() || !current {
                 self.metrics.stale_results_discarded =
                     self.metrics.stale_results_discarded.saturating_add(1);
                 continue;
@@ -390,11 +449,11 @@ impl WindowLoader for BrowserMcapWindowLoader {
                     self.metrics.source_bytes = self
                         .metrics
                         .source_bytes
-                        .saturating_add(loaded.diagnostics.source_bytes as u64);
+                        .saturating_add(loaded.diagnostics.source_bytes);
                     self.metrics.decompressed_bytes = self
                         .metrics
                         .decompressed_bytes
-                        .saturating_add(loaded.diagnostics.decompressed_bytes as u64);
+                        .saturating_add(loaded.diagnostics.decompressed_bytes);
                     self.metrics.per_message_copied_bytes = self
                         .metrics
                         .per_message_copied_bytes
@@ -418,7 +477,7 @@ impl WindowLoader for BrowserMcapWindowLoader {
     }
 
     fn cancel(&mut self) {
-        self.generation = self.generation.wrapping_add(1);
+        self.generation.set(self.generation.get().wrapping_add(1));
         self.state = LocalLoadState::Idle;
     }
 
@@ -612,7 +671,7 @@ pub(crate) async fn open_browser_mcap(
         bytes,
         latency_ms,
     );
-    let restore = BrowserMcapRestoreLoader::new(loader.file.clone(), file_size, summary);
+    let restore = BrowserMcapRestoreLoader::new(loader.source.file.clone(), file_size, summary);
     Ok(BrowserMcapRecording {
         catalog,
         loader,
@@ -782,8 +841,52 @@ async fn read_browser_restore_chunk(
     work: &mut RestoreWork,
 ) -> Result<Vec<RawMessage>, DataLoadError> {
     let request = chunk_request(chunk)?;
-    work.reserve_chunk(request.length, request.uncompressed_size)?;
-    let range = validate_range(file_size, request.offset, request.length)?;
+    if request.compression.is_empty() && request.stream() {
+        let mut offsets = selection
+            .exact
+            .iter()
+            .map(|(_, _, offset)| *offset)
+            .collect::<BTreeSet<_>>();
+        for channel in selection.history.keys().chain(selection.persistent.iter()) {
+            let index_offset = chunk.message_index_offsets.get(channel).ok_or_else(|| {
+                DataLoadError::invalid_record("uncompressed restore needs Message Index")
+            })?;
+            for entry in read_message_index(file, file_size, *channel, *index_offset, work).await? {
+                let time = i64::try_from(entry.log_time)
+                    .map_err(|_| DataLoadError::invalid_record("indexed time overflow"))?;
+                if selection.persistent.contains(channel)
+                    || selection
+                        .history
+                        .get(channel)
+                        .is_some_and(|start| time >= *start && time <= target.0)
+                {
+                    offsets.insert(entry.offset);
+                }
+            }
+        }
+        let mut messages = Vec::new();
+        for offset in offsets {
+            work.check()?;
+            let remaining = (256 * 1024 * 1024_usize).saturating_sub(work.chunk_bytes);
+            let message =
+                read_uncompressed_message(file, file_size, &request, offset, remaining).await?;
+            work.reserve_chunk(message.payload.len() + 31, 0)?;
+            if !selection.contains(&message, offset, target) {
+                return Err(DataLoadError::invalid_record(
+                    "indexed message differs from restore selection",
+                ));
+            }
+            work.admit_message()?;
+            messages.push(message);
+        }
+        return Ok(messages);
+    }
+    work.reserve_chunk(
+        request.bulk_length()?,
+        usize::try_from(request.uncompressed_size)
+            .map_err(|_| DataLoadError::invalid_record("expanded Chunk exceeds address space"))?,
+    )?;
+    let range = validate_range(file_size, request.offset, request.bulk_length()?)?;
     let compressed = read_file_range(file, file_size, range).await?;
     work.check()?;
     let (backing, _) = decode_chunk_backing(&request, compressed)?;
@@ -883,23 +986,35 @@ async fn read_message_index(
 
 #[cfg(target_arch = "wasm32")]
 async fn load_browser_window(
-    file: &File,
-    file_size: u64,
-    summary: &mcap::Summary,
-    topics: &[String],
+    source: &BrowserWindowSource,
     range: DataWindowTimeRange,
+    cancellation: &Cell<u64>,
+    generation: u64,
 ) -> Result<LoadedWindow, DataLoadError> {
     let started = Date::now();
-    let mut collector = OwnedWindowCollector::new(summary, topics, range)?;
+    let file = &source.file;
+    let file_size = source.file_size;
+    let mut collector = OwnedWindowCollector::new(&source.summary, &source.selected_topics, range)?;
     let mut source_reads = 0_u64;
-    let mut source_bytes = 0_usize;
+    let mut source_bytes = 0_u64;
     let mut processing_ms = 0.0;
     while let Some(request) = collector.next_read() {
-        let range = validate_range(file_size, request.offset, request.length)?;
+        check_window_generation(cancellation, generation)?;
+        if request.stream() {
+            let (reads, bytes, processing) =
+                stream_browser_chunk(source, &request, &mut collector, cancellation, generation)
+                    .await?;
+            source_reads += reads;
+            source_bytes += bytes;
+            processing_ms += processing;
+            continue;
+        }
+        let range = validate_range(file_size, request.offset, request.bulk_length()?)?;
         let bytes = read_file_range(file, file_size, range).await?;
+        check_window_generation(cancellation, generation)?;
         source_reads = source_reads.saturating_add(1);
         source_bytes = source_bytes
-            .checked_add(bytes.len())
+            .checked_add(bytes.len() as u64)
             .ok_or_else(|| DataLoadError::invalid_record("local source byte count overflow"))?;
         let processing_started = Date::now();
         collector.insert_chunk(&request, bytes)?;
@@ -914,6 +1029,383 @@ async fn load_browser_window(
         latency_ms: Date::now() - started,
         processing_ms,
     })
+}
+
+#[cfg(target_arch = "wasm32")]
+fn check_window_generation(cancellation: &Cell<u64>, expected: u64) -> Result<(), DataLoadError> {
+    if cancellation.get() != expected {
+        return Err(DataLoadError::invalid_record("browser window cancelled"));
+    }
+    Ok(())
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn yield_browser() -> Result<(), DataLoadError> {
+    let promise = js_sys::Promise::new(&mut |resolve, reject| {
+        if let Err(error) = web_sys::window()
+            .expect("browser Window")
+            .set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 0)
+        {
+            let _ = reject.call1(&wasm_bindgen::JsValue::NULL, &error);
+        }
+    });
+    JsFuture::from(promise).await.map_err(js_error)?;
+    Ok(())
+}
+
+#[cfg(any(test, target_arch = "wasm32"))]
+fn uncompressed_message_range(
+    request: &ChunkReadRequest,
+    record_offset: u64,
+    header: &[u8],
+    max_payload: usize,
+) -> Result<ByteRange, DataLoadError> {
+    if !request.compression.is_empty()
+        || request.length != request.uncompressed_size
+        || record_offset
+            .checked_add(31)
+            .is_none_or(|end| end > request.length)
+        || header.len() != 9
+        || header[0] != mcap::records::op::MESSAGE
+    {
+        return Err(DataLoadError::invalid_record(
+            "invalid uncompressed Message Index position/header",
+        ));
+    }
+    let length = u64::from_le_bytes(header[1..9].try_into().expect("eight-byte length"));
+    if !(22..=256 * 1024 * 1024).contains(&length)
+        || length - 22 > max_payload as u64
+        || length > request.length - record_offset - 9
+    {
+        return Err(DataLoadError::invalid_record(
+            "indexed message exceeds Chunk/payload bounds",
+        ));
+    }
+    let offset = request
+        .offset
+        .checked_add(record_offset)
+        .and_then(|offset| offset.checked_add(9))
+        .ok_or_else(|| DataLoadError::invalid_record("indexed file position overflow"))?;
+    Ok(ByteRange {
+        offset,
+        length: length as usize,
+    })
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn read_uncompressed_message(
+    file: &File,
+    file_size: u64,
+    request: &ChunkReadRequest,
+    record_offset: u64,
+    max_payload: usize,
+) -> Result<RawMessage, DataLoadError> {
+    if request.length != request.uncompressed_size
+        || record_offset
+            .checked_add(31)
+            .is_none_or(|end| end > request.length)
+    {
+        return Err(DataLoadError::invalid_record(
+            "invalid uncompressed indexed position",
+        ));
+    }
+    let position = request
+        .offset
+        .checked_add(record_offset)
+        .ok_or_else(|| DataLoadError::invalid_record("indexed file position overflow"))?;
+    let header = read_file_range(file, file_size, validate_range(file_size, position, 9)?).await?;
+    let range = uncompressed_message_range(request, record_offset, &header, max_payload)?;
+    let backing = read_file_range(
+        file,
+        file_size,
+        validate_range(file_size, range.offset, range.length)?,
+    )
+    .await?;
+    let Record::Message { header, data } = mcap::parse_record(op::MESSAGE, &backing)? else {
+        unreachable!("MESSAGE opcode parses as Message");
+    };
+    Ok(RawMessage {
+        stream_id: StreamId(u32::from(header.channel_id)),
+        arrival_time: ArrivalTime(
+            i64::try_from(header.log_time)
+                .map_err(|_| DataLoadError::invalid_record("message timestamp overflow"))?,
+        ),
+        publish_time_ns: Some(header.publish_time),
+        sequence: Some(header.sequence),
+        payload: backing.slice(backing.len() - data.len()..),
+    })
+}
+
+#[cfg(any(test, target_arch = "wasm32"))]
+struct BrowserChunkCursor {
+    request: ChunkReadRequest,
+    decoder: viewer_mcap::McapChunkStream,
+    input: Bytes,
+    consumed: usize,
+    offset: u64,
+    // Index entries keep physical offsets and exact log times; no decoded history.
+    entries: Option<Vec<(u16, u64, u64)>>,
+}
+
+#[cfg(any(test, target_arch = "wasm32"))]
+impl BrowserChunkCursor {
+    fn rewind_before(&mut self, first: Option<u64>) -> Result<(), DataLoadError> {
+        if first.is_some_and(|first| first < self.decoder.next_record_offset()) {
+            // Grouped/out-of-order records or a replacement seek can require an earlier
+            // physical position. Rewind, rather than treating physical order as log time.
+            self.decoder = viewer_mcap::McapChunkStream::new(
+                &self.request.compression,
+                self.request.length,
+                self.request.uncompressed_size,
+            )?;
+            self.input = Bytes::new();
+            self.consumed = 0;
+            self.offset = self.request.offset;
+        }
+        Ok(())
+    }
+
+    fn collect_step(
+        &mut self,
+        collector: &mut OwnedWindowCollector,
+        selected_offsets: &Option<BTreeMap<u64, (u16, u64)>>,
+        seen: &mut BTreeSet<u64>,
+    ) -> Result<(), DataLoadError> {
+        let last = selected_offsets
+            .as_ref()
+            .and_then(|offsets| offsets.last_key_value().map(|(offset, _)| *offset));
+        self.consumed +=
+            self.decoder
+                .step(&self.input[self.consumed..], |offset, opcode, data| {
+                    let before = collector.messages.len();
+                    collector.insert_streamed_record(opcode, data)?;
+                    if collector.messages.len() != before {
+                        let message = collector.messages.last().expect("just appended message");
+                        if selected_offsets.as_ref().is_some_and(|offsets| {
+                            offsets.get(&offset).is_none_or(|(channel, time)| {
+                                message.stream_id.0 != u32::from(*channel)
+                                    || message.arrival_time.0 as u64 != *time
+                            })
+                        }) {
+                            return Err(DataLoadError::invalid_record(
+                                "message differs from Chunk Message Index",
+                            ));
+                        }
+                        seen.insert(offset);
+                    }
+                    Ok(last.is_none_or(|last| offset < last))
+                })?;
+        Ok(())
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn stream_browser_chunk(
+    source: &BrowserWindowSource,
+    request: &ChunkReadRequest,
+    collector: &mut OwnedWindowCollector,
+    cancellation: &Cell<u64>,
+    generation: u64,
+) -> Result<(u64, u64, f64), DataLoadError> {
+    const READ_BYTES: u64 = 4 * 1024 * 1024;
+    const MAX_CHUNK_WORK: u64 = 64 * 1024 * 1024 * 1024;
+    if request.length > MAX_CHUNK_WORK || request.uncompressed_size > MAX_CHUNK_WORK {
+        return Err(DataLoadError::invalid_record(
+            "browser Chunk exceeds 64 GiB work limit",
+        ));
+    }
+    let end = request
+        .offset
+        .checked_add(request.length)
+        .ok_or_else(|| DataLoadError::invalid_record("Chunk range overflow"))?;
+    if end > source.file_size || end > JS_MAX_SAFE_INTEGER {
+        return Err(DataLoadError::invalid_record("Chunk exceeds file bounds"));
+    }
+    let cached = source.chunk_cursor.borrow_mut().take();
+    let mut cursor = match cached {
+        Some(cursor) if cursor.request == *request => cursor,
+        _ => BrowserChunkCursor {
+            request: request.clone(),
+            decoder: viewer_mcap::McapChunkStream::new(
+                &request.compression,
+                request.length,
+                request.uncompressed_size,
+            )?,
+            input: Bytes::new(),
+            consumed: 0,
+            offset: request.offset,
+            entries: None,
+        },
+    };
+    let mut reads = 0_u64;
+    let mut bytes_read = 0_u64;
+    if cursor.entries.is_none() {
+        let chunk = source
+            .summary
+            .chunk_indexes
+            .iter()
+            .find(|chunk| chunk.compressed_data_offset().ok() == Some(request.offset))
+            .ok_or_else(|| DataLoadError::invalid_record("Chunk missing from Summary"))?;
+        if collector
+            .selected_channels
+            .iter()
+            .all(|id| chunk.message_index_offsets.contains_key(id))
+        {
+            let token = Rc::new(Cell::new(generation));
+            let mut work = RestoreWork::new(token, generation);
+            let mut entries = Vec::new();
+            for channel in &collector.selected_channels {
+                check_window_generation(cancellation, generation)?;
+                let offset = chunk.message_index_offsets[channel];
+                let index =
+                    read_message_index(&source.file, source.file_size, *channel, offset, &mut work)
+                        .await?;
+                for entry in index {
+                    if entry.offset >= request.uncompressed_size
+                        || i64::try_from(entry.log_time).is_err()
+                    {
+                        return Err(DataLoadError::invalid_record(
+                            "Message Index entry exceeds Chunk/time bounds",
+                        ));
+                    }
+                    entries.push((*channel, entry.log_time, entry.offset));
+                }
+            }
+            reads += work.index_reads as u64;
+            bytes_read += work.index_bytes as u64;
+            cursor.entries = Some(entries);
+        }
+    }
+    let selected_offsets = cursor
+        .entries
+        .as_ref()
+        .map(|entries| {
+            let mut offsets = BTreeMap::new();
+            for (channel, time, offset) in entries {
+                if i64::try_from(*time)
+                    .ok()
+                    .is_some_and(|time| collector.range.contains(ArrivalTime(time)))
+                {
+                    if offsets.insert(*offset, (*channel, *time)).is_some() {
+                        return Err(DataLoadError::invalid_record(
+                            "duplicate Message Index physical position",
+                        ));
+                    }
+                    if offsets.len() > 200_000 {
+                        return Err(DataLoadError::invalid_record(
+                            "indexed window exceeds message budget",
+                        ));
+                    }
+                }
+            }
+            Ok::<_, DataLoadError>(offsets)
+        })
+        .transpose()?;
+    if selected_offsets.as_ref().is_some_and(BTreeMap::is_empty) {
+        check_window_generation(cancellation, generation)?;
+        *source.chunk_cursor.borrow_mut() = Some(cursor);
+        return Ok((reads, bytes_read, 0.0));
+    }
+    if request.compression.is_empty()
+        && let Some(offsets) = &selected_offsets
+    {
+        for (offset, (channel, time)) in offsets {
+            if collector.messages.len() >= 200_000 {
+                return Err(DataLoadError::invalid_record(
+                    "browser window exceeds message budget",
+                ));
+            }
+            check_window_generation(cancellation, generation)?;
+            let message = read_uncompressed_message(
+                &source.file,
+                source.file_size,
+                request,
+                *offset,
+                (1024 * 1024 * 1024_usize)
+                    .saturating_sub(collector.resident_bytes)
+                    .saturating_sub(22),
+            )
+            .await?;
+            if message.stream_id.0 != u32::from(*channel) || message.arrival_time.0 as u64 != *time
+            {
+                return Err(DataLoadError::invalid_record(
+                    "indexed message differs from window selection",
+                ));
+            }
+            reads += 2;
+            bytes_read += 31 + message.payload.len() as u64;
+            collector.resident_bytes += message.payload.len() + 22;
+            collector.messages.push(message);
+        }
+        check_window_generation(cancellation, generation)?;
+        *source.chunk_cursor.borrow_mut() = Some(cursor);
+        return Ok((reads, bytes_read, 0.0));
+    }
+    let first = selected_offsets
+        .as_ref()
+        .and_then(|offsets| offsets.first_key_value().map(|(offset, _)| *offset));
+    let last = selected_offsets
+        .as_ref()
+        .and_then(|offsets| offsets.last_key_value().map(|(offset, _)| *offset));
+    cursor.rewind_before(first)?;
+    let initial_expanded = cursor.decoder.expanded_bytes();
+    let mut seen = BTreeSet::new();
+    let mut processing_ms = 0.0;
+    let mut yield_started = Date::now();
+    loop {
+        check_window_generation(cancellation, generation)?;
+        if cursor.consumed == cursor.input.len() && cursor.offset < end {
+            let length = READ_BYTES.min(end - cursor.offset) as usize;
+            cursor.input = read_file_range(
+                &source.file,
+                source.file_size,
+                validate_range(source.file_size, cursor.offset, length)?,
+            )
+            .await?;
+            cursor.consumed = 0;
+            cursor.offset += length as u64;
+            reads += 1;
+            bytes_read += length as u64;
+        }
+        check_window_generation(cancellation, generation)?;
+        let started = Date::now();
+        let expanded = cursor.decoder.expanded_bytes();
+        cursor.collect_step(collector, &selected_offsets, &mut seen)?;
+        processing_ms += Date::now() - started;
+        if Date::now() - yield_started >= 8.0 {
+            yield_browser().await?;
+            yield_started = Date::now();
+        }
+        if last.is_some_and(|last| cursor.decoder.next_record_offset() > last) {
+            break;
+        }
+        if cursor.offset == end
+            && cursor.consumed == cursor.input.len()
+            && cursor.decoder.expanded_bytes() == expanded
+        {
+            if last.is_some() {
+                return Err(DataLoadError::invalid_record(
+                    "indexed message absent from Chunk",
+                ));
+            }
+            break;
+        }
+    }
+    if let Some(expected) = selected_offsets
+        && !seen.iter().eq(expected.keys())
+    {
+        return Err(DataLoadError::invalid_record("incomplete indexed window"));
+    }
+    if !request.compression.is_empty() {
+        collector.decompressed_bytes += cursor.decoder.expanded_bytes() - initial_expanded;
+    }
+    check_window_generation(cancellation, generation)?;
+    if last.is_some() {
+        *source.chunk_cursor.borrow_mut() = Some(cursor);
+    } else {
+        cursor.decoder.finish()?;
+    }
+    Ok((reads, bytes_read, processing_ms))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1143,7 +1635,7 @@ mod tests {
         let loaded =
             collect_window_from_bytes_for_test(&summary, &["/camera".to_owned()], range, bytes)
                 .unwrap();
-        let source_bytes = loaded.diagnostics.source_bytes;
+        let source_bytes = loaded.diagnostics.source_bytes as usize;
         (loaded, source_bytes)
     }
 
@@ -1196,8 +1688,211 @@ mod tests {
         assert!(loaded.diagnostics.decompressed_bytes > 0);
         assert_eq!(
             loaded.window.resident_bytes,
-            loaded.diagnostics.decompressed_bytes
+            loaded.diagnostics.decompressed_bytes as usize
         );
+    }
+
+    #[test]
+    fn direct_message_ranges_keep_large_offsets_and_reject_bad_lengths_before_allocation() {
+        let request = ChunkReadRequest {
+            offset: 100,
+            length: 20 << 30,
+            uncompressed_size: 20 << 30,
+            compression: String::new(),
+        };
+        let header = |length: u64| {
+            let mut bytes = vec![mcap::records::op::MESSAGE];
+            bytes.extend(length.to_le_bytes());
+            bytes
+        };
+        let range = uncompressed_message_range(&request, 19 << 30, &header(32), 10).unwrap();
+        assert_eq!(range.offset, (19 << 30) + 109);
+        assert_eq!(range.length, 32);
+        for (offset, length, budget) in [
+            (0, 21, 10),
+            (0, 32, 9),
+            (0, u64::MAX, 10),
+            (u64::MAX, 32, 10),
+            (request.length - 31, 32, 10),
+        ] {
+            assert!(uncompressed_message_range(&request, offset, &header(length), budget).is_err());
+        }
+        assert!(uncompressed_message_range(&request, 0, &[0; 8], 10).is_err());
+        let tiny = ChunkReadRequest {
+            length: 5,
+            uncompressed_size: 5,
+            ..request.clone()
+        };
+        assert!(uncompressed_message_range(&tiny, 0, &header(22), 0).is_err());
+        let overflowing = ChunkReadRequest {
+            offset: u64::MAX,
+            ..request
+        };
+        assert!(uncompressed_message_range(&overflowing, 0, &header(22), 0).is_err());
+    }
+
+    #[test]
+    fn indexed_chunk_continuation_and_rewind_preserve_windows_and_equal_time_ties() {
+        for times in [
+            [1010, 1010, 1020, 1020, 1030],
+            [1010, 1030, 1010, 1020, 1020],
+        ] {
+            let mut output = Cursor::new(Vec::new());
+            {
+                let mut writer = Writer::with_options(
+                    &mut output,
+                    WriteOptions::new()
+                        .compression(Some(Compression::Zstd))
+                        .chunk_size(None),
+                )
+                .unwrap();
+                let channel = writer
+                    .add_channel(0, "/camera", "cdr", &BTreeMap::new())
+                    .unwrap();
+                for (sequence, time) in times.into_iter().enumerate() {
+                    writer
+                        .write_to_known_channel(
+                            &MessageHeader {
+                                channel_id: channel,
+                                sequence: sequence as u32,
+                                log_time: time,
+                                publish_time: time,
+                            },
+                            &[sequence as u8; 16],
+                        )
+                        .unwrap();
+                }
+                writer.finish().unwrap();
+            }
+            let bytes = output.into_inner();
+            let summary = Summary::read(&bytes).unwrap().unwrap();
+            assert_eq!(summary.chunk_indexes.len(), 1);
+            let request = chunk_request(&summary.chunk_indexes[0]).unwrap();
+            let encoded = Bytes::copy_from_slice(
+                &bytes[request.offset as usize..(request.offset + request.length) as usize],
+            );
+            let (backing, _) = decode_chunk_backing(&request, encoded.clone()).unwrap();
+            let mut entries = Vec::new();
+            viewer_mcap::visit_mcap_chunk_records(&backing, |offset, message| {
+                if let Some(message) = message {
+                    entries.push((
+                        message.stream_id.0 as u16,
+                        message.arrival_time.0 as u64,
+                        offset,
+                    ));
+                }
+                Ok::<_, DataLoadError>(())
+            })
+            .unwrap();
+            let mut cursor = BrowserChunkCursor {
+                request: request.clone(),
+                decoder: viewer_mcap::McapChunkStream::new(
+                    "zstd",
+                    request.length,
+                    request.uncompressed_size,
+                )
+                .unwrap(),
+                input: Bytes::new(),
+                consumed: 0,
+                offset: request.offset,
+                entries: Some(entries),
+            };
+            for (start, end) in [(1000, 1020), (1020, 1040)] {
+                let range = DataWindowTimeRange::new(ArrivalTime(start), ArrivalTime(end)).unwrap();
+                let selected = Some(
+                    cursor
+                        .entries
+                        .as_ref()
+                        .unwrap()
+                        .iter()
+                        .filter(|(_, time, _)| range.contains(ArrivalTime(*time as i64)))
+                        .map(|(channel, time, offset)| (*offset, (*channel, *time)))
+                        .collect::<BTreeMap<_, _>>(),
+                );
+                let offsets = selected.as_ref().unwrap();
+                cursor
+                    .rewind_before(offsets.first_key_value().map(|(offset, _)| *offset))
+                    .unwrap();
+                if cursor.input.is_empty() {
+                    assert_eq!(cursor.offset, request.offset);
+                    cursor.input = encoded.clone();
+                    cursor.consumed = 0;
+                    cursor.offset += request.length;
+                }
+                let last = *offsets.last_key_value().unwrap().0;
+                let mut collector =
+                    OwnedWindowCollector::new(&summary, &["/camera".to_owned()], range).unwrap();
+                let mut seen = BTreeSet::new();
+                while cursor.decoder.next_record_offset() <= last {
+                    cursor
+                        .collect_step(&mut collector, &selected, &mut seen)
+                        .unwrap();
+                }
+                assert!(seen.iter().eq(offsets.keys()));
+                let actual = collector.finish(WindowLoadDiagnostics::default()).unwrap();
+                let expected = collect_window_from_bytes_for_test(
+                    &summary,
+                    &["/camera".to_owned()],
+                    range,
+                    &bytes,
+                )
+                .unwrap();
+                assert_eq!(actual.window.messages, expected.window.messages);
+            }
+        }
+    }
+
+    #[test]
+    fn streamed_windows_match_bulk_selection_without_retaining_other_messages() {
+        assert!(
+            ChunkReadRequest {
+                offset: 0,
+                length: 20 << 30,
+                compression: "zstd".into(),
+                uncompressed_size: 20 << 30
+            }
+            .stream()
+        );
+        for compression in [None, Some(Compression::Zstd)] {
+            let bytes = recording(compression);
+            let summary = Summary::read(&bytes).unwrap().unwrap();
+            let range = DataWindowTimeRange::new(ArrivalTime(1_010), ArrivalTime(1_030)).unwrap();
+            let topics = ["/camera".to_owned()];
+            let bulk =
+                collect_window_from_bytes_for_test(&summary, &topics, range, &bytes).unwrap();
+            let mut collector = OwnedWindowCollector::new(&summary, &topics, range).unwrap();
+            while let Some(request) = collector.next_read() {
+                let start = request.offset as usize;
+                let encoded = &bytes[start..start + request.length as usize];
+                let mut stream = viewer_mcap::McapChunkStream::new(
+                    &request.compression,
+                    request.length,
+                    request.uncompressed_size,
+                )
+                .unwrap();
+                for input in encoded.chunks(7) {
+                    let mut consumed = 0;
+                    loop {
+                        let before = stream.expanded_bytes();
+                        consumed += stream
+                            .step(&input[consumed..], |_, opcode, data| {
+                                collector.insert_streamed_record(opcode, data)?;
+                                Ok::<_, DataLoadError>(true)
+                            })
+                            .unwrap();
+                        if consumed == input.len() && before == stream.expanded_bytes() {
+                            break;
+                        }
+                    }
+                }
+                stream.finish().unwrap();
+            }
+            let streamed = collector.finish(WindowLoadDiagnostics::default()).unwrap();
+            assert_eq!(streamed.window.messages, bulk.window.messages);
+            assert_eq!(streamed.window.messages.len(), 2);
+            assert_eq!(streamed.window.resident_bytes, 32);
+            assert_eq!(streamed.diagnostics.per_message_copied_bytes, 32);
+        }
     }
 
     #[test]
@@ -1224,9 +1919,9 @@ mod tests {
         let encoded = Bytes::from(encoder.finish().unwrap());
         let request = ChunkReadRequest {
             offset: 0,
-            length: encoded.len(),
+            length: encoded.len() as u64,
             compression: "lz4".into(),
-            uncompressed_size: raw.len(),
+            uncompressed_size: raw.len() as u64,
         };
         let (backing, decompressed) = decode_chunk_backing(&request, encoded).unwrap();
         assert_eq!(decompressed, raw.len());
@@ -1280,8 +1975,12 @@ mod tests {
         let mut collector =
             OwnedWindowCollector::new(&summary, &["/camera".to_owned()], range).unwrap();
         let request = collector.next_read().unwrap();
-        let file_range =
-            validate_range(bytes.len() as u64, request.offset, request.length).unwrap();
+        let file_range = validate_range(
+            bytes.len() as u64,
+            request.offset,
+            request.bulk_length().unwrap(),
+        )
+        .unwrap();
         let compressed =
             Bytes::copy_from_slice(&bytes[file_range.offset as usize..file_range.end() as usize]);
         let (backing, _) = decode_chunk_backing(&request, compressed).unwrap();
@@ -1431,8 +2130,12 @@ mod tests {
         )
         .unwrap();
         let request = collector.next_read().unwrap();
-        let file_range =
-            validate_range(bytes.len() as u64, request.offset, request.length).unwrap();
+        let file_range = validate_range(
+            bytes.len() as u64,
+            request.offset,
+            request.bulk_length().unwrap(),
+        )
+        .unwrap();
         let compressed =
             Bytes::copy_from_slice(&bytes[file_range.offset as usize..file_range.end() as usize]);
         let (backing, _) = decode_chunk_backing(&request, compressed).unwrap();
@@ -1464,7 +2167,7 @@ mod tests {
         messages: usize,
         reads: usize,
         source_bytes: usize,
-        decompressed_bytes: usize,
+        decompressed_bytes: u64,
         logical_payload_bytes: usize,
         resident_bytes: usize,
         copied_bytes: usize,
@@ -1510,7 +2213,8 @@ mod tests {
         let mut range_reads = 0_usize;
         let mut processing = std::time::Duration::ZERO;
         while let Some(request) = collector.next_read() {
-            let range = validate_range(file_size, request.offset, request.length).unwrap();
+            let range =
+                validate_range(file_size, request.offset, request.bulk_length().unwrap()).unwrap();
             let mut bytes = vec![0; range.length];
             file.seek(std::io::SeekFrom::Start(range.offset)).unwrap();
             file.read_exact(&mut bytes).unwrap();
@@ -1526,7 +2230,7 @@ mod tests {
         let loaded = collector
             .finish(WindowLoadDiagnostics {
                 source_reads: range_reads as u64,
-                source_bytes: range_bytes,
+                source_bytes: range_bytes as u64,
                 decompressed_bytes: 0,
                 per_message_copied_bytes,
                 latency_ms: 0.0,

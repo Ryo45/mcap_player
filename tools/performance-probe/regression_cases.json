@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "fixtures": {
+    "raw-fhd-30hz": ["generate", "zstd", "8388608", "mixed", "3", "raw", "1920", "1080", "8", "30", "1"],
+    "jpeg-4k-8cam": ["generate", "zstd", "67108864", "mixed", "4", "jpeg", "3840", "2160", "8", "10", "8"],
+    "jpeg-512m": ["rechunk", "@jpeg-4k-8cam", "zstd", "536870912"],
+    "cloud-60k": ["generate-geometry", "cloud", "60000", "3"]
+  },
+  "native": [
+    {"id": "raw-fhd-30hz", "fixture": "raw-fhd-30hz", "command": ["run", "all", "forward", "0", "20", "native-layout"]},
+    {"id": "jpeg-4k-8cam", "fixture": "jpeg-4k-8cam", "command": ["run", "all", "forward", "0", "20", "native-layout"]},
+    {"id": "selected-scan", "fixture": "jpeg-4k-8cam", "command": ["run", "scan", "forward", "0", "20", "rgb"]},
+    {"id": "cloud-60k", "fixture": "cloud-60k", "command": ["run", "all", "forward", "0", "20", "rgb"]},
+    {"id": "seek-revisit-512m", "fixture": "jpeg-512m", "command": ["seek-workload", "same", "12"]}
+  ],
+  "web": [
+    {"id": "raw-fhd-30hz", "fixture": "raw-fhd-30hz", "cameras": 1, "span": 2.966666666, "seconds": 4, "seeks": true},
+    {"id": "jpeg-4k-8cam", "fixture": "jpeg-4k-8cam", "cameras": 8, "span": 3.9, "seconds": 5},
+    {"id": "jpeg-512m", "fixture": "jpeg-512m", "cameras": 8, "span": 3.9, "seconds": 5}
+  ]
+}

@@ -1,5 +1,9 @@
 # 1 GiB Chunkの試験とzstd展開の実行スレッド
 
+後続更新: [2026-10-24のWeb逐次処理・再計測](../2026-10-24-web-chunk-streaming/README.md)。
+以下は当時の実装・実験条件の記録。現行の再実行手順とCLIは
+[継続性能計測](../../../tools/performance-probe/README.md)を参照する。
+
 2026-10-16。[60秒ログ](../2026-10-16-web-minute-playback/README.md)と同じmessage集合を
 zstd level3・1 GiB targetへrechunkした。**Webは2回とも独立PSS guardで停止、Nativeの順次読み込みは既存上限で拒否した。**
 製品の上限・先読み・スレッド構成は変更していない。計測ツールのrechunk上限だけを512 MiBから1 GiBへ広げた。

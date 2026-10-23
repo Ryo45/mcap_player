@@ -1,5 +1,10 @@
 # 性能検証
 
+通常の回帰確認は [継続計測の手順](../../tools/performance-probe/README.md)を使う。
+日付付きレポートや製品ソースのpatchに依存せず、Nativeのデータ／decoder／SeekとWebの表示を
+固定ケースで測り、baselineとの差・試行失敗・条件不一致を終了コードで検出する。
+[巨大ChunkのWeb改善と20GiB単一Chunkの検証](2026-10-24-web-chunk-streaming/README.md)に導入時の結果を保存した。
+
 GUI比較の旧process_sampleには、別スレッドから起動した子プロセスを取りこぼす不具合があった。特に2026-10-20のDesktop比較ではrenderer欠落を確認し、CPU・PSS比較を撤回した。過去のGUI資源量は再監査が必要で、[修正後の表示パターン別比較](2026-10-20-desktop-workloads/README.md)と混ぜて集計しない。
 
 目的は性能上の特徴・限界・トレードオフを把握すること。高機能ビューアの

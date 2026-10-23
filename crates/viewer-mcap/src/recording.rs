@@ -1,6 +1,7 @@
 //! Concrete MCAP access and format-specific indexed planning.
 mod backing;
 mod chunk;
+mod chunk_stream;
 mod error;
 #[cfg(not(target_arch = "wasm32"))]
 mod file_messages;
@@ -13,6 +14,7 @@ mod segments_tests;
 mod source;
 mod source_identity;
 pub use chunk::{McapChunkError, decode_mcap_chunk, visit_mcap_chunk_records};
+pub use chunk_stream::McapChunkStream;
 #[cfg(not(target_arch = "wasm32"))]
 pub use file_messages::FileMessageStream;
 pub use latest_limits::{LatestQueryBudget, LatestQueryLimits};
