@@ -107,8 +107,8 @@ fn main() -> Result<()> {
 
 fn extract_jpeg(input: &str, output: &str, topic: &str, count: usize) -> Result<()> {
     ensure!(
-        (1..=32).contains(&count),
-        "JPEG extraction count must be 1..=32"
+        (1..=128).contains(&count),
+        "JPEG extraction count must be 1..=128"
     );
     fs::create_dir(output)?;
     let mut written = 0;
@@ -196,12 +196,12 @@ fn generate(
     ensure!(
         (1..=3840).contains(&image_spec.width)
             && (1..=2160).contains(&image_spec.height)
-            && (1..=32).contains(&image_spec.variants),
-        "image dimensions must be 1..3840 by 1..2160, variants 1..32"
+            && (1..=128).contains(&image_spec.variants),
+        "image dimensions must be 1..3840 by 1..2160, variants 1..128"
     );
     ensure!(
-        matches!(image_spec.hz, 5 | 10 | 20) && (1..=8).contains(&image_spec.count),
-        "camera hz must be 5/10/20 and count 1..8"
+        matches!(image_spec.hz, 5 | 10 | 20 | 30) && (1..=8).contains(&image_spec.count),
+        "camera hz must be 5/10/20/30 and count 1..8"
     );
     ensure!((1..=86_400).contains(&seconds), "seconds must be 1..86400");
     ensure!(
@@ -262,6 +262,11 @@ fn generate(
             seed ^= seed >> 17;
             seed ^= seed << 5;
             let noise = (seed % 32) as u8;
+            // Larger reference sets use an explicit ID band, robust to viewport downsampling.
+            if image_spec.variants > 32 && y < image_spec.height / 8 {
+                let bit = (variant >> (x * 8 / image_spec.width)) & 1;
+                return image::Rgb([if bit == 0 { 32 } else { 224 }; 3]);
+            }
             image::Rgb([
                 ((x + variant * 7) % 256) as u8 ^ noise,
                 (y % 256) as u8 ^ noise,
@@ -286,7 +291,7 @@ fn generate(
         let mut records = Vec::new();
         let ticks = u64::from(image_spec.hz.max(10));
         for tick in 0..ticks {
-            let time = BASE + second * 1_000_000_000 + tick * (1_000_000_000 / ticks);
+            let time = BASE + second * 1_000_000_000 + tick * 1_000_000_000 / ticks;
             if tick % (ticks / 10) == 0 {
                 records.push((
                     scan_id,
@@ -357,7 +362,7 @@ fn generate(
     let chunks = &source.summary().chunk_indexes;
     println!(
         "{}",
-        json!({"camera_hz":image_spec.hz,"cameras":image_spec.count,"width":image_spec.width,"height":image_spec.height,"variants":image_spec.variants,
+        json!({"identity_band_bits":if image_spec.variants > 32 {8} else {0},"camera_hz":image_spec.hz,"cameras":image_spec.count,"width":image_spec.width,"height":image_spec.height,"variants":image_spec.variants,
             "target_chunk_bytes":chunk_bytes,"chunk_count":chunks.len(),
             "largest_chunk_bytes":chunks.iter().map(|c|c.uncompressed_size).max().unwrap_or(0),
             "total_chunk_bytes":chunks.iter().map(|c|c.uncompressed_size).sum::<u64>(),

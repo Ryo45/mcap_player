@@ -45,6 +45,41 @@ def distribution(values):
     return {'median':statistics.median(values),'p95':values[int((len(values)-1)*.95)],'min':values[0],'max':values[-1]}
 
 
+def frame_offset_ns(frame, hz):
+    return frame * 1_000_000_000 // hz
+
+
+def frame_at_or_before(offset_ns, hz):
+    return ((offset_ns + 1) * hz - 1) // 1_000_000_000
+
+
+def identity_probes(references, positions, bits):
+    probes=[]
+    if len(references)!=1<<bits:raise RuntimeError('identity reference count mismatch')
+    for bit in range(bits):
+        zero=[v for index,v in enumerate(references) if not index&(1<<bit)]
+        one=[v for index,v in enumerate(references) if index&(1<<bit)]
+        contrasts=[(abs(sum(v[k]for v in one)/len(one)-sum(v[k]for v in zero)/len(zero)),k)for k in positions]
+        contrast,k=max(contrasts)
+        if contrast<64:raise RuntimeError('identity band has insufficient contrast')
+        low=sum(v[k]for v in zero)/len(zero);high=sum(v[k]for v in one)/len(one)
+        probes.append({'index':k,'threshold':(low+high)/2,'one_is_high':high>low})
+    if any(identify_camera(v,references,probes)['variant']!=index for index,v in enumerate(references)):
+        raise RuntimeError('identity band calibration mismatch')
+    return probes
+
+
+def identify_camera(vector, references, probes=None):
+    if probes is None:return identify(vector,references)
+    variant=sum(int((vector[p['index']]>p['threshold'])==p['one_is_high'])<<bit for bit,p in enumerate(probes))
+    return {'variant':variant,'mae':sum(abs(a-b)for a,b in zip(vector,references[variant]))/len(vector),
+            'marker_margin':min(abs(vector[p['index']]-p['threshold'])for p in probes)}
+
+
+def valid_camera_match(match):
+    return match['mae']<18 and (match['marker_margin']>24 if 'marker_margin'in match else match['second_mae']-match['mae']>1)
+
+
 def wait_seek(predicate, timeout, label):
     # Fast restoration should not be hidden by the general 50 ms startup poll.
     end=time.monotonic()+timeout
@@ -109,6 +144,9 @@ def main():
     parser.add_argument('--port',type=int,default=9370)
     args=parser.parse_args()
     case=json.loads(args.case.read_text());data=Path(case['data']);kind=case['kind'];raw_camera=case.get('encoding')=='raw'
+    camera_hz=case.get('camera_hz',10);variants=case.get('variants',32);observer_hz=case.get('observer_hz',20);pss_limit_mib=case.get('pss_limit_mib',4096)
+    if not 1<=camera_hz<=60 or not 2<=variants<=128 or not 10<=observer_hz<=120 or not 1024<=pss_limit_mib<=8192:parser.error('invalid fixture/observer/resource parameters')
+    if kind=='camera' and observer_hz<2*camera_hz:parser.error('camera observer must sample at least twice the input rate')
     files=[Path(v) for v in case.get('data_files',[str(data)])]
     data_facts=[{'path':str(v),'sha256':digest(v),'bytes':v.stat().st_size} for v in files]
     data_sha=data_facts[0]['sha256'] if len(files)==1 else __import__('hashlib').sha256(json.dumps(data_facts,sort_keys=True).encode()).hexdigest()
@@ -122,12 +160,16 @@ def main():
             'harness_sha256':digest(__file__),'native_patch_sha256':digest(Path(case.get('native_patch',REPORT/'native-measurement.patch'))),
             'cache':'cache-allowed; SHA256 read before launch','samples':[],'seeks':[],'pss_samples':[],
             'resource_sampler_sha256':digest(Path(__file__).with_name('measure_viewer_pilot.py')),
-            'limits':{'timed_pss_mib':4096,'timed_summed_rss_mib':16384,'timed_seconds':args.seconds,'wall_seconds':180},
+            'limits':{'timed_pss_mib':pss_limit_mib,'timed_summed_rss_mib':16384,'timed_seconds':args.seconds,'wall_seconds':180},
+            'camera_hz':camera_hz,'variants':variants,'observer_hz':observer_hz,
             'camera_policy':case.get('camera_policy','Native focus 10Hz/background <=5Hz; Lichtblick receives all displayed 10Hz streams'),
             'color_profile':'srgb'if args.app=='lichtblick'else'Native source sRGB'}
     env=os.environ|{'DISPLAY':':1','XAUTHORITY':'/run/user/1000/gdm/Xauthority','VK_DRIVER_FILES':'/usr/share/vulkan/icd.d/nvidia_icd.json',
                     'RUST_LOG':'info,wgpu_core::instance=debug,wgpu_hal::vulkan=info','MCAP_BENCH_GEOMETRY':str(args.case.resolve()),
                     'MCAP_BENCH_RAW_EXPAND':'1'if case.get('expanded')else'0'}
+    if 'native_background_hz'in case:
+        if case['native_background_hz'] not in [5,30]:parser.error('background experiment must be 5 or 30 Hz')
+        env['MCAP_BENCH_BACKGROUND_HZ']=str(case['native_background_hz'])
     guard_stop=threading.Event();guard_errors=[]
     processes=[];pss_sampler=None;cdp=browser=x11=window=None;profile=None;started=time.monotonic();request=1;inset=[0,0]
     control=args.output/'control.txt';control.write_text('1 seek 0\n')
@@ -159,8 +201,8 @@ def main():
                     if process.poll() is not None:return
                     try:
                         usage=process_sample(process.pid)
-                        if usage['pss_kib']>4096*1024:
-                            guard_errors.append('4 GiB application PSS guard during opening/calibration/playback')
+                        if usage['pss_kib']>pss_limit_mib*1024:
+                            guard_errors.append(f'{pss_limit_mib} MiB application PSS guard during opening/calibration/playback')
                             (args.output/'resource-guard.json').write_text(json.dumps({'reason':guard_errors[-1],'resources':usage},indent=2)+'\n')
                             os.killpg(process.pid,signal.SIGTERM)
                             return
@@ -265,32 +307,39 @@ def main():
 
             if args.calibrate:
                 if kind=='camera':
-                    refs=[[None]*32 for _ in range(case['cameras'])]
-                    hashes=[] if raw_camera else [digest(args.jpeg_dir/f'{i:02}.jpg')for i in range(32)]
-                    for index in range(32):
-                        send('seek',index*100000000+10000000);time.sleep(.15)
+                    refs=[[None]*variants for _ in range(case['cameras'])]
+                    hashes=[] if raw_camera else [digest(args.jpeg_dir/f'{i:02}.jpg')for i in range(variants)]
+                    for index in range(variants):
+                        offset_ns=frame_offset_ns(index,camera_hz)+min(10_000_000,1_000_000_000//camera_hz//3)
+                        send('seek',offset_ns);time.sleep(.15)
                         if cdp:
                             if hashes:
-                                expected={hashes[(index+i*7)%32]for i in range(case['cameras'])}
+                                expected={hashes[(index+i*7)%variants]for i in range(case['cameras'])}
                                 wait_for(lambda:expected.issubset(set(cdp.evaluate('window.workloadHashes'))),5,'JPEG input hashes')
-                            target={'sec':1735689600+index//10,'nsec':index%10*100000000+10000000}
+                            target={'sec':1735689600+offset_ns//1_000_000_000,'nsec':offset_ns%1_000_000_000}
                             wait_for(lambda:cdp.evaluate(STATE)['current']==target,5,'completed calibration seek')
                             time.sleep(.2)
                         else:
-                            wait_for(lambda:all(f'GPU_BENCH_FRAME camera={i} arrival={BASE+index*100000000} 'in(args.output/'app.log').read_text()for i in range(case['cameras'])),5,'all texture timestamps')
+                            wait_for(lambda:all(f'GPU_BENCH_FRAME camera={i} arrival={BASE+frame_offset_ns(index,camera_hz)} 'in(args.output/'app.log').read_text()for i in range(case['cameras'])),5,'all texture timestamps')
                         before=samples()
                         for attempt in range(40):
                             time.sleep(.025);current=samples()
                             if max(abs(a-b)for x,y in zip(before,current)for a,b in zip(x,y))<.15:break
                             before=current
                         else:raise RuntimeError('unstable camera calibration')
-                        for i,vector in enumerate(current):refs[i][(index+i*7)%32]=vector
+                        for i,vector in enumerate(current):refs[i][(index+i*7)%variants]=vector
                     minimum=min(identify(ref,[v for j,v in enumerate(per_camera)if j!=i])['mae']for per_camera in refs for i,ref in enumerate(per_camera))
                     result['minimum_pair_mae']=minimum
                     (args.output/'diagnostic-references.json').write_text(json.dumps(refs)+'\n')
                     if minimum<=1:raise RuntimeError('nonunique calibration')
                     reference={'app':args.app,'binary_sha256':result['binary_sha256'],'case_sha256':result['case_sha256'],'dataset_sha256':result['data_sha256'],
-                               'reference_group':case.get('reference_group'),'logical_crc32':case.get('logical_crc32'),'geometry':case['rects'],'references':refs,'minimum_pair_mae':minimum,'color_profile':result['color_profile'],'source_jpeg_sha256':hashes,'raw_calibration_note':'cursor and independent per-app pixel identities; Native exact texture timestamps; no JPEG Blob hash for Raw' if raw_camera else None}
+                               'reference_group':case.get('reference_group'),'logical_crc32':case.get('logical_crc32'),'geometry':case['rects'],'references':refs,'minimum_pair_mae':minimum,'color_profile':result['color_profile'],'camera_hz':camera_hz,'variants':variants,'source_jpeg_sha256':hashes,'raw_calibration_note':'cursor and independent per-app pixel identities; Native exact texture timestamps; no JPEG Blob hash for Raw' if raw_camera else None}
+                    if case.get('identity_bits'):
+                        reference['identity_probes']=[]
+                        for bank,image in zip(refs,case['images']):
+                            top=min(y for x,y in image['points'])
+                            positions=[index*3+k for index,(x,y)in enumerate(image['points'])if y==top for k in range(3)]
+                            reference['identity_probes'].append(identity_probes(bank,positions,case['identity_bits']))
                     (args.output/'references.json').write_text(json.dumps(reference)+'\n')
                     result['minimum_pair_mae']=minimum
                 else:
@@ -300,18 +349,20 @@ def main():
                         if case['points']not in result['point_draw_counts']:raise RuntimeError('expected point count never drawn')
                 screenshot('calibrated.png');result['status']='ok';return
 
-            refs=None
+            refs=None;probes=None
             if kind=='camera':
                 reference=json.loads(args.references.read_text())
+                if case.get('identity_bits') and not reference.get('identity_probes'):raise RuntimeError('identity band references required')
                 checks=[('app',args.app),('binary_sha256',result['binary_sha256'])]
                 if case.get('reference_group'):
                     checks += [('reference_group',case['reference_group']),('logical_crc32',case['logical_crc32']),('geometry',case['rects'])]
                 else:
                     checks += [('case_sha256',result['case_sha256']),('dataset_sha256',result['data_sha256'])]
+                if 'camera_hz'in case:checks += [('camera_hz',camera_hz),('variants',variants)]
                 for key,expected in checks:
                     if reference[key]!=expected:raise RuntimeError('reference provenance mismatch: '+key)
                 if reference.get('color_profile')!=result['color_profile']:raise RuntimeError('reference color profile mismatch')
-                refs=reference['references'];result['references_sha256']=digest(args.references)
+                refs=reference['references'];probes=reference.get('identity_probes');result['references_sha256']=digest(args.references)
             offsets=case.get('seek_offsets_ns', [25310000000,48710000000,16110000000,0]if kind=='camera'else[13310000000,18710000000,6110000000,0])
             if args.seek_only:
                 seek_origin=time.monotonic()
@@ -326,13 +377,13 @@ def main():
                 committed_ms=(time.monotonic()-begin)*1000
                 if refs:
                     while time.monotonic()-begin<6:
-                        matches=[identify(v,r)for v,r in zip(samples(),refs)]
-                        if all(m['variant']==(ns//100000000+i*7)%32 and m['mae']<18 and m['second_mae']-m['mae']>1 for i,m in enumerate(matches)):break
+                        matches=[identify_camera(v,r,probes[i]if probes else None)for i,(v,r)in enumerate(zip(samples(),refs))]
+                        if all(m['variant']==(frame_at_or_before(ns,camera_hz)+i*7)%variants and valid_camera_match(m) for i,m in enumerate(matches)):break
                         time.sleep(.01)
                     else:raise RuntimeError('seek pixels mismatch')
                     seek_result={'offset_ns':ns,'latency_ms':(time.monotonic()-begin)*1000,'control_completed_ms':committed_ms,'images':matches}
                     if args.app=='native':
-                        expected=BASE+ns//100000000*100000000
+                        expected=BASE+frame_offset_ns(frame_at_or_before(ns,camera_hz),camera_hz)
                         def exact_textures():
                             text=(args.output/'app.log').read_text()
                             stamps=[re.findall(rf'GPU_BENCH_FRAME camera={i} arrival=(\d+) ',text)for i in range(case['cameras'])]
@@ -371,19 +422,19 @@ def main():
                 if kind=='scene'and not re.search(rf'GPU_BENCH_CLOUD arrival=\d+ points={case["points"]}\b',text):raise RuntimeError('Native point count mismatch')
             screenshot('ready.png');baseline=process_sample(process.pid);baseline_clock=time.monotonic();result['before_play']=baseline
             if args.app=='lichtblick'and not any(p['role']=='renderer'for p in baseline['processes']):raise RuntimeError('renderer process not accounted')
-            send('play');begin=time.monotonic();result['play_command_ms']=(begin-baseline_clock)*1000;last_resources=begin-1;last_variants=[i*7%32 for i in range(case['cameras'])];frames=[0]*case['cameras']
+            send('play');begin=time.monotonic();result['play_command_ms']=(begin-baseline_clock)*1000;last_resources=begin-1;last_variants=[i*7%variants for i in range(case['cameras'])];frames=[0]*case['cameras']
             pss_sampler=PssSampler(process.pid,begin)
             while time.monotonic()-begin<args.seconds:
                 tick=time.monotonic();row={'images':[]}
                 if refs:
                     for i,(vector,reference)in enumerate(zip(samples(),refs)):
-                        match=identify(vector,reference);now=time.monotonic()
-                        valid=match['mae']<18 and match['second_mae']-match['mae']>1
+                        match=identify_camera(vector,reference,probes[i]if probes else None);now=time.monotonic()
+                        valid=valid_camera_match(match)
                         if valid:
-                            delta=(match['variant']-last_variants[i])%32
-                            if delta>16:raise RuntimeError('backward/ambiguous camera progression')
+                            delta=(match['variant']-last_variants[i])%variants
+                            if delta>variants//2:raise RuntimeError('backward/ambiguous camera progression')
                             frames[i]+=delta;last_variants[i]=match['variant']
-                        row['images'].append({'camera_id':i,'valid':valid,'forward_frame':frames[i],'wall_lag_ms':(now-begin-frames[i]*.1)*1000,**match})
+                        row['images'].append({'camera_id':i,'valid':valid,'forward_frame':frames[i],'wall_lag_ms':(now-begin-frames[i]/camera_hz)*1000,**match})
                 now=time.monotonic();row['s']=now-begin
                 if kind=='scene':
                     r=case['rects']['scene'];raw,_=capture(x11,window,[round(r[0])+inset[0],round(r[1])+inset[1],round(r[2]),round(r[3])]);row['scene_crc']=zlib.crc32(raw)
@@ -404,21 +455,22 @@ def main():
                 for value in pss_sampler.drain():
                     if 'error'in value:raise RuntimeError('PSS sampler: '+value['error'])
                     result['pss_samples'].append(value)
-                    if value['resources']['pss_kib']>4096*1024:raise RuntimeError('4 GiB PSS guard; not a product limit')
+                    if value['resources']['pss_kib']>pss_limit_mib*1024:raise RuntimeError(f'{pss_limit_mib} MiB PSS guard; not a product limit')
                 row['observer_work_ms']=(time.monotonic()-tick)*1000;result['samples'].append(row)
                 if time.monotonic()-started>180:raise RuntimeError('wall deadline')
-                time.sleep(max(0,.05-(time.monotonic()-tick)))
+                time.sleep(max(0,1/observer_hz-(time.monotonic()-tick)))
             result['after_play']=process_sample(process.pid,include_pss=False)
             result['cpu_interval_seconds']=time.monotonic()-baseline_clock
             result['observed_play_seconds']=time.monotonic()-begin
             if result['observed_play_seconds']>args.seconds+1:raise RuntimeError('measurement observer exceeded timed interval')
+            if case.get('identity_bits') and result['observed_play_seconds']>=variants/camera_hz:raise RuntimeError('measurement exceeded visual identity period')
             pss_sampler.stop_event.set()
             send('pause')
             pss_sampler.thread.join(timeout=.5)
             result['pss_samples'].extend(pss_sampler.drain())
             result['pss_samples_dropped']=pss_sampler.dropped
             result['after_pause']=process_sample(process.pid)
-            if result['after_pause']['pss_kib']>4096*1024:raise RuntimeError('4 GiB paused PSS guard; not a product limit')
+            if result['after_pause']['pss_kib']>pss_limit_mib*1024:raise RuntimeError(f'{pss_limit_mib} MiB paused PSS guard; not a product limit')
             screenshot('played.png')
             result['gpu_after']=subprocess.check_output(['nvidia-smi'],text=True,timeout=5)
             result['display_after']=subprocess.check_output(['xset','q'],env=env,text=True,timeout=5)
@@ -435,7 +487,7 @@ def main():
                 good=[(r['s'],r['images'][i])for r in rows if r['images'][i]['valid']]
                 if len(good)<len(rows)*.95:raise RuntimeError('unreliable camera identity')
                 elapsed=good[-1][0]-good[0][0];gap=max(b[0]-a[0]for a,b in zip(good,good[1:]))
-                if gap>=1.5:raise RuntimeError('ambiguous cyclic identity')
+                if gap>=variants/(2*camera_hz):raise RuntimeError('ambiguous cyclic identity')
                 result['summary']['cameras'].append({'camera_id':i,'updates_hz':sum(a[1]['variant']!=b[1]['variant']for a,b in zip(good,good[1:]))/elapsed,
                     'progress_hz':(good[-1][1]['forward_frame']-good[0][1]['forward_frame'])/elapsed,'lag_ms':distribution([r['wall_lag_ms']for t,r in good if t>=1]),
                     'rejected_samples':len(rows)-len(good),'max_sample_gap_ms':gap*1000})

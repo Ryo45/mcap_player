@@ -347,3 +347,58 @@ fn repeated_full_seek_reuses_chunks_without_changing_the_restored_frame() {
     std::fs::remove_file(path).unwrap();
     std::fs::remove_file(original).unwrap();
 }
+
+#[test]
+fn thirty_hz_fixture_preserves_rational_camera_and_scan_times_with_visual_ids() {
+    let original = fixture("raw");
+    let path = original.with_extension("30hz.mcap");
+    let facts = command(&[
+        "generate",
+        path.to_str().unwrap(),
+        "none",
+        "1048576",
+        "mixed",
+        "2",
+        "raw",
+        "64",
+        "36",
+        "128",
+        "30",
+        "1",
+    ]);
+    assert_eq!(facts["camera_hz"], 30);
+    assert_eq!(facts["identity_band_bits"], 8);
+    let mut cameras = 0;
+    let mut scans = 0;
+    for message in FileMessageStream::open(&path).unwrap() {
+        let message = message.unwrap();
+        if message.channel.topic == "/camera/0" {
+            assert_eq!(
+                message.log_time,
+                1_735_689_600_000_000_000 + u64::from(message.sequence) * 1_000_000_000 / 30
+            );
+            let image = viewer_core::decode_raw_image_bytes(message.data.to_vec().into()).unwrap();
+            for bit in 0..8 {
+                assert_eq!(
+                    image.data[(bit * 8 + 4) * 3],
+                    if (message.sequence >> bit) & 1 == 0 {
+                        32
+                    } else {
+                        224
+                    }
+                );
+            }
+            cameras += 1;
+        } else if message.channel.topic == "/scan" {
+            assert_eq!(
+                message.log_time,
+                1_735_689_600_000_000_000 + u64::from(message.sequence) * 100_000_000
+            );
+            scans += 1;
+        }
+    }
+    assert_eq!(cameras, 60);
+    assert_eq!(scans, 20);
+    std::fs::remove_file(path).unwrap();
+    std::fs::remove_file(original).unwrap();
+}

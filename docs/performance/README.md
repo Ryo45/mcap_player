@@ -29,6 +29,8 @@ Nativeの固定256 MiBゲートを見直し、Chunk先読みとSeek内の展開�
 
 [同じシーンを往復するSeekの計測と改善](2026-10-22-seek-revisit/README.md)では、大Chunkの再訪で残っていた再展開を解消した。画面反映の改善、連続再生時の追加メモリ、小ChunkでLichtblickに残る差を分けて記録する。
 
+[FHD Raw 30Hzの入力追従とDesktop比較](2026-10-22-camera-30hz/README.md)では、フォーカスの固定10Hz制限を外し、1台／4台で入力に追従できるか確認した。背景5Hzの製品設定と、全台30Hzの比較条件を分けて記録する。
+
 ## 再現
 
 Linux、Rust toolchain、Python 3.11以上（stdlibのみ）。計測中は他のビルドや

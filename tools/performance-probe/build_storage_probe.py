@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build current Native with measurement-only geometry, controls and 10 Hz cameras."""
+"""Build current Native with measurement-only geometry, controls and camera admission experiments."""
 import argparse
 import difflib
 from pathlib import Path
@@ -11,9 +11,10 @@ REPORT = ROOT / 'docs/performance/2026-10-22-raw-storage'
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--variant', choices=['storage', 'prefetch', 'seek-cache'], default='storage')
+    parser.add_argument('--variant', choices=['storage', 'prefetch', 'seek-cache', 'input-rate'], default='storage')
     args = parser.parse_args()
     report = ROOT / 'docs/performance/2026-10-22-seek-revisit' if args.variant == 'seek-cache' else REPORT
+    if args.variant == 'input-rate':report = ROOT / 'docs/performance/2026-10-22-camera-30hz'
     patch = ROOT / 'docs/performance/2026-10-20-desktop-workloads/native-measurement.patch'
     clean_paths = [line[6:] for line in patch.read_text().splitlines() if line.startswith('+++ b/')]
     clean_paths += ['crates/viewer-core/src/feature/controllers/camera.rs']
@@ -27,7 +28,18 @@ def main():
         text = camera.read_text()
         old = 'const BACKGROUND_CAMERA_INTERVAL: Duration = Duration::from_millis(200);'
         assert text.count(old) == 1
-        camera.write_text(text.replace(old, 'const BACKGROUND_CAMERA_INTERVAL: Duration = Duration::from_millis(100);'))
+        if args.variant == 'input-rate':
+            text = text.replace(old, """fn camera_background_interval() -> Duration {
+    static PERIOD: std::sync::OnceLock<Duration> = std::sync::OnceLock::new();
+    *PERIOD.get_or_init(|| {
+        if std::env::var("MCAP_BENCH_BACKGROUND_HZ").as_deref() == Ok("30") {
+            Duration::from_nanos(33_333_333)
+        } else { Duration::from_millis(200) }
+    })
+}""").replace('BACKGROUND_CAMERA_INTERVAL', 'camera_background_interval()')
+        else:
+            text = text.replace(old, 'const BACKGROUND_CAMERA_INTERVAL: Duration = Duration::from_millis(100);')
+        camera.write_text(text)
         if args.variant != 'storage':
             playback = ROOT / 'crates/viewer-mcap/src/playback.rs'
             text = playback.read_text()
