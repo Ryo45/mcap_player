@@ -1,0 +1,177 @@
+diff --git a/apps/viewer-native/src/app.rs b/apps/viewer-native/src/app.rs
+index e61d979..f9cfaa9 100644
+--- a/apps/viewer-native/src/app.rs
++++ b/apps/viewer-native/src/app.rs
+@@ -117,8 +117,18 @@ impl App {
+         if self.graphics.is_none() {
+             return Ok(());
+         }
+-        self.update_camera_presentation();
+-        let output = self.render_frame(window, elapsed)?;
++        let graphics = self.graphics.as_mut().expect("redraw requires graphics");
++        let camera_queue_error = graphics
++            .queue_camera_frames(self.workspace.cameras().state())
++            .err()
++            .map(|error| error.to_string());
++        // Decoding can finish while FIFO waits for the display. Collect only after
++        // that wait, so a completed image does not miss this frame's UI build.
++        let acquire_started = Instant::now();
++        let frame = graphics.acquire_frame()?;
++        let surface_wait = acquire_started.elapsed();
++        self.update_camera_presentation(camera_queue_error);
++        let output = self.render_frame(window, elapsed, frame, surface_wait);
+         self.apply_frame_actions(output.actions);
+         Ok(())
+     }
+@@ -133,9 +143,9 @@ impl App {
+         session.poll_queries();
+     }
+ 
+-    fn update_camera_presentation(&mut self) {
++    fn update_camera_presentation(&mut self, camera_queue_error: Option<String>) {
+         let graphics = self.graphics.as_mut().expect("redraw requires graphics");
+-        let mut presentation_errors = Vec::new();
++        let mut presentation_errors = camera_queue_error.into_iter().collect::<Vec<_>>();
+         if self.workspace.interaction.preview_time.is_some()
+             && let Some(snapshot) = self.preview.snapshot()
+             && let Err(error) = graphics.upload_preview(snapshot.camera_frames())
+@@ -143,8 +153,7 @@ impl App {
+             presentation_errors.push(error.to_string());
+         }
+         let mut camera_updates = Vec::new();
+-        let upload_result =
+-            graphics.upload_latest(self.workspace.cameras().state(), &mut camera_updates);
++        let upload_result = graphics.upload_ready_camera_frames(&mut camera_updates);
+         if let Err(error) = upload_result {
+             presentation_errors.push(error.to_string());
+         }
+@@ -169,7 +178,9 @@ impl App {
+         &mut self,
+         window: &Window,
+         elapsed: Duration,
+-    ) -> Result<RenderOutput, wgpu::SurfaceError> {
++        frame: wgpu::SurfaceTexture,
++        surface_wait: Duration,
++    ) -> RenderOutput {
+         let session = self.session.as_ref().expect("redraw requires a session");
+         let graphics = self.graphics.as_mut().expect("redraw requires graphics");
+         let playback = session.playback_view();
+@@ -215,6 +226,7 @@ impl App {
+             let render_started = Instant::now();
+             let result = graphics.render(
+                 window,
++                frame,
+                 RenderInput {
+                     presentation: &presentation.viewer,
+                     camera_overlays: presentation.camera_overlays,
+@@ -240,7 +252,8 @@ impl App {
+             );
+             (result, render_started.elapsed())
+         };
+-        self.presentation_state.record_render(render_elapsed);
++        self.presentation_state
++            .record_render(render_elapsed.saturating_add(surface_wait));
+         self.presentation_state.advance_metrics(elapsed);
+ 
+         render_result
+diff --git a/apps/viewer-native/src/graphics.rs b/apps/viewer-native/src/graphics.rs
+index ed29d16..d7ceb80 100644
+--- a/apps/viewer-native/src/graphics.rs
++++ b/apps/viewer-native/src/graphics.rs
+@@ -98,11 +98,12 @@ impl Graphics {
+     pub(crate) fn render(
+         &mut self,
+         window: &Window,
++        frame: wgpu::SurfaceTexture,
+         input: RenderInput<'_>,
+         layout: &LayoutDocument,
+         panels: &mut PanelRuntimeStore,
+         interaction: &ViewerInteractionState,
+-    ) -> Result<RenderOutput, wgpu::SurfaceError> {
++    ) -> RenderOutput {
+         let ui = self.build_ui(window, &input, layout, panels, interaction);
+         self.camera_decode_sizes = ui.render_requests.camera_sizes;
+         let view_requests = ViewRenderRequests {
+@@ -125,10 +126,10 @@ impl Graphics {
+         if let Some(scene) = view_requests.scene {
+             self.sync_scene(scene.logical_size, input.scene, pixels_per_point);
+         }
+-        self.paint_egui(window, ui.egui)?;
+-        Ok(RenderOutput {
++        self.paint_egui(window, frame, ui.egui);
++        RenderOutput {
+             actions: ui.actions,
+-        })
++        }
+     }
+ 
+     fn apply_scene_request(&mut self, request: SceneRenderRequest) {
+diff --git a/apps/viewer-native/src/graphics/camera.rs b/apps/viewer-native/src/graphics/camera.rs
+index b07e87f..32e9122 100644
+--- a/apps/viewer-native/src/graphics/camera.rs
++++ b/apps/viewer-native/src/graphics/camera.rs
+@@ -73,9 +73,8 @@ impl Graphics {
+         Ok(())
+     }
+ 
+-    pub(crate) fn upload_latest(
++    pub(crate) fn upload_ready_camera_frames(
+         &mut self,
+-        camera: &CameraState,
+         updates: &mut Vec<CameraBasePresentationUpdate>,
+     ) -> Result<(), CameraUploadError> {
+         let mut error = None;
+@@ -146,6 +145,15 @@ impl Graphics {
+                 upload_time: upload_started.elapsed(),
+             });
+         }
++        error.map_or(Ok(()), Err)
++    }
++
++    /// Queue pixel work before surface acquisition so decoding overlaps its wait.
++    pub(crate) fn queue_camera_frames(
++        &mut self,
++        camera: &CameraState,
++    ) -> Result<(), CameraUploadError> {
++        let mut error = None;
+         for (camera_id, frame) in camera.frames() {
+             let Some(&target) = self.camera_decode_sizes.get(camera_id) else {
+                 continue;
+diff --git a/apps/viewer-native/src/graphics/surface.rs b/apps/viewer-native/src/graphics/surface.rs
+index db49d2e..ff892fb 100644
+--- a/apps/viewer-native/src/graphics/surface.rs
++++ b/apps/viewer-native/src/graphics/surface.rs
+@@ -108,11 +108,17 @@ impl Graphics {
+         self.surface.configure(&self.device, &self.config);
+     }
+ 
++    /// Wait for display pacing before collecting camera work for this frame.
++    pub(crate) fn acquire_frame(&self) -> Result<wgpu::SurfaceTexture, wgpu::SurfaceError> {
++        self.surface.get_current_texture()
++    }
++
+     pub(super) fn paint_egui(
+         &mut self,
+         window: &Window,
++        frame: wgpu::SurfaceTexture,
+         output: egui::FullOutput,
+-    ) -> Result<(), wgpu::SurfaceError> {
++    ) {
+         let egui::FullOutput {
+             platform_output,
+             textures_delta,
+@@ -131,7 +137,6 @@ impl Graphics {
+             size_in_pixels: [self.config.width, self.config.height],
+             pixels_per_point: window.scale_factor() as f32,
+         };
+-        let frame = self.surface.get_current_texture()?;
+         let view = frame
+             .texture
+             .create_view(&wgpu::TextureViewDescriptor::default());
+@@ -178,6 +183,5 @@ impl Graphics {
+         for id in &textures_delta.free {
+             self.egui_renderer.free_texture(id);
+         }
+-        Ok(())
+     }
+ }

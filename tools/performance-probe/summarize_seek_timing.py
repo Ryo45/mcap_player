@@ -45,7 +45,8 @@ def summarize_run(path):
         accepted = stage('command_accept')
         draw = stage('image_draw', expected)
         presented = next(e['ns'] for e in group if e['stage'] == 'present_done' and e['ns'] >= draw)
-        acquired = next(e for e in group if e['stage'] == 'acquire_begin' and e['ns'] >= draw)
+        frame_begin = max(e['ns'] for e in group if e['stage'] == 'frame_begin' and e['ns'] <= draw)
+        acquired = next(e for e in group if e['stage'] == 'acquire_begin' and frame_begin <= e['ns'] <= presented)
         acquire_end = next(e for e in group if e['stage'] == 'acquire_done' and e['ns'] >= acquired['ns'])
         ns = {'restore_total': stage('seek_done') - stage('seek_begin'),
               'restore_read': stage('restore_read_done') - stage('cancel_done'),
@@ -74,14 +75,15 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--runs', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--group', action='append', help='Run-name suffix to aggregate; repeat for multiple groups')
     args = p.parse_args()
     runs = {v.parent.name: summarize_run(v.parent) for v in sorted(args.runs.glob('*-*/result.json'))
             if not v.parent.name.startswith('calibrate')}
     groups = {}
-    for kind in ['control', 'trace', 'lichtblick']:
+    for kind in args.group or ['control', 'trace', 'lichtblick']:
         values = [r for name, r in runs.items() if name.endswith('-' + kind)]
         groups[kind] = {'successful_runs': len(values), 'pixel_revisit_ms': [v['pixel_revisit_ms']['median'] for v in values]}
-        if kind == 'trace' and values:
+        if values and all('revisit_stages_ms' in v for v in values):
             groups[kind]['median_of_run_medians_ms'] = {k: statistics.median(v['revisit_stages_ms'][k]['median'] for v in values)
                                                        for k in values[0]['revisit_stages_ms']}
     args.output.write_text(json.dumps({'groups': groups, 'runs': runs}, indent=2) + '\n')

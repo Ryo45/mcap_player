@@ -98,11 +98,12 @@ impl Graphics {
     pub(crate) fn render(
         &mut self,
         window: &Window,
+        frame: wgpu::SurfaceTexture,
         input: RenderInput<'_>,
         layout: &LayoutDocument,
         panels: &mut PanelRuntimeStore,
         interaction: &ViewerInteractionState,
-    ) -> Result<RenderOutput, wgpu::SurfaceError> {
+    ) -> RenderOutput {
         let ui = self.build_ui(window, &input, layout, panels, interaction);
         self.camera_decode_sizes = ui.render_requests.camera_sizes;
         let view_requests = ViewRenderRequests {
@@ -125,10 +126,10 @@ impl Graphics {
         if let Some(scene) = view_requests.scene {
             self.sync_scene(scene.logical_size, input.scene, pixels_per_point);
         }
-        self.paint_egui(window, ui.egui)?;
-        Ok(RenderOutput {
+        self.paint_egui(window, frame, ui.egui);
+        RenderOutput {
             actions: ui.actions,
-        })
+        }
     }
 
     fn apply_scene_request(&mut self, request: SceneRenderRequest) {

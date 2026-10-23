@@ -110,6 +110,13 @@ state retain only CameraFrameMetadata plus pixels, releasing encoded copies at d
 pin MCAP Chunk backing. Successful seek/source transitions invalidate old generations. Failed
 restore leaves current presentation intact. The UI uploads completed images without waiting for
 pixel decode and uses the displayed image's measurement time/frame ID for its overlay.
+Native queues pixel work before acquiring the FIFO surface, then collects completed results after
+acquisition and before building the UI. Decoding therefore overlaps display pacing, and work that
+finishes during acquisition can appear in the same frame. The acquired `SurfaceTexture` moves
+through rendering to presentation; there is no hidden retained frame or extra offscreen redraw.
+Surface acquisition remains fallible at the application boundary; painting an acquired frame is
+infallible. Render wall-time metrics continue to include surface acquisition. Worker counts,
+queue limits, generation invalidation and FIFO latency configuration are unchanged.
 Physical display pixels select 1/1, 1/2, 1/4, or 1/8 IDCT output; projection remains in original
 source pixel coordinates, including aspect ratio/cropping for odd dimensions. Resize/focus changes
 can re-decode the same message. Browser uses two bounded camera Web Workers with resized

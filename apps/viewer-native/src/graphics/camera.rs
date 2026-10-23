@@ -73,9 +73,8 @@ impl Graphics {
         Ok(())
     }
 
-    pub(crate) fn upload_latest(
+    pub(crate) fn upload_ready_camera_frames(
         &mut self,
-        camera: &CameraState,
         updates: &mut Vec<CameraBasePresentationUpdate>,
     ) -> Result<(), CameraUploadError> {
         let mut error = None;
@@ -146,6 +145,15 @@ impl Graphics {
                 upload_time: upload_started.elapsed(),
             });
         }
+        error.map_or(Ok(()), Err)
+    }
+
+    /// Queue pixel work before surface acquisition so decoding overlaps its wait.
+    pub(crate) fn queue_camera_frames(
+        &mut self,
+        camera: &CameraState,
+    ) -> Result<(), CameraUploadError> {
+        let mut error = None;
         for (camera_id, frame) in camera.frames() {
             let Some(&target) = self.camera_decode_sizes.get(camera_id) else {
                 continue;

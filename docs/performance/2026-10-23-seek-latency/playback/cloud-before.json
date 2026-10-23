@@ -1,0 +1,142 @@
+{
+  "name": "cloud-60000-before",
+  "native_layout": {
+    "schemaVersion": 1,
+    "root": {
+      "kind": "panel",
+      "id": "scene-3d-0",
+      "panelType": "scene-3d",
+      "configVersion": 1,
+      "config": {
+        "optionalData": true,
+        "coloring": {
+          "mode": "rgb",
+          "intensityRange": [
+            0,
+            255
+          ]
+        }
+      }
+    }
+  },
+  "lichtblick_layout": {
+    "configById": {
+      "3D!bench": {
+        "layers": {
+          "845139cb-26bc-40b3-8161-8ab60af4baf5": {
+            "visible": true,
+            "frameLocked": true,
+            "label": "Grid",
+            "instanceId": "845139cb-26bc-40b3-8161-8ab60af4baf5",
+            "layerId": "foxglove.Grid",
+            "size": 10,
+            "divisions": 10,
+            "lineWidth": 1,
+            "color": "#248eff",
+            "position": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "order": 1
+          }
+        },
+        "cameraState": {
+          "distance": 20,
+          "perspective": true,
+          "phi": 60,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "targetOffset": [
+            0,
+            0,
+            0
+          ],
+          "targetOrientation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "thetaOffset": 45,
+          "fovy": 45,
+          "near": 0.5,
+          "far": 5000
+        },
+        "followMode": "follow-pose",
+        "scene": {
+          "transforms": {
+            "showLabel": false,
+            "axisScale": 0
+          }
+        },
+        "transforms": {
+          "base_scan": {
+            "visible": false
+          }
+        },
+        "topics": {
+          "/points": {
+            "visible": true,
+            "frameLocked": false,
+            "pointSize": 5,
+            "pointShape": "circle",
+            "decayTime": 0,
+            "colorMode": "rgb",
+            "colorField": "rgb",
+            "flatColor": "rgba(51,209,255,0.88)",
+            "explicitAlpha": 1
+          }
+        },
+        "publish": {
+          "type": "point",
+          "poseTopic": "/move_base_simple/goal",
+          "pointTopic": "/clicked_point",
+          "poseEstimateTopic": "/initialpose",
+          "poseEstimateXDeviation": 0.5,
+          "poseEstimateYDeviation": 0.5,
+          "poseEstimateThetaDeviation": 0.26179939
+        },
+        "imageMode": {},
+        "followTf": "base_scan"
+      }
+    },
+    "layout": "3D!bench",
+    "globalVariables": {},
+    "userNodes": {},
+    "playbackConfig": {
+      "speed": 1
+    }
+  },
+  "rects": {
+    "layout": [
+      320,
+      44,
+      1600,
+      958
+    ],
+    "scene": [
+      319.984375,
+      76,
+      1600,
+      926
+    ]
+  },
+  "kind": "scene",
+  "data": "/tmp/mcap-point-cloud2-data/cloud-60000-20s.mcap",
+  "cameras": 0,
+  "topics": [
+    "/points"
+  ],
+  "points": 60000,
+  "native_binary": "/home/ryo/development/mcap_player/target/gpu-native/viewer-native-seek-latency",
+  "native_patch": "/home/ryo/development/mcap_player/docs/performance/2026-10-23-seek-latency/native-seek-timing.patch"
+}
