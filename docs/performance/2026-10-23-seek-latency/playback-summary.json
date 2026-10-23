@@ -1,0 +1,972 @@
+{
+  "groups": {
+    "1-before": {
+      "runs": 3,
+      "cpu_percent": 30.00921630958949,
+      "peak_pss_mib": 274.3720703125,
+      "updates_hz": 29.314412581702168,
+      "wall_lag_p95_ms": 88.7328794846931
+    },
+    "1-after": {
+      "runs": 3,
+      "cpu_percent": 31.18801266661766,
+      "peak_pss_mib": 274.240234375,
+      "updates_hz": 29.516362374036735,
+      "wall_lag_p95_ms": 76.32117693622887
+    },
+    "4-before": {
+      "runs": 3,
+      "cpu_percent": 37.661391663626304,
+      "peak_pss_mib": 357.390625,
+      "updates_hz": 29.53038740567946,
+      "wall_lag_p95_ms": 98.83059815814099,
+      "minimum_background_hz": 5.005150407742281
+    },
+    "4-after": {
+      "runs": 3,
+      "cpu_percent": 41.39938996411091,
+      "peak_pss_mib": 345.908203125,
+      "updates_hz": 29.530068383999435,
+      "wall_lag_p95_ms": 81.12996177126975,
+      "minimum_background_hz": 5.005096336271091
+    },
+    "scene-before": {
+      "runs": 3,
+      "cpu_percent": 7.489603031190961,
+      "peak_pss_mib": 267.427734375,
+      "updates_hz": 9.903422655762851
+    },
+    "scene-after": {
+      "runs": 3,
+      "cpu_percent": 6.822648316476363,
+      "peak_pss_mib": 267.3525390625,
+      "updates_hz": 9.90294824323347
+    }
+  },
+  "runs": {
+    "2-scene-after": {
+      "status": "ok",
+      "case": "cloud-60000-after",
+      "app": "native",
+      "binary_sha256": "5650b70592e50cb24fc0bf9b3c2cb78f823a87472747c9fbb891901060d6bc83",
+      "data_sha256": "ef6f27cd4260f4509c469f0c6bdc8cd76db28116e165b20b3e170d36b7e45d63",
+      "observed_play_seconds": 6.008783549070358,
+      "summary": {
+        "cpu_one_core_percent": 6.157543767685524,
+        "peak_sampled_pss_mib": 267.3525390625,
+        "pss_sample_count": 24,
+        "pss_read_ms": {
+          "median": 7.2656068950891495,
+          "p95": 7.732911966741085,
+          "min": 3.3263154327869415,
+          "max": 8.06591659784317
+        },
+        "paused_pss_mib": 267.337890625,
+        "peak_sampled_summed_rss_mib": 277.5234375,
+        "observer_work_ms": {
+          "median": 6.012404337525368,
+          "p95": 7.184676826000214,
+          "min": 3.2121986150741577,
+          "max": 8.03489051759243
+        },
+        "cameras": [],
+        "scene_changes_hz": 9.90294824323347
+      }
+    },
+    "2-1-after": {
+      "status": "ok",
+      "case": "playback-1-after",
+      "app": "native",
+      "binary_sha256": "5650b70592e50cb24fc0bf9b3c2cb78f823a87472747c9fbb891901060d6bc83",
+      "data_sha256": "46a15133ffe3b6fdb1539c31d9322bbc4e4c365f9e8d2b13eaa8fe87aa602bfa",
+      "references_sha256": "b7ee4ec18caf2abfc3333f67028be96e44726c0c5be4f3ab50c1b211da670ded",
+      "observed_play_seconds": 4.00912931188941,
+      "summary": {
+        "cpu_one_core_percent": 36.415853606686895,
+        "peak_sampled_pss_mib": 274.0712890625,
+        "pss_sample_count": 17,
+        "pss_read_ms": {
+          "median": 4.627427086234093,
+          "p95": 5.292597226798534,
+          "min": 4.303020425140858,
+          "max": 5.381478928029537
+        },
+        "paused_pss_mib": 274.0556640625,
+        "peak_sampled_summed_rss_mib": 283.828125,
+        "observer_work_ms": {
+          "median": 2.395026385784149,
+          "p95": 2.6838118210434914,
+          "min": 2.1543586626648903,
+          "max": 2.9900269582867622
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.520231224215987,
+            "progress_hz": 29.520231224215987,
+            "lag_ms": {
+              "median": 64.8915645976862,
+              "p95": 79.08251266926536,
+              "min": 48.21778951833666,
+              "max": 81.76113913456584
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 11.749118566513062
+          }
+        ]
+      }
+    },
+    "0-4-after": {
+      "status": "ok",
+      "case": "playback-4-after",
+      "app": "native",
+      "binary_sha256": "5650b70592e50cb24fc0bf9b3c2cb78f823a87472747c9fbb891901060d6bc83",
+      "data_sha256": "46a15133ffe3b6fdb1539c31d9322bbc4e4c365f9e8d2b13eaa8fe87aa602bfa",
+      "references_sha256": "26192143bf8382c044e6f12308d14a45c03daedb5d7c60b10162ea3524e675a7",
+      "observed_play_seconds": 4.009415225125849,
+      "summary": {
+        "cpu_one_core_percent": 40.90257117160052,
+        "peak_sampled_pss_mib": 345.908203125,
+        "pss_sample_count": 17,
+        "pss_read_ms": {
+          "median": 5.690277554094791,
+          "p95": 6.035333499312401,
+          "min": 5.142975598573685,
+          "max": 6.4812274649739265
+        },
+        "paused_pss_mib": 334.0302734375,
+        "peak_sampled_summed_rss_mib": 355.9375,
+        "observer_work_ms": {
+          "median": 3.905082121491432,
+          "p95": 4.350858740508556,
+          "min": 3.13748512417078,
+          "max": 5.906630307435989
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.530068383999435,
+            "progress_hz": 29.530068383999435,
+            "lag_ms": {
+              "median": 66.71938815464573,
+              "p95": 81.12996177126975,
+              "min": 49.36362039297837,
+              "max": 97.8983534500002
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.488736934959888
+          },
+          {
+            "camera_id": 1,
+            "updates_hz": 5.2553511530846455,
+            "progress_hz": 29.530068383999435,
+            "lag_ms": {
+              "median": 148.01788727442423,
+              "p95": 237.12274177620807,
+              "min": 48.59985640893383,
+              "max": 247.5239486123124
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.488736934959888
+          },
+          {
+            "camera_id": 2,
+            "updates_hz": 5.005096336271091,
+            "progress_hz": 28.529049116745217,
+            "lag_ms": {
+              "median": 146.54009472578755,
+              "p95": 235.56681964546434,
+              "min": 46.841064281761604,
+              "max": 245.6976516172289
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.488736934959888
+          },
+          {
+            "camera_id": 3,
+            "updates_hz": 5.2553511530846455,
+            "progress_hz": 29.029558750372328,
+            "lag_ms": {
+              "median": 148.09171905120212,
+              "p95": 236.83425274988014,
+              "min": 46.39256683488679,
+              "max": 256.00813527901954
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.488736934959888
+          }
+        ]
+      }
+    },
+    "1-scene-before": {
+      "status": "ok",
+      "case": "cloud-60000-before",
+      "app": "native",
+      "binary_sha256": "fde12a885777ec58e49156c4d8da034518f800c57817ee6f090ae7e381e541d4",
+      "data_sha256": "ef6f27cd4260f4509c469f0c6bdc8cd76db28116e165b20b3e170d36b7e45d63",
+      "observed_play_seconds": 6.0084423422813416,
+      "summary": {
+        "cpu_one_core_percent": 7.3229093037003565,
+        "peak_sampled_pss_mib": 267.2041015625,
+        "pss_sample_count": 25,
+        "pss_read_ms": {
+          "median": 6.812859326601028,
+          "p95": 7.168978452682495,
+          "min": 3.4992722794413567,
+          "max": 7.637090049684048
+        },
+        "paused_pss_mib": 267.1884765625,
+        "peak_sampled_summed_rss_mib": 277.3671875,
+        "observer_work_ms": {
+          "median": 5.706713534891605,
+          "p95": 6.478714756667614,
+          "min": 3.1056376174092293,
+          "max": 7.492986507713795
+        },
+        "cameras": [],
+        "scene_changes_hz": 9.903422655762851
+      }
+    },
+    "1-scene-after": {
+      "status": "ok",
+      "case": "cloud-60000-after",
+      "app": "native",
+      "binary_sha256": "5650b70592e50cb24fc0bf9b3c2cb78f823a87472747c9fbb891901060d6bc83",
+      "data_sha256": "ef6f27cd4260f4509c469f0c6bdc8cd76db28116e165b20b3e170d36b7e45d63",
+      "observed_play_seconds": 6.009293841198087,
+      "summary": {
+        "cpu_one_core_percent": 6.822648316476363,
+        "peak_sampled_pss_mib": 266.828125,
+        "pss_sample_count": 25,
+        "pss_read_ms": {
+          "median": 6.992243230342865,
+          "p95": 7.574380375444889,
+          "min": 5.692706443369389,
+          "max": 7.747904397547245
+        },
+        "paused_pss_mib": 266.8134765625,
+        "peak_sampled_summed_rss_mib": 276.8671875,
+        "observer_work_ms": {
+          "median": 6.013800390064716,
+          "p95": 6.541918963193893,
+          "min": 2.56559532135725,
+          "max": 49.45081286132336
+        },
+        "cameras": [],
+        "scene_changes_hz": 9.90302340801366
+      }
+    },
+    "1-4-before": {
+      "status": "ok",
+      "case": "playback-4-before",
+      "app": "native",
+      "binary_sha256": "fde12a885777ec58e49156c4d8da034518f800c57817ee6f090ae7e381e541d4",
+      "data_sha256": "46a15133ffe3b6fdb1539c31d9322bbc4e4c365f9e8d2b13eaa8fe87aa602bfa",
+      "references_sha256": "8a378eb627b38ac50d7d7ba4c2c10f0a5e19cc9a91ee90e0317b1c3276485327",
+      "observed_play_seconds": 4.009297467768192,
+      "summary": {
+        "cpu_one_core_percent": 37.661391663626304,
+        "peak_sampled_pss_mib": 357.390625,
+        "pss_sample_count": 17,
+        "pss_read_ms": {
+          "median": 5.675474181771278,
+          "p95": 7.090761326253414,
+          "min": 3.457115963101387,
+          "max": 8.318152278661728
+        },
+        "paused_pss_mib": 345.5283203125,
+        "peak_sampled_summed_rss_mib": 367.55859375,
+        "observer_work_ms": {
+          "median": 3.7977369502186775,
+          "p95": 4.2913490906357765,
+          "min": 3.2084276899695396,
+          "max": 6.003410555422306
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.52855895403676,
+            "progress_hz": 29.52855895403676,
+            "lag_ms": {
+              "median": 81.40816142161667,
+              "p95": 97.64430380115918,
+              "min": 64.28702094902594,
+              "max": 99.81945610294751
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.391264714300632
+          },
+          {
+            "camera_id": 1,
+            "updates_hz": 5.255082525718406,
+            "progress_hz": 29.27831692900255,
+            "lag_ms": {
+              "median": 181.16892911493787,
+              "p95": 270.2528065070511,
+              "min": 81.57214950770131,
+              "max": 280.8601466938854
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.391264714300632
+          },
+          {
+            "camera_id": 2,
+            "updates_hz": 5.004840500684197,
+            "progress_hz": 28.277348828865712,
+            "lag_ms": {
+              "median": 180.46779458721485,
+              "p95": 268.8100344811877,
+              "min": 80.91112890591235,
+              "max": 278.7691771363217
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.391264714300632
+          },
+          {
+            "camera_id": 3,
+            "updates_hz": 5.255082525718406,
+            "progress_hz": 28.77783287893413,
+            "lag_ms": {
+              "median": 178.55000632504624,
+              "p95": 267.8449512148897,
+              "min": 78.9530672753851,
+              "max": 279.3072187031309
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.391264714300632
+          }
+        ]
+      }
+    },
+    "0-4-before": {
+      "status": "ok",
+      "case": "playback-4-before",
+      "app": "native",
+      "binary_sha256": "fde12a885777ec58e49156c4d8da034518f800c57817ee6f090ae7e381e541d4",
+      "data_sha256": "46a15133ffe3b6fdb1539c31d9322bbc4e4c365f9e8d2b13eaa8fe87aa602bfa",
+      "references_sha256": "8a378eb627b38ac50d7d7ba4c2c10f0a5e19cc9a91ee90e0317b1c3276485327",
+      "observed_play_seconds": 4.009404473938048,
+      "summary": {
+        "cpu_one_core_percent": 36.91227326241676,
+        "peak_sampled_pss_mib": 357.431640625,
+        "pss_sample_count": 17,
+        "pss_read_ms": {
+          "median": 5.714221857488155,
+          "p95": 6.083141081035137,
+          "min": 3.5779494792222977,
+          "max": 7.847459986805916
+        },
+        "paused_pss_mib": 357.4169921875,
+        "peak_sampled_summed_rss_mib": 367.52734375,
+        "observer_work_ms": {
+          "median": 3.9387261494994164,
+          "p95": 4.4406866654753685,
+          "min": 3.1876834109425545,
+          "max": 5.971420556306839
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.530512264569907,
+            "progress_hz": 29.530512264569907,
+            "lag_ms": {
+              "median": 83.65456691632689,
+              "p95": 98.83059815814099,
+              "min": 65.74385563532515,
+              "max": 101.21212347100172
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.365501537919044
+          },
+          {
+            "camera_id": 1,
+            "updates_hz": 5.25543014877939,
+            "progress_hz": 29.280253686056604,
+            "lag_ms": {
+              "median": 182.563698478043,
+              "p95": 271.4909739792346,
+              "min": 82.9847704619171,
+              "max": 281.94950092583906
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.365501537919044
+          },
+          {
+            "camera_id": 2,
+            "updates_hz": 5.005171570266087,
+            "progress_hz": 28.279219372003386,
+            "lag_ms": {
+              "median": 180.49969238539543,
+              "p95": 270.1090350126227,
+              "min": 81.58799459536881,
+              "max": 280.3697425251206
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.365501537919044
+          },
+          {
+            "camera_id": 3,
+            "updates_hz": 5.005171570266087,
+            "progress_hz": 28.779736529029996,
+            "lag_ms": {
+              "median": 180.48726065705222,
+              "p95": 269.10626652340096,
+              "min": 80.40493230024981,
+              "max": 279.62028446296847
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.365501537919044
+          }
+        ]
+      }
+    },
+    "2-4-before": {
+      "status": "ok",
+      "case": "playback-4-before",
+      "app": "native",
+      "binary_sha256": "fde12a885777ec58e49156c4d8da034518f800c57817ee6f090ae7e381e541d4",
+      "data_sha256": "46a15133ffe3b6fdb1539c31d9322bbc4e4c365f9e8d2b13eaa8fe87aa602bfa",
+      "references_sha256": "8a378eb627b38ac50d7d7ba4c2c10f0a5e19cc9a91ee90e0317b1c3276485327",
+      "observed_play_seconds": 4.009288057684898,
+      "summary": {
+        "cpu_one_core_percent": 40.90393848801169,
+        "peak_sampled_pss_mib": 351.87890625,
+        "pss_sample_count": 17,
+        "pss_read_ms": {
+          "median": 5.865846760571003,
+          "p95": 8.155045099556446,
+          "min": 4.575678147375584,
+          "max": 8.300550282001495
+        },
+        "paused_pss_mib": 340.0009765625,
+        "peak_sampled_summed_rss_mib": 361.703125,
+        "observer_work_ms": {
+          "median": 3.6914004012942314,
+          "p95": 4.276825115084648,
+          "min": 3.1743766739964485,
+          "max": 6.180177442729473
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.53038740567946,
+            "progress_hz": 29.53038740567946,
+            "lag_ms": {
+              "median": 84.23731811344615,
+              "p95": 99.28712006658324,
+              "min": 65.30108799537015,
+              "max": 109.37694025536393
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 11.996655724942684
+          },
+          {
+            "camera_id": 1,
+            "updates_hz": 5.2554079281293955,
+            "progress_hz": 29.280129885292347,
+            "lag_ms": {
+              "median": 182.15049020946017,
+              "p95": 271.3188199326395,
+              "min": 82.91449286043661,
+              "max": 281.7959062755109
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 11.996655724942684
+          },
+          {
+            "camera_id": 2,
+            "updates_hz": 5.005150407742281,
+            "progress_hz": 28.27909980374389,
+            "lag_ms": {
+              "median": 181.6270334025225,
+              "p95": 270.64308722813934,
+              "min": 82.06227732201432,
+              "max": 281.08037815739715
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 11.996655724942684
+          },
+          {
+            "camera_id": 3,
+            "updates_hz": 5.2554079281293955,
+            "progress_hz": 28.779614844518118,
+            "lag_ms": {
+              "median": 180.83459666619706,
+              "p95": 269.9840754891436,
+              "min": 81.52773498247079,
+              "max": 280.1151745642225
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 11.996655724942684
+          }
+        ]
+      }
+    },
+    "0-scene-after": {
+      "status": "ok",
+      "case": "cloud-60000-after",
+      "app": "native",
+      "binary_sha256": "5650b70592e50cb24fc0bf9b3c2cb78f823a87472747c9fbb891901060d6bc83",
+      "data_sha256": "ef6f27cd4260f4509c469f0c6bdc8cd76db28116e165b20b3e170d36b7e45d63",
+      "observed_play_seconds": 6.0088301952928305,
+      "summary": {
+        "cpu_one_core_percent": 6.823176689808867,
+        "peak_sampled_pss_mib": 268.0673828125,
+        "pss_sample_count": 24,
+        "pss_read_ms": {
+          "median": 7.046292535960674,
+          "p95": 7.3255812749266624,
+          "min": 3.3317217603325844,
+          "max": 7.7949408441782
+        },
+        "paused_pss_mib": 268.052734375,
+        "peak_sampled_summed_rss_mib": 278.578125,
+        "observer_work_ms": {
+          "median": 6.079330109059811,
+          "p95": 6.563963368535042,
+          "min": 3.0478183180093765,
+          "max": 7.395760156214237
+        },
+        "cameras": [],
+        "scene_changes_hz": 9.902926170036539
+      }
+    },
+    "2-4-after": {
+      "status": "ok",
+      "case": "playback-4-after",
+      "app": "native",
+      "binary_sha256": "5650b70592e50cb24fc0bf9b3c2cb78f823a87472747c9fbb891901060d6bc83",
+      "data_sha256": "46a15133ffe3b6fdb1539c31d9322bbc4e4c365f9e8d2b13eaa8fe87aa602bfa",
+      "references_sha256": "26192143bf8382c044e6f12308d14a45c03daedb5d7c60b10162ea3524e675a7",
+      "observed_play_seconds": 4.009437646716833,
+      "summary": {
+        "cpu_one_core_percent": 41.40124639251214,
+        "peak_sampled_pss_mib": 345.88671875,
+        "pss_sample_count": 17,
+        "pss_read_ms": {
+          "median": 5.698909983038902,
+          "p95": 8.090401999652386,
+          "min": 4.917975515127182,
+          "max": 8.231998421251774
+        },
+        "paused_pss_mib": 334.0048828125,
+        "peak_sampled_summed_rss_mib": 367.94921875,
+        "observer_work_ms": {
+          "median": 3.695480525493622,
+          "p95": 4.249244928359985,
+          "min": 3.220098093152046,
+          "max": 6.13987073302269
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.533305047653947,
+            "progress_hz": 29.533305047653947,
+            "lag_ms": {
+              "median": 65.83274820198604,
+              "p95": 79.89464439451699,
+              "min": 48.063655942678366,
+              "max": 93.47504172474163
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.369494117796421
+          },
+          {
+            "camera_id": 1,
+            "updates_hz": 5.2559271694977365,
+            "progress_hz": 29.533305047653947,
+            "lag_ms": {
+              "median": 148.91632317254943,
+              "p95": 237.93200074384612,
+              "min": 47.5315454105536,
+              "max": 260.15261604140204
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.369494117796421
+          },
+          {
+            "camera_id": 2,
+            "updates_hz": 5.005644923331178,
+            "progress_hz": 28.532176062987713,
+            "lag_ms": {
+              "median": 145.6895841285588,
+              "p95": 234.51489247381696,
+              "min": 46.20930887758723,
+              "max": 245.1508963480591
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.369494117796421
+          },
+          {
+            "camera_id": 3,
+            "updates_hz": 5.2559271694977365,
+            "progress_hz": 29.03274055532083,
+            "lag_ms": {
+              "median": 147.69616772731143,
+              "p95": 236.53647260119516,
+              "min": 46.295816389222864,
+              "max": 256.09399837752187
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 13.369494117796421
+          }
+        ]
+      }
+    },
+    "1-1-before": {
+      "status": "ok",
+      "case": "playback-1-before",
+      "app": "native",
+      "binary_sha256": "fde12a885777ec58e49156c4d8da034518f800c57817ee6f090ae7e381e541d4",
+      "data_sha256": "46a15133ffe3b6fdb1539c31d9322bbc4e4c365f9e8d2b13eaa8fe87aa602bfa",
+      "references_sha256": "61922cc669165b238cdbff66825966e9af1c728d0b0400258efe522cb33d3846",
+      "observed_play_seconds": 4.009532346390188,
+      "summary": {
+        "cpu_one_core_percent": 33.918217366778975,
+        "peak_sampled_pss_mib": 274.18359375,
+        "pss_sample_count": 17,
+        "pss_read_ms": {
+          "median": 4.676857963204384,
+          "p95": 5.723349750041962,
+          "min": 4.1899653151631355,
+          "max": 6.531275808811188
+        },
+        "paused_pss_mib": 274.1689453125,
+        "peak_sampled_summed_rss_mib": 284.4609375,
+        "observer_work_ms": {
+          "median": 2.6196371763944626,
+          "p95": 3.0856626108288765,
+          "min": 2.1628914400935173,
+          "max": 4.138032905757427
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.517333479922666,
+            "progress_hz": 29.517333479922666,
+            "lag_ms": {
+              "median": 75.09921404222641,
+              "p95": 88.64447101950645,
+              "min": 57.51802263160543,
+              "max": 90.51144197583194
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 12.254348956048489
+          }
+        ]
+      }
+    },
+    "1-1-after": {
+      "status": "ok",
+      "case": "playback-1-after",
+      "app": "native",
+      "binary_sha256": "5650b70592e50cb24fc0bf9b3c2cb78f823a87472747c9fbb891901060d6bc83",
+      "data_sha256": "46a15133ffe3b6fdb1539c31d9322bbc4e4c365f9e8d2b13eaa8fe87aa602bfa",
+      "references_sha256": "b7ee4ec18caf2abfc3333f67028be96e44726c0c5be4f3ab50c1b211da670ded",
+      "observed_play_seconds": 4.0078336000442505,
+      "summary": {
+        "cpu_one_core_percent": 31.18801266661766,
+        "peak_sampled_pss_mib": 285.8291015625,
+        "pss_sample_count": 17,
+        "pss_read_ms": {
+          "median": 5.582321435213089,
+          "p95": 6.948537193238735,
+          "min": 4.394100978970528,
+          "max": 7.024526596069336
+        },
+        "paused_pss_mib": 285.8134765625,
+        "peak_sampled_summed_rss_mib": 296.27734375,
+        "observer_work_ms": {
+          "median": 2.445206046104431,
+          "p95": 3.3506155014038086,
+          "min": 2.211584709584713,
+          "max": 65.7535046339035
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.27544404449501,
+            "progress_hz": 29.52566151496078,
+            "lag_ms": {
+              "median": 56.17491236577432,
+              "p95": 72.01624301572629,
+              "min": 40.02823953827228,
+              "max": 115.6163727243742
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 74.30961634963751
+          }
+        ]
+      }
+    },
+    "0-1-after": {
+      "status": "ok",
+      "case": "playback-1-after",
+      "app": "native",
+      "binary_sha256": "5650b70592e50cb24fc0bf9b3c2cb78f823a87472747c9fbb891901060d6bc83",
+      "data_sha256": "46a15133ffe3b6fdb1539c31d9322bbc4e4c365f9e8d2b13eaa8fe87aa602bfa",
+      "references_sha256": "b7ee4ec18caf2abfc3333f67028be96e44726c0c5be4f3ab50c1b211da670ded",
+      "observed_play_seconds": 4.009399271570146,
+      "summary": {
+        "cpu_one_core_percent": 30.677075636149546,
+        "peak_sampled_pss_mib": 274.240234375,
+        "pss_sample_count": 17,
+        "pss_read_ms": {
+          "median": 4.898654296994209,
+          "p95": 6.19172491133213,
+          "min": 4.416198469698429,
+          "max": 6.351351737976074
+        },
+        "paused_pss_mib": 274.224609375,
+        "peak_sampled_summed_rss_mib": 284.25390625,
+        "observer_work_ms": {
+          "median": 2.4496475234627724,
+          "p95": 3.0665788799524307,
+          "min": 2.163045108318329,
+          "max": 3.4871017560362816
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.516362374036735,
+            "progress_hz": 29.516362374036735,
+            "lag_ms": {
+              "median": 62.97679990530014,
+              "p95": 76.32117693622887,
+              "min": 43.652582789460716,
+              "max": 78.1821984797717
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 12.441388331353664
+          }
+        ]
+      }
+    },
+    "1-4-after": {
+      "status": "ok",
+      "case": "playback-4-after",
+      "app": "native",
+      "binary_sha256": "5650b70592e50cb24fc0bf9b3c2cb78f823a87472747c9fbb891901060d6bc83",
+      "data_sha256": "46a15133ffe3b6fdb1539c31d9322bbc4e4c365f9e8d2b13eaa8fe87aa602bfa",
+      "references_sha256": "26192143bf8382c044e6f12308d14a45c03daedb5d7c60b10162ea3524e675a7",
+      "observed_play_seconds": 4.009608825668693,
+      "summary": {
+        "cpu_one_core_percent": 41.39938996411091,
+        "peak_sampled_pss_mib": 358.22265625,
+        "pss_sample_count": 17,
+        "pss_read_ms": {
+          "median": 5.5221207439899445,
+          "p95": 6.138144992291927,
+          "min": 4.568013362586498,
+          "max": 6.148944608867168
+        },
+        "paused_pss_mib": 334.6025390625,
+        "peak_sampled_summed_rss_mib": 367.546875,
+        "observer_work_ms": {
+          "median": 3.9753131568431854,
+          "p95": 4.979480989277363,
+          "min": 3.154350444674492,
+          "max": 5.898795090615749
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.520175829486888,
+            "progress_hz": 29.520175829486888,
+            "lag_ms": {
+              "median": 67.12741802136102,
+              "p95": 81.53795544058084,
+              "min": 49.93179024507599,
+              "max": 98.0042662471532
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 12.851107865571976
+          },
+          {
+            "camera_id": 1,
+            "updates_hz": 5.253590613722243,
+            "progress_hz": 29.520175829486888,
+            "lag_ms": {
+              "median": 150.24146034071828,
+              "p95": 239.3264851222434,
+              "min": 48.95762583861752,
+              "max": 258.30646424243844
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 12.851107865571976
+          },
+          {
+            "camera_id": 2,
+            "updates_hz": 5.0034196321164215,
+            "progress_hz": 28.519491903063603,
+            "lag_ms": {
+              "median": 147.56000675261015,
+              "p95": 236.77443973720068,
+              "min": 48.320419155061245,
+              "max": 247.07054402679196
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 12.851107865571976
+          },
+          {
+            "camera_id": 3,
+            "updates_hz": 5.253590613722243,
+            "progress_hz": 29.019833866275246,
+            "lag_ms": {
+              "median": 147.21003205825878,
+              "p95": 236.32896350075816,
+              "min": 46.29762222369504,
+              "max": 256.08606350918615
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 12.851107865571976
+          }
+        ]
+      }
+    },
+    "0-1-before": {
+      "status": "ok",
+      "case": "playback-1-before",
+      "app": "native",
+      "binary_sha256": "fde12a885777ec58e49156c4d8da034518f800c57817ee6f090ae7e381e541d4",
+      "data_sha256": "46a15133ffe3b6fdb1539c31d9322bbc4e4c365f9e8d2b13eaa8fe87aa602bfa",
+      "references_sha256": "61922cc669165b238cdbff66825966e9af1c728d0b0400258efe522cb33d3846",
+      "observed_play_seconds": 4.065321554429829,
+      "summary": {
+        "cpu_one_core_percent": 30.00921630958949,
+        "peak_sampled_pss_mib": 274.3720703125,
+        "pss_sample_count": 17,
+        "pss_read_ms": {
+          "median": 5.323102697730064,
+          "p95": 6.329687312245369,
+          "min": 4.560459405183792,
+          "max": 6.38753455132246
+        },
+        "paused_pss_mib": 274.490234375,
+        "peak_sampled_summed_rss_mib": 283.6328125,
+        "observer_work_ms": {
+          "median": 2.4050064384937286,
+          "p95": 3.2362956553697586,
+          "min": 2.1857284009456635,
+          "max": 67.51114223152399
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.04953557394203,
+            "progress_hz": 29.295718078805947,
+            "lag_ms": {
+              "median": 77.76478522767616,
+              "p95": 92.90650300681591,
+              "min": 62.4049287289381,
+              "max": 98.3577446391184
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 75.49810130149126
+          }
+        ]
+      }
+    },
+    "0-scene-before": {
+      "status": "ok",
+      "case": "cloud-60000-before",
+      "app": "native",
+      "binary_sha256": "fde12a885777ec58e49156c4d8da034518f800c57817ee6f090ae7e381e541d4",
+      "data_sha256": "ef6f27cd4260f4509c469f0c6bdc8cd76db28116e165b20b3e170d36b7e45d63",
+      "observed_play_seconds": 6.008651765063405,
+      "summary": {
+        "cpu_one_core_percent": 7.821931768089955,
+        "peak_sampled_pss_mib": 267.427734375,
+        "pss_sample_count": 25,
+        "pss_read_ms": {
+          "median": 6.546299904584885,
+          "p95": 7.468425668776035,
+          "min": 4.468267783522606,
+          "max": 7.843220606446266
+        },
+        "paused_pss_mib": 267.412109375,
+        "peak_sampled_summed_rss_mib": 277.88671875,
+        "observer_work_ms": {
+          "median": 5.976492073386908,
+          "p95": 6.4277248457074165,
+          "min": 2.9985392466187477,
+          "max": 6.594475358724594
+        },
+        "cameras": [],
+        "scene_changes_hz": 9.903386069536218
+      }
+    },
+    "2-1-before": {
+      "status": "ok",
+      "case": "playback-1-before",
+      "app": "native",
+      "binary_sha256": "fde12a885777ec58e49156c4d8da034518f800c57817ee6f090ae7e381e541d4",
+      "data_sha256": "46a15133ffe3b6fdb1539c31d9322bbc4e4c365f9e8d2b13eaa8fe87aa602bfa",
+      "references_sha256": "61922cc669165b238cdbff66825966e9af1c728d0b0400258efe522cb33d3846",
+      "observed_play_seconds": 4.003484410233796,
+      "summary": {
+        "cpu_one_core_percent": 29.72325674766473,
+        "peak_sampled_pss_mib": 285.859375,
+        "pss_sample_count": 16,
+        "pss_read_ms": {
+          "median": 5.516562145203352,
+          "p95": 6.728854961693287,
+          "min": 4.534224048256874,
+          "max": 6.8957386538386345
+        },
+        "paused_pss_mib": 285.8515625,
+        "peak_sampled_summed_rss_mib": 296.1875,
+        "observer_work_ms": {
+          "median": 2.4022762663662434,
+          "p95": 2.73860152810812,
+          "min": 2.193647436797619,
+          "max": 61.28850672394037
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.314412581702168,
+            "progress_hz": 29.564963116588512,
+            "lag_ms": {
+              "median": 71.3970698416233,
+              "p95": 88.7328794846931,
+              "min": 55.82565205792589,
+              "max": 120.50246205180892
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 70.08911855518818
+          }
+        ]
+      }
+    },
+    "2-scene-before": {
+      "status": "ok",
+      "case": "cloud-60000-before",
+      "app": "native",
+      "binary_sha256": "fde12a885777ec58e49156c4d8da034518f800c57817ee6f090ae7e381e541d4",
+      "data_sha256": "ef6f27cd4260f4509c469f0c6bdc8cd76db28116e165b20b3e170d36b7e45d63",
+      "observed_play_seconds": 6.0082285245880485,
+      "summary": {
+        "cpu_one_core_percent": 7.489603031190961,
+        "peak_sampled_pss_mib": 267.5009765625,
+        "pss_sample_count": 24,
+        "pss_read_ms": {
+          "median": 6.735156290233135,
+          "p95": 7.277984172105789,
+          "min": 4.105548374354839,
+          "max": 7.731999270617962
+        },
+        "paused_pss_mib": 267.4853515625,
+        "peak_sampled_summed_rss_mib": 277.828125,
+        "observer_work_ms": {
+          "median": 5.708910524845123,
+          "p95": 6.382347084581852,
+          "min": 3.100159578025341,
+          "max": 6.67733047157526
+        },
+        "cameras": [],
+        "scene_changes_hz": 9.903490836106439
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+--- a/apps/viewer-native/src/graphics/surface.rs
++++ b/apps/viewer-native/src/graphics/surface.rs
+@@ -44,7 +44,9 @@
+             width: size.width.max(1),
+             height: size.height.max(1),
+             present_mode: wgpu::PresentMode::Fifo,
+-            desired_maximum_frame_latency: 2,
++            // Keep only the frame being presented ahead of input/seek updates.
++            // FIFO still paces redraws to the display; extra queued frames add latency.
++            desired_maximum_frame_latency: 1,
+             alpha_mode: capabilities.alpha_modes[0],
+             view_formats: vec![],
+         };

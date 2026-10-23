@@ -1,6 +1,6 @@
 # Native: 再訪Seekの画面反映に残るlatency
 
-状態: 段階別計測済み・改善は未実装。2026-10-22の[往復Seek計測](../../performance/2026-10-22-seek-revisit/README.md)で確認。
+状態: surface待ちとdecodeの重ね合わせを実装。残る画面反映差は継続調査。2026-10-22の[往復Seek計測](../../performance/2026-10-22-seek-revisit/README.md)で確認。
 
 ## 課題
 
@@ -37,3 +37,13 @@ Zstd 8 MiB設定・FHD Raw 1カメラの短距離往復では、Chunk再利用�
 実収録の180×320 rgb8でも、変換約0.15〜0.52msに対し結果回収待ち約15〜16msがあった。
 次はsurface取得を待った後に最新結果を回収できる処理順と、FIFO frame latency=1の測定対照を検討する。
 表示周期以上の裏描画や先回りしたdecoded cache・worker増設は行わない。
+
+## 2026-10-23の改善
+
+[処理順変更の比較](../../performance/2026-10-23-seek-latency/README.md)で、pixel workをsurface取得前にsubmitし、取得待ち後・UI構築前に完了結果を回収するようにした。
+最終版の各3processでは、再訪中央値が83.4msから66.6msへ約20%短縮。同時比較のLichtblickは60.4msで、差は約23msから約6msになった。
+操作受理から新画像present呼び出し終了も、前回の約33msから約17msになった。
+
+FIFO latency hintを1にするだけの対照には改善がなく、製品は2を維持した。
+worker・queue上限・cacheは増やしていない。取得後の描画から不要なResultを除き、取得失敗の回復経路は維持する。
+残りの差は、外部操作の受理待ちやcompositorのpresentation feedbackを含めて調べる余地がある。連続scrub/cancelや他GPUの検証も残る。

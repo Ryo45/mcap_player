@@ -1,0 +1,375 @@
+--- a/apps/viewer-native/src/main.rs
++++ b/apps/viewer-native/src/main.rs
+@@ -33,7 +33,9 @@
+ fn main() -> Result<()> {
+     env_logger::init();
+     let args = Args::parse()?;
+-    let mut workspace = NativeWorkspace::load_bundled_or_fallback(args.layout);
++    let mut workspace = if let Ok(path) = std::env::var("MCAP_BENCH_LAYOUT") {
++        NativeWorkspace::from_json(&std::fs::read_to_string(path)?).map_err(anyhow::Error::msg)?
++    } else { NativeWorkspace::load_bundled_or_fallback(args.layout) };
+     if let Some(topic) = &args.point_cloud_topic {
+         workspace.set_point_cloud_topic(topic.clone());
+     }
+@@ -54,3 +56,10 @@
+     event_loop.run_app(&mut app)?;
+     Ok(())
+ }
++
++pub(crate) fn bench_rect(key: &str) -> egui::Rect {
++    static VALUE: std::sync::OnceLock<serde_json::Value> = std::sync::OnceLock::new();
++    let config = VALUE.get_or_init(|| serde_json::from_str(&std::fs::read_to_string(std::env::var("MCAP_BENCH_GEOMETRY").unwrap()).unwrap()).unwrap());
++    let r = config["rects"][key].as_array().unwrap();
++    egui::Rect::from_min_size(egui::pos2(r[0].as_f64().unwrap() as f32,r[1].as_f64().unwrap() as f32),egui::vec2(r[2].as_f64().unwrap() as f32,r[3].as_f64().unwrap() as f32))
++}
+--- a/apps/viewer-native/src/app.rs
++++ b/apps/viewer-native/src/app.rs
+@@ -61,6 +61,7 @@
+             self.workspace.bindings(),
+         ) {
+             Ok(mut session) => {
++                log::info!("GPU_BENCH_SELECTION cameras={:?} cloud={:?}",session.plan().camera_topics(),session.plan().point_cloud_stream().map(|s|s.topic.as_str()));
+                 if let Some(previous) = &mut self.session {
+                     session.take_query_workers_from(previous);
+                 }
+@@ -113,7 +114,45 @@
+         if self.session.is_none() {
+             return Ok(());
+         }
++
++        static LAST: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
++        if let Ok(path) = std::env::var("MCAP_BENCH_CONTROL")
++            && let Ok(text) = std::fs::read_to_string(path)
++            && let Some((id, command)) = text.trim().split_once(' ')
++            && let Ok(id) = id.parse::<u64>()
++            && id > LAST.load(std::sync::atomic::Ordering::Relaxed)
++            && let Some(view) = self.session.as_ref().and_then(ViewerSession::playback_view)
++        {
++            let mut actions = Vec::new();
++            if let Some(offset) = command.strip_prefix("seek ").and_then(|v| v.parse::<i64>().ok()) {
++                if view.playing { actions.push(ViewerAction::Playback(viewer_core::PlaybackCommand::Toggle)); }
++                actions.push(ViewerAction::Playback(viewer_core::PlaybackCommand::Seek(viewer_core::ArrivalTime(view.start.0.saturating_add(offset)))));
++            } else if (command == "play" && !view.playing) || (command == "pause" && view.playing) {
++                actions.push(ViewerAction::Playback(viewer_core::PlaybackCommand::Toggle));
++            }
++            viewer_core::__seek_probe_op(id);
++viewer_core::__seek_probe("command_accept", 0);
++            self.apply_frame_actions(actions);
++viewer_core::__seek_probe("command_done", 0);
++            LAST.store(id, std::sync::atomic::Ordering::Relaxed);
++            log::info!("GPU_BENCH_COMMAND id={id}");
++        }
++
++viewer_core::__seek_probe("frame_begin", 0);
+         self.advance_session(elapsed);
++        if let Some(view) = self.session.as_ref().and_then(ViewerSession::playback_view) {
++            static CLOCK: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(i64::MIN);
++            if CLOCK.swap(view.cursor.0,std::sync::atomic::Ordering::Relaxed) != view.cursor.0 {
++                log::info!("GPU_BENCH_CURSOR cursor={}",view.cursor.0);
++            }
++        }
++        if let Some(frame) = self.workspace.runtime.as_ref().and_then(|r|r.point_cloud()).and_then(|c|c.point_cloud().latest()) {
++            static CLOUD: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(i64::MIN);
++            if CLOUD.swap(frame.arrival_time.0,std::sync::atomic::Ordering::Relaxed) != frame.arrival_time.0 {
++                log::info!("GPU_BENCH_CLOUD arrival={} points={}",frame.arrival_time.0,frame.points.len());
++            }
++        }
++
+         if self.graphics.is_none() {
+             return Ok(());
+         }
+@@ -127,8 +166,11 @@
+         let acquire_started = Instant::now();
+         let frame = graphics.acquire_frame()?;
+         let surface_wait = acquire_started.elapsed();
++viewer_core::__seek_probe("update_begin", 0);
+         self.update_camera_presentation(camera_queue_error);
++viewer_core::__seek_probe("update_end", 0);
+         let output = self.render_frame(window, elapsed, frame, surface_wait);
++viewer_core::__seek_probe("render_done", 0);
+         self.apply_frame_actions(output.actions);
+         Ok(())
+     }
+--- a/apps/viewer-native/src/graphics/views/camera.rs
++++ b/apps/viewer-native/src/graphics/views/camera.rs
+@@ -67,7 +67,7 @@
+     ui.separator();
+     let available = ui.available_size();
+     let thumbnail_reserve = if input.show_thumbnails { 70.0 } else { 0.0 };
+-    let focus_area = egui::vec2(available.x, (available.y - thumbnail_reserve).max(1.0));
++    let focus_area = input.focused_camera.map_or_else(|| egui::vec2(available.x, (available.y - thumbnail_reserve).max(1.0)), |id| crate::bench_rect(&format!("camera_{}",id.0)).size());
+     let density = ui.ctx().pixels_per_point();
+     if input.show_thumbnails {
+         for camera in input.cameras {
+@@ -178,7 +178,13 @@
+         );
+         return;
+     };
+-    let image_rect = contain_image_rect(container, texture.size);
++    let image_rect = contain_image_rect(crate::bench_rect(&format!("camera_{}",texture.camera_id.0)), texture.size);
++    ui.set_clip_rect(crate::bench_rect(&format!("camera_{}",texture.camera_id.0)));
++    static LAST_FRAME: [std::sync::atomic::AtomicI64; 32] = [const {std::sync::atomic::AtomicI64::new(i64::MIN)};32];
++    if LAST_FRAME[usize::from(texture.camera_id.0)].swap(texture.arrival_time.0,std::sync::atomic::Ordering::Relaxed) != texture.arrival_time.0 {
++viewer_core::__seek_probe("image_draw", texture.arrival_time.0);
++        log::info!("GPU_BENCH_FRAME camera={} arrival={} rect={:?} size={:?}",texture.camera_id.0,texture.arrival_time.0,image_rect,texture.size);
++    }
+     ui.put(
+         image_rect,
+         egui::Image::new((texture.texture_id, image_rect.size())).uv(egui::Rect::from_min_max(
+--- a/apps/viewer-native/src/graphics/views/scene.rs
++++ b/apps/viewer-native/src/graphics/views/scene.rs
+@@ -100,9 +100,10 @@
+     });
+     ui.label(tf_status);
+ 
+-    let logical_size = ui.available_size().max(egui::vec2(1.0, 1.0));
++    let logical_size = crate::bench_rect("scene").size();
++    ui.set_clip_rect(crate::bench_rect("scene"));
+     let response = ui
+-        .add(egui::Image::new((input.texture_id, logical_size)).sense(egui::Sense::drag()))
++        .put(crate::bench_rect("scene"),egui::Image::new((input.texture_id, logical_size)).sense(egui::Sense::drag()))
+         .on_hover_text(match camera_mode {
+             SceneCameraMode::Chase => {
+                 "Vehicle-following chase view · Wheel: zoom · Double-click: reset"
+--- a/apps/viewer-native/src/graphics/layout_host.rs
++++ b/apps/viewer-native/src/graphics/layout_host.rs
+@@ -94,7 +94,7 @@
+     panels: &mut PanelRuntimeStore,
+     context: PanelCompositionInput<'_>,
+ ) -> PanelOutput {
+-    let rect = ui.available_rect_before_wrap();
++    let rect = crate::bench_rect("layout");
+     let output = show_node(ui, &document.root, panels, context, rect, "root");
+     ui.allocate_rect(rect, egui::Sense::hover());
+     output
+--- a/apps/viewer-native/src/graphics/ui.rs
++++ b/apps/viewer-native/src/graphics/ui.rs
+@@ -105,7 +105,7 @@
+             if !panels.has_embedded_topics() {
+                 egui::SidePanel::left("source-status")
+                     .resizable(true)
+-                    .default_width(260.0)
++                    .default_width(320.0)
+                     .show(context, |ui| {
+                         source_status(ui, presentation);
+                         actions.extend(crate::panels::show_topics(
+--- a/apps/viewer-native/src/panels/inspector.rs
++++ b/apps/viewer-native/src/panels/inspector.rs
+@@ -135,7 +135,13 @@
+             ui.label("Updating cursor query…");
+         });
+     }
++
+     if let Some(metadata) = inspection.metadata {
++        static RAW: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(i64::MIN);
++        if RAW.swap(metadata.log_time.0,std::sync::atomic::Ordering::Relaxed) != metadata.log_time.0 {
++            log::info!("GPU_BENCH_INSPECTOR log={}",metadata.log_time.0);
++        }
++
+         if metadata.log_time > cursor {
+             ui.label("Waiting for the earlier cursor query…");
+             return;
+@@ -328,7 +334,7 @@
+             }
+             InspectorValue::Container(child) => {
+                 ui.push_id(child.id(), |ui| {
+-                    ui.collapsing(
++                    egui::CollapsingHeader::new(
+                         format!(
+                             "{}: {} ({} {})",
+                             field.name,
+@@ -339,9 +345,9 @@
+                             } else {
+                                 "fields"
+                             }
+-                        ),
+-                        |ui| show_container(ui, message, &child, state, visible, budget),
+-                    );
++                        ))
++                        .default_open(std::env::var("MCAP_BENCH_RAW_EXPAND").as_deref() == Ok("1") && field.name == "ranges")
++                        .show(ui, |ui| show_container(ui, message, &child, state, visible, budget));
+                 });
+             }
+         }
+--- a/crates/scene-renderer/src/lib.rs
++++ b/crates/scene-renderer/src/lib.rs
+@@ -58,9 +58,9 @@
+ impl Default for SceneCamera {
+     fn default() -> Self {
+         Self {
+-            distance: 6.0,
+-            azimuth: 0.699,
+-            elevation: 0.48,
++            distance: 20.0,
++            azimuth: 45.0_f32.to_radians(),
++            elevation: 30.0_f32.to_radians(),
+         }
+     }
+ }
+@@ -343,7 +343,7 @@
+         let (eye, target) = camera_pose(self.camera_mode, self.camera, frame);
+         let view = look_at_rh(eye, target, [0.0, 1.0, 0.0]);
+         let aspect = self.size.0 as f32 / self.size.1 as f32;
+-        let projection = perspective_rh(48.0_f32.to_radians(), aspect, 0.01, 160.0);
++        let projection = perspective_rh(45.0_f32.to_radians(), aspect, 0.5, 5000.0);
+         let view_projection = multiply(projection, view);
+         let uniform = SceneUniform {
+             view_projection,
+@@ -545,17 +545,11 @@
+ 
+ fn make_grid() -> Vec<Vertex> {
+     let mut vertices = Vec::new();
+-    for meter in -50_i32..=50 {
++    for meter in -5_i32..=5 {
+         let coordinate = meter as f32;
+-        let color = if meter == 0 {
+-            [0.22, 0.48, 0.42]
+-        } else if meter % 5 == 0 {
+-            [0.12, 0.26, 0.30]
+-        } else {
+-            [0.055, 0.10, 0.12]
+-        };
++        let color = [0.017641954, 0.27049786, 1.0];
+         // Short metric segments remain stable when the near plane cuts a grid line.
+-        for step in -50_i32..50 {
++        for step in -5_i32..5 {
+             let start = step as f32;
+             let end = start + 1.0;
+             push_line(
+--- a/crates/viewer-core/src/lib.rs
++++ b/crates/viewer-core/src/lib.rs
+@@ -91,3 +91,17 @@
+ 
+ mod platform_geometry;
+ pub use platform_geometry::{PlatformGeometry, PlatformGeometryError};
++
++// Measurement-only API, absent from product builds.
++static SEEK_PROBE_OP: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
++pub fn __seek_probe_op(id: u64) {
++    SEEK_PROBE_OP.store(id, std::sync::atomic::Ordering::Relaxed);
++}
++pub fn __seek_probe(stage: &str, arrival: i64) {
++    static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
++    if !*ENABLED.get_or_init(|| std::env::var("MCAP_SEEK_TRACE").as_deref() == Ok("1")) { return; }
++    static ORIGIN: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
++    let ns = ORIGIN.get_or_init(std::time::Instant::now).elapsed().as_nanos();
++    let op = SEEK_PROBE_OP.load(std::sync::atomic::Ordering::Relaxed);
++    eprintln!("SEEK_TRACE stage={stage} ns={ns} op={op} arrival={arrival}");
++}
+--- a/crates/viewer-renderer/src/camera_decode.rs
++++ b/crates/viewer-renderer/src/camera_decode.rs
+@@ -155,8 +155,10 @@
+                                     state = shared.available.wait(state).unwrap();
+                                 }
+                             };
++viewer_core::__seek_probe("worker_start", request.frame.arrival_time.0);
+                             let start = Instant::now();
+                             let image = decoder.decode_frame(&request.frame, request.target);
++viewer_core::__seek_probe("worker_done", request.frame.arrival_time.0);
+                             let result = CameraDecodeResult {
+                                 frame: request.frame.into(),
+                                 image,
+@@ -238,6 +240,7 @@
+                 lease: WorkLease(Arc::clone(&self.outstanding)),
+             },
+         );
++viewer_core::__seek_probe("decode_submitted", key.0.0);
+         self.shared.available.notify_all();
+         Ok(true)
+     }
+@@ -245,6 +248,7 @@
+     pub fn take_ready(&mut self) -> Option<CameraDecodeResult> {
+         while let Ok(result) = self.ready.as_ref()?.try_recv() {
+             if result.generation == self.shared.state.lock().unwrap().generation {
++viewer_core::__seek_probe("result_collected", result.frame.arrival_time.0);
+                 return Some(result);
+             }
+         }
+--- a/apps/viewer-native/src/graphics/camera.rs
++++ b/apps/viewer-native/src/graphics/camera.rs
+@@ -112,6 +112,7 @@
+                 continue;
+             }
+             let decode_elapsed = result.decode_time;
++viewer_core::__seek_probe("upload_begin", frame.arrival_time.0);
+             let upload_started = Instant::now();
+             let mut image = decoded.image;
+             if decoded.has_alpha {
+@@ -135,6 +136,7 @@
+                     *texture_id,
+                 );
+             }
++viewer_core::__seek_probe("upload_done", frame.arrival_time.0);
+             self.camera_geometry.insert(camera_id, decoded.geometry);
+             self.camera_base_images
+                 .mark_updated(frame.camera_id, frame.arrival_time);
+--- a/apps/viewer-native/src/graphics/surface.rs
++++ b/apps/viewer-native/src/graphics/surface.rs
+@@ -110,7 +110,10 @@
+ 
+     /// Wait for display pacing before collecting camera work for this frame.
+     pub(crate) fn acquire_frame(&self) -> Result<wgpu::SurfaceTexture, wgpu::SurfaceError> {
+-        self.surface.get_current_texture()
++viewer_core::__seek_probe("acquire_begin", 0);
++        let frame = self.surface.get_current_texture()?;
++viewer_core::__seek_probe("acquire_done", 0);
++        Ok(frame)
+     }
+ 
+     pub(super) fn paint_egui(
+@@ -177,9 +180,13 @@
+                 .forget_lifetime();
+             self.egui_renderer.render(&mut pass, &paint_jobs, &screen);
+         }
++viewer_core::__seek_probe("queue_submit_begin", 0);
+         self.queue
+             .submit(callbacks.into_iter().chain([encoder.finish()]));
++viewer_core::__seek_probe("queue_submit_done", 0);
++viewer_core::__seek_probe("present_begin", 0);
+         frame.present();
++viewer_core::__seek_probe("present_done", 0);
+         for id in &textures_delta.free {
+             self.egui_renderer.free_texture(id);
+         }
+--- a/apps/viewer-native/src/session.rs
++++ b/apps/viewer-native/src/session.rs
+@@ -320,10 +320,13 @@
+                     Ok(PlaybackEffect::None)
+                 }
+                 PlaybackCommand::Seek(cursor) => {
++viewer_core::__seek_probe("seek_begin", cursor.0);
+                     let target = cursor.clamp(playback.clock().start(), playback.clock().end());
+                     let restore_plan = viewer_core::RestorePlanner::new(playback.catalog())
+                         .plan(target, self.plan.restore_inputs())?;
++viewer_core::__seek_probe("plan_ready", target.0);
+                     playback.seek_with(&restore_plan, restore)?;
++viewer_core::__seek_probe("seek_done", target.0);
+                     self.window_queries.invalidate();
+                     Ok(PlaybackEffect::Seeked)
+                 }
+--- a/crates/viewer-mcap/src/playback.rs
++++ b/crates/viewer-mcap/src/playback.rs
+@@ -153,7 +153,9 @@
+         plan: &RestorePlan,
+         restore: impl FnOnce(viewer_core::ArrivalTime, Vec<RawMessage>) -> Result<(), E>,
+     ) -> Result<(), McapSeekError<E>> {
++viewer_core::__seek_probe("cancel_begin", plan.target.0);
+         self.source.cancel_prefetch();
++viewer_core::__seek_probe("cancel_done", plan.target.0);
+         let reader = self.source.restore_reader();
+         let mut messages = reader
+             .latest_before_with_limits(
+@@ -180,10 +182,13 @@
+         );
+         messages.sort_by_key(|message| (message.arrival_time, message.stream_id.0));
+ 
++viewer_core::__seek_probe("restore_read_done", plan.target.0);
+         let after_target = viewer_core::ArrivalTime(plan.target.0.saturating_add(1));
+         let source_position = reader.prepare_seek(after_target)?;
+         drop(reader);
++viewer_core::__seek_probe("position_ready", plan.target.0);
+         restore(plan.target, messages).map_err(McapSeekError::Restore)?;
++viewer_core::__seek_probe("feature_restored", plan.target.0);
+         self.source.commit_seek(source_position);
+         self.clock.seek(plan.target);
+         Ok(())

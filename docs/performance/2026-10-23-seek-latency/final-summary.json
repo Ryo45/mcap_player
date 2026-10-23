@@ -1,0 +1,574 @@
+{
+  "groups": {
+    "before": {
+      "successful_runs": 3,
+      "pixel_revisit_ms": [
+        83.42640567570925,
+        84.08903516829014,
+        82.53935584798455
+      ]
+    },
+    "after": {
+      "successful_runs": 3,
+      "pixel_revisit_ms": [
+        68.48491448909044,
+        66.60202704370022,
+        66.12699432298541
+      ]
+    },
+    "lichtblick": {
+      "successful_runs": 3,
+      "pixel_revisit_ms": [
+        63.16507933661342,
+        60.35273801535368,
+        59.13302395492792
+      ]
+    },
+    "trace": {
+      "successful_runs": 1,
+      "pixel_revisit_ms": [
+        68.62966669723392
+      ],
+      "median_of_run_medians_ms": {
+        "restore_total": 0.129628,
+        "restore_read": 0.0473855,
+        "position": 0.013129,
+        "feature_restore": 0.0280605,
+        "submit_from_restore": 0.9584665,
+        "worker_queue": 0.035132,
+        "pixel_conversion": 6.147599,
+        "result_wait": 8.828374,
+        "upload_cpu": 0.3888975,
+        "surface_acquire": 14.9672555,
+        "accept_to_present_call_return": 16.8421965
+      }
+    }
+  },
+  "runs": {
+    "0-after": {
+      "pixel_revisit_ms": {
+        "median": 68.48491448909044,
+        "min": 60.28219498693943,
+        "max": 80.2758364006877,
+        "count": 6
+      },
+      "control_revisit_ms": {
+        "median": 15.852873213589191,
+        "min": 10.726667940616608,
+        "max": 20.951387472450733,
+        "count": 6
+      },
+      "excluded_same_target_operations": 1
+    },
+    "0-before": {
+      "pixel_revisit_ms": {
+        "median": 83.42640567570925,
+        "min": 82.86987710744143,
+        "max": 88.2150111719966,
+        "count": 6
+      },
+      "control_revisit_ms": {
+        "median": 5.515378899872303,
+        "min": 5.486029200255871,
+        "max": 10.632186196744442,
+        "count": 6
+      },
+      "excluded_same_target_operations": 1
+    },
+    "0-lichtblick": {
+      "pixel_revisit_ms": {
+        "median": 63.16507933661342,
+        "min": 58.53972118347883,
+        "max": 74.29447863250971,
+        "count": 6
+      },
+      "control_revisit_ms": {
+        "median": 17.931352369487286,
+        "min": 15.857701189815998,
+        "max": 24.211939424276352,
+        "count": 6
+      },
+      "excluded_same_target_operations": 1
+    },
+    "1-after": {
+      "pixel_revisit_ms": {
+        "median": 66.60202704370022,
+        "min": 61.74918357282877,
+        "max": 68.33628751337528,
+        "count": 6
+      },
+      "control_revisit_ms": {
+        "median": 10.633991099894047,
+        "min": 5.559931509196758,
+        "max": 10.70371549576521,
+        "count": 6
+      },
+      "excluded_same_target_operations": 1
+    },
+    "1-before": {
+      "pixel_revisit_ms": {
+        "median": 84.08903516829014,
+        "min": 73.87509662657976,
+        "max": 99.6120274066925,
+        "count": 6
+      },
+      "control_revisit_ms": {
+        "median": 5.613779183477163,
+        "min": 5.558481439948082,
+        "max": 20.996836945414543,
+        "count": 6
+      },
+      "excluded_same_target_operations": 1
+    },
+    "1-lichtblick": {
+      "pixel_revisit_ms": {
+        "median": 60.35273801535368,
+        "min": 54.06884290277958,
+        "max": 71.93183992058039,
+        "count": 6
+      },
+      "control_revisit_ms": {
+        "median": 16.979306936264038,
+        "min": 16.117088496685028,
+        "max": 21.654317155480385,
+        "count": 6
+      },
+      "excluded_same_target_operations": 1
+    },
+    "2-after": {
+      "pixel_revisit_ms": {
+        "median": 66.12699432298541,
+        "min": 64.76128287613392,
+        "max": 67.90797598659992,
+        "count": 6
+      },
+      "control_revisit_ms": {
+        "median": 10.627302341163158,
+        "min": 10.624864138662815,
+        "max": 11.86016108840704,
+        "count": 6
+      },
+      "excluded_same_target_operations": 1
+    },
+    "2-before": {
+      "pixel_revisit_ms": {
+        "median": 82.53935584798455,
+        "min": 76.73848327249289,
+        "max": 87.11070660501719,
+        "count": 6
+      },
+      "control_revisit_ms": {
+        "median": 10.658069979399443,
+        "min": 5.52896223962307,
+        "max": 16.018763184547424,
+        "count": 6
+      },
+      "excluded_same_target_operations": 1
+    },
+    "2-lichtblick": {
+      "pixel_revisit_ms": {
+        "median": 59.13302395492792,
+        "min": 55.05006201565266,
+        "max": 69.57742851227522,
+        "count": 6
+      },
+      "control_revisit_ms": {
+        "median": 16.281534917652607,
+        "min": 12.523030862212181,
+        "max": 21.364126354455948,
+        "count": 6
+      },
+      "excluded_same_target_operations": 1
+    },
+    "diagnostic-trace": {
+      "pixel_revisit_ms": {
+        "median": 68.62966669723392,
+        "min": 60.27155742049217,
+        "max": 80.26031777262688,
+        "count": 6
+      },
+      "control_revisit_ms": {
+        "median": 16.232371795922518,
+        "min": 11.026808060705662,
+        "max": 21.471621468663216,
+        "count": 6
+      },
+      "excluded_same_target_operations": 1,
+      "operations": [
+        {
+          "index": 0,
+          "op": 2,
+          "offset_ns": 110000000,
+          "expected_arrival_ns": 1735689600100000000,
+          "revisit": false,
+          "stages_ms": {
+            "restore_total": 14.8888,
+            "restore_read": 14.861042,
+            "position": 0.009045,
+            "feature_restore": 0.00935,
+            "submit_from_restore": 0.323758,
+            "worker_queue": 0.016667,
+            "pixel_conversion": 7.487796,
+            "result_wait": 9.609656,
+            "upload_cpu": 0.258325,
+            "surface_acquire": 16.351877,
+            "accept_to_present_call_return": 32.806329
+          },
+          "pixel_latency_ms": 96.34684678167105,
+          "residual_ms": 63.54051778167105,
+          "note": "Residual includes pre-accept wait, FIFO/compositor/pixel observation; not GPU duration."
+        },
+        {
+          "index": 1,
+          "op": 3,
+          "offset_ns": 210000000,
+          "expected_arrival_ns": 1735689600200000000,
+          "revisit": false,
+          "stages_ms": {
+            "restore_total": 15.869819,
+            "restore_read": 15.807866,
+            "position": 0.015196,
+            "feature_restore": 0.012619,
+            "submit_from_restore": 0.62417,
+            "worker_queue": 0.017618,
+            "pixel_conversion": 3.175246,
+            "result_wait": 13.00813,
+            "upload_cpu": 0.454616,
+            "surface_acquire": 14.291846,
+            "accept_to_present_call_return": 33.535546
+          },
+          "pixel_latency_ms": 94.12786085158587,
+          "residual_ms": 60.59231485158587,
+          "note": "Residual includes pre-accept wait, FIFO/compositor/pixel observation; not GPU duration."
+        },
+        {
+          "index": 2,
+          "op": 4,
+          "offset_ns": 310000000,
+          "expected_arrival_ns": 1735689600300000000,
+          "revisit": false,
+          "stages_ms": {
+            "restore_total": 14.712469,
+            "restore_read": 14.654669,
+            "position": 0.015869,
+            "feature_restore": 0.012726,
+            "submit_from_restore": 0.534873,
+            "worker_queue": 0.025563,
+            "pixel_conversion": 3.40351,
+            "result_wait": 13.907533,
+            "upload_cpu": 0.46056,
+            "surface_acquire": 16.183345,
+            "accept_to_present_call_return": 34.380815
+          },
+          "pixel_latency_ms": 84.74513422697783,
+          "residual_ms": 50.36431922697783,
+          "note": "Residual includes pre-accept wait, FIFO/compositor/pixel observation; not GPU duration."
+        },
+        {
+          "index": 3,
+          "op": 5,
+          "offset_ns": 410000000,
+          "expected_arrival_ns": 1735689600400000000,
+          "revisit": false,
+          "stages_ms": {
+            "restore_total": 14.944816,
+            "restore_read": 14.88542,
+            "position": 0.013962,
+            "feature_restore": 0.011957,
+            "submit_from_restore": 0.542522,
+            "worker_queue": 0.013071,
+            "pixel_conversion": 3.097119,
+            "result_wait": 14.077308,
+            "upload_cpu": 0.441616,
+            "surface_acquire": 16.199452,
+            "accept_to_present_call_return": 33.482485
+          },
+          "pixel_latency_ms": 84.95790883898735,
+          "residual_ms": 51.47542383898735,
+          "note": "Residual includes pre-accept wait, FIFO/compositor/pixel observation; not GPU duration."
+        },
+        {
+          "index": 4,
+          "op": 6,
+          "offset_ns": 310000000,
+          "expected_arrival_ns": 1735689600300000000,
+          "revisit": false,
+          "stages_ms": {
+            "restore_total": 0.13021,
+            "restore_read": 0.048346,
+            "position": 0.01333,
+            "feature_restore": 0.028249,
+            "submit_from_restore": 0.9336,
+            "worker_queue": 0.035624,
+            "pixel_conversion": 6.203021,
+            "result_wait": 8.717583,
+            "upload_cpu": 0.391859,
+            "surface_acquire": 14.924126,
+            "accept_to_present_call_return": 16.756749
+          },
+          "pixel_latency_ms": 55.79489562660456,
+          "residual_ms": 39.03814662660456,
+          "note": "Residual includes pre-accept wait, FIFO/compositor/pixel observation; not GPU duration."
+        },
+        {
+          "index": 5,
+          "op": 7,
+          "offset_ns": 210000000,
+          "expected_arrival_ns": 1735689600200000000,
+          "revisit": false,
+          "stages_ms": {
+            "restore_total": 0.143264,
+            "restore_read": 0.048809,
+            "position": 0.013211,
+            "feature_restore": 0.028264,
+            "submit_from_restore": 0.936196,
+            "worker_queue": 0.036049,
+            "pixel_conversion": 6.071458,
+            "result_wait": 8.842392,
+            "upload_cpu": 0.397219,
+            "surface_acquire": 14.918107,
+            "accept_to_present_call_return": 16.773495
+          },
+          "pixel_latency_ms": 66.86070561408997,
+          "residual_ms": 50.08721061408997,
+          "note": "Residual includes pre-accept wait, FIFO/compositor/pixel observation; not GPU duration."
+        },
+        {
+          "index": 6,
+          "op": 8,
+          "offset_ns": 110000000,
+          "expected_arrival_ns": 1735689600100000000,
+          "revisit": false,
+          "stages_ms": {
+            "restore_total": 0.130794,
+            "restore_read": 0.048179,
+            "position": 0.01306,
+            "feature_restore": 0.028238,
+            "submit_from_restore": 0.932711,
+            "worker_queue": 0.035926,
+            "pixel_conversion": 6.087439,
+            "result_wait": 8.850616,
+            "upload_cpu": 0.399652,
+            "surface_acquire": 14.940862,
+            "accept_to_present_call_return": 16.800195
+          },
+          "pixel_latency_ms": 66.16537924855947,
+          "residual_ms": 49.36518424855947,
+          "note": "Residual includes pre-accept wait, FIFO/compositor/pixel observation; not GPU duration."
+        },
+        {
+          "index": 8,
+          "op": 10,
+          "offset_ns": 210000000,
+          "expected_arrival_ns": 1735689600200000000,
+          "revisit": true,
+          "stages_ms": {
+            "restore_total": 0.129515,
+            "restore_read": 0.047672,
+            "position": 0.013226,
+            "feature_restore": 0.02787,
+            "submit_from_restore": 0.953294,
+            "worker_queue": 0.036206,
+            "pixel_conversion": 6.152492,
+            "result_wait": 8.818795,
+            "upload_cpu": 0.392945,
+            "surface_acquire": 14.975182,
+            "accept_to_present_call_return": 16.877974
+          },
+          "pixel_latency_ms": 60.27155742049217,
+          "residual_ms": 43.39358342049218,
+          "note": "Residual includes pre-accept wait, FIFO/compositor/pixel observation; not GPU duration."
+        },
+        {
+          "index": 9,
+          "op": 11,
+          "offset_ns": 310000000,
+          "expected_arrival_ns": 1735689600300000000,
+          "revisit": true,
+          "stages_ms": {
+            "restore_total": 0.129741,
+            "restore_read": 0.047724,
+            "position": 0.01321,
+            "feature_restore": 0.027559,
+            "submit_from_restore": 0.976525,
+            "worker_queue": 0.035027,
+            "pixel_conversion": 6.177497,
+            "result_wait": 8.776863,
+            "upload_cpu": 0.395636,
+            "surface_acquire": 14.957915,
+            "accept_to_present_call_return": 16.845435
+          },
+          "pixel_latency_ms": 80.26031777262688,
+          "residual_ms": 63.41488277262688,
+          "note": "Residual includes pre-accept wait, FIFO/compositor/pixel observation; not GPU duration."
+        },
+        {
+          "index": 10,
+          "op": 12,
+          "offset_ns": 410000000,
+          "expected_arrival_ns": 1735689600400000000,
+          "revisit": true,
+          "stages_ms": {
+            "restore_total": 0.129133,
+            "restore_read": 0.047498,
+            "position": 0.012959,
+            "feature_restore": 0.028251,
+            "submit_from_restore": 0.960191,
+            "worker_queue": 0.035237,
+            "pixel_conversion": 6.142706,
+            "result_wait": 8.837953,
+            "upload_cpu": 0.387072,
+            "surface_acquire": 14.982865,
+            "accept_to_present_call_return": 16.847158
+          },
+          "pixel_latency_ms": 69.93943080306053,
+          "residual_ms": 53.09227280306053,
+          "note": "Residual includes pre-accept wait, FIFO/compositor/pixel observation; not GPU duration."
+        },
+        {
+          "index": 11,
+          "op": 13,
+          "offset_ns": 310000000,
+          "expected_arrival_ns": 1735689600300000000,
+          "revisit": true,
+          "stages_ms": {
+            "restore_total": 0.144471,
+            "restore_read": 0.047171,
+            "position": 0.013115,
+            "feature_restore": 0.040858,
+            "submit_from_restore": 0.956742,
+            "worker_queue": 0.041695,
+            "pixel_conversion": 6.081106,
+            "result_wait": 8.873839,
+            "upload_cpu": 0.390723,
+            "surface_acquire": 14.959329,
+            "accept_to_present_call_return": 16.838958
+          },
+          "pixel_latency_ms": 69.0518468618393,
+          "residual_ms": 52.21288886183929,
+          "note": "Residual includes pre-accept wait, FIFO/compositor/pixel observation; not GPU duration."
+        },
+        {
+          "index": 12,
+          "op": 14,
+          "offset_ns": 210000000,
+          "expected_arrival_ns": 1735689600200000000,
+          "revisit": true,
+          "stages_ms": {
+            "restore_total": 0.140284,
+            "restore_read": 0.047273,
+            "position": 0.013048,
+            "feature_restore": 0.036871,
+            "submit_from_restore": 0.848228,
+            "worker_queue": 0.015839,
+            "pixel_conversion": 4.288285,
+            "result_wait": 10.777422,
+            "upload_cpu": 0.356895,
+            "surface_acquire": 15.063846,
+            "accept_to_present_call_return": 16.790584
+          },
+          "pixel_latency_ms": 68.20748653262854,
+          "residual_ms": 51.41690253262854,
+          "note": "Residual includes pre-accept wait, FIFO/compositor/pixel observation; not GPU duration."
+        },
+        {
+          "index": 13,
+          "op": 15,
+          "offset_ns": 110000000,
+          "expected_arrival_ns": 1735689600100000000,
+          "revisit": true,
+          "stages_ms": {
+            "restore_total": 0.128149,
+            "restore_read": 0.046446,
+            "position": 0.013143,
+            "feature_restore": 0.027821,
+            "submit_from_restore": 0.971662,
+            "worker_queue": 0.031211,
+            "pixel_conversion": 6.323071,
+            "result_wait": 8.638551,
+            "upload_cpu": 0.35051,
+            "surface_acquire": 14.95808,
+            "accept_to_present_call_return": 16.816158
+          },
+          "pixel_latency_ms": 65.28464611619711,
+          "residual_ms": 48.46848811619711,
+          "note": "Residual includes pre-accept wait, FIFO/compositor/pixel observation; not GPU duration."
+        }
+      ],
+      "revisit_stages_ms": {
+        "restore_total": {
+          "median": 0.129628,
+          "min": 0.128149,
+          "max": 0.144471,
+          "count": 6
+        },
+        "restore_read": {
+          "median": 0.0473855,
+          "min": 0.046446,
+          "max": 0.047724,
+          "count": 6
+        },
+        "position": {
+          "median": 0.013129,
+          "min": 0.012959,
+          "max": 0.013226,
+          "count": 6
+        },
+        "feature_restore": {
+          "median": 0.0280605,
+          "min": 0.027559,
+          "max": 0.040858,
+          "count": 6
+        },
+        "submit_from_restore": {
+          "median": 0.9584665,
+          "min": 0.848228,
+          "max": 0.976525,
+          "count": 6
+        },
+        "worker_queue": {
+          "median": 0.035132,
+          "min": 0.015839,
+          "max": 0.041695,
+          "count": 6
+        },
+        "pixel_conversion": {
+          "median": 6.147599,
+          "min": 4.288285,
+          "max": 6.323071,
+          "count": 6
+        },
+        "result_wait": {
+          "median": 8.828374,
+          "min": 8.638551,
+          "max": 10.777422,
+          "count": 6
+        },
+        "upload_cpu": {
+          "median": 0.3888975,
+          "min": 0.35051,
+          "max": 0.395636,
+          "count": 6
+        },
+        "surface_acquire": {
+          "median": 14.9672555,
+          "min": 14.957915,
+          "max": 15.063846,
+          "count": 6
+        },
+        "accept_to_present_call_return": {
+          "median": 16.8421965,
+          "min": 16.790584,
+          "max": 16.877974,
+          "count": 6
+        }
+      },
+      "revisit_residual_ms": {
+        "median": 51.814895697233915,
+        "min": 43.39358342049218,
+        "max": 63.41488277262688,
+        "count": 6
+      }
+    }
+  }
+}

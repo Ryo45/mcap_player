@@ -108,11 +108,17 @@ impl Graphics {
         self.surface.configure(&self.device, &self.config);
     }
 
+    /// Wait for display pacing before collecting camera work for this frame.
+    pub(crate) fn acquire_frame(&self) -> Result<wgpu::SurfaceTexture, wgpu::SurfaceError> {
+        self.surface.get_current_texture()
+    }
+
     pub(super) fn paint_egui(
         &mut self,
         window: &Window,
+        frame: wgpu::SurfaceTexture,
         output: egui::FullOutput,
-    ) -> Result<(), wgpu::SurfaceError> {
+    ) {
         let egui::FullOutput {
             platform_output,
             textures_delta,
@@ -131,7 +137,6 @@ impl Graphics {
             size_in_pixels: [self.config.width, self.config.height],
             pixels_per_point: window.scale_factor() as f32,
         };
-        let frame = self.surface.get_current_texture()?;
         let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -178,6 +183,5 @@ impl Graphics {
         for id in &textures_delta.free {
             self.egui_renderer.free_texture(id);
         }
-        Ok(())
     }
 }

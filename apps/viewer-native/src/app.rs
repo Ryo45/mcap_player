@@ -117,8 +117,18 @@ impl App {
         if self.graphics.is_none() {
             return Ok(());
         }
-        self.update_camera_presentation();
-        let output = self.render_frame(window, elapsed)?;
+        let graphics = self.graphics.as_mut().expect("redraw requires graphics");
+        let camera_queue_error = graphics
+            .queue_camera_frames(self.workspace.cameras().state())
+            .err()
+            .map(|error| error.to_string());
+        // Decoding can finish while FIFO waits for the display. Collect only after
+        // that wait, so a completed image does not miss this frame's UI build.
+        let acquire_started = Instant::now();
+        let frame = graphics.acquire_frame()?;
+        let surface_wait = acquire_started.elapsed();
+        self.update_camera_presentation(camera_queue_error);
+        let output = self.render_frame(window, elapsed, frame, surface_wait);
         self.apply_frame_actions(output.actions);
         Ok(())
     }
@@ -133,9 +143,9 @@ impl App {
         session.poll_queries();
     }
 
-    fn update_camera_presentation(&mut self) {
+    fn update_camera_presentation(&mut self, camera_queue_error: Option<String>) {
         let graphics = self.graphics.as_mut().expect("redraw requires graphics");
-        let mut presentation_errors = Vec::new();
+        let mut presentation_errors = camera_queue_error.into_iter().collect::<Vec<_>>();
         if self.workspace.interaction.preview_time.is_some()
             && let Some(snapshot) = self.preview.snapshot()
             && let Err(error) = graphics.upload_preview(snapshot.camera_frames())
@@ -143,8 +153,7 @@ impl App {
             presentation_errors.push(error.to_string());
         }
         let mut camera_updates = Vec::new();
-        let upload_result =
-            graphics.upload_latest(self.workspace.cameras().state(), &mut camera_updates);
+        let upload_result = graphics.upload_ready_camera_frames(&mut camera_updates);
         if let Err(error) = upload_result {
             presentation_errors.push(error.to_string());
         }
@@ -169,7 +178,9 @@ impl App {
         &mut self,
         window: &Window,
         elapsed: Duration,
-    ) -> Result<RenderOutput, wgpu::SurfaceError> {
+        frame: wgpu::SurfaceTexture,
+        surface_wait: Duration,
+    ) -> RenderOutput {
         let session = self.session.as_ref().expect("redraw requires a session");
         let graphics = self.graphics.as_mut().expect("redraw requires graphics");
         let playback = session.playback_view();
@@ -215,6 +226,7 @@ impl App {
             let render_started = Instant::now();
             let result = graphics.render(
                 window,
+                frame,
                 RenderInput {
                     presentation: &presentation.viewer,
                     camera_overlays: presentation.camera_overlays,
@@ -240,7 +252,8 @@ impl App {
             );
             (result, render_started.elapsed())
         };
-        self.presentation_state.record_render(render_elapsed);
+        self.presentation_state
+            .record_render(render_elapsed.saturating_add(surface_wait));
         self.presentation_state.advance_metrics(elapsed);
 
         render_result

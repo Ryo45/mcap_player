@@ -1,0 +1,44 @@
+{
+  "base_commit": "ad3ccf3",
+  "files": [
+    {
+      "path": "target/gpu-native/viewer-native-seek-latency",
+      "sha256": "fde12a885777ec58e49156c4d8da034518f800c57817ee6f090ae7e381e541d4",
+      "bytes": 23182744
+    },
+    {
+      "path": "target/gpu-native/viewer-native-seek-order",
+      "sha256": "925728c4a125ecdb6f2c26468002b05ee28ddd0d791fa3ab1f7b6765af9c1a34",
+      "bytes": 23182928
+    },
+    {
+      "path": "target/gpu-native/viewer-native-seek-order-final",
+      "sha256": "5650b70592e50cb24fc0bf9b3c2cb78f823a87472747c9fbb891901060d6bc83",
+      "bytes": 23182384
+    },
+    {
+      "path": "tools/performance-probe/measure_desktop_workload.py",
+      "sha256": "4c418bce5896fec7fc0e464c2fb03938608761104be05e2d2215e584015e658e",
+      "bytes": 38863
+    },
+    {
+      "path": "tools/performance-probe/build_seek_timing_probe.py",
+      "sha256": "aafd49ced18462db8e85051aab88b804aecefd0b649f3f12fdfb693521948f33",
+      "bytes": 8844
+    },
+    {
+      "path": "tools/performance-probe/summarize_seek_timing.py",
+      "sha256": "dc19a1a0d5964eef51f360e21eb6ec8faba5c5bab3b67a9eb6fcf38916a12b32",
+      "bytes": 5403
+    }
+  ],
+  "adopted_fifo_latency": 2,
+  "worker_count": 2,
+  "new_cache": false,
+  "runs": 56,
+  "failed_runs": 0,
+  "final_primary_seek_runs": 9,
+  "timed_playback_runs": 18,
+  "post_measurement_tool_note": "Builder CLI help clarified and Graphics root added to product provenance after measurement; exact measured builder is archived in scripts/build_final_probe_measured.py.gz.",
+  "complete_product_patch_sha256": "d2669ab2fd39c9fb53b42f7fc3124ed03aa93e133b250629750462f251cf971a"
+}
