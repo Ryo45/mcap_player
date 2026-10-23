@@ -31,6 +31,8 @@ Nativeの固定256 MiBゲートを見直し、Chunk先読みとSeek内の展開�
 
 [FHD Raw 30Hzの入力追従とDesktop比較](2026-10-22-camera-30hz/README.md)では、フォーカスの固定10Hz制限を外し、1台／4台で入力に追従できるか確認した。背景5Hzの製品設定と、全台30Hzの比較条件を分けて記録する。
 
+[実収録rosbagの確認とNative Seekの段階別計測](2026-10-23-recorded-seek/README.md)では、Native / Webの実画像・正確なpredecessorを確認した後、Lichtblickとの差に残る画像変換・UI結果回収・surface取得待ちを分けて調べた。製品の処理順変更はまだ行っていない。
+
 ## 再現
 
 Linux、Rust toolchain、Python 3.11以上（stdlibのみ）。計測中は他のビルドや

@@ -1,0 +1,195 @@
+{
+  "product_behavior_commit": "dd31ca0",
+  "base_head": "9db64d5",
+  "files": [
+    {
+      "path": "target/gpu-native/viewer-native-input-rate",
+      "sha256": "5ad330cbf8e733de62b22b273a41bbf03e0c3abe400f2abfb208918c1e426eec",
+      "bytes": 23208888
+    },
+    {
+      "path": "target/gpu-native/viewer-native-seek-timing",
+      "sha256": "e6a53a6dea460270de3c3492d6b8216bd08fa42c5f7a82d40f9a4f354b420cda",
+      "bytes": 23190976
+    },
+    {
+      "path": "tools/performance-probe/measure_desktop_workload.py",
+      "sha256": "4c418bce5896fec7fc0e464c2fb03938608761104be05e2d2215e584015e658e",
+      "bytes": 38863
+    },
+    {
+      "path": "docs/performance/2026-10-23-recorded-seek/native-seek-timing.patch",
+      "sha256": "62bf249ddd145572f72b3f04be54005b0318f72ecc4be1251ac0cfe858f3e488",
+      "bytes": 17364
+    },
+    {
+      "path": "apps/viewer-web/dist/viewer-web-db627fc0397cd98b_bg.wasm",
+      "sha256": "b6d2ababb5d6683f81d93bac96cd7679a69acadebf7f18e6ab94d359103ca9f4",
+      "bytes": 1826115
+    },
+    {
+      "path": "apps/viewer-web/dist/viewer-web-db627fc0397cd98b.js",
+      "sha256": "3e629892c2237d5f7fe2d2c0787e14b62dd0d8198f6e3467002c7078189b7cb9",
+      "bytes": 67826
+    },
+    {
+      "path": "apps/viewer-web/dist/index.html",
+      "sha256": "1950dc46a541637d382add65233e208b88a0b4bb65106f3f94b64718240fd490",
+      "bytes": 5889
+    }
+  ],
+  "recorded_mcap_chunks": [
+    {
+      "start_ns": 1632554202268474506,
+      "end_ns": 1632554202802979766,
+      "expanded_bytes": 871246,
+      "compressed_bytes": 871246,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554202812866481,
+      "end_ns": 1632554203302472744,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554203312329511,
+      "end_ns": 1632554203802753377,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554203812456237,
+      "end_ns": 1632554204302812339,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554204313902960,
+      "end_ns": 1632554204802693696,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554204812388275,
+      "end_ns": 1632554205302444892,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554205312972805,
+      "end_ns": 1632554205802280201,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554205812723582,
+      "end_ns": 1632554206302766861,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554206312376544,
+      "end_ns": 1632554206802326540,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554206812496588,
+      "end_ns": 1632554207302389809,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554207313702773,
+      "end_ns": 1632554208010634234,
+      "expanded_bytes": 865673,
+      "compressed_bytes": 865673,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554208011919077,
+      "end_ns": 1632554208302292591,
+      "expanded_bytes": 865587,
+      "compressed_bytes": 865587,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554208313866909,
+      "end_ns": 1632554208801707207,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554208813378191,
+      "end_ns": 1632554209302701090,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554209312289367,
+      "end_ns": 1632554209801879972,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554209812193873,
+      "end_ns": 1632554210302584006,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554210313369835,
+      "end_ns": 1632554210802580539,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554210812221941,
+      "end_ns": 1632554211301991652,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554211488524426,
+      "end_ns": 1632554211803515835,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    },
+    {
+      "start_ns": 1632554211812213175,
+      "end_ns": 1632554212302407100,
+      "expanded_bytes": 865630,
+      "compressed_bytes": 865630,
+      "codec": ""
+    }
+  ],
+  "recorded_mcap_bytes": 17347951,
+  "conversion": {
+    "writer": "ROS 2 Jazzy rosbag2_py.SequentialWriter mcap storage plugin",
+    "verified_messages": 600,
+    "same_topics_log_times_and_cdr": true
+  },
+  "main_matrix": {
+    "successful_runs": 9,
+    "failures": 0,
+    "revisit_operations_per_run": 6,
+    "excluded_same_target_operations_per_run": 1
+  }
+}

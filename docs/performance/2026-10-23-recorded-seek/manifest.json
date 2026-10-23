@@ -1,0 +1,343 @@
+{
+  "product_commit": "9db64d5",
+  "product_behavior_commit": "dd31ca0",
+  "artifacts": [
+    {
+      "file": "runs/synthetic/0-control/app.log.gz",
+      "source": "/tmp/mcap-seek-timing/0-control/app.log",
+      "source_sha256": "0a63c2b3398fba911d9246e647ee6dbe80d58564deed09925d7b85ad2bde393e",
+      "bytes": 5764
+    },
+    {
+      "file": "runs/synthetic/0-control/result.json.gz",
+      "source": "/tmp/mcap-seek-timing/0-control/result.json",
+      "source_sha256": "99e43cfb5e1521ce0621594e385162a3f7c27f2b9bdeabe78079aa648465938a",
+      "bytes": 23181
+    },
+    {
+      "file": "runs/synthetic/0-control/running.json.gz",
+      "source": "/tmp/mcap-seek-timing/0-control/running.json",
+      "source_sha256": "2c15daa73b815d29485b7d1eea2be686ae60cfdf335e570fd21b8624caa789e1",
+      "bytes": 5112
+    },
+    {
+      "file": "runs/synthetic/0-lichtblick/app.log.gz",
+      "source": "/tmp/mcap-seek-timing/0-lichtblick/app.log",
+      "source_sha256": "038e59a9dd94319fa6e2da52c5d7d6b248b82754c6c3e05eaf3b4a119467321d",
+      "bytes": 501
+    },
+    {
+      "file": "runs/synthetic/0-lichtblick/result.json.gz",
+      "source": "/tmp/mcap-seek-timing/0-lichtblick/result.json",
+      "source_sha256": "5a55263bc8ae27f68abc65852cfd14dce7733b2f354f982c15e7986bfe3955ec",
+      "bytes": 46918
+    },
+    {
+      "file": "runs/synthetic/0-lichtblick/running.json.gz",
+      "source": "/tmp/mcap-seek-timing/0-lichtblick/running.json",
+      "source_sha256": "83c050f0eba194eb7495d5d08f37d093af5e2ab3a1ec988554cdd8f6b1253778",
+      "bytes": 5062
+    },
+    {
+      "file": "runs/synthetic/0-trace/app.log.gz",
+      "source": "/tmp/mcap-seek-timing/0-trace/app.log",
+      "source_sha256": "9c3296b6883dc6b05fac43cbc1354ef61cd70cd0dcd85fb06532bb5a66a64909",
+      "bytes": 298764
+    },
+    {
+      "file": "runs/synthetic/0-trace/result.json.gz",
+      "source": "/tmp/mcap-seek-timing/0-trace/result.json",
+      "source_sha256": "6316ffabf4c77e834ba41052d12a6f85475ea5ebfc1c8c8566b31d24b382b3ba",
+      "bytes": 23174
+    },
+    {
+      "file": "runs/synthetic/0-trace/running.json.gz",
+      "source": "/tmp/mcap-seek-timing/0-trace/running.json",
+      "source_sha256": "18fcc2fdb290f0206b827f094d3f1eb9cb48464d7f4ac1e5a19c15ddf9577fec",
+      "bytes": 5112
+    },
+    {
+      "file": "runs/synthetic/1-control/app.log.gz",
+      "source": "/tmp/mcap-seek-timing/1-control/app.log",
+      "source_sha256": "457bc9cf7790b5cdb9ae8d0893137cf1b8513d31422ae0cca6c4c9eded2ae3fd",
+      "bytes": 5764
+    },
+    {
+      "file": "runs/synthetic/1-control/result.json.gz",
+      "source": "/tmp/mcap-seek-timing/1-control/result.json",
+      "source_sha256": "30e2315cf42c897e33f6a9fbb557ddabfd796d26df42aaff10f5ce3de83643b0",
+      "bytes": 23191
+    },
+    {
+      "file": "runs/synthetic/1-control/running.json.gz",
+      "source": "/tmp/mcap-seek-timing/1-control/running.json",
+      "source_sha256": "381f9fed99751aa09aab88e603352aad5d6c066800869015d149a75a0d20c1d7",
+      "bytes": 5112
+    },
+    {
+      "file": "runs/synthetic/1-lichtblick/app.log.gz",
+      "source": "/tmp/mcap-seek-timing/1-lichtblick/app.log",
+      "source_sha256": "b400cd04e6588888694a36472d3c1df5add224ebebd61803d1d80d9203a78dbe",
+      "bytes": 501
+    },
+    {
+      "file": "runs/synthetic/1-lichtblick/result.json.gz",
+      "source": "/tmp/mcap-seek-timing/1-lichtblick/result.json",
+      "source_sha256": "fcc916658764888d4355cf6461b20e21aa0ae45c1896755d53a49f805432ccda",
+      "bytes": 46784
+    },
+    {
+      "file": "runs/synthetic/1-lichtblick/running.json.gz",
+      "source": "/tmp/mcap-seek-timing/1-lichtblick/running.json",
+      "source_sha256": "d4c67f9af83737aa96b150ae1014972023c463279533233ef9af2b94b9e36d08",
+      "bytes": 5062
+    },
+    {
+      "file": "runs/synthetic/1-trace/app.log.gz",
+      "source": "/tmp/mcap-seek-timing/1-trace/app.log",
+      "source_sha256": "7d751ad241fdcd3347d3df7de1131c80209b2c1c458a260db9c18fa4f2ee5843",
+      "bytes": 300551
+    },
+    {
+      "file": "runs/synthetic/1-trace/result.json.gz",
+      "source": "/tmp/mcap-seek-timing/1-trace/result.json",
+      "source_sha256": "31eb57d7b8a5cc102e06e532d1cf0f7c6f0b6f9668f2aa5c71a27cc3fb1d57d2",
+      "bytes": 23183
+    },
+    {
+      "file": "runs/synthetic/1-trace/running.json.gz",
+      "source": "/tmp/mcap-seek-timing/1-trace/running.json",
+      "source_sha256": "c2310c04e16070194217f27a038fa5143290cb3a83ef5437ee01c1cbf128ff39",
+      "bytes": 5112
+    },
+    {
+      "file": "runs/synthetic/2-control/app.log.gz",
+      "source": "/tmp/mcap-seek-timing/2-control/app.log",
+      "source_sha256": "f37f61b4b4eab0899d9a2f53e278d07be976a6a7ccb41a43712fff41a3db96e4",
+      "bytes": 5764
+    },
+    {
+      "file": "runs/synthetic/2-control/result.json.gz",
+      "source": "/tmp/mcap-seek-timing/2-control/result.json",
+      "source_sha256": "8d2e80ad4f2f8590564b1d81c69677a524a4e317da19ca35cf5f1ddae3b842ba",
+      "bytes": 23191
+    },
+    {
+      "file": "runs/synthetic/2-control/running.json.gz",
+      "source": "/tmp/mcap-seek-timing/2-control/running.json",
+      "source_sha256": "046164e9ded5ded4ab439dd9b3c496ac1a42ac7c08b177d55122b13643df119e",
+      "bytes": 5112
+    },
+    {
+      "file": "runs/synthetic/2-lichtblick/app.log.gz",
+      "source": "/tmp/mcap-seek-timing/2-lichtblick/app.log",
+      "source_sha256": "e70700460699ae77473da187e44bfbaf09c56e47167abf1e81cb7e3ac64a8c49",
+      "bytes": 501
+    },
+    {
+      "file": "runs/synthetic/2-lichtblick/result.json.gz",
+      "source": "/tmp/mcap-seek-timing/2-lichtblick/result.json",
+      "source_sha256": "73ae71aca906ada6de5826d0d4bee696cf1a9867c6429ac6daf77ce693bfe313",
+      "bytes": 46773
+    },
+    {
+      "file": "runs/synthetic/2-lichtblick/running.json.gz",
+      "source": "/tmp/mcap-seek-timing/2-lichtblick/running.json",
+      "source_sha256": "83822d5876c029581cb5057cf5372c0a394fd20ddc70b2b5c7d758ab882e329e",
+      "bytes": 5062
+    },
+    {
+      "file": "runs/synthetic/2-trace/app.log.gz",
+      "source": "/tmp/mcap-seek-timing/2-trace/app.log",
+      "source_sha256": "8660226e7fc0bf385326e07e0689e9708d84a032bd037d60130a1e5c06ac575f",
+      "bytes": 301779
+    },
+    {
+      "file": "runs/synthetic/2-trace/result.json.gz",
+      "source": "/tmp/mcap-seek-timing/2-trace/result.json",
+      "source_sha256": "b702aa33751609b82ece6f45c6b86b166a90064cf3f68dc6cf33d61f33e9423c",
+      "bytes": 23176
+    },
+    {
+      "file": "runs/synthetic/2-trace/running.json.gz",
+      "source": "/tmp/mcap-seek-timing/2-trace/running.json",
+      "source_sha256": "ab981ee743eadb0bfc84a7b4e521f3ec5e6491d1ae3da7278df583eb57934ad1",
+      "bytes": 5112
+    },
+    {
+      "file": "runs/synthetic/calibrate-native/app.log.gz",
+      "source": "/tmp/mcap-seek-timing/calibrate-native/app.log",
+      "source_sha256": "54c22103dc2a0d0c00ec74eb0df6258dc35ce2aa20179de5b7b57c18d1ec6854",
+      "bytes": 12152
+    },
+    {
+      "file": "runs/synthetic/calibrate-native/references.json.gz",
+      "source": "/tmp/mcap-seek-timing/calibrate-native/references.json",
+      "source_sha256": "f6d8348cefd4fa9321d7589d7dc57273c68f49eb6f60cbf94a40dd177d08ea4b",
+      "bytes": 63429
+    },
+    {
+      "file": "runs/synthetic/calibrate-native/result.json.gz",
+      "source": "/tmp/mcap-seek-timing/calibrate-native/result.json",
+      "source_sha256": "6d237989fc86aa16e4da58d4ea0f0e412b19ee55d4d058915ac8baa47fda379a",
+      "bytes": 5718
+    },
+    {
+      "file": "runs/synthetic/calibrate-native/running.json.gz",
+      "source": "/tmp/mcap-seek-timing/calibrate-native/running.json",
+      "source_sha256": "32370c1dde7d95174373496169e9fb8f5f6d716d490b5b513cbd265ab7088521",
+      "bytes": 5111
+    },
+    {
+      "file": "runs/recorded/native-0/app.log.gz",
+      "source": "/tmp/mcap-real-recording/native-0/app.log",
+      "source_sha256": "3a5e8597b505a8e8452628e9f253a082806ad25f0e22826b157db98d1309ca97",
+      "bytes": 41385
+    },
+    {
+      "file": "runs/recorded/native-0/result.json.gz",
+      "source": "/tmp/mcap-real-recording/native-0/result.json",
+      "source_sha256": "7c9dd8f4273b79f9bfac79e0e95b1a4d4bb7656d0ff169bba1fcb2cda8de19c8",
+      "bytes": 3497
+    },
+    {
+      "file": "runs/recorded/native-trace/app.log.gz",
+      "source": "/tmp/mcap-real-recording/native-trace/app.log",
+      "source_sha256": "dbb343368d42b45c4859c61f775e1b36c26b8859fe2ca0db4ff4e1e0118b34ce",
+      "bytes": 321017
+    },
+    {
+      "file": "runs/recorded/native-trace/result.json.gz",
+      "source": "/tmp/mcap-real-recording/native-trace/result.json",
+      "source_sha256": "efaa7be53d0ed9ae8276f4daf493cb04332f3c729a766cce5d754c3daf0723ce",
+      "bytes": 3499
+    },
+    {
+      "file": "runs/recorded/web-0/result.json.gz",
+      "source": "/tmp/mcap-real-recording/web-0/result.json",
+      "source_sha256": "5c0728956ecb47e39ef6d4fb750efb601f4244b49e16f16efb59fed132d076c2",
+      "bytes": 10315
+    },
+    {
+      "file": "runs/recorded/web-1/result.json.gz",
+      "source": "/tmp/mcap-real-recording/web-1/result.json",
+      "source_sha256": "e9e7d939e58d25fcec5e71989a23655c6e716e01e9f0aa43fe5a4142e25eab40",
+      "bytes": 14289
+    },
+    {
+      "file": "runs/recorded/web-2/result.json.gz",
+      "source": "/tmp/mcap-real-recording/web-2/result.json",
+      "source_sha256": "78dae570b1adccbb796a19f217c6bfaa1531771111d74157be5f47c514f6b7f2",
+      "bytes": 12162
+    },
+    {
+      "file": "runs/recorded/web-hardware/result.json.gz",
+      "source": "/tmp/mcap-real-recording/web-hardware/result.json",
+      "source_sha256": "b11d73ba419953f97640090897666e542efa254c2a62ac94bcbe6c2d53fe0db7",
+      "bytes": 312
+    },
+    {
+      "file": "runs/recorded/web-hardware-1/result.json.gz",
+      "source": "/tmp/mcap-real-recording/web-hardware-1/result.json",
+      "source_sha256": "c496be9c101e1b0dc6e77e5911e68fe18d31a3f736d0e9f37505d39007eb5aac",
+      "bytes": 304
+    },
+    {
+      "file": "runs/recorded/web-hardware-2/result.json.gz",
+      "source": "/tmp/mcap-real-recording/web-hardware-2/result.json",
+      "source_sha256": "2a1b3f0f53219aebc61128c472ab4d93def8e973f9c4ab8d0f1eef4adcec9182",
+      "bytes": 10956
+    },
+    {
+      "file": "recorded/source.json",
+      "source": "/home/ryo/development/mcap_player/target/real-recording-check/source.json",
+      "source_sha256": "1c2dcda40acfd824600a9f24a460f887d75969cf0f002741e134e84f60d2c319",
+      "bytes": 23727
+    },
+    {
+      "file": "scripts/convert.py",
+      "source": "/home/ryo/development/mcap_player/target/real-recording-check/convert.py",
+      "source_sha256": "366ea877a2d0d9baed9870d1d1207853b05553f45fe05d435ef12dd20a4f55ac",
+      "bytes": 1113
+    },
+    {
+      "file": "scripts/prepare_real_rosbag.py",
+      "source": "/tmp/prepare_real_rosbag.py",
+      "source_sha256": "cbd1c247e161340615c918eb7976f6c65a9e6fb6d3fa043fe9ecd0b79fdb0902",
+      "bytes": 1674
+    },
+    {
+      "file": "scripts/check_recorded_web.py",
+      "source": "/tmp/check_recorded_web.py",
+      "source_sha256": "6e7ed8744c9acc0d9e343facf7e44a2d7689ca3a8a5f8df770dcd7ce41ae1b63",
+      "bytes": 4949
+    },
+    {
+      "file": "scripts/recorded_hardware_browser.py",
+      "source": "/tmp/recorded_hardware_browser.py",
+      "source_sha256": "4e1d8048deba3fad63c24cf43887fd91ec420ee2ebe1c3f72ae1eeca843d1e9e",
+      "bytes": 2721,
+      "note": "Only trailing blank lines normalized after measurement."
+    },
+    {
+      "file": "scripts/run_seek_timing_matrix.py",
+      "source": "/tmp/run_seek_timing_matrix.py",
+      "source_sha256": "1b971bc097fa400c9d22cf7967bcbd57bd4db02993f98ff648ffc631508d7bb9",
+      "bytes": 1635
+    },
+    {
+      "file": "build-seek-timing.log.gz",
+      "source": "/tmp/build-seek-timing.log",
+      "source_sha256": "0380359c00fa6895b2b648a9c9a1eb5c06b6cd8e54053c72895a6f2dd8cc762d",
+      "bytes": 806
+    },
+    {
+      "file": "recorded-hardware-chrome.log.gz",
+      "source": "/tmp/recorded-hardware-chrome.log",
+      "source_sha256": "d1d092bfd60db182369420a1f9f84404446cc760daf23a0a989d117da6401800",
+      "bytes": 249
+    },
+    {
+      "file": "seek-timing-matrix.log.gz",
+      "source": "/tmp/seek-timing-matrix.log",
+      "source_sha256": "77b5fa9d404d28e51fc61dbf05e7d5369933fa069eade6f8494d3bd14c29d8f0",
+      "bytes": 3790
+    },
+    {
+      "file": "screenshots/recorded-native.png",
+      "source": "/tmp/mcap-real-recording/native-0/paused.png",
+      "source_sha256": "79d734ea993a990bb3a2d95fa8918cda6ffe24c1e9493616e002e1581e48e4ae",
+      "bytes": 747813
+    },
+    {
+      "file": "screenshots/recorded-web.png",
+      "source": "/tmp/mcap-real-recording/web-hardware-2/paused.png",
+      "source_sha256": "3143489f4c1ea515c75162f10a3967b7a3dcf589ae884e97bb37d949adb7710b",
+      "bytes": 299735
+    },
+    {
+      "file": "screenshots/headless-canvas-failure.png",
+      "source": "/tmp/mcap-real-recording/web-1/failed.png",
+      "source_sha256": "a3bbceec7eb5173c1660e03f38d4484c2a9fa463f6324e9c251503aabc9af9d5",
+      "bytes": 110528
+    },
+    {
+      "file": "screenshots/seek-native.png",
+      "source": "/tmp/mcap-seek-timing/2-trace/seeked.png",
+      "source_sha256": "fd3f9a5908c5b9c31fde448863a2166913a2b128405021af85a64868aec5b53a",
+      "bytes": 3248607
+    },
+    {
+      "file": "screenshots/seek-lichtblick.png",
+      "source": "/tmp/mcap-seek-timing/2-lichtblick/seeked.png",
+      "source_sha256": "b9662e89ef02128b61cd2233062b0d30a570c00de4741827e6b94cf908cd8479",
+      "bytes": 2875679
+    },
+    {
+      "file": "scripts/check_recorded_camera_measured.py.gz",
+      "source": "/home/ryo/development/mcap_player/tools/performance-probe/check_recorded_camera.py",
+      "source_sha256": "98e6a5529ae77be85bf5bb000feecdbde26074ec83264065b9eef151c96700f1",
+      "bytes": 8474
+    }
+  ]
+}

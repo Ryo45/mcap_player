@@ -1,6 +1,6 @@
 # Native: 再訪Seekの画面反映に残るlatency
 
-状態: 調査候補。2026-10-22の[往復Seek計測](../../performance/2026-10-22-seek-revisit/README.md)で確認。
+状態: 段階別計測済み・改善は未実装。2026-10-22の[往復Seek計測](../../performance/2026-10-22-seek-revisit/README.md)で確認。
 
 ## 課題
 
@@ -23,3 +23,17 @@ Zstd 8 MiB設定・FHD Raw 1カメラの短距離往復では、Chunk再利用�
 支配的な段階が判明してから、その段階だけを改善する。例えば余分なframe待ちなら結果通知・反映順を検討し、変換なら同じ表示品質・領域で処理を比較する。worker増設やdecoded画像cacheの追加を先に決めない。pause中のSeekにも正しく応答し、古いgenerationの画像を表示しないことを回帰検証する。
 
 連続ドラッグではなく、各Seek完了を待つ実験である。重なるSeek／cancelの評価は別の操作列を用意する。
+
+## 2026-10-23の段階別計測
+
+[実収録確認とSeek調査](../../performance/2026-10-23-recorded-seek/README.md)を実施した。
+合成FHD Raw・小Chunkの再訪で、各3processの中央値はNativeトレースoff約85.1ms、on約83.8ms、Lichtblick約60.8ms。
+同じtargetが連続する1操作は画面が既に一致するため除外した。
+
+トレース有効時の再訪復元は約0.13ms、Raw変換約6.28ms、worker完了後の回収待ち約9.12ms、新画像frameのsurface取得待ち約16.02ms。
+操作受理からpresent呼び出し終了は約33.12ms。外部画素確認までの残差約49〜52msは、受理前待ち・FIFO/compositor・観測をまだ分離できていない。
+ログ負荷を含む短いCPU区間、present API完了と実画面表示の違いに注意する。
+
+実収録の180×320 rgb8でも、変換約0.15〜0.52msに対し結果回収待ち約15〜16msがあった。
+次はsurface取得を待った後に最新結果を回収できる処理順と、FIFO frame latency=1の測定対照を検討する。
+表示周期以上の裏描画や先回りしたdecoded cache・worker増設は行わない。
