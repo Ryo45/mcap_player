@@ -16,6 +16,7 @@ def sha(data):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--title', default='Raw storage比較の集計')
     parser.add_argument('--input', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
@@ -66,7 +67,7 @@ def main():
         summary.append(row)
     (args.output / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     (args.output / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
-    lines = ['# Raw storage比較の集計', '', '計画は各条件3反復。実際の成功/試行数は表を参照。数値は成功した反復の中央値で、3/3未満は完全な比較として扱わない。', '',
+    lines = ['# ' + args.title, '', '計画は各条件3反復。実際の成功/試行数は表を参照。数値は成功した反復の中央値で、3/3未満は完全な比較として扱わない。', '',
              '| case | app | 成功/試行 | focus Hz | 最低 Hz | timeline frame/s | wall位相P95 ms | CPU % | PSS MiB | 起動〜ready ms |',
              '|---|---|---:|---:|---:|---:|---:|---:|---:|---:|']
     for row in summary:

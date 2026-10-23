@@ -1,0 +1,40 @@
+{
+  "product_commit": "dd31ca0",
+  "binaries": {
+    "viewer-native-input-rate": {
+      "sha256": "5ad330cbf8e733de62b22b273a41bbf03e0c3abe400f2abfb208918c1e426eec",
+      "bytes": 23208888
+    },
+    "performance-probe-input-rate": {
+      "sha256": "115bc291061ce294af345b6df862b3fbbf58da3a34ee7bee8c6a8037d0fe923a",
+      "bytes": 4931272
+    }
+  },
+  "measurement_patch_sha256": "14889265d1ddf466e918d15d3021b1ffdbb798e826b316a62dbf6ad0bc173baf",
+  "checks": [
+    {
+      "file": "input-cadence-workspace.log.gz",
+      "original_sha256": "111f6fc761cc88f756a646f5bfedaac31e7fe39233ed114e90a54ef3fe90b2c5"
+    },
+    {
+      "file": "input-cadence-web-checks.log.gz",
+      "original_sha256": "35af8dd606309a1eae213a37d69cad93d150b64080e24ffebf72ad75fb74caf5"
+    },
+    {
+      "file": "input-rate-final-tests.log.gz",
+      "original_sha256": "165f426f7496cf516746c507ef808b60a9c35be05f588e022fbc898672d8b61b"
+    },
+    {
+      "file": "build-input-rate.log.gz",
+      "original_sha256": "a59ea64bd426f12740c360c183b4b383e7a9277f8a1ed9f5512a8cc19218e3de"
+    }
+  ],
+  "default_background_hz": 5,
+  "full_rate_experiment_background_hz": 30,
+  "pss_experiment_guard_mib": 6144,
+  "measurement_harness": {
+    "file": "measurement-harness.py.gz",
+    "original_sha256": "e5e03625a4260055591877cc73897792c4f5be7352f321d9091ba7fd17be261f",
+    "current_tool_note": "After measurements: reject undersampled configurations and overlong visual identity periods; restore independent 10Hz Inspector progress units."
+  }
+}
