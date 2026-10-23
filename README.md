@@ -46,6 +46,8 @@ topicを調べても、CameraやSceneの再生対象は変わりません。大�
 Native連続読み込みとindexed queryではI/O削減の効き方が異なるため、分けて評価します。
 [Lichtblick Desktopと表示内容を合わせた比較・スクリーンショット](docs/performance/2026-10-20-desktop-default-layout/README.md)も掲載しています。
 [カメラ台数・Raw展開・Scan／RGB PointCloud2の表示パターン別比較](docs/performance/2026-10-20-desktop-workloads/README.md)では、更新頻度とメモリ・CPUを条件ごとに調べています。
+[Webの巨大Chunk改善と20GiB単一Chunkの境界試験](docs/performance/2026-10-24-web-chunk-streaming/README.md)も記録しています。
+[継続性能計測](tools/performance-probe/README.md)では、固定ケースを3反復し、baselineからの性能低下を検出できます。
 
 ## Native で再生
 

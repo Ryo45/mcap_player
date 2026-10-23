@@ -18,9 +18,11 @@ use viewer_mcap::{FileMessageStream, LatestMessageReader, McapSource};
 
 mod geometry;
 mod seek;
+mod sparse_chunk;
 mod storage;
 
 const BASE: u64 = 1_735_689_600_000_000_000;
+const RAW_IMAGE_SCHEMA: &[u8] = b"std_msgs/Header header\nuint32 height\nuint32 width\nstring encoding\nuint8 is_bigendian\nuint32 step\nuint8[] data\n================================================================================\nMSG: std_msgs/Header\nbuiltin_interfaces/Time stamp\nstring frame_id\n================================================================================\nMSG: builtin_interfaces/Time\nint32 sec\nuint32 nanosec";
 
 #[derive(Clone, Copy)]
 struct CameraFixture {
@@ -45,6 +47,9 @@ impl Default for CameraFixture {
 fn main() -> Result<()> {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
     match args.first().map(String::as_str) {
+        Some("generate-sparse-chunk") if args.len() == 3 => {
+            sparse_chunk::generate(&args[1], args[2].parse()?)
+        }
         Some("seek-workload") if args.len() == 4 => {
             seek::measure(&args[1], &args[2], args[3].parse()?)
         }
@@ -238,7 +243,7 @@ fn generate(
         b"std_msgs/Header header\nfloat32 angle_min\nfloat32 angle_max\nfloat32 angle_increment\nfloat32 time_increment\nfloat32 scan_time\nfloat32 range_min\nfloat32 range_max\nfloat32[] ranges\nfloat32[] intensities\n================================================================================\nMSG: std_msgs/Header\nbuiltin_interfaces/Time stamp\nstring frame_id\n================================================================================\nMSG: builtin_interfaces/Time\nint32 sec\nuint32 nanosec")?;
     let scan_id = writer.add_channel(scan_schema, "/scan", "cdr", &BTreeMap::new())?;
     let schema = if encoding == "raw" {
-        writer.add_schema("sensor_msgs/msg/Image", "ros2msg", b"std_msgs/Header header\nuint32 height\nuint32 width\nstring encoding\nuint8 is_bigendian\nuint32 step\nuint8[] data\n================================================================================\nMSG: std_msgs/Header\nbuiltin_interfaces/Time stamp\nstring frame_id\n================================================================================\nMSG: builtin_interfaces/Time\nint32 sec\nuint32 nanosec")?
+        writer.add_schema("sensor_msgs/msg/Image", "ros2msg", RAW_IMAGE_SCHEMA)?
     } else {
         writer.add_schema("sensor_msgs/msg/CompressedImage", "ros2msg", b"std_msgs/Header header\nstring format\nuint8[] data\n================================================================================\nMSG: std_msgs/Header\nbuiltin_interfaces/Time stamp\nstring frame_id\n================================================================================\nMSG: builtin_interfaces/Time\nint32 sec\nuint32 nanosec")?
     };
@@ -471,8 +476,21 @@ fn run(
     {
         requirements.require_all_cameras();
     }
-    let bindings: WorkspaceBindings =
+    let mut bindings: WorkspaceBindings =
         serde_json::from_str(include_str!("../../../config/workspace_bindings.json"))?;
+    if !source
+        .catalog()
+        .streams
+        .iter()
+        .any(|stream| stream.topic == bindings.point_cloud_topic)
+        && let Some(stream) = source
+            .catalog()
+            .streams
+            .iter()
+            .find(|stream| stream.schema == "sensor_msgs/msg/PointCloud2")
+    {
+        bindings.point_cloud_topic = stream.topic.clone();
+    }
     let plan = SessionPlan::build(source.catalog(), "/camera/0", &requirements, &bindings)?;
     let streams = if selection == "all" {
         source.catalog().streams.iter().map(|s| s.id).collect()

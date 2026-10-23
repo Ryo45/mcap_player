@@ -1,0 +1,992 @@
+{
+  "version": 1,
+  "engine": "web",
+  "machine": {
+    "cpu": "Intel(R) Core(TM) Ultra 7 265KF",
+    "machine": "x86_64",
+    "kernel": "7.0.0-30-generic",
+    "python": "3.12.3"
+  },
+  "fixtures": {
+    "cases_sha256": "8e70c6caa9b54d08ad539029f3451a99b08f4bdf8d6b3e5924a4f695326f7e80",
+    "generator_sha256": "f430250c0961a2bf07583c6ad7eed2caa12baf62ec01d08a0601d5be4d5756c6",
+    "fixtures": {
+      "raw-fhd-30hz": {
+        "sha256": "a0c742a218ba54cbf341a0eaebb8536d7c795f88954aa9c7398a9147b28e8826",
+        "bytes": 541384636
+      },
+      "jpeg-4k-8cam": {
+        "sha256": "c2d283cc811866fd74fd29bdaab1b7720cbc2fe1420ccaeae94dfd171ac7d649",
+        "bytes": 987803011
+      },
+      "jpeg-512m": {
+        "sha256": "f0650dbfd4d2f621b564622bc1e91af9d9326dae5860b902bd5cfad8fac12178",
+        "bytes": 987947569
+      },
+      "cloud-60k": {
+        "sha256": "fd1db3b74c95d9f0fdccc97019044d5199eeb38fae95aca9456e75babf3046ba",
+        "bytes": 36008989
+      }
+    },
+    "complete": true
+  },
+  "cases_sha256": "8e70c6caa9b54d08ad539029f3451a99b08f4bdf8d6b3e5924a4f695326f7e80",
+  "repeats": 3,
+  "runs": [
+    {
+      "case": "web/raw-fhd-30hz",
+      "repeat": 0,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 409.5571804791689,
+        "focus_content_hz": 29.019346230820545,
+        "background_min_content_hz": 0,
+        "log_seconds_per_wall_second": 0.9895485877251501,
+        "heartbeat_max_ms": 30.899999618530273,
+        "heartbeat_p95_ms": 27.5,
+        "peak_pss_mib": 1126.0380859375,
+        "seek_focus_ms": 110.2000002861023
+      },
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/jpeg-4k-8cam",
+      "repeat": 0,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 623.2666783034801,
+        "focus_content_hz": 9.67807660820654,
+        "background_min_content_hz": 2.2921760387857595,
+        "log_seconds_per_wall_second": 0.9932762834738291,
+        "heartbeat_max_ms": 62.39999961853027,
+        "heartbeat_p95_ms": 25.0,
+        "peak_pss_mib": 1690.8408203125,
+        "seek_focus_ms": null
+      },
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/jpeg-512m",
+      "repeat": 0,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 626.5153409913182,
+        "focus_content_hz": 9.437331019843887,
+        "background_min_content_hz": 2.2955670048268915,
+        "log_seconds_per_wall_second": 0.9947457020916529,
+        "heartbeat_max_ms": 58.0,
+        "heartbeat_p95_ms": 25.100000381469727,
+        "peak_pss_mib": 1675.416015625,
+        "seek_focus_ms": null
+      },
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/jpeg-512m",
+      "repeat": 1,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 621.689461171627,
+        "focus_content_hz": 9.625126646403242,
+        "background_min_content_hz": 2.026342451874367,
+        "log_seconds_per_wall_second": 0.9878419452887538,
+        "heartbeat_max_ms": 30.699999809265137,
+        "heartbeat_p95_ms": 26.0,
+        "peak_pss_mib": 1639.412109375,
+        "seek_focus_ms": null
+      },
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/jpeg-4k-8cam",
+      "repeat": 1,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 637.1634537354112,
+        "focus_content_hz": 9.640265867918531,
+        "background_min_content_hz": 2.283220863454389,
+        "log_seconds_per_wall_second": 0.9893957074969019,
+        "heartbeat_max_ms": 62.90000057220459,
+        "heartbeat_p95_ms": 24.399999618530273,
+        "peak_pss_mib": 1662.2880859375,
+        "seek_focus_ms": null
+      },
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/raw-fhd-30hz",
+      "repeat": 1,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 401.0130576789379,
+        "focus_content_hz": 29.534744810269665,
+        "background_min_content_hz": 0,
+        "log_seconds_per_wall_second": 0.9844914934544214,
+        "heartbeat_max_ms": 33.0,
+        "heartbeat_p95_ms": 28.100000381469727,
+        "peak_pss_mib": 1141.435546875,
+        "seek_focus_ms": 119.90000009536743
+      },
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/raw-fhd-30hz",
+      "repeat": 2,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 423.1597166508436,
+        "focus_content_hz": 29.19611161431477,
+        "background_min_content_hz": 0,
+        "log_seconds_per_wall_second": 0.9842628534432167,
+        "heartbeat_max_ms": 36.10000038146973,
+        "heartbeat_p95_ms": 28.5,
+        "peak_pss_mib": 1130.78125,
+        "seek_focus_ms": 109.14999961853027
+      },
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/jpeg-4k-8cam",
+      "repeat": 2,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 643.2944107800722,
+        "focus_content_hz": 9.630737258746716,
+        "background_min_content_hz": 2.0275236334203615,
+        "log_seconds_per_wall_second": 0.9884177712924261,
+        "heartbeat_max_ms": 65.5,
+        "heartbeat_p95_ms": 25.0,
+        "peak_pss_mib": 1713.265625,
+        "seek_focus_ms": null
+      },
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/jpeg-512m",
+      "repeat": 2,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 620.6538872793317,
+        "focus_content_hz": 9.70427498803541,
+        "background_min_content_hz": 2.0430052606390334,
+        "log_seconds_per_wall_second": 0.9959650645615288,
+        "heartbeat_max_ms": 51.5,
+        "heartbeat_p95_ms": 23.90000057220459,
+        "peak_pss_mib": 1555.5244140625,
+        "seek_focus_ms": null
+      },
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    }
+  ],
+  "probe_sha256": "f430250c0961a2bf07583c6ad7eed2caa12baf62ec01d08a0601d5be4d5756c6",
+  "limits": {
+    "workload_ms": [
+      "higher",
+      0.2,
+      10
+    ],
+    "seek_revisit_ms": [
+      "higher",
+      0.25,
+      1
+    ],
+    "peak_pss_mib": [
+      "higher",
+      0.2,
+      64
+    ],
+    "peak_rss_mib": [
+      "higher",
+      0.2,
+      64
+    ],
+    "open_ms": [
+      "higher",
+      0.25,
+      100
+    ],
+    "focus_content_hz": [
+      "lower",
+      0.15,
+      1
+    ],
+    "background_min_content_hz": [
+      "lower",
+      0.2,
+      0.5
+    ],
+    "log_seconds_per_wall_second": [
+      "lower",
+      0.1,
+      0.05
+    ],
+    "heartbeat_max_ms": [
+      "higher",
+      0.5,
+      20
+    ],
+    "seek_focus_ms": [
+      "higher",
+      0.25,
+      20
+    ]
+  },
+  "harness": {
+    "regression.py": "07830905386daf63242cedb8c39db1ac3b251fd5fb6a20320ef210a9f400b2aa",
+    "measure_web_recording.py": "d0844de8a7e53f60c940e3323c6b557b17aec623115479da31993ec5677df7f6",
+    "web_recording_probe.js": "647d0c7a84e053637c9312bf44f1218945cb1419f876cfd263ab8d9c75ef8e6a",
+    "benchmark_browser.py": "024f00d1fd6e38657407872fbdf1afe0c3077240a579cec572bf97abf45cbf8f"
+  },
+  "git_commit": "e8a638389e7ed2d1db5bb15e63c31e2a898e2a89",
+  "product_diff_sha256": "54f37c64140359cc66d3a51eeacc7e36c5d0bc4d8208f6dd05f71cebc18d7c43",
+  "product_sources": {
+    "apps/recording-server/src/api.rs": "99da03b7805790e94a5debaa1d8903f76e1c6dd42a1c5fe355f805232f64fd08",
+    "apps/recording-server/src/batch_service.rs": "f09c3750d94dcc3a8cc38c25e33655332fc276d2f5dbb769ac59bf22545de494",
+    "apps/recording-server/src/batch_service_tests.rs": "c5233d7810846834b003f61f5d72c90070782ffa8c4cd0204b6eeafd41263d67",
+    "apps/recording-server/src/config.rs": "a00b38ba8d6f21c261787562ec6ee89164792f5a347ec44e8b1fae10924e5fee",
+    "apps/recording-server/src/cursor.rs": "b456bbc812d7031041ea8b892b76b0e406318a9dc0901d4f2f3abfc21d0e6782",
+    "apps/recording-server/src/error.rs": "e9545e5a64dff8d6aac28884c117fee380fd8cba2056a16f3a2dc5a4df2aa09b",
+    "apps/recording-server/src/file_reader.rs": "366bc8a6562eb979aa909855d9cd8826375e13e30d4b51a262362e0d62f454a2",
+    "apps/recording-server/src/main.rs": "160fe2004a711a8f94d0e876121bf9980920f114797ec006d8174008ac1b5bcf",
+    "apps/recording-server/src/metrics.rs": "cde98bc6493f3e9ffdf6921ab444db201abf39573b575936fbb73682b2b45241",
+    "apps/recording-server/src/recording.rs": "7bd78610c64b51d7427afda3cdf6ab2a71f3b8e5289ea0ac42985d82f4ef1714",
+    "apps/recording-server/src/restore_service.rs": "d2f6237d550f849517b877c582cf1ca476f67bb74cbc6da8cf3ac87a40490649",
+    "apps/viewer-native/src/app.rs": "c46de6eec2f9629e562c7b1a4cad06eb221a0800582e3dcc0fec7094cbed00b3",
+    "apps/viewer-native/src/args.rs": "9faf94965a03eb273aeb2252a76a608a45f7ab18894c412a719e187096335e86",
+    "apps/viewer-native/src/bookmarks.rs": "3ad048d71ea55981575c5dabf672fe2c39b109cee7140502caa543278cd74167",
+    "apps/viewer-native/src/diagnostics.rs": "75ac0d441c5a4beeff4d1fc4c83985841c50ceecdf6471e835872072bb6a8e7b",
+    "apps/viewer-native/src/graphics/camera.rs": "f566cf349e9ef6f985002936def3f2f47e7523137dd18551f7682a2c21be67b4",
+    "apps/viewer-native/src/graphics/layout_host.rs": "bbffc33d8975e19ba8b1b9a72dd12a445034931fd14d67ac9903189e0f5636c2",
+    "apps/viewer-native/src/graphics/surface.rs": "c5f687b21318f9c506eb6d24354fc2bf8a08e935932d32e7b8f288b8d05ac5b4",
+    "apps/viewer-native/src/graphics/ui.rs": "7ae6bcb040b334a2a8124a8ee0c454f0ea073d3899ecb3e3b04731c71d34332d",
+    "apps/viewer-native/src/graphics/views/bev.rs": "ce8102e70c0993e1208135bc586663bf30f5f67ea298d1472fd7ea0704c7a50f",
+    "apps/viewer-native/src/graphics/views/camera.rs": "1e3c609d9d0d79311c986346631665cd99acd890e9d4f8a4fdbfa53459f3d335",
+    "apps/viewer-native/src/graphics/views/plot.rs": "ca2208ce29359813c614fb5d9c030cbb2f7d825b001a7d16db5cf79f0905f3d1",
+    "apps/viewer-native/src/graphics/views/scene.rs": "08c2aedd8895cef55c92f8ea7b060b528143427d52fea1697b315f26a5c65c09",
+    "apps/viewer-native/src/graphics/views.rs": "f7761f59dd28817720ba0bbfe48b86dc9c4abdee0a5a07725593a66b4feda39e",
+    "apps/viewer-native/src/graphics.rs": "b1081b2f6d49ab7922ba2374c357493125f7caf9ca5d9a65a8140671c72eb600",
+    "apps/viewer-native/src/inspection.rs": "86819ea6b440ea31b1eb98da6e4a118ec0e7a13ab6c7e13e9ea525ce5172b13f",
+    "apps/viewer-native/src/inspector_loader.rs": "2788e69cb82399f512bec16e61eb57687ce7ff15b154bba30938bddb6e3e21d6",
+    "apps/viewer-native/src/interaction.rs": "9ec2a63864e5a3dfc9c66bcedd5ff2b0de7a34e72ec707320b09e785f48b69b2",
+    "apps/viewer-native/src/live/admission.rs": "7573e5d26145f664d40614cded5f30fbab74aba6c04176887824107d56f6ae51",
+    "apps/viewer-native/src/live/catalog.rs": "d4cd1f0754821b32ceaa9ff25611335d466c3f3a1cee8b6a8b0b0a7bc62fa166",
+    "apps/viewer-native/src/live/dynamic_cdr.rs": "ddf8d5bb93c5a04eb68b266d54c768182ce93cd14b590580f3bd249d04f77fea",
+    "apps/viewer-native/src/live.rs": "ae0c75280188b37fac6e5a8f2ff25b08dd64f7368f5b75ee4c63bff328e25cbf",
+    "apps/viewer-native/src/main.rs": "5daf780a81ed0506b6d2555c704b7e2c96e9115792728c4322f904d42462932c",
+    "apps/viewer-native/src/numeric_plot_loader.rs": "086af682bc5f3529e62fbdd410fdfe0050b01604ee131d061e776955c0484870",
+    "apps/viewer-native/src/odometry_signals.rs": "cf08fbf23553e0d15d7bd2c5435909ea3ed7dea77365f8cebe7e8027cd36b62a",
+    "apps/viewer-native/src/panels/bev.rs": "5c6aabfc112958640b62eabd8bdcc4b34e00fa431a71c59a8774110dd1cd3510",
+    "apps/viewer-native/src/panels/camera.rs": "e8ccf6017329bfbc19d22cba178371413256aa2e0a4d8193b115fdbc868c5070",
+    "apps/viewer-native/src/panels/diagnostics.rs": "06269a1dc3a4f5a242069d7e7276973141b30b5d527117eb472d650d4afbf028",
+    "apps/viewer-native/src/panels/inspector.rs": "90f0d3713c1d9dacada212d6f6e099dd39626fdf90778eb21011ee584a1bc0de",
+    "apps/viewer-native/src/panels/placeholder.rs": "bbdd6ac2487faa0880cafbb1629f11336689eb43a0b43c9308d3ce4e67829d3d",
+    "apps/viewer-native/src/panels/plot.rs": "c4f85a666c0a3a2273839afddd2caa1469d5d00c20e3ea54fce69551a0b8148d",
+    "apps/viewer-native/src/panels/runtime.rs": "f074a3a2fb464dfe756d5f5731cada3ced764ad33bc4ff8599314df8166b8d66",
+    "apps/viewer-native/src/panels/scene.rs": "5b46a715cb432d18210dad89e69326733a4ae8d4cabebb3a6a341f5764b43166",
+    "apps/viewer-native/src/panels/status.rs": "90bf37c22824bef936a645d6c53ed7600b746369ccb9f3da7f51518249713fc7",
+    "apps/viewer-native/src/panels/topic_health.rs": "4bff4dc4bd7f8c6c20831e52567b3e7edc09d94ef4a881774d9b12a3d1f7c1e9",
+    "apps/viewer-native/src/panels/topic_tree.rs": "ccf611f96a8bb5587033f2476f60e4af9cd72e6fe38869b0357c629c4257d8aa",
+    "apps/viewer-native/src/panels/topics.rs": "cc961d5f3a00ecaebe58572c8302465d0039d0ba3bc91958de9c2cee0a17b31b",
+    "apps/viewer-native/src/panels.rs": "e7df26b2003f67c65bdcefb44d9411155f31fd94dfb73aacf47776a08452735d",
+    "apps/viewer-native/src/presentation.rs": "01d19a21f766efcb4be5112078bbd9d190f3268d29d224e9d4955a2b9872f934",
+    "apps/viewer-native/src/preview.rs": "083406a456ee6aad300e511886b72f5dda4e2cdec4b9073b338fe19f941ca45f",
+    "apps/viewer-native/src/query_error.rs": "1a5cf414011fb4055afec801eb36443c824bba76f06590e366ef595c4dc2bfec",
+    "apps/viewer-native/src/session.rs": "3106d0b500b3ed664da2c2ac423c532b73c0eae66e6a2a6f253c2863b51a4b6a",
+    "apps/viewer-native/src/signal_view.rs": "0d11d9e4a1431d2b15e478cdb3359e9b6a20f2f823efe84c28fe0d668c9eeb4a",
+    "apps/viewer-native/src/ui_components.rs": "36d8116663a33559094a9246f037f691bfe9c218e06b51f4ef1085b253298792",
+    "apps/viewer-native/src/window_query_loader.rs": "8b8782c2096897e57f7d11a3db183cdb837878eca6770992a0a094932b74e1e0",
+    "apps/viewer-native/src/workspace.rs": "23724b4bd6dc6250253eee8d167c660f820bd7df2b43325b4701ddc19e7c197c",
+    "apps/viewer-web/src/app/camera.rs": "60d540e4864957355f46db8b007bc90391ae21b97b06bca568476bfb4dd57cda",
+    "apps/viewer-web/src/app/physical_settings.rs": "3fad2290cd92237617206a75fa8a8607120b06e0a00afe8c9ee478acda80fd24",
+    "apps/viewer-web/src/app/presentation.rs": "b198620da97f195f29e2ceab75b495a9e8793a09c4d33e3817af5b8228c9c1c9",
+    "apps/viewer-web/src/app/scene.rs": "5e2e52a75574c43049d7f9b345b98ebe754833830ed24f9ecd806d35f75f027c",
+    "apps/viewer-web/src/app/source/remote.rs": "5ff2dda2e15d55b66017a3647bb4ec1bb604a337d9980c1593f95d054570103d",
+    "apps/viewer-web/src/app/source.rs": "a6c688f04dbc1fc1740f9a8a649088f73badf0adfa8ec82e46f991472a80d278",
+    "apps/viewer-web/src/app.rs": "a5cbd96517ee739bedfc5602f4fdc04c202c66bbc3273674591b6e27695b1474",
+    "apps/viewer-web/src/camera_bitmap.rs": "9afa91592c0c6f002e5c0ff565f69daa393271877840d9012a7ae610005ac5f3",
+    "apps/viewer-web/src/data_plane.rs": "a85414c4df8d440ad870762f7610af41ad428f6c955f010b63fab14aa301e032",
+    "apps/viewer-web/src/inspector_query.rs": "9e012478117bf6e8760b6ab9210e3744549f58770af8b45afc0f1449ac776f47",
+    "apps/viewer-web/src/jpeg_benchmark.rs": "6f93d391b14635f2ed2de8cc1063a7cd266c48cfc0dff22450bd47cba5ead187",
+    "apps/viewer-web/src/lib.rs": "7ec7d2f1fccab2d33f05d3f3bea98d8874a60c56dfc117987a0eb4c8b1382776",
+    "apps/viewer-web/src/local/catalog.rs": "f71332fd9ab450ea83b6473901982655224176dbac6fe8d4f06c11648d07f3be",
+    "apps/viewer-web/src/local/loader.rs": "8778ec098d97dd691d4e29bbaa9fab6773587f65087181fa7eaa6e2a1315aabf",
+    "apps/viewer-web/src/local.rs": "c93e547497311f9a52eb2339dec1fab94f72b93848d3ad71034b4a6761313e7b",
+    "apps/viewer-web/src/playback.rs": "361154ab4b3312e809211d86b77c962095534c0a8c282f674c59b4ff53316bae",
+    "apps/viewer-web/src/remote/catalog.rs": "5338162565cdb12942f44621e715dc0a780caf68f87f4a7f2e1bdeee8902aeaa",
+    "apps/viewer-web/src/remote/client.rs": "c39f85c950aab0259db7dcff5e0c01cf74ce5c2fbd3e7b368756749bcd2bf967",
+    "apps/viewer-web/src/remote/loader.rs": "dbaf564f767c0f10b9b0219f3b97a0d4ae4e874c075b10486a7b5675daa332ef",
+    "apps/viewer-web/src/remote.rs": "849471f69e37731446bea8b7e518d6028bb299082e4127e0faff95f9acc4b7cd",
+    "apps/viewer-web/src/topics.rs": "b79f594cee93d18f690d0ee1df2c4b18eeb38cd9fafcbb86508171f1f15cb209",
+    "apps/viewer-web/src/webgpu/host.rs": "22032464bfa385196841a41335097c0085fd69ef5418c0cfdb371c9b6b6bc15a",
+    "apps/viewer-web/src/webgpu/presenter.rs": "b28994413b79b5cb27ed063d251c5f0a98abaf7170a94564428511591a8eb635",
+    "apps/viewer-web/src/webgpu/state.rs": "6a4b2987a3c8023224d60c6fff926b1244e48e4de19252ddd2c32060560f96e5",
+    "apps/viewer-web/src/webgpu.rs": "5da5b1a9234fc7d30bf95d585e1a9a0118e360e28f8a8091ac47bdd5ff1ef429",
+    "crates/bev-renderer/src/lib.rs": "5d055c3bbc8f740cb3e90ee9df869ceafef26b81e841d55eab1b52a07ee87f8e",
+    "crates/scene-renderer/src/depth_tests.rs": "4931d58d3e894efadcfc709bff9850454b90ab6a031d5a63430d51398e70473d",
+    "crates/scene-renderer/src/lib.rs": "b8cfbeb47013bd41762587d853903c2b58f1dd5065e8020fca824b54080743de",
+    "crates/viewer-core/src/derived/bookmark.rs": "4651a52388db9d4664b2bc656672bb86196a9cda41dc2eb9e82bba803c9186a3",
+    "crates/viewer-core/src/derived/plot.rs": "103e9e95afbcb7d91811319939021a27c810aa3bb2891405bbc5c91234f4b6b6",
+    "crates/viewer-core/src/derived/preview.rs": "118d479e85342e36cc08d54bd8893ac811ff000e99784a3ed4c8ad982262e818",
+    "crates/viewer-core/src/derived/source_fingerprint.rs": "47ac19121b59450eb88fa6115aae4c2b4eb05076e97093a36c9b9716eec5f048",
+    "crates/viewer-core/src/derived.rs": "0b0a1d91a7d49aa042c2379f010214bd1e489a1c0f83477aec60064cc7a9234a",
+    "crates/viewer-core/src/feature/camera.rs": "61c5803336b8c62d06408a98fe487ec851fa92a4d627ff0573e4f9ffe4b26a7e",
+    "crates/viewer-core/src/feature/controllers/camera.rs": "c388b26fcb53b802b233bf03a255cd812e69c8d5cabba87ed18174b4cab3c7bd",
+    "crates/viewer-core/src/feature/controllers/counters.rs": "0593a6a598f0cfc45b85037fab10f1b8a8e91f3e4b4a7fdbc9f08e902900f86e",
+    "crates/viewer-core/src/feature/controllers/odometry.rs": "b8896a053cc89a19cf211e7090f2750d4d01420983e9616775b652bd9896f8ce",
+    "crates/viewer-core/src/feature/controllers/path.rs": "99b7301721c4096849094e0cc3ca30be24c593c8c7adb56c2ec8409131d5eda8",
+    "crates/viewer-core/src/feature/controllers/point_cloud.rs": "fbf1b14980beb73ba7a654675f68f9befb19ef9f69e0df0af598f0e3327683fd",
+    "crates/viewer-core/src/feature/controllers/tests.rs": "551fbd5aae0b35baf1072f3883aa0df59a5308096c881428118f55fe989cf9e4",
+    "crates/viewer-core/src/feature/controllers/transform.rs": "bc7cf39e64b41c0f01c22987357b1d53653a40dbc80a6ae893afa0f830e36b0a",
+    "crates/viewer-core/src/feature/controllers.rs": "075be9bec683d182507fe8b0f2e30403b2f42295148c7491a1aaa10e9af05d66",
+    "crates/viewer-core/src/feature/path.rs": "a7accc563007f92371b235ff5a3741c9439c4f26c5f96a4ec7c43e3dade5d808",
+    "crates/viewer-core/src/feature/performance.rs": "4df070fce8480286ae0faa84e67d21a03e0e3ade4b8e28d2e1dcd5fc1e2d4b90",
+    "crates/viewer-core/src/feature/point_cloud.rs": "5a3fd9b06f6638a62af9a90dfe8ebe0db1720199be0246b4963d58d97620bfa4",
+    "crates/viewer-core/src/feature/runtime.rs": "9f6064d80a45e1b8515589291b2553f5f69283c89ea45b2bb2d8967cad8c8eac",
+    "crates/viewer-core/src/feature/telemetry.rs": "afa75a742067b920a849d053a87564c982e8ca7e2cf0ccb23a0b3e90379d98b3",
+    "crates/viewer-core/src/feature/transform.rs": "6e86399c7eb1505ad82e669d85b158efb934944c307d88ed7f01a01e7f396d89",
+    "crates/viewer-core/src/feature.rs": "2139d99d6a92b354575d556e8f64bb1091b3c80a8cad54151a2986a7a1858927",
+    "crates/viewer-core/src/health/diagnostics.rs": "fb95e58d6871d671c79bcedf00d56e1b7502b6de8acf448dbb6b170394d1efee",
+    "crates/viewer-core/src/health/topic_timing.rs": "69d8d1babe67bf0f8fc7a0d22c19250bba48662cd406e2bd880a2e0e10d4477a",
+    "crates/viewer-core/src/health.rs": "addf48e0d873355265306da866b41dd6055974f7ec860cf96d805445238e5526",
+    "crates/viewer-core/src/inspection.rs": "f98fd5aedd20d7ca16fff44efb6dd2c435b41134bc0221c8b7748aabb214c93a",
+    "crates/viewer-core/src/lib.rs": "934388cee296116e7c15caf8f2668ae8a40581993f69be81c988d6837feb6394",
+    "crates/viewer-core/src/message/cdr/diagnostic.rs": "86ef5bceeff87af1aea053e800e5737f66111c8d3caa5dc181d28fd95ff6f18c",
+    "crates/viewer-core/src/message/cdr/image.rs": "1d5f231e3fdd202d20d0ba5fdc19d4c94ac0daab79a52a783168e59bcbaa9d9a",
+    "crates/viewer-core/src/message/cdr/laser_scan.rs": "79b9f1d56ce95f6b6b60de5d2ae5852ec79ffeb91fddd0dea62f60b8bb2b7c64",
+    "crates/viewer-core/src/message/cdr/numeric.rs": "a2cd1547c681bf76c7a397acd6d394bb45095e3f3f0861ebf836aa5a258d93ce",
+    "crates/viewer-core/src/message/cdr/odometry.rs": "af34ed7a3919e7186e01842badf12f2edd9aae13e9dbbaee10ed7baad43b9a19",
+    "crates/viewer-core/src/message/cdr/path.rs": "ab3c11fd9ea401eec0f6f48667f22eb9e99c51993c029c3152283eae6d40475c",
+    "crates/viewer-core/src/message/cdr/point_cloud2/tests.rs": "17a3838d157557164311b55ee6d03d6b0a5a6ab203ddf724d28aad4bd7111492",
+    "crates/viewer-core/src/message/cdr/point_cloud2.rs": "d495ea40eba856c935af2622cd4c62cc46234a61ca39996d1994b8b72d442092",
+    "crates/viewer-core/src/message/cdr/tests.rs": "67ef62b8bb91212265a354d288559a05755bb447d55928b7ccd9681d822e1ba3",
+    "crates/viewer-core/src/message/cdr/transform.rs": "39345d338574b3d3356d5c28728415e36b9e45b506d216de2112f12d8d6390b4",
+    "crates/viewer-core/src/message/cdr/wire.rs": "80b640edf49acf36899f72a26cebb48df926079890cbd520ac86ff5f699f5b28",
+    "crates/viewer-core/src/message/cdr.rs": "189b8a6296e27738d640a8b8e13bcb80a9bbee8382a7e27bd7c9c061dfc37b6a",
+    "crates/viewer-core/src/message/schema.rs": "359f07aaf963d80adb39099d817ebb11fc604a360da6fff72be89428de99c928",
+    "crates/viewer-core/src/message/time.rs": "4fbe110bc8adc4ac8908fd925ed2ab8105da03b55786a1ae1656bd9318c33ed3",
+    "crates/viewer-core/src/message.rs": "326a98d84e7171c7ff04026c82b50d3f94642cf10618f241615a2af434586d82",
+    "crates/viewer-core/src/platform_geometry.rs": "d2e08c172dafeb9ff4298f555d31340e9065707e40b310e9760326587251ab8f",
+    "crates/viewer-core/src/playback/clock.rs": "34a05220f5178f60c676a97e1683ecd865815da79c7f8291b03f39f80fb02f5c",
+    "crates/viewer-core/src/playback/data_window.rs": "17a004bce4d31c6ac4bbd40108359ecc3c71871f556c32c253a2437758079e52",
+    "crates/viewer-core/src/playback/timing.rs": "e65d1dfbf97759c51c2dc8a7500c41e3aa1bb4cb6072d1ba467d68690fab348a",
+    "crates/viewer-core/src/playback.rs": "217d578042bb974e669a1aebc052fe816837e3d1cb2a03d9499634c84052acfe",
+    "crates/viewer-core/src/presentation/camera.rs": "14c543c58853f1a2c39f4020fb17cb3602e4b96367ef188f5de493ae12be9687",
+    "crates/viewer-core/src/presentation/diagnostics.rs": "d356fea67ef9ab9803f513e573a63c5fe37840fc6698fa72dfb31758434ce4ba",
+    "crates/viewer-core/src/presentation/metrics.rs": "e6613bd590ccaa5ca4e04b81987bc4391fdfe044c9c1f6598a797f9867c14e9c",
+    "crates/viewer-core/src/presentation/path.rs": "20cdf5f85642a5414590ff80e98d30122eaf9e8bddd45ef9038076296bf2937c",
+    "crates/viewer-core/src/presentation/point_cloud.rs": "8d30a6bb72d6fddea43c960838ae6786364e523fc59cd4f8b235b417c7b21dc4",
+    "crates/viewer-core/src/presentation/projection.rs": "39e24bf399c75f49d9b34fa8082e4e34f45e61c64c94a804f4876a1209fb8d79",
+    "crates/viewer-core/src/presentation/scene.rs": "5e8186507b30cffbc1c34eb8d2d01897739bce9302665be93e225398094b50ef",
+    "crates/viewer-core/src/presentation/telemetry.rs": "9dc742b2d1bb2e91a121811a39fef3640762a4cf28529c28402799c3790b10ca",
+    "crates/viewer-core/src/presentation.rs": "993254a0f82e14033aa0486c7ca0b1136d63220185cd657fdb69e1bc9b1c0518",
+    "crates/viewer-core/src/recording/catalog.rs": "b69144813739ce9404ec0a1877e8d4594d85734eda11433466d7ee26bcf7933a",
+    "crates/viewer-core/src/recording/raw_message.rs": "3e63a70df6cf5bcc27fd9151d4750da45baa66eeece148955d05c61c296e8be8",
+    "crates/viewer-core/src/recording/restore.rs": "0f35557e6274175767a18698e16752b336e2ccd7daf36cbd5bfa44919dea0962",
+    "crates/viewer-core/src/recording/session_plan.rs": "71b87aee6105d2eb0c64bf6a1282b25de662bc46ea23188dbe136b207d6dec51",
+    "crates/viewer-core/src/recording/topic_tree.rs": "13323b644275713330d023d5eba982d2812576386ae75d7c791aa6afa4886aa6",
+    "crates/viewer-core/src/recording.rs": "5d817ecdadd85e331cdeba9b336d2f63dff89f4cc54dc2201f6bb95ac11626d6",
+    "crates/viewer-core/tests/physical_geometry.rs": "2e401881bba25ca755d2f274ad690b72ce911ae3568f591902d62adc5c9fb85f",
+    "crates/viewer-core/tests/point_cloud2.rs": "3b27f3cdb68f78c68f8014d5feddcb9185bdf5b2d82178dc2e3feff7157d2b7b",
+    "crates/viewer-layout/src/error.rs": "2859deb3c442be17d217112b664ca53a8cb714b6a1c25259fa2e6819db0554b0",
+    "crates/viewer-layout/src/lib.rs": "4a6e1bd36d54a7668eb201ed2d5f3d726708c07b838f44e8dd4c43208967e319",
+    "crates/viewer-layout/src/model.rs": "29e66517011aaa419c0363c4eadb6486ac1731a946ea7928d8a08cb0c8e98281",
+    "crates/viewer-layout/src/validation.rs": "4b8e500f11cee1504bcafd6c9a684adc6c70a8d0904c69a227e9d879cb972341",
+    "crates/viewer-layout/tests/layout_json.rs": "75b6a3c37b6aeb3f6a052fac379771cdb1cff259d96973871b0330d76099b9ef",
+    "crates/viewer-mcap/src/derived/source_fingerprint.rs": "6a95618e94c63541f0a0bb726e67933c8206907cc3ec786a35bb17190e747427",
+    "crates/viewer-mcap/src/derived.rs": "385555f53f43f1a6c76a85078b144b72c2e5f51832058b5f596301e0a95773a5",
+    "crates/viewer-mcap/src/lib.rs": "2d2c19fafabc070d1227c5fd8c392ec0d69a0d5f30117424298cc1a40c90243c",
+    "crates/viewer-mcap/src/playback.rs": "aaeffbc41d395239eb8655525f088bde96518e54a3bd34d792e98a16170f3ecc",
+    "crates/viewer-mcap/src/query/diagnostics.rs": "51f1003d5547b9fda6bec5ba91144583115d40bf029591b3279c92eabc678d34",
+    "crates/viewer-mcap/src/query/numeric_plot.rs": "96e57253a6afdd35c3df79587aca45b68b17172086a283350cfb6fb9d2f03afe",
+    "crates/viewer-mcap/src/query/odometry_signals.rs": "baf7825281b43ee69c2c7da9f2a4f5c6054031339d889358d9ba6e3eecf63ddf",
+    "crates/viewer-mcap/src/query/timestamp_window.rs": "637bd797d5d22b9045d20d093199ffd9aa8e2a9629f6c8ab672406c6453d9556",
+    "crates/viewer-mcap/src/query/topic_health.rs": "f73030e77ce35453ff32b70763d122b455ed6aaa9a1bbbed6ac471991e963110",
+    "crates/viewer-mcap/src/query.rs": "2adc19ecf07bac9971aa266d23155384ac87c5ba1a070463acec437ebe66fb97",
+    "crates/viewer-mcap/src/recording/backing.rs": "2368ed0847eeef31ed07d7b7b86ece7de4c1ac2ae1a1968cf293b53fcf3423b6",
+    "crates/viewer-mcap/src/recording/chunk.rs": "09ed1cb65bd09fedbd70768c4f491d0264584a918ace4e6da2d069294483a4d1",
+    "crates/viewer-mcap/src/recording/chunk_stream.rs": "9b706cf37ec993d5572cf869177c836269090a6cbeef7ac15b6221c4e44b889b",
+    "crates/viewer-mcap/src/recording/error.rs": "a872481a3662e9b79a73d1fde3a130f554f4352805f9ba83e62a1ce5ff907b92",
+    "crates/viewer-mcap/src/recording/file_messages.rs": "15788459a1f111079723b68e4a0ca7390ea297efed638d9ae4d4b0fa4ef683ca",
+    "crates/viewer-mcap/src/recording/latest_limits.rs": "5e4f358d0e61e52d95578d2bd0e5f67bfb85b34795349b8e5947ebefd17fbbd5",
+    "crates/viewer-mcap/src/recording/message_index.rs": "68397b547a89e704044799f2587f281c0a21b0a7ae1ed4a663e8cd9415916f5f",
+    "crates/viewer-mcap/src/recording/segments.rs": "2b54c5dd44b6c4edc7ed09f5672bc8570d838cb4ba287a55bedb8a305c44af0e",
+    "crates/viewer-mcap/src/recording/segments_tests.rs": "94279f9c709f803d9ce1c7c891ad656cc79fd830da3460bc2d09b69d4adc235e",
+    "crates/viewer-mcap/src/recording/source/index.rs": "da9b0572e2fae99ecafd1ba392e44df3ba5c1a8298899e264d2b70e976649f48",
+    "crates/viewer-mcap/src/recording/source/latest.rs": "694a0e6dfe0306fb2ec7b61c1410512d12e86f9dccae992603048efb06f52e8a",
+    "crates/viewer-mcap/src/recording/source/prefetch.rs": "39fa0750c98a9dee37602bf6d5b4a7f7e8ae81eeb0c8a7a3f3cbc12a6d8f20b0",
+    "crates/viewer-mcap/src/recording/source/range.rs": "e748764d128fdb6aafa0bc7646ab7322531616f3523c266c99cf19a01388c9b0",
+    "crates/viewer-mcap/src/recording/source/seek_chunks.rs": "0a69901c7feb7a1212e753d9bdb844b389aa6633d321640250e0155c3adeec29",
+    "crates/viewer-mcap/src/recording/source.rs": "1ac66563c2af67b547e6019bedd2a68a9ff32651f7796acc68ede8c2bbac2227",
+    "crates/viewer-mcap/src/recording/source_identity.rs": "2ff03db1b643dce63d233df38289e8721701a2f941bbd01e18e79be416b550da",
+    "crates/viewer-mcap/src/recording.rs": "83eac73f6e7dcb025ec8bd47254f901fe6ad170c603d4c99a04d59f2d062aec9",
+    "crates/viewer-mcap/src/schema.rs": "07b8521c63802cecd76c74adc4609bd05f9f4f26857252aabcf01487e95996ab",
+    "crates/viewer-mcap/tests/feature_runtime.rs": "f75348542640179bd0a5060bc33a86614394a56d0bd6091764d38f2884f30ed2",
+    "crates/viewer-mcap/tests/file_source.rs": "9a77581c011d37f65b591d56c19b3e2f6ea8917fd270947fdbd624c13096e36f",
+    "crates/viewer-mcap/tests/forward_order.rs": "bac63799fc2e4fde1a1e4ad87eaafabb3c95468bca7c5b7d8639ea9314e98390",
+    "crates/viewer-mcap/tests/inspector.rs": "0154bec75b84a7e00f45523d50f7aa94c21d90edae00055b4a64401cef3aa4e6",
+    "crates/viewer-mcap/tests/numeric_plot.rs": "b390b9e940771c908f115a54f9206fd035165063cc6877f9915d18d4644ece5e",
+    "crates/viewer-mcap/tests/playback_scenario.rs": "8b6110b4d2de9fb49b5b8e8c16c35426c02871792442e89f89e95dc9e486e0d5",
+    "crates/viewer-mcap/tests/point_cloud2.rs": "b5ed1e0018d4adac0e15f46ade763055333548ca7f7757a793abf7ae65bd0f8c",
+    "crates/viewer-mcap/tests/tf_fixture.rs": "65b6169ffad9f1895657e4791dd569d8e38754a0c1d3990a1610b035798a9520",
+    "crates/viewer-preview-mcap/src/error.rs": "0b74941f9f2a14b8d0b2cf1bcb26fdefb832f0e905f52f1b084b2b2a46554080",
+    "crates/viewer-preview-mcap/src/fingerprint.rs": "6ec5e56c7114ee5308c83d260986519e734ea8b90dee072ff38b20f5c9164bff",
+    "crates/viewer-preview-mcap/src/lib.rs": "148f2875e0e1e8d1bdcce4ef854307f8307c7d530be75303d368ebbc80be177e",
+    "crates/viewer-preview-mcap/src/query.rs": "f50821918e231ac422e495166d297aa7547fb04f6c567a9ed0dfe535a9582db8",
+    "crates/viewer-preview-mcap/src/reader.rs": "c9da70b1033f66558814107dc9ff36d7d04f5a5953b334655857bc3fef337085",
+    "crates/viewer-preview-mcap/src/schema.rs": "6b72d2e325fd79be83a0e0fcfd6350d43679c0601480d419f0307da77f4796c6",
+    "crates/viewer-preview-mcap/src/writer.rs": "ca0272f9844470c69ae7ed457e9dffb34202b697ec2a6feed3f16b3d4e52b9c1",
+    "crates/viewer-remote-protocol/examples/decode_batch.rs": "829f3c706edce0561e2dbaa81f1799bd4269e06916f7fa86e5b76234d4c70ff4",
+    "crates/viewer-remote-protocol/src/batch.rs": "570428ba15befd0ec68607c025167b0caf814e704fa9d0fa00538fb8fd6086f1",
+    "crates/viewer-remote-protocol/src/catalog.rs": "87023ed2e383a0f1ba982e262bcfdc6471e83dbb57fdddbb1b2f471cb6cded60",
+    "crates/viewer-remote-protocol/src/error.rs": "52e31aa406b2a6ba48fe9a21d20cc3eaf0b2badc2bea293a5fa39e2b54e76e60",
+    "crates/viewer-remote-protocol/src/lib.rs": "48eb374cc003cf5adce084eaa0435a10f87ecd9b2a59e76bb31893506b0c2f30",
+    "crates/viewer-renderer/src/camera_base.rs": "225615c4485bacb864349ecc1c24bdbc13d5c18afac54ffc0d8345628e7ce9c0",
+    "crates/viewer-renderer/src/camera_decode.rs": "491023b673bfb3544232b75d6e74eefb165ee24c5f40f72651d76be8cb118871",
+    "crates/viewer-renderer/src/camera_overlay.rs": "667bfa922b6ff87b2c9911bd8bb25993c78df50f7cb2600f11e5e89678207513",
+    "crates/viewer-renderer/src/camera_texture.rs": "ac6b5076032729930e71225a5ea15a3e801f7b4bbaf79d9b86a44d5be61e9f59",
+    "crates/viewer-renderer/src/image.rs": "50b6b4daa1ecc14bbd4aa6bc8ad888d721ac096d83df8b31b88a2c1c5ff5e834",
+    "crates/viewer-renderer/src/lib.rs": "a51b6b21a8566fe92262ff8aa98fcfd8f98a9d950eadbbc8b4cae754a362449e",
+    "crates/viewer-renderer/src/native_image.rs": "d15f2c4fe2485537edde0a2852e6ac6049d88b1ba79044cc0a8d6fb996e22398",
+    "crates/viewer-renderer/tests/camera_fixture.rs": "0d1c1a7cf8cd85c6e00081f6a2f5f4f5a1235334f6740179d0dd3cd1ab021991",
+    "crates/viewer-renderer/tests/camera_formats.rs": "bcfe6092607ab30c7d7dd2e68212588382fbddb64d77cb9c3f458ab72ca24838",
+    "tools/performance-probe/src/geometry.rs": "2cf45485830222a04147cd14ed7a0dfc3dd481a6e112f69e9bb6f7933992b2e1",
+    "tools/performance-probe/src/main.rs": "cfd042cead7c71ed4021dff67a6d019f10ed3b4d67831e9ff7975bd274a581ab",
+    "tools/performance-probe/src/seek.rs": "becf488c73a322f910900bbce548a05b5682b27c91c2b18880d608a12780b952",
+    "tools/performance-probe/src/sparse_chunk.rs": "21e99779e97f81b79b81e6f2a08b6b63525116239e8787da7bbc3b6f3a43926c",
+    "tools/performance-probe/src/storage.rs": "31ac3c025ae778698d415d08d274355115c79e8e0e046b46cd8d9f6573d02630"
+  }
+}

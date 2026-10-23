@@ -1,0 +1,41 @@
+{
+  "base_commit": "e8a6383",
+  "groups": {
+    "before": [
+      "runs/before/0-before-1g.json.gz",
+      "runs/before/0-before-512m.json.gz",
+      "runs/before/0-before-64m.json.gz",
+      "runs/before/1-before-1g.json.gz",
+      "runs/before/1-before-512m.json.gz",
+      "runs/before/1-before-64m.json.gz",
+      "runs/before/2-before-1g.json.gz",
+      "runs/before/2-before-512m.json.gz",
+      "runs/before/2-before-64m.json.gz"
+    ],
+    "after": [
+      "runs/after/0-1g.json.gz",
+      "runs/after/0-512m.json.gz",
+      "runs/after/0-64m.json.gz",
+      "runs/after/1-1g.json.gz",
+      "runs/after/1-512m.json.gz",
+      "runs/after/1-64m.json.gz",
+      "runs/after/2-1g.json.gz",
+      "runs/after/2-512m.json.gz",
+      "runs/after/2-64m.json.gz"
+    ],
+    "prototype": [
+      "runs/prototype/0-after-1g.json.gz",
+      "runs/prototype/0-after-512m.json.gz",
+      "runs/prototype/0-after-64m.json.gz",
+      "runs/prototype/1-after-1g.json.gz",
+      "runs/prototype/1-after-512m.json.gz",
+      "runs/prototype/1-after-64m.json.gz",
+      "runs/prototype/2-after-1g.json.gz",
+      "runs/prototype/2-after-512m.json.gz",
+      "runs/prototype/2-after-64m.json.gz"
+    ]
+  },
+  "note": "before and final-after are primary; prototype/exploration groups are separate",
+  "final_review": "After the matrix, added a generation check before returning an empty-window continuation. Matrix fixtures have no empty windows. Final build is checked by the web regression current group.",
+  "regression_cases_sha256": "8e70c6caa9b54d08ad539029f3451a99b08f4bdf8d6b3e5924a4f695326f7e80"
+}

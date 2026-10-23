@@ -161,7 +161,10 @@ Recording Server  -> RemoteWindowLoader ---------+       -> RecordingDataPlane
 
 `RecordingDataPlane` owns fixed-selection coverage, one-window-at-a-time prefetch, buffering,
 generation cancellation, and a 256 MiB resident-backing budget. It commits no semantic state.
-Local and Remote payloads remain `Bytes` slices of chunk/page backing allocations. The playback
+Small Local Chunks and Remote responses retain `Bytes` slices of chunk/page backing.
+Large Local Zstd Chunks stream into bounded record buffers and copy only selected window
+payloads; uncompressed indexed records can be read directly. See
+[Web data plane](web_recording_data_plane.md) for continuation, bounds and cancellation. The playback
 clock advances only after the required read and synchronous controller processing succeed; while
 buffering or seeking, the previously committed controller state remains visible.
 
@@ -229,7 +232,8 @@ Latest-before restoration is a small physical primitive, not a generic query API
 sparse `StreamId -> ChunkIndex` list at open, reads Message Index records lazily for the requested
 streams, chooses predecessor entries without decompressing data, groups candidates by Chunk, and
 streams each selected Chunk once. It does not expand all Message Index entries into RAM. Browser
-Local performs the same candidate/group/read operation with `File.slice`; Remote calls the
+Local performs the same candidate/group operation with `File.slice` and directly reads selected
+Message records for large uncompressed Chunks; Remote calls the
 Recording Server restore endpoint. An indexed recording with no predecessor leaves that feature
 unavailable. A non-empty stream without Message Index records reports indexed restore as
 unavailable rather than scanning the recording prefix or constructing a side index.

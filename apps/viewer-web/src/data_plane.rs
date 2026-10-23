@@ -25,8 +25,8 @@ pub(crate) struct WindowLoaderMetrics {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct WindowLoadDiagnostics {
     pub source_reads: u64,
-    pub source_bytes: usize,
-    pub decompressed_bytes: usize,
+    pub source_bytes: u64,
+    pub decompressed_bytes: u64,
     pub per_message_copied_bytes: usize,
     pub latency_ms: f64,
     pub processing_ms: f64,
@@ -559,7 +559,7 @@ mod tests {
             .unwrap(),
             diagnostics: WindowLoadDiagnostics {
                 source_reads: 1,
-                source_bytes: resident_bytes,
+                source_bytes: resident_bytes as u64,
                 decompressed_bytes: 0,
                 per_message_copied_bytes: 0,
                 latency_ms: 1.0,

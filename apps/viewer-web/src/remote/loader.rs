@@ -347,11 +347,11 @@ impl RemoteWindowLoader {
                     self.metrics.source_bytes = self
                         .metrics
                         .source_bytes
-                        .saturating_add(loaded.diagnostics.source_bytes as u64);
+                        .saturating_add(loaded.diagnostics.source_bytes);
                     self.metrics.decompressed_bytes = self
                         .metrics
                         .decompressed_bytes
-                        .saturating_add(loaded.diagnostics.decompressed_bytes as u64);
+                        .saturating_add(loaded.diagnostics.decompressed_bytes);
                     self.metrics.per_message_copied_bytes = self
                         .metrics
                         .per_message_copied_bytes
@@ -540,7 +540,7 @@ impl WindowAssembler {
             window,
             diagnostics: WindowLoadDiagnostics {
                 source_reads: self.pages,
-                source_bytes: self.source_bytes,
+                source_bytes: self.source_bytes as u64,
                 decompressed_bytes: 0,
                 per_message_copied_bytes: 0,
                 latency_ms,
@@ -711,6 +711,6 @@ mod tests {
         let loaded = assembler.finish(1.0).unwrap();
         assert!(loaded.window.messages.is_empty());
         assert_eq!(loaded.window.resident_bytes, 0);
-        assert_eq!(loaded.diagnostics.source_bytes, source_bytes);
+        assert_eq!(loaded.diagnostics.source_bytes, source_bytes as u64);
     }
 }

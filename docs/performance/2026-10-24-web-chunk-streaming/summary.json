@@ -1,0 +1,120 @@
+[
+  {
+    "case": "64m",
+    "stage": "before",
+    "attempts": 3,
+    "ok": 3,
+    "statuses": [
+      "ok",
+      "ok",
+      "ok"
+    ],
+    "metrics": {
+      "open_ms": 648.8256808370352,
+      "focus_content_hz": 9.295631053582117,
+      "background_min_content_hz": 1.8845467169212458,
+      "log_seconds_per_wall_second": 0.9992613471858819,
+      "heartbeat_max_ms": 94.20000076293945,
+      "heartbeat_p95_ms": 62.89999961853027,
+      "peak_pss_mib": 1993.873046875
+    },
+    "peak_pss_mib_all_attempts": 1993.873046875
+  },
+  {
+    "case": "64m",
+    "stage": "after",
+    "attempts": 3,
+    "ok": 3,
+    "statuses": [
+      "ok",
+      "ok",
+      "ok"
+    ],
+    "metrics": {
+      "open_ms": 721.8372905626893,
+      "focus_content_hz": 9.851334407463433,
+      "background_min_content_hz": 2.198065702140192,
+      "log_seconds_per_wall_second": 0.999585049796807,
+      "heartbeat_max_ms": 36.29999923706055,
+      "heartbeat_p95_ms": 25.199999809265137,
+      "peak_pss_mib": 1749.259765625
+    },
+    "peak_pss_mib_all_attempts": 1749.259765625
+  },
+  {
+    "case": "512m",
+    "stage": "before",
+    "attempts": 3,
+    "ok": 3,
+    "statuses": [
+      "ok",
+      "ok",
+      "ok"
+    ],
+    "metrics": {
+      "open_ms": 914.7788900882006,
+      "focus_content_hz": 5.818099921382402,
+      "background_min_content_hz": 1.2990146044517101,
+      "log_seconds_per_wall_second": 0.7319545062384312,
+      "heartbeat_max_ms": 797.6999998092651,
+      "heartbeat_p95_ms": 31.600000381469727,
+      "peak_pss_mib": 4317.9130859375
+    },
+    "peak_pss_mib_all_attempts": 4317.9130859375
+  },
+  {
+    "case": "512m",
+    "stage": "after",
+    "attempts": 3,
+    "ok": 3,
+    "statuses": [
+      "ok",
+      "ok",
+      "ok"
+    ],
+    "metrics": {
+      "open_ms": 621.4020345360041,
+      "focus_content_hz": 9.714943116451488,
+      "background_min_content_hz": 2.5561718767477566,
+      "log_seconds_per_wall_second": 0.996907031931625,
+      "heartbeat_max_ms": 30.699999809265137,
+      "heartbeat_p95_ms": 23.300000190734863,
+      "peak_pss_mib": 1612.513671875
+    },
+    "peak_pss_mib_all_attempts": 1612.513671875
+  },
+  {
+    "case": "1g",
+    "stage": "before",
+    "attempts": 3,
+    "ok": 0,
+    "statuses": [
+      "external-pss-limit",
+      "external-pss-limit",
+      "external-pss-limit"
+    ],
+    "metrics": {},
+    "peak_pss_mib_all_attempts": 4692.56640625
+  },
+  {
+    "case": "1g",
+    "stage": "after",
+    "attempts": 3,
+    "ok": 3,
+    "statuses": [
+      "ok",
+      "ok",
+      "ok"
+    ],
+    "metrics": {
+      "open_ms": 724.1900488734245,
+      "focus_content_hz": 9.882014733373744,
+      "background_min_content_hz": 2.38891543225763,
+      "log_seconds_per_wall_second": 0.9997085304935694,
+      "heartbeat_max_ms": 30.90000057220459,
+      "heartbeat_p95_ms": 23.800000190734863,
+      "peak_pss_mib": 1708.87890625
+    },
+    "peak_pss_mib_all_attempts": 1708.87890625
+  }
+]

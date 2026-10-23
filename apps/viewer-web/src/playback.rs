@@ -730,7 +730,7 @@ mod tests {
             .unwrap(),
             diagnostics: crate::data_plane::WindowLoadDiagnostics {
                 source_reads: 1,
-                source_bytes: resident_bytes,
+                source_bytes: resident_bytes as u64,
                 decompressed_bytes: 0,
                 per_message_copied_bytes: 0,
                 latency_ms: 1.0,

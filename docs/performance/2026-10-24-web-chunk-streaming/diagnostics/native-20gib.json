@@ -1,0 +1,17 @@
+{
+  "command": [
+    "target/release/performance-probe",
+    "run",
+    "/tmp/mcap-single-20gib-ros2.mcap",
+    "all",
+    "forward",
+    "0",
+    "20",
+    "native-layout"
+  ],
+  "returncode": 1,
+  "stdout": "",
+  "stderr": "Error: required PointCloud topic /scan is not an expected CDR stream (sensor_msgs/msg/LaserScan or sensor_msgs/msg/PointCloud2)\n",
+  "applicable": false,
+  "reason": "This forward probe requires a PointCloud stream, absent from the camera-only sparse fixture; not a Chunk-limit measurement."
+}

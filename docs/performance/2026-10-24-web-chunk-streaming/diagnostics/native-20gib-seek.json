@@ -1,0 +1,13 @@
+{
+  "scope": "Native full feature-restore data path, no GUI/GPU",
+  "command": [
+    "target/release/performance-probe",
+    "seek-workload",
+    "/tmp/mcap-single-20gib-ros2.mcap",
+    "same",
+    "2"
+  ],
+  "returncode": 1,
+  "stdout": "",
+  "stderr": "Error: query exceeds latest chunk bytes limit (8589934592)\n\nCaused by:\n    query exceeds latest chunk bytes limit (8589934592)\n"
+}
