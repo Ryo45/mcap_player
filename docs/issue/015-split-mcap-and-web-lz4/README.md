@@ -41,10 +41,10 @@ cargo run -p viewer-native -- --mcap /path/to/bag_directory --layout monitor
 
 自動の全走査や不完全なSeekへフォールバックしない。Native/WebのSummary/Chunk Index不足エラーに、明示的なreindex/convertが必要な旨を表示する。Message Index不足も全走査で補わない。
 
-[MCAP CLI](https://mcap.dev/guides/cli)の`recover`等で、別ファイルへ索引とSummaryを再生成できる。使用するCLIのhelpと出力を確認する。変換はユーザーが明示的に実行する独立した処理で、入力全体のI/Oを伴う。
+[MCAP CLI](https://mcap.dev/guides/cli)で、別ファイルへ索引とSummaryを生成できる。fastwriteの正常な入力には、検証済みの[変換手順と制約](../../fastwrite.md)を使う。変換はユーザーが明示的に実行する独立した処理で、入力全体のI/Oを伴う。
 
 ~~~sh
-mcap recover input.mcap -o indexed.mcap
+mcap compress input.mcap -o indexed.mcap --order preserve --chunk-size 4194304
 ~~~
 
 壊れた入力の回復ではレコードが失われる場合があるため、CLIの終了結果を確認する。`ros2 bag reindex`によるrosbag metadataの再生成と、MCAP内部のChunk/Message Index生成は区別する。

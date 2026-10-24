@@ -1,0 +1,241 @@
+{
+  "camera_pixel_decodes": 90,
+  "chunk_count": 90,
+  "delivered_messages": 120,
+  "expected_messages": 120,
+  "feature_decoded": 120,
+  "feature_dropped": 0,
+  "feature_ms": 1.080744,
+  "file_bytes": 538567885,
+  "final_memory": {
+    "hwm_kib": 42520,
+    "rss_kib": 38992
+  },
+  "initial_memory": {
+    "hwm_kib": 2820,
+    "rss_kib": 2820
+  },
+  "io": {
+    "chunks_expanded": 90,
+    "decompressed_bytes": 559930760,
+    "expanded_bytes": 559930760,
+    "prefetch_estimated_bytes": 0,
+    "prefetch_ready_hits": 0,
+    "prefetch_wait_ns": 0,
+    "prefetch_waits": 0,
+    "read_calls": 388,
+    "requested_bytes": 538562704,
+    "seek_cache_backing_bytes": 0,
+    "seek_cache_hits": 0,
+    "source_cache_backing_bytes": 0
+  },
+  "jpeg_decodes": 0,
+  "jpeg_ms": 322.4840550000001,
+  "largest_chunk_bytes": 6227658,
+  "message_index_bytes": 3720,
+  "mode": "forward",
+  "open_io": {
+    "chunks_expanded": 0,
+    "decompressed_bytes": 0,
+    "expanded_bytes": 0,
+    "prefetch_estimated_bytes": 0,
+    "prefetch_ready_hits": 0,
+    "prefetch_wait_ns": 0,
+    "prefetch_waits": 0,
+    "read_calls": 208,
+    "requested_bytes": 13721,
+    "seek_cache_backing_bytes": 0,
+    "seek_cache_hits": 0,
+    "source_cache_backing_bytes": 0
+  },
+  "open_memory": {
+    "hwm_kib": 3716,
+    "rss_kib": 3716
+  },
+  "open_ms": 0.548444,
+  "os_storage_read_bytes": 0,
+  "path": "target/fastwrite-check/indexed.mcap",
+  "payload_bytes": 559921800,
+  "pixel_format": "rgba",
+  "read_ms": 465.04474500000003,
+  "retained_camera_logical_bytes": 6220800,
+  "retained_pixel_bytes": 8294400,
+  "retained_scan_points": 360,
+  "samples": [
+    {
+      "io": {
+        "chunks_expanded": 1,
+        "decompressed_bytes": 6227658,
+        "expanded_bytes": 6227658,
+        "prefetch_estimated_bytes": 0,
+        "prefetch_ready_hits": 0,
+        "prefetch_wait_ns": 0,
+        "prefetch_waits": 0,
+        "read_calls": 210,
+        "requested_bytes": 6001202,
+        "seek_cache_backing_bytes": 0,
+        "seek_cache_hits": 0,
+        "source_cache_backing_bytes": 0
+      },
+      "memory": {
+        "hwm_kib": 18964,
+        "rss_kib": 18964
+      },
+      "progress": 0.006741573032950385
+    },
+    {
+      "io": {
+        "chunks_expanded": 12,
+        "decompressed_bytes": 74661976,
+        "expanded_bytes": 74661976,
+        "prefetch_estimated_bytes": 0,
+        "prefetch_ready_hits": 0,
+        "prefetch_wait_ns": 0,
+        "prefetch_waits": 0,
+        "read_calls": 232,
+        "requested_bytes": 71822549,
+        "seek_cache_backing_bytes": 0,
+        "seek_cache_hits": 0,
+        "source_cache_backing_bytes": 0
+      },
+      "memory": {
+        "hwm_kib": 32920,
+        "rss_kib": 32920
+      },
+      "progress": 0.1348314606590077
+    },
+    {
+      "io": {
+        "chunks_expanded": 24,
+        "decompressed_bytes": 149318712,
+        "expanded_bytes": 149318712,
+        "prefetch_estimated_bytes": 0,
+        "prefetch_ready_hits": 0,
+        "prefetch_wait_ns": 0,
+        "prefetch_waits": 0,
+        "read_calls": 256,
+        "requested_bytes": 143628396,
+        "seek_cache_backing_bytes": 0,
+        "seek_cache_hits": 0,
+        "source_cache_backing_bytes": 0
+      },
+      "memory": {
+        "hwm_kib": 42520,
+        "rss_kib": 32916
+      },
+      "progress": 0.262921348285065
+    },
+    {
+      "io": {
+        "chunks_expanded": 35,
+        "decompressed_bytes": 217754565,
+        "expanded_bytes": 217754565,
+        "prefetch_estimated_bytes": 0,
+        "prefetch_ready_hits": 0,
+        "prefetch_wait_ns": 0,
+        "prefetch_waits": 0,
+        "read_calls": 278,
+        "requested_bytes": 209451768,
+        "seek_cache_backing_bytes": 0,
+        "seek_cache_hits": 0,
+        "source_cache_backing_bytes": 0
+      },
+      "memory": {
+        "hwm_kib": 42520,
+        "rss_kib": 38992
+      },
+      "progress": 0.38426966287817194
+    },
+    {
+      "io": {
+        "chunks_expanded": 46,
+        "decompressed_bytes": 286190418,
+        "expanded_bytes": 286190418,
+        "prefetch_estimated_bytes": 0,
+        "prefetch_ready_hits": 0,
+        "prefetch_wait_ns": 0,
+        "prefetch_waits": 0,
+        "read_calls": 300,
+        "requested_bytes": 275273080,
+        "seek_cache_backing_bytes": 0,
+        "seek_cache_hits": 0,
+        "source_cache_backing_bytes": 0
+      },
+      "memory": {
+        "hwm_kib": 42520,
+        "rss_kib": 38992
+      },
+      "progress": 0.5123595505042292
+    },
+    {
+      "io": {
+        "chunks_expanded": 57,
+        "decompressed_bytes": 354624736,
+        "expanded_bytes": 354624736,
+        "prefetch_estimated_bytes": 0,
+        "prefetch_ready_hits": 0,
+        "prefetch_wait_ns": 0,
+        "prefetch_waits": 0,
+        "read_calls": 322,
+        "requested_bytes": 341094756,
+        "seek_cache_backing_bytes": 0,
+        "seek_cache_hits": 0,
+        "source_cache_backing_bytes": 0
+      },
+      "memory": {
+        "hwm_kib": 42520,
+        "rss_kib": 38992
+      },
+      "progress": 0.6337078650973362
+    },
+    {
+      "io": {
+        "chunks_expanded": 68,
+        "decompressed_bytes": 423060589,
+        "expanded_bytes": 423060589,
+        "prefetch_estimated_bytes": 0,
+        "prefetch_ready_hits": 0,
+        "prefetch_wait_ns": 0,
+        "prefetch_waits": 0,
+        "read_calls": 344,
+        "requested_bytes": 406916965,
+        "seek_cache_backing_bytes": 0,
+        "seek_cache_hits": 0,
+        "source_cache_backing_bytes": 0
+      },
+      "memory": {
+        "hwm_kib": 42520,
+        "rss_kib": 38992
+      },
+      "progress": 0.7617977527233936
+    },
+    {
+      "io": {
+        "chunks_expanded": 79,
+        "decompressed_bytes": 491496442,
+        "expanded_bytes": 491496442,
+        "prefetch_estimated_bytes": 0,
+        "prefetch_ready_hits": 0,
+        "prefetch_wait_ns": 0,
+        "prefetch_waits": 0,
+        "read_calls": 366,
+        "requested_bytes": 472740567,
+        "seek_cache_backing_bytes": 0,
+        "seek_cache_hits": 0,
+        "source_cache_backing_bytes": 0
+      },
+      "memory": {
+        "hwm_kib": 42520,
+        "rss_kib": 38992
+      },
+      "progress": 0.8831460673165005
+    }
+  ],
+  "seek_live_memory": null,
+  "seek_samples": [],
+  "selection": "all",
+  "tick_ms": 20,
+  "total_chunk_bytes": 559930760,
+  "unknown_messages": 0,
+  "workload_ms": 789.078053
+}

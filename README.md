@@ -74,7 +74,8 @@ cargo run -p viewer-native -- --mcap /path/to/rosbag_directory --layout monitor
 ```
 
 Summary・Chunk Index・選択streamのMessage Indexが必要です。索引のない記録を自動で全走査することはありません。
-対象範囲、制限、明示的な変換方法は[分割MCAPと入力互換性](docs/issue/015-split-mcap-and-web-lz4/README.md)を参照してください。
+rosbag2のfastwrite記録は[明示的な変換手順](docs/fastwrite.md)を参照してください。
+分割入力の対象範囲と制限は[分割MCAPと入力互換性](docs/issue/015-split-mcap-and-web-lz4/README.md)に記載しています。
 
 `standard` / `showcase` / `explore` / `monitor` のLayout JSONは0.1では同梱された内部presetです。外部向けの保存形式や
 backward compatibilityは保証しません。`schemaVersion` / `configVersion` は同梱presetの開発時検証と
