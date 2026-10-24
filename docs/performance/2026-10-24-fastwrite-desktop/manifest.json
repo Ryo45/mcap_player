@@ -1,0 +1,231 @@
+[
+  {
+    "name": "calibrate-indexed-lichtblick",
+    "command": [
+      "python3",
+      "tools/performance-probe/measure_desktop_workload.py",
+      "--case",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/indexed.json",
+      "--app",
+      "lichtblick",
+      "--output",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/calibrate-indexed-lichtblick",
+      "--seconds",
+      "3",
+      "--port",
+      "33155",
+      "--calibrate"
+    ],
+    "returncode": 0,
+    "calibration": true
+  },
+  {
+    "name": "calibrate-indexed-native",
+    "command": [
+      "python3",
+      "tools/performance-probe/measure_desktop_workload.py",
+      "--case",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/indexed.json",
+      "--app",
+      "native",
+      "--output",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/calibrate-indexed-native",
+      "--seconds",
+      "3",
+      "--port",
+      "57913",
+      "--calibrate"
+    ],
+    "returncode": 0,
+    "calibration": true
+  },
+  {
+    "name": "0-fastwrite-lichtblick",
+    "command": [
+      "python3",
+      "tools/performance-probe/measure_desktop_workload.py",
+      "--case",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/fastwrite.json",
+      "--app",
+      "lichtblick",
+      "--output",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/0-fastwrite-lichtblick",
+      "--seconds",
+      "3",
+      "--port",
+      "45211",
+      "--references",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/calibrate-fastwrite-lichtblick/references.json"
+    ],
+    "returncode": 0,
+    "calibration": false
+  },
+  {
+    "name": "0-indexed-native",
+    "command": [
+      "python3",
+      "tools/performance-probe/measure_desktop_workload.py",
+      "--case",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/indexed.json",
+      "--app",
+      "native",
+      "--output",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/0-indexed-native",
+      "--seconds",
+      "3",
+      "--port",
+      "45121",
+      "--references",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/calibrate-indexed-native/references.json"
+    ],
+    "returncode": 0,
+    "calibration": false
+  },
+  {
+    "name": "0-indexed-lichtblick",
+    "command": [
+      "python3",
+      "tools/performance-probe/measure_desktop_workload.py",
+      "--case",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/indexed.json",
+      "--app",
+      "lichtblick",
+      "--output",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/0-indexed-lichtblick",
+      "--seconds",
+      "3",
+      "--port",
+      "43423",
+      "--references",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/calibrate-indexed-lichtblick/references.json"
+    ],
+    "returncode": 0,
+    "calibration": false
+  },
+  {
+    "name": "1-indexed-lichtblick",
+    "command": [
+      "python3",
+      "tools/performance-probe/measure_desktop_workload.py",
+      "--case",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/indexed.json",
+      "--app",
+      "lichtblick",
+      "--output",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/1-indexed-lichtblick",
+      "--seconds",
+      "3",
+      "--port",
+      "56947",
+      "--references",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/calibrate-indexed-lichtblick/references.json"
+    ],
+    "returncode": 0,
+    "calibration": false
+  },
+  {
+    "name": "1-indexed-native",
+    "command": [
+      "python3",
+      "tools/performance-probe/measure_desktop_workload.py",
+      "--case",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/indexed.json",
+      "--app",
+      "native",
+      "--output",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/1-indexed-native",
+      "--seconds",
+      "3",
+      "--port",
+      "37321",
+      "--references",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/calibrate-indexed-native/references.json"
+    ],
+    "returncode": 0,
+    "calibration": false
+  },
+  {
+    "name": "1-fastwrite-lichtblick",
+    "command": [
+      "python3",
+      "tools/performance-probe/measure_desktop_workload.py",
+      "--case",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/fastwrite.json",
+      "--app",
+      "lichtblick",
+      "--output",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/1-fastwrite-lichtblick",
+      "--seconds",
+      "3",
+      "--port",
+      "33749",
+      "--references",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/calibrate-fastwrite-lichtblick/references.json"
+    ],
+    "returncode": 0,
+    "calibration": false
+  },
+  {
+    "name": "2-fastwrite-lichtblick",
+    "command": [
+      "python3",
+      "tools/performance-probe/measure_desktop_workload.py",
+      "--case",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/fastwrite.json",
+      "--app",
+      "lichtblick",
+      "--output",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/2-fastwrite-lichtblick",
+      "--seconds",
+      "3",
+      "--port",
+      "34057",
+      "--references",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/calibrate-fastwrite-lichtblick/references.json"
+    ],
+    "returncode": 0,
+    "calibration": false
+  },
+  {
+    "name": "2-indexed-native",
+    "command": [
+      "python3",
+      "tools/performance-probe/measure_desktop_workload.py",
+      "--case",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/indexed.json",
+      "--app",
+      "native",
+      "--output",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/2-indexed-native",
+      "--seconds",
+      "3",
+      "--port",
+      "58521",
+      "--references",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/calibrate-indexed-native/references.json"
+    ],
+    "returncode": 0,
+    "calibration": false
+  },
+  {
+    "name": "2-indexed-lichtblick",
+    "command": [
+      "python3",
+      "tools/performance-probe/measure_desktop_workload.py",
+      "--case",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/indexed.json",
+      "--app",
+      "lichtblick",
+      "--output",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/2-indexed-lichtblick",
+      "--seconds",
+      "3",
+      "--port",
+      "54633",
+      "--references",
+      "/home/ryo/development/mcap_player/target/fastwrite-desktop/calibrate-indexed-lichtblick/references.json"
+    ],
+    "returncode": 0,
+    "calibration": false
+  }
+]
