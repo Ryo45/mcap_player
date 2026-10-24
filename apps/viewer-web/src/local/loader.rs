@@ -1446,9 +1446,9 @@ async fn read_browser_summary(
             }
         }
     }
-    let summary = reader
-        .finish()
-        .ok_or_else(|| DataLoadError::invalid_record("MCAP has no Summary section; explicitly reindex or convert the recording before opening it (automatic full-file scanning is disabled)"))?;
+    let summary = reader.finish().ok_or_else(|| {
+        DataLoadError::invalid_record(viewer_mcap::McapSourceError::SummaryRequired.to_string())
+    })?;
     Ok((summary, reads, bytes_read))
 }
 

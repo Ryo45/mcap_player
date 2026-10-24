@@ -1,6 +1,8 @@
 //! Failures while opening, reading or querying an MCAP source.
 use std::fmt;
 
+const INDEXING_HELP: &str = "explicitly reindex or convert the recording before opening it: mcap compress INPUT.mcap -o OUTPUT.mcap (use a new output file; automatic full-file scanning is disabled)";
+
 #[derive(Debug)]
 pub enum McapSourceError {
     QueryLimit {
@@ -44,12 +46,12 @@ impl fmt::Display for McapSourceError {
             Self::Mcap(error) => write!(f, "MCAP error: {error}"),
             Self::SummaryRequired => write!(
                 f,
-                "MCAP Summary is required for indexed playback; explicitly reindex or convert the recording before opening it (automatic full-file scanning is disabled)"
+                "MCAP Summary is required for indexed playback; {INDEXING_HELP}"
             ),
             Self::ChunkIndexRequired => {
                 write!(
                     f,
-                    "MCAP Chunk Index is required for indexed playback; explicitly reindex or convert the recording before opening it (automatic full-file scanning is disabled)"
+                    "MCAP Chunk Index is required for indexed playback (rosbag2 fastwrite writes unchunked MCAP); {INDEXING_HELP}"
                 )
             }
             Self::Io(error) => write!(f, "source I/O: {error}"),
@@ -74,7 +76,7 @@ impl fmt::Display for McapSourceError {
             Self::Decompression { format, source } => write!(f, "{format} decompression: {source}"),
             Self::MessageIndexRequired(error) => write!(
                 f,
-                "MCAP Message Index is required to restore stream {}",
+                "MCAP Message Index is required to restore stream {}; {INDEXING_HELP}",
                 error.stream.0
             ),
             Self::InvalidChunk(reason) => write!(f, "invalid MCAP Chunk: {reason}"),
