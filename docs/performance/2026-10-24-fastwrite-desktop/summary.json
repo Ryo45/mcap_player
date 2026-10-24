@@ -1,0 +1,393 @@
+{
+  "medians": [
+    {
+      "input": "fastwrite",
+      "app": "lichtblick",
+      "successes": 3,
+      "cpu_one_core_percent": 147.9817135943857,
+      "peak_sampled_pss_mib": 2018.8330078125,
+      "updates_hz": 29.746149231956757,
+      "lag_median_ms": 28.702038526534857
+    },
+    {
+      "input": "indexed",
+      "app": "native",
+      "successes": 3,
+      "cpu_one_core_percent": 38.6566833079263,
+      "peak_sampled_pss_mib": 257.1376953125,
+      "updates_hz": 29.11036906906224,
+      "lag_median_ms": 67.17028195659313
+    },
+    {
+      "input": "indexed",
+      "app": "lichtblick",
+      "successes": 3,
+      "cpu_one_core_percent": 188.2671309637946,
+      "peak_sampled_pss_mib": 1458.9208984375,
+      "updates_hz": 29.743775696594795,
+      "lag_median_ms": 31.567498203366906
+    }
+  ],
+  "runs": [
+    {
+      "run": "0-fastwrite-lichtblick",
+      "status": "ok",
+      "error": null,
+      "summary": {
+        "cpu_one_core_percent": 150.6638561184156,
+        "peak_sampled_pss_mib": 2018.8330078125,
+        "pss_sample_count": 12,
+        "pss_read_ms": {
+          "median": 25.589487049728632,
+          "p95": 28.00660952925682,
+          "min": 21.84473443776369,
+          "max": 28.060111217200756
+        },
+        "paused_pss_mib": 1595.6064453125,
+        "peak_sampled_summed_rss_mib": 2462.69921875,
+        "observer_work_ms": {
+          "median": 3.223057836294174,
+          "p95": 4.903360269963741,
+          "min": 2.3524705320596695,
+          "max": 6.133965216577053
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.746149231956757,
+            "progress_hz": 29.746149231956757,
+            "lag_ms": {
+              "median": 28.702038526534857,
+              "p95": 50.6117109830182,
+              "min": 7.245707449813565,
+              "max": 53.926930700739284
+            },
+            "rejected_samples": 1,
+            "max_sample_gap_ms": 22.828330285847187
+          }
+        ]
+      },
+      "opening_to_ready_ms": 2844.3229431286454
+    },
+    {
+      "run": "0-indexed-lichtblick",
+      "status": "ok",
+      "error": null,
+      "summary": {
+        "cpu_one_core_percent": 171.4463936686759,
+        "peak_sampled_pss_mib": 1463.4208984375,
+        "pss_sample_count": 12,
+        "pss_read_ms": {
+          "median": 21.532428450882435,
+          "p95": 23.377904668450356,
+          "min": 18.16148031502962,
+          "max": 23.68096075952053
+        },
+        "paused_pss_mib": 909.5302734375,
+        "peak_sampled_summed_rss_mib": 1921.2109375,
+        "observer_work_ms": {
+          "median": 3.91435157507658,
+          "p95": 5.101204849779606,
+          "min": 2.3338403552770615,
+          "max": 7.0940302684903145
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.743775696594795,
+            "progress_hz": 29.743775696594795,
+            "lag_ms": {
+              "median": 31.567498203366906,
+              "p95": 54.58287174503029,
+              "min": -0.7056485861540729,
+              "max": 70.58619987219572
+            },
+            "rejected_samples": 5,
+            "max_sample_gap_ms": 22.901544347405434
+          }
+        ]
+      },
+      "opening_to_ready_ms": 2619.2987617105246
+    },
+    {
+      "run": "0-indexed-native",
+      "status": "ok",
+      "error": null,
+      "summary": {
+        "cpu_one_core_percent": 38.64863565854717,
+        "peak_sampled_pss_mib": 257.1240234375,
+        "pss_sample_count": 12,
+        "pss_read_ms": {
+          "median": 4.167301580309868,
+          "p95": 5.006005987524986,
+          "min": 4.002080298960209,
+          "max": 5.136499181389809
+        },
+        "paused_pss_mib": 239.5830078125,
+        "peak_sampled_summed_rss_mib": 269.09375,
+        "observer_work_ms": {
+          "median": 2.4278098717331886,
+          "p95": 2.935362048447132,
+          "min": 2.2217463701963425,
+          "max": 52.57725715637207
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.10361561454984,
+            "progress_hz": 29.43813993195846,
+            "lag_ms": {
+              "median": 67.25158548603449,
+              "p95": 80.30229893823471,
+              "min": 51.96940538783868,
+              "max": 121.15112226456404
+            },
+            "rejected_samples": 0,
+            "max_sample_gap_ms": 60.95056142657995
+          }
+        ]
+      },
+      "opening_to_ready_ms": 209.68048833310604
+    },
+    {
+      "run": "1-fastwrite-lichtblick",
+      "status": "ok",
+      "error": null,
+      "summary": {
+        "cpu_one_core_percent": 143.5362624810121,
+        "peak_sampled_pss_mib": 2178.892578125,
+        "pss_sample_count": 12,
+        "pss_read_ms": {
+          "median": 25.224509183317423,
+          "p95": 28.76247838139534,
+          "min": 23.329458199441433,
+          "max": 30.356436036527157
+        },
+        "paused_pss_mib": 1692.888671875,
+        "peak_sampled_summed_rss_mib": 2596.30859375,
+        "observer_work_ms": {
+          "median": 3.451252356171608,
+          "p95": 4.860911518335342,
+          "min": 2.475854940712452,
+          "max": 9.8986541852355
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.40346373666528,
+            "progress_hz": 29.737594006400112,
+            "lag_ms": {
+              "median": 36.87732387334108,
+              "p95": 54.32503366221986,
+              "min": 11.447333234051893,
+              "max": 76.6346799830595
+            },
+            "rejected_samples": 2,
+            "max_sample_gap_ms": 21.689116954803467
+          }
+        ]
+      },
+      "opening_to_ready_ms": 2581.991652958095
+    },
+    {
+      "run": "1-indexed-lichtblick",
+      "status": "ok",
+      "error": null,
+      "summary": {
+        "cpu_one_core_percent": 206.9183519736691,
+        "peak_sampled_pss_mib": 1407.4169921875,
+        "pss_sample_count": 12,
+        "pss_read_ms": {
+          "median": 15.754754655063152,
+          "p95": 19.644415006041527,
+          "min": 14.44417703896761,
+          "max": 21.187259815633297
+        },
+        "paused_pss_mib": 941.8076171875,
+        "peak_sampled_summed_rss_mib": 1889.6875,
+        "observer_work_ms": {
+          "median": 3.4872321411967278,
+          "p95": 5.103764124214649,
+          "min": 2.4719759821891785,
+          "max": 6.512489169836044
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.743782538024302,
+            "progress_hz": 29.743782538024302,
+            "lag_ms": {
+              "median": 25.500249241789284,
+              "p95": 46.80577181279655,
+              "min": -2.178290424247553,
+              "max": 48.79169141252815
+            },
+            "rejected_samples": 2,
+            "max_sample_gap_ms": 22.3523685708642
+          }
+        ]
+      },
+      "opening_to_ready_ms": 2639.637678861618
+    },
+    {
+      "run": "1-indexed-native",
+      "status": "ok",
+      "error": null,
+      "summary": {
+        "cpu_one_core_percent": 38.94499073230427,
+        "peak_sampled_pss_mib": 257.1376953125,
+        "pss_sample_count": 12,
+        "pss_read_ms": {
+          "median": 4.187422804534435,
+          "p95": 4.982692189514637,
+          "min": 3.936297260224819,
+          "max": 5.979506298899651
+        },
+        "paused_pss_mib": 257.0625,
+        "peak_sampled_summed_rss_mib": 267.16796875,
+        "observer_work_ms": {
+          "median": 2.4138884618878365,
+          "p95": 2.6636719703674316,
+          "min": 2.239788882434368,
+          "max": 4.1935015469789505
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.423265263601596,
+            "progress_hz": 29.423265263601596,
+            "lag_ms": {
+              "median": 67.17028195659313,
+              "p95": 81.2615803753336,
+              "min": 50.023825652897536,
+              "max": 82.80920827140426
+            },
+            "rejected_samples": 3,
+            "max_sample_gap_ms": 22.280782461166382
+          }
+        ]
+      },
+      "opening_to_ready_ms": 209.70861054956913
+    },
+    {
+      "run": "2-fastwrite-lichtblick",
+      "status": "ok",
+      "error": null,
+      "summary": {
+        "cpu_one_core_percent": 147.9817135943857,
+        "peak_sampled_pss_mib": 1995.453125,
+        "pss_sample_count": 12,
+        "pss_read_ms": {
+          "median": 26.301573496311903,
+          "p95": 28.585984371602535,
+          "min": 22.946007549762726,
+          "max": 30.579976737499237
+        },
+        "paused_pss_mib": 1621.005859375,
+        "peak_sampled_summed_rss_mib": 2417.92578125,
+        "observer_work_ms": {
+          "median": 3.6925002932548523,
+          "p95": 5.034958012402058,
+          "min": 2.4145757779479027,
+          "max": 9.789243340492249
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.749865249218043,
+            "progress_hz": 29.749865249218043,
+            "lag_ms": {
+              "median": 26.19540560990563,
+              "p95": 52.49771034965933,
+              "min": -2.6284876589974804,
+              "max": 62.90537230670434
+            },
+            "rejected_samples": 6,
+            "max_sample_gap_ms": 25.210602208971977
+          }
+        ]
+      },
+      "opening_to_ready_ms": 2838.274108245969
+    },
+    {
+      "run": "2-indexed-lichtblick",
+      "status": "ok",
+      "error": null,
+      "summary": {
+        "cpu_one_core_percent": 188.2671309637946,
+        "peak_sampled_pss_mib": 1458.9208984375,
+        "pss_sample_count": 12,
+        "pss_read_ms": {
+          "median": 21.555645391345024,
+          "p95": 24.377542547881603,
+          "min": 17.918751575052738,
+          "max": 26.006808504462242
+        },
+        "paused_pss_mib": 945.943359375,
+        "peak_sampled_summed_rss_mib": 1910.96875,
+        "observer_work_ms": {
+          "median": 3.840884193778038,
+          "p95": 5.051051266491413,
+          "min": 2.5770096108317375,
+          "max": 6.504738703370094
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.415324331022877,
+            "progress_hz": 29.749589380239048,
+            "lag_ms": {
+              "median": 40.98648354411117,
+              "p95": 65.04752089579901,
+              "min": 3.7244781851768494,
+              "max": 68.67734317978224
+            },
+            "rejected_samples": 1,
+            "max_sample_gap_ms": 22.675481624901295
+          }
+        ]
+      },
+      "opening_to_ready_ms": 2627.2643618285656
+    },
+    {
+      "run": "2-indexed-native",
+      "status": "ok",
+      "error": null,
+      "summary": {
+        "cpu_one_core_percent": 38.6566833079263,
+        "peak_sampled_pss_mib": 257.3056640625,
+        "pss_sample_count": 12,
+        "pss_read_ms": {
+          "median": 3.9902343414723873,
+          "p95": 4.870962351560593,
+          "min": 3.7584062665700912,
+          "max": 5.084057338535786
+        },
+        "paused_pss_mib": 257.3310546875,
+        "peak_sampled_summed_rss_mib": 269.3515625,
+        "observer_work_ms": {
+          "median": 2.4232836440205574,
+          "p95": 2.6705823838710785,
+          "min": 2.2335806861519814,
+          "max": 52.2605013102293
+        },
+        "cameras": [
+          {
+            "camera_id": 0,
+            "updates_hz": 29.11036906906224,
+            "progress_hz": 29.444971012384794,
+            "lag_ms": {
+              "median": 56.73784101381907,
+              "p95": 75.54162703454503,
+              "min": 42.7877396966021,
+              "max": 108.56832849482689
+            },
+            "rejected_samples": 5,
+            "max_sample_gap_ms": 60.77350862324238
+          }
+        ]
+      },
+      "opening_to_ready_ms": 214.55790661275387
+    }
+  ]
+}
