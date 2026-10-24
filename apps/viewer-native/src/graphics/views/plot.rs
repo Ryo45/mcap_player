@@ -71,14 +71,9 @@ pub(crate) fn show_plot_view(
     let presentation = signal_presentation(input.signal_id);
     ui.horizontal(|ui| {
         ui.heading(presentation.heading);
-        if input.signal.is_some() || input.current.is_some() {
+        if let Some(current) = input.current {
             ui.separator();
-            ui.monospace(
-                input
-                    .current
-                    .map(|sample| (presentation.format_current)(sample.value))
-                    .unwrap_or_else(|| "waiting for first sample".to_owned()),
-            );
+            ui.monospace((presentation.format_current)(current.value));
         }
         if input.loading {
             ui.separator();

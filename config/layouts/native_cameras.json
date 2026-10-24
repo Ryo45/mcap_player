@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "root": {
+    "kind": "split",
+    "direction": "column",
+    "children": [
+      {
+        "weight": 1,
+        "node": {
+          "kind": "split",
+          "direction": "row",
+          "children": [
+            {
+              "weight": 1,
+              "node": {
+                "kind": "panel",
+                "id": "cameras-front",
+                "panelType": "camera",
+                "configVersion": 1,
+                "title": "Front",
+                "config": {
+                  "cameraTopic": "/camera/front/image/compressed",
+                  "showThumbnails": false,
+                  "showOverlay": false,
+                  "schedulerPriority": true
+                }
+              }
+            },
+            {
+              "weight": 1,
+              "node": {
+                "kind": "panel",
+                "id": "cameras-left",
+                "panelType": "camera",
+                "configVersion": 1,
+                "title": "Front left",
+                "config": {
+                  "cameraTopic": "/camera/front_left/image/compressed",
+                  "showThumbnails": false,
+                  "showOverlay": false,
+                  "schedulerPriority": false
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "weight": 1,
+        "node": {
+          "kind": "split",
+          "direction": "row",
+          "children": [
+            {
+              "weight": 1,
+              "node": {
+                "kind": "panel",
+                "id": "cameras-right",
+                "panelType": "camera",
+                "configVersion": 1,
+                "title": "Front right",
+                "config": {
+                  "cameraTopic": "/camera/front_right/image/compressed",
+                  "showThumbnails": false,
+                  "showOverlay": false,
+                  "schedulerPriority": false
+                }
+              }
+            },
+            {
+              "weight": 1,
+              "node": {
+                "kind": "panel",
+                "id": "cameras-rear",
+                "panelType": "camera",
+                "configVersion": 1,
+                "title": "Rear",
+                "config": {
+                  "cameraTopic": "/camera/rear/image/compressed",
+                  "showThumbnails": false,
+                  "showOverlay": false,
+                  "schedulerPriority": false
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

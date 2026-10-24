@@ -4,6 +4,13 @@ The Native viewer's central area is restored from the versioned JSON embedded fr
 `config/layouts/native_default.json`. Playback controls, live status, source status,
 file opening, and application errors remain outside the layout document.
 
+Additional bundled presets include `cameras` (four selected image topics), `navigation`
+(Scene, Camera, BEV and motion plots), and `inspection` (Topics/Inspector and motion plots).
+See the [layout gallery](layout_gallery.md) for screenshots, commands and topic bindings.
+Builtin Plot panels use their allocated height rather than a fixed 170-pixel graph.
+An overview can be queried without forward Odometry playback; its heading only shows an
+exact current value when one is available, without displaying a misleading loading message.
+
 ## Ownership
 
 ```text

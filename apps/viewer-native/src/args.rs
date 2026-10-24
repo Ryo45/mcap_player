@@ -104,12 +104,12 @@ impl Args {
                 }
                 "--layout" => {
                     layout = parse_layout(&values.next().context(
-                        "--layout needs standard, showcase, explore, monitor, health or scene",
+                        "--layout needs standard, showcase, explore, monitor, health, scene, cameras, navigation or inspection",
                     )?)?
                 }
                 "--help" | "-h" => {
                     println!(
-                        "viewer-native [--mcap FILE_OR_DIRECTORY] [--camera-topic TOPIC] [--camera-calibration JSON] [--platform-geometry JSON | --no-platform-geometry] [--fixed-frame FRAME] [--ground-frame FRAME] [--layout standard|showcase|explore|monitor|health|scene] [--inspect-topic TOPIC] [--point-cloud-topic TOPIC] [--live [--reliable] [--live-raw-camera-topic TOPIC]...]\n\nFiles or directories containing indexed MCAP parts can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
+                        "viewer-native [--mcap FILE_OR_DIRECTORY] [--camera-topic TOPIC] [--camera-calibration JSON] [--platform-geometry JSON | --no-platform-geometry] [--fixed-frame FRAME] [--ground-frame FRAME] [--layout standard|showcase|explore|monitor|health|scene|cameras|navigation|inspection] [--inspect-topic TOPIC] [--point-cloud-topic TOPIC] [--live [--reliable] [--live-raw-camera-topic TOPIC]...]\n\nFiles or directories containing indexed MCAP parts can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
                     );
                     std::process::exit(0);
                 }
@@ -187,9 +187,12 @@ fn parse_layout(value: &str) -> Result<WorkspaceLayout> {
         "monitor" => Ok(WorkspaceLayout::Monitor),
         "health" => Ok(WorkspaceLayout::Health),
         "scene" => Ok(WorkspaceLayout::Scene),
+        "cameras" => Ok(WorkspaceLayout::Cameras),
+        "navigation" => Ok(WorkspaceLayout::Navigation),
+        "inspection" => Ok(WorkspaceLayout::Inspection),
         value => {
             bail!(
-                "unsupported layout {value:?}; expected standard, showcase, explore, monitor, health or scene"
+                "unsupported layout {value:?}; expected standard, showcase, explore, monitor, health, scene, cameras, navigation or inspection"
             )
         }
     }

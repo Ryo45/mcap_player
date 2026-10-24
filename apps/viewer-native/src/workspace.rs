@@ -27,12 +27,18 @@ pub(crate) enum WorkspaceLayout {
     Monitor,
     Health,
     Scene,
+    Cameras,
+    Navigation,
+    Inspection,
 }
 
 impl WorkspaceLayout {
     fn bundled_json(self) -> &'static str {
         match self {
             Self::Scene => include_str!("../../../config/layouts/native_scene.json"),
+            Self::Cameras => include_str!("../../../config/layouts/native_cameras.json"),
+            Self::Navigation => include_str!("../../../config/layouts/native_navigation.json"),
+            Self::Inspection => include_str!("../../../config/layouts/native_inspection.json"),
             Self::Standard => BUNDLED_DEFAULT_LAYOUT,
             Self::Showcase => BUNDLED_SHOWCASE_LAYOUT,
             Self::Monitor => include_str!("../../../config/layouts/native_monitor.json"),
@@ -343,6 +349,49 @@ mod tests {
         )
         .unwrap();
         workspace.configure_session(&plan);
+    }
+
+    #[test]
+    fn camera_wall_selects_only_its_four_streams() {
+        let workspace = NativeWorkspace::load_bundled_or_fallback(WorkspaceLayout::Cameras);
+        assert!(workspace.startup_warning().is_none());
+        assert_eq!(workspace.panels.placeholder_count(), 0);
+        let mut expected = PlaybackRequirements::empty();
+        for topic in [
+            "/camera/front/image/compressed",
+            "/camera/front_left/image/compressed",
+            "/camera/front_right/image/compressed",
+            "/camera/rear/image/compressed",
+        ] {
+            expected.require_camera_topic(topic);
+        }
+        assert_eq!(workspace.data_requirements().playback, expected);
+        assert!(workspace.data_requirements().signals.is_empty());
+        assert_eq!(
+            workspace.scheduler_priority_topic(),
+            Some("/camera/front/image/compressed")
+        );
+    }
+
+    #[test]
+    fn analysis_layouts_load_and_inspection_does_not_decode_cameras() {
+        for layout in [WorkspaceLayout::Navigation, WorkspaceLayout::Inspection] {
+            let workspace = NativeWorkspace::load_bundled_or_fallback(layout);
+            assert!(workspace.startup_warning().is_none());
+            assert_eq!(workspace.panels.placeholder_count(), 0);
+            assert_eq!(
+                workspace.data_requirements().signals,
+                BTreeSet::from([SignalId::Speed, SignalId::YawRate])
+            );
+            if layout == WorkspaceLayout::Inspection {
+                assert!(workspace.panels.has_embedded_topics());
+                // Plots query their series independently of forward feature playback.
+                assert_eq!(
+                    workspace.data_requirements().playback,
+                    PlaybackRequirements::empty()
+                );
+            }
+        }
     }
 
     #[test]
