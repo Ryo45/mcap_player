@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "root": {
+    "kind": "split",
+    "direction": "row",
+    "children": [
+      {
+        "weight": 0.52,
+        "node": {
+          "kind": "panel",
+          "id": "inspection-topics",
+          "panelType": "topics",
+          "configVersion": 1,
+          "title": "Topics / Inspector",
+          "config": {}
+        }
+      },
+      {
+        "weight": 0.48,
+        "node": {
+          "kind": "split",
+          "direction": "column",
+          "children": [
+            {
+              "weight": 1,
+              "node": {
+                "kind": "panel",
+                "id": "inspection-speed",
+                "panelType": "plot",
+                "configVersion": 1,
+                "title": "Speed",
+                "config": {
+                  "signal": "vehicle-speed"
+                }
+              }
+            },
+            {
+              "weight": 1,
+              "node": {
+                "kind": "panel",
+                "id": "inspection-yaw",
+                "panelType": "plot",
+                "configVersion": 1,
+                "title": "Yaw rate",
+                "config": {
+                  "signal": "yaw-rate"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

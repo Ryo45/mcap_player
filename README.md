@@ -27,6 +27,20 @@ topicを調べても、CameraやSceneの再生対象は変わりません。大�
 まず試すには[監視・解析用の画面](#監視解析用の画面)、撮影に使ったサンプルの準備は
 [スクリーンショットの再現手順](docs/screenshots.md)を参照してください。
 
+## 用途から選ぶ画面
+
+Nativeには、すぐ試せる用途別レイアウトを同梱しています。画像をクリックすると原寸で開けます。
+
+| 複数カメラを一覧する | 映像・空間・動きを照合する | Topicの値と時系列を調べる |
+|---|---|---|
+| ![4つの画像トピックを並べるNativeのcamerasレイアウト](docs/images/layout-cameras.png) | ![3D Scene、Camera overlay、BEV、速度・ヨーレートを表示するnavigationレイアウト](docs/images/layout-navigation.png) | ![LaserScanのInspectorと速度・ヨーレートのPlotを表示するinspectionレイアウト](docs/images/layout-inspection.png) |
+| `--layout cameras` | `--layout navigation` | `--layout inspection --inspect-topic /scan` |
+
+撮影は同梱デモの通常ビルドです。複数カメラのデモ画像は同じ元映像の色違いで、異なる実視点ではありません。
+Pathは生成データ、Camera calibrationはデモ値です。
+[画面ごとの使い方・大きい画像・対象トピック](docs/layout_gallery.md)を用意しています。
+先頭の`monitor`は、Topic・InspectorとScene・Cameraを同時に追う構成です。
+
 ## 主な機能
 
 - 複数のカメラ（JPEG/PNG `CompressedImage`、8bit Raw `Image`）を一覧・フォーカス表示

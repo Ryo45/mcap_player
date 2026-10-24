@@ -201,6 +201,7 @@ impl PlotPanel {
                 return PanelOutput::default();
             };
             let signal_id = self.config.signal.signal_id();
+            let plot_height = (ui.available_height() - 84.0).max(48.0);
             let output = show_plot_view(
                 ui,
                 PlotViewInput {
@@ -213,7 +214,7 @@ impl PlotPanel {
                     display_time: input.display_time.unwrap_or(playback.cursor),
                     preview_signal: input.preview_signal,
                     bookmarks: input.bookmarks,
-                    plot_height: 170.0,
+                    plot_height,
                 },
                 &mut self.state,
             );

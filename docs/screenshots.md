@@ -33,6 +33,18 @@ Previewはこのコピーのsource fingerprintに対応して別途生成しま�
 READMEの画像はfieldを折りたたんだ状態です。Inspectorではheaderを展開し、下へscrollして
 `ranges`などの配列を64要素ずつ閲覧できます。
 
+## 紹介記事用のレイアウト
+
+[用途別ギャラリー](layout_gallery.md)の`cameras`、`navigation`、`inspection`も、同じ撮影用コピーを使う。
+通常のNative releaseビルドを1920×1080にし、5.018秒の末尾で停止して撮影した。
+`inspection`だけは`--inspect-topic /scan`も指定する。撮影時にパネルを隠したり、
+画像を合成したり、表示用の物理scale補正を加えたりしていない。
+NVIDIA Vulkanの実ウィンドウからclient areaだけを保存している。
+
+複数画像の元データは`camera_7_5s.json`にある通り、同一視点の決定的な色違い。
+カメラごとの独立した実視点と誤解させないよう、記事内でもこの点を明記する。
+Pathも生成データ、校正値もデモ値。スクリーンショットを実ロボットの走行検証結果として扱わない。
+
 ## ブラウザ版を撮影する
 
 READMEの[ブラウザ画面](images/monitor-workspace-web.png)は、同じ

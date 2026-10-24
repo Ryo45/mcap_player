@@ -31,6 +31,7 @@ Metadataレコード、Attachmentが保持された。一方、**メッセージ
 ファイル全体の完全な複製とは扱わず、元ファイルを保存する。任意の未知レコードの保持も保証しない。
 
 検証は[2026-10-24の結果](verification/2026-10-24-fastwrite/README.md)に記録した。
+[Native / Lichtblick Desktopの同じRaw画像による比較](performance/2026-10-24-fastwrite-desktop/README.md)もある。
 再実行には外部CLIを明示的に指定する（通常の`cargo test`では外部依存テストをskipする）。
 
 ```sh
