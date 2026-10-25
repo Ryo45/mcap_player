@@ -108,3 +108,18 @@ PSS既定4500MiB（約4.39GiB）は**実験用の停止条件**。製品上限�
 
 過去の比較対象との寸法合わせや段階別trace用builderは、その実験専用のまま残す。
 通常の回帰確認はそれらのsource書き換えに依存しない。
+
+## Seek候補の破棄される旧状態を測る
+
+`FeatureRuntime::stage_restore`を変更せず、旧点群を持つruntimeと、同じ経路で事前に空にした
+runtimeを比較する計測。空の対照は新しい実装ではなく、不要な旧状態cloneのコストを分離するためのもの。
+
+```sh
+cargo build --release -p performance-probe --example seek_clone --locked
+python3 tools/performance-probe/measure_seek_clone.py --output target/seek-clone-new
+```
+
+6万／100万点、XYZ／RGBA／RGBA＋intensityを各3process、10回warmup後50回測る。
+state消去だけ、同サイズの復元decode、失敗を分け、時間・Rust allocator要求総量・追加live要求量を記録する。
+I/O・MCAP展開・GPU・WASMは含めず、RSS/VRAM測定ではない。
+結果と実装判断は[Seek候補の調査](../../docs/performance/2026-10-25-seek-candidate-copy/README.md)。

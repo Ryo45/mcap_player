@@ -1,0 +1,1644 @@
+{
+  "summary": [
+    {
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "populated": {
+        "ns": 10538.5,
+        "p95_ns": 11281,
+        "allocated_bytes": 720009.0,
+        "allocation_calls": 2.0,
+        "peak_extra_live_bytes": 720009.0
+      },
+      "empty_control": {
+        "ns": 109.0,
+        "p95_ns": 118,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "populated": {
+        "ns": 310707.0,
+        "p95_ns": 313131,
+        "allocated_bytes": 1440021.0,
+        "allocation_calls": 7.0,
+        "peak_extra_live_bytes": 720009.0
+      },
+      "empty_control": {
+        "ns": 300270.0,
+        "p95_ns": 303927,
+        "allocated_bytes": 720012.0,
+        "allocation_calls": 5.0,
+        "peak_extra_live_bytes": 720009.0
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "populated": {
+        "ns": 10537.5,
+        "p95_ns": 12994,
+        "allocated_bytes": 720009.0,
+        "allocation_calls": 2.0,
+        "peak_extra_live_bytes": 720009.0
+      },
+      "empty_control": {
+        "ns": 108.0,
+        "p95_ns": 149,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "populated": {
+        "ns": 14547.0,
+        "p95_ns": 18408,
+        "allocated_bytes": 960009.0,
+        "allocation_calls": 3.0,
+        "peak_extra_live_bytes": 960009.0
+      },
+      "empty_control": {
+        "ns": 108.0,
+        "p95_ns": 138,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "populated": {
+        "ns": 366949.0,
+        "p95_ns": 375721,
+        "allocated_bytes": 1920025.0,
+        "allocation_calls": 10.0,
+        "peak_extra_live_bytes": 960009.0
+      },
+      "empty_control": {
+        "ns": 352618.5,
+        "p95_ns": 357530,
+        "allocated_bytes": 960016.0,
+        "allocation_calls": 7.0,
+        "peak_extra_live_bytes": 960009.0
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "populated": {
+        "ns": 18210.0,
+        "p95_ns": 29853,
+        "allocated_bytes": 960009.0,
+        "allocation_calls": 3.0,
+        "peak_extra_live_bytes": 960009.0
+      },
+      "empty_control": {
+        "ns": 120.0,
+        "p95_ns": 203,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "populated": {
+        "ns": 19518.5,
+        "p95_ns": 26876,
+        "allocated_bytes": 1200009.0,
+        "allocation_calls": 4.0,
+        "peak_extra_live_bytes": 1200009.0
+      },
+      "empty_control": {
+        "ns": 111.5,
+        "p95_ns": 139,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "populated": {
+        "ns": 412299.0,
+        "p95_ns": 472938,
+        "allocated_bytes": 2400034.0,
+        "allocation_calls": 13.0,
+        "peak_extra_live_bytes": 1200009.0
+      },
+      "empty_control": {
+        "ns": 383590.0,
+        "p95_ns": 453407,
+        "allocated_bytes": 1200025.0,
+        "allocation_calls": 9.0,
+        "peak_extra_live_bytes": 1200009.0
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "populated": {
+        "ns": 28668.0,
+        "p95_ns": 44232,
+        "allocated_bytes": 1200009.0,
+        "allocation_calls": 4.0,
+        "peak_extra_live_bytes": 1200009.0
+      },
+      "empty_control": {
+        "ns": 139.0,
+        "p95_ns": 300,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "populated": {
+        "ns": 511755.0,
+        "p95_ns": 520787,
+        "allocated_bytes": 12000009.0,
+        "allocation_calls": 2.0,
+        "peak_extra_live_bytes": 12000009.0
+      },
+      "empty_control": {
+        "ns": 207.5,
+        "p95_ns": 332,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "populated": {
+        "ns": 3363069.5,
+        "p95_ns": 3391584,
+        "allocated_bytes": 24000021.0,
+        "allocation_calls": 7.0,
+        "peak_extra_live_bytes": 12000009.0
+      },
+      "empty_control": {
+        "ns": 2859971.5,
+        "p95_ns": 2889845,
+        "allocated_bytes": 12000012.0,
+        "allocation_calls": 5.0,
+        "peak_extra_live_bytes": 12000009.0
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "populated": {
+        "ns": 511282.5,
+        "p95_ns": 526171,
+        "allocated_bytes": 12000009.0,
+        "allocation_calls": 2.0,
+        "peak_extra_live_bytes": 12000009.0
+      },
+      "empty_control": {
+        "ns": 343.5,
+        "p95_ns": 552,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "populated": {
+        "ns": 859348.0,
+        "p95_ns": 972241,
+        "allocated_bytes": 16000009.0,
+        "allocation_calls": 3.0,
+        "peak_extra_live_bytes": 16000009.0
+      },
+      "empty_control": {
+        "ns": 293.5,
+        "p95_ns": 442,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "populated": {
+        "ns": 4612995.5,
+        "p95_ns": 4666493,
+        "allocated_bytes": 32000025.0,
+        "allocation_calls": 10.0,
+        "peak_extra_live_bytes": 16000009.0
+      },
+      "empty_control": {
+        "ns": 3855801.0,
+        "p95_ns": 3890200,
+        "allocated_bytes": 16000016.0,
+        "allocation_calls": 7.0,
+        "peak_extra_live_bytes": 16000009.0
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "populated": {
+        "ns": 918287.5,
+        "p95_ns": 992610,
+        "allocated_bytes": 16000009.0,
+        "allocation_calls": 3.0,
+        "peak_extra_live_bytes": 16000009.0
+      },
+      "empty_control": {
+        "ns": 479.0,
+        "p95_ns": 819,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "populated": {
+        "ns": 1178106.0,
+        "p95_ns": 1237422,
+        "allocated_bytes": 20000009.0,
+        "allocation_calls": 4.0,
+        "peak_extra_live_bytes": 20000009.0
+      },
+      "empty_control": {
+        "ns": 373.0,
+        "p95_ns": 536,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "populated": {
+        "ns": 5649623.0,
+        "p95_ns": 5740900,
+        "allocated_bytes": 40000034.0,
+        "allocation_calls": 13.0,
+        "peak_extra_live_bytes": 20000009.0
+      },
+      "empty_control": {
+        "ns": 4593076.0,
+        "p95_ns": 4645250,
+        "allocated_bytes": 20000025.0,
+        "allocation_calls": 9.0,
+        "peak_extra_live_bytes": 20000009.0
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "populated": {
+        "ns": 1234791.5,
+        "p95_ns": 1258792,
+        "allocated_bytes": 20000009.0,
+        "allocation_calls": 4.0,
+        "peak_extra_live_bytes": 20000009.0
+      },
+      "empty_control": {
+        "ns": 446.0,
+        "p95_ns": 810,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0
+      }
+    }
+  ],
+  "run_medians": [
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 10578.5,
+      "allocated_bytes": 720009.0,
+      "allocation_calls": 2.0,
+      "peak_extra_live_bytes": 720009.0,
+      "p95_ns": 11281
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 109.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 118
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": false,
+      "ns": 310738.0,
+      "allocated_bytes": 1440021.0,
+      "allocation_calls": 7.0,
+      "peak_extra_live_bytes": 720009.0,
+      "p95_ns": 313131
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": true,
+      "ns": 300301.0,
+      "allocated_bytes": 720012.0,
+      "allocation_calls": 5.0,
+      "peak_extra_live_bytes": 720009.0,
+      "p95_ns": 303927
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": false,
+      "ns": 10707.5,
+      "allocated_bytes": 720009.0,
+      "allocation_calls": 2.0,
+      "peak_extra_live_bytes": 720009.0,
+      "p95_ns": 12994
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": true,
+      "ns": 122.5,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 149
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 14730.0,
+      "allocated_bytes": 960009.0,
+      "allocation_calls": 3.0,
+      "peak_extra_live_bytes": 960009.0,
+      "p95_ns": 18408
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 108.5,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 135
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": false,
+      "ns": 366949.0,
+      "allocated_bytes": 1920025.0,
+      "allocation_calls": 10.0,
+      "peak_extra_live_bytes": 960009.0,
+      "p95_ns": 375721
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": true,
+      "ns": 352618.5,
+      "allocated_bytes": 960016.0,
+      "allocation_calls": 7.0,
+      "peak_extra_live_bytes": 960009.0,
+      "p95_ns": 424907
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": false,
+      "ns": 18210.0,
+      "allocated_bytes": 960009.0,
+      "allocation_calls": 3.0,
+      "peak_extra_live_bytes": 960009.0,
+      "p95_ns": 29853
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": true,
+      "ns": 109.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 179
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 19518.5,
+      "allocated_bytes": 1200009.0,
+      "allocation_calls": 4.0,
+      "peak_extra_live_bytes": 1200009.0,
+      "p95_ns": 26589
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 111.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 139
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": false,
+      "ns": 299016.0,
+      "allocated_bytes": 2400034.0,
+      "allocation_calls": 13.0,
+      "peak_extra_live_bytes": 1200009.0,
+      "p95_ns": 468441
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": true,
+      "ns": 272297.0,
+      "allocated_bytes": 1200025.0,
+      "allocation_calls": 9.0,
+      "peak_extra_live_bytes": 1200009.0,
+      "p95_ns": 508568
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": false,
+      "ns": 28668.0,
+      "allocated_bytes": 1200009.0,
+      "allocation_calls": 4.0,
+      "peak_extra_live_bytes": 1200009.0,
+      "p95_ns": 44232
+    },
+    {
+      "repeat": 0,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": true,
+      "ns": 115.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 226
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 510813.0,
+      "allocated_bytes": 12000009.0,
+      "allocation_calls": 2.0,
+      "peak_extra_live_bytes": 12000009.0,
+      "p95_ns": 525753
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 207.5,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 332
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": false,
+      "ns": 3368553.0,
+      "allocated_bytes": 24000021.0,
+      "allocation_calls": 7.0,
+      "peak_extra_live_bytes": 12000009.0,
+      "p95_ns": 3391584
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": true,
+      "ns": 2860880.0,
+      "allocated_bytes": 12000012.0,
+      "allocation_calls": 5.0,
+      "peak_extra_live_bytes": 12000009.0,
+      "p95_ns": 2892082
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": false,
+      "ns": 511282.5,
+      "allocated_bytes": 12000009.0,
+      "allocation_calls": 2.0,
+      "peak_extra_live_bytes": 12000009.0,
+      "p95_ns": 533420
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": true,
+      "ns": 351.5,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 539
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 911577.0,
+      "allocated_bytes": 16000009.0,
+      "allocation_calls": 3.0,
+      "peak_extra_live_bytes": 16000009.0,
+      "p95_ns": 986002
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 332.5,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 522
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": false,
+      "ns": 4616363.5,
+      "allocated_bytes": 32000025.0,
+      "allocation_calls": 10.0,
+      "peak_extra_live_bytes": 16000009.0,
+      "p95_ns": 4701909
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": true,
+      "ns": 3857787.0,
+      "allocated_bytes": 16000016.0,
+      "allocation_calls": 7.0,
+      "peak_extra_live_bytes": 16000009.0,
+      "p95_ns": 3890200
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": false,
+      "ns": 945090.5,
+      "allocated_bytes": 16000009.0,
+      "allocation_calls": 3.0,
+      "peak_extra_live_bytes": 16000009.0,
+      "p95_ns": 1173286
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": true,
+      "ns": 439.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 799
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 1175130.5,
+      "allocated_bytes": 20000009.0,
+      "allocation_calls": 4.0,
+      "peak_extra_live_bytes": 20000009.0,
+      "p95_ns": 1237422
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 374.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 543
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": false,
+      "ns": 5640927.0,
+      "allocated_bytes": 40000034.0,
+      "allocation_calls": 13.0,
+      "peak_extra_live_bytes": 20000009.0,
+      "p95_ns": 5708945
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": true,
+      "ns": 4591979.5,
+      "allocated_bytes": 20000025.0,
+      "allocation_calls": 9.0,
+      "peak_extra_live_bytes": 20000009.0,
+      "p95_ns": 4645250
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": false,
+      "ns": 1234791.5,
+      "allocated_bytes": 20000009.0,
+      "allocation_calls": 4.0,
+      "peak_extra_live_bytes": 20000009.0,
+      "p95_ns": 1252164
+    },
+    {
+      "repeat": 0,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": true,
+      "ns": 446.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 810
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 1178106.0,
+      "allocated_bytes": 20000009.0,
+      "allocation_calls": 4.0,
+      "peak_extra_live_bytes": 20000009.0,
+      "p95_ns": 1197022
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 351.5,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 513
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": false,
+      "ns": 5656977.0,
+      "allocated_bytes": 40000034.0,
+      "allocation_calls": 13.0,
+      "peak_extra_live_bytes": 20000009.0,
+      "p95_ns": 5740900
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": true,
+      "ns": 4603262.5,
+      "allocated_bytes": 20000025.0,
+      "allocation_calls": 9.0,
+      "peak_extra_live_bytes": 20000009.0,
+      "p95_ns": 4645011
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": false,
+      "ns": 1157645.0,
+      "allocated_bytes": 20000009.0,
+      "allocation_calls": 4.0,
+      "peak_extra_live_bytes": 20000009.0,
+      "p95_ns": 1258792
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": true,
+      "ns": 451.5,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 765
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 859348.0,
+      "allocated_bytes": 16000009.0,
+      "allocation_calls": 3.0,
+      "peak_extra_live_bytes": 16000009.0,
+      "p95_ns": 972241
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 290.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 442
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": false,
+      "ns": 4612715.5,
+      "allocated_bytes": 32000025.0,
+      "allocation_calls": 10.0,
+      "peak_extra_live_bytes": 16000009.0,
+      "p95_ns": 4661708
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": true,
+      "ns": 3853703.5,
+      "allocated_bytes": 16000016.0,
+      "allocation_calls": 7.0,
+      "peak_extra_live_bytes": 16000009.0,
+      "p95_ns": 3883074
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": false,
+      "ns": 918287.5,
+      "allocated_bytes": 16000009.0,
+      "allocation_calls": 3.0,
+      "peak_extra_live_bytes": 16000009.0,
+      "p95_ns": 961315
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": true,
+      "ns": 479.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 954
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 511755.0,
+      "allocated_bytes": 12000009.0,
+      "allocation_calls": 2.0,
+      "peak_extra_live_bytes": 12000009.0,
+      "p95_ns": 520787
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 183.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 313
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": false,
+      "ns": 3358458.0,
+      "allocated_bytes": 24000021.0,
+      "allocation_calls": 7.0,
+      "peak_extra_live_bytes": 12000009.0,
+      "p95_ns": 3390756
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": true,
+      "ns": 2859971.5,
+      "allocated_bytes": 12000012.0,
+      "allocation_calls": 5.0,
+      "peak_extra_live_bytes": 12000009.0,
+      "p95_ns": 2886330
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": false,
+      "ns": 515856.5,
+      "allocated_bytes": 12000009.0,
+      "allocation_calls": 2.0,
+      "peak_extra_live_bytes": 12000009.0,
+      "p95_ns": 526171
+    },
+    {
+      "repeat": 1,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": true,
+      "ns": 285.5,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 552
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 19675.5,
+      "allocated_bytes": 1200009.0,
+      "allocation_calls": 4.0,
+      "peak_extra_live_bytes": 1200009.0,
+      "p95_ns": 29260
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 112.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 137
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": false,
+      "ns": 412299.0,
+      "allocated_bytes": 2400034.0,
+      "allocation_calls": 13.0,
+      "peak_extra_live_bytes": 1200009.0,
+      "p95_ns": 475166
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": true,
+      "ns": 383590.0,
+      "allocated_bytes": 1200025.0,
+      "allocation_calls": 9.0,
+      "peak_extra_live_bytes": 1200009.0,
+      "p95_ns": 453407
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": false,
+      "ns": 30209.5,
+      "allocated_bytes": 1200009.0,
+      "allocation_calls": 4.0,
+      "peak_extra_live_bytes": 1200009.0,
+      "p95_ns": 42166
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": true,
+      "ns": 139.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 300
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 14347.5,
+      "allocated_bytes": 960009.0,
+      "allocation_calls": 3.0,
+      "peak_extra_live_bytes": 960009.0,
+      "p95_ns": 18089
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 106.5,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 138
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": false,
+      "ns": 356607.0,
+      "allocated_bytes": 1920025.0,
+      "allocation_calls": 10.0,
+      "peak_extra_live_bytes": 960009.0,
+      "p95_ns": 369171
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": true,
+      "ns": 318870.0,
+      "allocated_bytes": 960016.0,
+      "allocation_calls": 7.0,
+      "peak_extra_live_bytes": 960009.0,
+      "p95_ns": 354526
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": false,
+      "ns": 17184.5,
+      "allocated_bytes": 960009.0,
+      "allocation_calls": 3.0,
+      "peak_extra_live_bytes": 960009.0,
+      "p95_ns": 26023
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": true,
+      "ns": 120.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 203
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 10527.5,
+      "allocated_bytes": 720009.0,
+      "allocation_calls": 2.0,
+      "peak_extra_live_bytes": 720009.0,
+      "p95_ns": 10571
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 108.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 111
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": false,
+      "ns": 310707.0,
+      "allocated_bytes": 1440021.0,
+      "allocation_calls": 7.0,
+      "peak_extra_live_bytes": 720009.0,
+      "p95_ns": 313109
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": true,
+      "ns": 300270.0,
+      "allocated_bytes": 720012.0,
+      "allocation_calls": 5.0,
+      "peak_extra_live_bytes": 720009.0,
+      "p95_ns": 302172
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": false,
+      "ns": 10537.5,
+      "allocated_bytes": 720009.0,
+      "allocation_calls": 2.0,
+      "peak_extra_live_bytes": 720009.0,
+      "p95_ns": 11311
+    },
+    {
+      "repeat": 1,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": true,
+      "ns": 105.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 147
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 10538.5,
+      "allocated_bytes": 720009.0,
+      "allocation_calls": 2.0,
+      "peak_extra_live_bytes": 720009.0,
+      "p95_ns": 17730
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 114.5,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 200
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": false,
+      "ns": 310671.0,
+      "allocated_bytes": 1440021.0,
+      "allocation_calls": 7.0,
+      "peak_extra_live_bytes": 720009.0,
+      "p95_ns": 338340
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": true,
+      "ns": 300260.0,
+      "allocated_bytes": 720012.0,
+      "allocation_calls": 5.0,
+      "peak_extra_live_bytes": 720009.0,
+      "p95_ns": 461859
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": false,
+      "ns": 10526.5,
+      "allocated_bytes": 720009.0,
+      "allocation_calls": 2.0,
+      "peak_extra_live_bytes": 720009.0,
+      "p95_ns": 21223
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": true,
+      "ns": 108.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 200
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 14547.0,
+      "allocated_bytes": 960009.0,
+      "allocation_calls": 3.0,
+      "peak_extra_live_bytes": 960009.0,
+      "p95_ns": 21346
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 108.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 151
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": false,
+      "ns": 367665.0,
+      "allocated_bytes": 1920025.0,
+      "allocation_calls": 10.0,
+      "peak_extra_live_bytes": 960009.0,
+      "p95_ns": 463652
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": true,
+      "ns": 353101.0,
+      "allocated_bytes": 960016.0,
+      "allocation_calls": 7.0,
+      "peak_extra_live_bytes": 960009.0,
+      "p95_ns": 357530
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": false,
+      "ns": 18851.0,
+      "allocated_bytes": 960009.0,
+      "allocation_calls": 3.0,
+      "peak_extra_live_bytes": 960009.0,
+      "p95_ns": 45934
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": true,
+      "ns": 129.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 203
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 19411.0,
+      "allocated_bytes": 1200009.0,
+      "allocation_calls": 4.0,
+      "peak_extra_live_bytes": 1200009.0,
+      "p95_ns": 26876
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 111.5,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 152
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": false,
+      "ns": 462375.5,
+      "allocated_bytes": 2400034.0,
+      "allocation_calls": 13.0,
+      "peak_extra_live_bytes": 1200009.0,
+      "p95_ns": 472938
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": true,
+      "ns": 444166.5,
+      "allocated_bytes": 1200025.0,
+      "allocation_calls": 9.0,
+      "peak_extra_live_bytes": 1200009.0,
+      "p95_ns": 446522
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": false,
+      "ns": 24348.0,
+      "allocated_bytes": 1200009.0,
+      "allocation_calls": 4.0,
+      "peak_extra_live_bytes": 1200009.0,
+      "p95_ns": 55249
+    },
+    {
+      "repeat": 2,
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": true,
+      "ns": 169.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 308
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 513955.0,
+      "allocated_bytes": 12000009.0,
+      "allocation_calls": 2.0,
+      "peak_extra_live_bytes": 12000009.0,
+      "p95_ns": 520521
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 219.5,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 458
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": false,
+      "ns": 3363069.5,
+      "allocated_bytes": 24000021.0,
+      "allocation_calls": 7.0,
+      "peak_extra_live_bytes": 12000009.0,
+      "p95_ns": 3392342
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": true,
+      "ns": 2855372.0,
+      "allocated_bytes": 12000012.0,
+      "allocation_calls": 5.0,
+      "peak_extra_live_bytes": 12000009.0,
+      "p95_ns": 2889845
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": false,
+      "ns": 507784.5,
+      "allocated_bytes": 12000009.0,
+      "allocation_calls": 2.0,
+      "peak_extra_live_bytes": 12000009.0,
+      "p95_ns": 523786
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": true,
+      "ns": 343.5,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 634
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 842220.0,
+      "allocated_bytes": 16000009.0,
+      "allocation_calls": 3.0,
+      "peak_extra_live_bytes": 16000009.0,
+      "p95_ns": 929259
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 293.5,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 406
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": false,
+      "ns": 4612995.5,
+      "allocated_bytes": 32000025.0,
+      "allocation_calls": 10.0,
+      "peak_extra_live_bytes": 16000009.0,
+      "p95_ns": 4666493
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": true,
+      "ns": 3855801.0,
+      "allocated_bytes": 16000016.0,
+      "allocation_calls": 7.0,
+      "peak_extra_live_bytes": 16000009.0,
+      "p95_ns": 3891724
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": false,
+      "ns": 864768.0,
+      "allocated_bytes": 16000009.0,
+      "allocation_calls": 3.0,
+      "peak_extra_live_bytes": 16000009.0,
+      "p95_ns": 992610
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": true,
+      "ns": 531.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 819
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": false,
+      "ns": 1186989.5,
+      "allocated_bytes": 20000009.0,
+      "allocation_calls": 4.0,
+      "peak_extra_live_bytes": 20000009.0,
+      "p95_ns": 1746976
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": true,
+      "ns": 373.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 536
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": false,
+      "ns": 5649623.0,
+      "allocated_bytes": 40000034.0,
+      "allocation_calls": 13.0,
+      "peak_extra_live_bytes": 20000009.0,
+      "p95_ns": 6312663
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": true,
+      "ns": 4593076.0,
+      "allocated_bytes": 20000025.0,
+      "allocation_calls": 9.0,
+      "peak_extra_live_bytes": 20000009.0,
+      "p95_ns": 4683078
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": false,
+      "ns": 1254149.0,
+      "allocated_bytes": 20000009.0,
+      "allocation_calls": 4.0,
+      "peak_extra_live_bytes": 20000009.0,
+      "p95_ns": 1854165
+    },
+    {
+      "repeat": 2,
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": true,
+      "ns": 363.0,
+      "allocated_bytes": 0.0,
+      "allocation_calls": 0.0,
+      "peak_extra_live_bytes": 0.0,
+      "p95_ns": 821
+    }
+  ]
+}

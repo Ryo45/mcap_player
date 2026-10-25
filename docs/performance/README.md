@@ -40,6 +40,8 @@ Nativeの固定256 MiBゲートを見直し、Chunk先読みとSeek内の展開�
 
 [Native Seekのフレーム待ち削減](2026-10-23-seek-latency/README.md)では、画像変換をsurface取得待ちと重ねて、同じ画像が見えるまでの再訪latencyを約20%短縮した。FIFO hintだけの対照、30Hz画像・PointCloud・実録の回帰検証も分けて記録する。
 
+[Seek候補の旧点群clone調査](2026-10-25-seek-candidate-copy/README.md)では、製品コードを変更せず、clone直後に捨てる旧XYZ／RGBA／intensityの時間とallocationを分離した。空状態の対照比較であり、改善実装のA/BやGUI全体の高速化率とは区別する。
+
 ## 再現
 
 Linux、Rust toolchain、Python 3.11以上（stdlibのみ）。計測中は他のビルドや
