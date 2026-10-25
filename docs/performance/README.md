@@ -42,6 +42,8 @@ Nativeの固定256 MiBゲートを見直し、Chunk先読みとSeek内の展開�
 
 [Seek候補の旧点群clone調査](2026-10-25-seek-candidate-copy/README.md)では、製品コードを変更せず、clone直後に捨てる旧XYZ／RGBA／intensityの時間とallocationを分離した。空状態の対照比較であり、改善実装のA/BやGUI全体の高速化率とは区別する。
 
+[空のSeek候補構築と退行チェック](2026-10-25-empty-seek-candidate/README.md)では、実装後の100万点復元で不要な12〜20MBの確保をなくした。Native/Webの代表負荷を再測定し、最初に見つかったI/O条件差・失敗結果も残している。
+
 ## 再現
 
 Linux、Rust toolchain、Python 3.11以上（stdlibのみ）。計測中は他のビルドや

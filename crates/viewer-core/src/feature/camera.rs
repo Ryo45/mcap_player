@@ -142,6 +142,17 @@ pub struct CameraState {
 }
 
 impl CameraState {
+    pub(crate) fn restore_candidate(&self) -> Self {
+        Self {
+            latest: BTreeMap::new(),
+            status: self
+                .status
+                .keys()
+                .map(|id| (*id, CameraStatus::WaitingForCameraFrame))
+                .collect(),
+        }
+    }
+
     pub fn apply(&mut self, frame: CameraFrame) -> bool {
         if self
             .latest

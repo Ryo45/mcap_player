@@ -68,6 +68,8 @@ Canvas/WebGLがGPUでもWebGPUはソフトウェアの場合があるため、GP
 消灯・非表示・ソフトウェアへのfallbackは失敗。`--gpu software` は別baseline用の補助条件。
 
 各ケースで最低3回、独立processを起動する。反復ごとにケース順を反転する。
+各processの直前にその入力のSHA256を検証して読み、ほかの大きなケースによるcache evictionの偏りを減らす。
+このreadは計測区間外で、cache policyの異なるsuiteとの比較は拒否する。cold diskの測定ではない。
 `suite.json` とケースごとの出力・Chrome log・sampleを保存する。
 baseline指定時は許容幅を超えた劣化、試行失敗、ケース欠落、入力／環境／計測器の不一致でexit 1。
 既存結果を上書きせず、自動的にbaselineを更新しない。
@@ -123,3 +125,15 @@ python3 tools/performance-probe/measure_seek_clone.py --output target/seek-clone
 state消去だけ、同サイズの復元decode、失敗を分け、時間・Rust allocator要求総量・追加live要求量を記録する。
 I/O・MCAP展開・GPU・WASMは含めず、RSS/VRAM測定ではない。
 結果と実装判断は[Seek候補の調査](../../docs/performance/2026-10-25-seek-candidate-copy/README.md)。
+
+変更前binaryを保存してから変更後をビルドした場合、同じ条件を交互に実行して退行を検出できる。
+
+```sh
+python3 tools/performance-probe/compare_seek_candidate.py \
+  --before /path/to/seek_clone-before --after target/release/examples/seek_clone \
+  --output target/seek-candidate-comparison
+```
+
+各条件3processの中央値で、時間は10%かつ30µs、P95は20%かつ100µsを超える増加を失敗とする。
+allocator要求量・回数・追加live要求量は増加を許さず、空の復元／decode前の失敗は要求0 bytesも検査する。
+これはpoint-cloud-onlyの候補構築・feature decode検査で、GUI全体の性能は通常のNative/Web回帰計測を併用する。

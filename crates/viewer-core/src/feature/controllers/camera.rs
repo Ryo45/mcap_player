@@ -127,6 +127,25 @@ impl CameraController {
         Ok(true)
     }
 
+    pub(crate) fn restore_candidate(&self) -> Self {
+        let mut candidate = Self {
+            raw_streams: self.raw_streams.clone(),
+            stream_to_camera: self.stream_to_camera.clone(),
+            topics: self.topics.clone(),
+            state: self.state.restore_candidate(),
+            focused_camera: self.focused_camera,
+            presentation_elapsed: Duration::ZERO,
+            next_presentation: BTreeMap::new(),
+            pending: BTreeMap::new(),
+            counters: self.counters,
+            input_frames: self.input_frames,
+            presented_frames: self.presented_frames,
+            presented_by_id: self.presented_by_id.clone(),
+        };
+        candidate.reset_schedule();
+        candidate
+    }
+
     pub fn reset_for_restore(&mut self) {
         self.state.cold_seek();
         self.presentation_elapsed = Duration::ZERO;

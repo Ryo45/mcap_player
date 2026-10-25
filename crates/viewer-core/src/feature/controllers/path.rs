@@ -58,6 +58,14 @@ impl PathController {
         }
     }
 
+    pub(crate) fn restore_candidate(&self) -> Self {
+        Self {
+            stream: self.stream,
+            state: self.state.restore_candidate(),
+            counters: self.counters,
+        }
+    }
+
     pub fn reset_for_restore(&mut self) {
         self.state.cold_seek();
     }

@@ -90,6 +90,15 @@ pub struct TransformState {
 }
 
 impl TransformState {
+    pub(crate) fn restore_candidate(&self) -> Self {
+        let mut candidate = Self {
+            revision: self.revision,
+            ..Self::default()
+        };
+        candidate.clear();
+        candidate
+    }
+
     pub fn clear(&mut self) {
         self.static_edges.clear();
         self.dynamic_edges.clear();
@@ -322,6 +331,17 @@ mod tests {
             translation,
             rotation: [0.0, 0.0, 0.0, 1.0],
         }
+    }
+
+    #[test]
+    fn restore_candidate_preserves_revision_wrap_without_mutating_current_state() {
+        let state = TransformState {
+            revision: u64::MAX,
+            ..TransformState::default()
+        };
+        let candidate = state.restore_candidate();
+        assert_eq!(candidate.revision(), 0);
+        assert_eq!(state.revision(), u64::MAX);
     }
 
     #[test]

@@ -253,7 +253,7 @@ fn main() -> Result<()> {
     }
     println!(
         "{}",
-        json!({"points":points,"attributes":args[1],"samples":samples,"warmups":10,"old_decoded_vector_bytes":points as u64 * (12 + u64::from(color)*4 + u64::from(intensity)*4),"raw_message_bytes":good.payload.len(),"rows":rows,"note":"production code unchanged; empty-state control isolates discarded previous state, not a semantically equivalent new implementation; allocator requested bytes, not RSS/VRAM; no I/O or GPU"})
+        json!({"points":points,"attributes":args[1],"samples":samples,"warmups":10,"old_decoded_vector_bytes":points as u64 * (12 + u64::from(color)*4 + u64::from(intensity)*4),"raw_message_bytes":good.payload.len(),"rows":rows,"note":"production stage_restore; empty-state control isolates discarded previous state, not a semantically equivalent new implementation; allocator requested bytes, not RSS/VRAM; no I/O or GPU"})
     );
     Ok(())
 }

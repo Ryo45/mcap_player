@@ -76,6 +76,15 @@ impl TransformController {
         }
     }
 
+    pub(crate) fn restore_candidate(&self) -> Self {
+        Self {
+            dynamic_stream: self.dynamic_stream,
+            static_stream: self.static_stream,
+            state: self.state.restore_candidate(),
+            counters: self.counters,
+        }
+    }
+
     pub fn reset_for_restore(&mut self, _target: crate::ArrivalTime) {
         self.state.clear();
     }

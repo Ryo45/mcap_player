@@ -1,5 +1,8 @@
 use std::time::Duration;
-use viewer_core::*;
+use viewer_core::{
+    ArrivalTime, CameraId, CameraStatus, FeatureRuntime, ProcessingCounters, RawMessage,
+    SessionPlan, StreamId,
+};
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -17,6 +20,9 @@ mod tests {
         static_transforms: usize,
         dynamic_transforms: usize,
         transform_revision: u64,
+        path_revision: u64,
+        scene_revision: Option<u64>,
+        camera_statistics: (u64, u64, Vec<(CameraId, u64)>),
         scene: Option<PointCloudFrame>,
         priority: Option<CameraId>,
         counters: ProcessingCounters,
@@ -63,6 +69,20 @@ mod tests {
             static_transforms: runtime.transforms().state().static_len(),
             dynamic_transforms: runtime.transforms().state().dynamic_len(),
             transform_revision: runtime.transforms().state().revision(),
+            path_revision: runtime.path().state().revision(),
+            scene_revision: runtime
+                .point_cloud()
+                .map(|cloud| cloud.point_cloud().revision()),
+            camera_statistics: (
+                runtime.cameras().input_frames(),
+                runtime.cameras().presented_frames(),
+                runtime
+                    .cameras()
+                    .presented_by_id()
+                    .iter()
+                    .map(|(id, count)| (*id, *count))
+                    .collect(),
+            ),
             scene: runtime
                 .point_cloud()
                 .and_then(|scene| scene.point_cloud().latest())
@@ -98,6 +118,120 @@ mod tests {
             arrival_time,
             payload: Bytes::from_static(&[0xff]),
         }
+    }
+
+    #[test]
+    fn empty_seek_preserves_routes_priority_statistics_and_revision_sequence() {
+        let (plan, messages, mut runtime) = populated_runtime();
+        runtime.set_scheduling_priority(Some(CameraId(3)));
+        let background_stream = plan.camera_routes()[6].stream.id;
+        let pending = messages
+            .iter()
+            .rev()
+            .find(|m| m.stream_id == background_stream)
+            .unwrap()
+            .clone();
+        // Two pending background frames exercise coalescing counters and a nonempty pending queue.
+        runtime.process_messages(Duration::ZERO, &[pending.clone(), pending]);
+        let target = messages.last().unwrap().arrival_time;
+        runtime.process_messages(Duration::ZERO, &[malformed(StreamId(u32::MAX), target)]);
+        let before = snapshot(&runtime);
+        let before_time = runtime.processing_time();
+        let topics = runtime.cameras().topics().to_vec();
+        let mut candidate = runtime.stage_restore(target, &[]).unwrap();
+        assert_eq!(snapshot(&runtime), before);
+        assert_eq!(runtime.processing_time(), before_time);
+        assert_eq!(candidate.counters(), before.counters);
+        // Three process_messages calls preceded this stage; the fourth sample is the restore.
+        let timing = candidate.processing_time();
+        assert!(
+            (timing.average_ms - (before_time.average_ms * 3.0 + timing.last_ms) / 4.0).abs()
+                < 1e-8
+        );
+        assert_eq!(timing.max_ms, before_time.max_ms.max(timing.last_ms));
+        assert_eq!(candidate.scheduling_priority(), Some(CameraId(3)));
+        assert_eq!(candidate.cameras().topics(), topics);
+        assert_eq!(
+            snapshot(&candidate).camera_statistics,
+            before.camera_statistics
+        );
+        assert!(candidate.path().state().latest().is_none());
+        assert!(candidate.odometry().state().latest().is_none());
+        assert!(
+            candidate
+                .point_cloud()
+                .unwrap()
+                .point_cloud()
+                .latest()
+                .is_none()
+        );
+        assert_eq!(
+            candidate.path().state().revision(),
+            before.path_revision.wrapping_add(1)
+        );
+        assert_eq!(
+            candidate.point_cloud().unwrap().point_cloud().revision(),
+            before.scene_revision.unwrap().wrapping_add(1)
+        );
+        assert_eq!(
+            candidate.transforms().state().revision(),
+            before.transform_revision.wrapping_add(1)
+        );
+        assert_eq!(candidate.transforms().state().static_len(), 0);
+        assert_eq!(candidate.transforms().state().dynamic_len(), 0);
+        for (camera, _) in &topics {
+            assert!(candidate.cameras().state().latest_for(*camera).is_none());
+            assert_eq!(
+                candidate.cameras().state().status_for(*camera),
+                CameraStatus::WaitingForCameraFrame
+            );
+        }
+        // A cleared candidate must not resurrect the old pending queue on its next advance.
+        candidate.process_messages(Duration::from_secs(1), &[]);
+        assert_eq!(candidate.counters(), before.counters);
+        assert_eq!(
+            snapshot(&candidate).camera_statistics,
+            before.camera_statistics
+        );
+        assert_eq!(candidate.cameras().state().frames().count(), 0);
+        runtime.commit_restore(candidate);
+        // The selected routes still accept all feature types after the candidate is committed.
+        runtime.restore_transactional(target, &messages).unwrap();
+        assert!(runtime.path().state().latest().is_some());
+        assert!(runtime.odometry().state().latest().is_some());
+        assert!(
+            runtime
+                .point_cloud()
+                .unwrap()
+                .point_cloud()
+                .latest()
+                .is_some()
+        );
+        assert!(runtime.transforms().state().static_len() > 0);
+        assert!(runtime.transforms().state().dynamic_len() > 0);
+        assert_eq!(
+            runtime.cameras().state().frames().count(),
+            plan.camera_routes().len()
+        );
+        assert_eq!(
+            runtime.counters().decoded,
+            before.counters.decoded + messages.len() as u64
+        );
+        assert_eq!(runtime.counters().errors, before.counters.errors);
+        assert_eq!(
+            runtime.counters().unknown_streams,
+            before.counters.unknown_streams
+        );
+        assert_eq!(runtime.scheduling_priority(), Some(CameraId(3)));
+        assert_eq!(
+            runtime.path().state().revision(),
+            before.path_revision.wrapping_add(
+                2 + messages
+                    .iter()
+                    .filter(|m| Some(m.stream_id) == plan.path_stream().map(|s| s.id))
+                    .count() as u64
+            )
+        );
     }
 
     #[test]

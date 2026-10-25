@@ -33,6 +33,15 @@ pub struct PointCloudState {
 }
 
 impl PointCloudState {
+    pub(crate) fn restore_candidate(&self) -> Self {
+        let mut candidate = Self {
+            revision: self.revision,
+            ..Self::default()
+        };
+        candidate.cold_seek();
+        candidate
+    }
+
     pub fn apply(&mut self, frame: PointCloudFrame) -> bool {
         if !frame.attributes.matches_points(frame.points.len()) {
             return false;
@@ -75,6 +84,17 @@ mod tests {
             attributes: PointCloudAttributes::default(),
             points: vec![[2.0, 1.0, 0.0]],
         }
+    }
+
+    #[test]
+    fn restore_candidate_preserves_revision_wrap_without_mutating_current_state() {
+        let state = PointCloudState {
+            revision: u64::MAX,
+            ..PointCloudState::default()
+        };
+        let candidate = state.restore_candidate();
+        assert_eq!(candidate.revision(), 0);
+        assert_eq!(state.revision(), u64::MAX);
     }
 
     #[test]

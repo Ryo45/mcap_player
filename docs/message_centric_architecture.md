@@ -45,6 +45,14 @@ preparation input/output. Transaction staging and feature memory remain outside 
 Failed reads or feature restoration leave the visible source position and clock unchanged;
 physical cache warming is allowed during a failed transaction.
 
+Feature restore stages an independent empty candidate. Controllers copy their selected routes,
+Camera focus/scheduling configuration, cumulative counters and revision baselines without
+cloning old decoded frames, Path points, TF history or pending Camera messages. Reset revision
+transitions are preserved; Camera statuses return to Waiting and background schedules reanchor.
+TF starts empty and is rebuilt from the planner's dynamic history and Persistent static inputs,
+including when seeking backwards. Only a fully restored candidate replaces the authoritative
+runtime. A decode failure or stale Web generation leaves the old feature state untouched.
+
 ## Ownership and data flow
 
 ```text

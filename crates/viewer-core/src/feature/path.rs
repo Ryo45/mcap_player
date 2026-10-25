@@ -18,6 +18,15 @@ pub struct PathState {
 }
 
 impl PathState {
+    pub(crate) fn restore_candidate(&self) -> Self {
+        let mut candidate = Self {
+            revision: self.revision,
+            ..Self::default()
+        };
+        candidate.cold_seek();
+        candidate
+    }
+
     pub fn apply(&mut self, frame: PathFrame) -> bool {
         if self
             .latest
@@ -56,6 +65,17 @@ mod tests {
             frame_id: "base_link".into(),
             points: vec![[2.0, -(1.0), 0.0]],
         }
+    }
+
+    #[test]
+    fn restore_candidate_preserves_revision_wrap_without_mutating_current_state() {
+        let state = PathState {
+            revision: u64::MAX,
+            ..PathState::default()
+        };
+        let candidate = state.restore_candidate();
+        assert_eq!(candidate.revision(), 0);
+        assert_eq!(state.revision(), u64::MAX);
     }
 
     #[test]

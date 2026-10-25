@@ -471,6 +471,16 @@ fn raw_camera_selection_coalescing_and_failed_restore_preserve_current_frame() {
     assert!(matches!(before.format, crate::CameraImageFormat::Raw(_)));
     assert_eq!(controller.counters().errors, 0);
     assert_eq!(controller.counters().dropped, 1);
+    let mut candidate = controller.restore_candidate();
+    assert_eq!(candidate.counters(), controller.counters());
+    assert_eq!(candidate.focused_camera(), controller.focused_camera());
+    assert_eq!(candidate.input_frames(), controller.input_frames());
+    assert_eq!(candidate.presented_by_id(), controller.presented_by_id());
+    assert!(candidate.state().latest_for(CameraId(0)).is_none());
+    // The Raw-vs-Compressed route is configuration, and must survive candidate construction.
+    assert!(candidate.restore(&message).unwrap());
+    assert_eq!(candidate.state().latest_for(CameraId(0)), Some(&before));
+    assert_eq!(controller.state().latest_for(CameraId(0)), Some(&before));
     message.payload = Bytes::from_static(b"bad");
     message.arrival_time = ArrivalTime(3);
     assert!(controller.restore(&message).is_err());

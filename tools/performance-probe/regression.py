@@ -135,6 +135,7 @@ def run(args, spec):
     jobs = [(engine, case) for engine in engine_names for case in spec[engine]]
     result = {'version': 1, 'engine': args.engine, 'machine': machine(), 'fixtures': fixtures,
               'cases_sha256': digest(CASES), 'repeats': args.repeats, 'runs': [],
+              'input_cache_policy': 'SHA256 read immediately before each fresh process; cache-allowed',
               'probe_sha256': digest(args.probe), 'limits': LIMITS,
               'harness': {p.name: digest(p) for p in [Path(__file__), HERE / 'measure_web_recording.py', HERE / 'web_recording_probe.js', HERE / 'benchmark_browser.py']},
               'git_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
@@ -148,6 +149,10 @@ def run(args, spec):
             print('Running', repeat, name, flush=True)
             row = {'case': name, 'repeat': repeat}
             try:
+                # Suite-wide verification does not keep small cases resident after larger ones.
+                # Verify/read this input immediately before launch, outside the timed workload.
+                if digest(data) != fixtures['fixtures'][case['fixture']]['sha256']:
+                    raise RuntimeError('Fixture changed before case: ' + case['fixture'])
                 if engine == 'native':
                     output.mkdir()
                     command = case['command']
@@ -186,7 +191,7 @@ def run(args, spec):
 
 def compare(baseline, current):
     problems = []
-    for key in ['version', 'engine', 'machine', 'cases_sha256', 'harness', 'limits']:
+    for key in ['version', 'engine', 'machine', 'cases_sha256', 'harness', 'limits', 'input_cache_policy']:
         if json.dumps(baseline.get(key), sort_keys=True) != json.dumps(current.get(key), sort_keys=True):
             problems.append('incompatible ' + key)
     if baseline['fixtures']['fixtures'] != current['fixtures']['fixtures']:

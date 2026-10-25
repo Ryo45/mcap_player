@@ -1,0 +1,726 @@
+{
+  "status": "ok",
+  "problems": [],
+  "summary": [
+    {
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": false,
+      "before": {
+        "ns": 10532.0,
+        "allocated_bytes": 720009.0,
+        "allocation_calls": 2.0,
+        "peak_extra_live_bytes": 720009.0,
+        "p95_ns": 15219
+      },
+      "after": {
+        "ns": 105.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 182
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": true,
+      "before": {
+        "ns": 114.5,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 180
+      },
+      "after": {
+        "ns": 105.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 175
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": false,
+      "before": {
+        "ns": 310673.0,
+        "allocated_bytes": 1440021.0,
+        "allocation_calls": 7.0,
+        "peak_extra_live_bytes": 720009.0,
+        "p95_ns": 414926
+      },
+      "after": {
+        "ns": 300252.5,
+        "allocated_bytes": 720012.0,
+        "allocation_calls": 5.0,
+        "peak_extra_live_bytes": 720009.0,
+        "p95_ns": 304595
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": true,
+      "before": {
+        "ns": 300257.0,
+        "allocated_bytes": 720012.0,
+        "allocation_calls": 5.0,
+        "peak_extra_live_bytes": 720009.0,
+        "p95_ns": 327687
+      },
+      "after": {
+        "ns": 300254.5,
+        "allocated_bytes": 720012.0,
+        "allocation_calls": 5.0,
+        "peak_extra_live_bytes": 720009.0,
+        "p95_ns": 304866
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": false,
+      "before": {
+        "ns": 10521.0,
+        "allocated_bytes": 720009.0,
+        "allocation_calls": 2.0,
+        "peak_extra_live_bytes": 720009.0,
+        "p95_ns": 21647
+      },
+      "after": {
+        "ns": 99.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 184
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": true,
+      "before": {
+        "ns": 108.5,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 212
+      },
+      "after": {
+        "ns": 101.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 181
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": false,
+      "before": {
+        "ns": 14311.5,
+        "allocated_bytes": 960009.0,
+        "allocation_calls": 3.0,
+        "peak_extra_live_bytes": 960009.0,
+        "p95_ns": 22754
+      },
+      "after": {
+        "ns": 106.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 130
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": true,
+      "before": {
+        "ns": 108.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 193
+      },
+      "after": {
+        "ns": 106.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 127
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": false,
+      "before": {
+        "ns": 369690.0,
+        "allocated_bytes": 1920025.0,
+        "allocation_calls": 10.0,
+        "peak_extra_live_bytes": 960009.0,
+        "p95_ns": 383963
+      },
+      "after": {
+        "ns": 352489.5,
+        "allocated_bytes": 960016.0,
+        "allocation_calls": 7.0,
+        "peak_extra_live_bytes": 960009.0,
+        "p95_ns": 361212
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": true,
+      "before": {
+        "ns": 352991.0,
+        "allocated_bytes": 960016.0,
+        "allocation_calls": 7.0,
+        "peak_extra_live_bytes": 960009.0,
+        "p95_ns": 429746
+      },
+      "after": {
+        "ns": 352490.0,
+        "allocated_bytes": 960016.0,
+        "allocation_calls": 7.0,
+        "peak_extra_live_bytes": 960009.0,
+        "p95_ns": 389843
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": false,
+      "before": {
+        "ns": 19284.0,
+        "allocated_bytes": 960009.0,
+        "allocation_calls": 3.0,
+        "peak_extra_live_bytes": 960009.0,
+        "p95_ns": 46848
+      },
+      "after": {
+        "ns": 105.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 172
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": true,
+      "before": {
+        "ns": 126.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 225
+      },
+      "after": {
+        "ns": 108.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 152
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": false,
+      "before": {
+        "ns": 19885.5,
+        "allocated_bytes": 1200009.0,
+        "allocation_calls": 4.0,
+        "peak_extra_live_bytes": 1200009.0,
+        "p95_ns": 25800
+      },
+      "after": {
+        "ns": 109.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 127
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": true,
+      "before": {
+        "ns": 110.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 151
+      },
+      "after": {
+        "ns": 109.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 130
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": false,
+      "before": {
+        "ns": 299621.5,
+        "allocated_bytes": 2400034.0,
+        "allocation_calls": 13.0,
+        "peak_extra_live_bytes": 1200009.0,
+        "p95_ns": 475559
+      },
+      "after": {
+        "ns": 271174.0,
+        "allocated_bytes": 1200025.0,
+        "allocation_calls": 9.0,
+        "peak_extra_live_bytes": 1200009.0,
+        "p95_ns": 445464
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": true,
+      "before": {
+        "ns": 272645.5,
+        "allocated_bytes": 1200025.0,
+        "allocation_calls": 9.0,
+        "peak_extra_live_bytes": 1200009.0,
+        "p95_ns": 452127
+      },
+      "after": {
+        "ns": 301971.0,
+        "allocated_bytes": 1200025.0,
+        "allocation_calls": 9.0,
+        "peak_extra_live_bytes": 1200009.0,
+        "p95_ns": 445769
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": false,
+      "before": {
+        "ns": 28696.5,
+        "allocated_bytes": 1200009.0,
+        "allocation_calls": 4.0,
+        "peak_extra_live_bytes": 1200009.0,
+        "p95_ns": 55809
+      },
+      "after": {
+        "ns": 106.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 168
+      }
+    },
+    {
+      "points": 60000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": true,
+      "before": {
+        "ns": 116.5,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 205
+      },
+      "after": {
+        "ns": 107.5,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 142
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": false,
+      "before": {
+        "ns": 518748.5,
+        "allocated_bytes": 12000009.0,
+        "allocation_calls": 2.0,
+        "peak_extra_live_bytes": 12000009.0,
+        "p95_ns": 525367
+      },
+      "after": {
+        "ns": 105.5,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 118
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "clear-only",
+      "control": true,
+      "before": {
+        "ns": 215.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 334
+      },
+      "after": {
+        "ns": 106.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 121
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": false,
+      "before": {
+        "ns": 3363067.5,
+        "allocated_bytes": 24000021.0,
+        "allocation_calls": 7.0,
+        "peak_extra_live_bytes": 12000009.0,
+        "p95_ns": 3405637
+      },
+      "after": {
+        "ns": 2815881.5,
+        "allocated_bytes": 12000012.0,
+        "allocation_calls": 5.0,
+        "peak_extra_live_bytes": 12000009.0,
+        "p95_ns": 2830412
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "decode",
+      "control": true,
+      "before": {
+        "ns": 2858539.5,
+        "allocated_bytes": 12000012.0,
+        "allocation_calls": 5.0,
+        "peak_extra_live_bytes": 12000009.0,
+        "p95_ns": 2886481
+      },
+      "after": {
+        "ns": 2815840.5,
+        "allocated_bytes": 12000012.0,
+        "allocation_calls": 5.0,
+        "peak_extra_live_bytes": 12000009.0,
+        "p95_ns": 2836400
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": false,
+      "before": {
+        "ns": 514084.0,
+        "allocated_bytes": 12000009.0,
+        "allocation_calls": 2.0,
+        "peak_extra_live_bytes": 12000009.0,
+        "p95_ns": 529882
+      },
+      "after": {
+        "ns": 170.5,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 399
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "xyz",
+      "mode": "failure",
+      "control": true,
+      "before": {
+        "ns": 282.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 504
+      },
+      "after": {
+        "ns": 177.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 420
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": false,
+      "before": {
+        "ns": 849734.5,
+        "allocated_bytes": 16000009.0,
+        "allocation_calls": 3.0,
+        "peak_extra_live_bytes": 16000009.0,
+        "p95_ns": 961971
+      },
+      "after": {
+        "ns": 105.5,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 123
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "clear-only",
+      "control": true,
+      "before": {
+        "ns": 273.5,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 429
+      },
+      "after": {
+        "ns": 106.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 123
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": false,
+      "before": {
+        "ns": 4600145.5,
+        "allocated_bytes": 32000025.0,
+        "allocation_calls": 10.0,
+        "peak_extra_live_bytes": 16000009.0,
+        "p95_ns": 4647015
+      },
+      "after": {
+        "ns": 3727015.0,
+        "allocated_bytes": 16000016.0,
+        "allocation_calls": 7.0,
+        "peak_extra_live_bytes": 16000009.0,
+        "p95_ns": 3743127
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "decode",
+      "control": true,
+      "before": {
+        "ns": 3853427.5,
+        "allocated_bytes": 16000016.0,
+        "allocation_calls": 7.0,
+        "peak_extra_live_bytes": 16000009.0,
+        "p95_ns": 3883393
+      },
+      "after": {
+        "ns": 3726145.0,
+        "allocated_bytes": 16000016.0,
+        "allocation_calls": 7.0,
+        "peak_extra_live_bytes": 16000009.0,
+        "p95_ns": 3755508
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": false,
+      "before": {
+        "ns": 863151.5,
+        "allocated_bytes": 16000009.0,
+        "allocation_calls": 3.0,
+        "peak_extra_live_bytes": 16000009.0,
+        "p95_ns": 974978
+      },
+      "after": {
+        "ns": 201.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 469
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba",
+      "mode": "failure",
+      "control": true,
+      "before": {
+        "ns": 446.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 805
+      },
+      "after": {
+        "ns": 204.5,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 451
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": false,
+      "before": {
+        "ns": 1170181.0,
+        "allocated_bytes": 20000009.0,
+        "allocation_calls": 4.0,
+        "peak_extra_live_bytes": 20000009.0,
+        "p95_ns": 1266501
+      },
+      "after": {
+        "ns": 103.0,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 116
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "clear-only",
+      "control": true,
+      "before": {
+        "ns": 334.5,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 460
+      },
+      "after": {
+        "ns": 102.5,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 118
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": false,
+      "before": {
+        "ns": 5719294.5,
+        "allocated_bytes": 40000034.0,
+        "allocation_calls": 13.0,
+        "peak_extra_live_bytes": 20000009.0,
+        "p95_ns": 5775158
+      },
+      "after": {
+        "ns": 4576895.5,
+        "allocated_bytes": 20000025.0,
+        "allocation_calls": 9.0,
+        "peak_extra_live_bytes": 20000009.0,
+        "p95_ns": 4613562
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "decode",
+      "control": true,
+      "before": {
+        "ns": 4674436.0,
+        "allocated_bytes": 20000025.0,
+        "allocation_calls": 9.0,
+        "peak_extra_live_bytes": 20000009.0,
+        "p95_ns": 4711314
+      },
+      "after": {
+        "ns": 4574679.5,
+        "allocated_bytes": 20000025.0,
+        "allocation_calls": 9.0,
+        "peak_extra_live_bytes": 20000009.0,
+        "p95_ns": 4619779
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": false,
+      "before": {
+        "ns": 1153039.0,
+        "allocated_bytes": 20000009.0,
+        "allocation_calls": 4.0,
+        "peak_extra_live_bytes": 20000009.0,
+        "p95_ns": 1276899
+      },
+      "after": {
+        "ns": 215.5,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 538
+      }
+    },
+    {
+      "points": 1000000,
+      "attributes": "rgba-intensity",
+      "mode": "failure",
+      "control": true,
+      "before": {
+        "ns": 470.5,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 772
+      },
+      "after": {
+        "ns": 291.5,
+        "allocated_bytes": 0.0,
+        "allocation_calls": 0.0,
+        "peak_extra_live_bytes": 0.0,
+        "p95_ns": 544
+      }
+    }
+  ]
+}

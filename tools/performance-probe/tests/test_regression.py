@@ -66,7 +66,7 @@ class RegressionComparison(unittest.TestCase):
 
     def test_hardware_input_and_observer_changes_refuse_comparison(self):
         before = suite()
-        for key in ['machine', 'harness', 'cases_sha256', 'fixtures']:
+        for key in ['machine', 'harness', 'cases_sha256', 'fixtures', 'input_cache_policy']:
             after = copy.deepcopy(before)
             if key == 'fixtures':
                 after[key]['fixtures']['input']['sha256'] = 'changed'

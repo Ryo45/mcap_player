@@ -114,20 +114,27 @@ impl FeatureRuntime {
     }
 
     /// Builds a complete seek candidate without mutating the authoritative runtime.
+    /// Messages must already be selected for the target by the source's restore planner.
     pub fn stage_restore(
         &self,
-        target: ArrivalTime,
+        _target: ArrivalTime,
         messages: &[RawMessage],
     ) -> Result<Self, FeatureRestoreError> {
         let started = Instant::now();
-        let mut candidate = self.clone();
-        candidate.cameras.reset_for_restore();
-        candidate.path.reset_for_restore();
-        candidate.odometry.reset_for_restore();
-        candidate.transforms.reset_for_restore(target);
-        if let Some(point_cloud) = &mut candidate.point_cloud {
-            point_cloud.reset_for_restore();
-        }
+        // Retain routing and cumulative statistics, but never clone decoded frames or history
+        // that the restore immediately discards. The authoritative state stays untouched.
+        let mut candidate = Self {
+            cameras: self.cameras.restore_candidate(),
+            path: self.path.restore_candidate(),
+            odometry: self.odometry.restore_candidate(),
+            transforms: self.transforms.restore_candidate(),
+            point_cloud: self
+                .point_cloud
+                .as_ref()
+                .map(PointCloudController::restore_candidate),
+            unknown_streams: self.unknown_streams,
+            processing_time: self.processing_time,
+        };
 
         for message in messages {
             let mut matched = false;

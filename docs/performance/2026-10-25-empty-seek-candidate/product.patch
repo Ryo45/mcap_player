@@ -1,0 +1,499 @@
+diff --git a/crates/viewer-core/src/feature/camera.rs b/crates/viewer-core/src/feature/camera.rs
+index 7814518..4a50312 100644
+--- a/crates/viewer-core/src/feature/camera.rs
++++ b/crates/viewer-core/src/feature/camera.rs
+@@ -142,6 +142,17 @@ pub struct CameraState {
+ }
+ 
+ impl CameraState {
++    pub(crate) fn restore_candidate(&self) -> Self {
++        Self {
++            latest: BTreeMap::new(),
++            status: self
++                .status
++                .keys()
++                .map(|id| (*id, CameraStatus::WaitingForCameraFrame))
++                .collect(),
++        }
++    }
++
+     pub fn apply(&mut self, frame: CameraFrame) -> bool {
+         if self
+             .latest
+diff --git a/crates/viewer-core/src/feature/controllers/camera.rs b/crates/viewer-core/src/feature/controllers/camera.rs
+index 2e07130..3ad5b33 100644
+--- a/crates/viewer-core/src/feature/controllers/camera.rs
++++ b/crates/viewer-core/src/feature/controllers/camera.rs
+@@ -127,6 +127,25 @@ impl CameraController {
+         Ok(true)
+     }
+ 
++    pub(crate) fn restore_candidate(&self) -> Self {
++        let mut candidate = Self {
++            raw_streams: self.raw_streams.clone(),
++            stream_to_camera: self.stream_to_camera.clone(),
++            topics: self.topics.clone(),
++            state: self.state.restore_candidate(),
++            focused_camera: self.focused_camera,
++            presentation_elapsed: Duration::ZERO,
++            next_presentation: BTreeMap::new(),
++            pending: BTreeMap::new(),
++            counters: self.counters,
++            input_frames: self.input_frames,
++            presented_frames: self.presented_frames,
++            presented_by_id: self.presented_by_id.clone(),
++        };
++        candidate.reset_schedule();
++        candidate
++    }
++
+     pub fn reset_for_restore(&mut self) {
+         self.state.cold_seek();
+         self.presentation_elapsed = Duration::ZERO;
+diff --git a/crates/viewer-core/src/feature/controllers/odometry.rs b/crates/viewer-core/src/feature/controllers/odometry.rs
+index 485eb25..cc3548e 100644
+--- a/crates/viewer-core/src/feature/controllers/odometry.rs
++++ b/crates/viewer-core/src/feature/controllers/odometry.rs
+@@ -69,6 +69,14 @@ impl OdometryController {
+         }
+     }
+ 
++    pub(crate) fn restore_candidate(&self) -> Self {
++        Self {
++            stream: self.stream,
++            state: TelemetryState::default(),
++            counters: self.counters,
++        }
++    }
++
+     pub fn reset_for_restore(&mut self) {
+         self.state.cold_seek();
+     }
+diff --git a/crates/viewer-core/src/feature/controllers/path.rs b/crates/viewer-core/src/feature/controllers/path.rs
+index 2d52792..d6a9b6a 100644
+--- a/crates/viewer-core/src/feature/controllers/path.rs
++++ b/crates/viewer-core/src/feature/controllers/path.rs
+@@ -58,6 +58,14 @@ impl PathController {
+         }
+     }
+ 
++    pub(crate) fn restore_candidate(&self) -> Self {
++        Self {
++            stream: self.stream,
++            state: self.state.restore_candidate(),
++            counters: self.counters,
++        }
++    }
++
+     pub fn reset_for_restore(&mut self) {
+         self.state.cold_seek();
+     }
+diff --git a/crates/viewer-core/src/feature/controllers/point_cloud.rs b/crates/viewer-core/src/feature/controllers/point_cloud.rs
+index 6ff06c2..fb818eb 100644
+--- a/crates/viewer-core/src/feature/controllers/point_cloud.rs
++++ b/crates/viewer-core/src/feature/controllers/point_cloud.rs
+@@ -85,6 +85,15 @@ impl PointCloudController {
+         }
+     }
+ 
++    pub(crate) fn restore_candidate(&self) -> Self {
++        Self {
++            stream: self.stream,
++            point_cloud2: self.point_cloud2,
++            point_cloud: self.point_cloud.restore_candidate(),
++            counters: self.counters,
++        }
++    }
++
+     pub fn reset_for_restore(&mut self) {
+         self.point_cloud.cold_seek();
+     }
+diff --git a/crates/viewer-core/src/feature/controllers/tests.rs b/crates/viewer-core/src/feature/controllers/tests.rs
+index 73d77cc..2328068 100644
+--- a/crates/viewer-core/src/feature/controllers/tests.rs
++++ b/crates/viewer-core/src/feature/controllers/tests.rs
+@@ -471,6 +471,16 @@ fn raw_camera_selection_coalescing_and_failed_restore_preserve_current_frame() {
+     assert!(matches!(before.format, crate::CameraImageFormat::Raw(_)));
+     assert_eq!(controller.counters().errors, 0);
+     assert_eq!(controller.counters().dropped, 1);
++    let mut candidate = controller.restore_candidate();
++    assert_eq!(candidate.counters(), controller.counters());
++    assert_eq!(candidate.focused_camera(), controller.focused_camera());
++    assert_eq!(candidate.input_frames(), controller.input_frames());
++    assert_eq!(candidate.presented_by_id(), controller.presented_by_id());
++    assert!(candidate.state().latest_for(CameraId(0)).is_none());
++    // The Raw-vs-Compressed route is configuration, and must survive candidate construction.
++    assert!(candidate.restore(&message).unwrap());
++    assert_eq!(candidate.state().latest_for(CameraId(0)), Some(&before));
++    assert_eq!(controller.state().latest_for(CameraId(0)), Some(&before));
+     message.payload = Bytes::from_static(b"bad");
+     message.arrival_time = ArrivalTime(3);
+     assert!(controller.restore(&message).is_err());
+diff --git a/crates/viewer-core/src/feature/controllers/transform.rs b/crates/viewer-core/src/feature/controllers/transform.rs
+index fec3c70..73bd8e8 100644
+--- a/crates/viewer-core/src/feature/controllers/transform.rs
++++ b/crates/viewer-core/src/feature/controllers/transform.rs
+@@ -76,6 +76,15 @@ impl TransformController {
+         }
+     }
+ 
++    pub(crate) fn restore_candidate(&self) -> Self {
++        Self {
++            dynamic_stream: self.dynamic_stream,
++            static_stream: self.static_stream,
++            state: self.state.restore_candidate(),
++            counters: self.counters,
++        }
++    }
++
+     pub fn reset_for_restore(&mut self, _target: crate::ArrivalTime) {
+         self.state.clear();
+     }
+diff --git a/crates/viewer-core/src/feature/path.rs b/crates/viewer-core/src/feature/path.rs
+index 93cc8b6..e423d82 100644
+--- a/crates/viewer-core/src/feature/path.rs
++++ b/crates/viewer-core/src/feature/path.rs
+@@ -18,6 +18,15 @@ pub struct PathState {
+ }
+ 
+ impl PathState {
++    pub(crate) fn restore_candidate(&self) -> Self {
++        let mut candidate = Self {
++            revision: self.revision,
++            ..Self::default()
++        };
++        candidate.cold_seek();
++        candidate
++    }
++
+     pub fn apply(&mut self, frame: PathFrame) -> bool {
+         if self
+             .latest
+@@ -58,6 +67,17 @@ mod tests {
+         }
+     }
+ 
++    #[test]
++    fn restore_candidate_preserves_revision_wrap_without_mutating_current_state() {
++        let state = PathState {
++            revision: u64::MAX,
++            ..PathState::default()
++        };
++        let candidate = state.restore_candidate();
++        assert_eq!(candidate.revision(), 0);
++        assert_eq!(state.revision(), u64::MAX);
++    }
++
+     #[test]
+     fn rejects_old_path_and_clears_on_seek() {
+         let mut state = PathState::default();
+diff --git a/crates/viewer-core/src/feature/point_cloud.rs b/crates/viewer-core/src/feature/point_cloud.rs
+index 5719c9d..ed52475 100644
+--- a/crates/viewer-core/src/feature/point_cloud.rs
++++ b/crates/viewer-core/src/feature/point_cloud.rs
+@@ -33,6 +33,15 @@ pub struct PointCloudState {
+ }
+ 
+ impl PointCloudState {
++    pub(crate) fn restore_candidate(&self) -> Self {
++        let mut candidate = Self {
++            revision: self.revision,
++            ..Self::default()
++        };
++        candidate.cold_seek();
++        candidate
++    }
++
+     pub fn apply(&mut self, frame: PointCloudFrame) -> bool {
+         if !frame.attributes.matches_points(frame.points.len()) {
+             return false;
+@@ -77,6 +86,17 @@ mod tests {
+         }
+     }
+ 
++    #[test]
++    fn restore_candidate_preserves_revision_wrap_without_mutating_current_state() {
++        let state = PointCloudState {
++            revision: u64::MAX,
++            ..PointCloudState::default()
++        };
++        let candidate = state.restore_candidate();
++        assert_eq!(candidate.revision(), 0);
++        assert_eq!(state.revision(), u64::MAX);
++    }
++
+     #[test]
+     fn rejects_misaligned_attributes_without_mutating_state() {
+         let mut state = PointCloudState::default();
+diff --git a/crates/viewer-core/src/feature/runtime.rs b/crates/viewer-core/src/feature/runtime.rs
+index d32f81d..915c606 100644
+--- a/crates/viewer-core/src/feature/runtime.rs
++++ b/crates/viewer-core/src/feature/runtime.rs
+@@ -114,20 +114,27 @@ impl FeatureRuntime {
+     }
+ 
+     /// Builds a complete seek candidate without mutating the authoritative runtime.
++    /// Messages must already be selected for the target by the source's restore planner.
+     pub fn stage_restore(
+         &self,
+-        target: ArrivalTime,
++        _target: ArrivalTime,
+         messages: &[RawMessage],
+     ) -> Result<Self, FeatureRestoreError> {
+         let started = Instant::now();
+-        let mut candidate = self.clone();
+-        candidate.cameras.reset_for_restore();
+-        candidate.path.reset_for_restore();
+-        candidate.odometry.reset_for_restore();
+-        candidate.transforms.reset_for_restore(target);
+-        if let Some(point_cloud) = &mut candidate.point_cloud {
+-            point_cloud.reset_for_restore();
+-        }
++        // Retain routing and cumulative statistics, but never clone decoded frames or history
++        // that the restore immediately discards. The authoritative state stays untouched.
++        let mut candidate = Self {
++            cameras: self.cameras.restore_candidate(),
++            path: self.path.restore_candidate(),
++            odometry: self.odometry.restore_candidate(),
++            transforms: self.transforms.restore_candidate(),
++            point_cloud: self
++                .point_cloud
++                .as_ref()
++                .map(PointCloudController::restore_candidate),
++            unknown_streams: self.unknown_streams,
++            processing_time: self.processing_time,
++        };
+ 
+         for message in messages {
+             let mut matched = false;
+diff --git a/crates/viewer-core/src/feature/transform.rs b/crates/viewer-core/src/feature/transform.rs
+index bf67a5a..38c0812 100644
+--- a/crates/viewer-core/src/feature/transform.rs
++++ b/crates/viewer-core/src/feature/transform.rs
+@@ -90,6 +90,15 @@ pub struct TransformState {
+ }
+ 
+ impl TransformState {
++    pub(crate) fn restore_candidate(&self) -> Self {
++        let mut candidate = Self {
++            revision: self.revision,
++            ..Self::default()
++        };
++        candidate.clear();
++        candidate
++    }
++
+     pub fn clear(&mut self) {
+         self.static_edges.clear();
+         self.dynamic_edges.clear();
+@@ -324,6 +333,17 @@ mod tests {
+         }
+     }
+ 
++    #[test]
++    fn restore_candidate_preserves_revision_wrap_without_mutating_current_state() {
++        let state = TransformState {
++            revision: u64::MAX,
++            ..TransformState::default()
++        };
++        let candidate = state.restore_candidate();
++        assert_eq!(candidate.revision(), 0);
++        assert_eq!(state.revision(), u64::MAX);
++    }
++
+     #[test]
+     fn resolves_chain_and_inverse() {
+         let mut state = TransformState::default();
+diff --git a/crates/viewer-core/tests/point_cloud2.rs b/crates/viewer-core/tests/point_cloud2.rs
+index fda68d9..063bf5b 100644
+--- a/crates/viewer-core/tests/point_cloud2.rs
++++ b/crates/viewer-core/tests/point_cloud2.rs
+@@ -93,6 +93,22 @@ fn point_cloud2_uses_the_shared_route_and_failed_restore_leaves_xyz_and_attribut
+     );
+ }
+ 
++#[test]
++fn seek_keeps_disabled_point_cloud_disabled_and_unrouted_failure_is_transactional() {
++    let mut runtime = FeatureRuntime::new(&plan(), false);
++    runtime.process_messages(Duration::ZERO, &[raw(10, PAYLOAD)]);
++    let before = runtime.counters();
++    let candidate = runtime.stage_restore(ArrivalTime(5), &[]).unwrap();
++    assert!(candidate.point_cloud().is_none());
++    assert_eq!(candidate.counters(), before);
++    let error = runtime
++        .restore_transactional(ArrivalTime(10), &[raw(10, PAYLOAD)])
++        .unwrap_err();
++    assert_eq!(error.kind, viewer_core::FeatureRestoreErrorKind::Unrouted);
++    assert!(runtime.point_cloud().is_none());
++    assert_eq!(runtime.counters(), before);
++}
++
+ #[test]
+ fn tf_preserves_color_alignment_and_a_color_change_rebuilds_the_current_accumulated_cloud() {
+     let mut runtime = FeatureRuntime::new(&plan(), true);
+diff --git a/crates/viewer-mcap/tests/feature_runtime.rs b/crates/viewer-mcap/tests/feature_runtime.rs
+index ae54aae..d63d03d 100644
+--- a/crates/viewer-mcap/tests/feature_runtime.rs
++++ b/crates/viewer-mcap/tests/feature_runtime.rs
+@@ -1,5 +1,8 @@
+ use std::time::Duration;
+-use viewer_core::*;
++use viewer_core::{
++    ArrivalTime, CameraId, CameraStatus, FeatureRuntime, ProcessingCounters, RawMessage,
++    SessionPlan, StreamId,
++};
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+@@ -17,6 +20,9 @@ mod tests {
+         static_transforms: usize,
+         dynamic_transforms: usize,
+         transform_revision: u64,
++        path_revision: u64,
++        scene_revision: Option<u64>,
++        camera_statistics: (u64, u64, Vec<(CameraId, u64)>),
+         scene: Option<PointCloudFrame>,
+         priority: Option<CameraId>,
+         counters: ProcessingCounters,
+@@ -63,6 +69,20 @@ mod tests {
+             static_transforms: runtime.transforms().state().static_len(),
+             dynamic_transforms: runtime.transforms().state().dynamic_len(),
+             transform_revision: runtime.transforms().state().revision(),
++            path_revision: runtime.path().state().revision(),
++            scene_revision: runtime
++                .point_cloud()
++                .map(|cloud| cloud.point_cloud().revision()),
++            camera_statistics: (
++                runtime.cameras().input_frames(),
++                runtime.cameras().presented_frames(),
++                runtime
++                    .cameras()
++                    .presented_by_id()
++                    .iter()
++                    .map(|(id, count)| (*id, *count))
++                    .collect(),
++            ),
+             scene: runtime
+                 .point_cloud()
+                 .and_then(|scene| scene.point_cloud().latest())
+@@ -100,6 +120,120 @@ mod tests {
+         }
+     }
+ 
++    #[test]
++    fn empty_seek_preserves_routes_priority_statistics_and_revision_sequence() {
++        let (plan, messages, mut runtime) = populated_runtime();
++        runtime.set_scheduling_priority(Some(CameraId(3)));
++        let background_stream = plan.camera_routes()[6].stream.id;
++        let pending = messages
++            .iter()
++            .rev()
++            .find(|m| m.stream_id == background_stream)
++            .unwrap()
++            .clone();
++        // Two pending background frames exercise coalescing counters and a nonempty pending queue.
++        runtime.process_messages(Duration::ZERO, &[pending.clone(), pending]);
++        let target = messages.last().unwrap().arrival_time;
++        runtime.process_messages(Duration::ZERO, &[malformed(StreamId(u32::MAX), target)]);
++        let before = snapshot(&runtime);
++        let before_time = runtime.processing_time();
++        let topics = runtime.cameras().topics().to_vec();
++        let mut candidate = runtime.stage_restore(target, &[]).unwrap();
++        assert_eq!(snapshot(&runtime), before);
++        assert_eq!(runtime.processing_time(), before_time);
++        assert_eq!(candidate.counters(), before.counters);
++        // Three process_messages calls preceded this stage; the fourth sample is the restore.
++        let timing = candidate.processing_time();
++        assert!(
++            (timing.average_ms - (before_time.average_ms * 3.0 + timing.last_ms) / 4.0).abs()
++                < 1e-8
++        );
++        assert_eq!(timing.max_ms, before_time.max_ms.max(timing.last_ms));
++        assert_eq!(candidate.scheduling_priority(), Some(CameraId(3)));
++        assert_eq!(candidate.cameras().topics(), topics);
++        assert_eq!(
++            snapshot(&candidate).camera_statistics,
++            before.camera_statistics
++        );
++        assert!(candidate.path().state().latest().is_none());
++        assert!(candidate.odometry().state().latest().is_none());
++        assert!(
++            candidate
++                .point_cloud()
++                .unwrap()
++                .point_cloud()
++                .latest()
++                .is_none()
++        );
++        assert_eq!(
++            candidate.path().state().revision(),
++            before.path_revision.wrapping_add(1)
++        );
++        assert_eq!(
++            candidate.point_cloud().unwrap().point_cloud().revision(),
++            before.scene_revision.unwrap().wrapping_add(1)
++        );
++        assert_eq!(
++            candidate.transforms().state().revision(),
++            before.transform_revision.wrapping_add(1)
++        );
++        assert_eq!(candidate.transforms().state().static_len(), 0);
++        assert_eq!(candidate.transforms().state().dynamic_len(), 0);
++        for (camera, _) in &topics {
++            assert!(candidate.cameras().state().latest_for(*camera).is_none());
++            assert_eq!(
++                candidate.cameras().state().status_for(*camera),
++                CameraStatus::WaitingForCameraFrame
++            );
++        }
++        // A cleared candidate must not resurrect the old pending queue on its next advance.
++        candidate.process_messages(Duration::from_secs(1), &[]);
++        assert_eq!(candidate.counters(), before.counters);
++        assert_eq!(
++            snapshot(&candidate).camera_statistics,
++            before.camera_statistics
++        );
++        assert_eq!(candidate.cameras().state().frames().count(), 0);
++        runtime.commit_restore(candidate);
++        // The selected routes still accept all feature types after the candidate is committed.
++        runtime.restore_transactional(target, &messages).unwrap();
++        assert!(runtime.path().state().latest().is_some());
++        assert!(runtime.odometry().state().latest().is_some());
++        assert!(
++            runtime
++                .point_cloud()
++                .unwrap()
++                .point_cloud()
++                .latest()
++                .is_some()
++        );
++        assert!(runtime.transforms().state().static_len() > 0);
++        assert!(runtime.transforms().state().dynamic_len() > 0);
++        assert_eq!(
++            runtime.cameras().state().frames().count(),
++            plan.camera_routes().len()
++        );
++        assert_eq!(
++            runtime.counters().decoded,
++            before.counters.decoded + messages.len() as u64
++        );
++        assert_eq!(runtime.counters().errors, before.counters.errors);
++        assert_eq!(
++            runtime.counters().unknown_streams,
++            before.counters.unknown_streams
++        );
++        assert_eq!(runtime.scheduling_priority(), Some(CameraId(3)));
++        assert_eq!(
++            runtime.path().state().revision(),
++            before.path_revision.wrapping_add(
++                2 + messages
++                    .iter()
++                    .filter(|m| Some(m.stream_id) == plan.path_stream().map(|s| s.id))
++                    .count() as u64
++            )
++        );
++    }
++
+     #[test]
+     fn malformed_restore_for_any_feature_preserves_every_visible_state() {
+         let (plan, _, mut runtime) = populated_runtime();

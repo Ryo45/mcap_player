@@ -85,6 +85,15 @@ impl PointCloudController {
         }
     }
 
+    pub(crate) fn restore_candidate(&self) -> Self {
+        Self {
+            stream: self.stream,
+            point_cloud2: self.point_cloud2,
+            point_cloud: self.point_cloud.restore_candidate(),
+            counters: self.counters,
+        }
+    }
+
     pub fn reset_for_restore(&mut self) {
         self.point_cloud.cold_seek();
     }

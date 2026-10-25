@@ -94,6 +94,22 @@ fn point_cloud2_uses_the_shared_route_and_failed_restore_leaves_xyz_and_attribut
 }
 
 #[test]
+fn seek_keeps_disabled_point_cloud_disabled_and_unrouted_failure_is_transactional() {
+    let mut runtime = FeatureRuntime::new(&plan(), false);
+    runtime.process_messages(Duration::ZERO, &[raw(10, PAYLOAD)]);
+    let before = runtime.counters();
+    let candidate = runtime.stage_restore(ArrivalTime(5), &[]).unwrap();
+    assert!(candidate.point_cloud().is_none());
+    assert_eq!(candidate.counters(), before);
+    let error = runtime
+        .restore_transactional(ArrivalTime(10), &[raw(10, PAYLOAD)])
+        .unwrap_err();
+    assert_eq!(error.kind, viewer_core::FeatureRestoreErrorKind::Unrouted);
+    assert!(runtime.point_cloud().is_none());
+    assert_eq!(runtime.counters(), before);
+}
+
+#[test]
 fn tf_preserves_color_alignment_and_a_color_change_rebuilds_the_current_accumulated_cloud() {
     let mut runtime = FeatureRuntime::new(&plan(), true);
     runtime.process_messages(Duration::ZERO, &[raw(10, PAYLOAD)]);
