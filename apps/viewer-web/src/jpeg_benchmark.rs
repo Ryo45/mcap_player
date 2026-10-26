@@ -1,5 +1,6 @@
 //! Opt-in browser comparison of the previous production RGBA/Canvas path.
-use wasm_bindgen::{Clamped, JsCast, prelude::*};
+use wasm_bindgen::prelude::wasm_bindgen;
+use wasm_bindgen::{Clamped, JsCast, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, ImageData};
 #[wasm_bindgen]
 pub fn benchmark_jpeg_canvas(bytes: &[u8], canvas: HtmlCanvasElement) -> Result<(), JsValue> {

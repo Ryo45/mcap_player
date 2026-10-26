@@ -1,7 +1,13 @@
 #![cfg(not(target_arch = "wasm32"))]
-use std::{collections::BTreeMap, error::Error, io::Cursor, path::PathBuf};
-use viewer_core::*;
-use viewer_mcap::*;
+use std::collections::BTreeMap;
+use std::io::Cursor;
+use std::path::PathBuf;
+use viewer_core::{
+    ArrivalTime, DataWindowError, DataWindowTimeRange, MemoryWindowStore, PlaybackRequirements,
+    RestoreInput, RestorePlanner, RestoreSemantics, SerializedWindow, SessionPlan,
+    SessionPlanError, SourceCatalog, StreamId, WorkspaceBindings,
+};
+use viewer_mcap::{McapPlayback, McapSeekError, McapSource, McapSourceError, NumericPlotError};
 struct Fixture(PathBuf);
 impl Drop for Fixture {
     fn drop(&mut self) {
@@ -142,6 +148,7 @@ fn multi_chunk_failure_keeps_forward_position_at_last_successful_read() {
 }
 #[test]
 fn io_error_kind_is_available_through_source_chain() {
+    use std::error::Error;
     let (file, _) = fixture();
     std::fs::remove_file(&file.0).unwrap();
     let error = match McapSource::open_file(&file.0) {

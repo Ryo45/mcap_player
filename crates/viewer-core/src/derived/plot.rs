@@ -131,36 +131,43 @@ impl SignalOverviewReducer {
         self.input_sample_count
     }
 
-    /// Bounded numeric product independent of builtin signal identity.
-    pub fn samples(&self) -> Vec<SignalSample> {
-        let mut display_samples = Vec::with_capacity(self.retained_points());
-        for extrema in self.buckets.iter().flatten() {
-            if self.max_points == 1 || extrema.min == extrema.max {
-                display_samples.push(extrema.min);
+    /// Iterates over the bounded extrema in arrival order within each bucket.
+    /// No intermediate sample buffer is allocated; collect only when ownership is needed.
+    pub fn samples(&self) -> impl Iterator<Item = SignalSample> + '_ {
+        self.buckets.iter().flatten().flat_map(|extrema| {
+            let (first, second) = if self.max_points == 1 || extrema.min == extrema.max {
+                (extrema.min, None)
             } else if extrema.min.arrival_time <= extrema.max.arrival_time {
-                display_samples.extend([extrema.min, extrema.max]);
+                (extrema.min, Some(extrema.max))
             } else {
-                display_samples.extend([extrema.max, extrema.min]);
-            }
-        }
-        debug_assert!(display_samples.len() <= self.max_points);
-        display_samples
+                (extrema.max, Some(extrema.min))
+            };
+            std::iter::once(first).chain(second)
+        })
     }
 
     pub fn finish(&self, signal_id: SignalId) -> Option<LoadedSignal> {
         if self.input_sample_count == 0 {
             return None;
         }
-        let display_samples = self.samples();
+        let retained = self.retained_points();
+        let mut x_seconds = vec![0.0; retained];
+        let mut values = vec![0.0; retained];
+        let outputs = x_seconds
+            .iter_mut()
+            .zip(values.iter_mut())
+            .zip(self.samples());
+        for ((x, value), sample) in outputs {
+            *x = cursor_seconds(sample.arrival_time, self.origin);
+            *value = sample.value;
+        }
+        debug_assert!(values.len() <= self.max_points);
         Some(LoadedSignal {
             display: PlotSeries {
                 signal_id,
                 origin: self.origin,
-                x_seconds: display_samples
-                    .iter()
-                    .map(|sample| cursor_seconds(sample.arrival_time, self.origin))
-                    .collect(),
-                values: display_samples.iter().map(|sample| sample.value).collect(),
+                x_seconds,
+                values,
             },
             input_sample_count: self.input_sample_count,
         })
@@ -206,6 +213,73 @@ mod tests {
         let display = reducer.finish(SignalId::Speed).unwrap().display;
         assert_eq!(display.x_seconds, vec![1e-9, 2e-9, 4e-9, 5e-9]);
         assert_eq!(display.values, vec![-2.0, 7.0, 9.0, 1.0]);
+    }
+
+    #[test]
+    fn sample_iteration_preserves_order_metadata_and_can_be_consumed_partially() {
+        let mut reducer = SignalOverviewReducer::new(ArrivalTime(0), ArrivalTime(8), 4);
+        for (arrival, value) in [
+            (0, 3.0),
+            (1, -2.0),
+            (2, 7.0),
+            (3, 4.0),
+            (4, 9.0),
+            (5, 1.0),
+            (6, 8.0),
+            (7, 2.0),
+        ] {
+            reducer.push(sample(arrival, value));
+        }
+        let expected = [
+            sample(1, -2.0),
+            sample(2, 7.0),
+            sample(4, 9.0),
+            sample(5, 1.0),
+        ];
+        assert_eq!(reducer.samples().take(2).collect::<Vec<_>>(), expected[..2]);
+        assert_eq!(reducer.samples().collect::<Vec<_>>(), expected);
+        assert_eq!(reducer.input_sample_count(), 8);
+        assert_eq!(reducer.retained_points(), expected.len());
+    }
+
+    #[test]
+    fn sample_iteration_respects_zero_one_and_odd_budgets_and_equal_times() {
+        for budget in 0..=9 {
+            let mut reducer = SignalOverviewReducer::new(ArrivalTime(0), ArrivalTime(10), budget);
+            for item in [
+                sample(2, 9.0),
+                sample(2, -1.0),
+                sample(2, 4.0),
+                sample(8, 3.0),
+            ] {
+                reducer.push(item);
+            }
+            let samples: Vec<_> = reducer.samples().collect();
+            assert!(
+                samples.len() <= budget,
+                "overview exceeded point budget {budget}"
+            );
+            assert_eq!(samples.len(), reducer.retained_points());
+            assert!(
+                samples
+                    .windows(2)
+                    .all(|pair| pair[0].arrival_time <= pair[1].arrival_time)
+            );
+            if budget == 0 {
+                assert!(reducer.finish(SignalId::Speed).is_none());
+            } else if budget <= 3 {
+                let expected = if budget == 1 {
+                    vec![sample(2, -1.0)]
+                } else {
+                    vec![sample(2, -1.0), sample(2, 9.0)]
+                };
+                assert_eq!(samples, expected);
+            }
+        }
+        let mut constant = SignalOverviewReducer::new(ArrivalTime(0), ArrivalTime(10), 2);
+        constant.push(sample(2, 3.0));
+        constant.push(sample(3, 3.0));
+        assert_eq!(constant.samples().collect::<Vec<_>>(), [sample(2, 3.0)]);
     }
 
     #[test]

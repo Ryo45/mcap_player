@@ -16,7 +16,9 @@ use viewer_core::{
     ArrivalTime, CameraCalibrationSet, CameraId, PlaybackCommand, PlaybackSpeed,
     PresentationMetrics,
 };
-use wasm_bindgen::{JsCast, closure::Closure, prelude::*};
+use wasm_bindgen::closure::Closure;
+use wasm_bindgen::prelude::wasm_bindgen;
+use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{Event, HtmlButtonElement, HtmlElement, HtmlInputElement, HtmlSelectElement};
 
 const TOPIC: &str = "/camera/front/image/compressed";

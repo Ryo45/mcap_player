@@ -227,10 +227,16 @@ impl McapSource {
             chunks_read,
             series: fields
                 .into_iter()
-                .map(|(_, reducer, decode_errors)| NumericPlotOverview {
-                    samples: reducer.samples(),
-                    input_sample_count: reducer.input_sample_count(),
-                    decode_errors,
+                .map(|(_, reducer, decode_errors)| {
+                    // This query result owns its samples; retain the reducer's exact capacity
+                    // rather than growing a Vec while consuming the borrowed iterator.
+                    let mut samples = Vec::with_capacity(reducer.retained_points());
+                    samples.extend(reducer.samples());
+                    NumericPlotOverview {
+                        samples,
+                        input_sample_count: reducer.input_sample_count(),
+                        decode_errors,
+                    }
                 })
                 .collect(),
         })

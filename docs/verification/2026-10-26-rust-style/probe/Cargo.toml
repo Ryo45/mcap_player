@@ -1,0 +1,15 @@
+[package]
+name = "style-overview-probe"
+version = "0.1.0"
+edition = "2024"
+[dependencies]
+viewer-core = { path = "/home/ryo/development/mcap_player/crates/viewer-core" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[profile.release]
+lto = "thin"
+
+[[bin]]
+name="alternative"
+path="src/main_alt.rs"
