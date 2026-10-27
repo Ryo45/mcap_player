@@ -183,6 +183,10 @@ fn select_camera(camera: CameraId) {
                 Ok(false) => {}
                 Err(error) => set_status(&error.to_string(), true),
             }
+            if let Some(id) = app.focused_camera {
+                let selector: HtmlSelectElement = element("camera-topic");
+                selector.set_value(&id.0.to_string());
+            }
         }
     });
 }

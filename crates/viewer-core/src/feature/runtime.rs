@@ -197,6 +197,10 @@ impl FeatureRuntime {
         self.point_cloud.as_mut()
     }
 
+    pub fn present_pending_camera(&mut self, camera: CameraId) -> Result<(), crate::DecodeError> {
+        self.cameras.present_pending(camera)
+    }
+
     pub fn set_scheduling_priority(&mut self, camera: Option<CameraId>) {
         self.cameras.set_focused_camera(camera);
     }

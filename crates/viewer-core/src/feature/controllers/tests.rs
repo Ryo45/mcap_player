@@ -44,6 +44,59 @@ fn camera_plan_for_topics(topics: &[&str]) -> SessionPlan {
 }
 
 #[test]
+fn presenting_one_pending_camera_keeps_other_frames_and_rolls_back_bad_cdr() {
+    let plan = camera_plan_for_topics(&["/front", "/rear"]);
+    let mut controller = CameraController::new(&plan);
+    let first = scheduled_camera_message(1);
+    controller.restore(&first).unwrap();
+    let mut second = scheduled_camera_message(2);
+    second.stream_id = StreamId(8);
+    controller.admit(&second);
+    let original = controller
+        .state()
+        .latest_for(CameraId(0))
+        .unwrap()
+        .data
+        .as_ptr();
+    controller.present_pending(CameraId(1)).unwrap();
+    assert_eq!(
+        controller
+            .state()
+            .latest_for(CameraId(1))
+            .unwrap()
+            .arrival_time,
+        ArrivalTime(2)
+    );
+    assert_eq!(
+        controller
+            .state()
+            .latest_for(CameraId(0))
+            .unwrap()
+            .data
+            .as_ptr(),
+        original
+    );
+    let counters = controller.counters();
+    controller.present_pending(CameraId(1)).unwrap();
+    assert_eq!(controller.counters(), counters);
+    second.payload = Bytes::from_static(&[0xff]);
+    second.arrival_time = ArrivalTime(3);
+    controller.admit(&second);
+    let counters = controller.counters();
+    assert!(controller.present_pending(CameraId(1)).is_err());
+    assert_eq!(
+        controller
+            .state()
+            .latest_for(CameraId(1))
+            .unwrap()
+            .arrival_time,
+        ArrivalTime(2)
+    );
+    assert_eq!(controller.counters(), counters);
+    assert_eq!(controller.focused_camera(), Some(CameraId(0)));
+}
+
+#[test]
 fn camera_admission_coalesces_before_decode_and_keeps_bytes_slice() {
     let payload = Bytes::from(
         crate::encode_compressed_image_cdr(&CompressedImage {

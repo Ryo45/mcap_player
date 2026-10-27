@@ -25,6 +25,10 @@ mod tests {
             "test",
             "0",
             SourceFingerprint::new(SOURCE_FINGERPRINT_ALGORITHM, "fixture").unwrap(),
+            std::collections::BTreeMap::from([
+                (CameraId(0), "/front".into()),
+                (CameraId(1), "/rear".into()),
+            ]),
         )
         .unwrap()
     }
@@ -85,6 +89,26 @@ mod tests {
             writer.finish().unwrap();
         }
         output.into_inner()
+    }
+
+    #[test]
+    fn missing_image_topic_bindings_and_old_preview_versions_are_rejected() {
+        let mut output = Cursor::new(Vec::new());
+        let mut writer = PreviewMcapWriter::new(&mut output, &build_info()).unwrap();
+        assert!(writer.write_camera_frame(&frame(9, 100)).is_err());
+        let (topic, payload) = camera_payload(9, 9, 100);
+        let bytes = raw_mcap(vec![
+            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(2)),
+            (&topic, 100, payload),
+        ]);
+        assert!(
+            read_preview_mcap(&bytes)
+                .unwrap_err()
+                .to_string()
+                .contains("source-topic binding")
+        );
+        let old = raw_mcap(vec![(schema::BUILD_INFO_TOPIC, 0, build_info_payload(1))]);
+        assert!(read_preview_mcap(&old).is_err());
     }
 
     #[test]
@@ -177,7 +201,7 @@ mod tests {
 
     fn decode_test_camera_payload(payload: &[u8]) -> Result<(), PreviewMcapError> {
         let bytes = raw_mcap(vec![
-            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(1)),
+            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(2)),
             (&schema::camera_topic(CameraId(0)), 0, payload.to_vec()),
         ]);
         read_preview_mcap(&bytes).map(|_| ())
@@ -189,6 +213,7 @@ mod tests {
             generator_name: "test".to_owned(),
             generator_version: "0".to_owned(),
             source_fingerprint: build_info().source().clone(),
+            camera_topics: build_info().camera_topics().clone(),
         })
         .unwrap()
     }
@@ -233,7 +258,7 @@ mod tests {
 
     fn camera_payload(topic_id: u16, payload_id: u16, time: i64) -> (String, Vec<u8>) {
         let metadata = serde_json::to_vec(&schema::CameraMetadataWire {
-            schema_version: 1,
+            schema_version: 2,
             camera_id: CameraId(payload_id),
             measurement_time: None,
             arrival_time: ArrivalTime(time),
@@ -257,14 +282,14 @@ mod tests {
             Err(PreviewMcapError::MissingBuildInfo)
         ));
         let duplicate = raw_mcap(vec![
-            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(1)),
-            (schema::BUILD_INFO_TOPIC, 1, build_info_payload(1)),
+            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(2)),
+            (schema::BUILD_INFO_TOPIC, 1, build_info_payload(2)),
         ]);
         assert!(matches!(
             read_preview_mcap(&duplicate),
             Err(PreviewMcapError::DuplicateBuildInfo)
         ));
-        let future = raw_mcap(vec![(schema::BUILD_INFO_TOPIC, 0, build_info_payload(2))]);
+        let future = raw_mcap(vec![(schema::BUILD_INFO_TOPIC, 0, build_info_payload(3))]);
         assert!(read_preview_mcap(&future).is_err());
     }
 
@@ -272,7 +297,7 @@ mod tests {
     fn camera_and_signal_topic_payload_mismatches_are_rejected() {
         let (topic, camera) = camera_payload(0, 1, 10);
         let camera_bytes = raw_mcap(vec![
-            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(1)),
+            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(2)),
             (&topic, 10, camera),
         ]);
         assert!(read_preview_mcap(&camera_bytes).is_err());
@@ -285,7 +310,7 @@ mod tests {
         .unwrap();
         let wrong_topic = format!("{}unknown", schema::SIGNAL_TOPIC_PREFIX);
         let signal_bytes = raw_mcap(vec![
-            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(1)),
+            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(2)),
             (&wrong_topic, 0, signal),
         ]);
         let artifact = read_preview_mcap(&signal_bytes).unwrap();
@@ -298,14 +323,14 @@ mod tests {
         let metadata_len = u32::from_le_bytes(payload[..4].try_into().unwrap()) as usize;
         payload.truncate(4 + metadata_len);
         let empty = raw_mcap(vec![
-            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(1)),
+            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(2)),
             (&topic, 10, payload),
         ]);
         assert!(read_preview_mcap(&empty).is_err());
 
         let (topic, payload) = camera_payload(0, 0, 10);
         let wrong_header = raw_mcap(vec![
-            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(1)),
+            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(2)),
             (&topic, 11, payload),
         ]);
         assert!(read_preview_mcap(&wrong_header).is_err());
@@ -319,7 +344,7 @@ mod tests {
     #[test]
     fn unknown_topics_are_ignored() {
         let bytes = raw_mcap(vec![
-            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(1)),
+            (schema::BUILD_INFO_TOPIC, 0, build_info_payload(2)),
             ("/vendor/future", 1, vec![1, 2, 3]),
         ]);
         let artifact = read_preview_mcap(&bytes).unwrap();

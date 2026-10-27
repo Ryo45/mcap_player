@@ -34,9 +34,14 @@ layoutの`cameraTopic`は初期選択の希望値として使用する。MCAP内
 再生/停止と速度は維持し、失敗時は旧source位置・cursor・feature state・選択を保つ。
 CameraIdは再割当可能なので、成功後は画像decode jobとGPU/presentation cacheを無効化する。
 
-既存のPreview sidecarはCameraIdだけを持ち、元トピックとの対応を保存していない。
-このため切り替え後はsidecarの画像プレビューを使用せず、exact画像を表示する。
-数値・軌跡プレビューは維持する。トピック識別可能なsidecarの設計は別課題。
+読み込み対象が変わらない場合はCameraIdとfeature stateを維持し、フォーカスだけ変更する。
+停止中も既にadmitした最新画像をmaterializeできるため、source再読み込みは不要。
+
+Preview sidecar（schema 2）はartifactのCameraIdから元トピックへの対応を保持する。
+現在のSessionPlanへ対応づけてプレビュー画像のIDを変換するため、カメラ切り替え後も利用できる。
+元トピックのpreviewがない場合はその画像だけを省き、exact画像を表示する。
+数値・軌跡プレビューも維持する。対応変更時はGPUのpreview cacheを無効化する。
+旧schema 1のsidecarは再生成が必要（自動移行は行わない）。
 
 ROS Liveでは接続時のcatalog（購読済み画像）の範囲で表示を切り替える。
 ROS graphからの追加発見・購読の動的変更は行わない。
@@ -67,3 +72,5 @@ python3 tools/performance-probe/check_camera_topics.py \
 時刻維持、source交換時の候補リセット、非画像トピックの除外を確認する。
 
 実行結果・性能比較・スクリーンショットは[検証記録](verification/2026-10-27-camera-topics/README.md)にまとめている。
+
+フォーカス・プレビュー改善の[追加検証](verification/2026-10-27-camera-focus-followup/README.md)も参照。

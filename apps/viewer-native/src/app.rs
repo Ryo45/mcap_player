@@ -106,6 +106,8 @@ impl App {
                 match fingerprint {
                     Ok(fingerprint) => {
                         self.preview.load_for_source(path, &fingerprint);
+                        self.preview
+                            .bind_cameras(self.session.as_ref().expect("source committed").plan());
                         self.bookmarks.load_for_source(path, &fingerprint);
                     }
                     Err(error) => {
@@ -279,6 +281,7 @@ impl App {
     fn apply_frame_actions(&mut self, actions: Vec<ViewerAction>) {
         let session = self.session.as_mut().expect("redraw requires a session");
         let graphics = self.graphics.as_mut().expect("redraw requires graphics");
+        let preview_binding_revision = self.preview.camera_binding_revision();
         let playback_effect = Self::apply_actions(
             session,
             &mut self.workspace,
@@ -286,6 +289,9 @@ impl App {
             &mut self.diagnostics,
             actions,
         );
+        if self.preview.camera_binding_revision() != preview_binding_revision {
+            graphics.clear_preview();
+        }
         if playback_effect == PlaybackEffect::Seeked {
             Self::apply_presentation_transition(
                 &mut self.presentation_state,
@@ -344,15 +350,26 @@ impl App {
                                 false,
                             )
                             .map_err(anyhow::Error::msg)?;
-                        if session.playback_view().is_none() {
-                            // Live catalogs contain only already subscribed inputs. A focus change
-                            // does not restart subscriptions or pretend to restore a past frame.
+                        let requirements = workspace.panels.requirements_for_cameras(&cameras);
+                        let priority = cameras.priority_topic(&topic);
+                        let plan = viewer_core::SessionPlan::build(
+                            catalog,
+                            priority,
+                            &requirements.playback,
+                            workspace.bindings(),
+                        )?;
+                        if plan.selected_stream_ids() == session.plan().selected_stream_ids() {
+                            let camera_id = session
+                                .camera_id_for_topic(&topic)
+                                .expect("unchanged selection contains the validated image topic");
+                            workspace.runtime_mut().present_pending_camera(camera_id)?;
                             workspace.panels.bind_cameras(&cameras, session.plan());
-                            let scheduler = Self::scheduler_camera_for(workspace, session);
+                            let scheduler = workspace.scheduler_priority_topic().unwrap_or(&topic);
+                            let scheduler =
+                                session.camera_id_for_topic(scheduler).or(Some(camera_id));
                             workspace.runtime_mut().set_scheduling_priority(scheduler);
                             return Ok(false);
                         }
-                        let requirements = workspace.panels.requirements_for_cameras(&cameras);
                         let enable_point_cloud = workspace.panels.has_scene();
                         let priority = cameras.priority_topic(&topic);
                         let mut candidate = None;
@@ -374,7 +391,7 @@ impl App {
                         let scheduler = Self::scheduler_camera_for(workspace, session);
                         workspace.runtime_mut().set_scheduling_priority(scheduler);
                         workspace.interaction.preview_time = None;
-                        preview.camera_routes_changed();
+                        preview.bind_cameras(session.plan());
                         Ok(true)
                     })();
                     match result {
@@ -650,6 +667,176 @@ mod tests {
         workspace.reset_for_source(session.default_focused_camera());
         workspace.panels.bind_cameras(&cameras, session.plan());
         (workspace, session)
+    }
+
+    fn all_camera_workspace(path: &Path) -> (NativeWorkspace, ViewerSession) {
+        let mut workspace = NativeWorkspace::from_json(r#"{
+          "schemaVersion":1,"root":{"kind":"split","direction":"row","children":[
+            {"weight":1,"node":{"kind":"panel","id":"camera","panelType":"camera","configVersion":1,"config":{"showThumbnails":true}}},
+            {"weight":1,"node":{"kind":"panel","id":"scene","panelType":"scene-3d","configVersion":1,"config":{"optionalData":true}}}
+          ]}}
+        "#).unwrap();
+        let playback = viewer_mcap::McapPlayback::open_file(path).unwrap();
+        let cameras = workspace
+            .panels
+            .camera_selection(playback.catalog(), "", None, true)
+            .unwrap();
+        let requirements = workspace.panels.requirements_for_cameras(&cameras);
+        let session = ViewerSession::from_playback(
+            path,
+            playback,
+            cameras.priority_topic("").into(),
+            &requirements.playback,
+            workspace.bindings(),
+        )
+        .unwrap();
+        workspace.configure_session(session.plan());
+        workspace.reset_for_source(session.default_focused_camera());
+        workspace.panels.bind_cameras(&cameras, session.plan());
+        (workspace, session)
+    }
+
+    #[test]
+    fn focus_only_keeps_camera_ids_scene_and_clock_and_presents_pending_image() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap");
+        let (mut workspace, mut session) = all_camera_workspace(&path);
+        let mut preview = PreviewCoordinator::default();
+        let mut diagnostics = AppDiagnostics::default();
+        let view = session.playback_view().unwrap();
+        let target = ArrivalTime(view.start.0 + (view.end.0 - view.start.0) / 2);
+        App::apply_actions(
+            &mut session,
+            &mut workspace,
+            &mut preview,
+            &mut diagnostics,
+            vec![ViewerAction::Playback(PlaybackCommand::Seek(target))],
+        );
+        session
+            .tick(Duration::from_millis(100), |dt, messages| {
+                workspace.process_messages(dt, messages)
+            })
+            .unwrap();
+        App::apply_actions(
+            &mut session,
+            &mut workspace,
+            &mut preview,
+            &mut diagnostics,
+            vec![ViewerAction::Playback(PlaybackCommand::Toggle)],
+        );
+        let before = session.playback_view().unwrap();
+        let topics = session.plan().camera_topics();
+        let (camera_id, topic) = topics.last().unwrap();
+        let path_revision = workspace.path().state().revision();
+        let tf_revision = workspace.transforms().state().revision();
+        let cloud = workspace
+            .runtime()
+            .point_cloud()
+            .unwrap()
+            .point_cloud()
+            .latest()
+            .unwrap();
+        let points = cloud.points.as_ptr() as usize;
+        let expected = session
+            .plan()
+            .camera_routes()
+            .iter()
+            .find(|r| r.camera_id == *camera_id)
+            .unwrap()
+            .stream
+            .id;
+        let source = viewer_mcap::McapSource::open_file(&path).unwrap();
+        let expected = source
+            .latest_before(&[expected], before.cursor)
+            .unwrap()
+            .messages
+            .pop()
+            .unwrap()
+            .arrival_time;
+        let effect = App::apply_actions(
+            &mut session,
+            &mut workspace,
+            &mut preview,
+            &mut diagnostics,
+            vec![ViewerAction::SelectCameraTopic {
+                panel_id: viewer_layout::PanelId::new("camera").unwrap(),
+                topic: topic.clone(),
+            }],
+        );
+        assert_eq!(effect, PlaybackEffect::None);
+        assert_eq!(session.playback_view().unwrap(), before);
+        assert_eq!(session.plan().camera_topics(), topics);
+        assert_eq!(workspace.focused_camera(), Some(*camera_id));
+        assert_eq!(
+            workspace
+                .cameras()
+                .state()
+                .latest_for(*camera_id)
+                .unwrap()
+                .arrival_time,
+            expected
+        );
+        assert_eq!(workspace.path().state().revision(), path_revision);
+        assert_eq!(workspace.transforms().state().revision(), tf_revision);
+        assert_eq!(
+            workspace
+                .runtime()
+                .point_cloud()
+                .unwrap()
+                .point_cloud()
+                .latest()
+                .unwrap()
+                .points
+                .as_ptr() as usize,
+            points
+        );
+        assert!(diagnostics.message(&[]).is_none());
+    }
+
+    #[test]
+    #[ignore = "manual release measurement, no timing assertion"]
+    fn measure_camera_focus_actions() {
+        let path = std::env::var_os("MCAP_CAMERA_FOCUS_RECORDING")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| {
+                Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap")
+            });
+        let (mut workspace, mut session) = all_camera_workspace(&path);
+        let topics = session.plan().camera_topics();
+        assert!(topics.len() >= 2);
+        let view = session.playback_view().unwrap();
+        let target = ArrivalTime(view.start.0 + (view.end.0 - view.start.0) / 2);
+        let mut preview = PreviewCoordinator::default();
+        let mut diagnostics = AppDiagnostics::default();
+        App::apply_actions(
+            &mut session,
+            &mut workspace,
+            &mut preview,
+            &mut diagnostics,
+            vec![ViewerAction::Playback(PlaybackCommand::Seek(target))],
+        );
+        let mut times = Vec::new();
+        for index in 0..40 {
+            let started = Instant::now();
+            App::apply_actions(
+                &mut session,
+                &mut workspace,
+                &mut preview,
+                &mut diagnostics,
+                vec![ViewerAction::SelectCameraTopic {
+                    panel_id: viewer_layout::PanelId::new("camera").unwrap(),
+                    topic: topics[index % 2].1.clone(),
+                }],
+            );
+            times.push(started.elapsed().as_secs_f64() * 1000.0);
+            assert!(diagnostics.message(&[]).is_none());
+        }
+        times.sort_by(f64::total_cmp);
+        println!(
+            "CAMERA_FOCUS_MS median={:.6} p95={:.6} max={:.6}",
+            times[20], times[38], times[39]
+        );
     }
 
     #[test]

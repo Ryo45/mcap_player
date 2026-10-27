@@ -1,4 +1,4 @@
-# Preview MCAP v0
+# Preview MCAP — wire schema 2
 
 ## Purpose
 
@@ -16,7 +16,11 @@ MCAP remains the source of truth. Preview data does not enter exact feature cont
 | `/preview/trajectory` | one JSON position | point time |
 
 BuildInfo occurs exactly once and contains `previewSchemaVersion`, generator name/version, and the
-source fingerprint. Known topics reject unknown schema versions. Unknown topics are ignored for
+source fingerprint plus `cameraTopics`, a map from artifact CameraId to the original recording
+image topic. Session IDs are assigned independently and must be resolved by source topic before
+presentation. Camera frames without a source-topic binding are rejected by both reader and writer.
+Schema 1 sidecars must be regenerated with the current preview-builder; there is no migration path.
+Known topics reject unknown schema versions. Unknown topics are ignored for
 forward-compatible additions.
 
 Camera messages contain a four-byte little-endian JSON metadata length, the metadata JSON, and raw

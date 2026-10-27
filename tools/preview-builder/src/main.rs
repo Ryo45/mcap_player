@@ -82,6 +82,10 @@ fn main() -> Result<()> {
         "preview-builder",
         env!("CARGO_PKG_VERSION"),
         fingerprint.clone(),
+        camera_ids
+            .iter()
+            .map(|(channel, id)| (*id, summary.channels[channel].topic.clone()))
+            .collect(),
     )?;
     let mut writer = PreviewMcapWriter::new(BufWriter::new(output_file), &build_info)?;
     let mut pending_cameras = BTreeMap::<CameraId, PendingCamera>::new();

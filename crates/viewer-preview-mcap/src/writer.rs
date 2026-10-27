@@ -20,6 +20,7 @@ pub struct PreviewMcapWriter<W: Write + Seek> {
     channels: BTreeMap<String, u16>,
     last_time: BTreeMap<String, u64>,
     sequence: u32,
+    camera_topics: BTreeMap<viewer_core::CameraId, String>,
 }
 
 impl<W: Write + Seek> PreviewMcapWriter<W> {
@@ -29,7 +30,7 @@ impl<W: Write + Seek> PreviewMcapWriter<W> {
             .map_err(|error| PreviewMcapError::invalid(error.to_string()))?;
         let options = WriteOptions::default()
             .compression(None)
-            .profile("mcap-viewer-preview-v0")
+            .profile("mcap-viewer-preview-v2")
             .library("viewer-preview-mcap");
         let writer = Writer::with_options(output, options)?;
         let mut this = Self {
@@ -37,6 +38,7 @@ impl<W: Write + Seek> PreviewMcapWriter<W> {
             channels: BTreeMap::new(),
             last_time: BTreeMap::new(),
             sequence: 0,
+            camera_topics: build_info.camera_topics().clone(),
         };
         let payload = serde_json::to_vec(&BuildInfoWire::from(build_info))?;
         this.write_message(BUILD_INFO_TOPIC, "json", 0, &payload)?;
@@ -50,6 +52,11 @@ impl<W: Write + Seek> PreviewMcapWriter<W> {
         frame
             .validate()
             .map_err(|error| PreviewMcapError::invalid(error.to_string()))?;
+        if !self.camera_topics.contains_key(&frame.camera_id()) {
+            return Err(PreviewMcapError::invalid(
+                "preview image has no source-topic binding",
+            ));
+        }
         if frame.encoding() != PreviewImageEncoding::Jpeg {
             return Err(PreviewMcapError::invalid(
                 "preview camera encoding must be JPEG",

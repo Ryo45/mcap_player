@@ -127,6 +127,22 @@ impl CameraController {
         Ok(true)
     }
 
+    /// Presents this selected camera's latest already-admitted message without reading the
+    /// source or touching other cameras. Decode succeeds before pending/visible state changes.
+    pub fn present_pending(&mut self, camera_id: CameraId) -> Result<(), crate::DecodeError> {
+        let Some(message) = self.pending.get(&camera_id) else {
+            return Ok(());
+        };
+        let image = self.decode_frame(camera_id, message.clone())?;
+        self.pending.remove(&camera_id);
+        self.state.apply(image);
+        self.counters.decoded = self.counters.decoded.saturating_add(1);
+        self.presented_frames = self.presented_frames.saturating_add(1);
+        let count = self.presented_by_id.entry(camera_id).or_default();
+        *count = count.saturating_add(1);
+        Ok(())
+    }
+
     pub(crate) fn restore_candidate(&self) -> Self {
         let mut candidate = Self {
             raw_streams: self.raw_streams.clone(),
@@ -235,7 +251,25 @@ impl CameraController {
         camera_id: CameraId,
         message: RawMessage,
     ) -> Result<(), crate::DecodeError> {
-        let decoded = if self.raw_streams.contains(&message.stream_id) {
+        match self.decode_frame(camera_id, message) {
+            Ok(image) => {
+                self.state.apply(image);
+                self.counters.decoded = self.counters.decoded.saturating_add(1);
+                Ok(())
+            }
+            Err(error) => {
+                self.counters.errors = self.counters.errors.saturating_add(1);
+                Err(error)
+            }
+        }
+    }
+
+    fn decode_frame(
+        &self,
+        camera_id: CameraId,
+        message: RawMessage,
+    ) -> Result<CameraFrame, crate::DecodeError> {
+        if self.raw_streams.contains(&message.stream_id) {
             crate::decode_raw_image_bytes(message.payload).map(|image| CameraFrame {
                 camera_id,
                 arrival_time: message.arrival_time,
@@ -257,17 +291,6 @@ impl CameraController {
                 },
                 data: image.data,
             })
-        };
-        match decoded {
-            Ok(image) => {
-                self.state.apply(image);
-                self.counters.decoded = self.counters.decoded.saturating_add(1);
-                Ok(())
-            }
-            Err(error) => {
-                self.counters.errors = self.counters.errors.saturating_add(1);
-                Err(error)
-            }
         }
     }
 }

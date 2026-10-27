@@ -387,7 +387,8 @@ mod tests {
         assert!(SourceFingerprint::new("", "abc").is_err());
         assert!(SourceFingerprint::new("sha256", " ").is_err());
 
-        let info = PreviewBuildInfo::new("mcap-viewer", "0.1.0", fingerprint).unwrap();
+        let info =
+            PreviewBuildInfo::new("mcap-viewer", "0.1.0", fingerprint, Default::default()).unwrap();
         let json = serde_json::to_string(&info).unwrap();
         assert_eq!(
             serde_json::from_str::<PreviewBuildInfo>(&json).unwrap(),

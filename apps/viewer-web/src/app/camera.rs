@@ -263,16 +263,16 @@ pub(super) fn update_camera_presentation(
     selected_camera: Option<CameraId>,
 ) {
     let camera_topics = session.camera_topics();
-    if view.camera_topics.as_slice() != camera_topics {
+    let topics_changed = view.camera_topics.as_slice() != camera_topics;
+    if topics_changed {
         rebuild_camera_cards(camera_topics);
         view.camera_topics = camera_topics.to_vec();
     }
-    let selector: HtmlSelectElement = element("camera-topic");
-    if let Some(id) = selected_camera {
-        let value = id.0.to_string();
-        if selector.value() != value {
-            selector.set_value(&value);
-        }
+    if (topics_changed || view.last_drawn_camera != selected_camera)
+        && let Some(id) = selected_camera
+    {
+        let selector: HtmlSelectElement = element("camera-topic");
+        selector.set_value(&id.0.to_string());
     }
     if view.last_drawn_camera != selected_camera {
         clear_canvas("camera");

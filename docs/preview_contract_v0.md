@@ -175,12 +175,15 @@ Preview build information例：
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "generatorName": "mcap-viewer",
   "generatorVersion": "0.1.0",
   "source": {
     "algorithm": "sha256",
     "value": "0123456789abcdef"
+  },
+  "cameraTopics": {
+    "0": "/camera/front/image/compressed"
   }
 }
 ```

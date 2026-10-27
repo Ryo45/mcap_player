@@ -59,6 +59,7 @@ pub fn read_preview_mcap(bytes: &[u8]) -> Result<PreviewArtifact, PreviewMcapErr
                     wire.generator_name,
                     wire.generator_version,
                     wire.source_fingerprint,
+                    wire.camera_topics,
                 )
                 .map_err(|error| PreviewMcapError::invalid(error.to_string()))?,
             );
@@ -136,6 +137,14 @@ pub fn read_preview_mcap(bytes: &[u8]) -> Result<PreviewArtifact, PreviewMcapErr
     }
 
     let build_info = build_info.ok_or(PreviewMcapError::MissingBuildInfo)?;
+    if camera_frames
+        .keys()
+        .any(|id| !build_info.camera_topics().contains_key(id))
+    {
+        return Err(PreviewMcapError::invalid(
+            "preview image has no source-topic binding",
+        ));
+    }
     for frames in camera_frames.values_mut() {
         frames.sort_by_key(|frame| frame.arrival_time());
     }

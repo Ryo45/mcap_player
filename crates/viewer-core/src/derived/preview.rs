@@ -2,9 +2,9 @@
 
 use crate::{ArrivalTime, CameraId, MeasurementTime, SignalId, SourceFingerprint};
 use serde::{Deserialize, Serialize};
-use std::{error::Error, fmt};
+use std::{collections::BTreeMap, error::Error, fmt};
 
-pub const CURRENT_PREVIEW_SCHEMA_VERSION: u32 = 1;
+pub const CURRENT_PREVIEW_SCHEMA_VERSION: u32 = 2;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PreviewValidationError {
@@ -555,6 +555,20 @@ impl PreviewSnapshot {
         &self.camera_frames
     }
 
+    /// Resolves artifact-local image identities into the consumer's current session IDs.
+    /// Unbound images are omitted; payloads already owned by this snapshot are not copied.
+    pub fn remap_camera_ids(mut self, mapping: &BTreeMap<CameraId, CameraId>) -> Self {
+        self.camera_frames.retain_mut(|frame| {
+            if let Some(id) = mapping.get(&frame.camera_id) {
+                frame.camera_id = *id;
+                true
+            } else {
+                false
+            }
+        });
+        self
+    }
+
     pub fn signal_overviews(&self) -> &[SignalOverview] {
         &self.signal_overviews
     }
@@ -620,6 +634,7 @@ pub struct PreviewBuildInfo {
     generator_name: String,
     generator_version: String,
     source: SourceFingerprint,
+    camera_topics: BTreeMap<CameraId, String>,
 }
 
 impl PreviewBuildInfo {
@@ -627,12 +642,14 @@ impl PreviewBuildInfo {
         generator_name: impl Into<String>,
         generator_version: impl Into<String>,
         source: SourceFingerprint,
+        camera_topics: BTreeMap<CameraId, String>,
     ) -> Result<Self, PreviewValidationError> {
         let info = Self {
             schema_version: crate::CURRENT_PREVIEW_SCHEMA_VERSION,
             generator_name: generator_name.into(),
             generator_version: generator_version.into(),
             source,
+            camera_topics,
         };
         info.validate()?;
         Ok(info)
@@ -654,6 +671,10 @@ impl PreviewBuildInfo {
         &self.source
     }
 
+    pub fn camera_topics(&self) -> &BTreeMap<CameraId, String> {
+        &self.camera_topics
+    }
+
     pub fn validate(&self) -> Result<(), PreviewValidationError> {
         if self.schema_version != crate::CURRENT_PREVIEW_SCHEMA_VERSION {
             return Err(PreviewValidationError::new(format!(
@@ -671,6 +692,15 @@ impl PreviewBuildInfo {
                 "preview generatorVersion must not be empty",
             ));
         }
+        if self
+            .camera_topics
+            .values()
+            .any(|topic| topic.trim().is_empty())
+        {
+            return Err(PreviewValidationError::new(
+                "preview camera topic must not be empty",
+            ));
+        }
         self.source
             .validate()
             .map_err(|error| PreviewValidationError::new(error.to_string()))
@@ -684,6 +714,7 @@ struct PreviewBuildInfoWire {
     generator_name: String,
     generator_version: String,
     source: SourceFingerprint,
+    camera_topics: BTreeMap<CameraId, String>,
 }
 
 impl TryFrom<PreviewBuildInfoWire> for PreviewBuildInfo {
@@ -695,6 +726,7 @@ impl TryFrom<PreviewBuildInfoWire> for PreviewBuildInfo {
             generator_name: value.generator_name,
             generator_version: value.generator_version,
             source: value.source,
+            camera_topics: value.camera_topics,
         };
         info.validate()?;
         Ok(info)

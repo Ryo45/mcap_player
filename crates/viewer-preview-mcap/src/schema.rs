@@ -8,7 +8,7 @@ pub const BUILD_INFO_TOPIC: &str = "/preview/build_info";
 pub const TRAJECTORY_TOPIC: &str = "/preview/trajectory";
 pub const CAMERA_TOPIC_PREFIX: &str = "/preview/camera/";
 pub const SIGNAL_TOPIC_PREFIX: &str = "/preview/signal/";
-pub const WIRE_SCHEMA_VERSION: u32 = 1;
+pub const WIRE_SCHEMA_VERSION: u32 = 2;
 
 pub fn camera_topic(camera_id: CameraId) -> String {
     format!("{CAMERA_TOPIC_PREFIX}{}", camera_id.0)
@@ -44,6 +44,7 @@ pub(crate) struct BuildInfoWire {
     pub generator_name: String,
     pub generator_version: String,
     pub source_fingerprint: SourceFingerprint,
+    pub camera_topics: std::collections::BTreeMap<CameraId, String>,
 }
 
 impl From<&PreviewBuildInfo> for BuildInfoWire {
@@ -53,6 +54,7 @@ impl From<&PreviewBuildInfo> for BuildInfoWire {
             generator_name: info.generator_name().to_owned(),
             generator_version: info.generator_version().to_owned(),
             source_fingerprint: info.source().clone(),
+            camera_topics: info.camera_topics().clone(),
         }
     }
 }

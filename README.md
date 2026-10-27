@@ -221,6 +221,7 @@ Cameraパネルのプルダウンでは、schemaから検出したRaw Image / JP
 初期Cameraの`/camera/front/image/compressed`がないMCAPでも、利用可能な画像を選びます。
 他のtopic bindingは`config/workspace_bindings.json`を使用します。
 詳細は[画像トピックの切り替え](docs/camera_topic_selection.md)を参照してください。
+画像プレビューのsidecarはschema 2を使用します。旧形式は現在のpreview-builderで再生成してください。
 点群入力はLaserScan / PointCloud2です。軌跡overlayにはPath、TF、Camera calibrationが必要で、欠落時は状態を表示します。
 Generic Inspectorは記録のcursor query専用で、Liveの任意topic値閲覧は今後の対応です。
 このpresetはNativeのみです。
