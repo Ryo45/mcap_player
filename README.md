@@ -222,3 +222,7 @@ docker compose run --rm dev mcap-dev-check
 
 fmt、workspace Clippy、workspace tests、WASM check、Web release build、ROS Live testsを実行します。
 通常のホスト環境では、まず`cargo fmt --all -- --check`と`cargo test --workspace`を利用してください。
+
+## ライセンス
+
+[MIT License](LICENSE)
