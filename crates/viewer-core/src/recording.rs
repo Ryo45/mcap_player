@@ -11,6 +11,7 @@ pub use restore::{
 };
 pub use session_plan::{
     CameraRoute, PlaybackRequirements, SessionPlan, SessionPlanError, WorkspaceBindings,
+    camera_streams,
 };
 
 pub use catalog::{

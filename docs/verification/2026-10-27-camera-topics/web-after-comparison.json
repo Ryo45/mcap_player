@@ -1,0 +1,8 @@
+{
+  "baseline": "target/camera-topic-selection/web-before/suite.json",
+  "baseline_sha256": "6efcaeb18b41d0529134e6033ae6cbcbd92549b2163a0c0347b60f94467d725e",
+  "problems": [
+    "web/jpeg-512m: heartbeat_max_ms 35.300 -> 57.200",
+    "web/raw-fhd-30hz: seek_focus_ms 89.300 -> 114.850"
+  ]
+}

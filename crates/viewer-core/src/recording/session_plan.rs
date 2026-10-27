@@ -15,6 +15,13 @@ const LASER_SCAN_SCHEMA: &str = "sensor_msgs/msg/LaserScan";
 const POINT_CLOUD2_SCHEMA: &str = "sensor_msgs/msg/PointCloud2";
 const TF_MESSAGE_SCHEMA: &str = "tf2_msgs/msg/TFMessage";
 
+/// Image streams supported by the camera CDR decoders, independent of topic naming.
+pub fn camera_streams(catalog: &SourceCatalog) -> impl Iterator<Item = &StreamDescriptor> {
+    catalog.streams.iter().filter(|stream| {
+        accepts(stream, COMPRESSED_IMAGE_SCHEMA) || accepts(stream, RAW_IMAGE_SCHEMA)
+    })
+}
+
 /// Continuous inputs required by the currently open workspace.
 ///
 /// This is deliberately a small, closed set rather than a generic capability registry. Plot,
@@ -147,14 +154,7 @@ impl SessionPlan {
         requirements: &PlaybackRequirements,
         bindings: &WorkspaceBindings,
     ) -> Result<Self, SessionPlanError> {
-        let available_cameras = catalog
-            .streams
-            .iter()
-            .filter(|stream| {
-                accepts(stream, COMPRESSED_IMAGE_SCHEMA) || accepts(stream, RAW_IMAGE_SCHEMA)
-            })
-            .cloned()
-            .collect::<Vec<_>>();
+        let available_cameras = camera_streams(catalog).cloned().collect::<Vec<_>>();
 
         let mut selected_cameras = available_cameras
             .into_iter()
@@ -550,6 +550,24 @@ mod tests {
                 descriptor(30, "/unrelated", "example_msgs/msg/Other"),
             ],
         }
+    }
+
+    #[test]
+    fn image_discovery_uses_schema_and_encoding_instead_of_topic_names() {
+        let mut catalog = catalog();
+        catalog.streams = vec![
+            descriptor(1, "/project/raw", RAW_IMAGE_SCHEMA),
+            descriptor(2, "/unusual/compressed", COMPRESSED_IMAGE_SCHEMA),
+            descriptor(3, "/camera/front/image/compressed", PATH_SCHEMA),
+            descriptor(4, "/not-cdr", RAW_IMAGE_SCHEMA),
+        ];
+        catalog.streams[3].message_encoding = "json".into();
+        assert_eq!(
+            camera_streams(&catalog)
+                .map(|stream| stream.topic.as_str())
+                .collect::<Vec<_>>(),
+            ["/project/raw", "/unusual/compressed"]
+        );
     }
 
     #[test]

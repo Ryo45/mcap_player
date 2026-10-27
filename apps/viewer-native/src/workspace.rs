@@ -1,9 +1,8 @@
 #[cfg(test)]
 use crate::panels::NativePanel;
-use crate::{
-    interaction::ViewerAction,
-    panels::{PanelDataRequirements, PanelRuntimeStore},
-};
+#[cfg(any(test, feature = "ros2-live"))]
+use crate::panels::PanelDataRequirements;
+use crate::{interaction::ViewerAction, panels::PanelRuntimeStore};
 use std::time::Duration;
 use viewer_core::{
     ArrivalTime, CameraId, FeatureRestoreError, FeatureRuntime, PlaybackCommand,
@@ -60,6 +59,7 @@ pub(crate) struct NativeWorkspace {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct CameraViewState {
     pub(crate) focused_camera: Option<CameraId>,
+    pub(crate) topic: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -77,6 +77,7 @@ pub(crate) enum WorkspaceEffect {
     None,
     Playback(PlaybackCommand),
     SelectInspectorTopic(Option<String>),
+    SelectCameraTopic(PanelId, String),
     AddNumericSeries(viewer_core::StreamId, String),
     RemoveNumericSeries(viewer_core::StreamId, String),
     BeginPreview(ArrivalTime),
@@ -215,6 +216,9 @@ impl NativeWorkspace {
 
     pub(crate) fn apply_action(&mut self, action: ViewerAction) -> WorkspaceEffect {
         match action {
+            ViewerAction::SelectCameraTopic { panel_id, topic } => {
+                WorkspaceEffect::SelectCameraTopic(panel_id, topic)
+            }
             ViewerAction::SelectInspectorTopic(topic) => {
                 WorkspaceEffect::SelectInspectorTopic(topic)
             }
@@ -225,19 +229,6 @@ impl NativeWorkspace {
                 WorkspaceEffect::RemoveNumericSeries(stream, field_path)
             }
             ViewerAction::Playback(command) => WorkspaceEffect::Playback(command),
-            ViewerAction::SetFocusedCamera {
-                panel_id,
-                camera_id,
-            } => {
-                if self.panels.set_focused_camera(&panel_id, camera_id) {
-                    if let Some(runtime) = &mut self.runtime {
-                        runtime.set_scheduling_priority(camera_id);
-                    }
-                    WorkspaceEffect::None
-                } else {
-                    WorkspaceEffect::None
-                }
-            }
             ViewerAction::SetAccumulatePoints {
                 panel_id,
                 accumulate,
@@ -278,6 +269,7 @@ impl NativeWorkspace {
         (!self.startup_warnings.is_empty()).then(|| self.startup_warnings.join("; "))
     }
 
+    #[cfg(any(test, feature = "ros2-live"))]
     pub(crate) fn data_requirements(&self) -> PanelDataRequirements {
         self.panels.data_requirements()
     }
@@ -504,16 +496,16 @@ mod tests {
     }
 
     #[test]
-    fn fixed_showcase_camera_is_not_an_interactive_scheduler_focus_target() {
+    fn camera_topic_selection_is_staged_before_changing_focus() {
         let mut workspace = NativeWorkspace::load_bundled_or_fallback(WorkspaceLayout::Showcase);
         configure_camera_runtime(&mut workspace, 4);
         workspace.reset_for_source(Some(CameraId(0)));
         assert!(matches!(
-            workspace.apply_action(ViewerAction::SetFocusedCamera {
+            workspace.apply_action(ViewerAction::SelectCameraTopic {
                 panel_id: PanelId::new("camera-left").unwrap(),
-                camera_id: Some(CameraId(1)),
+                topic: "/camera/front_left/image/compressed".into(),
             }),
-            WorkspaceEffect::None
+            WorkspaceEffect::SelectCameraTopic(_, _)
         ));
         assert_eq!(workspace.focused_camera(), Some(CameraId(0)));
     }
@@ -525,13 +517,13 @@ mod tests {
         let camera_id = PanelId::new("camera-main").unwrap();
         let scene_id = PanelId::new("scene-main").unwrap();
         assert!(matches!(
-            workspace.apply_action(ViewerAction::SetFocusedCamera {
+            workspace.apply_action(ViewerAction::SelectCameraTopic {
                 panel_id: camera_id,
-                camera_id: Some(CameraId(3)),
+                topic: "/camera/3".into(),
             }),
-            WorkspaceEffect::None
+            WorkspaceEffect::SelectCameraTopic(_, _)
         ));
-        assert_eq!(workspace.focused_camera(), Some(CameraId(3)));
+        assert_eq!(workspace.focused_camera(), Some(CameraId(0)));
         assert!(!workspace.accumulate_points());
 
         assert!(matches!(
@@ -541,7 +533,7 @@ mod tests {
             }),
             WorkspaceEffect::None
         ));
-        assert_eq!(workspace.focused_camera(), Some(CameraId(3)));
+        assert_eq!(workspace.focused_camera(), Some(CameraId(0)));
         assert!(workspace.accumulate_points());
         assert_eq!(workspace.interaction.preview_time, None);
     }

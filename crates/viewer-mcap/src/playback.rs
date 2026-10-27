@@ -107,6 +107,31 @@ impl McapPlayback {
         self.source.select_streams(streams)
     }
 
+    /// Replaces continuous stream selection at the current cursor. Reads and feature restore
+    /// must succeed before the active traversal changes. Catalog/file backing and the bounded
+    /// seek cache are shared; decoded feature state is never copied here.
+    ///
+    /// Persistent inputs must be unchanged from `bootstrap_persistent`.
+    pub fn reselect_with<E>(
+        &mut self,
+        streams: impl IntoIterator<Item = StreamId>,
+        plan: &RestorePlan,
+        restore: impl FnOnce(viewer_core::ArrivalTime, Vec<RawMessage>) -> Result<(), E>,
+    ) -> Result<(), McapSeekError<E>> {
+        self.source.cancel_prefetch();
+        let mut source = self.source.playback_candidate();
+        source.select_streams(streams)?;
+        let mut candidate = Self {
+            source,
+            clock: self.clock.clone(),
+            source_read: self.source_read,
+            persistent_archive: self.persistent_archive.clone(),
+        };
+        candidate.seek_with(plan, restore)?;
+        *self = candidate;
+        Ok(())
+    }
+
     pub fn query_range(&self, query: &RangeQuery) -> Result<RangeQueryResult, RangeQueryError> {
         self.source.query_range(query)
     }
@@ -226,6 +251,79 @@ mod tests {
         let target = ArrivalTime(i64::try_from(last.message_end_time).unwrap());
         bytes[offset + length / 2] ^= 0x01;
         (bytes, target)
+    }
+
+    #[test]
+    fn failed_stream_reselection_preserves_clock_and_forward_traversal() {
+        let bytes = fixture("camera_7_5s.mcap");
+        let mut playback = McapPlayback::copy_from_slice(&bytes).unwrap();
+        let original_stream = playback.catalog().streams[0].id;
+        let next_stream = playback.catalog().streams[1].id;
+        playback.select_streams([original_stream]).unwrap();
+        playback.clock_mut().toggle();
+        let before = playback.clock().view();
+        let plan = RestorePlan {
+            target: before.cursor,
+            latest_before: vec![next_stream],
+            histories: vec![],
+            persistent: vec![],
+        };
+        let result = playback.reselect_with([next_stream], &plan, |_, _| {
+            Err(std::io::Error::other("decode failed"))
+        });
+        assert!(matches!(result, Err(McapSeekError::Restore(_))));
+        assert_eq!(playback.clock().view(), before);
+        let mut observed = Vec::new();
+        playback
+            .tick(Duration::from_millis(300), |_, messages| {
+                observed = messages
+            })
+            .unwrap();
+        assert!(!observed.is_empty());
+        assert!(
+            observed
+                .iter()
+                .all(|message| message.stream_id == original_stream)
+        );
+    }
+
+    #[test]
+    fn stream_reselection_commits_restored_cursor_and_new_forward_traversal() {
+        let bytes = fixture("camera_7_5s.mcap");
+        let mut playback = McapPlayback::copy_from_slice(&bytes).unwrap();
+        let stream = playback.catalog().streams[1].id;
+        let target = playback.clock().cursor();
+        let plan = RestorePlan {
+            target,
+            latest_before: vec![stream],
+            histories: vec![],
+            persistent: vec![],
+        };
+        playback
+            .reselect_with([stream], &plan, |restored, messages| {
+                assert_eq!(restored, target);
+                assert!(
+                    messages.iter().all(
+                        |message| message.stream_id == stream && message.arrival_time <= target
+                    )
+                );
+                Ok::<(), std::convert::Infallible>(())
+            })
+            .unwrap();
+        assert_eq!(playback.clock().cursor(), target);
+        playback.clock_mut().toggle();
+        let mut observed = Vec::new();
+        playback
+            .tick(Duration::from_millis(300), |_, messages| {
+                observed = messages
+            })
+            .unwrap();
+        assert!(!observed.is_empty());
+        assert!(
+            observed
+                .iter()
+                .all(|message| message.stream_id == stream && message.arrival_time > target)
+        );
     }
 
     #[test]

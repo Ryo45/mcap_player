@@ -1,4 +1,4 @@
-use viewer_core::{ArrivalTime, CameraId, PlaybackCommand};
+use viewer_core::{ArrivalTime, PlaybackCommand};
 use viewer_layout::PanelId;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -13,9 +13,9 @@ pub(crate) enum ViewerAction {
         stream: viewer_core::StreamId,
         field_path: String,
     },
-    SetFocusedCamera {
+    SelectCameraTopic {
         panel_id: PanelId,
-        camera_id: Option<CameraId>,
+        topic: String,
     },
     SetAccumulatePoints {
         panel_id: PanelId,

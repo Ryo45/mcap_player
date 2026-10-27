@@ -1,6 +1,6 @@
 use super::{
-    BevPanel, CameraPanel, InspectorPanel, NativePanel, PanelDataRequirements, PlaceholderPanel,
-    PlotPanel, ScenePanel, StatusPanel,
+    BevPanel, CameraPanel, CameraSelection, InspectorPanel, NativePanel, PanelDataRequirements,
+    PlaceholderPanel, PlotPanel, ScenePanel, StatusPanel,
 };
 use std::collections::BTreeMap;
 use viewer_core::CameraId;
@@ -90,12 +90,98 @@ impl PanelRuntimeStore {
         self.panels.get_mut(id)
     }
 
+    #[cfg(any(test, feature = "ros2-live"))]
     pub(crate) fn data_requirements(&self) -> PanelDataRequirements {
         let mut requirements = PanelDataRequirements::default();
         for panel in self.panels.values() {
             panel.contribute_data_requirements(&mut requirements);
         }
         requirements
+    }
+
+    pub(crate) fn camera_selection(
+        &self,
+        catalog: &viewer_core::SourceCatalog,
+        preferred: &str,
+        change: Option<(&PanelId, &str)>,
+        reset: bool,
+    ) -> Result<CameraSelection, String> {
+        let available_topics = viewer_core::camera_streams(catalog)
+            .map(|stream| stream.topic.clone())
+            .collect::<std::collections::BTreeSet<_>>()
+            .into_iter()
+            .collect::<Vec<_>>();
+        if let Some((id, topic)) = change {
+            if !matches!(self.panels.get(id), Some(NativePanel::Camera(_))) {
+                return Err(format!("Camera panel {id} is unavailable"));
+            }
+            if !available_topics.iter().any(|candidate| candidate == topic) {
+                return Err(format!("Unsupported image topic {topic:?}"));
+            }
+        }
+        let fallback = available_topics
+            .iter()
+            .find(|topic| topic.as_str() == preferred)
+            .or_else(|| available_topics.first());
+        let panels = self
+            .panels
+            .iter()
+            .filter_map(|(id, panel)| {
+                let NativePanel::Camera(panel) = panel else {
+                    return None;
+                };
+                let topic = change
+                    .filter(|(changed, _)| *changed == id)
+                    .map(|(_, topic)| topic)
+                    .or_else(|| panel.preferred_topic(reset))
+                    .and_then(|topic| {
+                        available_topics
+                            .iter()
+                            .find(|candidate| candidate.as_str() == topic)
+                    })
+                    .or(fallback)
+                    .cloned();
+                Some((id.clone(), topic))
+            })
+            .collect();
+        Ok(CameraSelection {
+            available_topics,
+            panels,
+        })
+    }
+
+    pub(crate) fn requirements_for_cameras(
+        &self,
+        selection: &CameraSelection,
+    ) -> PanelDataRequirements {
+        let mut requirements = PanelDataRequirements::default();
+        for (id, panel) in &self.panels {
+            if let NativePanel::Camera(panel) = panel {
+                panel.contribute_camera_requirements(
+                    selection.panels.get(id).and_then(|topic| topic.as_deref()),
+                    &mut requirements,
+                );
+            } else {
+                panel.contribute_data_requirements(&mut requirements);
+            }
+        }
+        requirements
+    }
+
+    pub(crate) fn bind_cameras(
+        &mut self,
+        selection: &CameraSelection,
+        plan: &viewer_core::SessionPlan,
+    ) {
+        for (id, panel) in &mut self.panels {
+            if let NativePanel::Camera(panel) = panel {
+                panel.bind_topics(
+                    &selection.available_topics,
+                    selection.panels.get(id).and_then(|topic| topic.as_deref()),
+                    plan,
+                );
+            }
+        }
     }
 
     pub(crate) fn reset_for_source(&mut self, focused_camera: Option<CameraId>) {
@@ -115,16 +201,6 @@ impl PanelRuntimeStore {
         self.panels
             .values()
             .any(|panel| matches!(panel, NativePanel::Scene(_)))
-    }
-
-    pub(crate) fn set_focused_camera(
-        &mut self,
-        panel_id: &PanelId,
-        camera_id: Option<CameraId>,
-    ) -> bool {
-        self.panels
-            .get_mut(panel_id)
-            .is_some_and(|panel| panel.set_focused_camera(camera_id))
     }
 
     pub(crate) fn set_accumulate_points(&mut self, panel_id: &PanelId, accumulate: bool) -> bool {

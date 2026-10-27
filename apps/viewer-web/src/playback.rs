@@ -9,6 +9,7 @@ use viewer_core::{
     ArrivalTime, CameraController, FeatureRuntime, FetchIntent, PlaybackClock, PlaybackCommand,
     PlaybackEffect, PlaybackLoadState, PlaybackRequirements, ProcessingCounters, RawMessage,
     RestorePlanner, SessionPlan, SourceCatalog, TransformController, WorkspaceBindings,
+    camera_streams,
 };
 #[cfg(any(test, target_arch = "wasm32"))]
 use viewer_core::{CameraId, OdometryController, PathController};
@@ -479,6 +480,33 @@ impl WebPlayback {
         self.runtime.set_scheduling_priority(camera);
     }
 
+    /// Changes presentation priority without expanding the selected streams. Paused playback
+    /// restores the exact predecessor instead of showing an older background-admitted frame.
+    #[cfg(any(test, target_arch = "wasm32"))]
+    pub(crate) fn select_camera(&mut self, camera: CameraId) -> Result<bool, WebPlaybackError> {
+        if !self
+            .runtime
+            .cameras()
+            .topics()
+            .iter()
+            .any(|(id, _)| *id == camera)
+        {
+            return Ok(false);
+        }
+        if self.runtime.scheduling_priority() == Some(camera) {
+            return Ok(true);
+        }
+        if !self.clock.is_playing() {
+            let target = self
+                .pending_seek
+                .as_ref()
+                .map_or(self.clock.cursor(), |seek| seek.target);
+            self.apply_command(PlaybackCommand::Seek(target))?;
+        }
+        self.runtime.set_scheduling_priority(Some(camera));
+        Ok(true)
+    }
+
     pub(crate) fn counters(&self) -> ProcessingCounters {
         self.runtime.counters()
     }
@@ -516,17 +544,7 @@ pub(crate) fn web_session_plan(
     preferred_camera: &str,
 ) -> Result<SessionPlan, viewer_core::SessionPlanError> {
     let mut requirements = PlaybackRequirements::empty();
-    let cameras = catalog
-        .streams
-        .iter()
-        .filter(|stream| {
-            stream.message_encoding == "cdr"
-                && matches!(
-                    stream.schema.as_str(),
-                    "sensor_msgs/msg/CompressedImage" | "sensor_msgs/msg/Image"
-                )
-        })
-        .collect::<Vec<_>>();
+    let cameras = camera_streams(catalog).collect::<Vec<_>>();
     for camera in &cameras {
         requirements.require_camera_topic(&camera.topic);
     }
@@ -579,6 +597,82 @@ mod tests {
 
     fn remote_catalog() -> RemoteCatalog {
         remote_catalog_until(3_000_000_000)
+    }
+
+    fn two_camera_playback() -> WebPlayback {
+        let mut catalog = remote_catalog();
+        let mut second = catalog.core.streams[0].clone();
+        second.id = StreamId(2);
+        second.topic = "/project/another/image".into();
+        catalog.core.streams.push(second);
+        catalog.plan = web_session_plan(&catalog.core, "/camera").unwrap();
+        catalog.selected_streams = catalog
+            .plan
+            .selected_stream_ids()
+            .iter()
+            .map(|id| id.0)
+            .collect();
+        WebPlayback::from_remote(RemoteApiClient::new("http://localhost").unwrap(), catalog)
+            .unwrap()
+    }
+
+    #[test]
+    fn paused_camera_choice_restores_exact_predecessors_without_changing_time_or_selection() {
+        let mut playback = two_camera_playback();
+        playback.runtime.set_scheduling_priority(Some(CameraId(0)));
+        playback.clock.seek(ArrivalTime(1_900_000_000));
+        let selected = playback.restore_inputs.clone();
+        assert!(playback.select_camera(CameraId(1)).unwrap());
+        assert_eq!(
+            playback.pending_seek.as_ref().unwrap().target,
+            ArrivalTime(1_900_000_000)
+        );
+        let first = camera_message(1_800_000_000);
+        let mut second = camera_message(1_850_000_000);
+        second.stream_id = StreamId(2);
+        playback.restore.remote_mut().inject(vec![first, second]);
+        assert_eq!(
+            playback.tick(Duration::ZERO).unwrap(),
+            PlaybackEffect::Seeked
+        );
+        assert_eq!(playback.clock.cursor(), ArrivalTime(1_900_000_000));
+        assert!(!playback.clock.is_playing());
+        assert_eq!(playback.runtime.scheduling_priority(), Some(CameraId(1)));
+        assert_eq!(
+            playback
+                .cameras()
+                .state()
+                .latest_for(CameraId(1))
+                .unwrap()
+                .arrival_time,
+            ArrivalTime(1_850_000_000)
+        );
+        assert_eq!(playback.restore_inputs, selected);
+    }
+
+    #[test]
+    fn camera_choice_keeps_pending_seek_target_and_rejects_stale_ids() {
+        let mut playback = two_camera_playback();
+        assert!(!playback.select_camera(CameraId(u16::MAX)).unwrap());
+        assert!(playback.pending_seek.is_none());
+        playback
+            .apply_command(PlaybackCommand::Seek(ArrivalTime(2_500_000_000)))
+            .unwrap();
+        assert!(playback.select_camera(CameraId(1)).unwrap());
+        assert_eq!(
+            playback.pending_seek.as_ref().unwrap().target,
+            ArrivalTime(2_500_000_000)
+        );
+    }
+
+    #[test]
+    fn playing_camera_choice_changes_priority_without_an_extra_restore() {
+        let mut playback = two_camera_playback();
+        playback.clock.toggle();
+        assert!(playback.select_camera(CameraId(1)).unwrap());
+        assert!(playback.pending_seek.is_none());
+        assert!(playback.clock.is_playing());
+        assert_eq!(playback.runtime.scheduling_priority(), Some(CameraId(1)));
     }
 
     #[test]

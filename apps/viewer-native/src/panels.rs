@@ -13,7 +13,7 @@ mod topics;
 pub(crate) use topic_tree::{show_field_plots, show_topics};
 
 pub(crate) use bev::BevPanel;
-pub(crate) use camera::{CameraPanel, CameraPanelInput};
+pub(crate) use camera::{CameraPanel, CameraPanelInput, CameraSelection};
 pub(crate) use inspector::{InspectorPanel, InspectorPanelInput};
 pub(crate) use placeholder::PlaceholderPanel;
 pub(crate) use plot::{
@@ -193,13 +193,6 @@ impl NativePanel {
             | Self::Status(_)
             | Self::Placeholder(_) => {}
         }
-    }
-
-    pub(crate) fn set_focused_camera(&mut self, camera_id: Option<viewer_core::CameraId>) -> bool {
-        let Self::Camera(panel) = self else {
-            return false;
-        };
-        panel.set_focused_camera(camera_id)
     }
 
     pub(crate) fn set_accumulate_points(&mut self, accumulate: bool) -> bool {

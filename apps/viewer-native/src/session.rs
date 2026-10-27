@@ -37,6 +37,7 @@ enum SessionSource {
     #[cfg(feature = "ros2-live")]
     Ros {
         handle: live::RosLiveHandle,
+        catalog: viewer_core::SourceCatalog,
     },
 }
 
@@ -49,14 +50,24 @@ pub(crate) struct SessionDiagnostics {
 }
 
 impl ViewerSession {
+    #[cfg(test)]
     pub(crate) fn open(
         path: &Path,
         topic: String,
         requirements: &PlaybackRequirements,
         bindings: &WorkspaceBindings,
     ) -> Result<Self> {
-        let mut playback =
-            McapPlayback::open_file(path).with_context(|| format!("open {}", path.display()))?;
+        let playback = McapPlayback::open_file(path)?;
+        Self::from_playback(path, playback, topic, requirements, bindings)
+    }
+
+    pub(crate) fn from_playback(
+        path: &Path,
+        mut playback: McapPlayback,
+        topic: String,
+        requirements: &PlaybackRequirements,
+        bindings: &WorkspaceBindings,
+    ) -> Result<Self> {
         let plan = SessionPlan::build(playback.catalog(), &topic, requirements, bindings)?;
         plan.validate_recording_capabilities(playback.catalog().capabilities)?;
         playback.select_streams(plan.selected_stream_ids())?;
@@ -97,7 +108,7 @@ impl ViewerSession {
         let handle = live::RosLiveHandle::start(specs, reliable).map_err(anyhow::Error::msg)?;
         Ok(Self {
             topic_tree: viewer_core::TopicTree::from_catalog(&catalog),
-            source: SessionSource::Ros { handle },
+            source: SessionSource::Ros { handle, catalog },
             plan,
             topic,
             source_name: format!(
@@ -274,7 +285,7 @@ impl ViewerSession {
         match &mut self.source {
             SessionSource::Mcap(playback) => playback.tick(elapsed, process)?,
             #[cfg(feature = "ros2-live")]
-            SessionSource::Ros { handle } => {
+            SessionSource::Ros { handle, .. } => {
                 if let Some(error) = handle.error() {
                     return Err(anyhow::Error::msg(error));
                 }
@@ -301,6 +312,48 @@ impl ViewerSession {
             SessionSource::Mcap(playback) => Some(playback.clock().view()),
             #[cfg(feature = "ros2-live")]
             SessionSource::Ros { .. } => None,
+        }
+    }
+
+    pub(crate) fn camera_catalog(&self) -> &viewer_core::SourceCatalog {
+        match &self.source {
+            SessionSource::Mcap(playback) => playback.catalog(),
+            #[cfg(feature = "ros2-live")]
+            SessionSource::Ros { catalog, .. } => catalog,
+        }
+    }
+
+    pub(crate) fn select_camera_topics(
+        &mut self,
+        priority: &str,
+        requirements: &PlaybackRequirements,
+        bindings: &WorkspaceBindings,
+        restore: impl FnOnce(
+            &SessionPlan,
+            ArrivalTime,
+            Vec<RawMessage>,
+        ) -> Result<(), FeatureRestoreError>,
+    ) -> Result<()> {
+        match &mut self.source {
+            SessionSource::Mcap(playback) => {
+                let plan =
+                    SessionPlan::build(playback.catalog(), priority, requirements, bindings)?;
+                plan.validate_recording_capabilities(playback.catalog().capabilities)?;
+                let restore_plan = viewer_core::RestorePlanner::new(playback.catalog())
+                    .plan(playback.clock().cursor(), plan.restore_inputs())?;
+                playback.reselect_with(
+                    plan.selected_stream_ids(),
+                    &restore_plan,
+                    |target, messages| restore(&plan, target, messages),
+                )?;
+                self.plan = plan;
+                self.topic = priority.to_owned();
+                Ok(())
+            }
+            #[cfg(feature = "ros2-live")]
+            SessionSource::Ros { .. } => {
+                anyhow::bail!("Changing live subscriptions requires reconnecting")
+            }
         }
     }
 
@@ -348,7 +401,7 @@ impl ViewerSession {
     ) -> SessionDiagnostics {
         #[cfg(feature = "ros2-live")]
         let source_name = match &self.source {
-            SessionSource::Ros { handle } => {
+            SessionSource::Ros { handle, .. } => {
                 let live = handle.diagnostics();
                 let age = live.latest_arrival.and_then(|arrival| {
                     let now = std::time::SystemTime::now()

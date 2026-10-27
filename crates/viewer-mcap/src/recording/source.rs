@@ -311,6 +311,12 @@ impl McapSource {
         reader
     }
 
+    pub(crate) fn playback_candidate(&self) -> Self {
+        let mut reader = self.restore_reader();
+        reader.retain_seek_chunks = false;
+        reader
+    }
+
     pub(crate) fn enable_seek_cache(&mut self) {
         let maximum = self.seek_cache_budget();
         if self.seek_chunks.is_none() {

@@ -174,7 +174,34 @@ fn install_controls() {
     speed_callback.forget();
 }
 
+fn select_camera(camera: CameraId) {
+    APP.with(|app| {
+        let mut app = app.borrow_mut();
+        if let Some(playback) = &mut app.playback {
+            match playback.select_camera(camera) {
+                Ok(true) => app.focused_camera = Some(camera),
+                Ok(false) => {}
+                Err(error) => set_status(&error.to_string(), true),
+            }
+        }
+    });
+}
+
 fn install_workspace_controls() {
+    let selector: HtmlSelectElement = element("camera-topic");
+    let callback = Closure::<dyn FnMut(Event)>::new(|event: Event| {
+        if let Some(id) = event
+            .target()
+            .and_then(|target| target.dyn_into::<HtmlSelectElement>().ok())
+            .and_then(|selector| selector.value().parse::<u16>().ok())
+        {
+            select_camera(CameraId(id));
+        }
+    });
+    selector
+        .add_event_listener_with_callback("change", callback.as_ref().unchecked_ref())
+        .expect("camera topic listener");
+    callback.forget();
     let thumbnails: HtmlElement = element("camera-thumbnails");
     let callback = Closure::<dyn FnMut(Event)>::new(|event: Event| {
         let selected = event
@@ -184,7 +211,7 @@ fn install_workspace_controls() {
             .and_then(|button| button.get_attribute("data-camera"))
             .and_then(|id| id.parse::<u16>().ok());
         if let Some(selected) = selected {
-            APP.with(|app| app.borrow_mut().focused_camera = Some(CameraId(selected)));
+            select_camera(CameraId(selected));
         }
     });
     thumbnails.set_onclick(Some(callback.as_ref().unchecked_ref()));

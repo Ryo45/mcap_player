@@ -14,7 +14,7 @@ remain shared observable requirements.
 | Topic catalog | Topic tree, schema, counts | Filterable topic list; all channels, schemas, encodings and counts | Hierarchical tree and numeric-field selection |
 | Message Inspector | Cursor-driven background latest-before queries; lazy fields and page navigation | Automatic cursor follow (250 ms), coalesced exact latest-before across topic channels, manual Refresh and auto on/off; lazy CDR containers and next-page navigation | Previous/first page navigation, schema definition view |
 | Monitor layout | Left Topics / Inspector, right Scene and camera | Same arrangement; smaller screens stack the panels | Resizable splits and configurable layouts |
-| Cameras | Multiple panels, shared textures, scheduler focus and trajectory overlays | Focused camera, thumbnails, scheduler focus and same overlays | Multiple independently focused camera panels |
+| Cameras | Schema-based image-topic dropdown per panel, shared textures, scheduler focus and trajectory overlays | Schema-based image-topic dropdown, thumbnails, scheduler focus and same overlays | Multiple independently focused camera panels |
 | BEV | Shared GPU renderer | Shared GPU renderer, selectable in the Scene region | Independent BEV panel when configurable layouts arrive |
 | 3D Scene | Shared renderer, chase/free/vehicle-eye cameras, Scan/TF, accumulation | Same renderer and bounded presentation state; camera modes, drag orbit, wheel zoom, reset, accumulation | Touch orbit controls and richer TF diagnostics |
 | Camera-less recordings | Query-only and optional-data layouts | Open catalogs with optional available continuous streams; empty selections read no message chunks | Dedicated query-only presets |
@@ -94,3 +94,6 @@ and camera functionality available.
 Each step should cover Browser Local and Remote together and add regressions for
 stale requests, exact nanoseconds, equal-time ties, failed seek rollback, and work/
 retained-memory limits where affected.
+
+Camera selection behavior and its bounded/transactional read path are described in
+[camera_topic_selection.md](camera_topic_selection.md).

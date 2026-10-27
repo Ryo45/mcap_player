@@ -59,7 +59,10 @@
       <div id="scene-info">Scan / TF: waiting</div>
     </section>
     <section class="camera-panel">
-      <h2>Camera Focus · <span id="camera-focus-label">waiting</span></h2>
+      <div class="camera-heading">
+        <h2>Camera Focus · <span id="camera-focus-label">waiting</span></h2>
+        <label>Image topic <select id="camera-topic" aria-label="Image topic" disabled><option>No image topics</option></select></label>
+      </div>
       <div class="camera-frame"><canvas id="camera" width="320" height="240"></canvas></div>
       <div id="camera-thumbnails" class="camera-thumbnails" aria-label="Camera thumbnails"></div>
     </section>

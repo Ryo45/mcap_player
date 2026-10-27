@@ -17,6 +17,7 @@ cargo run -p viewer-native -- --mcap /tmp/mcap-readme-demo/recording.mcap --layo
 
 同梱presetの対象は`/camera/front/image/compressed`、`/camera/front_left/image/compressed`、
 `/camera/front_right/image/compressed`、`/camera/rear/image/compressed`。
+これらは初期選択で、各Cameraパネルのプルダウンから記録内の別画像へ切り替えられる。
 **このデモの複数映像は同じ元映像の色違いであり、異なる実視点ではない。**
 同時表示の構成を示している。元画像は320×240なので、表示を拡大しても元の解像度は増えない。
 

@@ -64,7 +64,7 @@ pub use recording::{
     CameraRoute, PlaybackRequirements, RawMessage, RecordingTimeRange, RestoreInput, RestorePlan,
     RestorePlanError, RestorePlanner, RestoreRead, RestoreSemantics, SchemaDefinition, SessionPlan,
     SessionPlanError, SourceCapabilities, SourceCatalog, StreamDescriptor, StreamId,
-    StreamTimingSummary, WorkspaceBindings,
+    StreamTimingSummary, WorkspaceBindings, camera_streams,
 };
 
 pub use message::{NumericField, NumericFieldExtractor, RosMessageSchema};

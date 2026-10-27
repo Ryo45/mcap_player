@@ -22,6 +22,9 @@ ROS 2 の MCAP を再生し、カメラ映像・車両状態・周辺情報を�
 右下にCameraを配置し、記録の末尾で停止して`/scan`を表示しています。
 ローカルMCAPを選択するだけで、ブラウザでも点群・計画軌跡・Camera overlay・メッセージの値を確認できます。*
 
+画像トピックはschemaから検出し、Cameraの「Image topic」でRaw Image / JPEG / PNGを切り替えられます。
+トピック名がプロジェクトごとに異なる記録も、そのまま開いて選択できます。
+
 topicを調べても、CameraやSceneの再生対象は変わりません。大きな記録は必要なtopicと範囲を読み、
 配列はページ単位で、Plotは点数を制限した概要として表示します。
 まず試すには[監視・解析用の画面](#監視解析用の画面)、撮影に使ったサンプルの準備は
@@ -213,8 +216,11 @@ cargo run -p viewer-native --features ros2-live -- --live --layout monitor
 左上の「Source / diagnostics」で詳細診断、Inspector下の「Schema / numeric plots」でschemaと
 field Plotにアクセスできます。通常画面の追加sidebarとInspectorウィンドウは表示しません。
 現在値はcontinuous featureの共有状態から表示し、速度overviewの全記録読み込みは行いません。
-点群・TF・Odometry・Pathは存在する場合に使用します。フロントCameraは
-`/camera/front/image/compressed`、他のtopic bindingは`config/workspace_bindings.json`を使用します。
+点群・TF・Odometry・Pathは存在する場合に使用します。
+Cameraパネルのプルダウンでは、schemaから検出したRaw Image / JPEG / PNGトピックへ切り替えられます（Native / Web共通）。
+初期Cameraの`/camera/front/image/compressed`がないMCAPでも、利用可能な画像を選びます。
+他のtopic bindingは`config/workspace_bindings.json`を使用します。
+詳細は[画像トピックの切り替え](docs/camera_topic_selection.md)を参照してください。
 点群入力はLaserScan / PointCloud2です。軌跡overlayにはPath、TF、Camera calibrationが必要で、欠落時は状態を表示します。
 Generic Inspectorは記録のcursor query専用で、Liveの任意topic値閲覧は今後の対応です。
 このpresetはNativeのみです。

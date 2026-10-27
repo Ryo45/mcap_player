@@ -10,7 +10,8 @@ use viewer_core::{CameraCalibrationSet, CameraId, PresentationMetrics};
 use viewer_renderer::{CameraBaseImageTracker, CameraOverlaySnapshot, CameraOverlayState};
 use wasm_bindgen::JsCast;
 use web_sys::{
-    CanvasRenderingContext2d, HtmlButtonElement, HtmlCanvasElement, HtmlElement, ImageBitmap,
+    CanvasRenderingContext2d, HtmlButtonElement, HtmlCanvasElement, HtmlElement, HtmlSelectElement,
+    ImageBitmap,
 };
 struct CameraImageGeometry {
     source_size: (u32, u32),
@@ -187,9 +188,29 @@ pub(super) fn clear_canvas(canvas_id: &str) {
 }
 
 pub(super) fn rebuild_camera_cards(camera_topics: &[(CameraId, String)]) {
+    let selector: HtmlSelectElement = element("camera-topic");
+    selector.set_inner_html("");
+    selector.set_disabled(camera_topics.is_empty());
+    if camera_topics.is_empty() {
+        let option = document()
+            .create_element("option")
+            .expect("empty camera option");
+        option.set_text_content(Some("No image topics"));
+        selector
+            .append_child(&option)
+            .expect("empty camera option append");
+    }
     let container: HtmlElement = element("camera-thumbnails");
     container.set_inner_html("");
     for (camera_id, topic) in camera_topics {
+        let option = document()
+            .create_element("option")
+            .expect("camera topic option");
+        option
+            .set_attribute("value", &camera_id.0.to_string())
+            .expect("camera topic value");
+        option.set_text_content(Some(topic));
+        selector.append_child(&option).expect("camera topic append");
         let button: HtmlButtonElement = document()
             .create_element("button")
             .expect("camera card")
@@ -245,6 +266,13 @@ pub(super) fn update_camera_presentation(
     if view.camera_topics.as_slice() != camera_topics {
         rebuild_camera_cards(camera_topics);
         view.camera_topics = camera_topics.to_vec();
+    }
+    let selector: HtmlSelectElement = element("camera-topic");
+    if let Some(id) = selected_camera {
+        let value = id.0.to_string();
+        if selector.value() != value {
+            selector.set_value(&value);
+        }
     }
     if view.last_drawn_camera != selected_camera {
         clear_canvas("camera");

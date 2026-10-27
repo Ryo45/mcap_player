@@ -19,6 +19,7 @@ pub(crate) struct PreviewCoordinator {
     latest_snapshot: Option<PreviewSnapshot>,
     pub(crate) drag: PreviewDragState,
     status: PreviewStatus,
+    camera_routes_changed: bool,
 }
 
 impl PreviewCoordinator {
@@ -27,6 +28,7 @@ impl PreviewCoordinator {
         self.latest_snapshot = None;
         self.drag.clear();
         self.status = PreviewStatus::Unavailable;
+        self.camera_routes_changed = false;
     }
 
     pub(crate) fn load_for_source(&mut self, source_path: &Path, expected: &SourceFingerprint) {
@@ -65,6 +67,13 @@ impl PreviewCoordinator {
         }
     }
 
+    // Existing sidecars store session CameraIds without source-topic bindings. Do not reuse
+    // these images after routes change; numeric and trajectory previews remain usable.
+    pub(crate) fn camera_routes_changed(&mut self) {
+        self.camera_routes_changed = true;
+        self.update(None);
+    }
+
     pub(crate) fn update(&mut self, target_time: Option<ArrivalTime>) {
         let Some(artifact) = &self.artifact else {
             self.latest_snapshot = None;
@@ -77,7 +86,11 @@ impl PreviewCoordinator {
         let request = PreviewRequest {
             range,
             target_time,
-            camera_ids: artifact.camera_frames.keys().copied().collect(),
+            camera_ids: if self.camera_routes_changed {
+                Vec::new()
+            } else {
+                artifact.camera_frames.keys().copied().collect()
+            },
             signal_ids: artifact.signal_overviews.keys().copied().collect(),
             budget: PreviewBudget {
                 max_camera_frames: artifact.camera_frames.len(),
