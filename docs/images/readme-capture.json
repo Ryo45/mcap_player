@@ -1,0 +1,75 @@
+{
+  "source_sha256": "96263a20af75fea19bbd27da5e9e919504b1ea6882b758d2063fbddbe856c36a",
+  "native_sha256": "8f8992ab0d8124b1e55aeb9596255904534d2675f6cab078359067183c65d0b7",
+  "viewport": [
+    1920,
+    1080
+  ],
+  "captures": [
+    {
+      "layout": "monitor",
+      "image": "monitor-workspace.png"
+    },
+    {
+      "layout": "cameras",
+      "image": "layout-cameras.png"
+    },
+    {
+      "layout": "navigation",
+      "image": "layout-navigation.png"
+    },
+    {
+      "layout": "inspection",
+      "image": "layout-inspection.png"
+    },
+    {
+      "layout": "web-monitor",
+      "image": "monitor-workspace-web.png"
+    }
+  ],
+  "browser": {
+    "version": "Chrome/143.0.7499.192",
+    "mode": "hardware",
+    "viewport": [
+      1920,
+      1080
+    ],
+    "dpr": 1,
+    "gpu_devices": [
+      {
+        "vendorId": 4318,
+        "deviceId": 11269,
+        "vendorString": "Google Inc. (NVIDIA Corporation)",
+        "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+        "driverVendor": "Nvidia",
+        "driverVersion": "610.57.04"
+      }
+    ],
+    "feature_status": {
+      "2d_canvas": "enabled",
+      "direct_rendering_display_compositor": "disabled_off_ok",
+      "gpu_compositing": "enabled",
+      "multiple_raster_threads": "enabled_on",
+      "opengl": "enabled_on",
+      "rasterization": "enabled",
+      "raw_draw": "disabled_off_ok",
+      "skia_graphite": "disabled_off",
+      "trees_in_viz": "disabled_off",
+      "video_decode": "enabled",
+      "video_encode": "disabled_software",
+      "vulkan": "enabled_on",
+      "webgl": "enabled",
+      "webgpu": "enabled",
+      "webnn": "disabled_off"
+    }
+  },
+  "product_commit": "18787dc",
+  "description": "Unmodified release applications; same EOF cursor, generated Path and demo calibration; normal UI controls visible.",
+  "captured_at": "2026-10-27",
+  "cursor_ns": "1768724930204523401",
+  "web_state": {
+    "status": "Ready \u00b7 77 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 31 pts \u00b7 scan 360 pts \u00b7 5.02s",
+    "focus": "/camera/front/image/compressed",
+    "scene": "WebGPU ready"
+  }
+}

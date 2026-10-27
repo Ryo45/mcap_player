@@ -7,7 +7,7 @@ remain shared observable requirements.
 
 ## Current inventory
 
-| Area | Native | Web after the monitor workspace change | Remaining work |
+| Area | Native | Web (Browser Local / Remote) | Remaining work |
 | --- | --- | --- | --- |
 | Recording playback | Local indexed MCAP | Browser `File.slice()` and Recording Server | Native remote source UI, if needed |
 | Playback and seek | Pause, speed, exact restore | Same shared clock/controllers; async complete-window buffering and restore | Keep parity regressions as features expand |
@@ -22,8 +22,8 @@ remain shared observable requirements.
 | Topic Health / Diagnostics | Bounded query snapshots and session worker | Not implemented | Async index/range readers plus shared reductions; no full-recording scan fallback |
 | Preview / bookmarks | Preview sidecars and timeline bookmarks | Not implemented | Browser/Remote artifact loading and lifecycle |
 | Layout persistence | Validated layout documents and presets | Fixed monitor workspace | Browser layout host using the shared persistent model |
-| ROS live | ROS 2 subscriptions and dynamic catalog | Not implemented | Separate transport requirement; browser cannot directly reuse Native ROS subscriptions |
-| MCAP compression | Uncompressed, Zstd, LZ4 | Uncompressed and Zstd; Recording Server also restricts compression | Decide whether Browser LZ4 support is needed |
+| ROS live | Configured ROS 2 subscriptions; camera focus within subscribed inputs | Not implemented | Separate transport requirement; browser cannot directly reuse Native ROS subscriptions |
+| MCAP compression | Uncompressed, Zstd, LZ4 | Browser Local: uncompressed, Zstd, LZ4; Recording Server: uncompressed, Zstd | Server LZ4 support |
 
 ## First delivered slice: monitor workspace
 

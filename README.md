@@ -1,286 +1,224 @@
 # MCAP Player
 
-ROS 2 の MCAP を再生し、カメラ映像・車両状態・周辺情報をまとめて確認する Rust 製ビューアです。Native、ブラウザ、Recording Server 経由のリモート再生、ROS 2 live 入力に対応します。
+ROS 2のMCAPを再生し、カメラ映像・点群・計画経路・Topicの値を同じ時刻で確認するRust製ビューアです。
+Nativeアプリとブラウザで利用でき、Recording Server経由のリモート再生とNativeのROS 2 Live入力にも対応します。
 
-ロボットの「何が見えていて、どこへ進もうとしていて、そのときtopicに何が入っていたか」を
-一つの画面で追うための監視・解析ツールです。記録を再生・停止・seekしながら、映像と空間表示を
-確認し、気になるtopicの値を同じ再生位置で調べられます。
+大きな記録から表示・解析に必要なトピックと時刻範囲を読み、デコード済みの全履歴を常駐させない設計です。
+圧縮Chunk内に複数トピックが混在すると、非表示データを含むChunkの展開が必要になる場合もあります。
+性能の特徴と限界は[計測結果](docs/performance/README.md)にまとめています。
 
-**Native**
+[Nativeで試す](#nativeで試す) · [ブラウザで試す](#ブラウザで試す) · [手持ちの記録を開く](#手持ちの記録を開く) · [対応範囲と制約](#対応範囲と制約)
 
-![Nativeのmonitor画面。左にTopic一覧とLaserScanのInspector、右上に点群と計画軌跡の3D Scene、右下に軌跡を重畳したフロントCamera。](docs/images/monitor-workspace.png)
+## どんな画面で使えるか
 
-*同梱のシミュレーション記録をNativeで再生し、`/scan`をInspectした実画面です。
-水色はLaserScan、黄色はScene上の計画軌跡、緑色はCameraへの軌跡投影です。
-画面上部には速度・再生状態・TF／Cameraの状態を表示しています。*
+**Native — 左にTopics / Inspector、右に3D SceneとCamera**
 
-**ブラウザ（Chrome／WebGPU）**
+![Nativeのmonitor画面。Topic一覧とLaserScanのInspector、3D Scene、画像トピックを選べるCameraパネル。](docs/images/monitor-workspace.png)
 
-![ChromeのWeb版。Nativeと同じ録画・再生位置で、左にLaserScanのInspector、右上に3D Scene、右下に軌跡overlay付きフロントCameraを表示。](docs/images/monitor-workspace-web.png)
+**ブラウザ — ローカルMCAPを選択して同じ配置で確認**
 
-*同じサンプルをブラウザで開いた実画面です。Nativeと同じく、左にTopics／Inspector、右上にScene、
-右下にCameraを配置し、記録の末尾で停止して`/scan`を表示しています。
-ローカルMCAPを選択するだけで、ブラウザでも点群・計画軌跡・Camera overlay・メッセージの値を確認できます。*
+![ブラウザのmonitor画面。Nativeと同じ録画・再生位置で、Topics / Inspector、3D Scene、画像トピックのプルダウンとCameraを表示。](docs/images/monitor-workspace-web.png)
 
-画像トピックはschemaから検出し、Cameraの「Image topic」でRaw Image / JPEG / PNGを切り替えられます。
-トピック名がプロジェクトごとに異なる記録も、そのまま開いて選択できます。
+いずれも同梱のシミュレーション由来データを使った実画面です。水色はLaserScan、黄色は計画経路、緑色はCamera overlay。
+Pathは生成データ、Camera calibrationはデモ値です。[再現手順](docs/screenshots.md)を公開しています。
 
-topicを調べても、CameraやSceneの再生対象は変わりません。大きな記録は必要なtopicと範囲を読み、
-配列はページ単位で、Plotは点数を制限した概要として表示します。
-まず試すには[監視・解析用の画面](#監視解析用の画面)、撮影に使ったサンプルの準備は
-[スクリーンショットの再現手順](docs/screenshots.md)を参照してください。
-
-## 用途から選ぶ画面
-
-Nativeには、すぐ試せる用途別レイアウトを同梱しています。画像をクリックすると原寸で開けます。
+Nativeには用途別レイアウトもあります。
 
 | 複数カメラを一覧する | 映像・空間・動きを照合する | Topicの値と時系列を調べる |
-|---|---|---|
-| ![4つの画像トピックを並べるNativeのcamerasレイアウト](docs/images/layout-cameras.png) | ![3D Scene、Camera overlay、BEV、速度・ヨーレートを表示するnavigationレイアウト](docs/images/layout-navigation.png) | ![LaserScanのInspectorと速度・ヨーレートのPlotを表示するinspectionレイアウト](docs/images/layout-inspection.png) |
+| --- | --- | --- |
+| ![4つの画像トピックを並べるcamerasレイアウト](docs/images/layout-cameras.png) | ![Scene、Camera、BEV、速度・ヨーレートのnavigationレイアウト](docs/images/layout-navigation.png) | ![Inspectorと速度・ヨーレートのinspectionレイアウト](docs/images/layout-inspection.png) |
 | `--layout cameras` | `--layout navigation` | `--layout inspection --inspect-topic /scan` |
 
-撮影は同梱デモの通常ビルドです。複数カメラのデモ画像は同じ元映像の色違いで、異なる実視点ではありません。
-Pathは生成データ、Camera calibrationはデモ値です。
-[画面ごとの使い方・大きい画像・対象トピック](docs/layout_gallery.md)を用意しています。
-先頭の`monitor`は、Topic・InspectorとScene・Cameraを同時に追う構成です。
+複数カメラのデモは同じ元映像の色違いで、異なる実視点ではありません。
+各画面の目的・入力トピック・大きい画像は[レイアウトギャラリー](docs/layout_gallery.md)を参照してください。
 
-## 主な機能
+## Nativeで試す
 
-- 複数のカメラ（JPEG/PNG `CompressedImage`、8bit Raw `Image`）を一覧・フォーカス表示
-- カメラ画像上に計画経路を投影
-- BEV にグリッド、車両位置、計画経路を表示
-- 3D ビューに車両姿勢、軌跡、LaserScan / PointCloud2を表示
-- `/odom` の位置、向き、速度、ヨーレートを再生位置に同期して表示
-- `/tf` と `/tf_static` による座標変換
-- Nativeで分割MCAPを1本の時間軸として再生・Seek
-- Browser Localで非圧縮・Zstd・LZ4のMCAPを必要な範囲だけ読み込み
+以下のコマンドはリポジトリのルートで実行します。
+Rust **1.91.1**でビルド・検証しています。通常の記録再生にROS 2のインストールは不要です。
+NativeのビルドにはC/C++ツールチェーン、CMake、NASM、pkg-configが必要です。
+LinuxのGUI関連パッケージを含む環境例は[Docker開発環境](docs/development_container.md)と[Dockerfile](docker/Dockerfile)を参照してください。
+Dockerの既定サービスはビルド・テスト用で、Native GUI/GPUのホスト接続は別設定です。
 
-## 性能検証
-
-必要なデータだけを読み込み・decode・保持する設計が有効になる条件と限界を、
-圧縮方式・Chunk構成・選択トピック・記録長・Seekの条件を変えて測っています。
-[計測手順と指標の定義](docs/performance/README.md)に再現用コマンドと生データをまとめています。
-Native連続読み込みとindexed queryではI/O削減の効き方が異なるため、分けて評価します。
-[Lichtblick Desktopと表示内容を合わせた比較・スクリーンショット](docs/performance/2026-10-20-desktop-default-layout/README.md)も掲載しています。
-[カメラ台数・Raw展開・Scan／RGB PointCloud2の表示パターン別比較](docs/performance/2026-10-20-desktop-workloads/README.md)では、更新頻度とメモリ・CPUを条件ごとに調べています。
-[Webの巨大Chunk改善と20GiB単一Chunkの境界試験](docs/performance/2026-10-24-web-chunk-streaming/README.md)も記録しています。
-[継続性能計測](tools/performance-probe/README.md)では、固定ケースを3反復し、baselineからの性能低下を検出できます。
-
-## Native で再生
-
-引数なしの場合は同梱サンプルを再生します。
-
-```bash
-cargo run -p viewer-native
+```sh
+git clone https://github.com/Ryo45/mcap_player.git
+cd mcap_player
+cargo run --release -p viewer-native -- --layout monitor
 ```
 
-ファイルとカメラトピックを指定する場合:
+同梱の約5秒の記録を再生します。再生・停止・Seekを操作し、Cameraパネルのプルダウンから画像トピックを選べます。
+Inspectorまでスクリーンショットと同じ状態で試すには、依存schemaを補完した[撮影用デモ](docs/screenshots.md)を生成してください。
+初回ビルドには時間がかかります。性能を評価する際は`--release`を使用してください。
 
-```bash
-cargo run -p viewer-native -- \
-  --mcap tests/fixtures/camera-jpeg/camera_7_5s.mcap \
-  --camera-topic /camera/front/image/compressed
+## ブラウザで試す
+
+ローカル起動には、Rust・WASM用clang・Trunkを揃えたDocker環境を使えます。
+
+```sh
+docker compose build dev
+docker compose run --rm --service-ports dev bash -lc \
+  'cd apps/viewer-web && trunk serve --release --address 0.0.0.0'
 ```
 
-起動中のウィンドウへ `.mcap` ファイルをドロップして開くこともできます。カメラキャリブレーションを変更する場合は `--camera-calibration FILE` を指定してください。
+`http://localhost:8080`を開き、**Open MCAP**からファイルを選択します。
+Browser Localでは記録をサーバーへアップロードせず、ブラウザ内で必要な範囲を読みます。
+Cameraのない記録も開けます。動作確認にはLinux上のChrome / WebGPUを使用しています。
 
-分割MCAPは各partが入ったディレクトリを指定します。直下の`.mcap`を索引のlog timeで統合し、時間の隙間は保持します。
+ホスト側にツールが揃っている場合は、次の手順でも起動できます。
 
-```bash
-cargo run -p viewer-native -- --mcap /path/to/rosbag_directory --layout monitor
-```
-
-Summary・Chunk Index・選択streamのMessage Indexが必要です。索引のない記録を自動で全走査することはありません。
-rosbag2のfastwrite記録は[明示的な変換手順](docs/fastwrite.md)を参照してください。
-分割入力の対象範囲と制限は[分割MCAPと入力互換性](docs/issue/015-split-mcap-and-web-lz4/README.md)に記載しています。
-
-`standard` / `showcase` / `explore` / `monitor` のLayout JSONは0.1では同梱された内部presetです。外部向けの保存形式や
-backward compatibilityは保証しません。`schemaVersion` / `configVersion` は同梱presetの開発時検証と
-unsupported panelの可視化に使い、外部Layoutのload/save/migration policyは公開時に別途定義します。
-
-## ブラウザで再生
-
-```bash
+```sh
 rustup target add wasm32-unknown-unknown
-cargo install trunk
-cd apps/viewer-web
-trunk serve --release
+# clang-18を用意したLinux環境の例
+export CC_wasm32_unknown_unknown=clang-18
+export CXX_wasm32_unknown_unknown=clang++-18
+cargo install trunk --locked --version 0.21.14
+(cd apps/viewer-web && trunk serve --release)
 ```
 
-表示されたページでローカルの MCAP ファイルを選択します。ファイル全体は読み込まず、再生に必要な範囲だけを取得します。
-左に Topic 一覧・メッセージ Inspector、右上に 3D Scene、右下にカメラを表示します。
-Topic を選ぶと、現在の MCAP log time 以前の最新メッセージを自動取得します（最大250 ms間隔）。
-「Follow cursor」で自動追従を切り替え、「Refresh message」で手動更新できます。
-ROS 2 CDR のフィールドは完全な ros2msg dependency 定義があれば展開できます。カメラのない録画も開けます。
-3D は Chase / Free / Vehicle eye、点群蓄積に対応し、BEV 表示にも切り替えられます。
-Native / Web の対応状況と今後の開発順は[差分一覧](docs/native_web_parity.md)を参照してください。
+WebはTopics / Inspector・Scene / BEV・Cameraの固定配置です。
+Plot、Preview、bookmarks、用途別レイアウトは現在Nativeのみです。
 
-## 物理geometryとTurtleBot3
+## 手持ちの記録を開く
 
-Scene内の距離は **1.0 = 1 metre** です。車体・Path・Scanに個別の倍率を掛けません。
-同梱データ向けの車体はTurtleBot3 Waffle PiのURDF collision形状の包絡で、
-約 **0.283 × 0.306 × 0.141 m**。1 m gridと同じ単位で表示します。
-Pathはframe付き3D座標とzを保持し、TFでScene／BEV／Cameraへ変換します。
+### カメラ・Scene・Topicの値を一緒に見る
 
 ```sh
-cargo run -p viewer-native -- --layout monitor \
-  --platform-geometry config/platform_geometry/turtlebot3_waffle_pi.json \
-  --ground-frame base_footprint
+cargo run --release -p viewer-native -- \
+  --mcap /path/to/recording.mcap --layout monitor --no-platform-geometry
 ```
 
-geometry JSONは別のロボットや自動車の非対称なboundsにも置き換えられます。
-Nativeは`--no-platform-geometry`、WebはSceneの設定から車体を非表示にできます。
-Ground frameを指定しなければPathの元のzを使います。Camera calibrationは別設定で、
-同梱値がデモ値であることをoverlay状態に表示します。
-寸法の出所・座標系・検証・現在の制約は[physical geometry](docs/physical_geometry.md)を参照してください。
+ファイルや分割MCAPのディレクトリを、Nativeのウィンドウへドロップして開くこともできます。
+分割入力はディレクトリ直下の`.mcap`を1本のlog-time軸として扱います。
 
-## Recording Server
+**画像トピック名をコードに合わせる必要はありません。**
+`Image` / `CompressedImage`のschemaとCDR encodingから候補を抽出し、Cameraのプルダウンで切り替えられます。
+Nativeの複数パネルはそれぞれ独立して選択できます。
+`--camera-topic TOPIC`は初期カメラの希望値で、固定パネルの設定を一括置換する引数ではありません。
+[選択・フォーカス・プレビューの動作](docs/camera_topic_selection.md)を参照してください。
 
-LAN 上の MCAP をブラウザから再生する場合に使用します。
+同梱の車体形状はTurtleBot3 Waffle Piです。ほかの機体では上記のように非表示にするか、
+`--platform-geometry FILE.json`で実際の形状を指定します。Sceneは **1.0 = 1 metre** を維持します。
 
-```bash
-cp config/recording-server.toml.example config/recording-server.toml
-# config/recording-server.toml に MCAP のパスと許可する Origin を設定
-cargo run -p recording-server -- \
-  --config config/recording-server.toml
-```
+### 点群のトピックや座標系を合わせる
 
-ブラウザでサーバー URL（既定値: `http://localhost:8081`）を入力し、Remote Playback を開きます。設定の詳細は [Filesystem Recording Server](docs/filesystem_recording_server.md) を参照してください。
-
-## ROS 2 live 入力
-
-ROS 2 Jazzy の環境を読み込み、`ros2-live` 機能を有効にします。
-
-```bash
-source /opt/ros/jazzy/setup.bash
-cargo run -p viewer-native --features ros2-live -- \
-  --live --camera-topic /camera/front/image/compressed
-```
-
-Raw `sensor_msgs/msg/Image` はtopicを明示して購読します（`rgb8 / bgr8 / rgba8 / bgra8 / mono8`）。
-
-```bash
-cargo run -p viewer-native --features ros2-live -- \
-  --live --live-raw-camera-topic /camera/image_raw
-```
-
-`--live-raw-camera-topic`は複数回指定でき、JPEG/PNGのCompressedImageとも混在できます。
-`--camera-topic`未指定時は、Raw topicの辞書順先頭を優先Cameraにします。優先Cameraは`--camera-topic`で指定できます。
-固定topicのCameraパネルはlayout側のtopicに従い、表示するものだけを購読します。
-ROSグラフからの型の自動判定は行わないため、publisherの起動前にも購読できます。
-[実DDSでの検証結果](docs/verification/2026-10-21-camera-formats/raw-live.md)を参照してください。
-
-既定の QoS は best effort / volatile です。Reliable にする場合は `--reliable` を追加してください。動作確認用データの生成手順は [ROS fixture](tools/ros-fixture/README.md) を参照してください。
-
-## 対応データと制約
-
-- カメラ: JPEG/PNG の `sensor_msgs/msg/CompressedImage`、`sensor_msgs/msg/Image` の `rgb8 / bgr8 / rgba8 / bgra8 / mono8`
-- 計画経路: `/planning/path` の `nav_msgs/msg/Path`
-- 車両状態: `/odom`
-- 点群表示: LaserScan / PointCloud2（XYZ・RGB/RGBA・intensity着色。PointCloud2は記録入力）
-- カメラ内部パラメータ: `config/camera_calibration.json`
-- 未対応: 16bit・深度画像・compressedDepth、H.264/H.265、ブラウザでの live 入力
-
-### PointCloud2を表示する
-
-カメラを含まない点群記録は、Sceneだけのレイアウトで開けます。
-
-~~~sh
-cargo run -p viewer-native -- --mcap PATH --layout scene \
+```sh
+cargo run --release -p viewer-native -- \
+  --mcap /path/to/recording.mcap --layout scene \
   --point-cloud-topic /points --fixed-frame lidar --no-platform-geometry
-~~~
+```
 
---fixed-frameは記録のTFまたは点群headerに実在するframe名へ変更してください。
-Scene上部でAuto / Solid / RGB・RGBA / Intensityを選択でき、強度の表示範囲も指定できます。
-Webでは開く前にPhysical settingsのPoint cloud topicとWorld frameを設定します。
-[対応形式・リソース上限・着色のルール](docs/point_cloud2.md)を参照してください。
+`/points`と`lidar`は、記録内の実際のトピック名・frame名に置き換えてください。
+表示先frameが入力frameと異なる場合は、それらを結ぶTFが必要です。
+SceneではAuto / Solid / RGB・RGBA / Intensityを選び、強度範囲も変更できます。
+Webではファイルを開く前にSceneの設定でPoint cloud topicとWorld frameを指定します。
+[PointCloud2の対応形式と上限](docs/point_cloud2.md)を参照してください。
 
-## 監視・解析用の画面
+### Topicの中身とグラフを調べる
 
-Nativeに`monitor` presetを追加しています。
+CameraやSceneが不要な記録には、`--layout explore`が使えます。
+Topicsから対象を選ぶと、現在のMCAP log time以前の最新メッセージをInspectorで確認できます。
+配列はページ単位で表示し、Nativeではnumeric fieldの「+」から概要Plotを追加できます。
+InspectorやPlotで対象を選んでも、Cameraなどのcontinuous playback対象は増えません。
 
-`--inspect-topic /scan`を追加すると、起動時からそのtopicをInspectorに表示します。
-Inspector対象は画面のTopic一覧で変更できます。このオプションは記録入力専用です。
+ほかに`health`（到着周期・Diagnostics）、`inspection`（Inspector・速度/ヨーレート）があります。
+引数なしの既定レイアウトは`standard`です。`standard` / `navigation`などはデモ用のPath・Odometry等を要求するため、
+手持ちの記録の入口には、利用可能なScene入力を使う`monitor`か、query中心の`explore`を勧めます。
+
+### Path・TF・Camera overlayを合わせる
+
+| 入力 | 既定値・変更方法 |
+| --- | --- |
+| Camera | schemaから検出し、パネルで選択 |
+| LaserScan / PointCloud2 | `/scan`。Nativeは`--point-cloud-topic`、WebはScene設定で変更 |
+| 表示先frame | `odom`。Nativeは`--fixed-frame`、WebはWorld frameで変更 |
+| Path | `/planning/path` |
+| Odometry | `/odom` |
+| 動的TF / 静的TF | `/tf` / `/tf_static` |
+
+Path・Odometry・TFのトピック名は、現在[workspace bindings](config/workspace_bindings.json)をビルド時に埋め込みます。
+これらの名前を変更する場合は設定を編集し、Native/Webを再ビルドしてください。
+レイアウトの配置も同梱presetで、外部JSONの実行時load/saveやGUIでの配置編集は未対応です。
+
+Camera overlayにはPath・TF・実カメラに対応したcalibrationが必要です。
+同梱のcalibrationはデモ値で、別カメラの実測値としては使えません。
+Nativeは`--camera-calibration FILE.json`、WebはScene設定のCamera calibration JSONから読み込みます。
+[物理geometry・座標系・ground frame](docs/physical_geometry.md)に設定例をまとめています。
+
+## 対応範囲と制約
+
+| 項目 | Native | Browser Local | Recording Server → Web |
+| --- | --- | --- | --- |
+| 索引付きMCAP | 単一ファイル・分割ディレクトリ | 単一ファイル | 設定した単一ファイル |
+| MCAP圧縮 | 非圧縮・Zstd・LZ4 | 非圧縮・Zstd・LZ4 | 非圧縮・Zstd |
+| Camera / Scene / BEV / Inspector | 対応 | 対応 | 対応 |
+| 数値Plot・Topic Health・Diagnostics | 対応 | 未対応 | 未対応 |
+| Preview / bookmarks | 対応 | 未対応 | 未対応 |
+| ROS 2 Live | 対応 | 未対応 | 未対応 |
+
+- **索引が必要です。** Summary・Chunk Index・選択streamのMessage Indexがない場合はエラーを表示します。
+  巨大ファイルを黙って全走査することはありません。rosbag2 fastwriteなどは[明示的な変換](docs/fastwrite.md)を行ってください。
+- CameraはJPEG / PNGの`CompressedImage`と、`rgb8 / bgr8 / rgba8 / bgra8 / mono8`のRaw `Image`に対応します。
+  16bit・深度画像・compressedDepth・H.264/H.265は未対応です。
+- Inspectorとnumeric field PlotはROS 2 plain CDRと完全なros2msg依存定義を使います。
+  schemaが不足・未対応の場合はメタデータと理由を表示します。
+- PointCloud2は記録入力に対応します。Liveの点群入力はLaserScanです。
+- Nativeの画像Previewは任意の追加sidecarです。なくても再生・exact Seekは使えます。
+  **旧schema 1のsidecarは現在のpreview-builderで再生成が必要です。** 分割記録全体のPreview生成は未対応です。
+- 大きなChunkや高解像度画像は、展開時間・一時メモリ・Seek遅延に影響します。入力経路ごとに読み込み・保持・query上限があります。
+  すべての記録で一定のFPSやメモリ量を保証するものではありません。
+
+対応差分の詳細は[Native / Web一覧](docs/native_web_parity.md)、分割MCAPの制約は[入力互換性](docs/issue/015-split-mcap-and-web-lz4/README.md)を参照してください。
+
+## Recording Serverを使う
+
+LAN上の記録をブラウザから開く場合に使用します。
 
 ```sh
-cargo run -p viewer-native -- --mcap PATH --layout monitor
-# ROS 2 Jazzy環境でリアルタイム監視
-cargo run -p viewer-native --features ros2-live -- --live --layout monitor
+cp config/recording-server.toml.example config/recording-server.toml
+# MCAPの絶対パスと、実際にブラウザを開くOriginを設定
+cargo run --release -p recording-server -- --config config/recording-server.toml
 ```
 
-- 左30%: 検索できるTopic一覧、下に選択topicのGeneric Inspector。クリックで対象を切り替えます。
-- 右70%の上半分: 点群・車両・計画軌跡を重畳した3D Scene。Chase / Free / Vehicle eyeを切り替えられます。
-- 右下半分: フロントCamera 1台＋計画軌跡overlay。
-- Scene上部: 再生状態／時刻、速度、yaw rate、Camera／overlay状態、TF診断を常時表示。
+Web画面のRemote Recording Serverを開き、サーバーURL（既定は`http://localhost:8081`）へ接続します。
+サーバーは信頼できるLAN向けで、TLS・認証は提供しません。
+パス・Origin・リクエスト/Chunk上限は[サーバーの設定](docs/filesystem_recording_server.md)を参照してください。
 
-左上の「Source / diagnostics」で詳細診断、Inspector下の「Schema / numeric plots」でschemaと
-field Plotにアクセスできます。通常画面の追加sidebarとInspectorウィンドウは表示しません。
-現在値はcontinuous featureの共有状態から表示し、速度overviewの全記録読み込みは行いません。
-点群・TF・Odometry・Pathは存在する場合に使用します。
-Cameraパネルのプルダウンでは、schemaから検出したRaw Image / JPEG / PNGトピックへ切り替えられます（Native / Web共通）。
-初期Cameraの`/camera/front/image/compressed`がないMCAPでも、利用可能な画像を選びます。
-他のtopic bindingは`config/workspace_bindings.json`を使用します。
-詳細は[画像トピックの切り替え](docs/camera_topic_selection.md)を参照してください。
-画像プレビューのsidecarはschema 2を使用します。旧形式は現在のpreview-builderで再生成してください。
-点群入力はLaserScan / PointCloud2です。軌跡overlayにはPath、TF、Camera calibrationが必要で、欠落時は状態を表示します。
-Generic Inspectorは記録のcursor query専用で、Liveの任意topic値閲覧は今後の対応です。
-このpresetはNativeのみです。
+## ROS 2 Live入力を使う
 
-## Generic Inspector
+ROS 2 Jazzyの環境で`ros2-live`を有効にします。画像形式は起動時に指定します。
 
-Nativeの「Topics」でtopicを開き、**Inspect at cursor**を選ぶと、再生cursor `T`でのlatest message
-`<= T`を表示します。log time／publish time／sequence／ROS header stampと、schemaに従ったfield treeを
-閲覧できます。nested messageは折りたたみ、配列／sequenceは64要素ずつページ表示します。
-対象topicの選択でplayback selectionは増えません。messageとindex/chunkを再利用するため、近接した
-cursor移動でwhole-log scanや同じchunkの再展開を繰り返しません。
-ROS 2 plain CDR＋完全なros2msg dependency定義に対応し、未対応schemaはmetadataと理由を表示します。
-payload上限16 MiB、最大8 topicです。詳細は[architecture](docs/message_centric_architecture.md)を参照してください。
-
-## Topic Tree / numeric field Plot
-
-Nativeの左側「Topics」はcatalog/schema metadataだけで構築します。topicを開き、numeric fieldの
-「+」から任意fieldのbounded overview Plotを追加できます（最大8本、各4,000点）。Cameraなどを
-含まないrecordingは`cargo run -p viewer-native -- --mcap PATH --layout explore`で開けます。同じstreamの
-loading中fieldはまとめて読み、source切替後もnumeric workerは同時に1つです。追加・削除で
-continuous playbackのstream selectionは変わりません。ROS 2 CDR + ros2msgのnested numeric scalarに
-対応し、元schema definitionも表示します。Web Local/Remoteにも同じschema bytesを保持しますが、
-field Plot UIは現在Nativeのみです。現在の設計と対応範囲は
-[message-centric architecture](docs/message_centric_architecture.md)を参照してください。
-
-## Native recording I/O
-
-NativeのMCAP読み込みはbounded positional readを使います。元ファイルの変更・truncateでも、
-読み込み済みpayloadのRust参照は無効化されません。検知した変更はエラーとして扱います。
-詳細とAPIの時間境界は[現在のarchitecture](docs/message_centric_architecture.md)を参照してください。
-
-Nativeカメラは表示の物理pixel数に合わせてlibjpeg-turboのIDCT縮小を使い、2本のbounded workerでJPEGをdecodeします。
-overlayは元画像の座標で計算します。[設計と制限](docs/native_jpeg.md)、[FHD表示を基準にした4K記録の比較計測](docs/performance/2026-10-14-native-jpeg/summary.md)を参照してください。
-
-## 開発環境
-
-[Docker開発コンテナ](docs/development_container.md)にRust 1.91.1・clang・WASM・trunk・ROS 2 Jazzyをまとめています。
-NativeのJPEGデコードにはSIMDを有効にしたlibjpeg-turboを静的リンクします。ホストでビルドする場合はC/C++ツールチェーン、CMake、NASMが必要です（Ubuntu: `sudo apt install build-essential cmake nasm pkg-config`）。Dockerには同梱しています。
-
-`docker compose build dev`で準備し、`docker compose run --rm dev mcap-dev-check`で検証できます。
-
-## 開発時のチェック
-
-```bash
-cargo fmt --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
-cargo check -p viewer-core -p viewer-mcap -p viewer-renderer -p bev-renderer -p scene-renderer --target wasm32-unknown-unknown
-cd apps/viewer-web && trunk build --release
+```sh
 source /opt/ros/jazzy/setup.bash
-cargo test -p viewer-native --features ros2-live
+cargo run --release -p viewer-native --features ros2-live -- \
+  --live --layout standard --camera-topic /camera/front/image/compressed
+
+# Raw Imageの場合
+cargo run --release -p viewer-native --features ros2-live -- \
+  --live --layout standard --live-raw-camera-topic /camera/image_raw
 ```
 
-Native の `--layout health` は Topic Health（MCAP log time の到着・周期の事実）と
-Diagnostics（producer が報告した DiagnosticArray の level）を別 Panel で表示します。
-デフォルトは直近10秒、Diagnostics topic は `/diagnostics` です。
-詳細と設定は [Native recording health panels](docs/native_recording_health.md) を参照してください。
+Raw topicは複数指定でき、CompressedImageと混在できます。既定QoSはbest effort / volatileで、`--reliable`も指定できます。
+プルダウンの切り替えは購読済み画像の範囲です。ROSグラフからの追加発見・動的な購読変更、LiveのGeneric Inspectorは未対応です。
+[Live入力の検証](docs/verification/2026-10-21-camera-formats/raw-live.md)と[fixtureツール](tools/ros-fixture/README.md)を参照してください。
 
-Rustの責務別配置と命名方針は[module structure](docs/module_structure.md)、現在の依存・責務の評価は[セルフレビュー](docs/verification/2026-10-21-self-review/README.md)を参照してください。
+## 性能検証・開発資料
 
-Webのカメラ表示は2本のWeb WorkerでJPEG/PNGのデコードとRaw画像の変換を行い、表示サイズに合わせたImageBitmapをCanvasへ渡します。
-[Raw/PNG対応と検証](docs/issue/016-camera-image-formats/README.md)、[設計・制限と検証](docs/web_jpeg.md)、[4K JPEGのFHD基準比較](docs/performance/2026-10-15-web-jpeg/README.md)を参照してください。
+性能は圧縮方式、Chunk構成、選択トピック、画像形式、記録長、Seekの条件を変えて評価しています。
+比較対象と表示内容を揃えた測定、成功・失敗例、リソース上限を記録しています。
+
+- [性能検証の入口](docs/performance/README.md) / [継続性能計測の実行方法](tools/performance-probe/README.md)
+- [Lichtblick Desktopとの表示パターン別比較](docs/performance/2026-10-20-desktop-workloads/README.md)
+- [Webの巨大Chunk・20GiB単一Chunkの境界試験](docs/performance/2026-10-24-web-chunk-streaming/README.md)
+- [画像トピック選択・Preview修正の最終検証](docs/verification/2026-10-27-camera-focus-followup/README.md)
+- [アーキテクチャ](docs/message_centric_architecture.md) / [module構成](docs/module_structure.md)
+- [Native JPEG](docs/native_jpeg.md) / [Web画像処理](docs/web_jpeg.md) / [Native health panels](docs/native_recording_health.md)
+
+[Docker開発環境](docs/development_container.md)から、ビルド・テスト一式を実行できます。
+
+```sh
+docker compose build dev
+docker compose run --rm dev mcap-dev-check
+```
+
+fmt、workspace Clippy、workspace tests、WASM check、Web release build、ROS Live testsを実行します。
+通常のホスト環境では、まず`cargo fmt --all -- --check`と`cargo test --workspace`を利用してください。

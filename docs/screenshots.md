@@ -1,77 +1,73 @@
 # READMEのスクリーンショット
 
-READMEの[monitor画面](images/monitor-workspace.png)はNative Viewerの実ウィンドウを撮影しています。
-同梱のGazebo由来の小さなシミュレーション記録を使用し、Camera・LaserScan・Odometry・TFと
-決定的な計画Pathを同時表示しています。計画Pathはサンプル用の生成データです。
+READMEと[レイアウトギャラリー](layout_gallery.md)の5枚は、現行のNative / Web releaseビルドの実画面です。
+2026-10-27に`18787dc`の実装で撮り直し、Cameraのトピック選択プルダウンも表示しています。
+同梱のGazebo由来データに、決定的な計画Pathと完全なCamera / LaserScan schemaを加えた撮影用コピーを使います。
 
 ## サンプルを準備する
 
+リポジトリのルートで実行します。下の出力先が既にある場合は別の空ディレクトリを使ってください。
+`readme_fixture`は既存ファイルを上書きしません。
+
 ```sh
 mkdir -p /tmp/mcap-readme-demo
-cargo run -p ros-fixture --example readme_fixture -- /tmp/mcap-readme-demo/recording.mcap
-cargo run -p preview-builder -- /tmp/mcap-readme-demo/recording.mcap
-cargo run -p viewer-native -- \
+cargo run --release -p ros-fixture --example readme_fixture -- /tmp/mcap-readme-demo/recording.mcap
+cargo run --release -p preview-builder -- /tmp/mcap-readme-demo/recording.mcap
+cargo run --release -p viewer-native -- \
   --mcap /tmp/mcap-readme-demo/recording.mcap \
   --layout monitor --inspect-topic /scan
 ```
 
-`readme_fixture`は既存の`tests/fixtures/camera-jpeg/camera_7_5s.mcap`を読み、Camera／LaserScanの
-root-only ros2msg schemaにHeader／Timeの依存定義を補った撮影用コピーを作ります。
+`readme_fixture`は`tests/fixtures/camera-jpeg/camera_7_5s.mcap`を読み、Camera / LaserScanの
+root-only ros2msg schemaにHeader / Timeの依存定義を補います。
 message payload、log time、publish time、sequenceは保持し、MCAP indexはwriterで再構築します。
-出力が既に存在する場合は上書きしません。再実行時は別の空ディレクトリを使用してください。
-Previewはこのコピーのsource fingerprintに対応して別途生成します。
 この補完は同梱fixtureの既知の2型のみが対象で、任意ROS schemaの自動解決ではありません。
 
-## 撮影した状態
+Previewはこのコピーのsource fingerprintに対応して別途生成します。
+現在のschema 2で生成するため、古いsidecarを再利用しません。Webの撮影にsidecarは不要です。
 
-- Native `monitor` preset、1600 × 1100 pixels。
-- 記録の末尾で停止し、`/scan`のlatest messageを表示。
-- SceneはChase、scan accumulationはoff。
-- Cameraはフロント1台。PathとCamera calibration／TFによるoverlayを表示。
-- Desktopや別アプリを含めず、Viewerのclient areaのみをPNGで保存。
+## 共通の状態
 
-READMEの画像はfieldを折りたたんだ状態です。Inspectorではheaderを展開し、下へscrollして
-`ranges`などの配列を64要素ずつ閲覧できます。
+- 解像度はNative client area / browser viewportとも **1920 × 1080 pixels**。
+- MCAP log timeの末尾`1768724930204523401 ns`（開始から約5.018秒）で停止。
+- Native / Webのmonitor画面では`/scan`をInspectorで表示。sequence 43、360点。
+- SceneはChase、距離6 m、点群蓄積off。表示先frameは`odom`。
+- 車体はTurtleBot3 Waffle Piの物理bounds、gridは1 m。Pathの元のxyzを使用。
+- Cameraはフロント画像を選択し、overlayは30 visible points。校正値はデモ値と画面内にも表示。
+- アプリのパネル・操作部をそのまま表示。合成・パネル非表示・表示用の物理scale補正は行わない。
 
-## 紹介記事用のレイアウト
+Pathは生成された15 mのサンプルです。複数Camera画像は同一元映像の色違いで、異なる実視点ではありません。
+実ロボットの走行検証や実測calibrationの結果として扱わないでください。
 
-[用途別ギャラリー](layout_gallery.md)の`cameras`、`navigation`、`inspection`も、同じ撮影用コピーを使う。
-通常のNative releaseビルドを1920×1080にし、5.018秒の末尾で停止して撮影した。
-`inspection`だけは`--inspect-topic /scan`も指定する。撮影時にパネルを隠したり、
-画像を合成したり、表示用の物理scale補正を加えたりしていない。
-NVIDIA Vulkanの実ウィンドウからclient areaだけを保存している。
+## Native
 
-複数画像の元データは`camera_7_5s.json`にある通り、同一視点の決定的な色違い。
-カメラごとの独立した実視点と誤解させないよう、記事内でもこの点を明記する。
-Pathも生成データ、校正値もデモ値。スクリーンショットを実ロボットの走行検証結果として扱わない。
+[monitor画面](images/monitor-workspace.png)は上のコマンドで再現できます。
+記録を最後まで再生し、Inspectorの取得完了を待ちます。fieldの折りたたみ状態は既定のままです。
 
-## ブラウザ版を撮影する
+ギャラリーの`cameras` / `navigation` / `inspection`も同じ記録を使用します。
+`--layout`を変更し、`inspection`では`--inspect-topic /scan`を指定します。
+速度・ヨーレートのoverview取得が完了してから撮影します。
 
-READMEの[ブラウザ画面](images/monitor-workspace-web.png)は、同じ
-`/tmp/mcap-readme-demo/recording.mcap`をChromeのWeb版で開いた実画面です。
+Nativeの撮影はLinux / NVIDIA RTX 5070 Ti / Vulkanの通常ウィンドウです。
+Desktopや別アプリを含めず、client areaをPNGで保存しています。
+
+## ブラウザ
+
+[READMEの起動手順](../README.md#ブラウザで試す)でWeb版を開きます。
+ホストにTrunk等が揃っている場合は次のコマンドでも起動できます。
 
 ```sh
-cd apps/viewer-web
-trunk serve --release
+(cd apps/viewer-web && trunk serve --release)
 ```
 
-1. Chromeで表示されたURLを開き、viewportを1600 × 1100 pixelsにする。
-2. `Open MCAP`から撮影用の`recording.mcap`を選択する。Web版ではPreview sidecarは不要。
-3. timelineを末尾までseekし、停止状態にする。
-4. Topicsから`/scan`を選び、Inspectorの自動取得が完了するまで待つ。
-5. `3D Scene`、`Chase`、`Accumulate scans` off、フロントCameraを選ぶ。
-6. Inspectorのfieldは折りたたみ、Remote Recording Serverも閉じた状態でページ領域をPNG保存する。
+1. viewportを1920 × 1080 pixelsにする。
+2. **Open MCAP**で上の`recording.mcap`を選ぶ。
+3. timelineを末尾へSeekし、停止状態にする。
+4. Topicsから`/scan`を選び、Inspectorの取得が完了するまで待つ。
+5. `3D Scene` / `Chase`、`Accumulate points` off、Cameraの`Image topic`をフロント画像にする。
+6. Remote Recording Serverを閉じた状態で、ページ領域をPNG保存する。
 
-撮影時はNativeと同じcursor `1768724930204523401 ns`、Scan sequence 43、360点、
-Camera overlayの可視点30を確認した。パネル配置と再生状態を揃え、Web固有の操作部と
-camera thumbnailsはそのまま表示している。
+撮影にはLinux / Chrome 143 / NVIDIA Vulkanのhardware GPUを使用しました。
+ブラウザのtoolbarやDesktopを含みません。Web固有の操作部とCamera thumbnailsはそのまま表示しています。
 
-撮影にはheadless ChromeとソフトウェアWebGPUを使用した。画像はページviewportの実キャプチャで、
-ブラウザのtoolbarやDesktopを含まない。撮影用にパネルを隠したり合成したりしていない。
-
-## 物理geometry更新後の画像
-
-両画像はWaffle Piの物理bounds、1 m grid、Chase距離6 m、Pathの元のxyzを使って
-撮り直したものです。録画・末尾cursor・Scan sequence 43は同じです。
-Pathは生成された15 mのサンプルを縮めずに表示しています。Cameraの校正値は
-実測済みではなく、画像内でもdemo calibrationと明示しています。
+[撮影記録](images/readme-capture.json)に、入力とNative binaryのSHA-256、viewport、browser/GPU情報を保存しています。
