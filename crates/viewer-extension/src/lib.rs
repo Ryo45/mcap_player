@@ -102,3 +102,11 @@ impl ExtensionInput<'_> {
         }
     }
 }
+
+pub mod panel;
+#[cfg(not(target_arch = "wasm32"))]
+mod sandbox;
+#[cfg(not(target_arch = "wasm32"))]
+mod wasm_panel;
+#[cfg(not(target_arch = "wasm32"))]
+pub use wasm_panel::WasmPanel;

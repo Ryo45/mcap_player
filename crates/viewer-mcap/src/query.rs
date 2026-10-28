@@ -90,8 +90,8 @@ impl From<viewer_core::DiagnosticsReduceError> for WindowQueryError {
 mod numeric_plot;
 mod odometry_signals;
 pub use numeric_plot::{
-    NumericPlotDetail, NumericPlotError, NumericPlotOverview, NumericPlotOverviewBatch,
-    NumericSample, NumericSeriesRequest,
+    NumericOverviewPlan, NumericPlotDetail, NumericPlotError, NumericPlotOverview,
+    NumericPlotOverviewBatch, NumericSample, NumericSeriesRequest,
 };
 pub use odometry_signals::{
     load_odometry_signals, load_odometry_signals_for_topic_with_progress, load_speed_signal,

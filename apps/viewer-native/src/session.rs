@@ -30,6 +30,8 @@ pub(crate) struct ViewerSession {
     numeric_plots: crate::numeric_plot_loader::NumericPlotLoader,
     inspector_loader: InspectorLoader,
     window_queries: crate::window_query_loader::WindowQueryLoader,
+    #[cfg(feature = "plugin-panels")]
+    plugin_queries: crate::plugin_queries::PluginQueries,
 }
 
 enum SessionSource {
@@ -91,6 +93,8 @@ impl ViewerSession {
             numeric_plots: Default::default(),
             inspector_loader: InspectorLoader::default(),
             window_queries: Default::default(),
+            #[cfg(feature = "plugin-panels")]
+            plugin_queries: Default::default(),
         })
     }
 
@@ -120,10 +124,15 @@ impl ViewerSession {
             numeric_plots: Default::default(),
             inspector_loader: InspectorLoader::default(),
             window_queries: Default::default(),
+            #[cfg(feature = "plugin-panels")]
+            plugin_queries: Default::default(),
         })
     }
 
     pub(crate) fn take_query_workers_from(&mut self, previous: &mut Self) {
+        #[cfg(feature = "plugin-panels")]
+        self.plugin_queries
+            .take_worker_from(&mut previous.plugin_queries);
         self.window_queries
             .take_worker_from(&mut previous.window_queries);
         self.numeric_plots
@@ -209,6 +218,8 @@ impl ViewerSession {
     }
 
     pub(crate) fn poll_queries(&mut self) {
+        #[cfg(feature = "plugin-panels")]
+        let plugin_cursor = self.playback_view();
         let source = match &self.source {
             SessionSource::Mcap(playback) => Some(playback.recording_source()),
             #[cfg(feature = "ros2-live")]
@@ -223,16 +234,29 @@ impl ViewerSession {
         };
         self.inspector_loader.poll(source, target);
         self.window_queries.poll(source, target);
+        #[cfg(feature = "plugin-panels")]
+        self.plugin_queries.poll(source, plugin_cursor);
     }
 
     pub(crate) fn configure_window_queries(
         &mut self,
         requirements: &crate::panels::PanelDataRequirements,
     ) {
+        #[cfg(feature = "plugin-panels")]
+        self.plugin_queries.configure(requirements.plugins.clone());
         self.window_queries
             .configure_health(&requirements.topic_health);
         self.window_queries
             .configure_diagnostics(&requirements.diagnostics);
+    }
+    #[cfg(feature = "plugin-panels")]
+    pub(crate) fn plugin_data(
+        &self,
+    ) -> (
+        &std::collections::BTreeMap<String, viewer_extension::panel::PanelUpdate>,
+        u64,
+    ) {
+        (&self.plugin_queries.data, self.plugin_queries.generation)
     }
     pub(crate) fn producer_diagnostics(
         &self,
@@ -378,6 +402,8 @@ impl ViewerSession {
                         .plan(target, self.plan.restore_inputs())?;
                     playback.seek_with(&restore_plan, restore)?;
                     self.window_queries.invalidate();
+                    #[cfg(feature = "plugin-panels")]
+                    self.plugin_queries.invalidate();
                     Ok(PlaybackEffect::Seeked)
                 }
             },
@@ -529,5 +555,76 @@ mod numeric_demand_tests {
         assert_eq!(session.playback_view().unwrap().cursor, cursor);
         drop(session);
         std::fs::remove_file(path).unwrap();
+    }
+}
+
+#[cfg(all(test, feature = "plugin-panels"))]
+mod plugin_panel_tests {
+    use super::*;
+    #[test]
+    #[ignore = "build RobotStatus guest and generate target/plugin-panel fixtures first"]
+    fn actual_robot_status_session_preserves_playback_routes_and_seek_boundary() {
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../");
+        let mut workspace = crate::workspace::NativeWorkspace::load_bundled_or_fallback(
+            crate::workspace::WorkspaceLayout::Explore,
+        );
+        workspace
+            .add_plugin_panel(&root.join("examples/robot-status-panel/panel.json"))
+            .unwrap();
+        let requirements = workspace.data_requirements();
+        assert_eq!(requirements.playback, PlaybackRequirements::empty());
+        assert_eq!(requirements.plugins.len(), 1);
+        let path = root.join("target/plugin-panel/recording.mcap");
+        let mut session = ViewerSession::open(
+            &path,
+            "/camera".into(),
+            &requirements.playback,
+            workspace.bindings(),
+        )
+        .unwrap();
+        session.configure_window_queries(&requirements);
+        assert!(session.plan().selected_stream_ids().is_empty());
+        let target = session.playback_view().unwrap().end;
+        session
+            .apply_playback_command(PlaybackCommand::Seek(target), |_, messages| {
+                assert!(messages.is_empty());
+                Ok(())
+            })
+            .unwrap();
+        let generation = session.plugin_data().1;
+        let deadline = std::time::Instant::now() + Duration::from_secs(5);
+        while session.plugin_data().0.is_empty() {
+            session.poll_queries();
+            assert!(std::time::Instant::now() < deadline);
+            std::thread::yield_now();
+        }
+        assert_eq!(
+            session.plugin_data().0.values().next().unwrap().status,
+            viewer_extension::panel::InputStatus::Ready
+        );
+        assert_eq!(session.playback_view().unwrap().cursor, target);
+        assert!(session.plan().selected_stream_ids().is_empty());
+        let start = session.playback_view().unwrap().start;
+        let previous_data = session.plugin_data().0.clone();
+        assert!(
+            session
+                .apply_playback_command(PlaybackCommand::Seek(start), |target, _| Err(
+                    FeatureRestoreError {
+                        stream_id: viewer_core::StreamId(u32::MAX),
+                        arrival_time: target,
+                        kind: viewer_core::FeatureRestoreErrorKind::Unrouted
+                    }
+                ))
+                .is_err()
+        );
+        assert_eq!(session.plugin_data().1, generation);
+        assert_eq!(session.plugin_data().0, &previous_data);
+        assert_eq!(session.playback_view().unwrap().cursor, target);
+        session
+            .apply_playback_command(PlaybackCommand::Seek(start), |_, _| Ok(()))
+            .unwrap();
+        assert_ne!(session.plugin_data().1, generation);
+        assert!(session.plugin_data().0.is_empty());
+        assert_eq!(session.playback_view().unwrap().cursor, start);
     }
 }

@@ -196,6 +196,45 @@ impl NativeWorkspace {
         requirements
     }
 
+    #[cfg(feature = "plugin-panels")]
+    pub(crate) fn add_plugin_panel(&mut self, manifest: &std::path::Path) -> anyhow::Result<()> {
+        let mut document = self.layout.clone();
+        let mut number = 1;
+        let id = loop {
+            let candidate = viewer_layout::PanelId::new(format!("plugin-{number}"))?;
+            if self.panels.get_mut(&candidate).is_none() {
+                break candidate;
+            }
+            number += 1;
+        };
+        let panel = viewer_layout::PanelNode {
+            id,
+            panel_type: "plugin".into(),
+            config_version: 1,
+            title: None,
+            config: serde_json::json!({"manifest":manifest}),
+        };
+        document.root = viewer_layout::LayoutNode::Split {
+            direction: viewer_layout::SplitDirection::Row,
+            children: vec![
+                viewer_layout::SplitChild {
+                    weight: 1.,
+                    node: document.root,
+                },
+                viewer_layout::SplitChild {
+                    weight: 1.,
+                    node: viewer_layout::LayoutNode::Panel(panel),
+                },
+            ],
+        };
+        document.validate()?;
+        let store = crate::panels::PanelRuntimeStore::from_layout(&document);
+        self.layout = document;
+        self.panels = store.store;
+        self.startup_warnings.extend(store.warnings);
+        Ok(())
+    }
+
     pub(crate) fn set_point_cloud_topic(&mut self, topic: String) {
         self.bindings.point_cloud_topic = topic;
     }
@@ -491,6 +530,8 @@ mod tests {
                 inspections: Vec::new(),
                 topic_health: BTreeSet::new(),
                 diagnostics: BTreeSet::new(),
+                #[cfg(feature = "plugin-panels")]
+                plugins: vec![],
             }
         );
     }
@@ -567,6 +608,8 @@ mod tests {
                 inspections: Vec::new(),
                 topic_health: BTreeSet::new(),
                 diagnostics: BTreeSet::new(),
+                #[cfg(feature = "plugin-panels")]
+                plugins: vec![],
             }
         );
         assert_eq!(NativeWorkspace::default().panels.len(), 4);

@@ -42,3 +42,5 @@ pub use detection3d::{
     ObjectHypothesisWithPose, Pose3D, PoseWithCovariance, decode_detection3d_array,
     encode_detection3d_array_cdr,
 };
+
+pub use numeric::{MessageScalar, ScalarFieldExtractor};

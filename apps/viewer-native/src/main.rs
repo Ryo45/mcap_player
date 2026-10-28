@@ -11,6 +11,8 @@ mod live;
 mod numeric_plot_loader;
 mod odometry_signals;
 mod panels;
+#[cfg(feature = "plugin-panels")]
+mod plugin_queries;
 mod presentation;
 mod preview;
 mod query_error;
@@ -39,6 +41,12 @@ fn main() -> Result<()> {
     if let Some(topic) = &args.point_cloud_topic {
         workspace.set_point_cloud_topic(topic.clone());
     }
+    #[cfg(feature = "plugin-panels")]
+    for manifest in &args.plugin_panels {
+        workspace.add_plugin_panel(manifest)?;
+    }
+    #[cfg(not(feature = "plugin-panels"))]
+    debug_assert!(args.plugin_panels.is_empty());
     #[allow(unused_mut)]
     let mut presentation_state = PresentationState::default();
     #[cfg(feature = "scene-extension")]

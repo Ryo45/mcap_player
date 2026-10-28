@@ -305,6 +305,10 @@ mod tests {
                         inspector_topic: Some("/selected"),
                         topic_tree: &viewer_core::TopicTree::default(),
                         numeric_series: &[],
+                        #[cfg(feature = "plugin-panels")]
+                        plugin_generation: 0,
+                        #[cfg(feature = "plugin-panels")]
+                        plugin_data: &std::collections::BTreeMap::new(),
                     },
                 );
                 assert_eq!(

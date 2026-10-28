@@ -4,6 +4,8 @@ mod diagnostics;
 mod inspector;
 mod placeholder;
 mod plot;
+#[cfg(feature = "plugin-panels")]
+mod plugin;
 mod runtime;
 mod scene;
 mod status;
@@ -44,6 +46,8 @@ pub(crate) const SCENE_CONFIG_VERSION: u32 = 1;
 pub(crate) const STATUS_CONFIG_VERSION: u32 = 1;
 
 pub(crate) enum NativePanel {
+    #[cfg(feature = "plugin-panels")]
+    Plugin(Box<plugin::PluginPanel>),
     Explore,
     Topics(topics::TopicsPanel),
     Camera(CameraPanel),
@@ -64,6 +68,8 @@ impl NativePanel {
         input: &PanelCompositionInput<'_>,
     ) -> PanelOutput {
         match self {
+            #[cfg(feature = "plugin-panels")]
+            Self::Plugin(panel) => panel.show(ui, input),
             Self::Explore => {
                 ui.heading("Explore recording");
                 ui.label("Open a topic under Topics and select a numeric field to add a plot.");
@@ -181,6 +187,8 @@ impl NativePanel {
 
     pub(crate) fn reset_for_source(&mut self, focused_camera: Option<viewer_core::CameraId>) {
         match self {
+            #[cfg(feature = "plugin-panels")]
+            Self::Plugin(panel) => panel.reset(),
             Self::Camera(panel) => panel.state.focused_camera = focused_camera,
             Self::Plot(panel) => panel.reset_for_source(),
             Self::Inspector(panel) => panel.reset_for_source(),
@@ -212,6 +220,8 @@ impl NativePanel {
 
     pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
         match self {
+            #[cfg(feature = "plugin-panels")]
+            Self::Plugin(panel) => panel.requirements(requirements),
             Self::Camera(panel) => panel.contribute_data_requirements(requirements),
             Self::Bev(panel) => panel.contribute_data_requirements(requirements),
             Self::Scene(panel) => panel.contribute_data_requirements(requirements),
@@ -234,6 +244,8 @@ impl NativePanel {
     #[cfg(test)]
     pub(crate) fn kind_name(&self) -> &'static str {
         match self {
+            #[cfg(feature = "plugin-panels")]
+            Self::Plugin(_) => "plugin",
             Self::Explore => "explore",
             Self::Topics(_) => "topics",
             Self::Camera(_) => "camera",
@@ -251,6 +263,8 @@ impl NativePanel {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct PanelDataRequirements {
+    #[cfg(feature = "plugin-panels")]
+    pub(crate) plugins: Vec<(String, viewer_extension::panel::PanelDefinition)>,
     pub(crate) playback: viewer_core::PlaybackRequirements,
     pub(crate) signals: BTreeSet<SignalId>,
     pub(crate) inspections: Vec<InspectorRequirement>,
@@ -261,6 +275,8 @@ pub(crate) struct PanelDataRequirements {
 impl Default for PanelDataRequirements {
     fn default() -> Self {
         Self {
+            #[cfg(feature = "plugin-panels")]
+            plugins: vec![],
             playback: viewer_core::PlaybackRequirements::empty(),
             signals: BTreeSet::new(),
             inspections: Vec::new(),
@@ -297,6 +313,11 @@ pub(crate) struct SceneDataView<'a> {
 
 #[derive(Clone, Copy)]
 pub(crate) struct PanelCompositionInput<'a> {
+    #[cfg(feature = "plugin-panels")]
+    pub(crate) plugin_generation: u64,
+    #[cfg(feature = "plugin-panels")]
+    pub(crate) plugin_data:
+        &'a std::collections::BTreeMap<String, viewer_extension::panel::PanelUpdate>,
     pub(crate) playback: Option<PlaybackView>,
     pub(crate) presentation: &'a ViewerPresentation,
     pub(crate) camera_overlays: &'a viewer_renderer::CameraOverlayState,

@@ -17,8 +17,8 @@ pub use query::{
     query_topic_health,
 };
 pub use query::{
-    NumericPlotDetail, NumericPlotError, NumericPlotOverview, NumericPlotOverviewBatch,
-    NumericSample, NumericSeriesRequest, load_odometry_signals,
+    NumericOverviewPlan, NumericPlotDetail, NumericPlotError, NumericPlotOverview,
+    NumericPlotOverviewBatch, NumericSample, NumericSeriesRequest, load_odometry_signals,
     load_odometry_signals_for_topic_with_progress, load_speed_signal, load_yaw_rate_signal,
 };
 #[cfg(not(target_arch = "wasm32"))]

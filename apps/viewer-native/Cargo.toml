@@ -7,6 +7,7 @@ license.workspace = true
 [features]
 default = []
 scene-extension = ["dep:viewer-extension"]
+plugin-panels = ["dep:viewer-extension"]
 ros2-live = ["dep:rclrs"]
 
 [dependencies]

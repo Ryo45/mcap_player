@@ -269,6 +269,10 @@ impl App {
                     inspector_topic: session.selected_inspector_topic(),
                     topic_tree: session.topic_tree(),
                     numeric_series: session.numeric_series(),
+                    #[cfg(feature = "plugin-panels")]
+                    plugin_generation: session.plugin_data().1,
+                    #[cfg(feature = "plugin-panels")]
+                    plugin_data: session.plugin_data().0,
                     preview: self.preview.snapshot(),
                     preview_speed: self.preview.speed_overview(),
                     bookmarks: self.bookmarks.bookmarks(),

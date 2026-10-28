@@ -18,6 +18,7 @@ pub(crate) enum SourceMode {
 
 pub(crate) struct Args {
     pub(crate) mcap: PathBuf,
+    pub(crate) plugin_panels: Vec<PathBuf>,
     pub(crate) scene_extension: Option<PathBuf>,
     pub(crate) topic: String,
     pub(crate) calibration: PathBuf,
@@ -38,6 +39,7 @@ impl Args {
     fn parse_from(values: impl IntoIterator<Item = String>) -> Result<Self> {
         let mut mcap = PathBuf::from(DEFAULT_FIXTURE);
         let mut scene_extension = None;
+        let mut plugin_panels = Vec::new();
         let mut topic = DEFAULT_TOPIC.to_owned();
         let mut explicit_camera_topic = false;
         let mut raw_camera_topics = BTreeSet::new();
@@ -55,6 +57,11 @@ impl Args {
         let mut values = values.into_iter();
         while let Some(value) = values.next() {
             match value.as_str() {
+                "--plugin-panel" => {
+                    let path=values.next().context("--plugin-panel needs a manifest")?;
+                    plugin_panels.push(PathBuf::from(path));
+                    if plugin_panels.len()>4 { bail!("at most 4 PluginPanels"); }
+                }
                 "--scene-extension" => scene_extension = Some(PathBuf::from(values.next().context("--scene-extension needs a manifest JSON path")?)),
                 "--mcap" => mcap = PathBuf::from(values.next().context("--mcap needs a path")?),
                 "--camera-topic" => {
@@ -112,7 +119,7 @@ impl Args {
                 }
                 "--help" | "-h" => {
                     println!(
-                        "viewer-native [--scene-extension MANIFEST.json] [--mcap FILE_OR_DIRECTORY] [--camera-topic TOPIC] [--camera-calibration JSON] [--platform-geometry JSON | --no-platform-geometry] [--fixed-frame FRAME] [--ground-frame FRAME] [--layout standard|showcase|explore|monitor|health|scene|cameras|navigation|inspection] [--inspect-topic TOPIC] [--point-cloud-topic TOPIC] [--live [--reliable] [--live-raw-camera-topic TOPIC]...]\n\nFiles or directories containing indexed MCAP parts can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
+                        "viewer-native [--plugin-panel MANIFEST.json] [--scene-extension MANIFEST.json] [--mcap FILE_OR_DIRECTORY] [--camera-topic TOPIC] [--camera-calibration JSON] [--platform-geometry JSON | --no-platform-geometry] [--fixed-frame FRAME] [--ground-frame FRAME] [--layout standard|showcase|explore|monitor|health|scene|cameras|navigation|inspection] [--inspect-topic TOPIC] [--point-cloud-topic TOPIC] [--live [--reliable] [--live-raw-camera-topic TOPIC]...]\n\nFiles or directories containing indexed MCAP parts can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
                     );
                     std::process::exit(0);
                 }
@@ -143,8 +150,17 @@ impl Args {
                 bail!("Scene extensions currently support recording input only");
             }
         }
+        if !plugin_panels.is_empty() {
+            if !cfg!(feature = "plugin-panels") {
+                bail!("--plugin-panel requires plugin-panels feature");
+            }
+            if live {
+                bail!("PluginPanels currently require recording input");
+            }
+        }
         let mode = source_mode(live, reliable, raw_camera_topics)?;
         Ok(Self {
+            plugin_panels,
             scene_extension,
             mcap,
             topic,

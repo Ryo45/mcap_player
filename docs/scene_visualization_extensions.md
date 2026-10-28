@@ -10,7 +10,9 @@ metric Boxes for the existing Scene. Two independently built Wasm examples run:
 A bounded host decoder and common guest SDK now connect Detection3DArray all the
 way to Scene. The example recording contains **synthetic detections** over the
 bundled camera/scan data, not real perception output. Arbitrary custom ROS message
-types, Browser plugin loading and live Detection3D subscriptions are not implemented.
+types are not implemented for Scene inputs. The separate
+[PluginPanel PoC](wasm_plugin_panels.md) can project selected fields from custom
+message schemas. Browser plugin loading and live Detection3D subscriptions are not implemented.
 
 ## Pipeline and ownership
 

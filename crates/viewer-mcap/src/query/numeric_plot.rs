@@ -117,6 +117,12 @@ fn sample(
         value: extractor.extract(&message.payload)?,
     })
 }
+/// Compiled selected-field plans for repeated windows on the same source generation.
+/// Owns no messages or decoded history. Discard when replacing the source/schema.
+pub struct NumericOverviewPlan {
+    stream: StreamId,
+    fields: Vec<(NumericFieldExtractor, usize)>,
+}
 impl McapSource {
     fn numeric_extractor(
         &self,
@@ -164,6 +170,13 @@ impl McapSource {
         if cancelled() {
             return Err(crate::McapSourceError::QueryCancelled.into());
         }
+        let plan = self.compile_numeric_overview(requests)?;
+        self.query_numeric_overview_plan_cancellable(&plan, requests[0].range, &mut cancelled)
+    }
+    pub fn compile_numeric_overview(
+        &self,
+        requests: &[NumericSeriesRequest],
+    ) -> Result<NumericOverviewPlan, NumericPlotError> {
         let first = requests.first().ok_or(NumericPlotError::EmptyBatch)?;
         if requests.len() > 8 {
             return Err(NumericPlotError::InvalidBatchSize {
@@ -201,16 +214,37 @@ impl McapSource {
                         path: request.field_path.clone(),
                         source,
                     })?,
-                SignalOverviewReducer::new(
-                    request.range.start,
-                    request.range.end_exclusive,
-                    request.max_points,
-                ),
-                0u64,
+                request.max_points,
             ));
         }
+        Ok(NumericOverviewPlan {
+            stream: first.stream_id,
+            fields,
+        })
+    }
+    /// Reuses schema/skip plans; only reducers and the bounded output are new for each window.
+    pub fn query_numeric_overview_plan_cancellable(
+        &self,
+        plan: &NumericOverviewPlan,
+        range: DataWindowTimeRange,
+        cancelled: impl FnMut() -> bool,
+    ) -> Result<NumericPlotOverviewBatch, NumericPlotError> {
+        if range.start >= range.end_exclusive {
+            return Err(NumericPlotError::InvalidRange(range));
+        }
+        let mut fields = plan
+            .fields
+            .iter()
+            .map(|(extractor, points)| {
+                (
+                    extractor,
+                    SignalOverviewReducer::new(range.start, range.end_exclusive, *points),
+                    0u64,
+                )
+            })
+            .collect::<Vec<_>>();
         let chunks_read = self
-            .visit_stream_range(first.stream_id, first.range, cancelled, |message| {
+            .visit_stream_range(plan.stream, range, cancelled, |message| {
                 for (extractor, reducer, decode_errors) in &mut fields {
                     match extractor.extract(&message.payload) {
                         Ok(value) => reducer.push(SignalSample {

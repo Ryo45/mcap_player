@@ -28,3 +28,5 @@ pub use cdr::{
     ObjectHypothesisWithPose, Pose3D, PoseWithCovariance, decode_detection3d_array,
     encode_detection3d_array_cdr,
 };
+
+pub use cdr::{MessageScalar, ScalarFieldExtractor};
