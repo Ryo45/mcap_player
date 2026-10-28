@@ -1,0 +1,20 @@
+[package]
+name = "detection-boxes"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+# Independently built guest; no viewer, ROS, Wasm-bindgen or GPU dependencies.
+[workspace]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+viewer-extension = { path = "../../crates/viewer-extension" }
+viewer-core = { path = "../../crates/viewer-core", default-features = false }
+
+[profile.release]
+panic = "abort"
+opt-level = "s"
+lto = true

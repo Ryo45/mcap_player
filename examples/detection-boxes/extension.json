@@ -1,0 +1,10 @@
+{
+  "wasm": "target/wasm32-unknown-unknown/release/detection_boxes.wasm",
+  "extension": {
+    "id": "example.detection-boxes",
+    "apiVersion": 3,
+    "topic": "/perception/detections",
+    "schema": "vision_msgs/msg/Detection3DArray",
+    "input": "detection3d_array_v1"
+  }
+}

@@ -1,0 +1,10 @@
+   Compiling viewer-core v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.12s
+     Running tests/detection3d.rs (target/debug/deps/detection3d-77608d98aab55491)
+
+running 3 tests
+test independent_jazzy_rclpy_bytes_preserve_full_ros_fields ... ok
+test selection_coalescing_and_transactional_predecessor_restore ... ok
+test malformed_cdr_limits_and_all_truncations_fail_without_panics ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

@@ -234,10 +234,17 @@ impl App {
                 cameras: runtime.cameras(),
                 path: runtime.path(),
                 #[cfg(feature = "scene-extension")]
-                extension_path: self
+                extension_input: self
                     .workspace
                     .extension_stream()
-                    .and_then(|stream| runtime.path_for_stream(stream)),
+                    .and_then(|(kind, stream)| match kind {
+                        viewer_extension::ExtensionInputKind::PathPositions => runtime
+                            .path_for_stream(stream)
+                            .map(|c| crate::scene_extension::SceneInput::Path(c.state())),
+                        viewer_extension::ExtensionInputKind::Detection3DArray => runtime
+                            .detections_for_stream(stream)
+                            .map(|c| crate::scene_extension::SceneInput::Detections(c.state())),
+                    }),
                 odometry: runtime.odometry(),
                 transforms: runtime.transforms(),
                 point_cloud_controller: runtime.point_cloud(),

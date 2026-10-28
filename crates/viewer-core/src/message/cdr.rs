@@ -34,3 +34,11 @@ pub use diagnostic::{
     DiagnosticArray, DiagnosticKeyValue, DiagnosticLevel, DiagnosticStatus,
     MAX_DIAGNOSTIC_MESSAGE_BYTES, decode_diagnostic_array,
 };
+
+mod detection3d;
+pub use detection3d::{
+    BoundingBox3D, Detection3D, Detection3DArray, MAX_DETECTION_MESSAGE_BYTES,
+    MAX_DETECTION_RESULTS, MAX_DETECTIONS, MessageHeader, ObjectHypothesis,
+    ObjectHypothesisWithPose, Pose3D, PoseWithCovariance, decode_detection3d_array,
+    encode_detection3d_array_cdr,
+};

@@ -1,4 +1,7 @@
-# Independent extension input and identified Box verification — 2026-10-28
+# Independent extension input and identified Box verification — ABI 2, 2026-10-28
+
+Historical results for `4125dbc`; current Detection3D/Path SDK uses ABI 3.
+[Current commands and contracts](../../scene_visualization_extensions.md).
 
 Continues `c2dce06` on `feature/scene-visualization-extension`.
 [Current architecture, ABI 2 and reproducible commands](../../scene_visualization_extensions.md).

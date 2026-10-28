@@ -45,7 +45,10 @@ fn main() -> Result<()> {
     if let Some(manifest) = &args.scene_extension {
         use viewer_extension::VisualizationExtension;
         let extension = viewer_extension::WasmExtension::load(manifest)?;
-        workspace.enable_scene_extension(&extension.descriptor().topic)?;
+        workspace.enable_scene_extension(
+            &extension.descriptor().topic,
+            extension.descriptor().input_kind()?,
+        )?;
         presentation_state.set_scene_extension(Box::new(extension));
     }
     #[cfg(not(feature = "scene-extension"))]

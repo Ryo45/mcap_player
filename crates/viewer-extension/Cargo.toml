@@ -8,7 +8,7 @@ license.workspace = true
 anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-viewer-core = { path = "../viewer-core" }
+viewer-core = { path = "../viewer-core", default-features = false }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 wasmi = { version = "2.0", default-features = false, features = ["std", "stable", "validate", "portable-dispatch"] }

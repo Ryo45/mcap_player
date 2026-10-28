@@ -96,3 +96,12 @@ pub use health::{
 
 mod platform_geometry;
 pub use platform_geometry::{PlatformGeometry, PlatformGeometryError};
+
+pub use message::{
+    BoundingBox3D, Detection3D, Detection3DArray, MAX_DETECTION_MESSAGE_BYTES,
+    MAX_DETECTION_RESULTS, MAX_DETECTIONS, MessageHeader, ObjectHypothesis,
+    ObjectHypothesisWithPose, Pose3D, PoseWithCovariance, decode_detection3d_array,
+    encode_detection3d_array_cdr,
+};
+
+pub use feature::{Detection3DController, Detection3DFrame, Detection3DState};

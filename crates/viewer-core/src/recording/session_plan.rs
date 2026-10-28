@@ -9,6 +9,7 @@ use std::{collections::BTreeSet, fmt};
 
 const RAW_IMAGE_SCHEMA: &str = "sensor_msgs/msg/Image";
 const COMPRESSED_IMAGE_SCHEMA: &str = "sensor_msgs/msg/CompressedImage";
+const DETECTION_SCHEMA: &str = "vision_msgs/msg/Detection3DArray";
 const PATH_SCHEMA: &str = "nav_msgs/msg/Path";
 const ODOMETRY_SCHEMA: &str = "nav_msgs/msg/Odometry";
 const LASER_SCAN_SCHEMA: &str = "sensor_msgs/msg/LaserScan";
@@ -32,6 +33,7 @@ pub struct PlaybackRequirements {
     camera_topics: BTreeSet<String>,
     path: RequirementLevel,
     path_topics: BTreeSet<String>,
+    detection_topics: BTreeSet<String>,
     odometry: RequirementLevel,
     point_cloud: RequirementLevel,
     dynamic_transforms: RequirementLevel,
@@ -54,6 +56,7 @@ impl PlaybackRequirements {
             camera_topics: BTreeSet::new(),
             path: RequirementLevel::Disabled,
             path_topics: BTreeSet::new(),
+            detection_topics: BTreeSet::new(),
             odometry: RequirementLevel::Disabled,
             point_cloud: RequirementLevel::Disabled,
             dynamic_transforms: RequirementLevel::Disabled,
@@ -87,6 +90,10 @@ impl PlaybackRequirements {
     /// Multiple consumers of one topic share a route and materialization.
     pub fn require_path_topic(&mut self, topic: impl Into<String>) {
         self.path_topics.insert(topic.into());
+    }
+
+    pub fn require_detection_topic(&mut self, topic: impl Into<String>) {
+        self.detection_topics.insert(topic.into());
     }
 
     pub fn require_odometry(&mut self) {
@@ -149,6 +156,7 @@ pub struct SessionPlan {
     camera_routes: Vec<CameraRoute>,
     path_stream: Option<StreamDescriptor>,
     additional_path_streams: Vec<StreamDescriptor>,
+    detection_streams: Vec<StreamDescriptor>,
     odometry_stream: Option<StreamDescriptor>,
     point_cloud_stream: Option<StreamDescriptor>,
     dynamic_tf_stream: Option<StreamDescriptor>,
@@ -264,10 +272,28 @@ impl SessionPlan {
                 additional_path_streams.push(stream);
             }
         }
+        if requirements.detection_topics.len() > 32 {
+            return Err(SessionPlanError::TooManyDetectionStreams);
+        }
+        let detection_streams = requirements
+            .detection_topics
+            .iter()
+            .map(|topic| {
+                resolve_requirement(
+                    catalog,
+                    topic,
+                    &[DETECTION_SCHEMA],
+                    "Detection3DArray",
+                    RequirementLevel::Required,
+                )
+                .map(|stream| stream.expect("required stream resolved"))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(Self {
             camera_routes: selected_cameras,
             path_stream,
             additional_path_streams,
+            detection_streams,
             odometry_stream: resolve_requirement(
                 catalog,
                 &bindings.odometry_topic,
@@ -334,6 +360,10 @@ impl SessionPlan {
             .iter()
             .chain(&self.additional_path_streams)
             .find(|stream| stream.topic == topic)
+    }
+
+    pub fn detection_streams(&self) -> &[StreamDescriptor] {
+        &self.detection_streams
     }
 
     pub fn odometry_stream(&self) -> Option<&StreamDescriptor> {
@@ -411,6 +441,10 @@ impl SessionPlan {
                         semantics: PathController::restore_semantics(),
                     }),
             )
+            .chain(self.detection_streams.iter().map(|stream| RestoreInput {
+                stream_id: stream.id,
+                semantics: RestoreSemantics::LatestBefore,
+            }))
             .chain(self.odometry_stream.iter().map(|stream| RestoreInput {
                 stream_id: stream.id,
                 semantics: OdometryController::restore_semantics(),
@@ -441,6 +475,7 @@ impl SessionPlan {
         .into_iter()
         .flatten()
         .chain(&self.additional_path_streams)
+        .chain(&self.detection_streams)
     }
 }
 
@@ -501,6 +536,7 @@ pub enum SessionPlanError {
     },
     TooManyCameraStreams,
     TooManyPathStreams,
+    TooManyDetectionStreams,
     MissingPlaybackCapabilities {
         provided: crate::SourceCapabilities,
     },
@@ -532,6 +568,9 @@ impl fmt::Display for SessionPlanError {
                 f,
                 "required Transform input is unavailable on {dynamic_topic} or {static_topic}"
             ),
+            Self::TooManyDetectionStreams => {
+                write!(f, "at most 32 Detection3DArray inputs are supported")
+            }
             Self::TooManyPathStreams => {
                 write!(f, "at most 32 additional Path inputs are supported")
             }

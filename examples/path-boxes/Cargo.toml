@@ -10,6 +10,10 @@ license = "MIT"
 [lib]
 crate-type = ["cdylib"]
 
+[dependencies]
+viewer-extension = { path = "../../crates/viewer-extension" }
+viewer-core = { path = "../../crates/viewer-core", default-features = false }
+
 [profile.release]
 panic = "abort"
 opt-level = "s"

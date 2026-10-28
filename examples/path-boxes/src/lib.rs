@@ -1,12 +1,14 @@
-//! path_positions_v1 guest. Wire records only; never decodes CDR or touches a GPU.
-const INPUT_BYTES: usize = 16 + 1024 * 24;
-const OUTPUT_BYTES: usize = 256 * 60;
+//! Path demo using the common ABI 3 guest SDK; no CDR parsing or GPU calls.
+use viewer_core::{SceneBox, SceneObjectId, SceneOverlay};
+use viewer_extension::wire::{self, DecodedInput};
+const INPUT_BYTES: usize = viewer_extension::MAX_INPUT_BYTES;
+const OUTPUT_BYTES: usize = 256 * wire::BOX_BYTES;
 static mut INPUT: [u8; INPUT_BYTES] = [0; INPUT_BYTES];
 static mut OUTPUT: [u8; OUTPUT_BYTES] = [0; OUTPUT_BYTES];
 
 #[unsafe(no_mangle)]
 pub extern "C" fn api_version() -> u32 {
-    2
+    viewer_extension::API_VERSION
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn init() {}
@@ -20,59 +22,46 @@ pub extern "C" fn output_ptr() -> *mut u8 {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn update(count: u32) -> u32 {
-    if count > 1024 {
+pub extern "C" fn update(bytes: u32) -> u32 {
+    if bytes as usize > INPUT_BYTES {
         return u32::MAX;
     }
-    // At most 32 boxes; class-like alternating colors are selected by guest code.
-    let mut objects = 0usize;
-    let stride = (count as usize / 32).max(1);
-    for index in (0..count as usize).step_by(stride).take(32) {
-        let mut center = [0f32; 3];
-        for (axis, value) in center.iter_mut().enumerate() {
-            let offset = 16 + index * 24 + axis * 8;
-            let mut bytes = [0; 8];
-            // SAFETY: count <= 1024 bounds the complete input; guest exports run serially.
-            unsafe {
-                std::ptr::copy_nonoverlapping(input_ptr().add(offset), bytes.as_mut_ptr(), 8);
+    // SAFETY: bounded guest scratch; exports are invoked serially by the host.
+    let bytes = unsafe { std::slice::from_raw_parts(input_ptr(), bytes as usize) };
+    let Ok(DecodedInput::Path(path)) = wire::decode_input(bytes) else {
+        return u32::MAX;
+    };
+    let stride = (path.points.len() / 32).max(1);
+    let boxes = path
+        .points
+        .iter()
+        .enumerate()
+        .step_by(stride)
+        .take(32)
+        .map(|(index, point)| {
+            let half_yaw = index as f32 * 0.05;
+            SceneBox {
+                id: SceneObjectId(index as u64),
+                center: [point[0] as f32, point[1] as f32, point[2] as f32 + 0.25],
+                orientation: [0., 0., half_yaw.sin(), half_yaw.cos()],
+                size: [0.3, 0.3, 0.5],
+                color: if index % 2 == 0 {
+                    [1., 0.08, 0.25]
+                } else {
+                    [0.2, 1., 0.15]
+                },
             }
-            *value = f64::from_le_bytes(bytes) as f32;
-        }
-        let color = if index % 2 == 0 {
-            [1., 0.08, 0.25]
-        } else {
-            [0.2, 1., 0.15]
-        };
-        let mut record = [0u8; 60];
-        record[..8].copy_from_slice(&(index as u64).to_le_bytes());
-        let mut field = 8;
-        // The guest emits one oriented box, not 12 anonymous edges.
-        // Box bottom lies on the input position; the metric centre is 0.25 m above it.
-        let half_yaw = index as f32 * 0.05;
-        let values = [
-            center[0],
-            center[1],
-            center[2] + 0.25,
-            0.,
-            0.,
-            half_yaw.sin(),
-            half_yaw.cos(),
-            0.3,
-            0.3,
-            0.5,
-            color[0],
-            color[1],
-            color[2],
-        ];
-        for v in values {
-            record[field..field + 4].copy_from_slice(&v.to_le_bytes());
-            field += 4;
-        }
-        // SAFETY: at most 32 bounded records; guest exports run serially.
-        unsafe {
-            std::ptr::copy_nonoverlapping(record.as_ptr(), output_ptr().add(objects * 60), 60);
-        }
-        objects += 1;
+        })
+        .collect();
+    let Ok(overlay) = SceneOverlay::new(vec![], boxes) else {
+        return u32::MAX;
+    };
+    let Ok(output) = wire::encode_boxes(&overlay) else {
+        return u32::MAX;
+    };
+    // SAFETY: SceneOverlay caps at 256 boxes, fitting the fixed output buffer.
+    unsafe {
+        std::ptr::copy_nonoverlapping(output.as_ptr(), output_ptr(), output.len());
     }
-    objects as u32
+    overlay.boxes().len() as u32
 }

@@ -25,3 +25,7 @@ pub use telemetry::{TelemetryFrame, TelemetryState};
 pub use transform::{DYNAMIC_TF_HISTORY, RigidTransform, TransformBatch, TransformState};
 
 pub(crate) use transform::rotate;
+
+mod detection3d;
+pub use controllers::Detection3DController;
+pub use detection3d::{Detection3DFrame, Detection3DState};

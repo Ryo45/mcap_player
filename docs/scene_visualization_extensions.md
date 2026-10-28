@@ -1,207 +1,181 @@
-# Scene Visualization Extension — independent input and Box contract
+# Scene Visualization Extensions
 
-One optional Native Scene extension runs an independently built Wasm guest.
-The current example consumes `/perception/objects` as **Path positions**, independently
-of the Scene's `/planning/path`, and returns oriented Boxes with Object IDs.
-**Custom ROS types, full PoseStamped fields, real detector/track IDs and Browser
-extension loading are not implemented.** This fixture isolates input routing from
-adding another decoder; it does not claim detection-message compatibility.
+Optional Native extensions consume selected ROS feature state and return identified
+metric Boxes for the existing Scene. Two independently built Wasm examples run:
 
-## Architecture and decisions
+- `examples/detection-boxes`: **vision_msgs 4.x Detection3DArray** (validated against
+  ROS 2 Jazzy 4.1.1), using actual IDs, bbox poses/sizes and classification candidates.
+- `examples/path-boxes`: the earlier independent Path-position projection demo.
+
+A bounded host decoder and common guest SDK now connect Detection3DArray all the
+way to Scene. The example recording contains **synthetic detections** over the
+bundled camera/scan data, not real perception output. Arbitrary custom ROS message
+types, Browser plugin loading and live Detection3D subscriptions are not implemented.
+
+## Pipeline and ownership
 
 ```text
-panel requirements + startup extension descriptor (topic, schema, projection)
-    -> PlaybackRequirements (fixed named Path input)
-    -> SessionPlan (union of required streams; unique restore inputs)
-    -> indexed MCAP forward/LatestBefore reads
-    -> FeatureRuntime
-         displayed PathController: existing ordered behavior
-         additional PathControllers: latest-only per source batch before decode
-    -> committed, separate PathState per StreamId (one decoder/materialization)
-    -> Native presentation selects the descriptor's resolved input StreamId
-    -> WasmExtension / native VisualizationExtension
-    -> validated SceneOverlay { lines, boxes }, in the input frame
-    -> acquisition-time rigid TF placement to the configured fixed frame
-    -> independent overlay_revision
-    -> existing SceneRenderer (Box -> 12 edges only when overlay changes)
+startup descriptor + panel requirements
+    -> fixed SessionPlan union (unique StreamId/LatestBefore requirements)
+    -> indexed recording reads
+    -> FeatureRuntime admission/coalescing
+    -> one host CDR decode -> latest Path / Detection3D feature state
+    -> borrowed ExtensionInput::{Path, Detections}
+    -> shared wire SDK encode -> independent Wasm instance -> shared SDK decode
+    -> guest chooses IDs/geometry/colors -> validated SceneOverlay
+    -> measurement-time TF placement -> existing SceneRenderer overlay buffer
 ```
 
-Previously the extension was forced to share the displayed Path binding. That
-proved execution/rendering but not independent input selection. We now resolve
-named Path demands at session initialization without changing WorkspaceBindings.
-`SessionPlan::path_stream_for_topic` resolves the extension input; the Native
-workspace stores its StreamId on source configuration. Camera route reconfiguration
-retains the same extension requirement. There is no running subscription broker.
+Only enabled extensions add demands. Named inputs are independent of the displayed
+Path binding; multiple continuous consumers of a stream share materialization.
+Additional Path and Detection3D inputs use the same latest-in-batch admission
+calculation before decode (greatest log time, then final batch order). TF history
+and the displayed Path keep their existing policies. No RawMessage backing or
+full decoded history is retained by this path. Query/Inspector/Plot/Health/Preview
+remain distinct workloads; an Inspector query can independently decode its result.
 
-Same-stream consumers borrow the built-in PathController if selected, or one
-additional controller otherwise. Duplicate topic demands do not add physical
-streams, restore reads or decodes. Additional inputs are capped at 32 explicit
-Path topics, not a registry of arbitrary message types. Disabled extensions add
-no topic demand, extra controller, CDR decode or VM execution.
+Detection3DController retains one full message, arrival/log time and revision. Its
+empty seek candidate preserves routing, revision baseline and counters. Exact
+LatestBefore restoration and malformed-message rollback use the existing feature/
+source transaction. A forward decode error increments errors and retains the prior
+valid state. Empty detection arrays are valid latest values and clear old objects.
 
-For independent latest-value inputs, FeatureRuntime marks routed serialized
-messages as consumed but decodes only the greatest log time in a source batch;
-equal log times choose the final message in the source's deterministic batch
-order. No pending RawMessage/chunk backing survives the call. Dropped messages
-increment `dropped`, not `decoded` or decode errors. Malformed latest input follows
-existing forward tolerance: error count increases and the prior valid state remains.
-The displayed Path's semantics remain unchanged. TF retains history as before.
+Guest execution follows successful feature commit. Seek/source reset discards old
+objects and creates a fresh guest instance. Guest failures clear that overlay and
+latch an error until reset; they cannot roll back or corrupt committed playback.
+There are no asynchronous plugin results or dynamic subscriptions in this slice.
 
-Both Path roles use the existing common lightweight `decode_path` and the same
-empty restore-candidate mechanism. Independent inputs receive exact LatestBefore
-restoration even when their publication times differ from the displayed Path.
-Malformed restore of either input fails the entire candidate without changing
-cursor or either authoritative feature state. Missing/wrong-schema required topics
-fail source planning; absent predecessors produce empty feature/overlay state.
-Queries, Plot, Health, Preview and pixel decoding remain separate.
+## ROS facts and projection limits
 
-The host owns selection, CDR, metric coordinates, TF, bounds, GPU and error display.
-The guest owns object identity, dimensions, orientation and coloring. The Rust
-trait accepts a borrowed PathFrame and returns the same SceneOverlay without a VM.
-`path_positions_v1` is explicitly a partial projection: positions, frame and times;
-per-pose headers/orientations are not available. The 1024-point limit is checked
-at the VM boundary; the shared CDR decoder still materializes the full latest
-Path under existing source/CDR limits, without a separate early point-count cap. Future host typed decoders should
-preserve ROS meaning instead of pretending PathFrame is a full ROS Path.
+The host retains the **complete supported ROS model**: array header, every Detection3D
+header and string ID, all classification hypotheses/scores, each hypothesis pose
+and 36-element covariance, and bbox pose/full XYZ size. No top-class selection or
+pose normalization is performed by the decoder. Scores must be finite; they are
+not clamped to [0,1]. Pose/covariance components must be finite, bbox sizes nonnegative.
 
-## Box and object lifetime
+Bounds are enforced before allocation: 2 MiB CDR, 256 detections, 8 results/detection,
+256 UTF-8 bytes for frames/IDs and 128 for class IDs. Plain CDR1 little/big endian
+is accepted; other encapsulations/trailing old-format fields fail explicitly.
+Older vision_msgs layouts with numeric class IDs or source-cloud fields are not
+silently interpreted as 4.x. The independent rclpy [codec fixture](../tests/fixtures/ros2-detection3d/README.md)
+protects field order/alignment, UTF-8, empty arrays and covariance preservation.
 
-`viewer-core::SceneBox` contains:
+Initial Scene placement requires each detection header to match the array frame
+and stamp (leading frame slashes are normalized for comparison). Mixed headers
+remain intact in core state but generate an explicit presentation error; per-object
+TF placement is future work. A successful snapshot freezes at acquisition-time TF;
+missing TF retries on TF revision changes without rerunning the guest. It survives
+subsequent TF history eviction. New input/target frame causes a new placement.
 
-- `SceneObjectId(u64)`: stable within one extension, shared ID namespace with lines.
-- `center`: metric XYZ in the input frame.
-- `orientation`: unit ROS x/y/z/w quaternion.
-- `size`: full positive extent along the box's local X/Y/Z axes, in metres.
-- `color`: opaque linear RGB.
+Path input remains the explicitly partial `path_positions_v1` projection, not a
+full PoseStamped model. It has a 1024-point guest limit; its common CDR decoder still
+materializes the latest Path under source/CDR limits. Detection input has an early
+sequence cap before its dedicated host allocation.
 
-`SceneOverlay` is a complete replacement snapshot. Reusing an ID updates that
-object; IDs omitted from the next snapshot disappear. No decoded or object history
-is retained, and no persistent scene graph/diff protocol is implied. Duplicate IDs
-(including across Box/Line kinds) fail validation. Canonical ID ordering means
-output reordering alone does not cause a new revision/GPU upload. Picking, labels,
-class/track metadata and host-side per-object diffs are deferred.
+## Box/ID contract
 
-Host placement resolves a rigid transform once per snapshot. It transforms centres
-and composes orientations, preserving sizes and IDs; the pure RigidTransform API
-reuses existing TF math. Renderer expansion uses the Box corners. There is no
-per-platform scale correction or plugin-defined GPU resource.
+SceneBox: `SceneObjectId(u64)`, metric center, unit ROS x/y/z/w quaternion, full
+positive local-axis size and opaque linear RGB. Complete snapshots replace the
+prior snapshot: same ID updates, omitted ID deletes. IDs are unique across Box and
+Line objects; canonical ordering avoids uploads for reordering alone. This is not
+a persistent scene graph, diff cache, picking or label system.
 
-Once successfully placed, a snapshot freezes at measurement-time TF, not frame
-locked. Later TF eviction/updates do not move/remove it. Missing TF retries when
-TF changes without rerunning the guest. A new input revision or target frame causes
-placement to be reconsidered. Seek/source transitions drop old output and create a
-fresh guest instance **after successful playback commit**. Guest failures clear
-its overlay and disable it until reset, leaving playback and other features usable.
-No asynchronous guest results exist in this implementation.
+The detection guest selects the highest-score class: person red, car green, unknown
+blue. This policy lives in Wasm, not the host. It hashes nonempty ROS string IDs
+into stable 64-bit handles and uses array index for empty IDs. Original strings stay
+in the full input model; handles are not reversible IDs. Hash collisions/duplicate
+IDs fail output validation; empty-ID fallback is not stable tracking across reorder.
 
-## Runtime and ABI version 2
+Rigid TF placement transforms center/orientation, preserving size/ID. Renderer
+expands Boxes to 12 edges only on overlay revision changes, using the existing
+camera, grid, depth target and separate overlay buffer. Opaque one-pixel lines
+write/test depth. Draw order: grid, built-ins, overlay, points; point blending/depth
+policies stay unchanged. No display scale factors, alpha/variable line widths,
+plugin GPU resources or arbitrary shaders are introduced.
 
-Native uses optional [wasmi 2.0](https://docs.rs/wasmi/2.0.0/wasmi/) (Rust >=1.86),
-a fuel-metered interpreter instead of a JIT distribution. Ordinary Native builds
-and the viewer WebAssembly contain no VM. The crate's descriptor/Rust contracts
-also compile to WASM without the Native runtime dependency.
+## Shared SDK and ABI 3
 
-Core Wasm, no imports/start function; no WASI, filesystem, network, GPU or shaders.
-Component Model/WIT adds little for this one bounded buffer exchange and is deferred.
-Rust structures/traits are not the wire ABI. A Browser adapter should instantiate
-the guest separately through JavaScript in a dedicated Worker, use transferable
-bounded buffers and generation IDs, and terminate the Worker on deadline. Do not
-embed wasmi in the viewer Wasm; a main-thread promise timeout cannot interrupt a
-running guest. Browser loading/Worker lifecycle remains unimplemented.
+Rust plugins implement VisualizationExtension using borrowed typed inputs.
+`viewer-extension::wire` provides host **encode_input**, guest **decode_input** and
+**encode_boxes**. It is a bounded, explicit little-endian wire codec, **not CDR**.
+Guests neither parse ROS CDR nor instantiate a VM. The two examples share this SDK;
+no new generic registry, UI framework or universal decoded-message bus is needed.
 
-Manifest <=8 KiB:
+The native wasmi adapter retains the 8 MiB linear-memory/1M fuel limits. Compilation
+is bounded by a 2 MiB module and strict structural limits; value stack <=256 KiB,
+recursion <=128, one table <=1024 entries. Fuel is not a wall-time deadline. Compiled
+code, host buffers, GPU and old/new instance overlap during reset are additional
+memory. Errors include forbidden import names to make guest build problems visible.
 
-```json
-{
-  "wasm": "target/wasm32-unknown-unknown/release/path_boxes.wasm",
-  "extension": {
-    "id": "example.path-boxes",
-    "apiVersion": 2,
-    "topic": "/perception/objects",
-    "schema": "nav_msgs/msg/Path",
-    "input": "path_positions_v1"
-  }
-}
-```
+Core's **timing** feature is enabled by default for normal Native/Web. Guest SDK
+builds disable it because web-time/wasm-bindgen otherwise introduces browser imports.
+Only stage timing instrumentation is gated; playback/admission/restore algorithms
+are unchanged. Guests build in their own workspace with core default-features=false,
+so host feature unification cannot add JS bindings to their modules. Actual wasmi
+loading tests reject every import, including JS and WASI.
 
-Module path is relative to the manifest. Unknown fields and incompatible versions
-fail. The Rust descriptor has no Wasm file path. **ABI 1 line-record guests must be
-rebuilt**: no legacy interpreter path is retained in this pre-1.0 experiment.
+Manifest <=8 KiB: module path (relative to manifest) and descriptor id, apiVersion=3,
+topic, schema, input. Supported schema/projection pairs are Path/path_positions_v1
+and Detection3DArray/detection3d_array_v1. **ABI 1/2 guests must be rebuilt**; no legacy
+wire interpreter remains. Box output stays the 60-byte record introduced in ABI 2.
 
-Exports:
+Core Wasm exports: memory, api_version()->3, init(), input_ptr(), output_ptr(), and
+**update(input_byte_length:u32)->box_count:u32**. No start/imports, WASI, filesystem,
+network or GPU calls. Input <=2 MiB; all integers/f64 are little endian, strings are
+u32 byte length + UTF-8 without padding/NUL. Kind:u32 (1 Path, 2 detections), then
+arrival:i64. Path adds stamp:i64, frame:string, count:u32, XYZ:f64 triples. Detection
+adds array header (stamp:i64/frame:string), count:u32, then each detection's header,
+id:string, bbox position:3*f64/quaternion:4*f64/size:3*f64, results count:u32; each
+result is class:string, score:f64, position:3*f64, quaternion:4*f64, covariance:36*f64.
+The SDK rejects unknown tags, trailing/truncated data and all counts/strings over
+limits. No Rust structure layout/pointers cross instances.
 
-- `memory`, `api_version() -> u32` (=2), `init()`.
-- `input_ptr() -> u32`, `output_ptr() -> u32`: guest scratch buffers.
-- `update(point_count:u32) -> u32`: complete output Box count, <=256.
+Output <=256 Boxes: id:u64, center:3*f32, quaternion:4*f32, size:3*f32, color:3*f32
+(60 bytes each). Native Rust can also emit up to 4096 Lines. Host validates finite
+coordinates/corners within +/-1,000,000 m, positive finite sizes, unit squared-norm
+tolerance 1e-5, colors [0,1] and unique IDs, again after TF. Invalid display geometry
+fails instead of changing physical scale or fabricating a pose.
 
-Input is unchanged `path_positions_v1`: little-endian arrival/log i64 and
-measurement i64 nanoseconds, then at most 1024 XYZ f64 triples (24,592 bytes).
-Frame identity stays host-owned; output is in the same source frame.
-Output is explicitly encoded little endian, **60 bytes per Box**:
-`id:u64, center:3*f32, orientation:4*f32, size:3*f32, color:3*f32`.
-256 Boxes occupy at most 15,360 bytes. This guest emits up to 32 Boxes (1,920 bytes),
-where ABI 1 emitted their 384 edges (15,360 bytes). Native Rust output can also
-include up to 4096 Line objects; this Wasm ABI currently returns Boxes only.
+A future Browser adapter should use a separate JS WebAssembly instance in a Worker,
+transfer bounded buffers, scope results by generation and terminate on deadlines.
+Do not put wasmi inside the viewer Wasm or assume a main-thread promise can interrupt
+a running guest. WASI/Component Model/WIT is unnecessary for this current buffer API.
 
-Host validates finite metric coordinates/corners within +/-1,000,000 m, positive
-finite sizes, unit quaternion (squared norm tolerance 1e-5), RGB in [0,1], unique
-IDs and counts, before rendering and after TF placement. Invalid pointers, traps
-and fuel exhaustion are errors. Limits: 2 MiB module, strict compiler structural
-limits, 8 MiB guest linear memory, one memory/table with <=1024 table entries,
-256 KiB value stack, recursion <=128, 1M fuel per init/update. Fuel is **not a
-wall-time deadline**; compilation/host allocations/GPU and temporary reset overlap
-are outside linear memory. This remains an in-process VM.
-
-Renderer policy: opaque one-pixel depth-tested, depth-writing wireframes. Grid,
-built-in lines, overlay then points; existing point blending/depth behavior stays.
-Overlay uses one separate buffer and only uploads on overlay revision change.
-No alpha/variable width, arbitrary shaders, custom UI or direct wgpu access.
-
-## Reproduce
+## Build and run
 
 ```sh
 rustup target add wasm32-unknown-unknown
-cargo build --manifest-path examples/path-boxes/Cargo.toml \
+cargo build --manifest-path examples/detection-boxes/Cargo.toml \
   --target wasm32-unknown-unknown --release
-mkdir -p target/scene-extension-independent/staggered
-# Generate once; the tool refuses to overwrite an existing file.
-cargo run -p ros-fixture --example scene_extension_fixture -- \
-  target/scene-extension-independent/staggered/recording.mcap
+mkdir -p target/detection3d/recording
+# Once; the tool refuses to overwrite an existing recording.
+cargo run -p ros-fixture --example detection3d_fixture -- \
+  target/detection3d/recording/recording.mcap
 cargo run --release -p viewer-native --features scene-extension -- \
-  --mcap target/scene-extension-independent/staggered/recording.mcap --layout monitor \
-  --scene-extension examples/path-boxes/extension.json
+  --mcap target/detection3d/recording/recording.mcap --layout monitor \
+  --scene-extension examples/detection-boxes/extension.json \
+  --inspect-topic /perception/detections
 
-cargo test -p viewer-core --test path_inputs
+cargo test -p viewer-core --test detection3d
 cargo test -p viewer-extension
-cargo test -p viewer-extension independent_rust_guest -- --ignored
-cargo test -p viewer-native --features scene-extension
-cargo test -p viewer-native --features scene-extension actual_wasm_indexed_seek -- --ignored
+cargo test -p viewer-extension actual_detection_guest -- --ignored
+cargo test -p viewer-native --features scene-extension actual_detection3d_recording -- --ignored
+# Always run the checked-out verification script, even with an older cached image:
+docker compose run --rm dev bash docker/check.sh
 ```
 
-The generated fixture preserves the built-in Path and adds eight synthetic objects
-2 m to its left, using a separate Path topic at half the publication rate and with
-a 5 ms log-time offset. The original measurement/header stamp is preserved.
-Guest IDs derive from position index;
-they are demonstration identities, not detector tracking IDs. Both topics and their
-independent latest-before values can be inspected. Ordinary playback needs no ROS
-installation. Live extensions remain explicitly unsupported.
+The recording adds 23 synthetic detection frames, eight tracked objects and two
+hypotheses per object, at half Path rate and +5 ms log-time offset. Recording playback
+and tests using committed bytes require **no ROS installation**. ROS is only needed
+to regenerate the optional independent rclpy fixture, not to run the viewer.
 
-## Prior art and next step
+The Path example still works after its independent ABI 3 build; generate the prior
+`scene_extension_fixture` and use its manifest/recording. Existing Box/Path evidence
+is [archived](verification/scene-extension-independent/README.md).
+Current [Detection3D end-to-end verification and screenshots](verification/detection3d/README.md)
+record actual tests, performance and limitations.
 
-[RViz Marker](https://github.com/ros2/common_interfaces/blob/jazzy/visualization_msgs/msg/Marker.msg)
-provides the useful frame/time, object identity and shape precedent;
-[Foxglove SceneEntity](https://docs.foxglove.dev/docs/sdk/schemas/scene-entity) and
-[extensions](https://docs.foxglove.dev/docs/extensions) separate message conversion
-from host rendering/custom panels. [Rerun visualizers](https://rerun.io/docs/concepts/visualization/customize-views)
-keep Blueprint/layout distinct from visualization.
-[PlotJuggler parsers](https://github.com/facontidavide/PlotJuggler/blob/main/plotjuggler_base/include/PlotJuggler/messageparser_base.h)
-have a different lifetime from sources/transforms. These are design references,
-not compatibility claims or justification for recreating a generic plugin system.
-
-Next input step: a bounded host-side Detection3DArray decoder retaining IDs/pose/
-extents and latest-only restore/admission, with typed ROS semantics. Browser
-Workers, multiple runners, generated msg/idl types, labels/mesh/picking, persistent
-diffs, UI/layout and Signal Transform remain separate measured requirements.
-
-See [independent-input/Box verification](verification/scene-extension-independent/README.md)
-and [the historical ABI 1 results](verification/scene-extension/README.md).
+Next useful steps: per-detection frame/time placement, an explicit stable string-ID
+metadata/picking mapping, generated msg/idl types or Browser Worker host when needed.
+Arbitrary custom decoders, Live detection subscriptions, labels/meshes, GPU shaders,
+persistent diffs, UI/layout and Signal Transform remain separate requirements.

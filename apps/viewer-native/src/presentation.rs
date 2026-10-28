@@ -27,7 +27,7 @@ pub(crate) struct PresentationBuildInput<'a> {
     pub(crate) cameras: &'a viewer_core::CameraController,
     pub(crate) path: &'a viewer_core::PathController,
     #[cfg(feature = "scene-extension")]
-    pub(crate) extension_path: Option<&'a viewer_core::PathController>,
+    pub(crate) extension_input: Option<crate::scene_extension::SceneInput<'a>>,
     pub(crate) odometry: &'a viewer_core::OdometryController,
     pub(crate) transforms: &'a viewer_core::TransformController,
     pub(crate) point_cloud_controller: Option<&'a viewer_core::PointCloudController>,
@@ -107,7 +107,7 @@ impl PresentationState {
             cameras,
             path,
             #[cfg(feature = "scene-extension")]
-            extension_path,
+            extension_input,
             odometry,
             transforms,
             point_cloud_controller,
@@ -146,7 +146,9 @@ impl PresentationState {
         #[cfg(feature = "scene-extension")]
         if let Some(extension) = &mut self.extension {
             extension.update(
-                extension_path.map_or(&viewer_core::PathState::default(), |path| path.state()),
+                extension_input.unwrap_or(crate::scene_extension::SceneInput::Path(
+                    &viewer_core::PathState::default(),
+                )),
                 transforms.state(),
                 &self.path_projection.fixed_frame,
             );
@@ -266,7 +268,9 @@ mod tests {
             cameras: workspace.runtime().cameras(),
             path: workspace.runtime().path(),
             #[cfg(feature = "scene-extension")]
-            extension_path: workspace.extension_path(),
+            extension_input: workspace
+                .extension_path()
+                .map(|c| crate::scene_extension::SceneInput::Path(c.state())),
             odometry: workspace.runtime().odometry(),
             transforms: workspace.runtime().transforms(),
             point_cloud_controller: workspace.runtime().point_cloud(),
@@ -288,7 +292,9 @@ mod tests {
             cameras: workspace.runtime().cameras(),
             path: workspace.runtime().path(),
             #[cfg(feature = "scene-extension")]
-            extension_path: workspace.extension_path(),
+            extension_input: workspace
+                .extension_path()
+                .map(|c| crate::scene_extension::SceneInput::Path(c.state())),
             odometry: workspace.runtime().odometry(),
             transforms: workspace.runtime().transforms(),
             point_cloud_controller: workspace.runtime().point_cloud(),

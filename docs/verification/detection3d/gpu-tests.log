@@ -1,0 +1,32 @@
+   Compiling proc-macro2 v1.0.103
+   Compiling num-traits v0.2.19
+   Compiling quote v1.0.42
+   Compiling ordered-float v5.1.0
+   Compiling syn v2.0.111
+   Compiling thiserror-impl v2.0.17
+   Compiling zerocopy-derive v0.8.30
+   Compiling bytemuck_derive v1.10.2
+   Compiling serde_derive v1.0.228
+   Compiling thiserror v2.0.17
+   Compiling bytemuck v1.24.0
+   Compiling zerocopy v0.8.30
+   Compiling wgpu-types v27.0.1
+   Compiling serde v1.0.228
+   Compiling viewer-core v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-core)
+   Compiling half v2.7.1
+   Compiling naga v27.0.3
+   Compiling wgpu-hal v27.0.4
+   Compiling wgpu-core-deps-windows-linux-android v27.0.0
+   Compiling wgpu-core v27.0.3
+   Compiling wgpu v27.0.1
+   Compiling scene-renderer v0.1.0 (/home/ryo/development/mcap_player/crates/scene-renderer)
+    Finished `release` profile [optimized] target(s) in 15.33s
+     Running unittests src/lib.rs (target/release/deps/scene_renderer-bb2b8ef83ebf04be)
+
+running 2 tests
+Overlay regression adapter: AdapterInfo { name: "NVIDIA GeForce RTX 5070 Ti", vendor: 4318, device: 11269, device_type: DiscreteGpu, driver: "NVIDIA", driver_info: "610.57.04", backend: Vulkan }
+Depth regression adapter: AdapterInfo { name: "NVIDIA GeForce RTX 5070 Ti", vendor: 4318, device: 11269, device_type: DiscreteGpu, driver: "NVIDIA", driver_info: "610.57.04", backend: Vulkan }
+test depth_tests::opaque_points_occlude_by_distance_in_both_orders ... ok
+test depth_tests::extension_updates_do_not_upload_existing_layers ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.93s

@@ -45,6 +45,9 @@ visibility are independent of this physical naming choice.
 | Source catalog facts and capabilities | `viewer-core/recording/catalog.rs` |
 | ROS message definition parsing and field model | `viewer-core/message/schema.rs` |
 | CDR wire primitives / selected numeric extraction | `viewer-core/message/cdr/wire.rs`, `numeric.rs` |
+| ROS Detection3DArray bounded CDR/model | `viewer-core/message/cdr/detection3d.rs` |
+| Detection3D latest state / admission | `viewer-core/feature/detection3d.rs`, `controllers/detection3d.rs` |
+| Shared host/guest typed ABI codec | `viewer-extension/wire.rs` |
 | Scene Box/Object ID validation and rigid placement | `viewer-core/scene_overlay.rs`, `feature/transform.rs` |
 | Optional Native Wasm execution / wire ABI | `viewer-extension/wasm.rs` |
 | Native extension output lifecycle and fixed-frame placement | `viewer-native/scene_extension.rs` |

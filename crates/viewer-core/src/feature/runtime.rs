@@ -1,11 +1,12 @@
 //! Transactional ownership boundary for continuous feature state.
 
 use crate::{
-    ArrivalTime, CameraController, CameraId, OdometryController, PathController,
-    PlaybackPerformance, PointCloudController, ProcessingCounters, RawMessage, SessionPlan,
-    StageTiming, StreamId, TransformController,
+    ArrivalTime, CameraController, CameraId, Detection3DController, OdometryController,
+    PathController, PlaybackPerformance, PointCloudController, ProcessingCounters, RawMessage,
+    SessionPlan, StageTiming, StreamId, TransformController,
 };
 use std::{error::Error, fmt, time::Duration};
+#[cfg(feature = "timing")]
 use web_time::Instant;
 
 /// Shared continuous materialization boundary: route/admit serialized inputs, coalesce where
@@ -22,6 +23,7 @@ pub struct FeatureRuntime {
     cameras: CameraController,
     path: PathController,
     additional_paths: Vec<PathController>,
+    detections: Vec<Detection3DController>,
     odometry: OdometryController,
     transforms: TransformController,
     point_cloud: Option<PointCloudController>,
@@ -81,6 +83,11 @@ impl FeatureRuntime {
                 .iter()
                 .map(|stream| PathController::for_stream(stream.id))
                 .collect(),
+            detections: plan
+                .detection_streams()
+                .iter()
+                .map(|stream| Detection3DController::for_stream(stream.id))
+                .collect(),
             odometry: OdometryController::new(plan),
             transforms: TransformController::new(plan),
             point_cloud: enable_point_cloud.then(|| PointCloudController::new(plan)),
@@ -94,6 +101,7 @@ impl FeatureRuntime {
     /// A routed malformed message increments that controller's error counter and leaves its prior
     /// state visible. Camera admission remains serialized and coalesces before decode.
     pub fn process_messages(&mut self, elapsed: Duration, messages: &[RawMessage]) {
+        #[cfg(feature = "timing")]
         let started = Instant::now();
         for message in messages {
             // Dispatch to every controller, even after one accepts the message.
@@ -112,6 +120,7 @@ impl FeatureRuntime {
                     .additional_paths
                     .iter()
                     .any(|path| path.accepts(message.stream_id))
+                || self.detections.iter().any(|d| d.accepts(message.stream_id))
                 || odometry_matched
                 || transform_matched
                 || point_cloud_matched;
@@ -122,7 +131,11 @@ impl FeatureRuntime {
         for path in &mut self.additional_paths {
             path.process_latest(messages);
         }
+        for detections in &mut self.detections {
+            detections.process_latest(messages);
+        }
         self.cameras.advance(elapsed);
+        #[cfg(feature = "timing")]
         self.processing_time.record(started.elapsed());
     }
 
@@ -133,6 +146,7 @@ impl FeatureRuntime {
         _target: ArrivalTime,
         messages: &[RawMessage],
     ) -> Result<Self, FeatureRestoreError> {
+        #[cfg(feature = "timing")]
         let started = Instant::now();
         // Retain routing and cumulative statistics, but never clone decoded frames or history
         // that the restore immediately discards. The authoritative state stays untouched.
@@ -143,6 +157,11 @@ impl FeatureRuntime {
                 .additional_paths
                 .iter()
                 .map(PathController::restore_candidate)
+                .collect(),
+            detections: self
+                .detections
+                .iter()
+                .map(Detection3DController::restore_candidate)
                 .collect(),
             odometry: self.odometry.restore_candidate(),
             transforms: self.transforms.restore_candidate(),
@@ -161,6 +180,10 @@ impl FeatureRuntime {
             for path in &mut candidate.additional_paths {
                 matched |= restore_one("Path input", message, || path.restore(message))?;
             }
+            for detections in &mut candidate.detections {
+                matched |=
+                    restore_one("Detection3DArray", message, || detections.restore(message))?;
+            }
             matched |= restore_one("Odometry", message, || candidate.odometry.restore(message))?;
             matched |= restore_one("Transform", message, || {
                 candidate.transforms.restore(message)
@@ -176,6 +199,7 @@ impl FeatureRuntime {
                 });
             }
         }
+        #[cfg(feature = "timing")]
         candidate.processing_time.record(started.elapsed());
         Ok(candidate)
     }
@@ -209,6 +233,10 @@ impl FeatureRuntime {
         self.additional_paths
             .iter()
             .find(|path| path.accepts(stream))
+    }
+
+    pub fn detections_for_stream(&self, stream: StreamId) -> Option<&Detection3DController> {
+        self.detections.iter().find(|d| d.accepts(stream))
     }
 
     pub fn odometry(&self) -> &OdometryController {
@@ -248,6 +276,9 @@ impl FeatureRuntime {
         counters.merge(self.path.counters());
         for path in &self.additional_paths {
             counters.merge(path.counters());
+        }
+        for detections in &self.detections {
+            counters.merge(detections.counters());
         }
         counters.merge(self.odometry.counters());
         counters.merge(self.transforms.counters());

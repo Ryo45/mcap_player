@@ -1,7 +1,7 @@
-use crate::{API_VERSION, ExtensionDescriptor, MAX_INPUT_POINTS, VisualizationExtension};
+use crate::{API_VERSION, ExtensionDescriptor, ExtensionInput, VisualizationExtension, wire};
 use anyhow::{Context, Result, ensure};
 use std::{fs::File, io::Read, path::Path};
-use viewer_core::{MAX_OVERLAY_BOXES, PathFrame, SceneBox, SceneObjectId, SceneOverlay};
+use viewer_core::{MAX_OVERLAY_BOXES, SceneBox, SceneObjectId, SceneOverlay};
 use wasmi::{
     Config, EnforcedLimits, Engine, Instance, Linker, Module, Store, StoreLimits,
     StoreLimitsBuilder,
@@ -71,9 +71,15 @@ impl WasmExtension {
         config.set_max_recursion_depth(128);
         let engine = Engine::new(&config);
         let module = Module::new(&engine, bytes)?;
+        let imports = module
+            .imports()
+            .take(8)
+            .map(|import| format!("{}::{}", import.module(), import.name()))
+            .collect::<Vec<_>>();
         ensure!(
-            module.imports().next().is_none(),
-            "extension imports are forbidden (including WASI)"
+            imports.is_empty(),
+            "extension imports are forbidden (including WASI): {}",
+            imports.join(", ")
         );
         let (store, instance) = instantiate(&engine, &module)?;
         Ok(Self {
@@ -126,37 +132,26 @@ impl VisualizationExtension for WasmExtension {
         &self.descriptor
     }
 
-    fn update(&mut self, path: &PathFrame) -> Result<SceneOverlay> {
+    fn update(&mut self, input: ExtensionInput<'_>) -> Result<SceneOverlay> {
         ensure!(
-            path.points.len() <= MAX_INPUT_POINTS,
-            "Path exceeds extension input limit ({MAX_INPUT_POINTS} points)"
+            input.kind() == self.descriptor.input_kind()?,
+            "extension input kind mismatch"
         );
-        ensure!(
-            path.points.iter().flatten().all(|p| p.is_finite()),
-            "non-finite input position"
-        );
+        input.placement()?;
+        let input = wire::encode_input(input)?;
         self.store.set_fuel(FUEL)?;
         let input_ptr = self.call_u32("input_ptr")? as usize;
         let memory = self
             .instance
             .get_memory(&self.store, "memory")
             .context("missing memory")?;
-        // Explicit little-endian wire encoding; no shared Rust layout or guest pointers.
-        let mut input = Vec::with_capacity(16 + path.points.len() * 24);
-        input.extend_from_slice(&path.arrival_time.0.to_le_bytes());
-        input.extend_from_slice(&path.measurement_time.0.to_le_bytes());
-        for position in &path.points {
-            for value in position {
-                input.extend_from_slice(&value.to_le_bytes());
-            }
-        }
         memory
             .write(&mut self.store, input_ptr, &input)
             .map_err(|e| anyhow::anyhow!("input memory: {e}"))?;
         let count = self
             .instance
             .get_typed_func::<u32, u32>(&self.store, "update")?
-            .call(&mut self.store, path.points.len() as u32)? as usize;
+            .call(&mut self.store, input.len() as u32)? as usize;
         ensure!(
             count <= MAX_OVERLAY_BOXES,
             "extension output exceeds box limit"

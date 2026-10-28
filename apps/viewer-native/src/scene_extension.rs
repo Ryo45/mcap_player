@@ -1,6 +1,26 @@
 //! Presentation-owned extension generation; never mutates playback or feature truth.
 use viewer_core::{PathState, SceneOverlay, TransformState};
-use viewer_extension::VisualizationExtension;
+use viewer_extension::{ExtensionInput, VisualizationExtension};
+
+#[derive(Clone, Copy)]
+pub(crate) enum SceneInput<'a> {
+    Path(&'a PathState),
+    Detections(&'a viewer_core::Detection3DState),
+}
+impl SceneInput<'_> {
+    fn revision(&self) -> u64 {
+        match self {
+            Self::Path(p) => p.revision(),
+            Self::Detections(d) => d.revision(),
+        }
+    }
+    fn latest(&self) -> Option<ExtensionInput<'_>> {
+        match self {
+            Self::Path(p) => p.latest().map(ExtensionInput::Path),
+            Self::Detections(d) => d.latest().map(ExtensionInput::Detections),
+        }
+    }
+}
 
 pub(crate) struct SceneExtensionState {
     extension: Box<dyn VisualizationExtension>,
@@ -42,21 +62,21 @@ impl SceneExtensionState {
 
     pub(crate) fn update(
         &mut self,
-        path: &PathState,
+        input: SceneInput<'_>,
         transforms: &TransformState,
         fixed_frame: &str,
     ) {
         if self.failed {
             return;
         }
-        if self.input_revision != Some(path.revision()) {
-            self.input_revision = Some(path.revision());
+        if self.input_revision != Some(input.revision()) {
+            self.input_revision = Some(input.revision());
             self.placement_key = None;
             self.placement_valid = false;
             self.error = None;
             self.output = SceneOverlay::default();
-            if let Some(frame) = path.latest() {
-                match self.extension.update(frame) {
+            if let Some(frame) = input.latest() {
+                match frame.placement().and_then(|_| self.extension.update(frame)) {
                     Ok(output) => self.output = output,
                     Err(error) => {
                         self.set_placed(SceneOverlay::default());
@@ -82,9 +102,12 @@ impl SceneExtensionState {
         }
         self.placement_key = Some((transforms.revision(), fixed_frame.to_owned()));
         self.placement_valid = false;
-        let Some(frame) = path.latest() else {
+        let Some(frame) = input.latest() else {
             return;
         };
+        let (frame_id, measurement_time) = frame
+            .placement()
+            .expect("input placement validated before guest update");
         // Snapshot geometry is frozen at acquisition time, not frame-locked. Do not lose a
         // successfully placed overlay when bounded TF history later evicts that old time.
         if self.output.lines().is_empty() && self.output.boxes().is_empty() {
@@ -93,11 +116,9 @@ impl SceneExtensionState {
             self.placement_valid = true;
             return;
         }
-        let Some(transform) =
-            transforms.resolve_at(&frame.frame_id, fixed_frame, frame.measurement_time)
-        else {
+        let Some(transform) = transforms.resolve_at(frame_id, fixed_frame, measurement_time) else {
             self.set_placed(SceneOverlay::default());
-            self.error = Some(format!("missing TF {} → {fixed_frame}", frame.frame_id));
+            self.error = Some(format!("missing TF {} → {fixed_frame}", frame_id));
             return;
         };
         match self.output.transformed(transform) {
@@ -151,7 +172,10 @@ mod tests {
             self.resets.set(self.resets.get() + 1);
             Ok(())
         }
-        fn update(&mut self, frame: &PathFrame) -> anyhow::Result<SceneOverlay> {
+        fn update(&mut self, input: ExtensionInput<'_>) -> anyhow::Result<SceneOverlay> {
+            let ExtensionInput::Path(frame) = input else {
+                anyhow::bail!("expected Path");
+            };
             self.calls.set(self.calls.get() + 1);
             anyhow::ensure!(!self.fail, "test trap");
             let p = frame.points[0].map(|v| v as f32);
@@ -172,7 +196,7 @@ mod tests {
         let extension = RustLine {
             descriptor: ExtensionDescriptor {
                 id: "native-test".into(),
-                api_version: 2,
+                api_version: 3,
                 topic: "/planning/path".into(),
                 schema: "nav_msgs/msg/Path".into(),
                 input: "path_positions_v1".into(),
@@ -197,31 +221,31 @@ mod tests {
         let tf = TransformState::default();
         let mut path = PathState::default();
         apply(&mut path, 1., 1);
-        extension.update(&path, &tf, "odom");
+        extension.update(SceneInput::Path(&path), &tf, "odom");
         assert_eq!(calls.get(), 1);
         assert_eq!(extension.overlay().lines()[0].start[0], 1.);
         let revision = extension.revision();
         for _ in 0..100 {
-            extension.update(&path, &tf, "odom");
+            extension.update(SceneInput::Path(&path), &tf, "odom");
         }
         assert_eq!(calls.get(), 1);
         assert_eq!(extension.revision(), revision);
         apply(&mut path, 1., 2); // New message, identical guest geometry: no GPU upload revision.
-        extension.update(&path, &tf, "odom");
+        extension.update(SceneInput::Path(&path), &tf, "odom");
         assert_eq!(calls.get(), 2);
         assert_eq!(extension.revision(), revision);
         apply(&mut path, 3., 3);
-        extension.update(&path, &tf, "odom");
+        extension.update(SceneInput::Path(&path), &tf, "odom");
         assert_eq!(extension.overlay().lines()[0].start[0], 3.);
         // Committed backward seek: a fresh feature candidate can reuse low revisions.
         extension.reset();
         path = PathState::default();
         apply(&mut path, -1., 1);
-        extension.update(&path, &tf, "odom");
+        extension.update(SceneInput::Path(&path), &tf, "odom");
         assert_eq!(extension.overlay().lines()[0].start[0], -1.);
         // Committed source replacement with no predecessor must remove old objects.
         extension.reset();
-        extension.update(&PathState::default(), &tf, "odom");
+        extension.update(SceneInput::Path(&PathState::default()), &tf, "odom");
         assert!(extension.overlay().lines().is_empty());
         assert_eq!(resets.get(), 2);
     }
@@ -231,12 +255,12 @@ mod tests {
         let tf = TransformState::default();
         let mut path = PathState::default();
         apply(&mut path, 1., 1);
-        extension.update(&path, &tf, "odom");
+        extension.update(SceneInput::Path(&path), &tf, "odom");
         assert_eq!(extension.overlay().lines().len(), 1);
-        extension.update(&path, &tf, "missing");
+        extension.update(SceneInput::Path(&path), &tf, "missing");
         assert!(extension.overlay().lines().is_empty());
         assert!(extension.error().unwrap().contains("missing TF"));
-        extension.update(&path, &tf, "odom");
+        extension.update(SceneInput::Path(&path), &tf, "odom");
         assert_eq!(extension.overlay().lines().len(), 1);
         assert_eq!(calls.get(), 1);
     }
@@ -252,7 +276,7 @@ mod tests {
             points: vec![[1., 0., 0.]],
         });
         let mut tf = TransformState::default();
-        extension.update(&path, &tf, "odom");
+        extension.update(SceneInput::Path(&path), &tf, "odom");
         assert!(extension.error().is_some());
         let batch = |time, x| TransformBatch {
             arrival_time: ArrivalTime(time),
@@ -266,7 +290,7 @@ mod tests {
             }],
         };
         tf.apply(batch(1, 10.));
-        extension.update(&path, &tf, "odom");
+        extension.update(SceneInput::Path(&path), &tf, "odom");
         assert_eq!(extension.overlay().lines()[0].start[0], 11.);
         let revision = extension.revision();
         tf.apply(batch(3_000_000_000, 20.));
@@ -274,7 +298,7 @@ mod tests {
             tf.transform_points_at("robot", "odom", MeasurementTime(1), &[[1., 0., 0.]])
                 .is_none()
         );
-        extension.update(&path, &tf, "odom");
+        extension.update(SceneInput::Path(&path), &tf, "odom");
         assert_eq!(extension.overlay().lines()[0].start[0], 11.);
         assert_eq!(extension.revision(), revision);
         assert_eq!(calls.get(), 1);
@@ -287,14 +311,14 @@ mod tests {
         let mut path = PathState::default();
         apply(&mut path, 1., 1);
         let revision = path.revision();
-        extension.update(&path, &TransformState::default(), "odom");
+        extension.update(SceneInput::Path(&path), &TransformState::default(), "odom");
         assert!(extension.overlay().lines().is_empty());
         assert!(extension.error().unwrap().contains("test trap"));
-        extension.update(&path, &TransformState::default(), "odom");
+        extension.update(SceneInput::Path(&path), &TransformState::default(), "odom");
         assert_eq!(calls.get(), 1);
         assert_eq!(path.revision(), revision);
         extension.reset();
-        extension.update(&path, &TransformState::default(), "odom");
+        extension.update(SceneInput::Path(&path), &TransformState::default(), "odom");
         assert_eq!(calls.get(), 2);
     }
 }
@@ -315,7 +339,10 @@ mod recording_tests {
         let recording = root.join("target/scene-extension-independent/staggered/recording.mcap");
         let mut workspace = NativeWorkspace::load_bundled_or_fallback(WorkspaceLayout::Scene);
         workspace
-            .enable_scene_extension("/perception/objects")
+            .enable_scene_extension(
+                "/perception/objects",
+                viewer_extension::ExtensionInputKind::PathPositions,
+            )
             .unwrap();
         let requirements = workspace.data_requirements();
         let mut session = ViewerSession::open(
@@ -358,7 +385,7 @@ mod recording_tests {
             overlay.reset();
             let decoded = workspace.counters().decoded;
             overlay.update(
-                workspace.extension_path().unwrap().state(),
+                SceneInput::Path(workspace.extension_path().unwrap().state()),
                 workspace.transforms().state(),
                 "odom",
             );
@@ -436,7 +463,7 @@ mod recording_tests {
             input_revision
         );
         overlay.update(
-            workspace.extension_path().unwrap().state(),
+            SceneInput::Path(workspace.extension_path().unwrap().state()),
             workspace.transforms().state(),
             "odom",
         );
@@ -444,7 +471,176 @@ mod recording_tests {
         // Source commit clears output even when the next source reuses a Path revision.
         overlay.reset();
         assert!(overlay.overlay().boxes().is_empty());
-        overlay.update(&PathState::default(), &TransformState::default(), "odom");
+        overlay.update(
+            SceneInput::Path(&PathState::default()),
+            &TransformState::default(),
+            "odom",
+        );
+        assert!(overlay.overlay().boxes().is_empty());
+    }
+}
+
+#[cfg(test)]
+mod detection_recording_tests {
+    use super::*;
+    use crate::{
+        session::ViewerSession,
+        workspace::{NativeWorkspace, WorkspaceLayout},
+    };
+    use viewer_core::{ArrivalTime, PlaybackCommand, decode_detection3d_array};
+    use viewer_extension::ExtensionInputKind;
+    #[test]
+    #[ignore = "build detection-boxes guest and generate detection3d_fixture first"]
+    fn actual_detection3d_recording_to_wasm_to_scene() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let recording = root.join("target/detection3d/recording/recording.mcap");
+        let mut workspace = NativeWorkspace::load_bundled_or_fallback(WorkspaceLayout::Scene);
+        workspace
+            .enable_scene_extension(
+                "/perception/detections",
+                ExtensionInputKind::Detection3DArray,
+            )
+            .unwrap();
+        let mut session = ViewerSession::open(
+            &recording,
+            "".into(),
+            &workspace.data_requirements().playback,
+            workspace.bindings(),
+        )
+        .unwrap();
+        workspace.configure_session(session.plan());
+        let (_, stream) = workspace.extension_stream().unwrap();
+        assert_ne!(stream, session.plan().path_stream().unwrap().id);
+        let guest = viewer_extension::WasmExtension::load(
+            &root.join("examples/detection-boxes/extension.json"),
+        )
+        .unwrap();
+        let mut overlay = SceneExtensionState::new(Box::new(guest));
+        let reference = viewer_mcap::McapSource::open_file(&recording).unwrap();
+        let view = session.playback_view().unwrap();
+        let first_path = viewer_mcap::FileMessageStream::open(&recording)
+            .unwrap()
+            .find_map(|message| {
+                let message = message.unwrap();
+                (message.channel.topic == "/planning/path")
+                    .then_some(ArrivalTime(i64::try_from(message.log_time).unwrap()))
+            })
+            .unwrap();
+        for target in [view.end, first_path, view.start, view.end] {
+            session
+                .apply_playback_command(PlaybackCommand::Seek(target), |target, messages| {
+                    workspace.restore_messages(target, messages)
+                })
+                .unwrap();
+            overlay.reset();
+            let counts = workspace.counters();
+            let state = workspace
+                .runtime()
+                .detections_for_stream(stream)
+                .unwrap()
+                .state();
+            overlay.update(
+                SceneInput::Detections(state),
+                workspace.transforms().state(),
+                "odom",
+            );
+            assert!(overlay.error().is_none(), "{:?}", overlay.error());
+            let expected = reference.latest_before(&[stream], target).unwrap().messages;
+            assert_eq!(
+                state.latest().map(|f| f.arrival_time),
+                expected.last().map(|m| m.arrival_time)
+            );
+            assert_eq!(
+                workspace.counters(),
+                counts,
+                "no second CDR decode for presentation/guest"
+            );
+            if let Some(raw) = expected.last() {
+                let message = decode_detection3d_array(&raw.payload).unwrap();
+                assert_eq!(state.latest().unwrap().message, message);
+                assert_eq!(overlay.overlay().boxes().len(), message.detections.len());
+                let transform = workspace
+                    .transforms()
+                    .state()
+                    .resolve_at(&message.header.frame_id, "odom", message.header.stamp)
+                    .unwrap();
+                for d in message.detections {
+                    let center =
+                        transform.transform_point(d.bbox.center.position.map(|v| v as f32));
+                    let b = overlay
+                        .overlay()
+                        .boxes()
+                        .iter()
+                        .find(|b| {
+                            b.center
+                                .iter()
+                                .zip(center)
+                                .all(|(a, b)| (*a - b).abs() < 1e-5)
+                        })
+                        .unwrap();
+                    assert_eq!(b.size, d.bbox.size.map(|v| v as f32));
+                    let class = &d.results[0].hypothesis.class_id;
+                    assert_eq!(
+                        b.color,
+                        if class == "person" {
+                            [1., 0.08, 0.25]
+                        } else {
+                            [0.2, 1., 0.15]
+                        }
+                    );
+                }
+            } else {
+                assert!(overlay.overlay().boxes().is_empty());
+            }
+            assert_eq!(session.playback_view().unwrap().cursor, target);
+        }
+        // Inject a malformed detection into a real indexed seek candidate: no partial commit.
+        let before = overlay.overlay().clone();
+        let cursor = session.playback_view().unwrap().cursor;
+        assert!(
+            session
+                .apply_playback_command(
+                    PlaybackCommand::Seek(first_path),
+                    |target, mut messages| {
+                        messages.push(viewer_core::RawMessage {
+                            stream_id: stream,
+                            arrival_time: target,
+                            publish_time_ns: None,
+                            sequence: None,
+                            payload: vec![0].into(),
+                        });
+                        workspace.restore_messages(target, messages)
+                    }
+                )
+                .is_err()
+        );
+        assert_eq!(session.playback_view().unwrap().cursor, cursor);
+        overlay.update(
+            SceneInput::Detections(
+                workspace
+                    .runtime()
+                    .detections_for_stream(stream)
+                    .unwrap()
+                    .state(),
+            ),
+            workspace.transforms().state(),
+            "odom",
+        );
+        assert_eq!(*overlay.overlay(), before);
+        // New source generation starts with empty detections, even if StreamIds are reused.
+        workspace.configure_session(session.plan());
+        overlay.reset();
+        overlay.update(
+            SceneInput::Detections(
+                workspace
+                    .runtime()
+                    .detections_for_stream(stream)
+                    .unwrap()
+                    .state(),
+            ),
+            workspace.transforms().state(),
+            "odom",
+        );
         assert!(overlay.overlay().boxes().is_empty());
     }
 }

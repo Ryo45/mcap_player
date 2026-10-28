@@ -16,3 +16,7 @@ pub use transform::TransformController;
 
 #[cfg(test)]
 mod tests;
+
+mod detection3d;
+mod latest;
+pub use detection3d::Detection3DController;
