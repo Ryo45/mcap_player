@@ -1,4 +1,8 @@
-# Scene extension verification — 2026-10-28
+# Scene extension verification — initial ABI 1, 2026-10-28
+
+Historical results for `c2dce06`. Current input/Box contract and commands are in
+[the updated design](../../scene_visualization_extensions.md); these screenshots
+and measurements intentionally retain the original shared-input/line-output setup.
 
 Branch: `feature/scene-visualization-extension`; design, scope and reproducible
 build/run commands: [Scene Visualization Extension](../../scene_visualization_extensions.md).

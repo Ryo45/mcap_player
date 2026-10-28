@@ -10,7 +10,7 @@ use anyhow::{Result, ensure};
 use serde::Deserialize;
 use viewer_core::{PathFrame, SceneOverlay};
 
-pub const API_VERSION: u32 = 1;
+pub const API_VERSION: u32 = 2;
 pub const MAX_INPUT_POINTS: usize = 1024;
 
 /// Deployment facts, resolved once at startup. Not a subscription interface.

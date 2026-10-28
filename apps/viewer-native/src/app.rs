@@ -233,6 +233,11 @@ impl App {
             let presentation = self.presentation_state.build(PresentationBuildInput {
                 cameras: runtime.cameras(),
                 path: runtime.path(),
+                #[cfg(feature = "scene-extension")]
+                extension_path: self
+                    .workspace
+                    .extension_stream()
+                    .and_then(|stream| runtime.path_for_stream(stream)),
                 odometry: runtime.odometry(),
                 transforms: runtime.transforms(),
                 point_cloud_controller: runtime.point_cloud(),

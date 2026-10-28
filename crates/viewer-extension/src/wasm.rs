@@ -1,7 +1,7 @@
 use crate::{API_VERSION, ExtensionDescriptor, MAX_INPUT_POINTS, VisualizationExtension};
 use anyhow::{Context, Result, ensure};
 use std::{fs::File, io::Read, path::Path};
-use viewer_core::{MAX_OVERLAY_LINES, PathFrame, SceneLine, SceneOverlay};
+use viewer_core::{MAX_OVERLAY_BOXES, PathFrame, SceneBox, SceneObjectId, SceneOverlay};
 use wasmi::{
     Config, EnforcedLimits, Engine, Instance, Linker, Module, Store, StoreLimits,
     StoreLimitsBuilder,
@@ -10,7 +10,7 @@ use wasmi::{
 const MAX_MODULE_BYTES: usize = 2 * 1024 * 1024;
 const MAX_MEMORY_BYTES: usize = 8 * 1024 * 1024;
 const FUEL: u64 = 1_000_000;
-const LINE_BYTES: usize = 40;
+const BOX_BYTES: usize = 60;
 
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -158,31 +158,34 @@ impl VisualizationExtension for WasmExtension {
             .get_typed_func::<u32, u32>(&self.store, "update")?
             .call(&mut self.store, path.points.len() as u32)? as usize;
         ensure!(
-            count <= MAX_OVERLAY_LINES,
-            "extension output exceeds line limit"
+            count <= MAX_OVERLAY_BOXES,
+            "extension output exceeds box limit"
         );
         let output_ptr = self.call_u32("output_ptr")? as usize;
-        let mut output = vec![0; count * LINE_BYTES];
+        let mut output = vec![0; count * BOX_BYTES];
         memory
             .read(&self.store, output_ptr, &mut output)
             .map_err(|e| anyhow::anyhow!("output memory: {e}"))?;
-        let lines = output
-            .chunks_exact(LINE_BYTES)
+        let boxes = output
+            .chunks_exact(BOX_BYTES)
             .map(|bytes| {
-                let id = u32::from_le_bytes(bytes[..4].try_into().expect("fixed line record"));
-                let mut values = [0f32; 9];
-                for (value, bytes) in values.iter_mut().zip(bytes[4..].chunks_exact(4)) {
+                let id = SceneObjectId(u64::from_le_bytes(
+                    bytes[..8].try_into().expect("fixed box record"),
+                ));
+                let mut values = [0f32; 13];
+                for (value, bytes) in values.iter_mut().zip(bytes[8..].chunks_exact(4)) {
                     *value = f32::from_le_bytes(bytes.try_into().expect("fixed f32 field"));
                 }
-                SceneLine {
+                SceneBox {
                     id,
-                    start: [values[0], values[1], values[2]],
-                    end: [values[3], values[4], values[5]],
-                    color: [values[6], values[7], values[8]],
+                    center: [values[0], values[1], values[2]],
+                    orientation: [values[3], values[4], values[5], values[6]],
+                    size: [values[7], values[8], values[9]],
+                    color: [values[10], values[11], values[12]],
                 }
             })
             .collect();
-        Ok(SceneOverlay::new(lines)?)
+        Ok(SceneOverlay::new(vec![], boxes)?)
     }
 
     fn reset(&mut self) -> Result<()> {

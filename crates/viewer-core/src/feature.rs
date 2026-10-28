@@ -22,4 +22,6 @@ pub use performance::PlaybackPerformance;
 pub use point_cloud::{PointCloudAttributes, PointCloudFrame, PointCloudState};
 pub use runtime::{FeatureRestoreError, FeatureRestoreErrorKind, FeatureRuntime};
 pub use telemetry::{TelemetryFrame, TelemetryState};
-pub use transform::{DYNAMIC_TF_HISTORY, TransformBatch, TransformState};
+pub use transform::{DYNAMIC_TF_HISTORY, RigidTransform, TransformBatch, TransformState};
+
+pub(crate) use transform::rotate;

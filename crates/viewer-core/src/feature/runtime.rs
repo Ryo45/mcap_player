@@ -21,6 +21,7 @@ use web_time::Instant;
 pub struct FeatureRuntime {
     cameras: CameraController,
     path: PathController,
+    additional_paths: Vec<PathController>,
     odometry: OdometryController,
     transforms: TransformController,
     point_cloud: Option<PointCloudController>,
@@ -75,6 +76,11 @@ impl FeatureRuntime {
         Self {
             cameras: CameraController::new(plan),
             path: PathController::new(plan),
+            additional_paths: plan
+                .additional_path_streams()
+                .iter()
+                .map(|stream| PathController::for_stream(stream.id))
+                .collect(),
             odometry: OdometryController::new(plan),
             transforms: TransformController::new(plan),
             point_cloud: enable_point_cloud.then(|| PointCloudController::new(plan)),
@@ -102,12 +108,19 @@ impl FeatureRuntime {
             };
             let matched = camera_matched
                 || path_matched
+                || self
+                    .additional_paths
+                    .iter()
+                    .any(|path| path.accepts(message.stream_id))
                 || odometry_matched
                 || transform_matched
                 || point_cloud_matched;
             if !matched {
                 self.unknown_streams = self.unknown_streams.saturating_add(1);
             }
+        }
+        for path in &mut self.additional_paths {
+            path.process_latest(messages);
         }
         self.cameras.advance(elapsed);
         self.processing_time.record(started.elapsed());
@@ -126,6 +139,11 @@ impl FeatureRuntime {
         let mut candidate = Self {
             cameras: self.cameras.restore_candidate(),
             path: self.path.restore_candidate(),
+            additional_paths: self
+                .additional_paths
+                .iter()
+                .map(PathController::restore_candidate)
+                .collect(),
             odometry: self.odometry.restore_candidate(),
             transforms: self.transforms.restore_candidate(),
             point_cloud: self
@@ -140,6 +158,9 @@ impl FeatureRuntime {
             let mut matched = false;
             matched |= restore_one("Camera", message, || candidate.cameras.restore(message))?;
             matched |= restore_one("Path", message, || candidate.path.restore(message))?;
+            for path in &mut candidate.additional_paths {
+                matched |= restore_one("Path input", message, || path.restore(message))?;
+            }
             matched |= restore_one("Odometry", message, || candidate.odometry.restore(message))?;
             matched |= restore_one("Transform", message, || {
                 candidate.transforms.restore(message)
@@ -181,6 +202,15 @@ impl FeatureRuntime {
         &self.path
     }
 
+    pub fn path_for_stream(&self, stream: StreamId) -> Option<&PathController> {
+        if self.path.accepts(stream) {
+            return Some(&self.path);
+        }
+        self.additional_paths
+            .iter()
+            .find(|path| path.accepts(stream))
+    }
+
     pub fn odometry(&self) -> &OdometryController {
         &self.odometry
     }
@@ -216,6 +246,9 @@ impl FeatureRuntime {
         };
         counters.merge(self.cameras.counters());
         counters.merge(self.path.counters());
+        for path in &self.additional_paths {
+            counters.merge(path.counters());
+        }
         counters.merge(self.odometry.counters());
         counters.merge(self.transforms.counters());
         if let Some(point_cloud) = &self.point_cloud {

@@ -26,6 +26,8 @@ pub(crate) struct PresentationFrame<'a> {
 pub(crate) struct PresentationBuildInput<'a> {
     pub(crate) cameras: &'a viewer_core::CameraController,
     pub(crate) path: &'a viewer_core::PathController,
+    #[cfg(feature = "scene-extension")]
+    pub(crate) extension_path: Option<&'a viewer_core::PathController>,
     pub(crate) odometry: &'a viewer_core::OdometryController,
     pub(crate) transforms: &'a viewer_core::TransformController,
     pub(crate) point_cloud_controller: Option<&'a viewer_core::PointCloudController>,
@@ -104,6 +106,8 @@ impl PresentationState {
         let PresentationBuildInput {
             cameras,
             path,
+            #[cfg(feature = "scene-extension")]
+            extension_path,
             odometry,
             transforms,
             point_cloud_controller,
@@ -142,7 +146,7 @@ impl PresentationState {
         #[cfg(feature = "scene-extension")]
         if let Some(extension) = &mut self.extension {
             extension.update(
-                path.state(),
+                extension_path.map_or(&viewer_core::PathState::default(), |path| path.state()),
                 transforms.state(),
                 &self.path_projection.fixed_frame,
             );
@@ -160,7 +164,7 @@ impl PresentationState {
         });
         #[cfg(feature = "scene-extension")]
         if let Some(extension) = &self.extension {
-            scene.overlay = extension.lines();
+            scene.overlay = Some(extension.overlay());
             scene.overlay_revision = extension.revision();
             scene.diagnostics.extension_error = extension.error().map(str::to_owned);
         }
@@ -261,6 +265,8 @@ mod tests {
         let frame = presentation.build(PresentationBuildInput {
             cameras: workspace.runtime().cameras(),
             path: workspace.runtime().path(),
+            #[cfg(feature = "scene-extension")]
+            extension_path: workspace.extension_path(),
             odometry: workspace.runtime().odometry(),
             transforms: workspace.runtime().transforms(),
             point_cloud_controller: workspace.runtime().point_cloud(),
@@ -281,6 +287,8 @@ mod tests {
         let frame = presentation.build(PresentationBuildInput {
             cameras: workspace.runtime().cameras(),
             path: workspace.runtime().path(),
+            #[cfg(feature = "scene-extension")]
+            extension_path: workspace.extension_path(),
             odometry: workspace.runtime().odometry(),
             transforms: workspace.runtime().transforms(),
             point_cloud_controller: workspace.runtime().point_cloud(),

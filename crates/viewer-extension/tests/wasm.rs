@@ -6,7 +6,7 @@ use viewer_extension::{ExtensionDescriptor, VisualizationExtension, WasmExtensio
 fn descriptor() -> ExtensionDescriptor {
     ExtensionDescriptor {
         id: "test".into(),
-        api_version: 1,
+        api_version: 2,
         topic: "/planning/path".into(),
         schema: "nav_msgs/msg/Path".into(),
         input: "path_positions_v1".into(),
@@ -24,7 +24,7 @@ fn guest(body: &str) -> WasmExtension {
     let wat = format!(
         r#"(module
       (memory (export "memory") 1)
-      (func (export "api_version") (result i32) i32.const 1)
+      (func (export "api_version") (result i32) i32.const 2)
       (func (export "init"))
       (func (export "input_ptr") (result i32) i32.const 0)
       (func (export "output_ptr") (result i32) i32.const 32768)
@@ -44,9 +44,9 @@ fn traps_budget_and_output_validation_are_errors() {
     for code in [
         "unreachable",
         "(loop $forever br $forever) i32.const 0",
-        "i32.const 4097",
+        "i32.const 257",
         "i32.const -1",
-        "i32.const 32772 f32.const nan f32.store i32.const 1",
+        "i32.const 32776 f32.const nan f32.store i32.const 1",
     ] {
         assert!(guest(code).update(&path()).is_err(), "{code}");
     }
@@ -77,14 +77,14 @@ fn independent_rust_guest_produces_boxes_and_recovers_after_reset() {
         .join("../../examples/path-boxes/extension.json");
     let mut extension = WasmExtension::load(&manifest).unwrap();
     let output = extension.update(&path()).unwrap();
-    assert_eq!(output.lines().len(), 12);
+    assert_eq!(output.boxes().len(), 1);
     assert!(
         output
-            .lines()
+            .boxes()
             .iter()
-            .all(|line| line.start[0] >= 0.85 && line.end[2] <= 3.5)
+            .all(|line| line.center == [1., 2., 3.25] && line.size == [0.3, 0.3, 0.5])
     );
-    assert_eq!(output.lines()[0].color, [1., 0.08, 0.25]);
+    assert_eq!(output.boxes()[0].color, [1., 0.08, 0.25]);
     extension.reset().unwrap();
     assert_eq!(extension.update(&path()).unwrap(), output);
     let mut moved = path();
@@ -96,13 +96,13 @@ fn independent_rust_guest_produces_boxes_and_recovers_after_reset() {
 fn malformed_abi_and_memory_ranges_are_rejected() {
     let basic = r#"(module
       (memory (export "memory") 1)
-      (func (export "api_version") (result i32) i32.const 1)
+      (func (export "api_version") (result i32) i32.const 2)
       (func (export "init"))
       (func (export "input_ptr") (result i32) i32.const 0)
       (func (export "output_ptr") (result i32) i32.const 32768)
-      (func (export "update") (param i32) (result i32) i32.const 1))"#;
+      (func (export "update") (param i32) (result i32) i32.const 2))"#;
     for modified in [
-        basic.replace("i32.const 1)", "i32.const 2)"),
+        basic.replace("i32.const 2)", "i32.const 1)"),
         basic.replace(
             "(func (export \"init\"))",
             "(func (export \"init\") (loop $x br $x))",
@@ -121,7 +121,7 @@ fn malformed_abi_and_memory_ranges_are_rejected() {
         assert!(guest.update(&path()).is_err());
     }
     let mut descriptor = descriptor();
-    descriptor.api_version = 2;
+    descriptor.api_version = 1;
     assert!(WasmExtension::from_bytes(descriptor, &wat::parse_str(basic).unwrap()).is_err());
 }
 
@@ -137,13 +137,37 @@ fn measure_independent_guest_updates() {
     for _ in 0..1000 {
         let started = std::time::Instant::now();
         let output = guest.update(&frame).unwrap();
-        assert_eq!(output.lines().len(), 384);
+        assert_eq!(output.boxes().len(), 32);
         durations.push(started.elapsed().as_secs_f64() * 1000.);
         std::hint::black_box(output);
     }
     durations.sort_by(f64::total_cmp);
     println!(
-        "guest_update input_points=1024 output_lines=384 n=1000 median_ms={:.6} p95_ms={:.6} max_ms={:.6}",
+        "guest_update input_points=1024 output_boxes=32 n=1000 median_ms={:.6} p95_ms={:.6} max_ms={:.6}",
         durations[500], durations[950], durations[999]
+    );
+}
+
+#[test]
+fn box_wire_preserves_64bit_identity_and_rejects_duplicates_and_bad_dimensions() {
+    let valid = "i32.const 32768 i64.const 4294967297 i64.store\n i32.const 32800 f32.const 1 f32.store\n i32.const 32804 f32.const 2 f32.store\n i32.const 32808 f32.const 3 f32.store\n i32.const 32812 f32.const 4 f32.store\n i32.const 32816 f32.const 1 f32.store";
+    let output = guest(&format!("{valid} i32.const 1"))
+        .update(&path())
+        .unwrap();
+    assert_eq!(output.boxes()[0].id.0, 4294967297);
+    assert_eq!(output.boxes()[0].size, [2., 3., 4.]);
+    assert!(
+        guest(&format!(
+            "{valid} i32.const 32804 f32.const -1 f32.store i32.const 1"
+        ))
+        .update(&path())
+        .is_err()
+    );
+    assert!(
+        guest(&format!(
+            "{valid} i32.const 32828 i32.const 32768 i32.const 60 memory.copy i32.const 2"
+        ))
+        .update(&path())
+        .is_err()
     );
 }

@@ -1,5 +1,5 @@
 //! Presentation-owned extension generation; never mutates playback or feature truth.
-use viewer_core::{PathState, SceneLine, SceneOverlay, TransformState};
+use viewer_core::{PathState, SceneOverlay, TransformState};
 use viewer_extension::VisualizationExtension;
 
 pub(crate) struct SceneExtensionState {
@@ -87,40 +87,20 @@ impl SceneExtensionState {
         };
         // Snapshot geometry is frozen at acquisition time, not frame-locked. Do not lose a
         // successfully placed overlay when bounded TF history later evicts that old time.
-        if self.output.lines().is_empty() {
+        if self.output.lines().is_empty() && self.output.boxes().is_empty() {
             self.error = None;
             self.set_placed(SceneOverlay::default());
             self.placement_valid = true;
             return;
         }
-        let positions: Vec<_> = self
-            .output
-            .lines()
-            .iter()
-            .flat_map(|line| [line.start, line.end])
-            .collect();
-        let Some(positions) = transforms.transform_points_at(
-            &frame.frame_id,
-            fixed_frame,
-            frame.measurement_time,
-            &positions,
-        ) else {
+        let Some(transform) =
+            transforms.resolve_at(&frame.frame_id, fixed_frame, frame.measurement_time)
+        else {
             self.set_placed(SceneOverlay::default());
             self.error = Some(format!("missing TF {} → {fixed_frame}", frame.frame_id));
             return;
         };
-        let lines = self
-            .output
-            .lines()
-            .iter()
-            .zip(positions.chunks_exact(2))
-            .map(|(line, positions)| SceneLine {
-                start: positions[0],
-                end: positions[1],
-                ..*line
-            })
-            .collect();
-        match SceneOverlay::new(lines) {
+        match self.output.transformed(transform) {
             Ok(placed) => {
                 self.error = None;
                 self.set_placed(placed);
@@ -139,8 +119,8 @@ impl SceneExtensionState {
             self.revision = self.revision.wrapping_add(1);
         }
     }
-    pub(crate) fn lines(&self) -> &[SceneLine] {
-        self.placed.lines()
+    pub(crate) fn overlay(&self) -> &SceneOverlay {
+        &self.placed
     }
     pub(crate) fn revision(&self) -> u64 {
         self.revision
@@ -154,16 +134,16 @@ impl SceneExtensionState {
 mod tests {
     use super::*;
     use std::{cell::Cell, rc::Rc};
-    use viewer_core::{ArrivalTime, MeasurementTime, PathFrame};
+    use viewer_core::{ArrivalTime, MeasurementTime, PathFrame, SceneLine, SceneObjectId};
     use viewer_extension::ExtensionDescriptor;
 
-    struct RustBoxes {
+    struct RustLine {
         descriptor: ExtensionDescriptor,
         calls: Rc<Cell<usize>>,
         resets: Rc<Cell<usize>>,
         fail: bool,
     }
-    impl VisualizationExtension for RustBoxes {
+    impl VisualizationExtension for RustLine {
         fn descriptor(&self) -> &ExtensionDescriptor {
             &self.descriptor
         }
@@ -175,21 +155,24 @@ mod tests {
             self.calls.set(self.calls.get() + 1);
             anyhow::ensure!(!self.fail, "test trap");
             let p = frame.points[0].map(|v| v as f32);
-            Ok(SceneOverlay::new(vec![SceneLine {
-                id: 7,
-                start: p,
-                end: [p[0], p[1], p[2] + 1.],
-                color: [1., 0., 0.],
-            }])?)
+            Ok(SceneOverlay::new(
+                vec![SceneLine {
+                    id: SceneObjectId(7),
+                    start: p,
+                    end: [p[0], p[1], p[2] + 1.],
+                    color: [1., 0., 0.],
+                }],
+                vec![],
+            )?)
         }
     }
     fn state(fail: bool) -> (SceneExtensionState, Rc<Cell<usize>>, Rc<Cell<usize>>) {
         let calls = Rc::new(Cell::new(0));
         let resets = Rc::new(Cell::new(0));
-        let extension = RustBoxes {
+        let extension = RustLine {
             descriptor: ExtensionDescriptor {
                 id: "native-test".into(),
-                api_version: 1,
+                api_version: 2,
                 topic: "/planning/path".into(),
                 schema: "nav_msgs/msg/Path".into(),
                 input: "path_positions_v1".into(),
@@ -216,7 +199,7 @@ mod tests {
         apply(&mut path, 1., 1);
         extension.update(&path, &tf, "odom");
         assert_eq!(calls.get(), 1);
-        assert_eq!(extension.lines()[0].start[0], 1.);
+        assert_eq!(extension.overlay().lines()[0].start[0], 1.);
         let revision = extension.revision();
         for _ in 0..100 {
             extension.update(&path, &tf, "odom");
@@ -229,17 +212,17 @@ mod tests {
         assert_eq!(extension.revision(), revision);
         apply(&mut path, 3., 3);
         extension.update(&path, &tf, "odom");
-        assert_eq!(extension.lines()[0].start[0], 3.);
+        assert_eq!(extension.overlay().lines()[0].start[0], 3.);
         // Committed backward seek: a fresh feature candidate can reuse low revisions.
         extension.reset();
         path = PathState::default();
         apply(&mut path, -1., 1);
         extension.update(&path, &tf, "odom");
-        assert_eq!(extension.lines()[0].start[0], -1.);
+        assert_eq!(extension.overlay().lines()[0].start[0], -1.);
         // Committed source replacement with no predecessor must remove old objects.
         extension.reset();
         extension.update(&PathState::default(), &tf, "odom");
-        assert!(extension.lines().is_empty());
+        assert!(extension.overlay().lines().is_empty());
         assert_eq!(resets.get(), 2);
     }
     #[test]
@@ -249,12 +232,12 @@ mod tests {
         let mut path = PathState::default();
         apply(&mut path, 1., 1);
         extension.update(&path, &tf, "odom");
-        assert_eq!(extension.lines().len(), 1);
+        assert_eq!(extension.overlay().lines().len(), 1);
         extension.update(&path, &tf, "missing");
-        assert!(extension.lines().is_empty());
+        assert!(extension.overlay().lines().is_empty());
         assert!(extension.error().unwrap().contains("missing TF"));
         extension.update(&path, &tf, "odom");
-        assert_eq!(extension.lines().len(), 1);
+        assert_eq!(extension.overlay().lines().len(), 1);
         assert_eq!(calls.get(), 1);
     }
     #[test]
@@ -284,7 +267,7 @@ mod tests {
         };
         tf.apply(batch(1, 10.));
         extension.update(&path, &tf, "odom");
-        assert_eq!(extension.lines()[0].start[0], 11.);
+        assert_eq!(extension.overlay().lines()[0].start[0], 11.);
         let revision = extension.revision();
         tf.apply(batch(3_000_000_000, 20.));
         assert!(
@@ -292,7 +275,7 @@ mod tests {
                 .is_none()
         );
         extension.update(&path, &tf, "odom");
-        assert_eq!(extension.lines()[0].start[0], 11.);
+        assert_eq!(extension.overlay().lines()[0].start[0], 11.);
         assert_eq!(extension.revision(), revision);
         assert_eq!(calls.get(), 1);
         assert!(extension.error().is_none());
@@ -305,7 +288,7 @@ mod tests {
         apply(&mut path, 1., 1);
         let revision = path.revision();
         extension.update(&path, &TransformState::default(), "odom");
-        assert!(extension.lines().is_empty());
+        assert!(extension.overlay().lines().is_empty());
         assert!(extension.error().unwrap().contains("test trap"));
         extension.update(&path, &TransformState::default(), "odom");
         assert_eq!(calls.get(), 1);
@@ -329,9 +312,11 @@ mod recording_tests {
     #[ignore = "build independent path-boxes guest first"]
     fn actual_wasm_indexed_seek_and_failed_restore_preserve_transaction() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let recording = root.join("tests/fixtures/camera-jpeg/camera_7_5s.mcap");
+        let recording = root.join("target/scene-extension-independent/staggered/recording.mcap");
         let mut workspace = NativeWorkspace::load_bundled_or_fallback(WorkspaceLayout::Scene);
-        workspace.enable_scene_extension("/planning/path").unwrap();
+        workspace
+            .enable_scene_extension("/perception/objects")
+            .unwrap();
         let requirements = workspace.data_requirements();
         let mut session = ViewerSession::open(
             &recording,
@@ -345,8 +330,26 @@ mod recording_tests {
             viewer_extension::WasmExtension::load(&root.join("examples/path-boxes/extension.json"))
                 .unwrap();
         let mut overlay = SceneExtensionState::new(Box::new(guest));
+        let display_stream = session.plan().path_stream().unwrap().id;
+        let input_stream = session
+            .plan()
+            .path_stream_for_topic("/perception/objects")
+            .unwrap()
+            .id;
+        assert_ne!(display_stream, input_stream);
+        assert!(session.plan().selected_stream_ids().contains(&input_stream));
+        let reference = viewer_mcap::McapSource::open_file(&recording).unwrap();
         let view = session.playback_view().unwrap();
-        for target in [view.end, view.start, view.end] {
+        let first_path_time = viewer_mcap::FileMessageStream::open(&recording)
+            .unwrap()
+            .find_map(|message| {
+                let message = message.unwrap();
+                (message.channel.topic == "/planning/path").then_some(viewer_core::ArrivalTime(
+                    i64::try_from(message.log_time).unwrap(),
+                ))
+            })
+            .unwrap();
+        for target in [view.end, first_path_time, view.start, view.end] {
             session
                 .apply_playback_command(PlaybackCommand::Seek(target), |target, messages| {
                     workspace.restore_messages(target, messages)
@@ -355,15 +358,16 @@ mod recording_tests {
             overlay.reset();
             let decoded = workspace.counters().decoded;
             overlay.update(
-                workspace.path().state(),
+                workspace.extension_path().unwrap().state(),
                 workspace.transforms().state(),
                 "odom",
             );
             assert!(overlay.error().is_none(), "{:?}", overlay.error());
             assert_eq!(
-                overlay.lines().is_empty(),
+                overlay.overlay().boxes().is_empty(),
                 workspace
-                    .path()
+                    .extension_path()
+                    .unwrap()
                     .state()
                     .latest()
                     .is_none_or(|frame| frame.points.is_empty())
@@ -373,11 +377,47 @@ mod recording_tests {
                 decoded,
                 "guest must share host decode"
             );
+            let expected = reference
+                .latest_before(&[input_stream], target)
+                .unwrap()
+                .messages;
+            let actual = workspace.extension_path().unwrap().state().latest();
+            assert_eq!(
+                actual.map(|frame| frame.arrival_time),
+                expected.last().map(|message| message.arrival_time)
+            );
+            if let (Some(input), Some(display)) = (actual, workspace.path().state().latest()) {
+                assert_eq!(input.frame_id, display.frame_id);
+                assert_ne!(input.arrival_time, display.arrival_time);
+                assert!((input.points[0][1] - display.points[0][1] - 2.).abs() < 1e-8);
+                assert_eq!(
+                    overlay.overlay().boxes()[0].id,
+                    viewer_core::SceneObjectId(0)
+                );
+                let expected_center = workspace
+                    .transforms()
+                    .state()
+                    .resolve_at(&input.frame_id, "odom", input.measurement_time)
+                    .unwrap()
+                    .transform_point([
+                        input.points[0][0] as f32,
+                        input.points[0][1] as f32,
+                        input.points[0][2] as f32 + 0.25,
+                    ]);
+                assert!(
+                    overlay.overlay().boxes()[0]
+                        .center
+                        .iter()
+                        .zip(expected_center)
+                        .all(|(a, b)| (*a - b).abs() < 1e-5)
+                );
+            }
             assert_eq!(session.playback_view().unwrap().cursor, target);
         }
-        let previous = overlay.lines().to_vec();
+        let previous = overlay.overlay().boxes().to_vec();
         let cursor = session.playback_view().unwrap().cursor;
         let feature_revision = workspace.path().state().revision();
+        let input_revision = workspace.extension_path().unwrap().state().revision();
         assert!(
             session
                 .apply_playback_command(PlaybackCommand::Seek(view.start), |target, _| Err(
@@ -391,16 +431,20 @@ mod recording_tests {
         );
         assert_eq!(session.playback_view().unwrap().cursor, cursor);
         assert_eq!(workspace.path().state().revision(), feature_revision);
+        assert_eq!(
+            workspace.extension_path().unwrap().state().revision(),
+            input_revision
+        );
         overlay.update(
-            workspace.path().state(),
+            workspace.extension_path().unwrap().state(),
             workspace.transforms().state(),
             "odom",
         );
-        assert_eq!(overlay.lines(), previous);
+        assert_eq!(overlay.overlay().boxes(), previous);
         // Source commit clears output even when the next source reuses a Path revision.
         overlay.reset();
-        assert!(overlay.lines().is_empty());
+        assert!(overlay.overlay().boxes().is_empty());
         overlay.update(&PathState::default(), &TransformState::default(), "odom");
-        assert!(overlay.lines().is_empty());
+        assert!(overlay.overlay().boxes().is_empty());
     }
 }

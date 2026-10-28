@@ -106,6 +106,15 @@ with planned-path overlay enabled. Live monitoring uses the same feature views, 
 Inspector remains unavailable without a recording cursor. This preset introduces no arbitrary
 decoded-message history or additional renderer instance.
 
+An optional Native Scene extension can contribute a named Path input independently of the
+workspace's displayed Path. SessionPlan resolves the closed union and unique LatestBefore
+restore inputs. Same-stream consumers share one PathController; additional Path inputs coalesce
+within each source batch before decode and retain one materialized latest value. They participate
+in the existing staged restore transaction. Wasm executes only after feature commit, returning
+validated identified metric Boxes for host TF placement and the existing Scene renderer's separate
+overlay buffer. No query demand or dynamic subscription broker enters this path. See
+[Scene Visualization Extension](scene_visualization_extensions.md).
+
 `FeatureRuntime` owns the continuous materialization boundary, not just controller aggregation.
 Controllers implement its concrete feature-specific admission, decode and history policies. Panels,
 Camera overlays, Scene and diagnostics borrow shared materialized state. They do not decode their

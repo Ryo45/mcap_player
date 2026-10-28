@@ -1,0 +1,12 @@
+   Compiling viewer-core v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-core)
+   Compiling scene-renderer v0.1.0 (/home/ryo/development/mcap_player/crates/scene-renderer)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.43s
+     Running unittests src/lib.rs (target/debug/deps/scene_renderer-a805d1f71632c2a7)
+
+running 2 tests
+Depth regression adapter: AdapterInfo { name: "NVIDIA GeForce RTX 5070 Ti", vendor: 4318, device: 11269, device_type: DiscreteGpu, driver: "NVIDIA", driver_info: "610.57.04", backend: Vulkan }
+Overlay regression adapter: AdapterInfo { name: "NVIDIA GeForce RTX 5070 Ti", vendor: 4318, device: 11269, device_type: DiscreteGpu, driver: "NVIDIA", driver_info: "610.57.04", backend: Vulkan }
+test depth_tests::opaque_points_occlude_by_distance_in_both_orders ... ok
+test depth_tests::extension_updates_do_not_upload_existing_layers ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.75s

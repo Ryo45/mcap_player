@@ -74,18 +74,27 @@ fn opaque_points_occlude_by_distance_in_both_orders() {
 #[test]
 #[ignore = "requires a working GPU adapter; run explicitly on Native"]
 fn extension_updates_do_not_upload_existing_layers() {
-    use viewer_core::{SceneLine, SceneOverlay};
+    use viewer_core::{SceneBox, SceneLine, SceneObjectId, SceneOverlay};
     let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor::default());
     let adapter = pollster::block_on(instance.request_adapter(&Default::default())).unwrap();
     eprintln!("Overlay regression adapter: {:?}", adapter.get_info());
     let (device, queue) = pollster::block_on(adapter.request_device(&Default::default())).unwrap();
     let mut renderer = SceneRenderer::new(&device, 64, 64);
-    let overlay = SceneOverlay::new(vec![SceneLine {
-        id: 1,
-        start: [0., 0., 1.],
-        end: [1., 0., 1.],
-        color: [1., 0., 0.],
-    }])
+    let overlay = SceneOverlay::new(
+        vec![SceneLine {
+            id: SceneObjectId(1),
+            start: [0., 0., 1.],
+            end: [1., 0., 1.],
+            color: [1., 0., 0.],
+        }],
+        vec![SceneBox {
+            id: SceneObjectId(2),
+            center: [0., 0., 0.5],
+            orientation: [0., 0., 0., 1.],
+            size: [1., 0.5, 1.],
+            color: [0., 1., 0.],
+        }],
+    )
     .unwrap();
     let base = SceneFrame {
         cloud: &[[1., 0., 0.]],
@@ -95,12 +104,13 @@ fn extension_updates_do_not_upload_existing_layers() {
     renderer.render(&device, &queue, base);
     let initial = renderer.metrics();
     let frame = SceneFrame {
-        overlay: overlay.lines(),
+        overlay: Some(&overlay),
         overlay_revision: 1,
         ..base
     };
     assert!(renderer.needs_render(frame));
     renderer.render(&device, &queue, frame);
+    assert_eq!(renderer.overlay_vertices, 26);
     assert_eq!(
         renderer.metrics().overlay_uploads,
         initial.overlay_uploads + 1

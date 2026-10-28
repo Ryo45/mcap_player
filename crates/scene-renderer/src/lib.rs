@@ -1,7 +1,7 @@
 //! Minimal offscreen 3D scene renderer for a world grid, ego wireframe and planned path.
 
 use bytemuck::{Pod, Zeroable};
-use viewer_core::SceneLine;
+use viewer_core::SceneOverlay;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct SceneFrame<'a> {
@@ -9,7 +9,7 @@ pub struct SceneFrame<'a> {
     pub cloud_revision: u64,
     pub overlay_revision: u64,
     /// Validated ROS world-frame opaque lines, with an independent GPU upload revision.
-    pub overlay: &'a [SceneLine],
+    pub overlay: Option<&'a SceneOverlay>,
     /// World ROS metre positions, already placed by presentation.
     pub focus: [f32; 3],
     pub forward: [f32; 3],
@@ -338,14 +338,33 @@ impl SceneRenderer {
             self.metrics.layer_uploads += 1;
         }
         if self.last_overlay_revision != Some(frame.overlay_revision) {
-            let mut vertices = Vec::with_capacity(frame.overlay.len().saturating_mul(2));
-            for line in frame.overlay {
-                push_line(
-                    &mut vertices,
-                    ros_to_render(line.start),
-                    ros_to_render(line.end),
-                    line.color,
-                );
+            let mut vertices = Vec::new();
+            if let Some(overlay) = frame.overlay {
+                vertices.reserve(overlay.lines().len() * 2 + overlay.boxes().len() * 24);
+                for line in overlay.lines() {
+                    push_line(
+                        &mut vertices,
+                        ros_to_render(line.start),
+                        ros_to_render(line.end),
+                        line.color,
+                    );
+                }
+                for object in overlay.boxes() {
+                    let corners = object.corners();
+                    for a in 0..8 {
+                        for bit in [1, 2, 4] {
+                            let b = a ^ bit;
+                            if a < b {
+                                push_line(
+                                    &mut vertices,
+                                    ros_to_render(corners[a]),
+                                    ros_to_render(corners[b]),
+                                    object.color,
+                                );
+                            }
+                        }
+                    }
+                }
             }
             if vertices.len() > self.overlay_capacity {
                 self.overlay_capacity = vertices.len().next_power_of_two();
@@ -817,7 +836,7 @@ mod tests {
             revision: 1,
             cloud_revision: 0,
             overlay_revision: 0,
-            overlay: &[],
+            overlay: None,
             focus: [2.0, 3.0, 0.0],
             forward: [1.0, 0.0, 0.0],
             view_radius: 0.2,

@@ -54,7 +54,9 @@ pub(crate) struct NativeWorkspace {
     pub(crate) runtime: Option<FeatureRuntime>,
     startup_warnings: Vec<String>,
     #[cfg(feature = "scene-extension")]
-    scene_extension: bool,
+    extension_topic: Option<String>,
+    #[cfg(feature = "scene-extension")]
+    extension_stream: Option<viewer_core::StreamId>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -115,7 +117,9 @@ impl NativeWorkspace {
             bindings: bundled_workspace_bindings(),
             runtime: None,
             #[cfg(feature = "scene-extension")]
-            scene_extension: false,
+            extension_topic: None,
+            #[cfg(feature = "scene-extension")]
+            extension_stream: None,
             startup_warnings: runtime.warnings,
         })
     }
@@ -140,7 +144,9 @@ impl NativeWorkspace {
             bindings: bundled_workspace_bindings(),
             runtime: None,
             #[cfg(feature = "scene-extension")]
-            scene_extension: false,
+            extension_topic: None,
+            #[cfg(feature = "scene-extension")]
+            extension_stream: None,
             startup_warnings: vec![format!(
                 "Bundled layout could not be loaded; using emergency layout: {error}"
             )],
@@ -153,12 +159,7 @@ impl NativeWorkspace {
             self.panels.has_scene(),
             "Scene extension needs a Scene panel"
         );
-        anyhow::ensure!(
-            topic == self.bindings.path_topic,
-            "this slice shares the workspace Path topic {}; change the binding to use another Path",
-            self.bindings.path_topic
-        );
-        self.scene_extension = true;
+        self.extension_topic = Some(topic.to_owned());
         Ok(())
     }
 
@@ -177,8 +178,8 @@ impl NativeWorkspace {
         #[cfg(feature = "scene-extension")]
         let mut requirements = requirements;
         #[cfg(feature = "scene-extension")]
-        if self.scene_extension {
-            requirements.playback.require_path();
+        if let Some(topic) = &self.extension_topic {
+            requirements.playback.require_path_topic(topic);
             requirements.playback.optional_transforms();
         }
         requirements
@@ -205,7 +206,26 @@ impl NativeWorkspace {
     }
 
     pub(crate) fn configure_session(&mut self, plan: &SessionPlan) {
+        #[cfg(feature = "scene-extension")]
+        {
+            self.extension_stream = self
+                .extension_topic
+                .as_deref()
+                .and_then(|topic| plan.path_stream_for_topic(topic))
+                .map(|stream| stream.id);
+        }
         self.runtime = Some(FeatureRuntime::new(plan, self.panels.has_scene()));
+    }
+
+    #[cfg(feature = "scene-extension")]
+    pub(crate) fn extension_stream(&self) -> Option<viewer_core::StreamId> {
+        self.extension_stream
+    }
+
+    #[cfg(all(test, feature = "scene-extension"))]
+    pub(crate) fn extension_path(&self) -> Option<&viewer_core::PathController> {
+        self.extension_stream
+            .and_then(|stream| self.runtime().path_for_stream(stream))
     }
 
     pub(crate) fn process_messages(&mut self, elapsed: Duration, messages: Vec<RawMessage>) {
@@ -641,7 +661,16 @@ mod extension_tests {
         );
         let plan_before =
             SessionPlan::build(&catalog, "", &before.playback, workspace.bindings()).unwrap();
-        assert!(workspace.enable_scene_extension("/different-path").is_err());
+        workspace.enable_scene_extension("/different-path").unwrap();
+        assert!(
+            SessionPlan::build(
+                &catalog,
+                "",
+                &workspace.requirements_for_cameras(&cameras).playback,
+                workspace.bindings()
+            )
+            .is_err()
+        );
         workspace.enable_scene_extension("/planning/path").unwrap();
         let after = workspace.requirements_for_cameras(&cameras);
         let plan_after =

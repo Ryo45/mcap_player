@@ -45,6 +45,9 @@ visibility are independent of this physical naming choice.
 | Source catalog facts and capabilities | `viewer-core/recording/catalog.rs` |
 | ROS message definition parsing and field model | `viewer-core/message/schema.rs` |
 | CDR wire primitives / selected numeric extraction | `viewer-core/message/cdr/wire.rs`, `numeric.rs` |
+| Scene Box/Object ID validation and rigid placement | `viewer-core/scene_overlay.rs`, `feature/transform.rs` |
+| Optional Native Wasm execution / wire ABI | `viewer-extension/wasm.rs` |
+| Native extension output lifecycle and fixed-frame placement | `viewer-native/scene_extension.rs` |
 | Path feature state | `viewer-core/feature/path.rs` |
 | Point Cloud admission/decode/state updates | `viewer-core/feature/controllers/point_cloud.rs` |
 | Source-neutral derived artifact identity | `viewer-core/derived/source_fingerprint.rs` |

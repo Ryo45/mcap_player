@@ -23,6 +23,41 @@ impl PathController {
         }
     }
 
+    pub(crate) fn for_stream(stream: StreamId) -> Self {
+        Self {
+            stream: Some(stream),
+            state: PathState::default(),
+            counters: ProcessingCounters::default(),
+        }
+    }
+
+    pub(crate) fn accepts(&self, stream: StreamId) -> bool {
+        self.stream == Some(stream)
+    }
+
+    /// Latest-only additional inputs coalesce within a committed source batch, before decode.
+    /// No serialized chunk backing escapes this call. Equal log times use final batch order.
+    pub(crate) fn process_latest(&mut self, messages: &[RawMessage]) {
+        let mut latest: Option<(usize, &RawMessage)> = None;
+        let mut count = 0u64;
+        for (index, message) in messages
+            .iter()
+            .enumerate()
+            .filter(|(_, message)| self.accepts(message.stream_id))
+        {
+            count += 1;
+            if latest.is_none_or(|(previous, old)| {
+                (message.arrival_time, index) >= (old.arrival_time, previous)
+            }) {
+                latest = Some((index, message));
+            }
+        }
+        if let Some((_, message)) = latest {
+            self.counters.dropped = self.counters.dropped.saturating_add(count - 1);
+            let _ = self.decode_and_apply(message);
+        }
+    }
+
     pub fn process(&mut self, message: &RawMessage) -> bool {
         if Some(message.stream_id) != self.stream {
             return false;
