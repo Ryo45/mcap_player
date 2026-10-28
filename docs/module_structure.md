@@ -10,6 +10,8 @@ a reason to split a module; ownership and independent reasons to change are.
 - `viewer-core`: source-neutral facts, schema/CDR, pure reductions, clocks,
   feature state and presentation. No dependency on MCAP or its codecs.
 - `viewer-mcap`: MCAP bytes, indexed access, recording traversal and queries.
+- `viewer-extension`: optional Native Core Wasm execution and its bounded wire ABI;
+  source-neutral Scene geometry remains in viewer-core, GPU ownership in scene-renderer.
 - Frontend apps: platform I/O orchestration, async/thread lifecycle and GUI.
 - Renderer crates: camera preparation/textures, BEV or Scene GPU rendering.
 - `viewer-remote-protocol`, `viewer-layout`, `viewer-preview-mcap`: their concrete

@@ -48,11 +48,20 @@ pub(crate) struct PresentationState {
     calibrations: CameraCalibrationSet,
     metrics: PresentationMetrics,
     scene: ScenePresentationState,
+    #[cfg(feature = "scene-extension")]
+    extension: Option<crate::scene_extension::SceneExtensionState>,
     platform: Option<viewer_core::PlatformGeometry>,
     path_projection: viewer_core::PathProjectionPolicy,
 }
 
 impl PresentationState {
+    #[cfg(feature = "scene-extension")]
+    pub(crate) fn set_scene_extension(
+        &mut self,
+        extension: Box<dyn viewer_extension::VisualizationExtension>,
+    ) {
+        self.extension = Some(crate::scene_extension::SceneExtensionState::new(extension));
+    }
     pub(crate) fn set_platform(&mut self, geometry: Option<viewer_core::PlatformGeometry>) {
         self.platform = geometry;
         self.scene.reset();
@@ -130,7 +139,16 @@ impl PresentationState {
         let static_transform_count = transforms.state().static_len();
         let dynamic_transform_count = transforms.state().dynamic_len();
         let empty = viewer_core::PointCloudState::default();
-        let scene = self.scene.build(viewer_core::ScenePresentationInput {
+        #[cfg(feature = "scene-extension")]
+        if let Some(extension) = &mut self.extension {
+            extension.update(
+                path.state(),
+                transforms.state(),
+                &self.path_projection.fixed_frame,
+            );
+        }
+        #[allow(unused_mut)]
+        let mut scene = self.scene.build(viewer_core::ScenePresentationInput {
             path: path.state(),
             telemetry: odometry.state(),
             point_cloud: point_cloud_controller.map_or(&empty, |c| c.point_cloud()),
@@ -140,6 +158,12 @@ impl PresentationState {
             accumulate: accumulate_points,
             coloring,
         });
+        #[cfg(feature = "scene-extension")]
+        if let Some(extension) = &self.extension {
+            scene.overlay = extension.lines();
+            scene.overlay_revision = extension.revision();
+            scene.diagnostics.extension_error = extension.error().map(str::to_owned);
+        }
         let bev = scene.bev;
         PresentationFrame {
             viewer,
@@ -173,6 +197,10 @@ impl PresentationState {
     }
 
     pub(crate) fn apply_transition(&mut self, _transition: PresentationTransition) {
+        #[cfg(feature = "scene-extension")]
+        if let Some(extension) = &mut self.extension {
+            extension.reset();
+        }
         self.camera_overlays.reset_source();
         self.metrics.reset();
         self.scene.reset();

@@ -14,6 +14,8 @@ mod panels;
 mod presentation;
 mod preview;
 mod query_error;
+#[cfg(feature = "scene-extension")]
+mod scene_extension;
 mod session;
 mod signal_view;
 mod ui_components;
@@ -37,6 +39,17 @@ fn main() -> Result<()> {
     if let Some(topic) = &args.point_cloud_topic {
         workspace.set_point_cloud_topic(topic.clone());
     }
+    #[allow(unused_mut)]
+    let mut presentation_state = PresentationState::default();
+    #[cfg(feature = "scene-extension")]
+    if let Some(manifest) = &args.scene_extension {
+        use viewer_extension::VisualizationExtension;
+        let extension = viewer_extension::WasmExtension::load(manifest)?;
+        workspace.enable_scene_extension(&extension.descriptor().topic)?;
+        presentation_state.set_scene_extension(Box::new(extension));
+    }
+    #[cfg(not(feature = "scene-extension"))]
+    debug_assert!(args.scene_extension.is_none());
     let event_loop = EventLoop::new()?;
     event_loop.set_control_flow(ControlFlow::Poll);
     let mut app = App {
@@ -46,7 +59,7 @@ fn main() -> Result<()> {
         workspace,
         preview: PreviewCoordinator::default(),
         bookmarks: bookmarks::BookmarkState::default(),
-        presentation_state: PresentationState::default(),
+        presentation_state,
         graphics: None,
         last_frame: Instant::now(),
         diagnostics: AppDiagnostics::default(),

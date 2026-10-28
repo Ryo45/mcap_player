@@ -20,6 +20,8 @@ mod message;
 mod playback;
 mod presentation;
 mod recording;
+mod scene_overlay;
+pub use scene_overlay::{MAX_OVERLAY_LINES, SceneLine, SceneOverlay, SceneOverlayError};
 
 pub use derived::{
     Bookmark, BookmarkDocument, BookmarkId, BookmarkValidationError,

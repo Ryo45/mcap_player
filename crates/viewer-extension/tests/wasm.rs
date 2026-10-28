@@ -1,0 +1,149 @@
+#![cfg(not(target_arch = "wasm32"))]
+
+use viewer_core::{ArrivalTime, MeasurementTime, PathFrame};
+use viewer_extension::{ExtensionDescriptor, VisualizationExtension, WasmExtension};
+
+fn descriptor() -> ExtensionDescriptor {
+    ExtensionDescriptor {
+        id: "test".into(),
+        api_version: 1,
+        topic: "/planning/path".into(),
+        schema: "nav_msgs/msg/Path".into(),
+        input: "path_positions_v1".into(),
+    }
+}
+fn path() -> PathFrame {
+    PathFrame {
+        arrival_time: ArrivalTime(20),
+        measurement_time: MeasurementTime(10),
+        frame_id: "odom".into(),
+        points: vec![[1., 2., 3.]],
+    }
+}
+fn guest(body: &str) -> WasmExtension {
+    let wat = format!(
+        r#"(module
+      (memory (export "memory") 1)
+      (func (export "api_version") (result i32) i32.const 1)
+      (func (export "init"))
+      (func (export "input_ptr") (result i32) i32.const 0)
+      (func (export "output_ptr") (result i32) i32.const 32768)
+      (func (export "update") (param i32) (result i32) {body}))"#
+    );
+    WasmExtension::from_bytes(descriptor(), &wat::parse_str(wat).unwrap()).unwrap()
+}
+#[test]
+fn empty_output_and_fresh_reset() {
+    let mut extension = guest("i32.const 0");
+    assert!(extension.update(&path()).unwrap().lines().is_empty());
+    extension.reset().unwrap();
+    assert!(extension.update(&path()).unwrap().lines().is_empty());
+}
+#[test]
+fn traps_budget_and_output_validation_are_errors() {
+    for code in [
+        "unreachable",
+        "(loop $forever br $forever) i32.const 0",
+        "i32.const 4097",
+        "i32.const -1",
+        "i32.const 32772 f32.const nan f32.store i32.const 1",
+    ] {
+        assert!(guest(code).update(&path()).is_err(), "{code}");
+    }
+    assert!(
+        guest("memory.size drop i32.const 129 memory.grow drop i32.const 0")
+            .update(&path())
+            .is_err()
+    );
+    let mut extension = guest("i32.const 0");
+    let mut oversized = path();
+    oversized.points = vec![[0.; 3]; 1025];
+    assert!(extension.update(&oversized).is_err());
+}
+#[test]
+fn imports_start_and_initial_excess_memory_rejected() {
+    for wat in [
+        r#"(module (import "wasi_snapshot_preview1" "proc_exit" (func (param i32))))"#,
+        "(module (memory 129))",
+        "(module (func $start) (start $start))",
+    ] {
+        assert!(WasmExtension::from_bytes(descriptor(), &wat::parse_str(wat).unwrap()).is_err());
+    }
+}
+#[test]
+#[ignore = "build independent examples/path-boxes Wasm first; see docs/scene_visualization_extensions.md"]
+fn independent_rust_guest_produces_boxes_and_recovers_after_reset() {
+    let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples/path-boxes/extension.json");
+    let mut extension = WasmExtension::load(&manifest).unwrap();
+    let output = extension.update(&path()).unwrap();
+    assert_eq!(output.lines().len(), 12);
+    assert!(
+        output
+            .lines()
+            .iter()
+            .all(|line| line.start[0] >= 0.85 && line.end[2] <= 3.5)
+    );
+    assert_eq!(output.lines()[0].color, [1., 0.08, 0.25]);
+    extension.reset().unwrap();
+    assert_eq!(extension.update(&path()).unwrap(), output);
+    let mut moved = path();
+    moved.points[0][0] += 10.;
+    assert_ne!(extension.update(&moved).unwrap(), output);
+}
+
+#[test]
+fn malformed_abi_and_memory_ranges_are_rejected() {
+    let basic = r#"(module
+      (memory (export "memory") 1)
+      (func (export "api_version") (result i32) i32.const 1)
+      (func (export "init"))
+      (func (export "input_ptr") (result i32) i32.const 0)
+      (func (export "output_ptr") (result i32) i32.const 32768)
+      (func (export "update") (param i32) (result i32) i32.const 1))"#;
+    for modified in [
+        basic.replace("i32.const 1)", "i32.const 2)"),
+        basic.replace(
+            "(func (export \"init\"))",
+            "(func (export \"init\") (loop $x br $x))",
+        ),
+    ] {
+        assert!(
+            WasmExtension::from_bytes(descriptor(), &wat::parse_str(modified).unwrap()).is_err()
+        );
+    }
+    for modified in [
+        basic.replace("i32.const 0)", "i32.const -1)"),
+        basic.replace("i32.const 32768)", "i32.const 65530)"),
+    ] {
+        let mut guest =
+            WasmExtension::from_bytes(descriptor(), &wat::parse_str(modified).unwrap()).unwrap();
+        assert!(guest.update(&path()).is_err());
+    }
+    let mut descriptor = descriptor();
+    descriptor.api_version = 2;
+    assert!(WasmExtension::from_bytes(descriptor, &wat::parse_str(basic).unwrap()).is_err());
+}
+
+#[test]
+#[ignore = "manual release timing; requires independent path-boxes guest build"]
+fn measure_independent_guest_updates() {
+    let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples/path-boxes/extension.json");
+    let mut guest = WasmExtension::load(&manifest).unwrap();
+    let mut frame = path();
+    frame.points = (0..1024).map(|i| [i as f64 * 0.01, 0., 0.]).collect();
+    let mut durations = Vec::new();
+    for _ in 0..1000 {
+        let started = std::time::Instant::now();
+        let output = guest.update(&frame).unwrap();
+        assert_eq!(output.lines().len(), 384);
+        durations.push(started.elapsed().as_secs_f64() * 1000.);
+        std::hint::black_box(output);
+    }
+    durations.sort_by(f64::total_cmp);
+    println!(
+        "guest_update input_points=1024 output_lines=384 n=1000 median_ms={:.6} p95_ms={:.6} max_ms={:.6}",
+        durations[500], durations[950], durations[999]
+    );
+}

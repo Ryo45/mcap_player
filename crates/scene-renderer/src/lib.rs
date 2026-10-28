@@ -1,11 +1,15 @@
 //! Minimal offscreen 3D scene renderer for a world grid, ego wireframe and planned path.
 
 use bytemuck::{Pod, Zeroable};
+use viewer_core::SceneLine;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct SceneFrame<'a> {
     pub revision: u64,
     pub cloud_revision: u64,
+    pub overlay_revision: u64,
+    /// Validated ROS world-frame opaque lines, with an independent GPU upload revision.
+    pub overlay: &'a [SceneLine],
     /// World ROS metre positions, already placed by presentation.
     pub focus: [f32; 3],
     pub forward: [f32; 3],
@@ -24,6 +28,7 @@ pub struct SceneMetrics {
     pub target_creations: u64,
     pub layer_uploads: u64,
     pub point_uploads: u64,
+    pub overlay_uploads: u64,
     pub renders: u64,
 }
 
@@ -103,6 +108,10 @@ pub struct SceneRenderer {
     dynamic_buffer: wgpu::Buffer,
     dynamic_capacity: usize,
     dynamic_vertices: u32,
+    overlay_buffer: wgpu::Buffer,
+    overlay_capacity: usize,
+    overlay_vertices: u32,
+    last_overlay_revision: Option<u64>,
     point_buffer: wgpu::Buffer,
     point_capacity: usize,
     point_count: u32,
@@ -279,6 +288,10 @@ impl SceneRenderer {
             dynamic_buffer,
             dynamic_capacity: 1,
             dynamic_vertices: 0,
+            overlay_buffer: make_empty_vertex_buffer(device, "3D extension lines", 1),
+            overlay_capacity: 1,
+            overlay_vertices: 0,
+            last_overlay_revision: None,
             point_buffer,
             point_capacity: 1,
             point_count: 0,
@@ -292,6 +305,7 @@ impl SceneRenderer {
                 target_creations: 1,
                 layer_uploads: 0,
                 point_uploads: 0,
+                overlay_uploads: 0,
                 renders: 0,
             },
         }
@@ -322,6 +336,31 @@ impl SceneRenderer {
             }
             self.dynamic_vertices = u32::try_from(vertices.len()).unwrap_or(u32::MAX);
             self.metrics.layer_uploads += 1;
+        }
+        if self.last_overlay_revision != Some(frame.overlay_revision) {
+            let mut vertices = Vec::with_capacity(frame.overlay.len().saturating_mul(2));
+            for line in frame.overlay {
+                push_line(
+                    &mut vertices,
+                    ros_to_render(line.start),
+                    ros_to_render(line.end),
+                    line.color,
+                );
+            }
+            if vertices.len() > self.overlay_capacity {
+                self.overlay_capacity = vertices.len().next_power_of_two();
+                self.overlay_buffer =
+                    make_empty_vertex_buffer(device, "3D extension lines", self.overlay_capacity);
+            }
+            if !vertices.is_empty() {
+                queue.write_buffer(&self.overlay_buffer, 0, bytemuck::cast_slice(&vertices));
+            }
+            self.overlay_vertices = vertices.len() as u32;
+            // Empty removal needs no GPU upload.
+            if !vertices.is_empty() {
+                self.metrics.overlay_uploads += 1;
+            }
+            self.last_overlay_revision = Some(frame.overlay_revision);
         }
         let cloud_changed = self.last_cloud_revision != Some(frame.cloud_revision);
         if cloud_changed {
@@ -391,6 +430,10 @@ impl SceneRenderer {
                 pass.set_vertex_buffer(0, self.dynamic_buffer.slice(..));
                 pass.draw(0..self.dynamic_vertices, 0..1);
             }
+            if self.overlay_vertices > 0 {
+                pass.set_vertex_buffer(0, self.overlay_buffer.slice(..));
+                pass.draw(0..self.overlay_vertices, 0..1);
+            }
             if self.point_count > 0 {
                 pass.set_pipeline(if self.opaque_points {
                     &self.opaque_point_pipeline
@@ -411,6 +454,7 @@ impl SceneRenderer {
     pub fn needs_render(&self, frame: SceneFrame<'_>) -> bool {
         self.last_revision != Some(frame.revision)
             || self.last_cloud_revision != Some(frame.cloud_revision)
+            || self.last_overlay_revision != Some(frame.overlay_revision)
             || self.camera_dirty
     }
 
@@ -418,6 +462,7 @@ impl SceneRenderer {
     pub fn invalidate(&mut self) {
         self.last_revision = None;
         self.last_cloud_revision = None;
+        self.last_overlay_revision = None;
     }
 
     /// Linear sampling view for color-managed presentation.
@@ -771,6 +816,8 @@ mod tests {
         let vertices = make_dynamic_lines(SceneFrame {
             revision: 1,
             cloud_revision: 0,
+            overlay_revision: 0,
+            overlay: &[],
             focus: [2.0, 3.0, 0.0],
             forward: [1.0, 0.0, 0.0],
             view_radius: 0.2,

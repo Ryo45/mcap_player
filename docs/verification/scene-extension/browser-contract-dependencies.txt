@@ -1,0 +1,40 @@
+viewer-extension v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-extension)
+├── anyhow v1.0.100
+├── serde v1.0.228
+│   ├── serde_core v1.0.228
+│   └── serde_derive v1.0.228 (proc-macro)
+│       ├── proc-macro2 v1.0.103
+│       │   └── unicode-ident v1.0.22
+│       ├── quote v1.0.42
+│       │   └── proc-macro2 v1.0.103 (*)
+│       └── syn v2.0.111
+│           ├── proc-macro2 v1.0.103 (*)
+│           ├── quote v1.0.42 (*)
+│           └── unicode-ident v1.0.22
+├── serde_json v1.0.151
+│   ├── itoa v1.0.18
+│   ├── memchr v2.7.6
+│   ├── serde_core v1.0.228
+│   └── zmij v1.0.23
+└── viewer-core v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-core)
+    ├── bytes v1.11.0
+    ├── serde v1.0.228 (*)
+    ├── serde_json v1.0.151 (*)
+    └── web-time v1.1.0
+        ├── js-sys v0.3.83
+        │   ├── once_cell v1.21.3
+        │   └── wasm-bindgen v0.2.106
+        │       ├── cfg-if v1.0.4
+        │       ├── once_cell v1.21.3
+        │       ├── wasm-bindgen-macro v0.2.106 (proc-macro)
+        │       │   ├── quote v1.0.42 (*)
+        │       │   └── wasm-bindgen-macro-support v0.2.106
+        │       │       ├── bumpalo v3.19.0
+        │       │       ├── proc-macro2 v1.0.103 (*)
+        │       │       ├── quote v1.0.42 (*)
+        │       │       ├── syn v2.0.111 (*)
+        │       │       └── wasm-bindgen-shared v0.2.106
+        │       │           └── unicode-ident v1.0.22
+        │       └── wasm-bindgen-shared v0.2.106
+        │           └── unicode-ident v1.0.22
+        └── wasm-bindgen v0.2.106 (*)

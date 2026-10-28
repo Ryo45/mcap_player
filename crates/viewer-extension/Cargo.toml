@@ -1,0 +1,17 @@
+[package]
+name = "viewer-extension"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+viewer-core = { path = "../viewer-core" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+wasmi = { version = "2.0", default-features = false, features = ["std", "stable", "validate", "portable-dispatch"] }
+
+[dev-dependencies]
+wat = "1"

@@ -6,9 +6,11 @@ license.workspace = true
 
 [features]
 default = []
+scene-extension = ["dep:viewer-extension"]
 ros2-live = ["dep:rclrs"]
 
 [dependencies]
+viewer-extension = { path = "../../crates/viewer-extension", optional = true }
 viewer-mcap = { path = "../../crates/viewer-mcap" }
 anyhow.workspace = true
 bev-renderer = { path = "../../crates/bev-renderer" }

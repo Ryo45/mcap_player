@@ -1,0 +1,10 @@
+{
+  "wasm": "target/wasm32-unknown-unknown/release/path_boxes.wasm",
+  "extension": {
+    "id": "example.path-boxes",
+    "apiVersion": 1,
+    "topic": "/planning/path",
+    "schema": "nav_msgs/msg/Path",
+    "input": "path_positions_v1"
+  }
+}

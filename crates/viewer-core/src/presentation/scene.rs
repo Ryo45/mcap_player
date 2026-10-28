@@ -15,6 +15,7 @@ pub struct BevSnapshot<'a> {
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct SceneDiagnostics {
+    pub extension_error: Option<String>,
     pub tf_misses: u64,
     pub point_cloud_color_error: Option<&'static str>,
     pub last_tf_route: Option<String>,
@@ -29,6 +30,8 @@ pub struct SceneDiagnostics {
 pub struct SceneSnapshot<'a> {
     pub revision: u64,
     pub cloud_revision: u64,
+    pub overlay_revision: u64,
+    pub overlay: &'a [crate::SceneLine],
     pub focus: [f32; 3],
     pub forward: [f32; 3],
     pub view_radius: f32,
@@ -329,6 +332,8 @@ impl ScenePresentationState {
         SceneSnapshot {
             revision: self.geometry_revision,
             cloud_revision: self.visible_revision,
+            overlay_revision: 0,
+            overlay: &[],
             focus,
             forward,
             view_radius,

@@ -70,3 +70,59 @@ fn opaque_points_occlude_by_distance_in_both_orders() {
         readback.unmap();
     }
 }
+
+#[test]
+#[ignore = "requires a working GPU adapter; run explicitly on Native"]
+fn extension_updates_do_not_upload_existing_layers() {
+    use viewer_core::{SceneLine, SceneOverlay};
+    let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor::default());
+    let adapter = pollster::block_on(instance.request_adapter(&Default::default())).unwrap();
+    eprintln!("Overlay regression adapter: {:?}", adapter.get_info());
+    let (device, queue) = pollster::block_on(adapter.request_device(&Default::default())).unwrap();
+    let mut renderer = SceneRenderer::new(&device, 64, 64);
+    let overlay = SceneOverlay::new(vec![SceneLine {
+        id: 1,
+        start: [0., 0., 1.],
+        end: [1., 0., 1.],
+        color: [1., 0., 0.],
+    }])
+    .unwrap();
+    let base = SceneFrame {
+        cloud: &[[1., 0., 0.]],
+        path: &[[0., 0., 0.], [1., 0., 0.]],
+        ..Default::default()
+    };
+    renderer.render(&device, &queue, base);
+    let initial = renderer.metrics();
+    let frame = SceneFrame {
+        overlay: overlay.lines(),
+        overlay_revision: 1,
+        ..base
+    };
+    assert!(renderer.needs_render(frame));
+    renderer.render(&device, &queue, frame);
+    assert_eq!(
+        renderer.metrics().overlay_uploads,
+        initial.overlay_uploads + 1
+    );
+    assert_eq!(renderer.metrics().layer_uploads, initial.layer_uploads);
+    assert_eq!(renderer.metrics().point_uploads, initial.point_uploads);
+    assert!(!renderer.needs_render(frame));
+    renderer.orbit(1., 1.);
+    renderer.render(&device, &queue, frame);
+    assert_eq!(
+        renderer.metrics().overlay_uploads,
+        initial.overlay_uploads + 1
+    );
+    let removed = SceneFrame {
+        overlay_revision: 2,
+        ..base
+    };
+    renderer.render(&device, &queue, removed);
+    assert_eq!(renderer.overlay_vertices, 0);
+    assert_eq!(
+        renderer.metrics().overlay_uploads,
+        initial.overlay_uploads + 1
+    );
+    assert_eq!(renderer.metrics().point_uploads, initial.point_uploads);
+}

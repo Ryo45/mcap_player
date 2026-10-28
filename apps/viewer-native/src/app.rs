@@ -60,7 +60,7 @@ impl App {
                 .panels
                 .camera_selection(playback.catalog(), &self.args.topic, None, true)
                 .map_err(anyhow::Error::msg)?;
-            let requirements = self.workspace.panels.requirements_for_cameras(&cameras);
+            let requirements = self.workspace.requirements_for_cameras(&cameras);
             let topic = cameras.priority_topic(&self.args.topic).to_owned();
             let session = ViewerSession::from_playback(
                 path,
@@ -350,7 +350,7 @@ impl App {
                                 false,
                             )
                             .map_err(anyhow::Error::msg)?;
-                        let requirements = workspace.panels.requirements_for_cameras(&cameras);
+                        let requirements = workspace.requirements_for_cameras(&cameras);
                         let priority = cameras.priority_topic(&topic);
                         let plan = viewer_core::SessionPlan::build(
                             catalog,
@@ -654,7 +654,7 @@ mod tests {
             .panels
             .camera_selection(playback.catalog(), "/missing/project/camera", None, true)
             .unwrap();
-        let requirements = workspace.panels.requirements_for_cameras(&cameras);
+        let requirements = workspace.requirements_for_cameras(&cameras);
         let session = ViewerSession::from_playback(
             &path,
             playback,
@@ -681,7 +681,7 @@ mod tests {
             .panels
             .camera_selection(playback.catalog(), "", None, true)
             .unwrap();
-        let requirements = workspace.panels.requirements_for_cameras(&cameras);
+        let requirements = workspace.requirements_for_cameras(&cameras);
         let session = ViewerSession::from_playback(
             path,
             playback,
@@ -987,7 +987,7 @@ mod tests {
             .camera_selection(&catalog, "/missing", None, true)
             .unwrap();
         assert!(cameras.available_topics.is_empty());
-        let requirements = workspace.panels.requirements_for_cameras(&cameras);
+        let requirements = workspace.requirements_for_cameras(&cameras);
         let plan = viewer_core::SessionPlan::build(
             &catalog,
             "/missing",

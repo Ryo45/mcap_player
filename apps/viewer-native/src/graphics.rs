@@ -195,6 +195,8 @@ impl Graphics {
         let frame = SceneFrame {
             revision: snapshot.revision,
             cloud_revision: snapshot.cloud_revision,
+            overlay_revision: snapshot.overlay_revision,
+            overlay: snapshot.overlay,
             focus: snapshot.focus,
             forward: snapshot.forward,
             view_radius: snapshot.view_radius,

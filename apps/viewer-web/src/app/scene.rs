@@ -145,6 +145,8 @@ pub(super) fn update_scene_presentation(
         SceneFrame {
             revision: scene.revision,
             cloud_revision: scene.cloud_revision,
+            overlay_revision: scene.overlay_revision,
+            overlay: scene.overlay,
             focus: scene.focus,
             forward: scene.forward,
             view_radius: scene.view_radius,
