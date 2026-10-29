@@ -3,20 +3,23 @@ use std::collections::BTreeMap;
 use viewer_extension::{
     WasmPanel,
     panel::{
-        HostCommand, InputStatus, PanelDefinition, PanelEvent, PanelOutput, PanelScalar,
-        PanelUpdate, UiNode,
+        HostCommand, InputStatus, PanelDefinition, PanelEvent, PanelInputDefinition,
+        PanelInputSnapshot, PanelOutput, PanelUpdate, PanelValue, UiNode,
     },
 };
 fn definition() -> PanelDefinition {
     PanelDefinition {
-        api_version: 1,
+        api_version: 2,
         id: "test".into(),
         title: "Test".into(),
-        topic: "/custom".into(),
-        fields: vec!["value".into()],
-        plots: vec!["value".into()],
-        history_seconds: 10,
-        max_points: 128,
+        inputs: vec![PanelInputDefinition {
+            id: "status".into(),
+            topic: "/custom".into(),
+            fields: vec!["value".into()],
+            plots: vec!["value".into()],
+            history_seconds: 10,
+            max_points: 128,
+        }],
     }
 }
 fn update() -> PanelUpdate {
@@ -25,10 +28,16 @@ fn update() -> PanelUpdate {
         revision: 1,
         cursor_ns: "100".into(),
         source_start_ns: "0".into(),
-        status: InputStatus::Ready,
-        values: BTreeMap::new(),
-        histories: BTreeMap::new(),
-        errors: vec![],
+        inputs: BTreeMap::from([(
+            "status".into(),
+            PanelInputSnapshot {
+                status: InputStatus::Ready,
+                log_time_ns: Some("100".into()),
+                values: BTreeMap::new(),
+                histories: BTreeMap::new(),
+                errors: vec![],
+            },
+        )]),
         events: vec![],
         settings: serde_json::Value::Null,
     }
@@ -44,7 +53,7 @@ fn guest(body: &str, output: &str) -> WasmPanel {
         r#"(module (memory (export "memory") 4)
  (data (i32.const 150000) "{}") (data (i32.const 160000) "{}")
  (global $ptr (mut i32) (i32.const 150000))
- (func (export "panel_api_version") (result i32) i32.const 1)
+ (func (export "panel_api_version") (result i32) i32.const 2)
  (func (export "init")) (func (export "input_ptr") (result i32) i32.const 0)
  (func (export "output_ptr") (result i32) global.get $ptr)
  (func (export "define") (param i32) (result i32) i32.const {})
@@ -88,7 +97,7 @@ fn bounded_output_traps_and_command_permissions() {
         PanelOutput {
             root: UiNode::Plot {
                 title: "x".into(),
-                series: vec!["unknown".into()]
+                series: vec!["status/unknown".into()]
             },
             commands: vec![]
         }
@@ -118,16 +127,22 @@ fn actual_robot_status_panel_guest() {
     let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../examples/robot-status-panel/panel.json");
     let mut panel = WasmPanel::load(&manifest).unwrap();
-    assert_eq!(panel.definition().topic, "/robot/status");
+    assert_eq!(panel.definition().inputs[0].topic, "/robot/status");
     let mut input = update();
     input
+        .inputs
+        .get_mut("status")
+        .unwrap()
         .values
-        .insert("state".into(), PanelScalar::Text("working".into()));
-    input.values.insert(
+        .insert("state".into(), PanelValue::Text("working".into()));
+    input.inputs.get_mut("status").unwrap().values.insert(
         "sequence".into(),
-        PanelScalar::Unsigned("9007199254740993".into()),
+        PanelValue::Unsigned("9007199254740993".into()),
     );
     input
+        .inputs
+        .get_mut("status")
+        .unwrap()
         .histories
         .insert("battery".into(), vec![[0., 90.], [1., 89.]]);
     let output = panel.update(&input).unwrap();
@@ -144,9 +159,9 @@ fn actual_robot_status_panel_guest() {
     );
     panel.reset().unwrap();
     input.events.clear();
-    input.status = InputStatus::MissingTopic;
-    input.values.clear();
-    input.histories.clear();
+    input.inputs.get_mut("status").unwrap().status = InputStatus::MissingTopic;
+    input.inputs.get_mut("status").unwrap().values.clear();
+    input.inputs.get_mut("status").unwrap().histories.clear();
     let text = serde_json::to_string(&panel.update(&input).unwrap()).unwrap();
     assert!(!text.contains("working"));
     assert!(!text.contains("9007199254740993"));
@@ -161,8 +176,13 @@ fn actual_robot_status_panel_update_timing() {
     let mut panel = WasmPanel::load(&manifest).unwrap();
     let mut input = update();
     for field in ["battery", "temperature"] {
-        input.values.insert(field.into(), PanelScalar::Number(42.));
-        input.histories.insert(
+        input
+            .inputs
+            .get_mut("status")
+            .unwrap()
+            .values
+            .insert(field.into(), PanelValue::Number(42.));
+        input.inputs.get_mut("status").unwrap().histories.insert(
             field.into(),
             (0..128)
                 .map(|i| [i as f64 * 0.04, 42. + (i as f64).sin()])
@@ -170,15 +190,21 @@ fn actual_robot_status_panel_update_timing() {
         );
     }
     input
+        .inputs
+        .get_mut("status")
+        .unwrap()
         .values
-        .insert("state".into(), PanelScalar::Text("working".into()));
-    input.values.insert(
+        .insert("state".into(), PanelValue::Text("working".into()));
+    input.inputs.get_mut("status").unwrap().values.insert(
         "sequence".into(),
-        PanelScalar::Unsigned("9007199254740993".into()),
+        PanelValue::Unsigned("9007199254740993".into()),
     );
     input
+        .inputs
+        .get_mut("status")
+        .unwrap()
         .values
-        .insert("enabled".into(), PanelScalar::Bool(true));
+        .insert("enabled".into(), PanelValue::Bool(true));
     let mut times = Vec::new();
     for revision in 0..200 {
         input.revision = revision;
@@ -194,4 +220,39 @@ fn actual_robot_status_panel_update_timing() {
         times[199],
         serde_json::to_vec(&input).unwrap().len()
     );
+}
+
+#[test]
+fn multiple_input_definitions_and_snapshot_bounds() {
+    let mut panel = definition();
+    let mut second = panel.inputs[0].clone();
+    second.id = "tracks".into();
+    second.topic = "/tracks".into();
+    second.fields = vec!["objects[].id".into()];
+    second.plots.clear();
+    panel.inputs.push(second);
+    panel.validate().unwrap();
+    assert!(panel.has_series("status/value"));
+    assert!(!panel.has_series("tracks/value"));
+    assert!(!panel.has_series("value"));
+    panel.inputs[1].id = "status".into();
+    assert!(panel.validate().is_err());
+    panel.inputs[1].id = "tracks".into();
+    panel.inputs[1].plots = vec!["objects[].score".into()];
+    assert!(panel.validate().is_err());
+    let mut data = update();
+    let input = data.inputs.get_mut("status").unwrap();
+    input
+        .values
+        .insert("array".into(), PanelValue::Array(vec![]));
+    input.validate_size().unwrap();
+    input.values.insert(
+        "array".into(),
+        PanelValue::Array(
+            (0..128)
+                .map(|_| PanelValue::Text("x".repeat(256)))
+                .collect(),
+        ),
+    );
+    assert!(input.validate_size().is_err());
 }

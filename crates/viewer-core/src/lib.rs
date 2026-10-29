@@ -106,4 +106,7 @@ pub use message::{
 
 pub use feature::{Detection3DController, Detection3DFrame, Detection3DState};
 
-pub use message::{MessageScalar, ScalarFieldExtractor};
+pub use message::{
+    FieldDecodeBudget, FieldDecodeLimits, MessageScalar, ScalarFieldExtractor,
+    SelectedFieldExtractor, SelectedValue,
+};

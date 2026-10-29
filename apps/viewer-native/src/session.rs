@@ -599,7 +599,7 @@ mod plugin_panel_tests {
             std::thread::yield_now();
         }
         assert_eq!(
-            session.plugin_data().0.values().next().unwrap().status,
+            session.plugin_data().0.values().next().unwrap().inputs["status"].status,
             viewer_extension::panel::InputStatus::Ready
         );
         assert_eq!(session.playback_view().unwrap().cursor, target);

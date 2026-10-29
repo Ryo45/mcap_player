@@ -104,11 +104,17 @@ impl PluginPanel {
             && (self.last_key != Some((data.generation, data.revision)) || !self.events.is_empty())
         {
             self.plots = data
-                .histories
+                .inputs
                 .iter()
+                .flat_map(|(input, snapshot)| {
+                    snapshot
+                        .histories
+                        .iter()
+                        .map(move |(field, points)| (format!("{input}/{field}"), points))
+                })
                 .map(|(id, points)| {
                     (
-                        id.clone(),
+                        id,
                         points
                             .iter()
                             .map(|p| egui_plot::PlotPoint::new(p[0], p[1]))
@@ -246,10 +252,16 @@ mod tests {
             revision: 1,
             cursor_ns: "100".into(),
             source_start_ns: "0".into(),
-            status: viewer_extension::panel::InputStatus::Ready,
-            values: BTreeMap::new(),
-            histories: BTreeMap::new(),
-            errors: vec![],
+            inputs: BTreeMap::from([(
+                "status".into(),
+                viewer_extension::panel::PanelInputSnapshot {
+                    status: viewer_extension::panel::InputStatus::Ready,
+                    log_time_ns: None,
+                    values: BTreeMap::new(),
+                    histories: BTreeMap::new(),
+                    errors: vec![],
+                },
+            )]),
             events: vec![],
             settings: serde_json::Value::Null,
         };
@@ -281,7 +293,7 @@ mod tests {
         assert!(panel.output.is_none());
         assert_eq!(panel.vm.definition(), &definition);
         panel.reset();
-        input.status = viewer_extension::panel::InputStatus::NoPredecessor;
+        input.inputs.clear();
         assert!(panel.vm.update(&input).unwrap().commands.is_empty());
     }
 }

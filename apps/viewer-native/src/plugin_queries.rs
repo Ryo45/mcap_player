@@ -9,10 +9,12 @@ use std::{
     time::{Duration, Instant},
 };
 use viewer_core::{
-    ArrivalTime, DataWindowTimeRange, MessageScalar, RosMessageSchema, ScalarFieldExtractor,
-    StreamId,
+    ArrivalTime, DataWindowTimeRange, FieldDecodeBudget, FieldDecodeLimits, MessageScalar,
+    RosMessageSchema, SelectedFieldExtractor, SelectedValue, StreamId,
 };
-use viewer_extension::panel::{InputStatus, PanelDefinition, PanelScalar, PanelUpdate};
+use viewer_extension::panel::{
+    InputStatus, PanelDefinition, PanelInputDefinition, PanelInputSnapshot, PanelUpdate, PanelValue,
+};
 use viewer_mcap::{LatestMessageReader, McapSource, NumericOverviewPlan, NumericSeriesRequest};
 type Definitions = Vec<(String, PanelDefinition)>;
 struct Job {
@@ -112,10 +114,15 @@ impl PluginQueries {
                     })
                 }
                 Err(error) => {
-                    for (id, _) in &self.definitions {
+                    for (id, definition) in &self.definitions {
                         let mut data = empty(self.generation, 0, view.cursor, view.start);
-                        data.errors
-                            .push(format!("start plugin query worker: {error}"));
+                        for input in &definition.inputs {
+                            let mut snapshot = missing(InputStatus::Unavailable);
+                            snapshot
+                                .errors
+                                .push(format!("start plugin query worker: {error}"));
+                            data.inputs.insert(input.id.clone(), snapshot);
+                        }
                         self.data.insert(id.clone(), data);
                     }
                     return;
@@ -139,6 +146,15 @@ impl PluginQueries {
             ))
         } else {
             view.cursor
+        };
+        // Resuming after an exact paused query must not round the requested time backwards:
+        // its cached history may contain samples later than that rounded target.
+        let target = if view.playing {
+            target
+                .max(self.last_request.map_or(target, |(last, _)| last))
+                .min(view.cursor)
+        } else {
+            target
         };
         if self.busy
             || self.last_request == Some((target, view.playing))
@@ -171,30 +187,27 @@ fn empty(generation: u64, revision: u64, target: ArrivalTime, start: ArrivalTime
         revision,
         cursor_ns: target.0.to_string(),
         source_start_ns: start.0.to_string(),
-        status: InputStatus::Unavailable,
-        values: BTreeMap::new(),
-        histories: BTreeMap::new(),
-        errors: vec![],
+        inputs: BTreeMap::new(),
         events: vec![],
         settings: serde_json::Value::Null,
     }
 }
 struct Projection {
     stream: StreamId,
-    fields: Vec<(String, ScalarFieldExtractor)>,
+    fields: Vec<(String, SelectedFieldExtractor)>,
     history_key: Option<DataWindowTimeRange>,
     history_plan: Option<NumericOverviewPlan>,
     history_updated_at: Option<Instant>,
     history: BTreeMap<String, Vec<[f64; 2]>>,
     latest_time: Option<ArrivalTime>,
-    latest_values: BTreeMap<String, PanelScalar>,
+    latest_values: BTreeMap<String, PanelValue>,
 }
 struct QueryContext {
     generation: u64,
     latest: LatestMessageReader,
-    projections: BTreeMap<String, Result<Projection, String>>,
+    projections: BTreeMap<(String, String), Result<Projection, String>>,
 }
-fn compile(source: &McapSource, definition: &PanelDefinition) -> Result<Projection, String> {
+fn compile(source: &McapSource, definition: &PanelInputDefinition) -> Result<Projection, String> {
     let streams = source
         .catalog()
         .streams
@@ -215,7 +228,7 @@ fn compile(source: &McapSource, definition: &PanelDefinition) -> Result<Projecti
         .iter()
         .map(|path| {
             schema
-                .compile_scalar(path)
+                .compile_field(path)
                 .map(|plan| (path.clone(), plan))
                 .map_err(|e| format!("{path}: {e}"))
         })
@@ -254,131 +267,183 @@ fn compile(source: &McapSource, definition: &PanelDefinition) -> Result<Projecti
         latest_values: BTreeMap::new(),
     })
 }
+fn missing(status: InputStatus) -> PanelInputSnapshot {
+    PanelInputSnapshot {
+        status,
+        log_time_ns: None,
+        values: BTreeMap::new(),
+        histories: BTreeMap::new(),
+        errors: vec![],
+    }
+}
+fn panel_value(value: SelectedValue) -> PanelValue {
+    match value {
+        SelectedValue::Array(values) => {
+            PanelValue::Array(values.into_iter().map(panel_value).collect())
+        }
+        SelectedValue::Scalar(s) => match s {
+            MessageScalar::Bool(v) => PanelValue::Bool(v),
+            MessageScalar::Signed(v) => PanelValue::Signed(v.to_string()),
+            MessageScalar::Unsigned(v) => PanelValue::Unsigned(v.to_string()),
+            MessageScalar::Float(v) => PanelValue::Number(v),
+            MessageScalar::Text(v) => PanelValue::Text(v),
+        },
+    }
+}
+fn query_input(
+    job: &Job,
+    context: &mut QueryContext,
+    panel: &str,
+    definition: &PanelInputDefinition,
+    cancelled: &impl Fn() -> bool,
+) -> PanelInputSnapshot {
+    let range = job.source.time_range();
+    let start = range.start;
+    let projection = context
+        .projections
+        .entry((panel.into(), definition.id.clone()))
+        .or_insert_with(|| compile(&job.source, definition));
+    let p = match projection {
+        Ok(p) => p,
+        Err(error) => {
+            let mut input = missing(if error == "missing topic" {
+                InputStatus::MissingTopic
+            } else {
+                InputStatus::DecodeError
+            });
+            input.errors.push(error.chars().take(512).collect());
+            return input;
+        }
+    };
+    let outcome = (|| -> anyhow::Result<PanelInputSnapshot> {
+        let Some((_, raw)) = context
+            .latest
+            .read_at_cancellable(p.stream, job.target, cancelled)?
+        else {
+            return Ok(missing(InputStatus::NoPredecessor));
+        };
+        anyhow::ensure!(
+            raw.payload.len() <= 2 * 1024 * 1024,
+            "selected message exceeds 2 MiB panel limit"
+        );
+        if p.latest_time != Some(raw.arrival_time) {
+            let mut budget = FieldDecodeBudget::new(FieldDecodeLimits {
+                max_array_len: 128,
+                max_values: 512,
+                max_text_bytes: 2048,
+                max_total_text_bytes: 8192,
+            });
+            let mut values = BTreeMap::new();
+            for (path, extractor) in &p.fields {
+                values.insert(
+                    path.clone(),
+                    panel_value(extractor.extract(&raw.payload, &mut budget)?),
+                );
+            }
+            p.latest_time = Some(raw.arrival_time);
+            p.latest_values = values;
+        }
+        let mut input = missing(InputStatus::Ready);
+        input.log_time_ns = Some(raw.arrival_time.0.to_string());
+        input.values = p.latest_values.clone();
+        let end = if job.playing {
+            start.0.saturating_add(
+                job.target.0.saturating_sub(start.0) / 1_000_000_000 * 1_000_000_000,
+            )
+        } else {
+            job.target.0.saturating_add(1).min(range.end_exclusive.0)
+        };
+        let begin = end
+            .saturating_sub(i64::from(definition.history_seconds) * 1_000_000_000)
+            .max(start.0);
+        if !definition.plots.is_empty() && begin < end {
+            let window = DataWindowTimeRange::new(ArrivalTime(begin), ArrivalTime(end))?;
+            if p.history_key != Some(window)
+                && (!job.playing || due(p.history_updated_at, Duration::from_secs(1)))
+            {
+                p.history.clear();
+                p.history_key = None;
+                let batch = job.source.query_numeric_overview_plan_cancellable(
+                    p.history_plan.as_ref().expect("plots have compiled plans"),
+                    window,
+                    cancelled,
+                )?;
+                for (path, series) in definition.plots.iter().zip(batch.series) {
+                    if series.decode_errors > 0 {
+                        input.errors.push(format!(
+                            "{path}: {} historical decode errors",
+                            series.decode_errors
+                        ));
+                    }
+                    p.history.insert(
+                        path.clone(),
+                        series
+                            .samples
+                            .iter()
+                            .filter(|s| s.arrival_time <= job.target)
+                            .map(|s| {
+                                [
+                                    (s.arrival_time.0 as i128 - start.0 as i128) as f64 / 1e9,
+                                    s.value,
+                                ]
+                            })
+                            .collect(),
+                    );
+                }
+                p.history_key = Some(window);
+                p.history_updated_at = Some(Instant::now());
+            }
+            input.histories = p.history.clone();
+        }
+        input.validate_size()?;
+        Ok(input)
+    })();
+    match outcome {
+        Ok(input) => input,
+        Err(error) => {
+            p.latest_time = None;
+            p.latest_values.clear();
+            p.history.clear();
+            p.history_key = None;
+            p.history_updated_at = None;
+            let mut input = missing(InputStatus::DecodeError);
+            input
+                .errors
+                .push(error.to_string().chars().take(512).collect());
+            input
+        }
+    }
+}
 fn query(
     job: &Job,
     context: &mut QueryContext,
     cancelled: impl Fn() -> bool,
 ) -> BTreeMap<String, PanelUpdate> {
-    let range = job.source.time_range();
-    let start = range.start;
     let mut results = BTreeMap::new();
     for (id, definition) in &job.definitions {
-        let mut update = empty(job.generation, job.revision, job.target, start);
-        let projection = context
-            .projections
-            .entry(id.clone())
-            .or_insert_with(|| compile(&job.source, definition));
-        match projection {
-            Err(error) => {
-                update.status = if error == "missing topic" {
-                    InputStatus::MissingTopic
-                } else {
-                    InputStatus::DecodeError
-                };
-                update.errors.push(error.clone());
+        if cancelled() {
+            break;
+        }
+        let mut update = empty(
+            job.generation,
+            job.revision,
+            job.target,
+            job.source.time_range().start,
+        );
+        for input in &definition.inputs {
+            if cancelled() {
+                break;
             }
-            Ok(p) => {
-                let outcome = (|| -> anyhow::Result<()> {
-                    let Some((_, raw)) = context
-                        .latest
-                        .read_at_cancellable(p.stream, job.target, &cancelled)?
-                    else {
-                        update.status = InputStatus::NoPredecessor;
-                        return Ok(());
-                    };
-                    anyhow::ensure!(
-                        raw.payload.len() <= 2 * 1024 * 1024,
-                        "selected message exceeds 2 MiB panel limit"
-                    );
-                    if p.latest_time != Some(raw.arrival_time) {
-                        let mut values = BTreeMap::new();
-                        for (path, extractor) in &p.fields {
-                            let value = match extractor.extract(&raw.payload, 2048)? {
-                                MessageScalar::Bool(v) => PanelScalar::Bool(v),
-                                MessageScalar::Signed(v) => PanelScalar::Signed(v.to_string()),
-                                MessageScalar::Unsigned(v) => PanelScalar::Unsigned(v.to_string()),
-                                MessageScalar::Float(v) => PanelScalar::Number(v),
-                                MessageScalar::Text(v) => PanelScalar::Text(v),
-                            };
-                            values.insert(path.clone(), value);
-                        }
-                        p.latest_time = Some(raw.arrival_time);
-                        p.latest_values = values;
-                    }
-                    update.values = p.latest_values.clone();
-                    update.status = InputStatus::Ready;
-                    let end = if job.playing {
-                        start.0.saturating_add(
-                            job.target.0.saturating_sub(start.0) / 1_000_000_000 * 1_000_000_000,
-                        )
-                    } else {
-                        job.target.0.saturating_add(1).min(range.end_exclusive.0)
-                    };
-                    let begin = end
-                        .saturating_sub(i64::from(definition.history_seconds) * 1_000_000_000)
-                        .max(start.0);
-                    if !definition.plots.is_empty() && begin < end {
-                        let window =
-                            DataWindowTimeRange::new(ArrivalTime(begin), ArrivalTime(end))?;
-                        if p.history_key != Some(window)
-                            && (!job.playing || due(p.history_updated_at, Duration::from_secs(1)))
-                        {
-                            p.history.clear();
-                            p.history_key = None;
-                            let batch = job.source.query_numeric_overview_plan_cancellable(
-                                p.history_plan
-                                    .as_ref()
-                                    .expect("nonempty plots have compiled plans"),
-                                window,
-                                &cancelled,
-                            )?;
-                            for (path, series) in definition.plots.iter().zip(batch.series) {
-                                if series.decode_errors > 0 {
-                                    update.errors.push(format!(
-                                        "{path}: {} historical decode errors",
-                                        series.decode_errors
-                                    ));
-                                }
-                                p.history.insert(
-                                    path.clone(),
-                                    series
-                                        .samples
-                                        .iter()
-                                        .filter(|s| s.arrival_time <= job.target)
-                                        .map(|s| {
-                                            [
-                                                (s.arrival_time.0 as i128 - start.0 as i128) as f64
-                                                    / 1e9,
-                                                s.value,
-                                            ]
-                                        })
-                                        .collect(),
-                                );
-                            }
-                            p.history_key = Some(window);
-                            p.history_updated_at = Some(Instant::now());
-                        }
-                        update.histories = p.history.clone();
-                    }
-                    Ok(())
-                })();
-                if let Err(error) = outcome {
-                    p.latest_time = None;
-                    p.latest_values.clear();
-                    p.history.clear();
-                    p.history_key = None;
-                    p.history_updated_at = None;
-                    update.status = InputStatus::DecodeError;
-                    update.values.clear();
-                    update.histories.clear();
-                    update.errors.push(error.to_string());
-                }
-            }
+            update.inputs.insert(
+                input.id.clone(),
+                query_input(job, context, id, input, &cancelled),
+            );
         }
         results.insert(id.clone(), update);
     }
     results
 }
+
 fn run(shared: Arc<(Mutex<Mailbox>, Condvar)>, generation: Arc<AtomicU64>) {
     let mut context: Option<QueryContext> = None;
     loop {
@@ -484,16 +549,19 @@ mod tests {
         let mut queries = PluginQueries::default();
         queries.configure(vec![("panel".into(), definition.clone())]);
         let first = wait(&mut queries, &source, range.start);
-        assert_eq!(first.status, InputStatus::NoPredecessor);
+        assert_eq!(first.inputs["status"].status, InputStatus::NoPredecessor);
         queries.invalidate();
         let last = wait(&mut queries, &source, end);
-        assert_eq!(last.status, InputStatus::Ready);
-        assert_eq!(last.values["state"], PanelScalar::Text("navigating".into()));
-        assert!(
-            matches!(&last.values["sequence"],PanelScalar::Unsigned(v) if v.parse::<u64>().unwrap()>9_007_199_254_740_992)
+        assert_eq!(last.inputs["status"].status, InputStatus::Ready);
+        assert_eq!(
+            last.inputs["status"].values["state"],
+            PanelValue::Text("navigating".into())
         );
-        assert!(!last.histories["battery"].is_empty());
-        assert!(last.histories.values().all(|points| {
+        assert!(
+            matches!(&last.inputs["status"].values["sequence"],PanelValue::Unsigned(v) if v.parse::<u64>().unwrap()>9_007_199_254_740_992)
+        );
+        assert!(!last.inputs["status"].histories["battery"].is_empty());
+        assert!(last.inputs["status"].histories.values().all(|points| {
             points.len() <= 128
                 && points
                     .iter()
@@ -515,10 +583,36 @@ mod tests {
         assert_eq!(source.read_diagnostics().file_read_calls, reads);
         // Pausing must bypass that timer and restore exact cursor results immediately.
         assert_eq!(
-            wait(&mut throttled, &source, end).status,
+            wait(&mut throttled, &source, end).inputs["status"].status,
             InputStatus::Ready
         );
         drop(throttled);
+        let mut resumed = PluginQueries::default();
+        resumed.configure(vec![("panel".into(), definition.clone())]);
+        let paused_cursor = ArrivalTime(range.start.0 + 1_550_000_000);
+        let paused = wait(&mut resumed, &source, paused_cursor);
+        resumed.last_started = None;
+        let mut playing = view(&source, paused_cursor);
+        playing.playing = true;
+        let deadline = Instant::now() + Duration::from_secs(3);
+        loop {
+            resumed.poll(Some(&source), Some(playing));
+            if resumed.data["panel"].revision > paused.revision {
+                break;
+            }
+            assert!(Instant::now() < deadline);
+            std::thread::yield_now();
+        }
+        let restored = &resumed.data["panel"];
+        assert_eq!(restored.cursor_ns, paused_cursor.0.to_string());
+        assert!(
+            restored.inputs["status"]
+                .histories
+                .values()
+                .flatten()
+                .all(|point| point[0] <= (paused_cursor.0 - range.start.0) as f64 / 1e9)
+        );
+        drop(resumed);
         let mut job = Job {
             generation: 1,
             revision: 1,
@@ -535,19 +629,26 @@ mod tests {
         let short = query(&job, &mut context, || false);
         context
             .projections
-            .get_mut("panel")
+            .get_mut(&("panel".into(), "status".into()))
             .unwrap()
             .as_mut()
             .unwrap()
             .history_updated_at = Some(Instant::now());
         job.target = end;
         let fast = query(&job, &mut context, || false);
-        assert_eq!(short["panel"].histories, fast["panel"].histories);
+        assert_eq!(
+            short["panel"].inputs["status"].histories,
+            fast["panel"].inputs["status"].histories
+        );
         job.playing = false;
         let paused = query(&job, &mut context, || false);
         assert!(
-            paused["panel"].histories["battery"].last().unwrap()[0]
-                > short["panel"].histories["battery"].last().unwrap()[0]
+            paused["panel"].inputs["status"].histories["battery"]
+                .last()
+                .unwrap()[0]
+                > short["panel"].inputs["status"].histories["battery"]
+                    .last()
+                    .unwrap()[0]
         );
         let generation = queries.generation;
         queries.invalidate();
@@ -555,10 +656,13 @@ mod tests {
         assert_ne!(queries.generation, generation);
         let earlier = ArrivalTime(range.start.0 + (end.0 - range.start.0) / 2);
         let restored = wait(&mut queries, &source, earlier);
-        assert_eq!(restored.status, InputStatus::Ready);
-        assert_ne!(restored.values["battery"], last.values["battery"]);
+        assert_eq!(restored.inputs["status"].status, InputStatus::Ready);
+        assert_ne!(
+            restored.inputs["status"].values["battery"],
+            last.inputs["status"].values["battery"]
+        );
         assert!(
-            restored
+            restored.inputs["status"]
                 .histories
                 .values()
                 .flatten()
@@ -573,26 +677,152 @@ mod tests {
         replacement.take_worker_from(&mut queries);
         let changed = wait(&mut replacement, &alternate, end);
         assert_eq!(
-            changed.values["state"],
-            PanelScalar::Text("charging".into())
+            changed.inputs["status"].values["state"],
+            PanelValue::Text("charging".into())
         );
-        assert_ne!(changed.values["battery"], last.values["battery"]);
+        assert_ne!(
+            changed.inputs["status"].values["battery"],
+            last.inputs["status"].values["battery"]
+        );
         replacement.invalidate();
         let malformed = super::tests::source("malformed");
         let bad = wait(&mut replacement, &malformed, end);
-        assert_eq!(bad.status, InputStatus::DecodeError);
-        assert!(bad.values.is_empty());
-        assert!(bad.histories.is_empty());
+        assert_eq!(bad.inputs["status"].status, InputStatus::DecodeError);
+        assert!(bad.inputs["status"].values.is_empty());
+        assert!(bad.inputs["status"].histories.is_empty());
         replacement.configure(vec![(
             "panel".into(),
             PanelDefinition {
-                topic: "/missing".into(),
+                inputs: vec![PanelInputDefinition {
+                    topic: "/missing".into(),
+                    ..definition.inputs[0].clone()
+                }],
                 ..definition
             },
         )]);
         let missing = wait(&mut replacement, &source, end);
-        assert_eq!(missing.status, InputStatus::MissingTopic);
-        assert!(missing.values.is_empty());
-        assert!(missing.histories.is_empty());
+        assert_eq!(missing.inputs["status"].status, InputStatus::MissingTopic);
+        assert!(missing.inputs["status"].values.is_empty());
+        assert!(missing.inputs["status"].histories.is_empty());
+    }
+    #[test]
+    #[ignore = "build robot-monitor-panel and generate target/plugin-multi-input fixtures first"]
+    fn actual_robot_monitor_arrays_multiple_inputs_and_source_isolation() {
+        let dir = root().join("target/plugin-multi-input");
+        let mut wasm =
+            WasmPanel::load(&root().join("examples/robot-monitor-panel/panel.json")).unwrap();
+        let definition = wasm.definition().clone();
+        assert_eq!(definition.inputs.len(), 2);
+        let source = McapSource::open_file(&dir.join("recording.mcap")).unwrap();
+        let mut queries = PluginQueries::default();
+        queries.configure(vec![("panel".into(), definition.clone())]);
+        let frames = viewer_mcap::FileMessageStream::open(&dir.join("recording.mcap"))
+            .unwrap()
+            .map(Result::unwrap)
+            .filter(|m| m.channel.topic == "/perception/tracks")
+            .map(|m| {
+                (
+                    ArrivalTime(m.log_time as i64),
+                    u32::from_le_bytes(m.data[4..8].try_into().unwrap()),
+                )
+            })
+            .collect::<Vec<_>>();
+        let end = ArrivalTime(source.time_range().end_exclusive.0 - 1);
+        let before = wait(&mut queries, &source, ArrivalTime(frames[0].0.0 - 1));
+        assert_eq!(before.inputs["status"].status, InputStatus::Ready);
+        assert_eq!(before.inputs["tracks"].status, InputStatus::NoPredecessor);
+        for index in [frames.len() - 1, 0, 5, 4, frames.len() - 1] {
+            queries.invalidate();
+            assert!(queries.data.is_empty());
+            wasm.reset().unwrap();
+            let (target, frame) = frames[index];
+            let data = wait(&mut queries, &source, target);
+            for id in ["status", "tracks"] {
+                assert_eq!(data.inputs[id].status, InputStatus::Ready);
+                assert!(
+                    data.inputs[id]
+                        .log_time_ns
+                        .as_ref()
+                        .unwrap()
+                        .parse::<i64>()
+                        .unwrap()
+                        <= target.0
+                );
+            }
+            let tracks = &data.inputs["tracks"];
+            for path in [
+                "objects[].id",
+                "objects[].label",
+                "objects[].confidence",
+                "objects[].distance",
+            ] {
+                let PanelValue::Array(values) = &tracks.values[path] else {
+                    panic!("expected selected array")
+                };
+                assert_eq!(values.len(), (frame % 4) as usize);
+            }
+            let PanelValue::Array(timings) = &tracks.values["timings_ms[]"] else {
+                panic!()
+            };
+            assert_eq!(timings.len(), (frame % 3 + 1) as usize);
+            let output = wasm.update(&data).unwrap();
+            let text = serde_json::to_string(&output).unwrap();
+            if frame % 4 == 0 {
+                assert!(text.contains("No objects in latest perception frame"));
+                assert!(!text.contains("9007199254740993"));
+            } else {
+                assert!(text.contains("9007199254740993"));
+                assert!(text.contains("person"));
+            }
+        }
+        queries.invalidate();
+        let data = wait(&mut queries, &source, end);
+        assert_ne!(
+            data.inputs["status"].log_time_ns,
+            data.inputs["tracks"].log_time_ns
+        );
+        assert!(!data.inputs["status"].histories["battery"].is_empty());
+        for mode in [
+            "malformed",
+            "oversized",
+            "missing-tracks",
+            "missing-status",
+            "alternate",
+        ] {
+            queries.invalidate();
+            queries.poll(Some(&source), Some(view(&source, end)));
+            let replacement = McapSource::open_file(&dir.join(format!("{mode}.mcap"))).unwrap();
+            let mut next = PluginQueries::default();
+            next.configure(vec![("panel".into(), definition.clone())]);
+            next.take_worker_from(&mut queries);
+            queries = next;
+            wasm.reset().unwrap();
+            let data = wait(&mut queries, &replacement, end);
+            let text = serde_json::to_string(&wasm.update(&data).unwrap()).unwrap();
+            match mode {
+                "malformed" | "oversized" => {
+                    assert_eq!(data.inputs["tracks"].status, InputStatus::DecodeError);
+                    assert!(data.inputs["tracks"].values.is_empty());
+                    assert!(data.inputs["tracks"].log_time_ns.is_none());
+                    assert_eq!(data.inputs["status"].status, InputStatus::Ready);
+                    assert!(!text.contains("9007199254740993"));
+                }
+                "missing-tracks" => {
+                    assert_eq!(data.inputs["tracks"].status, InputStatus::MissingTopic);
+                    assert_eq!(data.inputs["status"].status, InputStatus::Ready);
+                }
+                "missing-status" => {
+                    assert_eq!(data.inputs["status"].status, InputStatus::MissingTopic);
+                    assert_eq!(data.inputs["tracks"].status, InputStatus::Ready);
+                    assert!(data.inputs["status"].histories.is_empty());
+                    assert!(text.contains("person"));
+                }
+                _ => {
+                    assert_eq!(data.inputs["tracks"].status, InputStatus::Ready);
+                    assert!(text.contains("alternate"));
+                    assert!(!text.contains("forklift"));
+                }
+            }
+        }
     }
 }

@@ -29,4 +29,7 @@ pub use cdr::{
     encode_detection3d_array_cdr,
 };
 
-pub use cdr::{MessageScalar, ScalarFieldExtractor};
+pub use cdr::{
+    FieldDecodeBudget, FieldDecodeLimits, MessageScalar, ScalarFieldExtractor,
+    SelectedFieldExtractor, SelectedValue,
+};

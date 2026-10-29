@@ -1,0 +1,17 @@
+{
+  "command": [
+    "target/plugin-multi-input/viewer-native",
+    "--mcap",
+    "target/plugin-multi-input/recording.mcap",
+    "--layout",
+    "scene",
+    "--plugin-panel",
+    "examples/robot-monitor-panel/panel.json"
+  ],
+  "source_sha256": "367964919054afaa17fc06557332acf94a7594d89135eb1960033dd6c64afc37",
+  "binary_sha256": "81ec93fa227a8b45cf470f0f442b8fc8b03f55fc743d4a89dea56fcb187db2d9",
+  "guest_sha256": "f408eca09bd8cb29ff44df90b79ed30895f4d44ec6be2a1aa017ecd07a64708d",
+  "adapter": "NVIDIA RTX 5070 Ti / Vulkan",
+  "image": "scene.png",
+  "note": "Inspect actual image; a capture alone does not assert UI content."
+}

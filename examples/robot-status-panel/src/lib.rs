@@ -1,13 +1,13 @@
 //! Standalone Core Wasm guest. ROS/CDR and egui belong to the host.
 use viewer_extension::panel::{
-    HostCommand, InputStatus, MAX_OUTPUT_BYTES, MAX_UPDATE_BYTES, PanelDefinition, PanelEvent,
-    PanelOutput, PanelUpdate, UiNode,
+    HostCommand, InputStatus, MAX_OUTPUT_BYTES, MAX_UPDATE_BYTES, PANEL_API_VERSION,
+    PanelDefinition, PanelEvent, PanelInputDefinition, PanelOutput, PanelUpdate, UiNode,
 };
 static mut INPUT: [u8; MAX_UPDATE_BYTES] = [0; MAX_UPDATE_BYTES];
 static mut OUTPUT: [u8; MAX_OUTPUT_BYTES] = [0; MAX_OUTPUT_BYTES];
 #[unsafe(no_mangle)]
 pub extern "C" fn panel_api_version() -> u32 {
-    1
+    PANEL_API_VERSION
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn init() {}
@@ -48,16 +48,19 @@ pub extern "C" fn define(length: u32) -> u32 {
         return u32::MAX;
     };
     write(PanelDefinition {
-        api_version: 1,
+        api_version: PANEL_API_VERSION,
         id: "robot-status".into(),
         title: "Robot status".into(),
-        topic: settings["topic"].as_str().unwrap_or("/robot/status").into(),
-        fields: ["battery", "temperature", "state", "sequence", "enabled"]
-            .map(String::from)
-            .to_vec(),
-        plots: ["battery", "temperature"].map(String::from).to_vec(),
-        history_seconds: 10,
-        max_points: 128,
+        inputs: vec![PanelInputDefinition {
+            id: "status".into(),
+            topic: settings["topic"].as_str().unwrap_or("/robot/status").into(),
+            fields: ["battery", "temperature", "state", "sequence", "enabled"]
+                .map(String::from)
+                .to_vec(),
+            plots: ["battery", "temperature"].map(String::from).to_vec(),
+            history_seconds: 10,
+            max_points: 128,
+        }],
     })
 }
 #[unsafe(no_mangle)]
@@ -68,7 +71,15 @@ pub extern "C" fn update(length: u32) -> u32 {
     let Ok(update) = serde_json::from_slice::<PanelUpdate>(input) else {
         return u32::MAX;
     };
-    let root = if update.status == InputStatus::Ready {
+    let Some(status) = update.inputs.get("status") else {
+        return write(PanelOutput {
+            root: UiNode::Text {
+                text: "Missing status input".into(),
+            },
+            commands: vec![],
+        });
+    };
+    let root = if status.status == InputStatus::Ready {
         let heading = if cfg!(feature = "alternate") {
             "Robot telemetry — alternate guest"
         } else {
@@ -84,7 +95,7 @@ pub extern "C" fn update(length: u32) -> u32 {
         .into_iter()
         .map(|(key, label, unit)| UiNode::Value {
             label: label.into(),
-            value: update
+            value: status
                 .values
                 .get(key)
                 .map(|v| v.display())
@@ -100,12 +111,12 @@ pub extern "C" fn update(length: u32) -> u32 {
                 UiNode::Row { children: values },
                 UiNode::Plot {
                     title: "Battery / temperature history".into(),
-                    series: vec!["battery".into(), "temperature".into()],
+                    series: vec!["status/battery".into(), "status/temperature".into()],
                 },
                 UiNode::Text {
                     text: format!(
                         "{} reduced samples",
-                        update.histories.values().map(Vec::len).sum::<usize>()
+                        status.histories.values().map(Vec::len).sum::<usize>()
                     ),
                 },
                 UiNode::Button {
@@ -116,7 +127,7 @@ pub extern "C" fn update(length: u32) -> u32 {
         }
     } else {
         UiNode::Text {
-            text: format!("Input {:?}: {}", update.status, update.errors.join("; ")),
+            text: format!("Input {:?}: {}", status.status, status.errors.join("; ")),
         }
     };
     let commands = if update

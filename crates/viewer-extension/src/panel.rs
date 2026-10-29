@@ -2,7 +2,7 @@
 use anyhow::{Result, ensure};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
-pub const PANEL_API_VERSION: u32 = 1;
+pub const PANEL_API_VERSION: u32 = 2;
 pub const MAX_UPDATE_BYTES: usize = 128 * 1024;
 pub const MAX_OUTPUT_BYTES: usize = 64 * 1024;
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -11,6 +11,12 @@ pub struct PanelDefinition {
     pub api_version: u32,
     pub id: String,
     pub title: String,
+    pub inputs: Vec<PanelInputDefinition>,
+}
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PanelInputDefinition {
+    pub id: String,
     pub topic: String,
     pub fields: Vec<String>,
     pub plots: Vec<String>,
@@ -24,49 +30,80 @@ impl PanelDefinition {
             "unsupported panel API"
         );
         ensure!(
-            !self.id.is_empty()
-                && self.id.len() <= 128
-                && self.title.len() <= 256
-                && !self.topic.is_empty()
-                && self.topic.len() <= 1024,
-            "invalid panel identity/topic"
+            !self.id.is_empty() && self.id.len() <= 128 && self.title.len() <= 256,
+            "invalid panel identity"
         );
         ensure!(
-            self.fields.len() <= 16
-                && self.plots.len() <= 4
-                && self.history_seconds >= 1
-                && self.history_seconds <= 60
-                && (1..=256).contains(&self.max_points),
-            "panel demand exceeds limits"
+            !self.inputs.is_empty() && self.inputs.len() <= 4,
+            "panel needs 1..=4 inputs"
         );
-        for paths in [&self.fields, &self.plots] {
-            let mut seen = BTreeSet::new();
-            for p in paths {
-                ensure!(
-                    !p.is_empty() && p.len() <= 128 && seen.insert(p),
-                    "invalid/duplicate selected field"
-                );
+        let mut ids = BTreeSet::new();
+        let mut plots = 0;
+        for input in &self.inputs {
+            ensure!(
+                !input.id.is_empty()
+                    && input.id.len() <= 64
+                    && input
+                        .id
+                        .bytes()
+                        .all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'-')
+                    && ids.insert(&input.id),
+                "invalid/duplicate input id"
+            );
+            ensure!(
+                !input.topic.is_empty()
+                    && input.topic.len() <= 1024
+                    && input.fields.len() <= 16
+                    && input.plots.len() <= 4
+                    && (1..=60).contains(&input.history_seconds)
+                    && (1..=256).contains(&input.max_points),
+                "input demand exceeds limits"
+            );
+            plots += input.plots.len();
+            for paths in [&input.fields, &input.plots] {
+                let mut seen = BTreeSet::new();
+                for path in paths {
+                    ensure!(
+                        !path.is_empty() && path.len() <= 128 && seen.insert(path),
+                        "invalid/duplicate field"
+                    );
+                }
             }
+            ensure!(
+                input.plots.iter().all(|path| !path.contains('[')),
+                "history plots require scalar fields"
+            );
         }
+        ensure!(plots <= 4, "at most four history fields per panel");
         Ok(())
+    }
+    pub fn has_series(&self, reference: &str) -> bool {
+        self.inputs.iter().any(|input| {
+            input
+                .plots
+                .iter()
+                .any(|path| reference == format!("{}/{path}", input.id))
+        })
     }
 }
 /// Integer values are decimal strings: JS/Python need not round through a double.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", content = "value", rename_all = "kebab-case")]
-pub enum PanelScalar {
+pub enum PanelValue {
     Bool(bool),
     Signed(String),
     Unsigned(String),
     Number(f64),
     Text(String),
+    Array(Vec<PanelValue>),
 }
-impl PanelScalar {
+impl PanelValue {
     pub fn display(&self) -> String {
         match self {
             Self::Bool(v) => v.to_string(),
             Self::Signed(v) | Self::Unsigned(v) | Self::Text(v) => v.clone(),
             Self::Number(v) => format!("{v:.2}"),
+            Self::Array(values) => format!("[{} values]", values.len()),
         }
     }
 }
@@ -91,13 +128,19 @@ pub struct PanelUpdate {
     pub revision: u64,
     pub cursor_ns: String,
     pub source_start_ns: String,
+    pub inputs: BTreeMap<String, PanelInputSnapshot>,
+    pub events: Vec<PanelEvent>,
+    pub settings: serde_json::Value,
+}
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PanelInputSnapshot {
     pub status: InputStatus,
-    pub values: BTreeMap<String, PanelScalar>,
+    pub log_time_ns: Option<String>,
+    pub values: BTreeMap<String, PanelValue>,
     /// Bounded min/max-reduced samples; x is seconds relative to source_start_ns.
     pub histories: BTreeMap<String, Vec<[f64; 2]>>,
     pub errors: Vec<String>,
-    pub events: Vec<PanelEvent>,
-    pub settings: serde_json::Value,
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "kebab-case", deny_unknown_fields)]
@@ -177,7 +220,7 @@ impl PanelOutput {
                 UiNode::Plot { title, series } => {
                     check(title)?;
                     ensure!(
-                        series.len() <= 4 && series.iter().all(|id| definition.plots.contains(id)),
+                        series.len() <= 4 && series.iter().all(|id| definition.has_series(id)),
                         "plot references undeclared series"
                     );
                 }
@@ -192,5 +235,28 @@ impl PanelOutput {
             Ok(())
         }
         visit(&self.root, 0, &mut 128, definition, &mut BTreeSet::new())
+    }
+}
+
+/// Per-input bound leaves room for four inputs, settings and events within MAX_UPDATE_BYTES.
+pub const MAX_INPUT_SNAPSHOT_BYTES: usize = 24 * 1024;
+impl PanelInputSnapshot {
+    pub fn validate_size(&self) -> Result<()> {
+        struct Limit(usize);
+        impl std::io::Write for Limit {
+            fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+                self.0 = self.0.checked_sub(bytes.len()).ok_or_else(|| {
+                    std::io::Error::other(
+                        "panel input exceeds 24 KiB; reduce fields/history budget",
+                    )
+                })?;
+                Ok(bytes.len())
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+        serde_json::to_writer(Limit(MAX_INPUT_SNAPSHOT_BYTES), self)?;
+        Ok(())
     }
 }

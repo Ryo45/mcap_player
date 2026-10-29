@@ -212,7 +212,7 @@ Raw topicは複数指定でき、CompressedImageと混在できます。既定Qo
 - [画像トピック選択・Preview修正の最終検証](docs/verification/2026-10-27-camera-focus-followup/README.md)
 - [アーキテクチャ](docs/message_centric_architecture.md) / [module構成](docs/module_structure.md)
 - [Scene Visualization Extensionの最小実装・ビルド手順](docs/scene_visualization_extensions.md)（Nativeの任意機能。Detection3DArray／Pathを入力に外部WasmでScene描画）
-- [Wasm PluginPanel PoCのビルド・実行手順](docs/wasm_plugin_panels.md)（Nativeの任意機能。独自ROSメッセージの現在値・履歴グラフを外部Wasmで定義）
+- [Wasm PluginPanel PoCのビルド・実行手順](docs/wasm_plugin_panels.md)（Nativeの任意機能。複数の独自ROSメッセージ・可変長配列の現在値、履歴グラフを外部Wasmで定義）
 - [Native JPEG](docs/native_jpeg.md) / [Web画像処理](docs/web_jpeg.md) / [Native health panels](docs/native_recording_health.md)
 
 [Docker開発環境](docs/development_container.md)から、ビルド・テスト一式を実行できます。

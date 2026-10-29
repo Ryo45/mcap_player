@@ -44,3 +44,6 @@ pub use detection3d::{
 };
 
 pub use numeric::{MessageScalar, ScalarFieldExtractor};
+
+mod selection;
+pub use selection::{FieldDecodeBudget, FieldDecodeLimits, SelectedFieldExtractor, SelectedValue};

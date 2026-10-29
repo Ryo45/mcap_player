@@ -111,7 +111,12 @@ impl RosMessageSchema {
         }
         Err(unsupported(format!("unknown field {}", path[0])))
     }
-    fn skip(&self, kind: &WireType, depth: usize, budget: &mut usize) -> Result<Skip, DecodeError> {
+    pub(super) fn skip(
+        &self,
+        kind: &WireType,
+        depth: usize,
+        budget: &mut usize,
+    ) -> Result<Skip, DecodeError> {
         if depth >= 32 {
             return Err(unsupported("recursive schema"));
         }
@@ -134,14 +139,18 @@ impl RosMessageSchema {
     }
 }
 #[derive(Clone, Debug)]
-enum Skip {
+pub(super) enum Skip {
     Scalar(usize),
     String,
     Array(Box<Skip>, Option<usize>),
     Message(Vec<Skip>),
 }
 impl Skip {
-    fn apply(&self, reader: &mut Reader<'_>, budget: &mut usize) -> Result<(), DecodeError> {
+    pub(super) fn apply(
+        &self,
+        reader: &mut Reader<'_>,
+        budget: &mut usize,
+    ) -> Result<(), DecodeError> {
         *budget = budget.checked_sub(1).ok_or(DecodeError::InvalidLength)?;
         match self {
             Self::Scalar(size) => {
@@ -198,14 +207,7 @@ impl NumericFieldExtractor {
         RosMessageSchema::for_stream(stream)?.compile_numeric(path)
     }
     fn reader<'a>(&self, payload: &'a [u8]) -> Result<Reader<'a>, DecodeError> {
-        // Plain XCDR1 only. Parameter-list and XCDR2 require different layouts.
-        if payload.len() < 4 {
-            return Err(DecodeError::Truncated);
-        }
-        if payload[0] != 0 || payload[1] > 1 {
-            return Err(DecodeError::InvalidEncapsulation);
-        }
-        let mut reader = Reader::new(payload)?;
+        let mut reader = cdr_reader(payload)?;
         let mut budget = 1_000_000;
         for skip in &self.skips {
             skip.apply(&mut reader, &mut budget)?;
@@ -248,38 +250,53 @@ impl ScalarFieldExtractor {
         max_text_bytes: usize,
     ) -> Result<MessageScalar, DecodeError> {
         let mut reader = self.0.reader(payload)?;
-        if self.0.scalar == "string" {
-            return reader
-                .string_bounded(max_text_bytes)
-                .map(MessageScalar::Text);
-        }
-        let value =
-            reader.scalar_bits(scalar_size(&self.0.scalar).expect("compiled scalar type"))?;
-        Ok(match self.0.scalar.as_str() {
-            "bool" => {
-                if value > 1 {
-                    return Err(DecodeError::InvalidLength);
-                }
-                MessageScalar::Bool(value == 1)
-            }
-            "int8" => MessageScalar::Signed(value as i8 as i64),
-            "int16" => MessageScalar::Signed(value as i16 as i64),
-            "int32" => MessageScalar::Signed(value as i32 as i64),
-            "int64" => MessageScalar::Signed(value as i64),
-            "float32" | "float64" => {
-                let number = if self.0.scalar == "float32" {
-                    f32::from_bits(value as u32) as f64
-                } else {
-                    f64::from_bits(value)
-                };
-                if !number.is_finite() {
-                    return Err(DecodeError::InvalidLength);
-                }
-                MessageScalar::Float(number)
-            }
-            _ => MessageScalar::Unsigned(value),
-        })
+        read_scalar(&self.0.scalar, &mut reader, max_text_bytes)
     }
+}
+pub(super) fn cdr_reader(payload: &[u8]) -> Result<Reader<'_>, DecodeError> {
+    if payload.len() < 4 {
+        return Err(DecodeError::Truncated);
+    }
+    if payload[0] != 0 || payload[1] > 1 {
+        return Err(DecodeError::InvalidEncapsulation);
+    }
+    Reader::new(payload)
+}
+pub(super) fn read_scalar(
+    kind: &str,
+    reader: &mut Reader<'_>,
+    max_text_bytes: usize,
+) -> Result<MessageScalar, DecodeError> {
+    if kind == "string" {
+        return reader
+            .string_bounded(max_text_bytes)
+            .map(MessageScalar::Text);
+    }
+    let value = reader.scalar_bits(scalar_size(kind).expect("compiled scalar type"))?;
+    Ok(match kind {
+        "bool" => {
+            if value > 1 {
+                return Err(DecodeError::InvalidLength);
+            }
+            MessageScalar::Bool(value == 1)
+        }
+        "int8" => MessageScalar::Signed(value as i8 as i64),
+        "int16" => MessageScalar::Signed(value as i16 as i64),
+        "int32" => MessageScalar::Signed(value as i32 as i64),
+        "int64" => MessageScalar::Signed(value as i64),
+        "float32" | "float64" => {
+            let number = if kind == "float32" {
+                f32::from_bits(value as u32) as f64
+            } else {
+                f64::from_bits(value)
+            };
+            if !number.is_finite() {
+                return Err(DecodeError::InvalidLength);
+            }
+            MessageScalar::Float(number)
+        }
+        _ => MessageScalar::Unsigned(value),
+    })
 }
 
 #[cfg(test)]
