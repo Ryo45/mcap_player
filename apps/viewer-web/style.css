@@ -55,3 +55,6 @@ button:disabled { cursor: default; opacity: .5; }
 .physical-settings label { display: block; margin: .4rem 0; }
 
 #physical-settings-error {color: #ff7777;}
+
+#workspace-bindings-status { font-size: .75rem; color: #8ba4b1; overflow-wrap: anywhere; }
+#workspace-bindings-status.error { color: #ff7777; }

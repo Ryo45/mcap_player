@@ -1,0 +1,17 @@
+[
+  {
+    "file": "invalid.json",
+    "exit": 1,
+    "stderr": "Error: workspace bindings target/workspace-bindings/invalid.json\n\nCaused by:\n    workspace bindings JSON: unknown field `unknown`, expected one of `pathTopic`, `odometryTopic`, `pointCloudTopic`, `dynamicTfTopic`, `staticTfTopic` at line 1 column 10\n"
+  },
+  {
+    "file": "empty.json",
+    "exit": 1,
+    "stderr": "Error: workspace bindings target/workspace-bindings/empty.json\n\nCaused by:\n    pointCloudTopic must be nonempty, at most 1024 bytes, and contain no whitespace/control characters\n"
+  },
+  {
+    "file": "not-found.json",
+    "exit": 1,
+    "stderr": "Error: open workspace bindings target/workspace-bindings/not-found.json\n\nCaused by:\n    No such file or directory (os error 2)\n"
+  }
+]

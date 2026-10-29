@@ -62,6 +62,7 @@ impl LocalCatalog {
     pub(crate) fn from_summary(
         summary: &mcap::Summary,
         primary_camera_topic: &str,
+        bindings: &viewer_core::WorkspaceBindings,
     ) -> Result<Self, LocalCatalogError> {
         if summary.chunk_indexes.is_empty() {
             return Err(LocalCatalogError::MissingChunkIndex);
@@ -126,7 +127,7 @@ impl LocalCatalog {
             streams,
             capabilities: SourceCapabilities::INDEXED_RECORDING,
         };
-        let plan = crate::playback::web_session_plan(&core, primary_camera_topic)
+        let plan = crate::playback::web_session_plan(&core, primary_camera_topic, bindings)
             .map_err(LocalCatalogError::from)?;
         plan.validate_recording_capabilities(core.capabilities)
             .map_err(LocalCatalogError::from)?;
@@ -194,8 +195,12 @@ mod tests {
             .unwrap()
             .checked_add(1)
             .unwrap();
-        let catalog =
-            LocalCatalog::from_summary(&summary, "/camera/front/image/compressed").unwrap();
+        let catalog = LocalCatalog::from_summary(
+            &summary,
+            "/camera/front/image/compressed",
+            &crate::workspace_bindings::bundled(),
+        )
+        .unwrap();
 
         assert_eq!(
             catalog
@@ -241,7 +246,12 @@ mod schema_parity_tests {
         .unwrap();
         let summary = mcap::Summary::read(&bytes).unwrap().unwrap();
         let native = viewer_mcap::McapSource::copy_from_slice((bytes).as_ref()).unwrap();
-        let local = LocalCatalog::from_summary(&summary, "/camera/front/image/compressed").unwrap();
+        let local = LocalCatalog::from_summary(
+            &summary,
+            "/camera/front/image/compressed",
+            &crate::workspace_bindings::bundled(),
+        )
+        .unwrap();
         assert_eq!(native.catalog().streams, local.core.streams);
         for stream in &local.core.streams {
             let schema = summary.channels[&(stream.id.0 as u16)]
@@ -252,5 +262,56 @@ mod schema_parity_tests {
             assert_eq!(definition.encoding, schema.encoding);
             assert_eq!(definition.data.as_ref(), schema.data.as_ref());
         }
+    }
+    #[test]
+    fn explicit_bindings_select_renamed_local_streams() {
+        let bytes = std::fs::read(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap"),
+        )
+        .unwrap();
+        let mut summary = mcap::Summary::read(&bytes).unwrap().unwrap();
+        let mut bindings = crate::workspace_bindings::bundled();
+        for topic in [
+            &mut bindings.path_topic,
+            &mut bindings.odometry_topic,
+            &mut bindings.point_cloud_topic,
+            &mut bindings.dynamic_tf_topic,
+            &mut bindings.static_tf_topic,
+        ] {
+            *topic = format!("/robot{topic}");
+        }
+        for channel in summary.channels.values_mut() {
+            if !channel.topic.starts_with("/camera/") {
+                let mut updated = channel.as_ref().clone();
+                updated.topic = format!("/robot{}", updated.topic);
+                *channel = std::sync::Arc::new(updated);
+            }
+        }
+        let catalog =
+            LocalCatalog::from_summary(&summary, "/camera/front/image/compressed", &bindings)
+                .unwrap();
+        assert_eq!(
+            catalog.plan.path_stream().unwrap().topic,
+            bindings.path_topic
+        );
+        assert_eq!(
+            catalog.plan.odometry_stream().unwrap().topic,
+            bindings.odometry_topic
+        );
+        assert_eq!(
+            catalog.plan.point_cloud_stream().unwrap().topic,
+            bindings.point_cloud_topic
+        );
+        assert!(catalog.selected_topics.contains(&bindings.dynamic_tf_topic));
+        assert!(catalog.selected_topics.contains(&bindings.static_tf_topic));
+        let default = LocalCatalog::from_summary(
+            &summary,
+            "/camera/front/image/compressed",
+            &crate::workspace_bindings::bundled(),
+        )
+        .unwrap();
+        assert!(default.plan.path_stream().is_none());
+        assert!(default.plan.point_cloud_stream().is_none());
     }
 }

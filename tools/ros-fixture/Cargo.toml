@@ -10,3 +10,6 @@ anyhow.workspace = true
 image = { workspace = true, features = ["png"] }
 mcap = { workspace = true, features = ["lz4", "zstd"] }
 viewer-core = { path = "../../crates/viewer-core" }
+
+[dev-dependencies]
+serde_json.workspace = true

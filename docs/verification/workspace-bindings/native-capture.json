@@ -1,0 +1,15 @@
+{
+  "command": [
+    "target/workspace-bindings/viewer-native",
+    "--mcap",
+    "target/workspace-bindings/recording.mcap",
+    "--layout",
+    "monitor",
+    "--workspace-bindings",
+    "target/workspace-bindings/bindings.json"
+  ],
+  "source_sha256": "1553dc665ef6cc70fea5b1a7ab2c83072391883f7caae70f1addc5caf18e1274",
+  "binary_sha256": "32e767b1c60080d25f6e13d29c25c65bf84b42df41c188e19f07983b56a30994",
+  "bindings_sha256": "cc173026b60b33478240ff314da25558d1daba4b3be39062b5aa06bee9d8f9c3",
+  "image": "native.png"
+}

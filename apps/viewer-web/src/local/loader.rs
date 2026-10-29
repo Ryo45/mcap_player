@@ -653,13 +653,14 @@ impl RestoreWork {
 pub(crate) async fn open_browser_mcap(
     file: File,
     primary_camera_topic: &str,
+    bindings: &viewer_core::WorkspaceBindings,
 ) -> Result<BrowserMcapRecording, DataLoadError> {
     let file_size = browser_file_size(&file)?;
     let started = Date::now();
     let (summary, reads, bytes) = read_browser_summary(&file, file_size).await?;
     let latency_ms = Date::now() - started;
-    let catalog =
-        LocalCatalog::from_summary(&summary, primary_camera_topic).map_err(DataLoadError::from)?;
+    let catalog = LocalCatalog::from_summary(&summary, primary_camera_topic, bindings)
+        .map_err(DataLoadError::from)?;
     let selected_topics = catalog.selected_topics.clone();
     let summary = Rc::new(summary);
     let loader = BrowserMcapWindowLoader::new(
@@ -1659,7 +1660,12 @@ mod tests {
     fn camera_selection_falls_back_to_an_available_topic() {
         let bytes = camera_recording(None);
         let summary = Summary::read(&bytes).unwrap().unwrap();
-        let catalog = crate::local::LocalCatalog::from_summary(&summary, "/absent-camera").unwrap();
+        let catalog = crate::local::LocalCatalog::from_summary(
+            &summary,
+            "/absent-camera",
+            &crate::workspace_bindings::bundled(),
+        )
+        .unwrap();
         assert_eq!(catalog.plan.primary_camera_topic(), Some("/camera"));
     }
 
@@ -2082,7 +2088,12 @@ mod tests {
             viewer_core::ProcessingCounters,
         ) {
             let summary = Summary::read(bytes).unwrap().unwrap();
-            let catalog = LocalCatalog::from_summary(&summary, "/camera").unwrap();
+            let catalog = LocalCatalog::from_summary(
+                &summary,
+                "/camera",
+                &crate::workspace_bindings::bundled(),
+            )
+            .unwrap();
             let range = DataWindowTimeRange::new(ArrivalTime(1_000), ArrivalTime(1_031)).unwrap();
             let loaded = collect_window_from_bytes_for_test(
                 &summary,
@@ -2196,8 +2207,12 @@ mod tests {
             }
         }
         let summary = summary_reader.finish().unwrap();
-        let catalog =
-            LocalCatalog::from_summary(&summary, "/camera/front/image/compressed").unwrap();
+        let catalog = LocalCatalog::from_summary(
+            &summary,
+            "/camera/front/image/compressed",
+            &crate::workspace_bindings::bundled(),
+        )
+        .unwrap();
         let recording = catalog.core.time_range.unwrap();
         let end = ArrivalTime(
             recording

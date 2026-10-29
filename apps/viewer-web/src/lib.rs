@@ -10,6 +10,8 @@ mod playback;
 mod remote;
 #[cfg(any(test, target_arch = "wasm32"))]
 mod topics;
+#[cfg(any(test, target_arch = "wasm32"))]
+mod workspace_bindings;
 
 #[cfg(any(test, target_arch = "wasm32"))]
 mod camera_bitmap;

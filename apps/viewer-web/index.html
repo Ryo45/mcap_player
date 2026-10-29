@@ -11,6 +11,9 @@
 <body>
   <header>
     <label class="file">Open MCAP <input id="mcap-file" type="file" accept=".mcap"></label>
+    <label class="file">Workspace bindings JSON <input id="workspace-bindings-file" type="file" accept=".json,application/json"></label>
+    <button id="workspace-bindings-reset" type="button">Use bundled bindings</button>
+    <span id="workspace-bindings-status" role="status">Bundled default · for next recording</span>
     <button id="play">Play</button>
     <select id="speed" aria-label="Playback speed">
       <option value="0.25">0.25x</option><option value="0.5">0.5x</option>
@@ -49,7 +52,7 @@
         <summary id="platform-geometry-label">Platform geometry / path / calibration</summary>
         <label><input id="platform-enabled" type="checkbox" checked> Show configured physical body</label>
         <label>Platform geometry JSON <input id="platform-geometry-file" type="file" accept=".json"></label>
-        <label>Point cloud topic (before opening recording) <input id="point-cloud-topic" value="/scan" size="20" maxlength="1024"></label>
+        <label>Point cloud topic (before opening recording) <input id="point-cloud-topic" value="" placeholder="From bindings (default /scan)" size="20" maxlength="1024"></label>
         <label>World frame <input id="fixed-frame" value="odom" size="12"></label>
         <label>Ground frame (empty = original Path z) <input id="ground-frame" value="" size="16"></label>
         <label>Camera calibration JSON <input id="camera-calibration-file" type="file" accept=".json"></label>

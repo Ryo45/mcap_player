@@ -16,26 +16,6 @@ use viewer_core::{CameraId, OdometryController, PathController};
 #[cfg(target_arch = "wasm32")]
 use viewer_core::{PlaybackPerformance, StageTiming};
 
-const WEB_WORKSPACE_BINDINGS: &str = include_str!("../../../config/workspace_bindings.json");
-
-pub(crate) fn web_workspace_bindings() -> WorkspaceBindings {
-    #[allow(unused_mut)]
-    let mut bindings: WorkspaceBindings = serde_json::from_str(WEB_WORKSPACE_BINDINGS)
-        .expect("bundled Web workspace bindings must be valid");
-    #[cfg(target_arch = "wasm32")]
-    {
-        use wasm_bindgen::JsCast;
-        if let Some(input) = web_sys::window()
-            .and_then(|w| w.document())
-            .and_then(|d| d.get_element_by_id("point-cloud-topic"))
-            .and_then(|e| e.dyn_into::<web_sys::HtmlInputElement>().ok())
-        {
-            bindings.point_cloud_topic = input.value();
-        }
-    }
-    bindings
-}
-
 #[cfg(target_arch = "wasm32")]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum PlaybackSourceKind {
@@ -542,6 +522,7 @@ impl WebPlayback {
 pub(crate) fn web_session_plan(
     catalog: &SourceCatalog,
     preferred_camera: &str,
+    bindings: &WorkspaceBindings,
 ) -> Result<SessionPlan, viewer_core::SessionPlanError> {
     let mut requirements = PlaybackRequirements::empty();
     let cameras = camera_streams(catalog).collect::<Vec<_>>();
@@ -557,7 +538,7 @@ pub(crate) fn web_session_plan(
     requirements.optional_odometry();
     requirements.optional_point_cloud();
     requirements.optional_transforms();
-    SessionPlan::build(catalog, priority, &requirements, &web_workspace_bindings())
+    SessionPlan::build(catalog, priority, &requirements, bindings)
 }
 
 #[cfg(test)]
@@ -592,7 +573,7 @@ mod tests {
             }],
             Vec::new(),
         );
-        crate::remote::adapt_catalog(&catalog).unwrap()
+        crate::remote::adapt_catalog(&catalog, &crate::workspace_bindings::bundled()).unwrap()
     }
 
     fn remote_catalog() -> RemoteCatalog {
@@ -605,7 +586,12 @@ mod tests {
         second.id = StreamId(2);
         second.topic = "/project/another/image".into();
         catalog.core.streams.push(second);
-        catalog.plan = web_session_plan(&catalog.core, "/camera").unwrap();
+        catalog.plan = web_session_plan(
+            &catalog.core,
+            "/camera",
+            &crate::workspace_bindings::bundled(),
+        )
+        .unwrap();
         catalog.selected_streams = catalog
             .plan
             .selected_stream_ids()
@@ -683,9 +669,12 @@ mod tests {
         )
         .unwrap();
         let summary = mcap::Summary::read(&bytes).unwrap().unwrap();
-        let local =
-            crate::local::LocalCatalog::from_summary(&summary, "/camera/front/image/compressed")
-                .unwrap();
+        let local = crate::local::LocalCatalog::from_summary(
+            &summary,
+            "/camera/front/image/compressed",
+            &crate::workspace_bindings::bundled(),
+        )
+        .unwrap();
         let start = local.core.time_range.unwrap().start;
         let target = ArrivalTime(start.0 + 2_000_000_000);
         let loaded = crate::local::collect_window_from_bytes_for_test(
@@ -765,7 +754,7 @@ mod tests {
             ],
             Vec::new(),
         );
-        crate::remote::adapt_catalog(&catalog).unwrap()
+        crate::remote::adapt_catalog(&catalog, &crate::workspace_bindings::bundled()).unwrap()
     }
 
     fn camera_message(time: i64) -> RawMessage {
@@ -1224,9 +1213,12 @@ mod tests {
         )
         .unwrap();
         let summary = mcap::Summary::read(&bytes).unwrap().unwrap();
-        let catalog =
-            crate::local::LocalCatalog::from_summary(&summary, "/camera/front/image/compressed")
-                .unwrap();
+        let catalog = crate::local::LocalCatalog::from_summary(
+            &summary,
+            "/camera/front/image/compressed",
+            &crate::workspace_bindings::bundled(),
+        )
+        .unwrap();
         let recording = catalog.core.time_range.unwrap();
         let window_end = viewer_core::ArrivalTime(
             recording

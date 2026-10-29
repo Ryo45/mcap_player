@@ -531,3 +531,71 @@ mod numeric_demand_tests {
         std::fs::remove_file(path).unwrap();
     }
 }
+
+#[cfg(test)]
+mod bindings_recording_tests {
+    use super::*;
+    #[test]
+    #[ignore = "generate target/workspace-bindings fixture first; docker/check.sh runs this gate"]
+    fn actual_workspace_bindings_recording_seek_and_camera_reselection() {
+        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../target/workspace-bindings");
+        let bindings =
+            crate::workspace_bindings::load(Some(&dir.join("bindings.json")), None).unwrap();
+        let mut workspace = crate::workspace::NativeWorkspace::default();
+        workspace.set_bindings(bindings.clone());
+        let requirements = workspace.data_requirements().playback;
+        let mut session = ViewerSession::open(
+            &dir.join("recording.mcap"),
+            "/camera/front/image/compressed".into(),
+            &requirements,
+            workspace.bindings(),
+        )
+        .unwrap();
+        workspace.configure_session(session.plan());
+        assert_eq!(
+            session.plan().path_stream().unwrap().topic,
+            bindings.path_topic
+        );
+        assert_eq!(
+            session.plan().odometry_stream().unwrap().topic,
+            bindings.odometry_topic
+        );
+        assert_eq!(
+            session.plan().point_cloud_stream().unwrap().topic,
+            bindings.point_cloud_topic
+        );
+        let target = session.playback_view().unwrap().end;
+        session
+            .apply_playback_command(PlaybackCommand::Seek(target), |target, messages| {
+                workspace.restore_messages(target, messages)
+            })
+            .unwrap();
+        assert!(workspace.path().state().latest().is_some());
+        assert!(
+            workspace
+                .runtime()
+                .point_cloud()
+                .unwrap()
+                .point_cloud()
+                .latest()
+                .is_some()
+        );
+        let camera = session.plan().camera_topics().last().unwrap().1.clone();
+        session
+            .select_camera_topics(&camera, &requirements, workspace.bindings(), |_, _, _| {
+                Ok(())
+            })
+            .unwrap();
+        assert_eq!(
+            session.plan().path_stream().unwrap().topic,
+            bindings.path_topic
+        );
+        assert_eq!(
+            session.plan().point_cloud_stream().unwrap().topic,
+            bindings.point_cloud_topic
+        );
+        assert_eq!(workspace.bindings(), &bindings);
+        assert_eq!(session.playback_view().unwrap().cursor, target);
+    }
+}

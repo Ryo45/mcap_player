@@ -127,6 +127,45 @@ pub struct WorkspaceBindings {
     pub static_tf_topic: String,
 }
 
+impl WorkspaceBindings {
+    pub const MAX_JSON_BYTES: usize = 16 * 1024;
+    pub fn from_json(json: &str) -> Result<Self, String> {
+        if json.len() > Self::MAX_JSON_BYTES {
+            return Err("workspace bindings exceed 16 KiB".into());
+        }
+        let bindings: Self =
+            serde_json::from_str(json).map_err(|e| format!("workspace bindings JSON: {e}"))?;
+        bindings.validate()?;
+        Ok(bindings)
+    }
+    pub fn validate(&self) -> Result<(), String> {
+        for (name, topic) in [
+            ("pathTopic", &self.path_topic),
+            ("odometryTopic", &self.odometry_topic),
+            ("pointCloudTopic", &self.point_cloud_topic),
+            ("dynamicTfTopic", &self.dynamic_tf_topic),
+            ("staticTfTopic", &self.static_tf_topic),
+        ] {
+            if topic.is_empty()
+                || topic.len() > 1024
+                || topic.chars().any(|c| c.is_whitespace() || c.is_control())
+            {
+                return Err(format!(
+                    "{name} must be nonempty, at most 1024 bytes, and contain no whitespace/control characters"
+                ));
+            }
+        }
+        Ok(())
+    }
+    pub fn with_point_cloud_override(mut self, topic: Option<&str>) -> Result<Self, String> {
+        if let Some(topic) = topic {
+            self.point_cloud_topic = topic.into();
+        }
+        self.validate()?;
+        Ok(self)
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CameraRoute {
     pub stream: StreamDescriptor,
@@ -752,5 +791,115 @@ mod tests {
         let mut requirements = PlaybackRequirements::empty();
         requirements.require_camera_topic("/camera/wrong");
         assert!(SessionPlan::build(&source, "/camera/wrong", &requirements, &bindings(),).is_err());
+    }
+    #[test]
+    fn custom_bindings_keep_required_optional_and_schema_rules() {
+        let original = bindings();
+        let mut custom = original.clone();
+        for topic in [
+            &mut custom.path_topic,
+            &mut custom.odometry_topic,
+            &mut custom.point_cloud_topic,
+            &mut custom.dynamic_tf_topic,
+            &mut custom.static_tf_topic,
+        ] {
+            *topic = format!("/robot{topic}");
+        }
+        let custom =
+            WorkspaceBindings::from_json(&serde_json::to_string(&custom).unwrap()).unwrap();
+        let mut recording = catalog();
+        for stream in &mut recording.streams {
+            if !stream.topic.starts_with("/camera/") {
+                stream.topic = format!("/robot/{}", stream.topic.trim_start_matches('/'));
+            }
+        }
+        let requirements = standard_requirements();
+        let plan = SessionPlan::build(
+            &recording,
+            "/camera/front/image/compressed",
+            &requirements,
+            &custom,
+        )
+        .unwrap();
+        assert_eq!(plan.path_stream().unwrap().topic, custom.path_topic);
+        assert_eq!(plan.odometry_stream().unwrap().topic, custom.odometry_topic);
+        assert_eq!(
+            plan.point_cloud_stream().unwrap().topic,
+            custom.point_cloud_topic
+        );
+        assert!(
+            SessionPlan::build(
+                &recording,
+                "/camera/front/image/compressed",
+                &requirements,
+                &original
+            )
+            .is_err()
+        );
+        recording
+            .streams
+            .iter_mut()
+            .find(|s| s.topic == custom.path_topic)
+            .unwrap()
+            .schema = "wrong/msg/Path".into();
+        assert!(
+            SessionPlan::build(
+                &recording,
+                "/camera/front/image/compressed",
+                &requirements,
+                &custom
+            )
+            .is_err()
+        );
+        let mut optional = PlaybackRequirements::empty();
+        optional.optional_path();
+        optional.optional_odometry();
+        optional.optional_point_cloud();
+        optional.optional_transforms();
+        let plan = SessionPlan::build(
+            &recording,
+            "/camera/front/image/compressed",
+            &optional,
+            &custom,
+        )
+        .unwrap();
+        assert!(plan.path_stream().is_none());
+        assert!(plan.odometry_stream().is_some());
+    }
+}
+
+#[cfg(test)]
+mod bindings_json_tests {
+    use super::*;
+    #[test]
+    fn strict_complete_json_and_topic_values() {
+        let json = include_str!("../../../../config/workspace_bindings.json");
+        let defaults = WorkspaceBindings::from_json(json).unwrap();
+        for invalid in [
+            "{",
+            "{}",
+            &json.replace("\"pathTopic\"", "\"typo\""),
+            &json.replace("/planning/path", ""),
+            &json.replace("/odom", "bad topic"),
+            &json.replace("/scan", "\\n"),
+            &json.replace("/scan", &"x".repeat(1025)),
+            &json.replace("\"pathTopic\":", "\"pathTopic\":12,\"pathTopic\":"),
+        ] {
+            assert!(WorkspaceBindings::from_json(invalid).is_err(), "{invalid}");
+        }
+        assert!(
+            WorkspaceBindings::from_json(&" ".repeat(WorkspaceBindings::MAX_JSON_BYTES + 1))
+                .is_err()
+        );
+        assert!(
+            defaults
+                .clone()
+                .with_point_cloud_override(Some(" "))
+                .is_err()
+        );
+        assert_eq!(
+            defaults.clone().with_point_cloud_override(None).unwrap(),
+            defaults
+        );
     }
 }

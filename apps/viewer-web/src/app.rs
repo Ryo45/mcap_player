@@ -1,4 +1,5 @@
 //! Browser application root: event wiring and frame/source orchestration.
+mod bindings;
 mod camera;
 mod physical_settings;
 mod presentation;
@@ -390,6 +391,7 @@ fn duration_since(started_ms: f64) -> Duration {
 #[wasm_bindgen(start)]
 pub fn start() -> Result<(), JsValue> {
     source::install_controls();
+    bindings::install();
     physical_settings::install_controls();
     install_controls();
     install_workspace_controls();

@@ -1,0 +1,64 @@
+{
+  "status": "ok",
+  "checks": [
+    {
+      "invalid": "invalid.json",
+      "error": "invalid.json: workspace bindings JSON: unknown field `unknown`, expected one of `pathTopic`, `odometryTopic`, `pointCloudTopic`, `dynamicTfTopic`, `staticTfTopic` at line 1 column 10"
+    },
+    {
+      "invalid": "empty.json",
+      "error": "empty.json: pointCloudTopic must be nonempty, at most 1024 bytes, and contain no whitespace/control characters"
+    },
+    {
+      "read_failure_blocked": "bindings.json: read workspace bindings: injected read failure"
+    },
+    {
+      "stale_read_after_explicit_reset": "Bundled default: valid for next recording \u00b7 point cloud /scan"
+    },
+    {
+      "local": "Ready \u00b7 146 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 31 pts \u00b7 scan 360 pts \u00b7 1.76s",
+      "scene": "Point cloud: 360 visible points \u00b7 base_scan \u2192 odom",
+      "odometry": "x +0.06 m \u00b7 y +0.66 m \u00b7 yaw +173.9\u00b0 \u00b7 0.06 m/s \u00b7 yaw rate +4.0\u00b0/s"
+    },
+    {
+      "current_session_kept_bindings_after_reset": "Ready \u00b7 218 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 31 pts \u00b7 scan 360 pts \u00b7 4.01s"
+    },
+    {
+      "remote": "Ready \u00b7 72 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 31 pts \u00b7 scan 360 pts \u00b7 3.51s",
+      "scene": "Point cloud: 360 visible points \u00b7 base_scan \u2192 odom",
+      "odometry": "x -0.03 m \u00b7 y +0.67 m \u00b7 yaw +171.0\u00b0 \u00b7 0.06 m/s \u00b7 yaw rate -13.8\u00b0/s"
+    },
+    {
+      "remote_camera_seek": "Ready \u00b7 145 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 31 pts \u00b7 scan 360 pts \u00b7 1.51s"
+    }
+  ],
+  "local_initial": "Reading MCAP Summary\u2026",
+  "browser": {
+    "version": "Chrome/143.0.7499.192",
+    "mode": "hardware",
+    "viewport": [
+      1920,
+      1080
+    ],
+    "dpr": 1,
+    "gpu_devices": [
+      {
+        "vendorId": 4318,
+        "deviceId": 11269,
+        "vendorString": "Google Inc. (NVIDIA Corporation)",
+        "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+        "driverVendor": "Nvidia",
+        "driverVersion": "610.57.04"
+      }
+    ]
+  },
+  "source_sha256": "1553dc665ef6cc70fea5b1a7ab2c83072391883f7caae70f1addc5caf18e1274",
+  "bindings_sha256": "cc173026b60b33478240ff314da25558d1daba4b3be39062b5aa06bee9d8f9c3",
+  "web_assets": {
+    "viewer-web-71638f1c2e5e9a72_bg.wasm": "89f6dd57c7304e9ec64dcd311b16fa7c23fae3b5daffaf369ceef61559502f04",
+    "index.html": "a9f16137fa7e694e2f1dea9c169be2c9784a1c6db1ec5ec0400d70e7f0664e11",
+    "viewer-web-71638f1c2e5e9a72.js": "d621836c3f2bcae196effbbbe38913cfeabe20511cb5d6c83ba99ce0fbf17b70",
+    "style-e7f6b56537a4e4d5.css": "6467c2b56e0bc4fffaf30dd2b497d68e71a368b8fc3a281bc8ef39d76e698257",
+    "camera_decode_worker.js": "b6f4aa7f1e03beac72af90128eefecdf792c682f1b7012725d961b5f62f9ee19"
+  }
+}

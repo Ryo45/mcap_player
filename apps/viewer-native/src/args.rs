@@ -27,6 +27,7 @@ pub(crate) struct Args {
     pub(crate) layout: WorkspaceLayout,
     pub(crate) inspect_topic: Option<String>,
     pub(crate) point_cloud_topic: Option<String>,
+    pub(crate) workspace_bindings: Option<PathBuf>,
 }
 
 impl Args {
@@ -50,9 +51,16 @@ impl Args {
         let mut layout = WorkspaceLayout::Standard;
         let mut inspect_topic = None;
         let mut point_cloud_topic = None;
+        let mut workspace_bindings = None;
         let mut values = values.into_iter();
         while let Some(value) = values.next() {
             match value.as_str() {
+                "--workspace-bindings" => {
+                    let path = values
+                        .next()
+                        .context("--workspace-bindings needs a JSON path")?;
+                    workspace_bindings = Some(PathBuf::from(path));
+                }
                 "--mcap" => mcap = PathBuf::from(values.next().context("--mcap needs a path")?),
                 "--camera-topic" => {
                     topic = values.next().context("--camera-topic needs a topic")?;
@@ -109,7 +117,7 @@ impl Args {
                 }
                 "--help" | "-h" => {
                     println!(
-                        "viewer-native [--mcap FILE_OR_DIRECTORY] [--camera-topic TOPIC] [--camera-calibration JSON] [--platform-geometry JSON | --no-platform-geometry] [--fixed-frame FRAME] [--ground-frame FRAME] [--layout standard|showcase|explore|monitor|health|scene|cameras|navigation|inspection] [--inspect-topic TOPIC] [--point-cloud-topic TOPIC] [--live [--reliable] [--live-raw-camera-topic TOPIC]...]\n\nFiles or directories containing indexed MCAP parts can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
+                        "viewer-native [--workspace-bindings JSON] [--mcap FILE_OR_DIRECTORY] [--camera-topic TOPIC] [--camera-calibration JSON] [--platform-geometry JSON | --no-platform-geometry] [--fixed-frame FRAME] [--ground-frame FRAME] [--layout standard|showcase|explore|monitor|health|scene|cameras|navigation|inspection] [--inspect-topic TOPIC] [--point-cloud-topic TOPIC] [--live [--reliable] [--live-raw-camera-topic TOPIC]...]\n\nFiles or directories containing indexed MCAP parts can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
                     );
                     std::process::exit(0);
                 }
@@ -144,6 +152,7 @@ impl Args {
             layout,
             inspect_topic,
             point_cloud_topic,
+            workspace_bindings,
         })
     }
 }
@@ -292,5 +301,30 @@ mod tests {
     #[test]
     fn reliability_is_not_silently_ignored_without_live_mode() {
         assert!(source_mode(false, true, BTreeSet::new()).is_err());
+    }
+    #[test]
+    fn workspace_bindings_flag_requires_a_path() {
+        let args = Args::parse_from([
+            "--workspace-bindings".into(),
+            "robot.json".into(),
+            "--point-cloud-topic".into(),
+            "/manual".into(),
+        ])
+        .unwrap();
+        assert_eq!(args.workspace_bindings, Some(PathBuf::from("robot.json")));
+        assert_eq!(args.point_cloud_topic.as_deref(), Some("/manual"));
+        assert!(Args::parse_from(["--workspace-bindings".into()]).is_err());
+    }
+    #[cfg(feature = "ros2-live")]
+    #[test]
+    fn workspace_bindings_are_accepted_for_live_startup() {
+        let args = Args::parse_from([
+            "--live".into(),
+            "--workspace-bindings".into(),
+            "robot.json".into(),
+        ])
+        .unwrap();
+        assert!(matches!(args.mode, SourceMode::Ros { .. }));
+        assert_eq!(args.workspace_bindings, Some(PathBuf::from("robot.json")));
     }
 }

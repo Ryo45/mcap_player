@@ -19,6 +19,7 @@ mod signal_view;
 mod ui_components;
 mod window_query_loader;
 mod workspace;
+mod workspace_bindings;
 
 use anyhow::Result;
 use app::App;
@@ -34,9 +35,11 @@ fn main() -> Result<()> {
     env_logger::init();
     let args = Args::parse()?;
     let mut workspace = NativeWorkspace::load_bundled_or_fallback(args.layout);
-    if let Some(topic) = &args.point_cloud_topic {
-        workspace.set_point_cloud_topic(topic.clone());
-    }
+    let bindings = workspace_bindings::load(
+        args.workspace_bindings.as_deref(),
+        args.point_cloud_topic.as_deref(),
+    )?;
+    workspace.set_bindings(bindings);
     let event_loop = EventLoop::new()?;
     event_loop.set_control_flow(ControlFlow::Poll);
     let mut app = App {

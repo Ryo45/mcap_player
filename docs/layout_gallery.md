@@ -61,7 +61,7 @@ cargo run -p viewer-native -- --mcap /tmp/mcap-readme-demo/recording.mcap \
 [cameras](../config/layouts/native_cameras.json)、[navigation](../config/layouts/native_navigation.json)、
 [inspection](../config/layouts/native_inspection.json)のJSONに、配置・比率・パネル設定がある。
 カメラは各パネルのプルダウンで記録内のトピックへ変更でき、再ビルドは不要。
-Path・Odometry・TFの名前は`config/workspace_bindings.json`、配置はpreset JSONを変更し、再ビルドする。
+Path・Odometry・PointCloud・TFの名前は、Nativeの`--workspace-bindings FILE.json`、WebのWorkspace bindings JSONで実行時に指定できる（[手順](../README.md#手持ちの記録を開く)）。配置は同梱preset JSONを変更して再ビルドする。
 現在はコンパイル時に埋め込むpresetであり、外部JSONの実行時読み込み・GUIでのlayout編集機能はない。
 `--camera-topic`は固定された複数panelの`cameraTopic`を一括置換する引数ではない。
 

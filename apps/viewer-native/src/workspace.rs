@@ -142,8 +142,8 @@ impl NativeWorkspace {
         }
     }
 
-    pub(crate) fn set_point_cloud_topic(&mut self, topic: String) {
-        self.bindings.point_cloud_topic = topic;
+    pub(crate) fn set_bindings(&mut self, bindings: WorkspaceBindings) {
+        self.bindings = bindings;
     }
 
     pub(crate) fn point_cloud_coloring(&self) -> viewer_core::PointCloudColoring {
@@ -282,8 +282,8 @@ impl NativeWorkspace {
     }
 }
 
-fn bundled_workspace_bindings() -> WorkspaceBindings {
-    serde_json::from_str(BUNDLED_WORKSPACE_BINDINGS)
+pub(crate) fn bundled_workspace_bindings() -> WorkspaceBindings {
+    WorkspaceBindings::from_json(BUNDLED_WORKSPACE_BINDINGS)
         .expect("bundled workspace bindings must be valid")
 }
 

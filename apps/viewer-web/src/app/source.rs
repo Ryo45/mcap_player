@@ -31,17 +31,26 @@ fn install_file_input() {
         let Some(file) = input.files().and_then(|files| files.get(0)) else {
             return;
         };
+        let bindings = match super::bindings::for_source_open() {
+            Ok(bindings) => bindings,
+            Err(error) => {
+                super::bindings::report_open_error(&error);
+                return;
+            }
+        };
+        super::bindings::set_opening(true);
         let file_name = file.name();
         let generation = begin_source_change();
         spawn_local(async move {
             set_status("Reading MCAP Summary…", false);
-            let result = match open_browser_mcap(file, TOPIC).await {
+            let result = match open_browser_mcap(file, TOPIC, &bindings).await {
                 Ok(recording) => WebPlayback::from_local(recording),
                 Err(error) => Err(crate::playback::WebPlaybackError::from(error)),
             };
             if !source_is_current(generation) {
                 return;
             }
+            super::bindings::set_opening(false);
             match result {
                 Ok(playback) => {
                     APP.with(|cell| {
@@ -72,6 +81,7 @@ fn install_file_input() {
 
 fn install_remote_playback(playback: WebPlayback) {
     begin_source_change();
+    super::bindings::set_opening(false);
     APP.with(|cell| {
         let mut app = cell.borrow_mut();
         app.topics.reset(&playback);

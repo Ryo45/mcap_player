@@ -176,7 +176,14 @@ fn install_open_playback() {
             set_output("Connect and load a catalog first", true);
             return;
         };
-        let result = adapt_catalog(&catalog)
+        let bindings = match super::super::bindings::for_source_open() {
+            Ok(bindings) => bindings,
+            Err(error) => {
+                set_output(&error, true);
+                return;
+            }
+        };
+        let result = adapt_catalog(&catalog, &bindings)
             .map_err(|error| error.to_string())
             .and_then(|catalog| {
                 WebPlayback::from_remote(client, catalog).map_err(|error| error.to_string())

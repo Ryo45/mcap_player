@@ -135,8 +135,37 @@ InspectorやPlotで対象を選んでも、Cameraなどのcontinuous playback対
 | Odometry | `/odom` |
 | 動的TF / 静的TF | `/tf` / `/tf_static` |
 
-Path・Odometry・TFのトピック名は、現在[workspace bindings](config/workspace_bindings.json)をビルド時に埋め込みます。
-これらの名前を変更する場合は設定を編集し、Native/Webを再ビルドしてください。
+Path・Odometry・PointCloud・TFのトピック名は、[workspace bindings](config/workspace_bindings.json)と同じ形式のJSONを実行時に指定できます。再ビルドは不要です。
+
+```sh
+cargo run -p viewer-native --release -- \
+  --mcap recording.mcap --layout monitor --workspace-bindings my_robot.json
+# ROS 2 Liveでも起動時に指定できます（購読の実行中切り替えは行いません）。
+cargo run -p viewer-native --release --features ros2-live -- \
+  --live --workspace-bindings my_robot.json
+```
+
+```json
+{
+  "pathTopic": "/planning/path",
+  "odometryTopic": "/odom",
+  "pointCloudTopic": "/scan",
+  "dynamicTfTopic": "/tf",
+  "staticTfTopic": "/tf_static"
+}
+```
+
+Nativeの優先順位は、明示的な`--point-cloud-topic` > 外部JSON > 同梱デフォルトです。
+外部JSONは5項目すべて指定してください。未知キー・欠落項目・空文字などの不備は起動エラーになります。
+
+Webでは **Open MCAPの隣のWorkspace bindings JSON** で先にファイルを選択し、valid表示を確認してから記録を開きます。
+Browser LocalとRecording Serverの両方で利用でき、JSONはブラウザ内で処理されます。サーバーへのアップロードや追加APIは不要です。
+Scene設定のPoint cloud topic欄は、**空欄ならJSONの値**を使い、入力した場合だけJSONを上書きします。
+設定未指定時は従来のデフォルトを使います。エラー中・読み込み中は新しい記録を開けません。
+訂正したJSONを選ぶか、Use bundled bindingsで明示的に同梱設定へ戻してください。PointCloud欄の手入力は引き続き優先され、空欄にするとJSON／同梱値へ戻ります。
+設定は次に開く記録に適用され、開いているセッションには反映しません。Camera切り替えやSeekでも、そのセッションの設定を維持します。
+JSONはUTF-8・16 KiB以下、トピック名は1〜1024バイトで空白・制御文字を含めないでください。
+実際のtopic/schemaの解決は既存の必須・任意入力ルールに従い、自動推定は行いません。[Native／Web Local／Remoteの検証結果](docs/verification/workspace-bindings/README.md)を参照してください。
 レイアウトの配置も同梱presetで、外部JSONの実行時load/saveやGUIでの配置編集は未対応です。
 
 Camera overlayにはPath・TF・実カメラに対応したcalibrationが必要です。
