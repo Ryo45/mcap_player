@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd /workspace/mcap_player
+python3 -m unittest discover -s tools/repository-storage -p 'test_*.py'
+python3 tools/repository-storage/storage.py check
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked

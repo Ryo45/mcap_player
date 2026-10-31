@@ -2,3 +2,10 @@
 /apps/viewer-web/dist
 /mcap/
 /ripgrep_*.deb
+
+# Scratch measurements belong here or under target/, never in versioned reports.
+/.artifact-staging/
+/docs/performance/**/.staging/
+/docs/verification/**/.staging/
+/tools/repository-storage/__pycache__/
+/examples/*/target/

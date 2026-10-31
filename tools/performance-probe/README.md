@@ -1,5 +1,7 @@
 # 継続する性能計測
 
+計測成果物の追加・取得は[保存方針](../../docs/repository-storage/README.md)を参照。大きな生データは任意取得とし、必要な入力が未取得なら `tools/repository-storage/storage.py require <path>` で確認する。
+
 通常の回帰確認は `regression.py` を入口にする。日付付きレポートは実験の記録として残し、
 現在の実行スクリプトから参照しない。製品ソースへのpatch適用・文字列置換・書き戻しは不要。
 Pythonは標準ライブラリだけを使う。Linux、同じマシン、cache-allowed条件で比較する。

@@ -1,5 +1,7 @@
 # 性能検証
 
+計測成果物の追加・取得は[保存方針](../repository-storage/README.md)を参照。大きな生データは任意取得とし、必要な入力が未取得なら `tools/repository-storage/storage.py require <path>` で確認する。
+
 通常の回帰確認は [継続計測の手順](../../tools/performance-probe/README.md)を使う。
 日付付きレポートや製品ソースのpatchに依存せず、Nativeのデータ／decoder／SeekとWebの表示を
 固定ケースで測り、baselineとの差・試行失敗・条件不一致を終了コードで検出する。
