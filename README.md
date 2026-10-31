@@ -49,7 +49,7 @@ cargo run --release -p viewer-native -- --layout monitor
 同梱の約5秒の記録を再生します。再生・停止・Seekを操作し、Cameraパネルのプルダウンから画像トピックを選べます。
 Inspectorまでスクリーンショットと同じ状態で試すには、依存schemaを補完した[撮影用デモ](docs/screenshots.md)を生成してください。
 初回ビルドには時間がかかります。性能を評価する際は`--release`を使用してください。
-任意の計測成果物は取得せずにビルドできます。[成果物の保存・取得方針](docs/repository-storage/README.md)を参照してください。既存履歴のLFS移行はまだ実施していません。
+任意の計測成果物は取得せずにビルドできます。[成果物の保存・取得方針](docs/repository-storage/README.md)を参照してください。既存成果物のLFS移行と、旧commit SHAの対応表は[移行記録](docs/repository-storage/migration-2026-10-31.md)を参照してください。
 
 ## ブラウザで試す
 
