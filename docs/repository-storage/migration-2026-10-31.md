@@ -36,8 +36,18 @@ featureの移行直後は `f13d4eb153deca3dad82fd7880337278aa4b266d`、masterは
 - 設定を含む再実験のfresh Git packは86.76 MiB。調査時の145.79 MiBから約40%減。packのまとめ方・最終記録commitで多少変動する。
 - 通常cloneでLFS payload取得0、150パスすべてpointerのままを確認。
 - その状態で `docker/check.sh` が完走。toolテスト5件、policy、fmt、workspace clippy/test、実fixtureのNative bindings、WASM check、Web release build、ROS Live（95 passed / 5 ignored）が成功。feature製品コードの全テスト再実行はしていないが、履歴移行による非対象blob不変はfeatureを含む全commitで検証した。
-- 取得前のpreflight失敗を確認後、単一JSONLをローカルLFSから明示取得。payload 1個だけを取得し、SHA-256とpreflight成功を確認。GitHubからの取得確認は公開後に行う。
+- 取得前のpreflight失敗を確認後、単一JSONLをローカルLFSから明示取得。payload 1個だけを取得し、SHA-256とpreflight成功を確認。公開後にはGitHubからの明示取得でも同じSHA-256一致を確認した。
 
 GitHub側の古いobjectの消去や表示容量の即時低下は保証しない。既存cloneには旧履歴が残るため、基本はfresh cloneを使う。
 他の作業cloneから旧branchをmerge/pushしないこと。未公開変更は内容を確認したpatch等で移す。
 公開は[移行手順](migration.md)にあるLFS upload後・3 headsのみのatomicなforce-with-lease更新を使う。branch削除や無条件force pushはしない。
+
+## 公開後の確認
+
+144 objectsのLFS upload後、main・feature・masterの3 headsを旧SHA指定のatomic force-with-leaseで更新した。branch削除は実施していない。
+GitHubから改めて通常cloneし、3 refs一致、fsck、storage policyを確認した。自動LFS取得は0個、単一JSONLを明示pullすると1個だけ取得され、元payloadのSHA-256と一致した。
+この公開後fresh cloneの `git count-objects -vH` は **size-pack: 87.03 MiB**。調査時の145.79 MiBから約40.3%減った。
+[公開直後の確認結果](verification-2026-10-31.json)はその時点のSHAで、後続の記録commitにより現在の先端は進む。
+
+元の作業ディレクトリのmain・feature・origin参照も新履歴へ揃えた。未追跡の利用者ファイルは保持した。
+この既存cloneには旧object・reflogを復旧の余地として残しており、破壊的なGCはしていない。ローカルの保存容量とfresh cloneの転送量を混同しないこと。

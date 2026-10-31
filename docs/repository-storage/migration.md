@@ -77,7 +77,7 @@ python3 tools/repository-storage/storage.py resolve 50024b45 --map /path/to/comm
 
 ## 4. 承認地点：ここで必ず停止
 
-**本番へのLFS upload・ref更新は未実施。この段階で管理者の承認を得る。**
+**2026-10-31は、別ディレクトリへバックアップしてから開始する指示に基づき実施済み。再実施時は、この段階で改めて管理者の承認を得る。**
 承認対象は対象150パス、更新する3 heads、全履歴SHA変更、LFS保存・転送コスト、保護ルール変更、更新停止時間。
 以下は承認後にだけ実行する具体的な公開コマンド案。`TASK_MIRROR` は検証済み一時mirror、OLD変数は凍結後の `refs-before.txt` にある完全SHAを設定する。調査時のSHAをそのまま再利用しない。
 
