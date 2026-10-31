@@ -3,7 +3,7 @@
 通常の開発に必要なソース・fixture・デモ・代表画像はGitに残し、任意の大きな生の計測成果物だけをGit LFSへ分離する。
 [2026-10-29の調査](audit-2026-10-29.md)と[履歴移行手順](migration.md)を参照。
 
-**現時点では既存ファイルをLFSへ変換していない。** 新しい属性と取得設定だけでは過去のGit blobは消えず、既存履歴のclone容量は減らない。既存150パスの移行は承認待ち。
+**既存150パスは履歴ごとLFSへ移行した。** [2026-10-31の移行記録](migration-2026-10-31.md)と[旧SHA対応表](commit-map-2026-10-31.csv)を参照。移行前からあるcloneには旧objectが残るため、fresh cloneを使う。
 
 ## 保存先
 
@@ -40,7 +40,7 @@ python3 tools/repository-storage/storage.py check
 ただし利用者のGit設定が優先され、古いcommitにはこのファイルがないため、明示的に取得を止める場合は上記の環境変数を使う。
 Git LFS未導入でも必要なファイルは通常Gitのまま利用できる。LFSへの新規追加や任意成果物の取得をする人はGit LFSを導入して `git lfs install --local` を実行する。
 
-生データを読む前に取得状況を確認できる。履歴移行前は既存成果物がそのまま存在するため成功する。
+生データを読む前に取得状況を確認できる。取得済みなら成功し、pointerのままなら取得コマンドを表示する。
 
 ```sh
 python3 tools/repository-storage/storage.py require docs/performance/2026-10-14-4k-large-chunks
