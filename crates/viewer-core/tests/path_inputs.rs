@@ -66,12 +66,16 @@ fn selection_is_independent_and_shared_consumers_do_not_duplicate_decoding() {
     assert!(shared.additional_path_streams().is_empty());
     assert_eq!(shared.restore_inputs().len(), 1);
     let mut runtime = FeatureRuntime::new(&shared, false);
-    runtime.process_messages(Duration::ZERO, &[message(1, 10, 1.)]);
+    let mut unrequested = message(2, 10, 1.);
+    unrequested.payload = vec![0].into();
+    runtime.process_messages(Duration::ZERO, &[message(1, 10, 1.), unrequested]);
     assert!(std::ptr::eq(
         runtime.path(),
         runtime.path_for_stream(StreamId(1)).unwrap()
     ));
     assert_eq!(runtime.counters().decoded, 1);
+    assert_eq!(runtime.counters().errors, 0);
+    assert!(runtime.path_for_stream(StreamId(2)).is_none());
     let independent = plan(Some("/perception/objects"));
     assert_eq!(
         independent.selected_stream_ids(),

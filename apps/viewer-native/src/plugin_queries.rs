@@ -533,10 +533,17 @@ mod tests {
     }
     #[test]
     fn disabled_queries_do_not_start_io_or_threads() {
+        let source =
+            McapSource::open_file(&root().join("tests/fixtures/camera-jpeg/camera_7_5s.mcap"))
+                .unwrap();
         let mut queries = PluginQueries::default();
-        queries.poll(None, None);
+        queries.poll(
+            Some(&source),
+            Some(view(&source, source.time_range().start)),
+        );
         assert!(queries.worker.is_none());
         assert!(queries.data.is_empty());
+        assert!(queries.last_request.is_none());
     }
     #[test]
     #[ignore = "build RobotStatus guest and generate target/plugin-panel fixtures first"]
