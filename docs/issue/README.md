@@ -1,6 +1,6 @@
 # リリース前アーキテクチャ課題
 
-統合保留: [018 Wasm統合候補のWeb Raw Seek性能退行](018-wasm-default-web-seek-regression/README.md)。プラグイン未設定でも追加交互計測で約35%遅延。mainへの取り込みを撤回し、Wasmブランチで原因調査する。
+対応済み: [018 Wasm統合候補のWeb Raw Seek計測](018-wasm-default-web-seek-regression/README.md)。旧約35%退行の判断を訂正。poll待ちの混入を修正し、同一成果物の再計測は既存閾値内。mainへの再統合は別途判断。
 
 追加対応: [015 分割MCAPの時間軸とWeb LZ4](015-split-mcap-and-web-lz4/README.md)。Nativeのディレクトリ入力とBrowser LocalのLZ4を実装。Raw Image/PNGは[016 Camera入力形式](016-camera-image-formats/README.md)で対応。
 

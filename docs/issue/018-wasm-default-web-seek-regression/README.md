@@ -1,10 +1,12 @@
 # Wasm統合候補でプラグイン未設定のWeb Raw Seekが遅くなる
 
 - Priority: P1 / Wasm branchをmainへ統合する前のgate
-- 状態: 未対応、原因未特定。mainへのmergeは撤回済み。
+- 状態: 対応済み（2026-11-01）。計測器のpoll混入・二段階確認の競合を修正。mainへの再統合は別途判断。
 - 対象: `feature/scene-visualization-extension` と現mainの統合候補。通常ビルド、プラグイン未設定。
 
 ## 課題と確認したこと
+
+以下は2026-10-31の発見時の記録。約35%を性能退行とした結論は訂正した。最新の結論は末尾の2026-11-01の調査結果を参照。
 
 [測定記録](../../verification/wasm-default-merge/README.md)のWeb FHD rgb8 / 30 Hzで、Seekからcamera canvas反映までの中央値が最初92→115 ms、交互の追加計測でも88→120 msになった。
 追加計測の+31 ms / +35%は既存の許容閾値を超える。
@@ -37,3 +39,15 @@ Native処理時間・再訪Seekは今回の代表ケースで明確な退行な�
 - Native/Webの既定build、必要Stream、decode数、追加Queryなし、点群・カメラ・transactional Seekを維持。
 - 背景最低更新とメモリも併記し、改善のために他の指標を悪化させていないか確認する。
 - 未解決ならmainへの統合を保留し続ける。
+
+## 2026-11-01の調査結果・対応
+
+**当初の約35%退行という判断を訂正する。原因はWasm実行ではなく、Seek指標に外部poll遅延が混ざり、確認に二つの異なる時刻を使っていたこと。**
+[詳細な原因・修正・保存した測定結果](../../verification/wasm-seek-timing/README.md)を参照。
+
+同じ旧成果物を使った修正版observerの18試行はすべて成功。Raw Seek中央値はmain 70.65→候補73.30 msで、既存の許容閾値内。
+4K / 大Chunkの背景更新・メモリも既存閾値内だった。閾値は緩和していない。
+旧報告とraw archiveは改変せず保存し、描画時刻からの再解析も可能にした。
+
+アプリ本体へ推測の最適化は入れず、observerと単体テスト、Docker checkを修正した。
+この課題の計測上のblockerは解消したが、mainへのmergeはこの作業では行わない。

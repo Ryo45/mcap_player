@@ -40,7 +40,8 @@ Webは通常のrelease成果物を開き、既存のfile input／Play／timeline
 viewportは1920×1080、DPR=1、focusは960×540、Sceneは非表示。16×9のcanvas内容hashを観測し、
 同じ内容の再描画を新画像と数えない。観測のreadback負荷も含む。
 JPEGはfocusと背景の最低更新頻度を別に測る。Rawは再生後の4地点のSeekも測る。
-WebのSeek指標はcursor確定と新しい画像jobのcanvas反映までであり、厳密なpredecessorの画素照合試験とは区別する。
+WebのSeek指標（v2）は、timeline input dispatch直前から、そのSeek tokenの最初の画像jobがCamera canvasの`drawImage`を完了するまでのブラウザ内時刻差。cursorの一致も確認する。CDPの完了確認までの待ちは含めず、`observation_delay_ms`へ別記する。GPU compositorのscanoutや厳密なpredecessorの画素照合を測るものではない。
+2026-11-01以前のv1は50ms間隔の外部pollと二段階確認の競合が混ざっていたため、Seek回帰判断に使わない。v2と同じobserverでbaselineを再作成する。harness hashが違うsuiteは既存の比較処理が拒否する。
 
 ## baseline作成と回帰確認
 
