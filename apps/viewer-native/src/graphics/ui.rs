@@ -149,6 +149,10 @@ impl Graphics {
                         inspector_topic: render_input.inspector_topic,
                         topic_tree: render_input.topic_tree,
                         numeric_series: render_input.numeric_series,
+                        #[cfg(feature = "plugin-panels")]
+                        plugin_generation: render_input.plugin_generation,
+                        #[cfg(feature = "plugin-panels")]
+                        plugin_data: render_input.plugin_data,
                     },
                 );
                 actions.extend(output.actions);

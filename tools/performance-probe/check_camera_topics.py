@@ -4,6 +4,7 @@ import argparse
 import base64
 import json
 from pathlib import Path
+import re
 import time
 
 from benchmark_browser import browser, serve
@@ -95,7 +96,11 @@ def check(args):
         assert all(topic.endswith('/image/compressed') for topic in state()['options'])
         choose('/camera/rear/image/compressed')
         wait(lambda: state()['pixel'] is not None and state()['pixel'][3] > 0)
+        wait(lambda: all(re.search(pattern, state()['status'] or '') for pattern in
+                         [r'path [1-9][0-9]* pts', r'scan [1-9][0-9]* pts', r'\b0 errors\b']))
+        assert 'TF missing' not in page.evaluate('document.querySelector("#scene-info").textContent')
         results.append(state())
+        capture('web-existing-scene.png')
         if args.recorded:
             open_file(args.recorded, 1, seek=True)
             assert state()['options'] == ['/cam/camera/image_raw']

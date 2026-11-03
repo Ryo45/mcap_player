@@ -46,6 +46,12 @@
       if (job && shownJobs.get(id) !== job.id) {
         shownJobs.set(id, job.id);
         probe.presentations.push({id, job: job.id, seekToken: job.seekToken, t: performance.now()});
+        // Keep the first focus draw for the current seek, even if more frames arrive
+        // before the host polls. Stale jobs must never satisfy a newer seek.
+        if (id === 'camera' && job.seekToken === probe.seekToken &&
+            probe.focusPresentation?.seekToken !== job.seekToken) {
+          probe.focusPresentation = probe.presentations.at(-1);
+        }
       }
       context.imageSmoothingEnabled = false;
       draw.call(context, this.canvas, 0, 0, 16, 9);
@@ -66,6 +72,7 @@
     canvases: [...document.querySelectorAll('#camera, [id^="camera-thumb-"]')]
       .map(canvas => ({id: canvas.id, width: canvas.width, height: canvas.height})),
     visibility: document.visibilityState, focused: document.hasFocus(),
-    changes: probe.changes.length, presented: [...shownJobs.keys()], wasm_bytes: probe.memory?.buffer.byteLength,
+    changes: probe.changes.length, presented: [...shownJobs.keys()], focus_presentation: probe.focusPresentation,
+    wasm_bytes: probe.memory?.buffer.byteLength,
     adapter: probe.adapter, errors: probe.errors});
 })();

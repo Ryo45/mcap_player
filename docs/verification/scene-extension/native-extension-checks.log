@@ -1,0 +1,116 @@
+    Checking viewer-extension v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-extension)
+    Checking viewer-native v0.1.0 (/home/ryo/development/mcap_player/apps/viewer-native)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.28s
+   Compiling viewer-extension v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-extension)
+   Compiling viewer-native v0.1.0 (/home/ryo/development/mcap_player/apps/viewer-native)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.74s
+     Running unittests src/main.rs (target/debug/deps/viewer_native-71e678a260b58f5a)
+
+running 97 tests
+test app::tests::measure_camera_focus_actions ... ignored, manual release measurement, no timing assertion
+test args::tests::layout_config_accepts_the_bundled_views ... ok
+test args::tests::initial_inspector_selection_is_recording_only_and_requires_a_topic ... ok
+test args::tests::point_cloud_selection_requires_a_nonempty_bounded_topic ... ok
+test args::tests::reliability_is_not_silently_ignored_without_live_mode ... ok
+test args::tests::raw_live_topics_are_explicit_bounded_and_live_only ... ok
+test bookmarks::tests::bookmarks_are_exposed_in_time_order_from_valid_documents ... ok
+test diagnostics::tests::diagnostics_keep_playback_presentation_and_sidecar_failures_distinct ... ok
+test graphics::layout_host::tests::column_split_uses_vertical_axis ... ok
+test graphics::layout_host::tests::row_split_normalizes_weights_and_subtracts_gaps ... ok
+test graphics::layout_host::tests::tiny_viewport_never_produces_negative_or_out_of_bounds_rects ... ok
+test graphics::views::camera::tests::contain_mapping_accounts_for_letterboxing ... ok
+test app::tests::playback_action_is_applied_to_the_session ... ok
+test bookmarks::tests::directory_sources_use_their_own_bookmarks_sidecar ... ok
+test interaction::tests::drag_pause_and_resume_intent_is_temporary ... ok
+test live::admission::tests::camera_latest_coalesces_before_decode ... ok
+test app::tests::preview_action_does_not_seek_playback ... ok
+test live::admission::tests::semantic_and_tf_streams_preserve_order_with_a_fixed_bound ... ok
+test live::admission::tests::static_tf_overflow_is_terminal_and_does_not_replace_pending_state ... ok
+test live::catalog::tests::catalog_is_deterministic_and_standard_plan_selects_every_live_role ... ok
+test live::catalog::tests::one_topic_cannot_claim_two_live_roles ... ok
+test live::catalog::tests::raw_and_compressed_cameras_share_latest_delivery_and_fixed_panel_selection ... ok
+test live::catalog::tests::fixed_camera_topics_expand_live_selection_without_duplicates ... ok
+test live::tests::malformed_semantic_message_does_not_hide_the_prior_valid_message ... ok
+test live::tests::current_camera_live_admission_routes_latest_message_to_camera_controller ... ok
+test numeric_plot_loader::source_replacement_tests::source_replacement_retains_one_cancelled_worker_and_discards_old_results ... ok
+test live::tests::raw_live_admission_keeps_one_unconverted_latest_frame ... ok
+test numeric_plot_loader::tests::demand_is_deduplicated_and_series_count_is_bounded ... ok
+test numeric_plot_loader::regroup_tests::new_field_cancels_inflight_group_and_retains_all_pending_demands ... ok
+test app::tests::preview_drag_pauses_without_seek_and_release_seeks_once_then_resumes ... ok
+test numeric_plot_loader::tests::removal_and_readdition_cannot_commit_cancelled_result ... ok
+test app::tests::seek_action_still_reaches_the_viewer_session ... ok
+test odometry_signals::tests::live_mode_clear_does_not_start_a_worker ... ok
+test graphics::camera::tests::camera_upload_alpha_matches_egui_and_clears_fully_transparent_rgb ... ok
+test odometry_signals::tests::partial_result_is_visible_while_full_scan_remains_loading ... ok
+test odometry_signals::tests::starts_idle_and_clear_returns_to_idle ... ok
+test panels::camera::tests::configured_topic_selects_exactly_without_semantic_role_heuristics ... ok
+test odometry_signals::tests::loads_speed_samples_on_the_worker ... ok
+test app::tests::invalid_camera_choice_leaves_binding_clock_and_visible_frame_unchanged ... ok
+test odometry_signals::tests::stale_generation_result_is_ignored ... ok
+test app::tests::missing_images_and_source_replacement_do_not_keep_old_camera_requirements ... ok
+test inspector_loader::topic_merge_tests::latest_topic_message_is_selected_across_channels_and_metadata_survives_unsupported_schema ... ok
+test odometry_signals::tests::playback_progresses_while_plot_loading_is_pending ... ok
+test odometry_signals::tests::start_enters_loading_and_worker_failure_becomes_failed ... ok
+test odometry_signals::tests::successful_worker_result_becomes_ready_even_without_speed_samples ... ok
+test panels::plot::tests::follow_shifts_at_boundary_but_not_while_paused ... ok
+test panels::camera::tests::fixed_camera_selector_config_is_typed ... ok
+test inspector_loader::tests::missing_topic_reports_a_typed_error_without_expanding_playback_requirements ... ok
+test odometry_signals::tests::plot_failure_does_not_stop_playback_progress ... ok
+test panels::plot::tests::layout_plot_signals_map_to_the_closed_signal_ids ... ok
+test panels::runtime::selection_tests::builtin_plot_only_requires_a_query ... ok
+test panels::runtime::tests::enforces_only_bev_and_scene_singletons ... ok
+test panels::runtime::tests::inspector_contributes_a_bounded_topic_requirement ... ok
+test panels::runtime::tests::parses_camera_and_plot_configs ... ok
+test panels::runtime::tests::status_requires_speed_without_a_plot_specific_dependency ... ok
+test panels::runtime::tests::permits_multiple_camera_and_plot_panels ... ok
+test panels::runtime::tests::health_and_diagnostics_requirements_are_deduplicated_without_playback_routes ... ok
+test panels::runtime::tests::unknown_invalid_and_unsupported_panels_preserve_original_config ... ok
+test panels::status::tests::status_accepts_a_cursor_filtered_current_speed ... ok
+test panels::tests::panel_output_aggregation_keeps_actions_and_render_requests ... ok
+test panels::runtime::tests::window_panels_reject_invalid_config_and_versions ... ok
+test scene_extension::recording_tests::actual_wasm_indexed_seek_and_failed_restore_preserve_transaction ... ignored, build independent path-boxes guest first
+test scene_extension::tests::extension_failure_is_latched_without_mutating_feature_truth ... ok
+test preview::tests::preview_follows_source_topics_across_subset_selection_id_changes_and_return ... ok
+test scene_extension::tests::missing_tf_clears_geometry_without_reexecuting_guest ... ok
+test scene_extension::tests::acquisition_pose_survives_tf_history_eviction_and_missing_tf_retries ... ok
+test scene_extension::tests::rust_extension_reuses_unchanged_output_and_resets_seek_source_generations ... ok
+test signal_view::tests::gets_speed_and_yaw_rate_with_independent_snapshot_state ... ok
+test presentation::tests::owns_and_resets_cpu_presentation_caches ... ok
+test workspace::tests::analysis_layouts_load_and_inspection_does_not_decode_cameras ... ok
+test window_query_loader::tests::session_queries_preserve_playback_selection_and_seek_invalidates_results ... ok
+test workspace::extension_tests::extension_demand_is_startup_only_and_shares_existing_path_route ... ok
+test window_query_loader::tests::unchanged_demand_reuses_one_result_and_one_worker ... ok
+test inspector_loader::tests::coalescing_does_not_lose_initial_source_or_latest_cursor ... ok
+test workspace::tests::display_time_prefers_preview_and_falls_back_to_cursor ... ok
+test workspace::tests::invalid_bundled_equivalent_uses_a_visible_emergency_panel ... ok
+test workspace::tests::bundled_workspace_has_four_typed_panels_without_placeholders ... ok
+test workspace::tests::camera_wall_selects_only_its_four_streams ... ok
+test workspace::tests::camera_topic_selection_is_staged_before_changing_focus ... ok
+test workspace::tests::monitor_embeds_queries_without_overview_or_extra_camera_demand ... ok
+test workspace::tests::bundled_showcase_is_selectable_without_changing_the_standard_default ... ok
+test workspace::tests::playback_and_preview_keep_their_distinct_effects ... ok
+test inspector_loader::tests::cursor_boundaries_empty_predecessor_and_same_message_view_reuse ... ok
+test workspace::tests::scoped_actions_update_only_the_target_panel_state ... ok
+test window_query_loader::tests::backward_seek_immediately_hides_future_windows_and_requeries ... ok
+test app::tests::camera_selection_restores_raw_and_compressed_at_the_cursor_and_prunes_other_images ... ok
+test inspector_loader::tests::source_replacement_keeps_one_worker_and_rejects_old_recording_results ... ok
+test panels::camera::tests::dropdown_emits_a_scoped_topic_choice_without_committing_the_binding ... ok
+test panels::topics::tests::clicking_a_filtered_topic_emits_the_existing_inspector_query_action ... ok
+test session::numeric_demand_tests::adding_and_removing_field_plots_preserves_fixed_selection_and_cursor ... ok
+test graphics::layout_host::tests::bundled_layout_invokes_all_panels_and_aggregates_render_requests ... ok
+test live::admission::tests::resident_backlog_never_grows_with_input_duration ... ok
+test app::tests::focus_only_keeps_camera_ids_scene_and_clock_and_presents_pending_image ... ok
+test app::tests::native_workspace_seek_restores_the_indexed_camera_predecessor ... ok
+test live::tests::admission_and_direct_delivery_reduce_to_the_same_feature_state ... ok
+test window_query_loader::tests::forward_updates_publish_completed_results_and_errors_are_isolated ... ok
+test window_query_loader::tests::source_replacement_reuses_one_worker_and_discards_old_results ... ok
+
+test result: ok. 95 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.26s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.26s
+     Running unittests src/main.rs (target/debug/deps/viewer_native-71e678a260b58f5a)
+
+running 1 test
+test scene_extension::recording_tests::actual_wasm_indexed_seek_and_failed_restore_preserve_transaction ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.09s

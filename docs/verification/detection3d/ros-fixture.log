@@ -1,0 +1,91 @@
+time="2026-10-28T14:10:00+09:00" level=warning msg="No services to build"
+time="2026-10-28T14:10:00+09:00" level=warning msg="No services to build"
+ Container mcap_player-dev-run-2e293d0023db Creating
+ Container mcap_player-dev-run-2e293d0023db Created
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following NEW packages will be installed:
+  ros-jazzy-vision-msgs
+0 upgraded, 1 newly installed, 0 to remove and 153 not upgraded.
+Need to get 190 kB of archives.
+After this operation, 2629 kB of additional disk space will be used.
+Get:1 http://packages.ros.org/ros2/ubuntu noble/main amd64 ros-jazzy-vision-msgs amd64 4.1.1-3noble.20260911.140407 [190 kB]
+debconf: delaying package configuration, since apt-utils is not installed
+Fetched 190 kB in 1s (200 kB/s)
+Selecting previously unselected package ros-jazzy-vision-msgs.
+(Reading database ...
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 44467 files and directories currently installed.)
+Preparing to unpack .../ros-jazzy-vision-msgs_4.1.1-3noble.20260911.140407_amd64.deb ...
+Unpacking ros-jazzy-vision-msgs (4.1.1-3noble.20260911.140407) ...
+Setting up ros-jazzy-vision-msgs (4.1.1-3noble.20260911.140407) ...
+Wrote 985 ROS-serialized bytes
+ros-jazzy-vision-msgs	4.1.1-3noble.20260911.140407
+# A list of 3D detections, for a multi-object 3D detector.
+
+std_msgs/Header header
+	builtin_interfaces/Time stamp
+		int32 sec
+		uint32 nanosec
+	string frame_id
+
+# A list of the detected proposals. A multi-proposal detector might generate
+#   this list with many candidate detections generated from a single input.
+Detection3D[] detections
+	std_msgs/Header header
+		builtin_interfaces/Time stamp
+			int32 sec
+			uint32 nanosec
+		string frame_id
+	ObjectHypothesisWithPose[] results
+		ObjectHypothesis hypothesis
+			string class_id
+			float64 score
+		geometry_msgs/PoseWithCovariance pose
+			Pose pose
+				Point position
+					float64 x
+					float64 y
+					float64 z
+				Quaternion orientation
+					float64 x 0
+					float64 y 0
+					float64 z 0
+					float64 w 1
+			float64[36] covariance
+	BoundingBox3D bbox
+		geometry_msgs/Pose center
+			Point position
+				float64 x
+				float64 y
+				float64 z
+			Quaternion orientation
+				float64 x 0
+				float64 y 0
+				float64 z 0
+				float64 w 1
+		geometry_msgs/Vector3 size
+			float64 x
+			float64 y
+			float64 z
+	string id

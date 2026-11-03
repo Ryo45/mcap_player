@@ -1,0 +1,39 @@
+{
+  "source_sha256": "11ef45eb17d2f1f57ba7651372072f5a5230a985fc416fa124136f3546b1820d",
+  "binary_sha256": "794c16df2c29ca9be830efc0e356d721342061c5c2d4bf60cf85c2ea4175582e",
+  "guest_sha256": "884a62fd76e8d874701ccb5f26fa72d5dd6a2aef86647aeae3932b2a16aa0292",
+  "alternate_guest_sha256": "a098adc67b81fd93473a9c07156a5069cb1a18b2fd1944593230ec1de0ce054d",
+  "captures": [
+    {
+      "name": "native",
+      "pid": 3395081,
+      "command": [
+        "target/plugin-panel/viewer-native",
+        "--mcap",
+        "target/plugin-panel/recording.mcap",
+        "--layout",
+        "explore",
+        "--plugin-panel",
+        "examples/robot-status-panel/panel.json"
+      ],
+      "binary_sha256": "794c16df2c29ca9be830efc0e356d721342061c5c2d4bf60cf85c2ea4175582e",
+      "image": "native-final.png"
+    },
+    {
+      "name": "alternate",
+      "pid": 3395116,
+      "command": [
+        "target/plugin-panel/viewer-native",
+        "--mcap",
+        "target/plugin-panel/recording.mcap",
+        "--layout",
+        "explore",
+        "--plugin-panel",
+        "target/plugin-panel/alternate-panel.json"
+      ],
+      "binary_sha256": "794c16df2c29ca9be830efc0e356d721342061c5c2d4bf60cf85c2ea4175582e",
+      "image": "alternate-final.png"
+    }
+  ],
+  "note": "Native and alternate guest runs use the same host binary, restarted between runs. Reload implementation is tested separately. The optional Scene coexistence GUI capture was obscured by the desktop lock screen and is not published."
+}

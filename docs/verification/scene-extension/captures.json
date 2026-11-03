@@ -1,0 +1,31 @@
+{
+  "source_sha256": "96263a20af75fea19bbd27da5e9e919504b1ea6882b758d2063fbddbe856c36a",
+  "binary_sha256": "bde480da4dfe855f01dd0230a27c6f082932240259c78b26165b83e41658e92e",
+  "guest_sha256": "baa3b6ab15a2bdb78da328654b5d06da4458707a3dbf7bbf1a0aad3c14e2fa40",
+  "captures": [
+    {
+      "enabled": false,
+      "command": [
+        "target/release/viewer-native",
+        "--mcap",
+        "/home/ryo/development/mcap_player/target/readme-release/recording.mcap",
+        "--layout",
+        "monitor"
+      ],
+      "image": "disabled.png"
+    },
+    {
+      "enabled": true,
+      "command": [
+        "target/release/viewer-native",
+        "--mcap",
+        "/home/ryo/development/mcap_player/target/readme-release/recording.mcap",
+        "--layout",
+        "monitor",
+        "--scene-extension",
+        "examples/path-boxes/extension.json"
+      ],
+      "image": "enabled.png"
+    }
+  ]
+}

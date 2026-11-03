@@ -10,6 +10,8 @@ a reason to split a module; ownership and independent reasons to change are.
 - `viewer-core`: source-neutral facts, schema/CDR, pure reductions, clocks,
   feature state and presentation. No dependency on MCAP or its codecs.
 - `viewer-mcap`: MCAP bytes, indexed access, recording traversal and queries.
+- `viewer-extension`: optional Native Core Wasm execution and its bounded wire ABI;
+  source-neutral Scene geometry remains in viewer-core, GPU ownership in scene-renderer.
 - Frontend apps: platform I/O orchestration, async/thread lifecycle and GUI.
 - Renderer crates: camera preparation/textures, BEV or Scene GPU rendering.
 - `viewer-remote-protocol`, `viewer-layout`, `viewer-preview-mcap`: their concrete
@@ -43,6 +45,12 @@ visibility are independent of this physical naming choice.
 | Source catalog facts and capabilities | `viewer-core/recording/catalog.rs` |
 | ROS message definition parsing and field model | `viewer-core/message/schema.rs` |
 | CDR wire primitives / selected numeric extraction | `viewer-core/message/cdr/wire.rs`, `numeric.rs` |
+| ROS Detection3DArray bounded CDR/model | `viewer-core/message/cdr/detection3d.rs` |
+| Detection3D latest state / admission | `viewer-core/feature/detection3d.rs`, `controllers/detection3d.rs` |
+| Shared host/guest typed ABI codec | `viewer-extension/wire.rs` |
+| Scene Box/Object ID validation and rigid placement | `viewer-core/scene_overlay.rs`, `feature/transform.rs` |
+| Optional Native Wasm execution / wire ABI | `viewer-extension/wasm.rs` |
+| Native extension output lifecycle and fixed-frame placement | `viewer-native/scene_extension.rs` |
 | Path feature state | `viewer-core/feature/path.rs` |
 | Point Cloud admission/decode/state updates | `viewer-core/feature/controllers/point_cloud.rs` |
 | Source-neutral derived artifact identity | `viewer-core/derived/source_fingerprint.rs` |

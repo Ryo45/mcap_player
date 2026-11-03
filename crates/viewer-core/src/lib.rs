@@ -20,6 +20,11 @@ mod message;
 mod playback;
 mod presentation;
 mod recording;
+mod scene_overlay;
+pub use scene_overlay::{
+    MAX_OVERLAY_BOXES, MAX_OVERLAY_LINES, SceneBox, SceneLine, SceneObjectId, SceneOverlay,
+    SceneOverlayError,
+};
 
 pub use derived::{
     Bookmark, BookmarkDocument, BookmarkId, BookmarkValidationError,
@@ -35,8 +40,8 @@ pub use feature::{
     CameraStatus, DYNAMIC_TF_HISTORY, FeatureRestoreError, FeatureRestoreErrorKind, FeatureRuntime,
     OdometryController, PathController, PathFrame, PathState, PlaybackPerformance,
     PointCloudAttributes, PointCloudController, PointCloudFrame, PointCloudState,
-    ProcessingCounters, RawImageEncoding, RawImageLayout, TelemetryFrame, TelemetryState,
-    TransformBatch, TransformController, TransformState,
+    ProcessingCounters, RawImageEncoding, RawImageLayout, RigidTransform, TelemetryFrame,
+    TelemetryState, TransformBatch, TransformController, TransformState,
 };
 pub use message::{
     ArrivalTime, CompressedImage, DecodeError, DecodedCompressedImage, DecodedPointCloud2,
@@ -91,3 +96,17 @@ pub use health::{
 
 mod platform_geometry;
 pub use platform_geometry::{PlatformGeometry, PlatformGeometryError};
+
+pub use message::{
+    BoundingBox3D, Detection3D, Detection3DArray, MAX_DETECTION_MESSAGE_BYTES,
+    MAX_DETECTION_RESULTS, MAX_DETECTIONS, MessageHeader, ObjectHypothesis,
+    ObjectHypothesisWithPose, Pose3D, PoseWithCovariance, decode_detection3d_array,
+    encode_detection3d_array_cdr,
+};
+
+pub use feature::{Detection3DController, Detection3DFrame, Detection3DState};
+
+pub use message::{
+    FieldDecodeBudget, FieldDecodeLimits, MessageScalar, ScalarFieldExtractor,
+    SelectedFieldExtractor, SelectedValue,
+};

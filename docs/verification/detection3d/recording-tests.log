@@ -1,0 +1,14 @@
+   Compiling viewer-core v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-core)
+   Compiling viewer-mcap v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-mcap)
+   Compiling scene-renderer v0.1.0 (/home/ryo/development/mcap_player/crates/scene-renderer)
+   Compiling viewer-renderer v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-renderer)
+   Compiling viewer-extension v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-extension)
+   Compiling viewer-preview-mcap v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-preview-mcap)
+   Compiling viewer-native v0.1.0 (/home/ryo/development/mcap_player/apps/viewer-native)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.15s
+     Running unittests src/main.rs (target/debug/deps/viewer_native-b93e2604cf1dfe13)
+
+running 1 test
+test scene_extension::detection_recording_tests::actual_detection3d_recording_to_wasm_to_scene ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 97 filtered out; finished in 0.17s

@@ -1,0 +1,31 @@
+{
+  "source_sha256": "fbb8131105ec27b89fe5a58bc8949b8757e5d6620d3842f825602c5974250b94",
+  "binary_sha256": "0eba557261aaed45cbd972feab0fab1954a10571d34ffc5f9bf3453ddc704a0a",
+  "guest_sha256": "3ffcdafb0548dd2c8031b967d7ce793ba4bc6d6655e0e21c4daf51aa816bac59",
+  "captures": [
+    {
+      "enabled": false,
+      "command": [
+        "target/release/viewer-native",
+        "--mcap",
+        "/home/ryo/development/mcap_player/target/scene-extension-independent/staggered/recording.mcap",
+        "--layout",
+        "monitor"
+      ],
+      "image": "disabled.png"
+    },
+    {
+      "enabled": true,
+      "command": [
+        "target/release/viewer-native",
+        "--mcap",
+        "/home/ryo/development/mcap_player/target/scene-extension-independent/staggered/recording.mcap",
+        "--layout",
+        "monitor",
+        "--scene-extension",
+        "examples/path-boxes/extension.json"
+      ],
+      "image": "enabled.png"
+    }
+  ]
+}

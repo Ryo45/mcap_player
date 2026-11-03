@@ -21,7 +21,6 @@ import time
 import urllib.request
 import zlib
 
-from PIL import Image
 from browser_cdp import CDP
 from check_native_gpu import X11
 from compare_native_desktop import capture, digest, identify, wait_for, window_for, TIME_PROPS, STATE
@@ -41,6 +40,8 @@ def import_layout(cdp, layout):
 
 
 def main():
+    from PIL import Image
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--app', choices=['native', 'lichtblick'], required=True)
     parser.add_argument('--case', choices=['default', 'scan', 'raw'], required=True)

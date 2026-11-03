@@ -25,6 +25,12 @@ pub(crate) struct SceneViewOutput {
 pub(crate) fn show_scene_view(ui: &mut egui::Ui, input: SceneViewInput<'_>) -> SceneViewOutput {
     let mut camera_mode = input.camera_mode;
     let mut accumulation_change = None;
+    if let Some(error) = &input.diagnostics.extension_error {
+        ui.colored_label(
+            egui::Color32::LIGHT_RED,
+            format!("Scene extension: {error}"),
+        );
+    }
     let mut tf_status = if let Some(error) = &input.diagnostics.current_tf_error {
         format!(
             "TF missing {} → {} · misses {}",

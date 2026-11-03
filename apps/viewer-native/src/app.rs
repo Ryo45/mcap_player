@@ -60,7 +60,7 @@ impl App {
                 .panels
                 .camera_selection(playback.catalog(), &self.args.topic, None, true)
                 .map_err(anyhow::Error::msg)?;
-            let requirements = self.workspace.panels.requirements_for_cameras(&cameras);
+            let requirements = self.workspace.requirements_for_cameras(&cameras);
             let topic = cameras.priority_topic(&self.args.topic).to_owned();
             let session = ViewerSession::from_playback(
                 path,
@@ -233,6 +233,18 @@ impl App {
             let presentation = self.presentation_state.build(PresentationBuildInput {
                 cameras: runtime.cameras(),
                 path: runtime.path(),
+                #[cfg(feature = "scene-extension")]
+                extension_input: self
+                    .workspace
+                    .extension_stream()
+                    .and_then(|(kind, stream)| match kind {
+                        viewer_extension::ExtensionInputKind::PathPositions => runtime
+                            .path_for_stream(stream)
+                            .map(|c| crate::scene_extension::SceneInput::Path(c.state())),
+                        viewer_extension::ExtensionInputKind::Detection3DArray => runtime
+                            .detections_for_stream(stream)
+                            .map(|c| crate::scene_extension::SceneInput::Detections(c.state())),
+                    }),
                 odometry: runtime.odometry(),
                 transforms: runtime.transforms(),
                 point_cloud_controller: runtime.point_cloud(),
@@ -257,6 +269,10 @@ impl App {
                     inspector_topic: session.selected_inspector_topic(),
                     topic_tree: session.topic_tree(),
                     numeric_series: session.numeric_series(),
+                    #[cfg(feature = "plugin-panels")]
+                    plugin_generation: session.plugin_data().1,
+                    #[cfg(feature = "plugin-panels")]
+                    plugin_data: session.plugin_data().0,
                     preview: self.preview.snapshot(),
                     preview_speed: self.preview.speed_overview(),
                     bookmarks: self.bookmarks.bookmarks(),
@@ -350,7 +366,7 @@ impl App {
                                 false,
                             )
                             .map_err(anyhow::Error::msg)?;
-                        let requirements = workspace.panels.requirements_for_cameras(&cameras);
+                        let requirements = workspace.requirements_for_cameras(&cameras);
                         let priority = cameras.priority_topic(&topic);
                         let plan = viewer_core::SessionPlan::build(
                             catalog,
@@ -654,7 +670,7 @@ mod tests {
             .panels
             .camera_selection(playback.catalog(), "/missing/project/camera", None, true)
             .unwrap();
-        let requirements = workspace.panels.requirements_for_cameras(&cameras);
+        let requirements = workspace.requirements_for_cameras(&cameras);
         let session = ViewerSession::from_playback(
             &path,
             playback,
@@ -681,7 +697,7 @@ mod tests {
             .panels
             .camera_selection(playback.catalog(), "", None, true)
             .unwrap();
-        let requirements = workspace.panels.requirements_for_cameras(&cameras);
+        let requirements = workspace.requirements_for_cameras(&cameras);
         let session = ViewerSession::from_playback(
             path,
             playback,
@@ -987,7 +1003,7 @@ mod tests {
             .camera_selection(&catalog, "/missing", None, true)
             .unwrap();
         assert!(cameras.available_topics.is_empty());
-        let requirements = workspace.panels.requirements_for_cameras(&cameras);
+        let requirements = workspace.requirements_for_cameras(&cameras);
         let plan = viewer_core::SessionPlan::build(
             &catalog,
             "/missing",

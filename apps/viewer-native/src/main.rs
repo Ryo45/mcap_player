@@ -11,9 +11,13 @@ mod live;
 mod numeric_plot_loader;
 mod odometry_signals;
 mod panels;
+#[cfg(feature = "plugin-panels")]
+mod plugin_queries;
 mod presentation;
 mod preview;
 mod query_error;
+#[cfg(feature = "scene-extension")]
+mod scene_extension;
 mod session;
 mod signal_view;
 mod ui_components;
@@ -40,6 +44,26 @@ fn main() -> Result<()> {
         args.point_cloud_topic.as_deref(),
     )?;
     workspace.set_bindings(bindings);
+    #[cfg(feature = "plugin-panels")]
+    for manifest in &args.plugin_panels {
+        workspace.add_plugin_panel(manifest)?;
+    }
+    #[cfg(not(feature = "plugin-panels"))]
+    debug_assert!(args.plugin_panels.is_empty());
+    #[allow(unused_mut)]
+    let mut presentation_state = PresentationState::default();
+    #[cfg(feature = "scene-extension")]
+    if let Some(manifest) = &args.scene_extension {
+        use viewer_extension::VisualizationExtension;
+        let extension = viewer_extension::WasmExtension::load(manifest)?;
+        workspace.enable_scene_extension(
+            &extension.descriptor().topic,
+            extension.descriptor().input_kind()?,
+        )?;
+        presentation_state.set_scene_extension(Box::new(extension));
+    }
+    #[cfg(not(feature = "scene-extension"))]
+    debug_assert!(args.scene_extension.is_none());
     let event_loop = EventLoop::new()?;
     event_loop.set_control_flow(ControlFlow::Poll);
     let mut app = App {
@@ -49,7 +73,7 @@ fn main() -> Result<()> {
         workspace,
         preview: PreviewCoordinator::default(),
         bookmarks: bookmarks::BookmarkState::default(),
-        presentation_state: PresentationState::default(),
+        presentation_state,
         graphics: None,
         last_frame: Instant::now(),
         diagnostics: AppDiagnostics::default(),

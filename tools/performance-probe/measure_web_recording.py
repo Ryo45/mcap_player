@@ -23,6 +23,21 @@ def percentile(values, fraction):
     return sorted(values)[min(len(values) - 1, int((len(values) - 1) * fraction))] if values else None
 
 
+def seek_observation(state, target, issued):
+    """Time the matching canvas draw, independently of CDP polling cadence."""
+    event = state.get('focus_presentation')
+    if (abs(state['cursor'] - target) >= .0002 or not event
+            or event['seekToken'] != issued['token'] or event['t'] < issued['time']):
+        return None
+    return {
+        'target': target, 'seek_token': issued['token'], 'job': event['job'],
+        'issued_time_ms': issued['time'], 'presented_time_ms': event['t'],
+        'observed_time_ms': state['now'],
+        'focus_changed_ms': event['t'] - issued['time'],
+        'observation_delay_ms': state['now'] - event['t'],
+    }
+
+
 def measure(args):
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -37,6 +52,7 @@ def measure(args):
         'samples': [], 'memory': [], 'seeks': [],
         'pss_limit_mib': args.pss_limit_mib, 'seconds': args.seconds,
         'observer': '16x9 canvas content hash on production composition; readback overhead included',
+        'seek_timing': 'v2: input dispatch start to first matching camera drawImage return; excludes CDP detection delay; not display scanout',
     }
     checkpoint = lambda: (output / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
     checkpoint()
@@ -117,10 +133,9 @@ def measure(args):
                     page.evaluate("document.querySelector('#play').click()")
                 result.update(play_start_ms=start, play_end_ms=end, final=ended)
                 for target in ([.7, .2, .6, .3] if args.seeks else []):
-                    issued = page.evaluate(f"(()=>{{recordingProbe.phase='seek';recordingProbe.seekToken++;const t=document.querySelector('#timeline');t.value='{target}';t.dispatchEvent(new Event('input',{{bubbles:true}}));return {{time:performance.now(), token:recordingProbe.seekToken}};}})()")
-                    settled = wait(lambda state: abs(state['cursor'] - target) < .0002 and page.evaluate(
-                        f'recordingProbe.presentations.some(event=>event.id==="camera" && event.seekToken==={issued["token"]} && event.t>={issued["time"]})'), 30)
-                    result['seeks'].append({'target': target, 'focus_changed_ms': settled['now'] - issued['time']})
+                    issued = page.evaluate(f"(()=>{{recordingProbe.phase='seek';recordingProbe.seekToken++;const t=document.querySelector('#timeline');t.value='{target}';const issued={{time:performance.now(), token:recordingProbe.seekToken}};t.dispatchEvent(new Event('input',{{bubbles:true}}));return issued;}})()")
+                    settled = wait(lambda state: seek_observation(state, target, issued) is not None, 30)
+                    result['seeks'].append(seek_observation(settled, target, issued))
                 result['changes'] = page.evaluate('recordingProbe.changes')
                 result['presentations'] = page.evaluate('recordingProbe.presentations')
                 result['beats'] = page.evaluate('recordingProbe.beats')

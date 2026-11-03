@@ -19,7 +19,6 @@ import time
 import urllib.request
 import zlib
 
-from PIL import Image
 from browser_cdp import CDP
 from check_native_gpu import X11
 from compare_native_desktop import capture, digest, identify, wait_for, window_for
@@ -132,6 +131,8 @@ def camera_geometry(rect,index):
 
 
 def main():
+    from PIL import Image
+
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--case',type=Path,required=True)
     parser.add_argument('--app',choices=['native','lichtblick'],required=True)

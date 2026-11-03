@@ -1,0 +1,35 @@
+{
+  "source_sha256": "3ca23b1eb57d2eac37346f878d8b40817757fe85667f618f1f179303fa6fcec4",
+  "binary_sha256": "ef9db7f254aba65ab95ac0bde3029aab3a6a2bbc7672030478ece1cfdfb49637",
+  "guest_sha256": "51292cabe3e1015919c8526b20b7a33545ff2773454f5d11c52f90fc4d2a699b",
+  "captures": [
+    {
+      "enabled": false,
+      "command": [
+        "target/release/viewer-native",
+        "--mcap",
+        "/home/ryo/development/mcap_player/target/detection3d/recording/recording.mcap",
+        "--layout",
+        "monitor",
+        "--inspect-topic",
+        "/perception/detections"
+      ],
+      "image": "disabled.png"
+    },
+    {
+      "enabled": true,
+      "command": [
+        "target/release/viewer-native",
+        "--mcap",
+        "/home/ryo/development/mcap_player/target/detection3d/recording/recording.mcap",
+        "--layout",
+        "monitor",
+        "--inspect-topic",
+        "/perception/detections",
+        "--scene-extension",
+        "examples/detection-boxes/extension.json"
+      ],
+      "image": "enabled.png"
+    }
+  ]
+}

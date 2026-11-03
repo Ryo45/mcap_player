@@ -16,13 +16,18 @@ pub struct TransformBatch {
     pub transforms: Vec<TransformStamped>,
 }
 
+/// A validated source-neutral rigid placement resolved from TF. No scale component.
 #[derive(Clone, Copy, Debug, PartialEq)]
-struct RigidTransform {
+pub struct RigidTransform {
     translation: [f64; 3],
     rotation: [f64; 4],
 }
 
 impl RigidTransform {
+    /// Compose a unit ROS x/y/z/w quaternion with this placement rotation.
+    pub fn transform_orientation(self, orientation: [f32; 4]) -> [f32; 4] {
+        quaternion_multiply(self.rotation, orientation.map(f64::from)).map(|v| v as f32)
+    }
     const IDENTITY: Self = Self {
         translation: [0.0; 3],
         rotation: [0.0, 0.0, 0.0, 1.0],
@@ -69,7 +74,7 @@ impl RigidTransform {
     fn transform_point_f64(self, point: [f64; 3]) -> [f64; 3] {
         add(rotate(self.rotation, point), self.translation)
     }
-    fn transform_point(self, point: [f32; 3]) -> [f32; 3] {
+    pub fn transform_point(self, point: [f32; 3]) -> [f32; 3] {
         self.transform_point_f64(point.map(f64::from))
             .map(|v| v as f32)
     }
@@ -163,6 +168,16 @@ impl TransformState {
 
     pub fn dynamic_len(&self) -> usize {
         self.dynamic_edges.len()
+    }
+
+    /// Resolve one acquisition-time rigid placement for a complete geometry snapshot.
+    pub fn resolve_at(
+        &self,
+        source: &str,
+        target: &str,
+        time: MeasurementTime,
+    ) -> Option<RigidTransform> {
+        self.resolve(source, target, Some(time))
     }
 
     pub fn transform_points(
@@ -302,7 +317,7 @@ fn quaternion_multiply(left: [f64; 4], right: [f64; 4]) -> [f64; 4] {
     ]
 }
 
-fn rotate(rotation: [f64; 4], point: [f64; 3]) -> [f64; 3] {
+pub(crate) fn rotate(rotation: [f64; 4], point: [f64; 3]) -> [f64; 3] {
     let vector = [point[0], point[1], point[2], 0.0];
     let inverse = [-rotation[0], -rotation[1], -rotation[2], rotation[3]];
     let rotated = quaternion_multiply(quaternion_multiply(rotation, vector), inverse);

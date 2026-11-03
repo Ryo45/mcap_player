@@ -1,0 +1,867 @@
+{
+  "version": 1,
+  "engine": "web",
+  "machine": {
+    "cpu": "Intel(R) Core(TM) Ultra 7 265KF",
+    "machine": "x86_64",
+    "kernel": "7.0.0-30-generic",
+    "python": "3.12.3"
+  },
+  "cases_sha256": "8e70c6caa9b54d08ad539029f3451a99b08f4bdf8d6b3e5924a4f695326f7e80",
+  "fixtures": {
+    "cases_sha256": "8e70c6caa9b54d08ad539029f3451a99b08f4bdf8d6b3e5924a4f695326f7e80",
+    "generator_sha256": "f430250c0961a2bf07583c6ad7eed2caa12baf62ec01d08a0601d5be4d5756c6",
+    "fixtures": {
+      "raw-fhd-30hz": {
+        "sha256": "a0c742a218ba54cbf341a0eaebb8536d7c795f88954aa9c7398a9147b28e8826",
+        "bytes": 541384636
+      },
+      "jpeg-4k-8cam": {
+        "sha256": "c2d283cc811866fd74fd29bdaab1b7720cbc2fe1420ccaeae94dfd171ac7d649",
+        "bytes": 987803011
+      },
+      "jpeg-512m": {
+        "sha256": "f0650dbfd4d2f621b564622bc1e91af9d9326dae5860b902bd5cfad8fac12178",
+        "bytes": 987947569
+      },
+      "cloud-60k": {
+        "sha256": "fd1db3b74c95d9f0fdccc97019044d5199eeb38fae95aca9456e75babf3046ba",
+        "bytes": 36008989
+      }
+    },
+    "complete": true
+  },
+  "limits": {
+    "workload_ms": [
+      "higher",
+      0.2,
+      10
+    ],
+    "seek_revisit_ms": [
+      "higher",
+      0.25,
+      1
+    ],
+    "peak_pss_mib": [
+      "higher",
+      0.2,
+      64
+    ],
+    "peak_rss_mib": [
+      "higher",
+      0.2,
+      64
+    ],
+    "open_ms": [
+      "higher",
+      0.25,
+      100
+    ],
+    "focus_content_hz": [
+      "lower",
+      0.15,
+      1
+    ],
+    "background_min_content_hz": [
+      "lower",
+      0.2,
+      0.5
+    ],
+    "log_seconds_per_wall_second": [
+      "lower",
+      0.1,
+      0.05
+    ],
+    "heartbeat_max_ms": [
+      "higher",
+      0.5,
+      20
+    ],
+    "seek_focus_ms": [
+      "higher",
+      0.25,
+      20
+    ]
+  },
+  "repeats": 3,
+  "runs": [
+    {
+      "case": "web/raw-fhd-30hz",
+      "repeat": 0,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 414.572318084538,
+        "focus_content_hz": 29.034841813868614,
+        "background_min_content_hz": 0,
+        "log_seconds_per_wall_second": 0.9900769811699653,
+        "heartbeat_max_ms": 32,
+        "heartbeat_p95_ms": 27.5,
+        "peak_pss_mib": 1189.1103515625,
+        "seek_focus_ms": 78.59999990463257
+      },
+      "web_assets": {
+        "camera_decode_worker.js": "b6f4aa7f1e03beac72af90128eefecdf792c682f1b7012725d961b5f62f9ee19",
+        "index.html": "49cda4819256fdbcf34b3fb4a978575248049361b113ca662bfb41d3680ee664",
+        "style-e7f6b56537a4e4d5.css": "6467c2b56e0bc4fffaf30dd2b497d68e71a368b8fc3a281bc8ef39d76e698257",
+        "viewer-web-346fa69a6ab50738.js": "a67dae492be311c389f43e49ac3c0dbbcf437553e475fb065c6b32e55c71ab2a",
+        "viewer-web-346fa69a6ab50738_bg.wasm": "5e8968f3d39f1d97fd80cae3a29ec9fa257b103e326992dd3d718fa474475872",
+        "viewer-web-71638f1c2e5e9a72.js": "905d0189d1729f0cac4519c568fab7878e53b8f3747beab27c51d561eed3cf4d",
+        "viewer-web-71638f1c2e5e9a72_bg.wasm": "0676111c5cc2de0e7c1940467d5ac8e39fde4aabf0422b13e4c71530e8442c55"
+      },
+      "seek_timing": "v2: input dispatch start to first matching camera drawImage return; excludes CDP detection delay; not display scanout",
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/jpeg-4k-8cam",
+      "repeat": 0,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 672.6815272122622,
+        "focus_content_hz": 9.630981345378668,
+        "background_min_content_hz": 2.0275750200797193,
+        "log_seconds_per_wall_second": 0.9884428222888633,
+        "heartbeat_max_ms": 61.40000057220459,
+        "heartbeat_p95_ms": 25.800000190734863,
+        "peak_pss_mib": 1657.1767578125,
+        "seek_focus_ms": null
+      },
+      "web_assets": {
+        "camera_decode_worker.js": "b6f4aa7f1e03beac72af90128eefecdf792c682f1b7012725d961b5f62f9ee19",
+        "index.html": "49cda4819256fdbcf34b3fb4a978575248049361b113ca662bfb41d3680ee664",
+        "style-e7f6b56537a4e4d5.css": "6467c2b56e0bc4fffaf30dd2b497d68e71a368b8fc3a281bc8ef39d76e698257",
+        "viewer-web-346fa69a6ab50738.js": "a67dae492be311c389f43e49ac3c0dbbcf437553e475fb065c6b32e55c71ab2a",
+        "viewer-web-346fa69a6ab50738_bg.wasm": "5e8968f3d39f1d97fd80cae3a29ec9fa257b103e326992dd3d718fa474475872",
+        "viewer-web-71638f1c2e5e9a72.js": "905d0189d1729f0cac4519c568fab7878e53b8f3747beab27c51d561eed3cf4d",
+        "viewer-web-71638f1c2e5e9a72_bg.wasm": "0676111c5cc2de0e7c1940467d5ac8e39fde4aabf0422b13e4c71530e8442c55"
+      },
+      "seek_timing": "v2: input dispatch start to first matching camera drawImage return; excludes CDP detection delay; not display scanout",
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/jpeg-512m",
+      "repeat": 0,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 590.6662894412875,
+        "focus_content_hz": 9.678569609761611,
+        "background_min_content_hz": 2.0375936020550762,
+        "log_seconds_per_wall_second": 0.9933268810018496,
+        "heartbeat_max_ms": 48.40000057220459,
+        "heartbeat_p95_ms": 24.100000381469727,
+        "peak_pss_mib": 1691.421875,
+        "seek_focus_ms": null
+      },
+      "web_assets": {
+        "camera_decode_worker.js": "b6f4aa7f1e03beac72af90128eefecdf792c682f1b7012725d961b5f62f9ee19",
+        "index.html": "49cda4819256fdbcf34b3fb4a978575248049361b113ca662bfb41d3680ee664",
+        "style-e7f6b56537a4e4d5.css": "6467c2b56e0bc4fffaf30dd2b497d68e71a368b8fc3a281bc8ef39d76e698257",
+        "viewer-web-346fa69a6ab50738.js": "a67dae492be311c389f43e49ac3c0dbbcf437553e475fb065c6b32e55c71ab2a",
+        "viewer-web-346fa69a6ab50738_bg.wasm": "5e8968f3d39f1d97fd80cae3a29ec9fa257b103e326992dd3d718fa474475872",
+        "viewer-web-71638f1c2e5e9a72.js": "905d0189d1729f0cac4519c568fab7878e53b8f3747beab27c51d561eed3cf4d",
+        "viewer-web-71638f1c2e5e9a72_bg.wasm": "0676111c5cc2de0e7c1940467d5ac8e39fde4aabf0422b13e4c71530e8442c55"
+      },
+      "seek_timing": "v2: input dispatch start to first matching camera drawImage return; excludes CDP detection delay; not display scanout",
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/jpeg-512m",
+      "repeat": 1,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 623.7889053300023,
+        "focus_content_hz": 9.652509652041996,
+        "background_min_content_hz": 2.032107295166736,
+        "log_seconds_per_wall_second": 0.9906523063937838,
+        "heartbeat_max_ms": 33.5,
+        "heartbeat_p95_ms": 25.59999942779541,
+        "peak_pss_mib": 1603.7568359375,
+        "seek_focus_ms": null
+      },
+      "web_assets": {
+        "camera_decode_worker.js": "b6f4aa7f1e03beac72af90128eefecdf792c682f1b7012725d961b5f62f9ee19",
+        "index.html": "49cda4819256fdbcf34b3fb4a978575248049361b113ca662bfb41d3680ee664",
+        "style-e7f6b56537a4e4d5.css": "6467c2b56e0bc4fffaf30dd2b497d68e71a368b8fc3a281bc8ef39d76e698257",
+        "viewer-web-346fa69a6ab50738.js": "a67dae492be311c389f43e49ac3c0dbbcf437553e475fb065c6b32e55c71ab2a",
+        "viewer-web-346fa69a6ab50738_bg.wasm": "5e8968f3d39f1d97fd80cae3a29ec9fa257b103e326992dd3d718fa474475872",
+        "viewer-web-71638f1c2e5e9a72.js": "905d0189d1729f0cac4519c568fab7878e53b8f3747beab27c51d561eed3cf4d",
+        "viewer-web-71638f1c2e5e9a72_bg.wasm": "0676111c5cc2de0e7c1940467d5ac8e39fde4aabf0422b13e4c71530e8442c55"
+      },
+      "seek_timing": "v2: input dispatch start to first matching camera drawImage return; excludes CDP detection delay; not display scanout",
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/jpeg-4k-8cam",
+      "repeat": 1,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 635.4448748752475,
+        "focus_content_hz": 9.70179738514847,
+        "background_min_content_hz": 2.297794117535164,
+        "log_seconds_per_wall_second": 0.9957107842652377,
+        "heartbeat_max_ms": 76.19999980926514,
+        "heartbeat_p95_ms": 23.59999942779541,
+        "peak_pss_mib": 1652.2255859375,
+        "seek_focus_ms": null
+      },
+      "web_assets": {
+        "camera_decode_worker.js": "b6f4aa7f1e03beac72af90128eefecdf792c682f1b7012725d961b5f62f9ee19",
+        "index.html": "49cda4819256fdbcf34b3fb4a978575248049361b113ca662bfb41d3680ee664",
+        "style-e7f6b56537a4e4d5.css": "6467c2b56e0bc4fffaf30dd2b497d68e71a368b8fc3a281bc8ef39d76e698257",
+        "viewer-web-346fa69a6ab50738.js": "a67dae492be311c389f43e49ac3c0dbbcf437553e475fb065c6b32e55c71ab2a",
+        "viewer-web-346fa69a6ab50738_bg.wasm": "5e8968f3d39f1d97fd80cae3a29ec9fa257b103e326992dd3d718fa474475872",
+        "viewer-web-71638f1c2e5e9a72.js": "905d0189d1729f0cac4519c568fab7878e53b8f3747beab27c51d561eed3cf4d",
+        "viewer-web-71638f1c2e5e9a72_bg.wasm": "0676111c5cc2de0e7c1940467d5ac8e39fde4aabf0422b13e4c71530e8442c55"
+      },
+      "seek_timing": "v2: input dispatch start to first matching camera drawImage return; excludes CDP detection delay; not display scanout",
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/raw-fhd-30hz",
+      "repeat": 1,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 406.1262384057045,
+        "focus_content_hz": 28.97199373386463,
+        "background_min_content_hz": 0,
+        "log_seconds_per_wall_second": 0.9879338857220353,
+        "heartbeat_max_ms": 38.79999923706055,
+        "heartbeat_p95_ms": 27.899999618530273,
+        "peak_pss_mib": 1200.7587890625,
+        "seek_focus_ms": 73.30000019073486
+      },
+      "web_assets": {
+        "camera_decode_worker.js": "b6f4aa7f1e03beac72af90128eefecdf792c682f1b7012725d961b5f62f9ee19",
+        "index.html": "49cda4819256fdbcf34b3fb4a978575248049361b113ca662bfb41d3680ee664",
+        "style-e7f6b56537a4e4d5.css": "6467c2b56e0bc4fffaf30dd2b497d68e71a368b8fc3a281bc8ef39d76e698257",
+        "viewer-web-346fa69a6ab50738.js": "a67dae492be311c389f43e49ac3c0dbbcf437553e475fb065c6b32e55c71ab2a",
+        "viewer-web-346fa69a6ab50738_bg.wasm": "5e8968f3d39f1d97fd80cae3a29ec9fa257b103e326992dd3d718fa474475872",
+        "viewer-web-71638f1c2e5e9a72.js": "905d0189d1729f0cac4519c568fab7878e53b8f3747beab27c51d561eed3cf4d",
+        "viewer-web-71638f1c2e5e9a72_bg.wasm": "0676111c5cc2de0e7c1940467d5ac8e39fde4aabf0422b13e4c71530e8442c55"
+      },
+      "seek_timing": "v2: input dispatch start to first matching camera drawImage return; excludes CDP detection delay; not display scanout",
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/raw-fhd-30hz",
+      "repeat": 2,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 412.8522118553519,
+        "focus_content_hz": 29.66864457441868,
+        "background_min_content_hz": 0,
+        "log_seconds_per_wall_second": 0.9889548189250522,
+        "heartbeat_max_ms": 31.800000190734863,
+        "heartbeat_p95_ms": 26.0,
+        "peak_pss_mib": 1184.80859375,
+        "seek_focus_ms": 69.59999990463257
+      },
+      "web_assets": {
+        "camera_decode_worker.js": "b6f4aa7f1e03beac72af90128eefecdf792c682f1b7012725d961b5f62f9ee19",
+        "index.html": "49cda4819256fdbcf34b3fb4a978575248049361b113ca662bfb41d3680ee664",
+        "style-e7f6b56537a4e4d5.css": "6467c2b56e0bc4fffaf30dd2b497d68e71a368b8fc3a281bc8ef39d76e698257",
+        "viewer-web-346fa69a6ab50738.js": "a67dae492be311c389f43e49ac3c0dbbcf437553e475fb065c6b32e55c71ab2a",
+        "viewer-web-346fa69a6ab50738_bg.wasm": "5e8968f3d39f1d97fd80cae3a29ec9fa257b103e326992dd3d718fa474475872",
+        "viewer-web-71638f1c2e5e9a72.js": "905d0189d1729f0cac4519c568fab7878e53b8f3747beab27c51d561eed3cf4d",
+        "viewer-web-71638f1c2e5e9a72_bg.wasm": "0676111c5cc2de0e7c1940467d5ac8e39fde4aabf0422b13e4c71530e8442c55"
+      },
+      "seek_timing": "v2: input dispatch start to first matching camera drawImage return; excludes CDP detection delay; not display scanout",
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/jpeg-4k-8cam",
+      "repeat": 2,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 669.0784702077508,
+        "focus_content_hz": 9.697835849951728,
+        "background_min_content_hz": 2.0416496526214165,
+        "log_seconds_per_wall_second": 0.9953042056529405,
+        "heartbeat_max_ms": 60.5,
+        "heartbeat_p95_ms": 24.399999618530273,
+        "peak_pss_mib": 1637.6396484375,
+        "seek_focus_ms": null
+      },
+      "web_assets": {
+        "camera_decode_worker.js": "b6f4aa7f1e03beac72af90128eefecdf792c682f1b7012725d961b5f62f9ee19",
+        "index.html": "49cda4819256fdbcf34b3fb4a978575248049361b113ca662bfb41d3680ee664",
+        "style-e7f6b56537a4e4d5.css": "6467c2b56e0bc4fffaf30dd2b497d68e71a368b8fc3a281bc8ef39d76e698257",
+        "viewer-web-346fa69a6ab50738.js": "a67dae492be311c389f43e49ac3c0dbbcf437553e475fb065c6b32e55c71ab2a",
+        "viewer-web-346fa69a6ab50738_bg.wasm": "5e8968f3d39f1d97fd80cae3a29ec9fa257b103e326992dd3d718fa474475872",
+        "viewer-web-71638f1c2e5e9a72.js": "905d0189d1729f0cac4519c568fab7878e53b8f3747beab27c51d561eed3cf4d",
+        "viewer-web-71638f1c2e5e9a72_bg.wasm": "0676111c5cc2de0e7c1940467d5ac8e39fde4aabf0422b13e4c71530e8442c55"
+      },
+      "seek_timing": "v2: input dispatch start to first matching camera drawImage return; excludes CDP detection delay; not display scanout",
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    },
+    {
+      "case": "web/jpeg-512m",
+      "repeat": 2,
+      "status": "ok",
+      "metrics": {
+        "open_ms": 622.5031837821007,
+        "focus_content_hz": 9.679555758865396,
+        "background_min_content_hz": 2.037801212392715,
+        "log_seconds_per_wall_second": 0.9934280910414486,
+        "heartbeat_max_ms": 63.80000019073486,
+        "heartbeat_p95_ms": 23.5,
+        "peak_pss_mib": 1645.8037109375,
+        "seek_focus_ms": null
+      },
+      "web_assets": {
+        "camera_decode_worker.js": "b6f4aa7f1e03beac72af90128eefecdf792c682f1b7012725d961b5f62f9ee19",
+        "index.html": "49cda4819256fdbcf34b3fb4a978575248049361b113ca662bfb41d3680ee664",
+        "style-e7f6b56537a4e4d5.css": "6467c2b56e0bc4fffaf30dd2b497d68e71a368b8fc3a281bc8ef39d76e698257",
+        "viewer-web-346fa69a6ab50738.js": "a67dae492be311c389f43e49ac3c0dbbcf437553e475fb065c6b32e55c71ab2a",
+        "viewer-web-346fa69a6ab50738_bg.wasm": "5e8968f3d39f1d97fd80cae3a29ec9fa257b103e326992dd3d718fa474475872",
+        "viewer-web-71638f1c2e5e9a72.js": "905d0189d1729f0cac4519c568fab7878e53b8f3747beab27c51d561eed3cf4d",
+        "viewer-web-71638f1c2e5e9a72_bg.wasm": "0676111c5cc2de0e7c1940467d5ac8e39fde4aabf0422b13e4c71530e8442c55"
+      },
+      "seek_timing": "v2: input dispatch start to first matching camera drawImage return; excludes CDP detection delay; not display scanout",
+      "environment": {
+        "browser": "Chrome/143.0.7499.192",
+        "gpu_mode": "hardware",
+        "gpu_devices": [
+          {
+            "vendorId": 4318,
+            "deviceId": 11269,
+            "vendorString": "Google Inc. (NVIDIA Corporation)",
+            "deviceString": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2, OpenGL 4.5.0 NVIDIA 610.57.04)",
+            "driverVendor": "Nvidia",
+            "driverVersion": "610.57.04"
+          }
+        ],
+        "adapter": {
+          "vendor": "nvidia",
+          "architecture": "blackwell",
+          "device": "",
+          "description": "",
+          "fallback": false
+        },
+        "viewport": [
+          1920,
+          1080
+        ],
+        "canvases": [
+          {
+            "id": "camera",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "id": "camera-thumb-0",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-1",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-2",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-3",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-4",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-5",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-6",
+            "width": 112,
+            "height": 63
+          },
+          {
+            "id": "camera-thumb-7",
+            "width": 112,
+            "height": 63
+          }
+        ]
+      }
+    }
+  ],
+  "input_cache_policy": "SHA256 read immediately before each fresh process; cache-allowed",
+  "harness": {
+    "recheck.py": "fa8559bb00fdc5efdd3b90cc6f5eaaa41b0beb5316ae2d36905a7e3d87416234",
+    "regression.py": "40c728c76338ce5865b8f7fded3dc3e1826abb83bab83a0afbeb72880ab9e4dc",
+    "measure_web_recording.py": "cad54e420a51cd1d98da461d3d346538929a5eccc415c61d4cb82be008700751",
+    "web_recording_probe.js": "9149e08b3df8931b1f72d879deab49c70a48453f139a508fda42bd542d14b55f",
+    "benchmark_browser.py": "024f00d1fd6e38657407872fbdf1afe0c3077240a579cec572bf97abf45cbf8f",
+    "browser_cdp.py": "8b7e986d3a28f616b5df7ce8aadf486a4c9e19ea9d527339c9d144b813435625"
+  },
+  "product_identity": "Actual web_assets hashes per run; no inference from harness checkout"
+}

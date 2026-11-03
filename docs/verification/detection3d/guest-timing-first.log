@@ -1,0 +1,22 @@
+   Compiling viewer-core v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-core)
+   Compiling viewer-extension v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-extension)
+    Finished `release` profile [optimized] target(s) in 5.29s
+     Running unittests src/lib.rs (target/release/deps/viewer_extension-4be15323d18e1f9f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/detection3d.rs (target/release/deps/detection3d-8cb72f2d99110818)
+
+running 1 test
+detection_guest updates=1000 detections=8 hypotheses_each=2 input_bytes=6706 output_bytes=480 median_ms=0.142924 p95_ms=0.193466 max_ms=0.678148
+test measure_detection_guest_updates ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.16s
+
+     Running tests/wasm.rs (target/release/deps/wasm-ce1ba1de424e6340)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s

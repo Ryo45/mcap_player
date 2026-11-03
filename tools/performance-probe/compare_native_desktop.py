@@ -22,7 +22,6 @@ import tempfile
 import time
 import urllib.request
 
-from PIL import Image, ImageFilter
 from browser_cdp import CDP
 from check_native_gpu import X11
 from measure_viewer_pilot import process_sample
@@ -64,6 +63,8 @@ def pixels(raw, stride):
 
 
 def templates(directory):
+    from PIL import Image, ImageFilter
+
     files = sorted(Path(directory).glob('*.jpg'))
     if len(files) != 32:
         raise ValueError('expected exactly 32 extracted JPEG variants')
@@ -108,6 +109,8 @@ def window_for(pid, env):
 
 
 def main():
+    from PIL import Image, ImageFilter
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--app', choices=['native', 'lichtblick'], required=True)
     parser.add_argument('--camera-trace', action='store_true', help='enable temporary per-stage Native measurement hooks')

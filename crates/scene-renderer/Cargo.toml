@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+viewer-core = { path = "../viewer-core" }
 bytemuck.workspace = true
 wgpu.workspace = true
 

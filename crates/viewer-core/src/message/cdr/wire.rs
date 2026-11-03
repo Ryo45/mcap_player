@@ -161,7 +161,14 @@ impl<'a> Reader<'a> {
     }
 
     pub(crate) fn string(&mut self) -> Result<String, DecodeError> {
+        self.string_bounded(MAX_FIELD_BYTES)
+    }
+
+    pub(crate) fn string_bounded(&mut self, max_bytes: usize) -> Result<String, DecodeError> {
         let length = self.length()?;
+        if length.saturating_sub(1) > max_bytes {
+            return Err(DecodeError::InvalidLength);
+        }
         if length == 0 {
             return Err(DecodeError::InvalidLength);
         }

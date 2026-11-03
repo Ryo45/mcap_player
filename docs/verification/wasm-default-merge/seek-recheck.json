@@ -1,0 +1,86 @@
+[
+  {
+    "repeat": 0,
+    "label": "before",
+    "metrics": {
+      "open_ms": 403.2647255808115,
+      "focus_content_hz": 28.7745989746982,
+      "background_min_content_hz": 0,
+      "log_seconds_per_wall_second": 0.9812028000661486,
+      "heartbeat_max_ms": 36.19999980926514,
+      "heartbeat_p95_ms": 27.299999237060547,
+      "peak_pss_mib": 1160.755859375,
+      "seek_focus_ms": 88.40000009536743
+    }
+  },
+  {
+    "repeat": 0,
+    "label": "after",
+    "metrics": {
+      "open_ms": 412.61049173772335,
+      "focus_content_hz": 29.330400291439414,
+      "background_min_content_hz": 0,
+      "log_seconds_per_wall_second": 0.9887900096028409,
+      "heartbeat_max_ms": 34,
+      "heartbeat_p95_ms": 26.699999809265137,
+      "peak_pss_mib": 1172.615234375,
+      "seek_focus_ms": 106.14999961853027
+    }
+  },
+  {
+    "repeat": 1,
+    "label": "after",
+    "metrics": {
+      "open_ms": 409.12331361323595,
+      "focus_content_hz": 28.414789056542396,
+      "background_min_content_hz": 0,
+      "log_seconds_per_wall_second": 0.9917318531231285,
+      "heartbeat_max_ms": 32.40000057220459,
+      "heartbeat_p95_ms": 27.200000762939453,
+      "peak_pss_mib": 1158.8017578125,
+      "seek_focus_ms": 119.5
+    }
+  },
+  {
+    "repeat": 1,
+    "label": "before",
+    "metrics": {
+      "open_ms": 402.9390076175332,
+      "focus_content_hz": 29.077540106951872,
+      "background_min_content_hz": 0,
+      "log_seconds_per_wall_second": 0.9915329766042781,
+      "heartbeat_max_ms": 33.30000019073486,
+      "heartbeat_p95_ms": 27.0,
+      "peak_pss_mib": 1138.33203125,
+      "seek_focus_ms": 89.7000002861023
+    }
+  },
+  {
+    "repeat": 2,
+    "label": "before",
+    "metrics": {
+      "open_ms": 407.051470130682,
+      "focus_content_hz": 28.082374968359282,
+      "background_min_content_hz": 0,
+      "log_seconds_per_wall_second": 0.991798163342194,
+      "heartbeat_max_ms": 35.39999961853027,
+      "heartbeat_p95_ms": 26.5,
+      "peak_pss_mib": 1205.1083984375,
+      "seek_focus_ms": 71.44999933242798
+    }
+  },
+  {
+    "repeat": 2,
+    "label": "after",
+    "metrics": {
+      "open_ms": 421.1575072258711,
+      "focus_content_hz": 29.271246889705623,
+      "background_min_content_hz": 0,
+      "log_seconds_per_wall_second": 0.9981383036775385,
+      "heartbeat_max_ms": 38.0,
+      "heartbeat_p95_ms": 27.5,
+      "peak_pss_mib": 1141.5068359375,
+      "seek_focus_ms": 123.7000002861023
+    }
+  }
+]

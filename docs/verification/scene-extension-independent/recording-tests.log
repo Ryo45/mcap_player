@@ -1,0 +1,14 @@
+   Compiling viewer-core v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-core)
+   Compiling viewer-mcap v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-mcap)
+   Compiling viewer-renderer v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-renderer)
+   Compiling scene-renderer v0.1.0 (/home/ryo/development/mcap_player/crates/scene-renderer)
+   Compiling viewer-extension v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-extension)
+   Compiling viewer-preview-mcap v0.1.0 (/home/ryo/development/mcap_player/crates/viewer-preview-mcap)
+   Compiling viewer-native v0.1.0 (/home/ryo/development/mcap_player/apps/viewer-native)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.53s
+     Running unittests src/main.rs (target/debug/deps/viewer_native-71e678a260b58f5a)
+
+running 1 test
+test scene_extension::recording_tests::actual_wasm_indexed_seek_and_failed_restore_preserve_transaction ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.06s

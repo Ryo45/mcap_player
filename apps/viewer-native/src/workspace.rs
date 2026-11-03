@@ -1,7 +1,6 @@
 #[cfg(test)]
 use crate::panels::NativePanel;
-#[cfg(any(test, feature = "ros2-live"))]
-use crate::panels::PanelDataRequirements;
+use crate::panels::{CameraSelection, PanelDataRequirements};
 use crate::{interaction::ViewerAction, panels::PanelRuntimeStore};
 use std::time::Duration;
 use viewer_core::{
@@ -54,6 +53,10 @@ pub(crate) struct NativeWorkspace {
     bindings: WorkspaceBindings,
     pub(crate) runtime: Option<FeatureRuntime>,
     startup_warnings: Vec<String>,
+    #[cfg(feature = "scene-extension")]
+    extension_topic: Option<(viewer_extension::ExtensionInputKind, String)>,
+    #[cfg(feature = "scene-extension")]
+    extension_stream: Option<(viewer_extension::ExtensionInputKind, viewer_core::StreamId)>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -113,6 +116,10 @@ impl NativeWorkspace {
             interaction: ViewerInteractionState::default(),
             bindings: bundled_workspace_bindings(),
             runtime: None,
+            #[cfg(feature = "scene-extension")]
+            extension_topic: None,
+            #[cfg(feature = "scene-extension")]
+            extension_stream: None,
             startup_warnings: runtime.warnings,
         })
     }
@@ -136,6 +143,10 @@ impl NativeWorkspace {
             interaction: ViewerInteractionState::default(),
             bindings: bundled_workspace_bindings(),
             runtime: None,
+            #[cfg(feature = "scene-extension")]
+            extension_topic: None,
+            #[cfg(feature = "scene-extension")]
+            extension_stream: None,
             startup_warnings: vec![format!(
                 "Bundled layout could not be loaded; using emergency layout: {error}"
             )],
@@ -144,6 +155,88 @@ impl NativeWorkspace {
 
     pub(crate) fn set_bindings(&mut self, bindings: WorkspaceBindings) {
         self.bindings = bindings;
+    }
+
+    #[cfg(feature = "scene-extension")]
+    pub(crate) fn enable_scene_extension(
+        &mut self,
+        topic: &str,
+        kind: viewer_extension::ExtensionInputKind,
+    ) -> anyhow::Result<()> {
+        anyhow::ensure!(
+            self.panels.has_scene(),
+            "Scene extension needs a Scene panel"
+        );
+        self.extension_topic = Some((kind, topic.to_owned()));
+        Ok(())
+    }
+
+    pub(crate) fn requirements_for_cameras(
+        &self,
+        cameras: &CameraSelection,
+    ) -> PanelDataRequirements {
+        let requirements = self.panels.requirements_for_cameras(cameras);
+        self.with_extension_requirements(requirements)
+    }
+
+    fn with_extension_requirements(
+        &self,
+        requirements: PanelDataRequirements,
+    ) -> PanelDataRequirements {
+        #[cfg(feature = "scene-extension")]
+        let mut requirements = requirements;
+        #[cfg(feature = "scene-extension")]
+        if let Some((kind, topic)) = &self.extension_topic {
+            match kind {
+                viewer_extension::ExtensionInputKind::PathPositions => {
+                    requirements.playback.require_path_topic(topic)
+                }
+                viewer_extension::ExtensionInputKind::Detection3DArray => {
+                    requirements.playback.require_detection_topic(topic)
+                }
+            }
+            requirements.playback.optional_transforms();
+        }
+        requirements
+    }
+
+    #[cfg(feature = "plugin-panels")]
+    pub(crate) fn add_plugin_panel(&mut self, manifest: &std::path::Path) -> anyhow::Result<()> {
+        let mut document = self.layout.clone();
+        let mut number = 1;
+        let id = loop {
+            let candidate = viewer_layout::PanelId::new(format!("plugin-{number}"))?;
+            if self.panels.get_mut(&candidate).is_none() {
+                break candidate;
+            }
+            number += 1;
+        };
+        let panel = viewer_layout::PanelNode {
+            id,
+            panel_type: "plugin".into(),
+            config_version: 1,
+            title: None,
+            config: serde_json::json!({"manifest":manifest}),
+        };
+        document.root = viewer_layout::LayoutNode::Split {
+            direction: viewer_layout::SplitDirection::Row,
+            children: vec![
+                viewer_layout::SplitChild {
+                    weight: 1.,
+                    node: document.root,
+                },
+                viewer_layout::SplitChild {
+                    weight: 1.,
+                    node: viewer_layout::LayoutNode::Panel(panel),
+                },
+            ],
+        };
+        document.validate()?;
+        let store = crate::panels::PanelRuntimeStore::from_layout(&document);
+        self.layout = document;
+        self.panels = store.store;
+        self.startup_warnings.extend(store.warnings);
+        Ok(())
     }
 
     pub(crate) fn point_cloud_coloring(&self) -> viewer_core::PointCloudColoring {
@@ -163,7 +256,34 @@ impl NativeWorkspace {
     }
 
     pub(crate) fn configure_session(&mut self, plan: &SessionPlan) {
+        #[cfg(feature = "scene-extension")]
+        {
+            self.extension_stream = self.extension_topic.as_ref().and_then(|(kind, topic)| {
+                let stream = match kind {
+                    viewer_extension::ExtensionInputKind::PathPositions => {
+                        plan.path_stream_for_topic(topic)
+                    }
+                    viewer_extension::ExtensionInputKind::Detection3DArray => {
+                        plan.detection_streams().iter().find(|s| s.topic == *topic)
+                    }
+                }?;
+                Some((*kind, stream.id))
+            });
+        }
         self.runtime = Some(FeatureRuntime::new(plan, self.panels.has_scene()));
+    }
+
+    #[cfg(feature = "scene-extension")]
+    pub(crate) fn extension_stream(
+        &self,
+    ) -> Option<(viewer_extension::ExtensionInputKind, viewer_core::StreamId)> {
+        self.extension_stream
+    }
+
+    #[cfg(all(test, feature = "scene-extension"))]
+    pub(crate) fn extension_path(&self) -> Option<&viewer_core::PathController> {
+        self.extension_stream
+            .and_then(|(_, stream)| self.runtime().path_for_stream(stream))
     }
 
     pub(crate) fn process_messages(&mut self, elapsed: Duration, messages: Vec<RawMessage>) {
@@ -271,7 +391,7 @@ impl NativeWorkspace {
 
     #[cfg(any(test, feature = "ros2-live"))]
     pub(crate) fn data_requirements(&self) -> PanelDataRequirements {
-        self.panels.data_requirements()
+        self.with_extension_requirements(self.panels.data_requirements())
     }
 
     #[cfg(test)]
@@ -410,6 +530,8 @@ mod tests {
                 inspections: Vec::new(),
                 topic_health: BTreeSet::new(),
                 diagnostics: BTreeSet::new(),
+                #[cfg(feature = "plugin-panels")]
+                plugins: vec![],
             }
         );
     }
@@ -486,6 +608,8 @@ mod tests {
                 inspections: Vec::new(),
                 topic_health: BTreeSet::new(),
                 diagnostics: BTreeSet::new(),
+                #[cfg(feature = "plugin-panels")]
+                plugins: vec![],
             }
         );
         assert_eq!(NativeWorkspace::default().panels.len(), 4);
@@ -572,5 +696,82 @@ mod tests {
         assert_eq!(emergency.panels.len(), 1);
         assert_eq!(emergency.panels.placeholder_count(), 1);
         assert!(emergency.startup_warning().is_some());
+    }
+}
+
+#[cfg(all(test, feature = "scene-extension"))]
+mod extension_tests {
+    use super::*;
+    #[test]
+    fn extension_demand_is_startup_only_and_shares_existing_path_route() {
+        let mut workspace = NativeWorkspace::load_bundled_or_fallback(WorkspaceLayout::Scene);
+        let catalog = viewer_mcap::McapPlayback::open_file(
+            &std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap"),
+        )
+        .unwrap()
+        .catalog()
+        .clone();
+        let cameras = workspace
+            .panels
+            .camera_selection(&catalog, "", None, true)
+            .unwrap();
+        let before = workspace.requirements_for_cameras(&cameras);
+        assert_eq!(
+            before.playback,
+            workspace.panels.requirements_for_cameras(&cameras).playback
+        );
+        let plan_before =
+            SessionPlan::build(&catalog, "", &before.playback, workspace.bindings()).unwrap();
+        workspace
+            .enable_scene_extension(
+                "/different-path",
+                viewer_extension::ExtensionInputKind::PathPositions,
+            )
+            .unwrap();
+        assert!(
+            SessionPlan::build(
+                &catalog,
+                "",
+                &workspace.requirements_for_cameras(&cameras).playback,
+                workspace.bindings()
+            )
+            .is_err()
+        );
+        workspace
+            .enable_scene_extension(
+                "/planning/path",
+                viewer_extension::ExtensionInputKind::PathPositions,
+            )
+            .unwrap();
+        let after = workspace.requirements_for_cameras(&cameras);
+        let plan_after =
+            SessionPlan::build(&catalog, "", &after.playback, workspace.bindings()).unwrap();
+        assert_eq!(
+            plan_after.selected_stream_ids(),
+            plan_before.selected_stream_ids()
+        );
+        let path_id = plan_after.path_stream().unwrap().id;
+        assert_eq!(
+            plan_after
+                .restore_inputs()
+                .iter()
+                .filter(|r| r.stream_id == path_id)
+                .count(),
+            1
+        );
+        let mut missing = catalog;
+        missing.streams.retain(|s| s.id != path_id);
+        assert!(SessionPlan::build(&missing, "", &before.playback, workspace.bindings()).is_ok());
+        assert!(SessionPlan::build(&missing, "", &after.playback, workspace.bindings()).is_err());
+        let mut explorer = NativeWorkspace::load_bundled_or_fallback(WorkspaceLayout::Explore);
+        assert!(
+            explorer
+                .enable_scene_extension(
+                    "/planning/path",
+                    viewer_extension::ExtensionInputKind::PathPositions
+                )
+                .is_err()
+        );
     }
 }
