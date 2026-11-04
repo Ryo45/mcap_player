@@ -16,6 +16,7 @@ mod plugin_queries;
 mod presentation;
 mod preview;
 mod query_error;
+mod query_service;
 #[cfg(feature = "scene-extension")]
 mod scene_extension;
 mod session;

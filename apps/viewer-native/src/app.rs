@@ -80,6 +80,9 @@ impl App {
                 self.workspace.configure_session(session.plan());
                 self.workspace
                     .reset_for_source(session.default_focused_camera());
+                self.workspace
+                    .panels
+                    .bind_query_sources(session.recording_source());
                 self.workspace.panels.bind_cameras(&cameras, session.plan());
                 let scheduler_camera = Self::scheduler_camera_for(&self.workspace, &session);
                 self.workspace

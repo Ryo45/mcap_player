@@ -24,9 +24,15 @@ impl PanelRuntimeStore {
         let mut warnings = Vec::new();
         let mut has_bev = false;
         let mut has_scene = false;
+        let mut has_query = false;
         visit_panels(&document.root, &mut |node| {
             let mut panel = create_native_panel(node);
             match &panel {
+                NativePanel::Query(_) if has_query => {
+                    warnings.push("Only one Query panel is supported per workspace".into());
+                    panel = NativePanel::Placeholder(PlaceholderPanel::duplicate_singleton(node));
+                }
+                NativePanel::Query(_) => has_query = true,
                 NativePanel::Bev(_) if has_bev => {
                     warnings.push(format!(
                         "panel {} is a duplicate BEV instance and was replaced with a placeholder",
@@ -186,6 +192,14 @@ impl PanelRuntimeStore {
         }
     }
 
+    pub(crate) fn bind_query_sources(&mut self, source: Option<&viewer_mcap::McapSource>) {
+        for panel in self.panels.values_mut() {
+            if let NativePanel::Query(panel) = panel {
+                panel.service.bind_source(source);
+            }
+        }
+    }
+
     pub(crate) fn reset_for_source(&mut self, focused_camera: Option<CameraId>) {
         self.topic_inspector = Default::default();
         for panel in self.panels.values_mut() {
@@ -263,6 +277,7 @@ pub(crate) fn create_native_panel(node: &PanelNode) -> NativePanel {
         }
         #[cfg(feature = "plugin-panels")]
         "plugin" => super::plugin::PluginPanel::create(node),
+        "query" => super::query::QueryPanel::create(node),
         "camera" => CameraPanel::create(node),
         "bev" => BevPanel::create(node),
         "plot" => PlotPanel::create(node),

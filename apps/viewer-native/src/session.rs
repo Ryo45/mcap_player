@@ -178,7 +178,7 @@ impl ViewerSession {
         self.numeric_plots.remove(stream, path);
     }
 
-    fn recording_source(&self) -> Option<&viewer_mcap::McapSource> {
+    pub(crate) fn recording_source(&self) -> Option<&viewer_mcap::McapSource> {
         match &self.source {
             SessionSource::Mcap(playback) => Some(playback.recording_source()),
             #[cfg(feature = "ros2-live")]

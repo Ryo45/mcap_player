@@ -174,6 +174,17 @@ Camera overlayにはPath・TF・実カメラに対応したcalibrationが必要�
 Nativeは`--camera-calibration FILE.json`、WebはScene設定のCamera calibration JSONから読み込みます。
 [物理geometry・座標系・ground frame](docs/physical_geometry.md)に設定例をまとめています。
 
+## 固定時間範囲のTable / Plot解析（Native）
+
+```sh
+cargo run --release -p viewer-native -- --mcap /path/to/recording.mcap --layout query
+```
+
+Queryパネルでtopic・開始/終了log time（整数ns）・fieldを選び、Tableまたは時系列PlotでRunします。
+範囲は再生カーソルから独立しており、通常の再生やSeekでは変わりません。
+TableはページングとInspector、Plotはboundedな数値集約を使います。Indexed recording専用で、ROS 2 Liveは非対応です。
+[使い方・独自メッセージのデモ・取得上限](docs/query_panel.md)を参照してください。
+
 ## 対応範囲と制約
 
 | 項目 | Native | Browser Local | Recording Server → Web |

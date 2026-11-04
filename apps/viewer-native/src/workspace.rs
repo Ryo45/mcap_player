@@ -28,11 +28,13 @@ pub(crate) enum WorkspaceLayout {
     Cameras,
     Navigation,
     Inspection,
+    Query,
 }
 
 impl WorkspaceLayout {
     fn bundled_json(self) -> &'static str {
         match self {
+            Self::Query => include_str!("../../../config/layouts/native_query.json"),
             Self::Scene => include_str!("../../../config/layouts/native_scene.json"),
             Self::Cameras => include_str!("../../../config/layouts/native_cameras.json"),
             Self::Navigation => include_str!("../../../config/layouts/native_navigation.json"),

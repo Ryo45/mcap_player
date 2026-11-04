@@ -26,7 +26,7 @@ pub use source::{
     IndexedMessagePosition, IndexedMessages, IndexedReadDiagnostics, LatestMessageReader,
     LatestQueryDiagnostics, McapSource, SourceReadDiagnostics,
 };
-pub use source::{QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult};
+pub use source::{QueryLimits, RangePageCursor, RangeQuery, RangeQueryError, RangeQueryResult};
 pub use source_identity::{MCAP_SUMMARY_IDENTITY_ALGORITHM, McapSummaryIdentity};
 
 pub use error::McapSourceError;

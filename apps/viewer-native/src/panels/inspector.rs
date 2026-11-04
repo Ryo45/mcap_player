@@ -208,21 +208,30 @@ pub(super) fn show_inspection(
         state.pages.clear();
     }
     if let Some(message) = &inspection.message {
-        state.reset_message(message);
-        if ui.small_button("Reset field expansion").clicked() {
-            state.pages.clear();
-        }
-        let mut visible = BTreeSet::new();
-        let mut budget = 2048usize;
-        egui::ScrollArea::vertical()
-            .max_height(650.0)
-            .show(ui, |ui| {
-                show_container(ui, message, &message.root, state, &mut visible, &mut budget)
-            });
-        // Collapsed branches release their bounded decoded pages immediately.
-        state.pages.retain(|id, _| visible.contains(id));
+        show_message_fields(ui, message, state);
     }
 }
+
+pub(super) fn show_message_fields(
+    ui: &mut egui::Ui,
+    message: &std::sync::Arc<InspectorMessage>,
+    state: &mut InspectorTreeState,
+) {
+    state.reset_message(message);
+    if ui.small_button("Reset field expansion").clicked() {
+        state.pages.clear();
+    }
+    let mut visible = BTreeSet::new();
+    let mut budget = 2048usize;
+    egui::ScrollArea::vertical()
+        .max_height(650.0)
+        .show(ui, |ui| {
+            show_container(ui, message, &message.root, state, &mut visible, &mut budget)
+        });
+    // Collapsed branches release their bounded decoded pages immediately.
+    state.pages.retain(|id, _| visible.contains(id));
+}
+
 fn show_container(
     ui: &mut egui::Ui,
     message: &InspectorMessage,

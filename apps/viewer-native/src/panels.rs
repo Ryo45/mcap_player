@@ -6,6 +6,7 @@ mod placeholder;
 mod plot;
 #[cfg(feature = "plugin-panels")]
 mod plugin;
+mod query;
 mod runtime;
 mod scene;
 mod status;
@@ -48,6 +49,7 @@ pub(crate) const STATUS_CONFIG_VERSION: u32 = 1;
 pub(crate) enum NativePanel {
     #[cfg(feature = "plugin-panels")]
     Plugin(Box<plugin::PluginPanel>),
+    Query(Box<query::QueryPanel>),
     Explore,
     Topics(topics::TopicsPanel),
     Camera(CameraPanel),
@@ -70,6 +72,7 @@ impl NativePanel {
         match self {
             #[cfg(feature = "plugin-panels")]
             Self::Plugin(panel) => panel.show(ui, input),
+            Self::Query(panel) => panel.show(ui, input),
             Self::Explore => {
                 ui.heading("Explore recording");
                 ui.label("Open a topic under Topics and select a numeric field to add a plot.");
@@ -189,6 +192,7 @@ impl NativePanel {
         match self {
             #[cfg(feature = "plugin-panels")]
             Self::Plugin(panel) => panel.reset(),
+            Self::Query(panel) => panel.reset_for_source(),
             Self::Camera(panel) => panel.state.focused_camera = focused_camera,
             Self::Plot(panel) => panel.reset_for_source(),
             Self::Inspector(panel) => panel.reset_for_source(),
@@ -230,7 +234,7 @@ impl NativePanel {
             Self::Status(panel) => panel.contribute_data_requirements(requirements),
             Self::TopicHealth(panel) => panel.contribute_data_requirements(requirements),
             Self::Diagnostics(panel) => panel.contribute_data_requirements(requirements),
-            Self::Explore | Self::Topics(_) | Self::Placeholder(_) => {}
+            Self::Query(_) | Self::Explore | Self::Topics(_) | Self::Placeholder(_) => {}
         }
     }
 
@@ -246,6 +250,7 @@ impl NativePanel {
         match self {
             #[cfg(feature = "plugin-panels")]
             Self::Plugin(_) => "plugin",
+            Self::Query(_) => "query",
             Self::Explore => "explore",
             Self::Topics(_) => "topics",
             Self::Camera(_) => "camera",

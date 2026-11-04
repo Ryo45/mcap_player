@@ -95,8 +95,8 @@ impl SignalOverviewReducer {
             return;
         }
         self.input_sample_count = self.input_sample_count.saturating_add(1);
-        let duration = self.end_exclusive.0.saturating_sub(self.origin.0).max(1) as i128;
-        let offset = sample.arrival_time.0.saturating_sub(self.origin.0).max(0) as i128;
+        let duration = (i128::from(self.end_exclusive.0) - i128::from(self.origin.0)).max(1);
+        let offset = (i128::from(sample.arrival_time.0) - i128::from(self.origin.0)).max(0);
         let scaled = offset.saturating_mul(self.buckets.len() as i128) / duration;
         let bucket = usize::try_from(scaled)
             .unwrap_or(usize::MAX)
@@ -295,4 +295,18 @@ mod tests {
         assert!(reducer.retained_points() <= max_points);
         assert!(loaded.display.values.len() <= max_points);
     }
+}
+
+#[test]
+fn overview_buckets_preserve_the_full_signed_nanosecond_range() {
+    let mut reducer = SignalOverviewReducer::new(ArrivalTime(i64::MIN), ArrivalTime(i64::MAX), 8);
+    for (time, value) in [(0, 1.), (i64::MAX / 2, 2.), (i64::MAX - 1, 3.)] {
+        reducer.push(SignalSample {
+            arrival_time: ArrivalTime(time),
+            measurement_time: None,
+            value,
+        });
+    }
+    let values = reducer.samples().map(|s| s.value).collect::<Vec<_>>();
+    assert_eq!(values, [1., 2., 3.]);
 }

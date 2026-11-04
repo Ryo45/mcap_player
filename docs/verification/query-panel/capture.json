@@ -1,0 +1,23 @@
+{
+  "mode": "normal Native release; no optional features",
+  "fixture_sha256": "bb968174b5c670943af3eee094e19494c37404c9c18fe5c8cf6649fdb0e28f96",
+  "binary_sha256": "4d187753aad3990e7533d8f73a5a296b1c3a82c762f24c064493075ce62566ae",
+  "backend": "Xephyr / llvmpipe Vulkan (functional smoke, not GPU performance)",
+  "viewport": [
+    1920,
+    1080
+  ],
+  "source": "query_fixture (300 messages per topic, 10 Hz, synthetic)",
+  "verified": [
+    "Two topics selected with value fields",
+    "Table completed with 64 rows",
+    "Next page starts at 1700000003200000000 ns",
+    "Plot has 300 inputs per series, zero decode errors",
+    "Query range remains fixed while playback cursor advances"
+  ],
+  "images": {
+    "table.png": "792b04f43dce34d2a7e9d34475acd7d92d7becb1e875ead019245600976b2e35",
+    "plot.png": "06d0428b4581766b0ef2d5e9feea58d02a8e3f459180c7a280a8f5da5c544d64"
+  },
+  "note": "Final release captures include the pre-read cancellation guard, bounded Inspector detail copies and virtualized topic list."
+}

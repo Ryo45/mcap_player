@@ -10,7 +10,7 @@ use index::IndexReadMetrics;
 pub use index::IndexedMessagePosition;
 use index::{LatestIndexRead, StreamChunks};
 pub use latest::{LatestMessageReader, LatestQueryDiagnostics};
-pub use range::{QueryLimits, RangeQuery, RangeQueryError, RangeQueryResult};
+pub use range::{QueryLimits, RangePageCursor, RangeQuery, RangeQueryError, RangeQueryResult};
 
 use crate::{IndexedChunkFact, McapSourceError, ensure_indexed, history_candidate_chunks};
 
