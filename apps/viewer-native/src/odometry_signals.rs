@@ -461,9 +461,9 @@ mod tests {
         let current_generation = loader.generation;
         loader.apply_result(LoadResult {
             generation: current_generation.wrapping_sub(1),
-            result: Err(Arc::new(QueryLoadError::WorkerPanicked {
-                worker: "stale failure",
-            })),
+            result: Err(Arc::new(QueryLoadError::Source(
+                viewer_mcap::McapSourceError::SummaryRequired,
+            ))),
             elapsed_ms: 0.0,
             complete: true,
         });
@@ -471,26 +471,26 @@ mod tests {
         assert!(loader.error().is_none());
         loader.apply_result(LoadResult {
             generation: current_generation,
-            result: Err(Arc::new(QueryLoadError::WorkerPanicked {
-                worker: "current failure",
-            })),
+            result: Err(Arc::new(QueryLoadError::Source(
+                viewer_mcap::McapSourceError::SourceChanged,
+            ))),
             elapsed_ms: 0.0,
             complete: true,
         });
         assert!(matches!(
             loader.error(),
-            Some(QueryLoadError::WorkerPanicked {
-                worker: "current failure"
-            })
+            Some(QueryLoadError::Source(
+                viewer_mcap::McapSourceError::SourceChanged
+            ))
         ));
         for signal_id in [SignalId::Speed, SignalId::YawRate] {
             let view = loader.query_view().get(signal_id);
             assert!(!view.loading);
             assert!(matches!(
                 view.error,
-                Some(QueryLoadError::WorkerPanicked {
-                    worker: "current failure"
-                })
+                Some(QueryLoadError::Source(
+                    viewer_mcap::McapSourceError::SourceChanged
+                ))
             ));
         }
     }

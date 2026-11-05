@@ -8,7 +8,6 @@ mod inspector_loader;
 mod interaction;
 #[cfg(any(test, feature = "ros2-live"))]
 mod live;
-mod numeric_plot_loader;
 mod odometry_signals;
 mod panels;
 #[cfg(feature = "plugin-panels")]

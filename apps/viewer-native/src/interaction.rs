@@ -5,11 +5,7 @@ use viewer_layout::PanelId;
 pub(crate) enum ViewerAction {
     Playback(PlaybackCommand),
     SelectInspectorTopic(Option<String>),
-    AddNumericSeries {
-        stream: viewer_core::StreamId,
-        field_path: String,
-    },
-    RemoveNumericSeries {
+    InspectNumericField {
         stream: viewer_core::StreamId,
         field_path: String,
     },

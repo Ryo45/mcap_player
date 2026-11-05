@@ -5,8 +5,10 @@ The Native viewer's central area is restored from the versioned JSON embedded fr
 file opening, and application errors remain outside the layout document.
 
 Additional bundled presets include `cameras` (four selected image topics), `navigation`
-(Scene, Camera, BEV and motion plots), and `inspection` (Topics/Inspector and motion plots).
+(Scene, Camera, BEV and motion plots), and `inspection` (cursor Inspector and fixed-range Table/Plot).
 See the [layout gallery](layout_gallery.md) for screenshots, commands and topic bindings.
+Inspection uses one `inspection` panel with At cursor / Time range tabs. The independent
+`query` preset/panel and Field plots popup have been removed. See [Inspection / Query Service](query_panel.md).
 Builtin Plot panels use their allocated height rather than a fixed 170-pixel graph.
 An overview can be queried without forward Odometry playback; its heading only shows an
 exact current value when one is available, without displaying a misleading loading message.
@@ -102,9 +104,9 @@ Column
 
 ## Native panels and placeholders
 
-The concrete enum variants are Camera, BEV, builtin Plot, Inspector, Scene, Status, Explore, and Placeholder. Camera
+The concrete enum variants are Camera, BEV, builtin Plot, Inspection, fixed-topic Inspector, Scene, Status, Explore, and Placeholder. Camera
 and Plot may have multiple runtime instances. The current GPU implementation
-supports at most one BEV and one Scene; later valid instances become placeholders.
+supports at most one BEV, one Scene and one Inspection; later valid instances become placeholders.
 
 A placeholder is also created when:
 

@@ -3,7 +3,7 @@ use super::{
     PanelOutput,
     inspector::{InspectorPanelInput, InspectorTreeState, show_inspection},
 };
-use crate::{interaction::ViewerAction, numeric_plot_loader::NumericSeriesState};
+use crate::interaction::ViewerAction;
 use viewer_core::{TopicTree, ViewerPresentation};
 
 #[derive(Default)]
@@ -14,7 +14,6 @@ pub(crate) struct TopicsPanel {
 
 pub(crate) struct TopicsPanelInput<'a> {
     pub tree: &'a TopicTree,
-    pub series: &'a [NumericSeriesState],
     pub selected_topic: Option<&'a str>,
     pub inspector: InspectorPanelInput<'a>,
     pub presentation: &'a ViewerPresentation,
@@ -104,11 +103,10 @@ impl TopicsPanel {
                             if let Some(entry) =
                                 input.tree.entries.iter().find(|e| e.topic == topic)
                             {
-                                ui.collapsing("Schema / numeric plots", |ui| {
+                                ui.collapsing("Schema / plot fields", |ui| {
                                     super::topic_tree::show_topic_details(
                                         ui,
                                         entry,
-                                        input.series,
                                         &mut output.actions,
                                     );
                                 });
@@ -167,7 +165,6 @@ mod tests {
                                 ui,
                                 TopicsPanelInput {
                                     tree: &tree,
-                                    series: &[],
                                     selected_topic: None,
                                     inspector: InspectorPanelInput {
                                         inspections: &[],

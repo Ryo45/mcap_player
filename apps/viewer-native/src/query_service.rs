@@ -639,7 +639,7 @@ mod tests {
         let path = std::env::temp_dir().join(format!("query-session-{}.mcap", std::process::id()));
         std::fs::write(&path, fixture(10, 0, false, false)).unwrap();
         let mut workspace = crate::workspace::NativeWorkspace::load_bundled_or_fallback(
-            crate::workspace::WorkspaceLayout::Query,
+            crate::workspace::WorkspaceLayout::Inspection,
         );
         let demand = workspace.data_requirements().playback;
         let mut session = crate::session::ViewerSession::open(

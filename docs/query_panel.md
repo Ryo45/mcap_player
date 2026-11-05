@@ -1,12 +1,12 @@
-# Native Query Panel / Query Service
+# Native Inspection / Query Service
 
-Indexed MCAPに対して、連続再生から独立した固定log-time範囲を問い合わせる。既存Inspectionのcursor直前値と記録全体Plotに対して、範囲内メッセージのTableと固定範囲Plotを追加する位置づけ。今回の`--layout query`はその検証用presetで、UI入口の統合と取得Serviceの責務分離は独立して扱う。
+Inspectionを解析UIの入口とし、At cursor（再生位置の直前値）とTime range（固定範囲のTable / Plot）を切り替える。取得側のQuery ServiceはUIから独立して維持する。独立したQuery panel / presetとField plots popup・NumericPlotLoaderは廃止した。
 
 ```sh
-cargo run --release -p viewer-native -- --mcap /path/to/recording.mcap --layout query
+cargo run --release -p viewer-native -- --mcap /path/to/recording.mcap --layout inspection
 ```
 
-TopicsとQueryの配置で開く。開始・終了を**整数の絶対log time（ns）**で指定する。
+InspectionのTime rangeを選ぶ。開始・終了を**整数の絶対log time（ns）**で指定する。
 範囲は `[start, end)`。初期値は記録全体で、再生・Seekによる自動追従はしない。
 Start at cursor / End after cursorは押した時点の値を一度だけコピーする。
 
@@ -20,7 +20,7 @@ Cancel / clearで実行・結果を破棄する。Source交換でも選択・結
 
 TableはNext / Previousでページを移動でき、直近16個の継続位置だけを保持する。Run queryで先頭へ戻る。
 Plotはmin/max bucket overviewで、全decoded履歴を保持しない。mainの再生位置はマーカーとして表示する。
-query側のズームや入力・ページ操作はPlaybackCommandを出さず、通常再生・Seekを変更しない。
+範囲側のズームや入力・ページ操作はPlaybackCommandを出さず、通常再生・Seekを変更しない。
 ROS 2 Liveは非対応と明示し、過去履歴のリングバッファは作らない。
 
 ## 小さい独自ROSメッセージのデモ
@@ -28,7 +28,7 @@ ROS 2 Liveは非対応と明示し、過去履歴のリングバッファは作�
 ```sh
 mkdir -p target/query-demo
 cargo run -p ros-fixture --example query_fixture -- target/query-demo/recording.mcap
-cargo run --release -p viewer-native -- --mcap target/query-demo/recording.mcap --layout query
+cargo run --release -p viewer-native -- --mcap target/query-demo/recording.mcap --layout inspection
 ```
 
 fixtureは新規pathだけに書き、既存ファイルを上書きしない。
@@ -38,12 +38,14 @@ Tableでは`value, status`、Plotでは両topicの`value`を選んでRunする�
 ## 責務と既存コードの再利用
 
 ```text
-QueryPanel (条件・表示・ページ履歴)
+InspectionPanel
+   +-> At cursor: Topics / Inspector -> existing InspectorLoader
+   +-> Time range: RangeInspection (条件・表示・ページ履歴)
    -> QueryRequest
 QueryService (source所有・1 worker・generation・実行状態)
    -> range / numeric queries on independent McapSource forks
    -> QueryResult (bounded table rows / numeric overview)
-QueryPanel (Table / Plot / Inspector)
+RangeInspection (Table / Plot / Inspector)
 ```
 
 - `apps/viewer-native/src/query_service.rs` はegui、Workspace layout、FeatureRuntime、Playback cursorに依存しない。同期`execute`も単独で使える。非同期Serviceは入力と同じ要求型を使い、他panelや将来のNative plugin hostからも利用可能。
@@ -57,7 +59,7 @@ QueryPanel (Table / Plot / Inspector)
 
 ## 上限と実用上の制限
 
-- 同じWorkspaceではQuery panelは1個まで。重複は既存のsingleton placeholder扱い。
+- 同じWorkspaceではInspection panelは1個まで。重複は既存のsingleton placeholder扱い。embedded Inspectionのないlayoutでは、sidebarから同じInspectionを1個のwindowとして開く。
 - 最大8 stream / 合計8 field。Table pageは最大64 row。保持するInspector payload copyはpage合計4 MiBまで。大きなmessageでもmetadata・選択fieldは取得でき、詳細copyが予算を超えるrowは理由を表示してcopyを保持しない。Chunk backingはpageに残さない。
 - field射影は1 row全体で128 value、array長64、各text 1 KiB、text総計2 KiB。過大・不正fieldはrowのerrorとして表示する。詳細Inspectorの既存ページ・走査上限も維持。
 - Plotは1 field最大2048点。値は描画用f64。Tableの整数値・log-timeキーは整数精度を維持する。
@@ -68,6 +70,17 @@ QueryPanel (Table / Plot / Inspector)
 - cancelは既存reader同様に協調的。現在のfile read / Chunk展開自体は中断しない。Source交換でUIをjoin待ちにせず、panel破棄では取消後にworkerをjoinする。
 - QueryにもI/O・CPUが必要で、通常再生とのresource競合はあり得る。再生状態の独立性と無負荷を混同しない。
 
+## Inspection / Query / Plotの分担
+
+- **InspectionPanel** は解析UIの構成だけを担当する。At cursorとTime rangeを切り替え、topicの値と範囲解析の入口を1か所にする。範囲・結果はSeekやtab往復で保持し、Source交換では破棄する。
+- **TopicsPanel / Inspector** はカタログ閲覧とカーソル直前値の遅延表示。Time rangeへ切り替えると選択によるカーソルqueryを解除し、戻ると以前のtopicを再選択する。固定topicのInspector panelは明示的なlayout要求として維持する。
+- **RangeInspection** は固定範囲の条件、Tableページ履歴、Plot表示を担当する。fieldのPlot…はdraftへの追加だけで、自動取得しない。複数fieldは同じ入力欄で追加・削除できる。
+- **QueryService** は取得・予算・取消・世代管理。Inspectorのexact predecessorは引き続きInspectorLoaderへ、固定範囲の取得はQueryServiceへ任せる。利用目的の違うworkerを無理に1つにしない。
+- **既存PlotPanel / OdometrySignalLoader** は速度・ヨーレートというsemantic signalの再生表示。overview / follow、viewport detail、preview・bookmark・Seek操作を維持する。任意fieldの解析とは操作と更新理由が違うため、この経路は残す。`navigation`等のlayoutで利用できる。
+
+従来のField plotsは任意fieldを記録全体で読むもう1つの解析UIだったため、popup・NumericPlotLoader・Sessionのseries保持・専用actionsを削除した。任意fieldの取得はQueryServiceのbounded overviewへ一本化し、最大2048点/field・256 MiB work予算を使う。従来の4000点/field・無指定の全記録走査とは上限が異なる。大きい記録では範囲を絞って実行する。
+`--layout query`と`panelType: query/topics`は削除し、`--layout inspection`と`panelType: inspection`へ更新した。旧名のaliasは作らない。Web UIは今回変更していない。
+
 ## 構造上の見通し
 
 他のquery利用者にはNativeの要求/結果APIを再利用できるが、汎用plugin ABIや別crateはまだ作っていない。
@@ -75,9 +88,5 @@ QueryPanel (Table / Plot / Inspector)
 既存overviewは情報を集約しているため、exactな整列の入力には無条件に使わず、既存numeric detail等のbounded exact取得を拡張する必要がある。
 XY Plotはその実行結果を表示する新しいpresentationにする。FeatureRuntimeへ解析履歴を持ち込む必要はない。
 
-既存Inspector/Plot/Window query loaderとgeneration・mailbox処理に類似がある。
-今回は固定範囲の明示実行、cursor追従、recent-window更新という要求の意味が異なるため、全loaderの強制移行やgeneric worker frameworkは避けた。
-現時点の具体的な改善余地は、multi-topic Plotの重複Chunk readと、同じschemaのcompileを要求間で再利用する点。
-それぞれ計測で問題になった時点で既存query executorを広げればよく、SQL・Arrow・全履歴storeは不要。
-
-検証結果は[Query Panelの検証](verification/query-panel/README.md)を参照。
+残る改善余地はmulti-topic Plotの重複Chunk readと同じschemaの要求間compile再利用。今回のUI統合ではそれらの下位executorを変更していない。
+検証結果は[Inspection / Queryの検証](verification/query-panel/README.md)を参照。

@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "root": {
-    "kind": "split", "direction": "row", "children": [
-      { "weight": 0.25, "node": { "kind": "panel", "id": "query-topics", "panelType": "topics", "configVersion": 1, "config": {} } },
-      { "weight": 0.75, "node": { "kind": "panel", "id": "query-main", "panelType": "query", "configVersion": 1, "title": "Query recording", "config": {} } }
-    ]
-  }
-}

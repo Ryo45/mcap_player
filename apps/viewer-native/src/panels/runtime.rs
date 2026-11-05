@@ -10,7 +10,8 @@ use viewer_layout::{LayoutDocument, LayoutNode, PanelId, PanelNode};
 
 pub(crate) struct PanelRuntimeStore {
     panels: BTreeMap<PanelId, NativePanel>,
-    topic_inspector: super::inspector::InspectorTreeState,
+    fallback_inspection: Box<super::inspection::InspectionPanel>,
+    inspection_open: bool,
 }
 
 pub(crate) struct PanelRuntimeBuildResult {
@@ -24,15 +25,15 @@ impl PanelRuntimeStore {
         let mut warnings = Vec::new();
         let mut has_bev = false;
         let mut has_scene = false;
-        let mut has_query = false;
+        let mut has_inspection = false;
         visit_panels(&document.root, &mut |node| {
             let mut panel = create_native_panel(node);
             match &panel {
-                NativePanel::Query(_) if has_query => {
-                    warnings.push("Only one Query panel is supported per workspace".into());
+                NativePanel::Inspection(_) if has_inspection => {
+                    warnings.push("Only one Inspection panel is supported per workspace".into());
                     panel = NativePanel::Placeholder(PlaceholderPanel::duplicate_singleton(node));
                 }
-                NativePanel::Query(_) => has_query = true,
+                NativePanel::Inspection(_) => has_inspection = true,
                 NativePanel::Bev(_) if has_bev => {
                     warnings.push(format!(
                         "panel {} is a duplicate BEV instance and was replaced with a placeholder",
@@ -52,7 +53,6 @@ impl PanelRuntimeStore {
                 #[cfg(feature = "plugin-panels")]
                 NativePanel::Plugin(_) => {}
                 NativePanel::Explore
-                | NativePanel::Topics(_)
                 | NativePanel::Camera(_)
                 | NativePanel::Plot(_)
                 | NativePanel::Inspector(_)
@@ -71,28 +71,56 @@ impl PanelRuntimeStore {
         PanelRuntimeBuildResult {
             store: Self {
                 panels,
-                topic_inspector: Default::default(),
+                fallback_inspection: Box::default(),
+                inspection_open: false,
             },
             warnings,
         }
     }
 
-    pub(crate) fn show_topic_inspector(
+    fn inspection_mut(&mut self) -> &mut super::inspection::InspectionPanel {
+        for panel in self.panels.values_mut() {
+            if let NativePanel::Inspection(panel) = panel {
+                return panel;
+            }
+        }
+        &mut self.fallback_inspection
+    }
+
+    pub(crate) fn inspect_at_cursor(&mut self) {
+        self.inspection_open = true;
+        self.inspection_mut().at_cursor();
+    }
+
+    pub(crate) fn inspect_numeric_field(&mut self, stream: viewer_core::StreamId, path: String) {
+        self.inspection_open = true;
+        self.inspection_mut().select_numeric_field(stream, path);
+    }
+
+    pub(crate) fn show_inspection_window(
         &mut self,
         context: &egui::Context,
-        topic: Option<&str>,
-        inspections: &[crate::inspection::TopicInspection],
-        cursor: Option<viewer_core::ArrivalTime>,
+        input: &super::PanelCompositionInput<'_>,
     ) -> Vec<crate::interaction::ViewerAction> {
-        super::inspector::show_topic_inspector(
-            context,
-            topic,
-            super::InspectorPanelInput {
-                inspections,
-                cursor,
-            },
-            &mut self.topic_inspector,
-        )
+        if self.has_embedded_inspection() {
+            return Vec::new();
+        }
+        let mut open = self.inspection_open || input.inspector_topic.is_some();
+        let mut actions = Vec::new();
+        if open {
+            egui::Window::new("Inspection")
+                .open(&mut open)
+                .default_size(egui::vec2(1000., 700.))
+                .show(context, |ui| {
+                    actions.extend(self.fallback_inspection.show(ui, input).actions);
+                });
+            if !open {
+                self.fallback_inspection.cancel();
+                actions.push(crate::interaction::ViewerAction::SelectInspectorTopic(None));
+            }
+        }
+        self.inspection_open = open;
+        actions
     }
     pub(crate) fn get_mut(&mut self, id: &PanelId) -> Option<&mut NativePanel> {
         self.panels.get_mut(id)
@@ -193,24 +221,21 @@ impl PanelRuntimeStore {
     }
 
     pub(crate) fn bind_query_sources(&mut self, source: Option<&viewer_mcap::McapSource>) {
-        for panel in self.panels.values_mut() {
-            if let NativePanel::Query(panel) = panel {
-                panel.service.bind_source(source);
-            }
-        }
+        self.inspection_mut().range.service.bind_source(source);
     }
 
     pub(crate) fn reset_for_source(&mut self, focused_camera: Option<CameraId>) {
-        self.topic_inspector = Default::default();
+        self.fallback_inspection.reset_for_source();
+        self.inspection_open = false;
         for panel in self.panels.values_mut() {
             panel.reset_for_source(focused_camera);
         }
     }
 
-    pub(crate) fn has_embedded_topics(&self) -> bool {
+    pub(crate) fn has_embedded_inspection(&self) -> bool {
         self.panels
             .values()
-            .any(|panel| matches!(panel, NativePanel::Topics(_)))
+            .any(|panel| matches!(panel, NativePanel::Inspection(_)))
     }
 
     pub(crate) fn has_scene(&self) -> bool {
@@ -272,12 +297,9 @@ pub(crate) fn create_native_panel(node: &PanelNode) -> NativePanel {
         "explore" if node.config_version == 1 && node.config == serde_json::json!({}) => {
             NativePanel::Explore
         }
-        "topics" if node.config_version == 1 && node.config == serde_json::json!({}) => {
-            NativePanel::Topics(Default::default())
-        }
         #[cfg(feature = "plugin-panels")]
         "plugin" => super::plugin::PluginPanel::create(node),
-        "query" => super::query::QueryPanel::create(node),
+        "inspection" => super::inspection::InspectionPanel::create(node),
         "camera" => CameraPanel::create(node),
         "bev" => BevPanel::create(node),
         "plot" => PlotPanel::create(node),
@@ -351,6 +373,46 @@ mod tests {
         assert_eq!(inspector.kind_name(), "inspector");
         let status = create_native_panel(&node("status", "status", json!({})));
         assert_eq!(status.kind_name(), "status");
+    }
+
+    #[test]
+    fn inspection_has_one_entry_point_and_no_implicit_queries() {
+        let document = layout(vec![
+            node("analysis", "inspection", json!({})),
+            node("duplicate", "inspection", json!({})),
+        ]);
+        let mut runtime = PanelRuntimeStore::from_layout(&document);
+        assert_eq!(runtime.warnings.len(), 1);
+        assert_eq!(runtime.store.placeholder_count(), 1);
+        assert!(runtime.store.has_embedded_inspection());
+        let requirements = runtime.store.data_requirements();
+        assert!(requirements.signals.is_empty());
+        assert!(requirements.inspections.is_empty());
+        assert_eq!(
+            requirements.playback,
+            viewer_core::PlaybackRequirements::empty()
+        );
+        runtime.store.inspect_at_cursor();
+        runtime.store.bind_query_sources(None);
+        assert!(matches!(
+            runtime.store.inspection_mut().range.service.state,
+            crate::query_service::QueryState::Unavailable
+        ));
+        // The former experimental entry points are removed, not aliases.
+        for kind in ["query", "topics"] {
+            assert_eq!(
+                create_native_panel(&node("old", kind, json!({}))).kind_name(),
+                "placeholder"
+            );
+        }
+        let mut fallback =
+            PanelRuntimeStore::from_layout(&layout(vec![node("scene", "scene-3d", json!({}))]))
+                .store;
+        assert!(!fallback.has_embedded_inspection());
+        fallback.inspect_numeric_field(viewer_core::StreamId(1), "value".into());
+        assert!(fallback.inspection_open);
+        fallback.reset_for_source(None);
+        assert!(!fallback.inspection_open);
     }
 
     #[test]

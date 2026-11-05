@@ -26,7 +26,7 @@ Nativeには用途別レイアウトもあります。
 
 | 複数カメラを一覧する | 映像・空間・動きを照合する | Topicの値と時系列を調べる |
 | --- | --- | --- |
-| ![4つの画像トピックを並べるcamerasレイアウト](docs/images/layout-cameras.png) | ![Scene、Camera、BEV、速度・ヨーレートのnavigationレイアウト](docs/images/layout-navigation.png) | ![Inspectorと速度・ヨーレートのinspectionレイアウト](docs/images/layout-inspection.png) |
+| ![4つの画像トピックを並べるcamerasレイアウト](docs/images/layout-cameras.png) | ![Scene、Camera、BEV、速度・ヨーレートのnavigationレイアウト](docs/images/layout-navigation.png) | ![再生位置と固定範囲を調べるinspectionレイアウト](docs/images/layout-inspection.png) |
 | `--layout cameras` | `--layout navigation` | `--layout inspection --inspect-topic /scan` |
 
 複数カメラのデモは同じ元映像の色違いで、異なる実視点ではありません。
@@ -121,7 +121,7 @@ Topicsから対象を選ぶと、現在のMCAP log time以前の最新メッセ�
 配列はページ単位で表示し、Nativeではnumeric fieldの「+」から概要Plotを追加できます。
 InspectorやPlotで対象を選んでも、Cameraなどのcontinuous playback対象は増えません。
 
-ほかに`health`（到着周期・Diagnostics）、`inspection`（Inspector・速度/ヨーレート）があります。
+ほかに`health`（到着周期・Diagnostics）、`inspection`（再生位置のInspector・固定範囲のTable/Plot）があります。
 引数なしの既定レイアウトは`standard`です。`standard` / `navigation`などはデモ用のPath・Odometry等を要求するため、
 手持ちの記録の入口には、利用可能なScene入力を使う`monitor`か、query中心の`explore`を勧めます。
 
@@ -174,13 +174,14 @@ Camera overlayにはPath・TF・実カメラに対応したcalibrationが必要�
 Nativeは`--camera-calibration FILE.json`、WebはScene設定のCamera calibration JSONから読み込みます。
 [物理geometry・座標系・ground frame](docs/physical_geometry.md)に設定例をまとめています。
 
-## 固定時間範囲のTable / Plot解析（Native）
+## Topicの値・固定時間範囲のTable / Plot解析（Native）
 
 ```sh
-cargo run --release -p viewer-native -- --mcap /path/to/recording.mcap --layout query
+cargo run --release -p viewer-native -- --mcap /path/to/recording.mcap --layout inspection
 ```
 
-Queryパネルでtopic・開始/終了log time（整数ns）・fieldを選び、Tableまたは時系列PlotでRunします。
+Inspectionの **At cursor** で再生位置の値を確認し、**Time range** でtopic・開始/終了log time（整数ns）・fieldを選び、Tableまたは時系列PlotでRunします。
+数値fieldのPlot…ボタンはTime rangeの条件を準備します。実行はRun操作で明示的に行います。
 範囲は再生カーソルから独立しており、通常の再生やSeekでは変わりません。
 TableはページングとInspector、Plotはboundedな数値集約を使います。Indexed recording専用で、ROS 2 Liveは非対応です。
 [使い方・独自メッセージのデモ・取得上限](docs/query_panel.md)を参照してください。

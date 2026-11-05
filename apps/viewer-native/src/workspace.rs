@@ -28,13 +28,11 @@ pub(crate) enum WorkspaceLayout {
     Cameras,
     Navigation,
     Inspection,
-    Query,
 }
 
 impl WorkspaceLayout {
     fn bundled_json(self) -> &'static str {
         match self {
-            Self::Query => include_str!("../../../config/layouts/native_query.json"),
             Self::Scene => include_str!("../../../config/layouts/native_scene.json"),
             Self::Cameras => include_str!("../../../config/layouts/native_cameras.json"),
             Self::Navigation => include_str!("../../../config/layouts/native_navigation.json"),
@@ -83,8 +81,6 @@ pub(crate) enum WorkspaceEffect {
     Playback(PlaybackCommand),
     SelectInspectorTopic(Option<String>),
     SelectCameraTopic(PanelId, String),
-    AddNumericSeries(viewer_core::StreamId, String),
-    RemoveNumericSeries(viewer_core::StreamId, String),
     BeginPreview(ArrivalTime),
     UpdatePreview(Option<ArrivalTime>),
     CommitPreview(ArrivalTime),
@@ -342,13 +338,14 @@ impl NativeWorkspace {
                 WorkspaceEffect::SelectCameraTopic(panel_id, topic)
             }
             ViewerAction::SelectInspectorTopic(topic) => {
+                if topic.is_some() {
+                    self.panels.inspect_at_cursor();
+                }
                 WorkspaceEffect::SelectInspectorTopic(topic)
             }
-            ViewerAction::AddNumericSeries { stream, field_path } => {
-                WorkspaceEffect::AddNumericSeries(stream, field_path)
-            }
-            ViewerAction::RemoveNumericSeries { stream, field_path } => {
-                WorkspaceEffect::RemoveNumericSeries(stream, field_path)
+            ViewerAction::InspectNumericField { stream, field_path } => {
+                self.panels.inspect_numeric_field(stream, field_path);
+                WorkspaceEffect::SelectInspectorTopic(None)
             }
             ViewerAction::Playback(command) => WorkspaceEffect::Playback(command),
             ViewerAction::SetAccumulatePoints {
@@ -493,12 +490,16 @@ mod tests {
             let workspace = NativeWorkspace::load_bundled_or_fallback(layout);
             assert!(workspace.startup_warning().is_none());
             assert_eq!(workspace.panels.placeholder_count(), 0);
-            assert_eq!(
-                workspace.data_requirements().signals,
-                BTreeSet::from([SignalId::Speed, SignalId::YawRate])
-            );
+            if layout == WorkspaceLayout::Navigation {
+                assert_eq!(
+                    workspace.data_requirements().signals,
+                    BTreeSet::from([SignalId::Speed, SignalId::YawRate])
+                );
+            } else {
+                assert!(workspace.data_requirements().signals.is_empty());
+            }
             if layout == WorkspaceLayout::Inspection {
-                assert!(workspace.panels.has_embedded_topics());
+                assert!(workspace.panels.has_embedded_inspection());
                 // Plots query their series independently of forward feature playback.
                 assert_eq!(
                     workspace.data_requirements().playback,
@@ -544,8 +545,8 @@ mod tests {
         assert!(workspace.startup_warning().is_none());
         assert_eq!(workspace.panels.len(), 3);
         assert_eq!(workspace.panels.placeholder_count(), 0);
-        assert!(workspace.panels.has_embedded_topics());
-        assert_eq!(workspace.panel("monitor-topics").kind_name(), "topics");
+        assert!(workspace.panels.has_embedded_inspection());
+        assert_eq!(workspace.panel("monitor-topics").kind_name(), "inspection");
         assert_eq!(workspace.panel("monitor-front").kind_name(), "camera");
         assert_eq!(workspace.panel("monitor-scene").kind_name(), "scene-3d");
         let mut expected = PlaybackRequirements::empty();

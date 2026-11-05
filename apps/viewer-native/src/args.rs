@@ -122,12 +122,12 @@ impl Args {
                 }
                 "--layout" => {
                     layout = parse_layout(&values.next().context(
-                        "--layout needs standard, showcase, explore, monitor, health, scene, cameras, navigation, inspection or query",
+                        "--layout needs standard, showcase, explore, monitor, health, scene, cameras, navigation, inspection",
                     )?)?
                 }
                 "--help" | "-h" => {
                     println!(
-                        "viewer-native [--workspace-bindings JSON] [--plugin-panel MANIFEST.json] [--scene-extension MANIFEST.json] [--mcap FILE_OR_DIRECTORY] [--camera-topic TOPIC] [--camera-calibration JSON] [--platform-geometry JSON | --no-platform-geometry] [--fixed-frame FRAME] [--ground-frame FRAME] [--layout standard|showcase|explore|monitor|health|scene|cameras|navigation|inspection|query] [--inspect-topic TOPIC] [--point-cloud-topic TOPIC] [--live [--reliable] [--live-raw-camera-topic TOPIC]...]\n\nFiles or directories containing indexed MCAP parts can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
+                        "viewer-native [--workspace-bindings JSON] [--plugin-panel MANIFEST.json] [--scene-extension MANIFEST.json] [--mcap FILE_OR_DIRECTORY] [--camera-topic TOPIC] [--camera-calibration JSON] [--platform-geometry JSON | --no-platform-geometry] [--fixed-frame FRAME] [--ground-frame FRAME] [--layout standard|showcase|explore|monitor|health|scene|cameras|navigation|inspection] [--inspect-topic TOPIC] [--point-cloud-topic TOPIC] [--live [--reliable] [--live-raw-camera-topic TOPIC]...]\n\nFiles or directories containing indexed MCAP parts can also be dropped onto the window. --inspect-topic selects an initial recording Inspector query."
                     );
                     std::process::exit(0);
                 }
@@ -218,7 +218,6 @@ fn source_mode(
 
 fn parse_layout(value: &str) -> Result<WorkspaceLayout> {
     match value {
-        "query" => Ok(WorkspaceLayout::Query),
         "standard" => Ok(WorkspaceLayout::Standard),
         "showcase" => Ok(WorkspaceLayout::Showcase),
         "explore" => Ok(WorkspaceLayout::Explore),
@@ -230,7 +229,7 @@ fn parse_layout(value: &str) -> Result<WorkspaceLayout> {
         "inspection" => Ok(WorkspaceLayout::Inspection),
         value => {
             bail!(
-                "unsupported layout {value:?}; expected standard, showcase, explore, monitor, health, scene, cameras, navigation, inspection or query"
+                "unsupported layout {value:?}; expected standard, showcase, explore, monitor, health, scene, cameras, navigation, inspection"
             )
         }
     }

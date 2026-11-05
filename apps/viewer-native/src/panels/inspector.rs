@@ -2,7 +2,6 @@ use super::{
     INSPECTOR_CONFIG_VERSION, NativePanel, PanelDataRequirements, PanelOutput, PlaceholderPanel,
 };
 use crate::inspection::{InspectorRequirement, TopicInspection};
-use crate::interaction::ViewerAction;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use viewer_core::{
@@ -88,29 +87,6 @@ impl InspectorTreeState {
             self.pages.clear();
         }
     }
-}
-pub(crate) fn show_topic_inspector(
-    context: &egui::Context,
-    topic: Option<&str>,
-    input: InspectorPanelInput<'_>,
-    state: &mut InspectorTreeState,
-) -> Vec<ViewerAction> {
-    let mut actions = Vec::new();
-    if let Some(topic) = topic {
-        let mut open = true;
-        egui::Window::new("Generic Inspector")
-            .open(&mut open)
-            .default_width(600.0)
-            .default_height(500.0)
-            .show(context, |ui| show_inspection(ui, topic, input, state));
-        if !open {
-            actions.push(ViewerAction::SelectInspectorTopic(None));
-        }
-    } else {
-        state.message = None;
-        state.pages.clear();
-    }
-    actions
 }
 pub(super) fn show_inspection(
     ui: &mut egui::Ui,

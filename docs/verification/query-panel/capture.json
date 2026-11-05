@@ -1,7 +1,7 @@
 {
   "mode": "normal Native release; no optional features",
   "fixture_sha256": "bb968174b5c670943af3eee094e19494c37404c9c18fe5c8cf6649fdb0e28f96",
-  "binary_sha256": "4d187753aad3990e7533d8f73a5a296b1c3a82c762f24c064493075ce62566ae",
+  "binary_sha256": "26ea9777c24788096ffa86f92810203f19cbf55d7a1ee6b78767c549df1a7e8b",
   "backend": "Xephyr / llvmpipe Vulkan (functional smoke, not GPU performance)",
   "viewport": [
     1920,
@@ -9,15 +9,17 @@
   ],
   "source": "query_fixture (300 messages per topic, 10 Hz, synthetic)",
   "verified": [
-    "Two topics selected with value fields",
-    "Table completed with 64 rows",
-    "Next page starts at 1700000003200000000 ns",
-    "Plot has 300 inputs per series, zero decode errors",
-    "Query range remains fixed while playback cursor advances"
+    "At cursor displays the custom RobotMetric scalar and string fields",
+    "Time range Table has 64 rows and a continuation page",
+    "Time range Plot has two series of 300 inputs and zero decode errors",
+    "Plot field action returns to the shared range draft in Idle, without automatic reading",
+    "At cursor restores /robot/speed after range navigation"
   ],
   "images": {
-    "table.png": "792b04f43dce34d2a7e9d34475acd7d92d7becb1e875ead019245600976b2e35",
-    "plot.png": "06d0428b4581766b0ef2d5e9feea58d02a8e3f459180c7a280a8f5da5c544d64"
+    "table.png": "ef42521d4d7022280111c96a7366e0d8ba16c6e9aa11f79b201b52abb9c2ab7c",
+    "plot.png": "552dc87c415b79017a5a593dc7c39cb12b58f3972914f22b95eba73f3405283c",
+    "cursor.png": "c23194ad6bb4feab27bfae9d559d337222efdeeb61c0b4e444a47774a7e5adc0"
   },
-  "note": "Final release captures include the pre-read cancellation guard, bounded Inspector detail copies and virtualized topic list."
+  "note": "Unified Inspection release; llvmpipe is functional verification only. The 29.9 s recording had reached its end during interactive verification; cursor independence during playback/Seek is covered by regression tests.",
+  "layout": "inspection"
 }

@@ -1,6 +1,6 @@
-//! Fixed-range query controls and presentation; acquisition belongs to QueryService.
+//! Fixed-range inspection controls and results; acquisition belongs to QueryService.
 use super::{
-    NativePanel, PanelCompositionInput, PanelOutput, PlaceholderPanel,
+    PanelCompositionInput, PanelOutput,
     inspector::{InspectorTreeState, show_message_fields},
 };
 use crate::query_service::{
@@ -8,9 +8,8 @@ use crate::query_service::{
 };
 use std::collections::BTreeMap;
 use viewer_core::{ArrivalTime, DataWindowTimeRange, MessageScalar, SelectedValue, StreamId};
-use viewer_layout::PanelNode;
 
-pub(crate) struct QueryPanel {
+pub(crate) struct RangeInspection {
     pub(super) service: QueryService,
     initialized: bool,
     start: String,
@@ -23,15 +22,9 @@ pub(crate) struct QueryPanel {
     inspector: InspectorTreeState,
     error: Option<String>,
 }
-impl QueryPanel {
-    pub fn create(node: &PanelNode) -> NativePanel {
-        if node.config_version != 1 || node.config != serde_json::json!({}) {
-            return NativePanel::Placeholder(PlaceholderPanel::invalid_config(
-                node,
-                "Query requires version 1 and empty config".into(),
-            ));
-        }
-        NativePanel::Query(Box::new(Self {
+impl RangeInspection {
+    pub fn new() -> Self {
+        Self {
             service: Default::default(),
             initialized: false,
             start: String::new(),
@@ -43,7 +36,47 @@ impl QueryPanel {
             selected: None,
             inspector: Default::default(),
             error: None,
-        }))
+        }
+    }
+    /// Only edits the draft. Reading starts when the user explicitly runs it.
+    pub(super) fn select_numeric_field(&mut self, stream: StreamId, path: String) {
+        if self
+            .service
+            .catalog()
+            .is_none_or(|c| c.by_id(stream).is_none())
+        {
+            return;
+        }
+        let count = self
+            .fields
+            .values()
+            .map(|v| v.split(',').filter(|p| !p.trim().is_empty()).count())
+            .sum::<usize>();
+        let duplicate = self
+            .fields
+            .get(&stream)
+            .is_some_and(|v| v.split(',').any(|p| p.trim() == path));
+        if !duplicate
+            && (count >= crate::query_service::MAX_FIELDS
+                || (!self.fields.contains_key(&stream) && self.fields.len() >= MAX_TOPICS))
+        {
+            self.error = Some(
+                "At most eight streams and eight fields; remove an existing selection first".into(),
+            );
+            return;
+        }
+        self.changed();
+        let fields = self.fields.entry(stream).or_default();
+        if !duplicate {
+            if !fields.is_empty() {
+                fields.push_str(", ");
+            }
+            fields.push_str(&path);
+        }
+        self.mode = QueryMode::Plot;
+    }
+    pub(super) fn cancel(&mut self) {
+        self.changed();
     }
     pub fn reset_for_source(&mut self) {
         self.service.bind_source(None);
@@ -101,7 +134,7 @@ impl QueryPanel {
         })
     }
     pub fn show(&mut self, ui: &mut egui::Ui, input: &PanelCompositionInput<'_>) -> PanelOutput {
-        ui.heading("Query recording");
+        ui.heading("Time range");
         self.service.poll();
         let Some(range) = self.service.range() else {
             ui.label(
@@ -118,7 +151,7 @@ impl QueryPanel {
             "Fixed MCAP log-time range [start, end) · playback/Seek do not change these conditions",
         );
         let mut changed = false;
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             ui.label("Start ns");
             changed |= ui
                 .add(
@@ -136,7 +169,7 @@ impl QueryPanel {
                 )
                 .changed();
         });
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             if ui.button("Full recording").clicked() {
                 self.start = range.start.0.to_string();
                 self.end = range.end_exclusive.0.to_string();
@@ -173,7 +206,7 @@ impl QueryPanel {
                     |ui, rows| {
                         for stream in &catalog.streams[rows] {
                             let mut selected = self.fields.contains_key(&stream.id);
-                            ui.horizontal(|ui| {
+                            ui.horizontal_wrapped(|ui| {
                                 if ui
                                     .add_enabled(
                                         selected || self.fields.len() < MAX_TOPICS,
@@ -212,7 +245,7 @@ impl QueryPanel {
         if changed {
             self.changed();
         }
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             if ui.button("Run query").clicked() { match self.request() { Ok(request)=>{self.history.clear();self.run(request)}, Err(e)=>{self.changed();self.error=Some(e);} } }
             if ui.button("Cancel / clear").clicked() {self.changed();}
             ui.small("64 rows / 4 MiB detail cache · 8 fields · 2048 Plot points per field · 256 MiB read/expansion work");
@@ -229,7 +262,7 @@ impl QueryPanel {
                 ui.label("Idle · choose conditions and Run query");
             }
             QueryState::Loading => {
-                ui.horizontal(|ui| {
+                ui.horizontal_wrapped(|ui| {
                     ui.spinner();
                     ui.label("Loading query… playback remains independent");
                 });
@@ -247,7 +280,7 @@ impl QueryPanel {
                         " · end of range"
                     }
                 ));
-                ui.horizontal(|ui| {
+                ui.horizontal_wrapped(|ui| {
                     if ui
                         .add_enabled(!self.history.is_empty(), egui::Button::new("Previous page"))
                         .clicked()
@@ -406,17 +439,8 @@ fn value(v: &SelectedValue) -> String {
 mod tests {
     use super::*;
     use crate::query_service::QueryRow;
-    fn panel() -> QueryPanel {
-        let NativePanel::Query(panel) = QueryPanel::create(&PanelNode {
-            id: viewer_layout::PanelId::new("query").unwrap(),
-            panel_type: "query".into(),
-            config_version: 1,
-            title: None,
-            config: serde_json::json!({}),
-        }) else {
-            panic!()
-        };
-        *panel
+    fn panel() -> RangeInspection {
+        RangeInspection::new()
     }
     #[test]
     fn edited_conditions_and_source_reset_drop_old_results_without_playback_commands() {
@@ -449,5 +473,56 @@ mod tests {
     #[test]
     fn plot_offsets_do_not_overflow_at_i64_boundaries() {
         assert!(seconds(ArrivalTime(i64::MAX), ArrivalTime(i64::MIN)) > 0.);
+    }
+
+    #[test]
+    fn field_selection_only_prepares_a_bounded_draft_and_preserves_the_range() {
+        let mut bytes = std::io::Cursor::new(Vec::new());
+        let mut writer = mcap::Writer::new(&mut bytes).unwrap();
+        let schema = writer
+            .add_schema("custom/msg/Status", "ros2msg", b"float64 value\n")
+            .unwrap();
+        let channel = writer
+            .add_channel(schema, "/robot/status", "cdr", &BTreeMap::new())
+            .unwrap();
+        writer
+            .write_to_known_channel(
+                &mcap::records::MessageHeader {
+                    channel_id: channel,
+                    sequence: 0,
+                    log_time: 100,
+                    publish_time: 99,
+                },
+                &[0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 240, 63],
+            )
+            .unwrap();
+        writer.finish().unwrap();
+        drop(writer);
+        let source = viewer_mcap::McapSource::from_bytes(bytes.into_inner().into()).unwrap();
+        let stream = source.catalog().streams[0].id;
+        let before = source.read_diagnostics();
+        let mut p = panel();
+        p.service.bind_source(Some(&source));
+        p.start = "100".into();
+        p.end = "101".into();
+        p.initialized = true;
+        p.select_numeric_field(stream, "value".into());
+        p.select_numeric_field(stream, "value".into());
+        assert!(matches!(p.service.state, QueryState::Idle));
+        let request = p.request().unwrap();
+        assert_eq!(request.mode, QueryMode::Plot);
+        assert_eq!(request.topics[0].fields, ["value"]);
+        assert_eq!(request.range.start, ArrivalTime(100));
+        assert_eq!(request.range.end_exclusive, ArrivalTime(101));
+        assert_eq!(source.read_diagnostics(), before);
+        for index in 1..8 {
+            p.select_numeric_field(stream, format!("field{index}"));
+        }
+        p.select_numeric_field(stream, "overflow".into());
+        assert!(p.error.is_some());
+        assert_eq!(p.request().unwrap().topics[0].fields.len(), 8);
+        p.reset_for_source();
+        assert!(p.fields.is_empty());
+        assert!(matches!(p.service.state, QueryState::Unavailable));
     }
 }

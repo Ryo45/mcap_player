@@ -271,7 +271,6 @@ impl App {
                     producer_diagnostics: session.producer_diagnostics(),
                     inspector_topic: session.selected_inspector_topic(),
                     topic_tree: session.topic_tree(),
-                    numeric_series: session.numeric_series(),
                     #[cfg(feature = "plugin-panels")]
                     plugin_generation: session.plugin_data().1,
                     #[cfg(feature = "plugin-panels")]
@@ -421,12 +420,6 @@ impl App {
                 }
                 WorkspaceEffect::SelectInspectorTopic(topic) => {
                     session.select_inspector_topic(topic)
-                }
-                WorkspaceEffect::AddNumericSeries(stream, path) => {
-                    session.add_numeric_series(stream, path)
-                }
-                WorkspaceEffect::RemoveNumericSeries(stream, path) => {
-                    session.remove_numeric_series(stream, &path)
                 }
                 WorkspaceEffect::Playback(command) => match session
                     .apply_playback_command(command, |target, messages| {

@@ -8,9 +8,6 @@ pub(crate) enum QueryLoadError {
         worker: &'static str,
         source: std::io::Error,
     },
-    WorkerPanicked {
-        worker: &'static str,
-    },
 }
 impl std::fmt::Display for QueryLoadError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -19,7 +16,6 @@ impl std::fmt::Display for QueryLoadError {
             Self::Numeric(error) => error.fmt(f),
             Self::Inspection(error) => error.fmt(f),
             Self::StartWorker { worker, source } => write!(f, "start {worker} worker: {source}"),
-            Self::WorkerPanicked { worker } => write!(f, "{worker} worker panicked"),
         }
     }
 }
@@ -30,7 +26,6 @@ impl std::error::Error for QueryLoadError {
             Self::Numeric(error) => Some(error),
             Self::Inspection(error) => Some(error),
             Self::StartWorker { source, .. } => Some(source),
-            _ => None,
         }
     }
 }

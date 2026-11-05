@@ -76,9 +76,9 @@ mod tests {
     fn gets_speed_and_yaw_rate_with_independent_snapshot_state() {
         let speed = signal(SignalId::Speed, 3.0);
         let yaw_rate = signal(SignalId::YawRate, 0.2);
-        let failure = crate::query_error::QueryLoadError::WorkerPanicked {
-            worker: "yaw query failed",
-        };
+        let failure = crate::query_error::QueryLoadError::Source(
+            viewer_mcap::McapSourceError::QueryCancelled,
+        );
         let view = SignalView::new(
             SignalDataView {
                 signal: Some(&speed),
@@ -104,7 +104,7 @@ mod tests {
         assert!(!yaw_view.loading);
         assert_eq!(
             yaw_view.error.unwrap().to_string(),
-            "yaw query failed worker panicked"
+            "recording query: recording query cancelled"
         );
         assert!(view.first_error().is_some());
     }

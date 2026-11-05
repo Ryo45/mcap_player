@@ -87,6 +87,26 @@ impl Graphics {
         let mut actions = Vec::new();
         let mut render_requests = PanelRenderRequests::default();
 
+        let composition_input = PanelCompositionInput {
+            playback,
+            presentation,
+            camera_overlays: render_input.camera_overlays,
+            interaction,
+            signals: render_input.signals,
+            preview,
+            resources,
+            scene,
+            inspections: render_input.inspections,
+            topic_health: render_input.topic_health,
+            diagnostics: render_input.producer_diagnostics,
+            inspector_topic: render_input.inspector_topic,
+            topic_tree: render_input.topic_tree,
+            #[cfg(feature = "plugin-panels")]
+            plugin_generation: render_input.plugin_generation,
+            #[cfg(feature = "plugin-panels")]
+            plugin_data: render_input.plugin_data,
+        };
+
         let egui = self.egui_context.run(input, |context| {
             if let Some(playback) = playback {
                 egui::TopBottomPanel::bottom("playback-controls").show(context, |ui| {
@@ -102,59 +122,18 @@ impl Graphics {
                     ui.label("Live mode · timeline and playback clock disabled");
                 });
             }
-            if !panels.has_embedded_topics() {
+            if !panels.has_embedded_inspection() {
                 egui::SidePanel::left("source-status")
                     .resizable(true)
                     .default_width(260.0)
                     .show(context, |ui| {
                         source_status(ui, presentation);
-                        actions.extend(crate::panels::show_topics(
-                            ui,
-                            render_input.topic_tree,
-                            render_input.numeric_series,
-                        ));
+                        actions.extend(crate::panels::show_topics(ui, render_input.topic_tree));
                     });
             }
-            actions.extend(crate::panels::show_field_plots(
-                context,
-                render_input.topic_tree,
-                render_input.numeric_series,
-                playback,
-            ));
-            if !panels.has_embedded_topics() {
-                actions.extend(panels.show_topic_inspector(
-                    context,
-                    render_input.inspector_topic,
-                    render_input.inspections,
-                    playback.map(|view| view.cursor),
-                ));
-            }
+            actions.extend(panels.show_inspection_window(context, &composition_input));
             egui::CentralPanel::default().show(context, |ui| {
-                let output = show_layout_host(
-                    ui,
-                    layout,
-                    panels,
-                    PanelCompositionInput {
-                        playback,
-                        presentation,
-                        camera_overlays: render_input.camera_overlays,
-                        interaction,
-                        signals: render_input.signals,
-                        preview,
-                        resources,
-                        scene,
-                        inspections: render_input.inspections,
-                        topic_health: render_input.topic_health,
-                        diagnostics: render_input.producer_diagnostics,
-                        inspector_topic: render_input.inspector_topic,
-                        topic_tree: render_input.topic_tree,
-                        numeric_series: render_input.numeric_series,
-                        #[cfg(feature = "plugin-panels")]
-                        plugin_generation: render_input.plugin_generation,
-                        #[cfg(feature = "plugin-panels")]
-                        plugin_data: render_input.plugin_data,
-                    },
-                );
+                let output = show_layout_host(ui, layout, panels, composition_input);
                 actions.extend(output.actions);
                 render_requests = output.render_requests;
             });

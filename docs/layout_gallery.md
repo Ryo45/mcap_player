@@ -40,10 +40,12 @@ cargo run -p viewer-native -- --mcap /tmp/mcap-readme-demo/recording.mcap --layo
 
 ## Topicの値と時系列を調べる — inspection
 
-![Topic一覧、LaserScanの値、速度とヨーレート](images/layout-inspection.png)
+![Inspectionで固定範囲の値と時系列を解析](images/layout-inspection.png)
 
-左のTopic一覧から現在位置以前の最新メッセージを調べ、右で速度とヨーレートの記録全体を見渡す。
-数値の変化が気になる時刻へPlotで移動し、Inspectorでheaderや配列を展開する。
+画像は[独自ROS型の小さいデモ](query_panel.md#小さい独自rosメッセージのデモ)の2 topicを固定範囲で表示したもの。
+
+At cursorで現在位置以前の最新メッセージを調べ、Time rangeで固定範囲のTable / Plotを解析する。
+数値fieldのPlot…から条件を準備し、Runで取得する。範囲側のPlot操作は再生カーソルを移動しない。
 配列はページ単位、グラフは点数を制限した概要であり、全履歴のデコード済み常駐を前提にしない。
 Camera・Sceneは表示せず、カメラのdecodeも要求しない。
 
@@ -52,7 +54,8 @@ cargo run -p viewer-native -- --mcap /tmp/mcap-readme-demo/recording.mcap \
   --layout inspection --inspect-topic /scan
 ```
 
-速度・ヨーレートは`/odom`をqueryする。Inspectorは完全なros2msg依存定義が必要。
+Inspectionは速度・ヨーレートを自動取得しない。再生追従のmotion Plotはnavigation等で利用できる。
+Inspectorは完全なros2msg依存定義が必要。
 別のTopicを選んでも、カメラ等の再生対象を勝手に増やさない。
 
 ## 別の記録へ合わせる

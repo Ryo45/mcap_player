@@ -36,7 +36,6 @@ pub(crate) struct RenderInput<'a> {
     #[cfg(feature = "plugin-panels")]
     pub(crate) plugin_data:
         &'a std::collections::BTreeMap<String, viewer_extension::panel::PanelUpdate>,
-    pub(crate) numeric_series: &'a [crate::numeric_plot_loader::NumericSeriesState],
     pub(crate) preview: Option<&'a PreviewSnapshot>,
     pub(crate) preview_speed: Option<&'a SignalOverview>,
     pub(crate) bookmarks: &'a [Bookmark],

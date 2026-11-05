@@ -1,19 +1,20 @@
 mod bev;
 mod camera;
 mod diagnostics;
+mod inspection;
 mod inspector;
 mod placeholder;
 mod plot;
 #[cfg(feature = "plugin-panels")]
 mod plugin;
-mod query;
+mod range_inspection;
 mod runtime;
 mod scene;
 mod status;
 mod topic_health;
 mod topic_tree;
 mod topics;
-pub(crate) use topic_tree::{show_field_plots, show_topics};
+pub(crate) use topic_tree::show_topics;
 
 pub(crate) use bev::BevPanel;
 pub(crate) use camera::{CameraPanel, CameraPanelInput, CameraSelection};
@@ -49,9 +50,8 @@ pub(crate) const STATUS_CONFIG_VERSION: u32 = 1;
 pub(crate) enum NativePanel {
     #[cfg(feature = "plugin-panels")]
     Plugin(Box<plugin::PluginPanel>),
-    Query(Box<query::QueryPanel>),
+    Inspection(Box<inspection::InspectionPanel>),
     Explore,
-    Topics(topics::TopicsPanel),
     Camera(CameraPanel),
     Bev(BevPanel),
     Plot(PlotPanel),
@@ -72,25 +72,12 @@ impl NativePanel {
         match self {
             #[cfg(feature = "plugin-panels")]
             Self::Plugin(panel) => panel.show(ui, input),
-            Self::Query(panel) => panel.show(ui, input),
+            Self::Inspection(panel) => panel.show(ui, input),
             Self::Explore => {
                 ui.heading("Explore recording");
                 ui.label("Open a topic under Topics and select a numeric field to add a plot.");
                 PanelOutput::default()
             }
-            Self::Topics(panel) => panel.show(
-                ui,
-                topics::TopicsPanelInput {
-                    tree: input.topic_tree,
-                    series: input.numeric_series,
-                    selected_topic: input.inspector_topic,
-                    inspector: InspectorPanelInput {
-                        inspections: input.inspections,
-                        cursor: input.playback.map(|view| view.cursor),
-                    },
-                    presentation: input.presentation,
-                },
-            ),
             Self::Camera(panel) => panel.show(
                 ui,
                 CameraPanelInput {
@@ -192,11 +179,10 @@ impl NativePanel {
         match self {
             #[cfg(feature = "plugin-panels")]
             Self::Plugin(panel) => panel.reset(),
-            Self::Query(panel) => panel.reset_for_source(),
+            Self::Inspection(panel) => panel.reset_for_source(),
             Self::Camera(panel) => panel.state.focused_camera = focused_camera,
             Self::Plot(panel) => panel.reset_for_source(),
             Self::Inspector(panel) => panel.reset_for_source(),
-            Self::Topics(panel) => panel.reset_for_source(),
             Self::Explore
             | Self::Bev(_)
             | Self::Scene(_)
@@ -234,7 +220,7 @@ impl NativePanel {
             Self::Status(panel) => panel.contribute_data_requirements(requirements),
             Self::TopicHealth(panel) => panel.contribute_data_requirements(requirements),
             Self::Diagnostics(panel) => panel.contribute_data_requirements(requirements),
-            Self::Query(_) | Self::Explore | Self::Topics(_) | Self::Placeholder(_) => {}
+            Self::Inspection(_) | Self::Explore | Self::Placeholder(_) => {}
         }
     }
 
@@ -250,9 +236,8 @@ impl NativePanel {
         match self {
             #[cfg(feature = "plugin-panels")]
             Self::Plugin(_) => "plugin",
-            Self::Query(_) => "query",
+            Self::Inspection(_) => "inspection",
             Self::Explore => "explore",
-            Self::Topics(_) => "topics",
             Self::Camera(_) => "camera",
             Self::Bev(_) => "bev",
             Self::Plot(_) => "plot",
@@ -336,7 +321,6 @@ pub(crate) struct PanelCompositionInput<'a> {
     pub(crate) diagnostics: &'a [crate::window_query_loader::DiagnosticsQueryState],
     pub(crate) inspector_topic: Option<&'a str>,
     pub(crate) topic_tree: &'a viewer_core::TopicTree,
-    pub(crate) numeric_series: &'a [crate::numeric_plot_loader::NumericSeriesState],
 }
 
 #[derive(Default)]

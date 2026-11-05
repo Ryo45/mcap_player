@@ -3,8 +3,8 @@
   "root": {
     "kind": "split", "direction": "row", "children": [
       { "weight": 0.3, "node": {
-        "kind": "panel", "id": "monitor-topics", "panelType": "topics",
-        "configVersion": 1, "title": "Topics / Inspector", "config": {}
+        "kind": "panel", "id": "monitor-topics", "panelType": "inspection",
+        "configVersion": 1, "title": "Inspection", "config": {}
       }},
       { "weight": 0.7, "node": {
         "kind": "split", "direction": "column", "children": [
