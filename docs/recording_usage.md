@@ -119,4 +119,3 @@ Nativeは`--camera-calibration FILE.json`、WebはScene設定のCamera calibrati
   すべての記録で一定のFPSやメモリ量を保証するものではありません。
 
 対応差分の詳細は[Native / Web一覧](native_web_parity.md)、分割MCAPの制約は[入力互換性](issue/015-split-mcap-and-web-lz4/README.md)を参照してください。
-
