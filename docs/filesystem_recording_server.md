@@ -18,9 +18,15 @@ Copy `config/recording-server.toml.example`, replace every recording path with a
 and list every Browser origin explicitly:
 
 ```bash
-cargo run -p recording-server -- \
+cp config/recording-server.toml.example config/recording-server.toml
+# Edit recording paths and allowed browser origins before starting the server.
+cargo run --release -p recording-server -- \
   --config config/recording-server.toml
 ```
+
+In the Web UI, expand **Remote Recording Server**, connect to the server URL
+(default `http://localhost:8081`), select a recording and load its catalog, then open playback.
+The server is intended for a trusted LAN and does not provide TLS or authentication.
 
 Configuration can be checked without binding a socket:
 
