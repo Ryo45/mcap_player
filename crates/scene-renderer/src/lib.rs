@@ -1,4 +1,4 @@
-//! Minimal offscreen 3D scene renderer for a world grid, ego wireframe and planned path.
+//! Offscreen metric scene with a world grid, platform envelope, heading marker and path.
 
 use bytemuck::{Pod, Zeroable};
 use viewer_core::SceneOverlay;
@@ -12,7 +12,8 @@ pub struct SceneFrame<'a> {
     pub overlay: Option<&'a SceneOverlay>,
     /// World ROS metre positions, already placed by presentation.
     pub focus: [f32; 3],
-    pub forward: [f32; 3],
+    /// Known world-frame heading. None suppresses the direction annotation.
+    pub forward: Option<[f32; 3]>,
     pub view_radius: f32,
     pub platform: Option<[[f32; 3]; 8]>,
     pub path: &'a [[f32; 3]],
@@ -63,9 +64,9 @@ impl SceneCameraMode {
 impl Default for SceneCamera {
     fn default() -> Self {
         Self {
-            distance: 6.0,
-            azimuth: 0.699,
-            elevation: 0.48,
+            distance: 5.5,
+            azimuth: 0.22,
+            elevation: 0.82,
         }
     }
 }
@@ -98,6 +99,7 @@ pub struct SceneRenderer {
     depth: wgpu::Texture,
     depth_view: wgpu::TextureView,
     pipeline: wgpu::RenderPipeline,
+    surface_pipeline: wgpu::RenderPipeline,
     point_pipeline: wgpu::RenderPipeline,
     opaque_point_pipeline: wgpu::RenderPipeline,
     opaque_points: bool,
@@ -108,6 +110,7 @@ pub struct SceneRenderer {
     dynamic_buffer: wgpu::Buffer,
     dynamic_capacity: usize,
     dynamic_vertices: u32,
+    surface_vertices: u32,
     overlay_buffer: wgpu::Buffer,
     overlay_capacity: usize,
     overlay_vertices: u32,
@@ -164,7 +167,7 @@ impl SceneRenderer {
             bind_group_layouts: &[&uniform_layout],
             push_constant_ranges: &[],
         });
-        let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        let mut line_descriptor = wgpu::RenderPipelineDescriptor {
             label: Some("3D scene line pipeline"),
             layout: Some(&pipeline_layout),
             vertex: wgpu::VertexState {
@@ -205,14 +208,19 @@ impl SceneRenderer {
             depth_stencil: Some(wgpu::DepthStencilState {
                 format: wgpu::TextureFormat::Depth32Float,
                 depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less,
+                // Keep envelope edges and paths visible on coincident opaque surfaces.
+                depth_compare: wgpu::CompareFunction::LessEqual,
                 stencil: Default::default(),
                 bias: Default::default(),
             }),
             multisample: Default::default(),
             multiview: None,
             cache: None,
-        });
+        };
+        let pipeline = device.create_render_pipeline(&line_descriptor);
+        line_descriptor.label = Some("3D platform and heading surfaces");
+        line_descriptor.primitive.topology = wgpu::PrimitiveTopology::TriangleList;
+        let surface_pipeline = device.create_render_pipeline(&line_descriptor);
         let mut point_descriptor = wgpu::RenderPipelineDescriptor {
             label: Some("3D point billboard pipeline"),
             layout: Some(&pipeline_layout),
@@ -278,6 +286,7 @@ impl SceneRenderer {
             depth,
             depth_view,
             pipeline,
+            surface_pipeline,
             point_pipeline,
             opaque_point_pipeline,
             opaque_points: false,
@@ -288,6 +297,7 @@ impl SceneRenderer {
             dynamic_buffer,
             dynamic_capacity: 1,
             dynamic_vertices: 0,
+            surface_vertices: 0,
             overlay_buffer: make_empty_vertex_buffer(device, "3D extension lines", 1),
             overlay_capacity: 1,
             overlay_vertices: 0,
@@ -325,7 +335,9 @@ impl SceneRenderer {
 
     pub fn render(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, frame: SceneFrame<'_>) {
         if self.last_revision != Some(frame.revision) {
-            let vertices = make_dynamic_lines(frame);
+            let mut vertices = make_surfaces(frame);
+            self.surface_vertices = vertices.len() as u32;
+            vertices.extend(make_dynamic_lines(frame));
             if vertices.len() > self.dynamic_capacity {
                 self.dynamic_capacity = vertices.len().next_power_of_two();
                 self.dynamic_buffer =
@@ -401,7 +413,12 @@ impl SceneRenderer {
         let (eye, target) = camera_pose(self.camera_mode, self.camera, frame);
         let view = look_at_rh(eye, target, [0.0, 1.0, 0.0]);
         let aspect = self.size.0 as f32 / self.size.1 as f32;
-        let projection = perspective_rh(48.0_f32.to_radians(), aspect, 0.01, 160.0);
+        let fov: f32 = if self.camera_mode == SceneCameraMode::Chase {
+            56.0
+        } else {
+            48.0
+        };
+        let projection = perspective_rh(fov.to_radians(), aspect, 0.01, 160.0);
         let view_projection = multiply(projection, view);
         let uniform = SceneUniform {
             view_projection,
@@ -447,7 +464,12 @@ impl SceneRenderer {
             pass.draw(0..self.grid_vertices, 0..1);
             if self.dynamic_vertices > 0 {
                 pass.set_vertex_buffer(0, self.dynamic_buffer.slice(..));
-                pass.draw(0..self.dynamic_vertices, 0..1);
+                if self.surface_vertices > 0 {
+                    pass.set_pipeline(&self.surface_pipeline);
+                    pass.draw(0..self.surface_vertices, 0..1);
+                    pass.set_pipeline(&self.pipeline);
+                }
+                pass.draw(self.surface_vertices..self.dynamic_vertices, 0..1);
             }
             if self.overlay_vertices > 0 {
                 pass.set_vertex_buffer(0, self.overlay_buffer.slice(..));
@@ -554,7 +576,16 @@ fn camera_pose(
     frame: SceneFrame<'_>,
 ) -> ([f32; 3], [f32; 3]) {
     let focus = ros_to_render(frame.focus);
-    let forward = normalize(ros_to_render(frame.forward));
+    let heading = frame
+        .forward
+        .filter(|v| v.iter().all(|x| x.is_finite()) && v[0].hypot(v[1]) > f32::EPSILON);
+    // World-axis overview is a camera fallback, never a fabricated robot heading.
+    let forward = normalize(ros_to_render(heading.unwrap_or([1.0, 0.0, 0.0])));
+    let mode = if mode == SceneCameraMode::VehicleEye && heading.is_none() {
+        SceneCameraMode::Free
+    } else {
+        mode
+    };
     match mode {
         SceneCameraMode::Chase | SceneCameraMode::Free => {
             let yaw = if mode == SceneCameraMode::Chase {
@@ -570,7 +601,16 @@ fn camera_pose(
                     focus[1] + camera.distance * camera.elevation.sin(),
                     focus[2] + horizontal * azimuth.cos(),
                 ],
-                focus,
+                if mode == SceneCameraMode::Chase && heading.is_some() {
+                    let lookahead = camera.distance * 0.03;
+                    [
+                        focus[0] + forward[0] * lookahead,
+                        focus[1],
+                        focus[2] + forward[2] * lookahead,
+                    ]
+                } else {
+                    focus
+                },
             )
         }
         SceneCameraMode::VehicleEye => {
@@ -635,6 +675,73 @@ fn make_grid() -> Vec<Vertex> {
                 color,
             );
         }
+    }
+    vertices
+}
+
+/// Opaque faces preserve the supplied physical bounds. The raised arrow is a separate
+/// navigation annotation, with a bounded metric size; it never rescales source geometry.
+fn make_surfaces(frame: SceneFrame<'_>) -> Vec<Vertex> {
+    let mut vertices = Vec::with_capacity(45);
+    if let Some(corners) = frame.platform {
+        for (face, color) in [
+            ([0, 1, 2, 3], [0.03, 0.10, 0.13]),
+            ([4, 5, 6, 7], [0.06, 0.40, 0.48]),
+            ([1, 2, 6, 5], [1.0, 0.35, 0.04]), // physical +x front
+            ([0, 3, 7, 4], [0.04, 0.22, 0.28]),
+            ([0, 1, 5, 4], [0.03, 0.16, 0.22]),
+            ([3, 2, 6, 7], [0.03, 0.16, 0.22]),
+        ] {
+            for index in [face[0], face[1], face[2], face[0], face[2], face[3]] {
+                vertices.push(Vertex {
+                    position: ros_to_render(corners[index]),
+                    color,
+                });
+            }
+        }
+    }
+    let Some(forward) = frame.forward.filter(|v| v.iter().all(|x| x.is_finite())) else {
+        return vertices;
+    };
+    let horizontal = forward[0].hypot(forward[1]);
+    if horizontal <= f32::EPSILON {
+        return vertices;
+    }
+    let forward = [forward[0] / horizontal, forward[1] / horizontal, 0.0];
+    let left = [-forward[1], forward[0], 0.0];
+    let top = frame.platform.map_or(frame.focus[2], |corners| {
+        corners
+            .iter()
+            .map(|p| p[2])
+            .fold(f32::NEG_INFINITY, f32::max)
+    });
+    // Presentation symbol, not a sensor mount or part of the platform envelope.
+    let length = (frame.view_radius * 1.5).clamp(0.65, 1.5);
+    let point = |along: f32, across: f32| {
+        ros_to_render([
+            frame.focus[0] + length * (forward[0] * along + left[0] * across),
+            frame.focus[1] + length * (forward[1] * along + left[1] * across),
+            top + 0.18,
+        ])
+    };
+    for (along, across) in [
+        (0., -0.045),
+        (0.65, -0.045),
+        (0.65, 0.045),
+        (0., -0.045),
+        (0.65, 0.045),
+        (0., 0.045),
+    ] {
+        vertices.push(Vertex {
+            position: point(along, across),
+            color: [0.95, 0.97, 1.0],
+        });
+    }
+    for (along, across) in [(0.55, -0.23), (1.0, 0.0), (0.55, 0.23)] {
+        vertices.push(Vertex {
+            position: point(along, across),
+            color: [1.0, 0.35, 0.04],
+        });
     }
     vertices
 }
@@ -838,7 +945,7 @@ mod tests {
             overlay_revision: 0,
             overlay: None,
             focus: [2.0, 3.0, 0.0],
-            forward: [1.0, 0.0, 0.0],
+            forward: Some([1.0, 0.0, 0.0]),
             view_radius: 0.2,
             platform: None,
             path: &path,
@@ -887,21 +994,22 @@ mod tests {
         assert_eq!(camera.distance, 0.3);
         camera.elevation = (camera.elevation + 10_000.0 * 0.008).clamp(0.12, 1.35);
         assert_eq!(camera.elevation, 1.35);
-        assert_eq!(SceneCamera::default().distance, 6.0);
+        assert_eq!(SceneCamera::default().distance, 5.5);
     }
 
     #[test]
     fn chase_and_vehicle_eye_follow_ego_heading() {
         let frame = SceneFrame {
             focus: [2.0, 3.0, 0.0],
-            forward: [0.0, 1.0, 0.0],
+            forward: Some([0.0, 1.0, 0.0]),
             view_radius: 0.2,
             ..SceneFrame::default()
         };
         let (chase_eye, chase_target) =
             camera_pose(SceneCameraMode::Chase, SceneCamera::default(), frame);
         assert!(chase_eye.iter().all(|value| value.is_finite()));
-        assert_eq!(chase_target, [-3.0, 0.0, -2.0]);
+        assert!(chase_target[0] < -3.0);
+        assert_eq!([chase_target[1], chase_target[2]], [0.0, -2.0]);
 
         let (vehicle_eye, vehicle_target) =
             camera_pose(SceneCameraMode::VehicleEye, SceneCamera::default(), frame);
@@ -929,6 +1037,73 @@ mod tests {
             subtract(lines[1].position, lines[0].position),
             [0.0, 0.0, -1.0]
         );
+    }
+
+    #[test]
+    fn physical_faces_keep_bounds_and_direction_annotation_requires_heading() {
+        let geometry =
+            viewer_core::PlatformGeometry::new("robot".into(), [-1., -0.4, 0.], [0.5, 0.6, 0.3])
+                .unwrap();
+        let corners = geometry.corners().map(|p| p.map(|v| v as f32));
+        let frame = SceneFrame {
+            platform: Some(corners),
+            view_radius: 0.2,
+            ..Default::default()
+        };
+        let body = make_surfaces(frame);
+        assert_eq!(body.len(), 36);
+        assert!(
+            body.iter()
+                .all(|v| corners.iter().any(|c| ros_to_render(*c) == v.position))
+        );
+        for forward in [None, Some([0., 0., 0.]), Some([f32::NAN, 0., 0.])] {
+            assert_eq!(make_surfaces(SceneFrame { forward, ..frame }).len(), 36);
+        }
+        let surfaces = make_surfaces(SceneFrame {
+            forward: Some([0., 1., 0.]),
+            ..frame
+        });
+        assert_eq!(surfaces.len(), 45);
+        let arrow = &surfaces[36..];
+        assert!(arrow.iter().all(|v| (v.position[1] - 0.48).abs() < 1e-6));
+        // ROS +y maps to renderer -x. The triangle tip is farthest forward.
+        assert!((arrow[7].position[0] + 0.65).abs() < 1e-6);
+        assert_eq!(arrow[7].position[2], 0.);
+    }
+
+    #[test]
+    fn chase_stays_behind_and_above_a_rotating_robot_and_unknown_pose_is_an_overview() {
+        let camera = SceneCamera::default();
+        for angle in [0., std::f32::consts::FRAC_PI_2, std::f32::consts::PI] {
+            let forward = [angle.cos(), angle.sin(), 0.];
+            let frame = SceneFrame {
+                focus: [2., 3., 0.2],
+                forward: Some(forward),
+                ..Default::default()
+            };
+            let (eye, target) = camera_pose(SceneCameraMode::Chase, camera, frame);
+            let focus = ros_to_render(frame.focus);
+            let direction = ros_to_render(forward);
+            assert!(dot(subtract(eye, focus), direction) < 0.);
+            assert!(eye[1] > focus[1]);
+            assert!(dot(subtract(target, focus), direction) > 0.);
+            let (free_eye, _) = camera_pose(SceneCameraMode::Free, camera, frame);
+            let (fixed_eye, _) = camera_pose(
+                SceneCameraMode::Free,
+                camera,
+                SceneFrame {
+                    forward: None,
+                    ..frame
+                },
+            );
+            assert_eq!(free_eye, fixed_eye);
+        }
+        let unknown = SceneFrame::default();
+        assert_eq!(
+            camera_pose(SceneCameraMode::VehicleEye, camera, unknown),
+            camera_pose(SceneCameraMode::Free, camera, unknown)
+        );
+        assert!(make_surfaces(unknown).is_empty());
     }
 }
 

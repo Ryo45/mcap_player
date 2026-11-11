@@ -33,7 +33,8 @@ pub struct SceneSnapshot<'a> {
     pub overlay_revision: u64,
     pub overlay: Option<&'a crate::SceneOverlay>,
     pub focus: [f32; 3],
-    pub forward: [f32; 3],
+    /// World-frame heading; absent when neither TF nor matching Odometry provides a pose.
+    pub forward: Option<[f32; 3]>,
     pub view_radius: f32,
     pub platform: Option<[[f32; 3]; 8]>,
     pub path: &'a [[f32; 3]],
@@ -72,7 +73,7 @@ pub struct ScenePresentationState {
     platform: Option<[[f32; 3]; 8]>,
     geometry_revision: u64,
     focus: [f32; 3],
-    forward: [f32; 3],
+    forward: Option<[f32; 3]>,
     footprint: Option<[f32; 4]>,
 }
 
@@ -265,14 +266,20 @@ impl ScenePresentationState {
         let mut body = None;
         self.diagnostics.platform_tf_error = None;
         self.diagnostics.platform_geometry_error = None;
-        let mut focus = telemetry
-            .filter(|t| t.frame_id.trim_start_matches('/') == target_frame.trim_start_matches('/'))
-            .map_or([0.0; 3], |t| {
-                [t.position_x as f32, t.position_y as f32, 0.0]
-            });
-        let mut forward = telemetry.map_or([1.0, 0.0, 0.0], |t| {
-            [t.yaw_radians.cos() as f32, t.yaw_radians.sin() as f32, 0.0]
+        let odometry_pose = telemetry.filter(|t| {
+            t.frame_id.trim_start_matches('/') == target_frame.trim_start_matches('/')
+                && t.child_frame_id.trim_start_matches('/') == reference.trim_start_matches('/')
+                && [t.position_x, t.position_y, t.yaw_radians]
+                    .iter()
+                    .all(|v| v.is_finite())
+                && (t.position_x as f32).is_finite()
+                && (t.position_y as f32).is_finite()
         });
+        let mut focus = odometry_pose.map_or([0.0; 3], |t| {
+            [t.position_x as f32, t.position_y as f32, 0.0]
+        });
+        let mut forward =
+            odometry_pose.map(|t| [t.yaw_radians.cos() as f32, t.yaw_radians.sin() as f32, 0.0]);
         let mut view_radius = 0.5;
         if let Some(g) = platform {
             let mut corners = g.corners().to_vec();
@@ -288,7 +295,9 @@ impl ScenePresentationState {
                     focus = std::array::from_fn(|axis| {
                         (bounds.iter().map(|p| f64::from(p[axis])).sum::<f64>() / 8.0) as f32
                     });
-                    forward = std::array::from_fn(|i| (points[9][i] - points[8][i]) as f32);
+                    forward = Some(std::array::from_fn(|i| {
+                        (points[9][i] - points[8][i]) as f32
+                    }));
                     view_radius =
                         (g.extent()[0].hypot(g.extent()[1]).hypot(g.extent()[2]) / 2.0) as f32;
                     body = Some(bounds);
@@ -466,6 +475,88 @@ mod tests {
         assert!(scene.path.is_empty());
         assert!(scene.diagnostics.path_tf_error.is_some());
         assert_eq!(scene.cloud, [[1.0, 2.0, 3.0]]);
+    }
+
+    #[test]
+    fn platform_heading_tracks_tf_without_odometry_and_missing_pose_invalidates_only_geometry() {
+        let geometry: PlatformGeometry = serde_json::from_str(include_str!(
+            "../../../../config/platform_geometry/turtlebot3_waffle_pi.json"
+        ))
+        .unwrap();
+        let path = PathState::default();
+        let cloud = PointCloudState::default();
+        let policy = PathProjectionPolicy::default();
+        let mut state = ScenePresentationState::default();
+        let mut transforms = TransformState::default();
+        let mut odometry = TelemetryState::default();
+        let mut build = |tf: &TransformState, odom: &TelemetryState| {
+            let scene = state.build(ScenePresentationInput {
+                path: &path,
+                telemetry: odom,
+                point_cloud: &cloud,
+                transforms: tf,
+                platform: Some(&geometry),
+                path_projection: &policy,
+                accumulate: false,
+                coloring: Default::default(),
+            });
+            (
+                scene.forward,
+                scene.platform,
+                scene.revision,
+                scene.cloud_revision,
+            )
+        };
+        let missing = build(&transforms, &odometry);
+        assert!(missing.0.is_none() && missing.1.is_none());
+        let mut revision = missing.2;
+        for angle in [0., std::f64::consts::FRAC_PI_2, std::f64::consts::PI] {
+            transforms.clear();
+            transforms.apply(TransformBatch {
+                arrival_time: ArrivalTime(1),
+                is_static: true,
+                transforms: vec![TransformStamped {
+                    measurement_time: MeasurementTime(0),
+                    frame_id: "odom".into(),
+                    child_frame_id: "base_link".into(),
+                    translation: [2., 3., 0.1],
+                    rotation: [0., 0., (angle / 2.).sin(), (angle / 2.).cos()],
+                }],
+            });
+            let scene = build(&transforms, &odometry);
+            let forward = scene.0.unwrap();
+            assert!((forward[0] - angle.cos() as f32).abs() < 1e-5);
+            assert!((forward[1] - angle.sin() as f32).abs() < 1e-5);
+            let corners = scene.1.unwrap();
+            let distance = |a: usize, b: usize| {
+                (0..3)
+                    .map(|i| (corners[a][i] - corners[b][i]).powi(2))
+                    .sum::<f32>()
+                    .sqrt()
+            };
+            assert!((distance(0, 1) - 0.2825).abs() < 1e-5);
+            assert!((distance(1, 2) - 0.306).abs() < 1e-5);
+            assert!((distance(0, 4) - 0.14125).abs() < 1e-5);
+            assert_ne!(scene.2, revision);
+            assert_eq!(scene.3, missing.3);
+            assert_eq!(build(&transforms, &odometry).2, scene.2);
+            revision = scene.2;
+        }
+        transforms.clear();
+        let mut wrong_frame = telemetry(1, [4., 5.]);
+        wrong_frame.frame_id = "map".into();
+        odometry.apply(wrong_frame);
+        let missing = build(&transforms, &odometry);
+        assert!(missing.0.is_none() && missing.1.is_none());
+        assert_ne!(missing.2, revision);
+        odometry.apply(telemetry(2, [4., 5.]));
+        let fallback = build(&transforms, &odometry);
+        assert!(fallback.0.is_some() && fallback.1.is_none());
+        odometry.cold_seek();
+        let empty = build(&transforms, &odometry);
+        assert!(empty.0.is_none());
+        assert_ne!(empty.2, fallback.2);
+        assert_eq!(empty.3, fallback.3);
     }
 
     #[test]

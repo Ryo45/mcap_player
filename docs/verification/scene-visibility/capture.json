@@ -1,0 +1,80 @@
+{
+  "date": "2026-11-11",
+  "fixture_sha256": "252b8771117999c7d26dbba20cae6e6239e4ba3e99dc56a6ff575a634f5d75fc",
+  "source": "readme_fixture from bundled camera_7_5s.mcap; Gazebo-derived images/scan and generated Path; demo calibration",
+  "viewport": [
+    1920,
+    1080
+  ],
+  "log_time_ns": 1768724930204523401,
+  "accumulate": false,
+  "native": {
+    "before": {
+      "binary_sha256": "07e06c9a90de6610abb59cf5082e86ade7b3fffff08935dbe3101d8d15da3017",
+      "fixture_sha256": "252b8771117999c7d26dbba20cae6e6239e4ba3e99dc56a6ff575a634f5d75fc",
+      "backend": "llvmpipe Vulkan / Xephyr; functional image, not performance",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "state": "recording end; Chase default; 1m grid; accumulation off"
+    },
+    "after": {
+      "binary_sha256": "741f0ada758bbe69a5d6ce2052edc9826b2d4a7db61e9a09e9956dcefb6e6c9d",
+      "fixture_sha256": "252b8771117999c7d26dbba20cae6e6239e4ba3e99dc56a6ff575a634f5d75fc",
+      "backend": "llvmpipe Vulkan / Xephyr; functional image, not performance",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "state": "recording end; Chase default; 1m grid; accumulation off"
+    }
+  },
+  "web": {
+    "before_wasm": {
+      "viewer-web-ff7e4709abe13ff6_bg.wasm": "660421a206113b18130bfeb10134f06a02c1da51c6f8f4a7306f1a6ea7553434"
+    },
+    "after_wasm": {
+      "viewer-web-e91c2370ca6414b_bg.wasm": "2aab8db7871298b41674b9347c4f2e62b5d4cd5822767ea0ed783c27da569eda"
+    },
+    "capture": {
+      "browser": "Chrome/143.0.7499.192",
+      "backend": "NVIDIA Vulkan; functional screenshot, not a performance comparison",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "status": "Ready \u00b7 77 decoded \u00b7 0 errors \u00b7 0 dropped \u00b7 path 31 pts \u00b7 scan 360 pts \u00b7 5.02s",
+      "scene": "Point cloud: 360 visible points \u00b7 base_scan \u2192 odom",
+      "state": "seek end; Chase default; 1m grid; accumulation off"
+    },
+    "before_backend": "same Chrome/NVIDIA Vulkan workflow; screenshot saved before a capture metadata-writing error"
+  },
+  "images": {
+    "native-before.png": "e30c973368934167807a99af79f59f29d0c20c02be7b2690d51c55982a45cf47",
+    "native-after.png": "0ab3c4811981a0252e7b114aae2fa9709428016cac5e26f83ce800705f0a7af8",
+    "web-before.png": "6bc005bc04e806c7ffb290844cb6b93be969836d3848c1aa19fed6ca852e6dfc",
+    "web-after.png": "bc6692445dcb3387e8b30961261c23c5598b56fc7e053442901b32faa39e6dc8"
+  },
+  "camera": {
+    "before": {
+      "distance_m": 6,
+      "azimuth_radians": 0.699,
+      "elevation_radians": 0.48,
+      "vertical_fov_degrees": 48,
+      "lookahead_m": 0
+    },
+    "after": {
+      "distance_m": 5.5,
+      "azimuth_radians": 0.22,
+      "elevation_radians": 0.82,
+      "vertical_fov_degrees": 56,
+      "lookahead_m": 0.165
+    }
+  },
+  "render_sources_sha256": {
+    "crates/scene-renderer/src/lib.rs": "b69f268cea132f513e62911638ddf796b20ce19c82ff46e550cff7d45011dcfd",
+    "crates/viewer-core/src/presentation/scene.rs": "bf810a0ece635bcc2a5c2e680c1450f98fd2e5bb35f25ea840e4b8b7418f3d61",
+    "config/platform_geometry/turtlebot3_waffle_pi.json": "9fd5eab9bd50bc665f6826c1d6beee893d545b270016e08ed7ebf297ecb5299a"
+  }
+}

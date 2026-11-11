@@ -2,6 +2,54 @@ use super::{SceneCameraMode, SceneFrame, SceneRenderer, camera_pose};
 
 #[test]
 #[ignore = "requires a working GPU adapter; run explicitly on Native"]
+fn heading_updates_reuse_cloud_buffers_and_camera_changes_reuse_geometry() {
+    let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor::default());
+    let adapter = pollster::block_on(instance.request_adapter(&Default::default())).unwrap();
+    let (device, queue) = pollster::block_on(adapter.request_device(&Default::default())).unwrap();
+    let mut renderer = SceneRenderer::new(&device, 320, 240);
+    let platform =
+        viewer_core::PlatformGeometry::new("base".into(), [-0.2, -0.15, 0.], [0.1, 0.15, 0.14])
+            .unwrap();
+    let frame = SceneFrame {
+        platform: Some(platform.corners().map(|p| p.map(|v| v as f32))),
+        forward: Some([1., 0., 0.]),
+        view_radius: 0.2,
+        cloud: &[[1., 0., 0.]],
+        ..Default::default()
+    };
+    renderer.render(&device, &queue, frame);
+    assert_eq!(renderer.surface_vertices, 45);
+    let metrics = renderer.metrics();
+    assert!(!renderer.needs_render(frame));
+    let missing = SceneFrame {
+        forward: None,
+        revision: 1,
+        ..frame
+    };
+    assert!(renderer.needs_render(missing));
+    renderer.render(&device, &queue, missing);
+    assert_eq!(renderer.surface_vertices, 36);
+    assert_eq!(renderer.metrics().point_uploads, metrics.point_uploads);
+    assert_eq!(renderer.metrics().layer_uploads, metrics.layer_uploads + 1);
+    for mode in [
+        SceneCameraMode::Free,
+        SceneCameraMode::VehicleEye,
+        SceneCameraMode::Chase,
+    ] {
+        renderer.set_camera_mode(mode);
+        renderer.zoom(20.);
+        renderer.orbit(10., 5.);
+        renderer.reset_camera();
+        renderer.render(&device, &queue, missing);
+    }
+    assert_eq!(renderer.metrics().point_uploads, metrics.point_uploads);
+    assert_eq!(renderer.metrics().layer_uploads, metrics.layer_uploads + 1);
+    renderer.invalidate();
+    assert!(renderer.needs_render(missing));
+}
+
+#[test]
+#[ignore = "requires a working GPU adapter; run explicitly on Native"]
 fn opaque_points_occlude_by_distance_in_both_orders() {
     let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor::default());
     let adapter = pollster::block_on(instance.request_adapter(&Default::default())).unwrap();

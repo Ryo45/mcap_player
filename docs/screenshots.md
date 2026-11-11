@@ -1,8 +1,13 @@
 # READMEのスクリーンショット
 
-READMEと[レイアウトギャラリー](layout_gallery.md)の5枚は、現行のNative / Web releaseビルドの実画面です。
+READMEと[レイアウトギャラリー](layout_gallery.md)の5枚は、下記の撮影時点のNative / Web releaseビルドの実画面です。
 2026-10-27に`18787dc`の実装で撮り直し、Cameraのトピック選択プルダウンも表示しています。
 同梱のGazebo由来データに、決定的な計画Pathと完全なCamera / LaserScan schemaを加えた撮影用コピーを使います。
+
+2026-11-11に共通SceneRendererのChaseと車体表示を改善しました。
+[Native / Webの変更前後、撮影方法・使用GPU・検証結果](verification/scene-visibility/README.md)を別途保存しています。
+現在のChase既定は距離5.5 m・仰角約47°・方位ずれ約12.6°・垂直画角56°です。
+以下の距離6 mなどは既存README画像を撮った当時の条件です。
 
 ## サンプルを準備する
 
