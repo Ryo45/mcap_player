@@ -387,22 +387,15 @@ impl App {
                             return Ok(false);
                         }
                         let enable_point_cloud = workspace.panels.has_scene();
-                        let priority = cameras.priority_topic(&topic);
-                        let mut candidate = None;
-                        session.select_camera_topics(
-                            priority,
-                            &requirements.playback,
-                            workspace.bindings(),
-                            |plan, target, messages| {
+                        let candidate =
+                            session.select_camera_topics(plan, |plan, target, messages| {
                                 let mut runtime =
                                     viewer_core::FeatureRuntime::new(plan, enable_point_cloud);
                                 runtime.set_scheduling_priority(plan.primary_camera());
                                 runtime.restore_transactional(target, &messages)?;
-                                candidate = Some(runtime);
-                                Ok(())
-                            },
-                        )?;
-                        workspace.runtime = candidate;
+                                Ok(runtime)
+                            })?;
+                        workspace.runtime = Some(candidate);
                         workspace.panels.bind_cameras(&cameras, session.plan());
                         let scheduler = Self::scheduler_camera_for(workspace, session);
                         workspace.runtime_mut().set_scheduling_priority(scheduler);
@@ -990,6 +983,128 @@ mod tests {
                 .message(&[])
                 .unwrap()
                 .contains("Unsupported image topic")
+        );
+    }
+
+    #[test]
+    fn failed_camera_restore_preserves_plan_runtime_and_forward_selection() {
+        let mut output = std::io::Cursor::new(Vec::new());
+        let mut writer = mcap::Writer::new(&mut output).unwrap();
+        let schema = writer
+            .add_schema("sensor_msgs/msg/CompressedImage", "ros2msg", b"unused")
+            .unwrap();
+        let good = writer
+            .add_channel(schema, "/good", "cdr", &Default::default())
+            .unwrap();
+        let bad = writer
+            .add_channel(schema, "/bad", "cdr", &Default::default())
+            .unwrap();
+        let image = viewer_core::encode_compressed_image_cdr(&viewer_core::CompressedImage {
+            measurement_time: viewer_core::MeasurementTime(100),
+            frame_id: "camera".into(),
+            format: "jpeg".into(),
+            data: vec![1, 2, 3],
+        })
+        .unwrap();
+        for sequence in 0..2 {
+            for (channel_id, payload) in [(good, image.as_slice()), (bad, &[0u8][..])] {
+                writer
+                    .write_to_known_channel(
+                        &mcap::records::MessageHeader {
+                            channel_id,
+                            sequence,
+                            log_time: 100 + u64::from(sequence) * 100,
+                            publish_time: 100,
+                        },
+                        payload,
+                    )
+                    .unwrap();
+            }
+        }
+        writer.finish().unwrap();
+        drop(writer);
+        let playback = viewer_mcap::McapPlayback::from_bytes(output.into_inner().into()).unwrap();
+        let mut workspace = NativeWorkspace::from_json(
+            r#"{
+            "schemaVersion":1,"root":{"kind":"panel","id":"camera",
+            "panelType":"camera","configVersion":1,"config":{"cameraTopic":"/good"}}
+        }"#,
+        )
+        .unwrap();
+        let cameras = workspace
+            .panels
+            .camera_selection(playback.catalog(), "/good", None, true)
+            .unwrap();
+        let requirements = workspace.requirements_for_cameras(&cameras);
+        let mut session = ViewerSession::from_playback(
+            Path::new("in-memory.mcap"),
+            playback,
+            "/good".into(),
+            &requirements.playback,
+            workspace.bindings(),
+        )
+        .unwrap();
+        workspace.configure_session(session.plan());
+        workspace.panels.bind_cameras(&cameras, session.plan());
+        session
+            .apply_playback_command(
+                PlaybackCommand::Seek(ArrivalTime(100)),
+                |target, messages| workspace.restore_messages(target, messages),
+            )
+            .unwrap();
+        let before = session.playback_view().unwrap();
+        let selected = session.plan().selected_stream_ids();
+        let frame = workspace
+            .cameras()
+            .state()
+            .frames()
+            .next()
+            .unwrap()
+            .1
+            .clone();
+        let mut diagnostics = AppDiagnostics::default();
+        let effect = App::apply_actions(
+            &mut session,
+            &mut workspace,
+            &mut PreviewCoordinator::default(),
+            &mut diagnostics,
+            vec![ViewerAction::SelectCameraTopic {
+                panel_id: viewer_layout::PanelId::new("camera").unwrap(),
+                topic: "/bad".into(),
+            }],
+        );
+        assert_eq!(effect, PlaybackEffect::None);
+        assert!(
+            diagnostics
+                .message(&[])
+                .unwrap()
+                .contains("restore decode failed")
+        );
+        assert_eq!(session.playback_view().unwrap(), before);
+        assert_eq!(session.plan().selected_stream_ids(), selected);
+        assert_eq!(
+            workspace.cameras().state().frames().next().unwrap().1,
+            &frame
+        );
+        let mut delivered = Vec::new();
+        session
+            .tick(Duration::from_nanos(100), |_, messages| {
+                delivered = messages
+            })
+            .unwrap();
+        assert!(!delivered.is_empty());
+        assert!(
+            delivered
+                .iter()
+                .all(|message| selected.contains(&message.stream_id))
+        );
+        assert_eq!(
+            workspace
+                .panels
+                .camera_selection(session.camera_catalog(), "/good", None, false)
+                .unwrap()
+                .panels,
+            cameras.panels
         );
     }
 

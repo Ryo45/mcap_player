@@ -185,7 +185,7 @@ mod tests {
             .unwrap();
         let before = playback.clock().view();
         assert!(matches!(
-            playback.seek_with(&restore(110), |_, _| Err("reject")),
+            playback.seek_with(&restore(110), |_, _| Err::<(), _>("reject")),
             Err(crate::McapSeekError::Restore("reject"))
         ));
         assert_eq!(playback.clock().view(), before);

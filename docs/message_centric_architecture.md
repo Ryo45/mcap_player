@@ -69,6 +69,10 @@ Native indexed source / Web RecordingDataPlane / ROS live push
                  -> panels
 ```
 
+The [Native/Web session ownership review](session_ownership_review.md) maps the application
+owners and commit boundaries, and explains why synchronous Native delivery and asynchronous
+Web playback retain different outer structures.
+
 `SourceCatalog` contains source facts only: recording time range, topic, schema, encoding, stable
 session-local `StreamId`, original schema encoding/definition bytes, an optional recording-wide
 message count, and supported source operations. Native and Browser Local share one `Arc<SchemaDefinition>` per MCAP schema across

@@ -9,7 +9,7 @@ use crate::{
 use anyhow::{Context, Result};
 use std::{path::Path, time::Duration};
 use viewer_core::{
-    ArrivalTime, CameraId, FeatureRestoreError, PlaybackCommand, PlaybackEffect,
+    ArrivalTime, CameraId, FeatureRestoreError, FeatureRuntime, PlaybackCommand, PlaybackEffect,
     PlaybackPerformance, PlaybackRequirements, PlaybackView, ProcessingCounters, RawMessage,
     RestoreSemantics, SessionPlan, StageTiming, WorkspaceBindings,
 };
@@ -347,32 +347,30 @@ impl ViewerSession {
         }
     }
 
+    /// Commit the already resolved selection, then return the restored feature candidate.
+    /// No caller-visible state changes if source preparation or restoration fails.
     pub(crate) fn select_camera_topics(
         &mut self,
-        priority: &str,
-        requirements: &PlaybackRequirements,
-        bindings: &WorkspaceBindings,
+        plan: SessionPlan,
         restore: impl FnOnce(
             &SessionPlan,
             ArrivalTime,
             Vec<RawMessage>,
-        ) -> Result<(), FeatureRestoreError>,
-    ) -> Result<()> {
+        ) -> Result<FeatureRuntime, FeatureRestoreError>,
+    ) -> Result<FeatureRuntime> {
         match &mut self.source {
             SessionSource::Mcap(playback) => {
-                let plan =
-                    SessionPlan::build(playback.catalog(), priority, requirements, bindings)?;
                 plan.validate_recording_capabilities(playback.catalog().capabilities)?;
                 let restore_plan = viewer_core::RestorePlanner::new(playback.catalog())
                     .plan(playback.clock().cursor(), plan.restore_inputs())?;
-                playback.reselect_with(
+                let restored = playback.reselect_with(
                     plan.selected_stream_ids(),
                     &restore_plan,
                     |target, messages| restore(&plan, target, messages),
                 )?;
+                self.topic = plan.primary_camera_topic().unwrap_or("").to_owned();
                 self.plan = plan;
-                self.topic = priority.to_owned();
-                Ok(())
+                Ok(restored)
             }
             #[cfg(feature = "ros2-live")]
             SessionSource::Ros { .. } => {
@@ -608,11 +606,21 @@ mod bindings_recording_tests {
                 .is_some()
         );
         let camera = session.plan().camera_topics().last().unwrap().1.clone();
-        session
-            .select_camera_topics(&camera, &requirements, workspace.bindings(), |_, _, _| {
-                Ok(())
+        let plan = SessionPlan::build(
+            session.camera_catalog(),
+            &camera,
+            &requirements,
+            workspace.bindings(),
+        )
+        .unwrap();
+        let enable_point_cloud = workspace.panels.has_scene();
+        let candidate = session
+            .select_camera_topics(plan, |plan, target, messages| {
+                viewer_core::FeatureRuntime::new(plan, enable_point_cloud)
+                    .stage_restore(target, &messages)
             })
             .unwrap();
+        workspace.runtime = Some(candidate);
         assert_eq!(
             session.plan().path_stream().unwrap().topic,
             bindings.path_topic

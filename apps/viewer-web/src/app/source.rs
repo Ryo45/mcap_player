@@ -53,17 +53,7 @@ fn install_file_input() {
             super::bindings::set_opening(false);
             match result {
                 Ok(playback) => {
-                    APP.with(|cell| {
-                        let mut app = cell.borrow_mut();
-                        app.topics.reset(&playback);
-                        app.playback = Some(playback);
-                        app.view.reset_for_source();
-                        app.focused_camera = None;
-                    });
-                    let timeline: HtmlInputElement = element("timeline");
-                    timeline.set_disabled(false);
-                    let speed: HtmlSelectElement = element("speed");
-                    speed.set_disabled(false);
+                    commit_playback(playback);
                     set_status(
                         &format!("{file_name} ready · lazy File.slice playback"),
                         false,
@@ -82,6 +72,16 @@ fn install_file_input() {
 fn install_remote_playback(playback: WebPlayback) {
     begin_source_change();
     super::bindings::set_opening(false);
+    commit_playback(playback);
+    set_status(
+        "Remote playback opened · buffering first window · seek available",
+        false,
+    );
+}
+
+/// Local and Remote publish the same fresh, paused session and matching controls.
+/// Callers must reject obsolete source-open generations before entering here.
+fn commit_playback(playback: WebPlayback) {
     APP.with(|cell| {
         let mut app = cell.borrow_mut();
         app.topics.reset(&playback);
@@ -91,16 +91,13 @@ fn install_remote_playback(playback: WebPlayback) {
         app.previous_ms = Date::now();
     });
     let timeline: HtmlInputElement = element("timeline");
+    timeline.set_value("0");
     timeline.set_disabled(false);
     let speed: HtmlSelectElement = element("speed");
     speed.set_value("1");
     speed.set_disabled(false);
     let play: HtmlButtonElement = element("play");
     play.set_inner_text("Play");
-    set_status(
-        "Remote playback opened · buffering first window · seek available",
-        false,
-    );
 }
 
 pub(super) fn install_controls() {

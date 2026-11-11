@@ -111,13 +111,15 @@ impl McapPlayback {
     /// must succeed before the active traversal changes. Catalog/file backing and the bounded
     /// seek cache are shared; decoded feature state is never copied here.
     ///
+    /// The restored value is returned only after the traversal commits, so callers can publish
+    /// a feature candidate without a separately captured output slot.
     /// Persistent inputs must be unchanged from `bootstrap_persistent`.
-    pub fn reselect_with<E>(
+    pub fn reselect_with<T, E>(
         &mut self,
         streams: impl IntoIterator<Item = StreamId>,
         plan: &RestorePlan,
-        restore: impl FnOnce(viewer_core::ArrivalTime, Vec<RawMessage>) -> Result<(), E>,
-    ) -> Result<(), McapSeekError<E>> {
+        restore: impl FnOnce(viewer_core::ArrivalTime, Vec<RawMessage>) -> Result<T, E>,
+    ) -> Result<T, McapSeekError<E>> {
         self.source.cancel_prefetch();
         let mut source = self.source.playback_candidate();
         source.select_streams(streams)?;
@@ -127,9 +129,9 @@ impl McapPlayback {
             source_read: self.source_read,
             persistent_archive: self.persistent_archive.clone(),
         };
-        candidate.seek_with(plan, restore)?;
+        let restored = candidate.seek_with(plan, restore)?;
         *self = candidate;
-        Ok(())
+        Ok(restored)
     }
 
     pub fn query_range(&self, query: &RangeQuery) -> Result<RangeQueryResult, RangeQueryError> {
@@ -173,11 +175,11 @@ impl McapPlayback {
     /// Every physical read and the forward-source reposition complete before the caller replaces
     /// visible controller state. The exact target message is part of restoration and is skipped by
     /// subsequent forward delivery.
-    pub fn seek_with<E>(
+    pub fn seek_with<T, E>(
         &mut self,
         plan: &RestorePlan,
-        restore: impl FnOnce(viewer_core::ArrivalTime, Vec<RawMessage>) -> Result<(), E>,
-    ) -> Result<(), McapSeekError<E>> {
+        restore: impl FnOnce(viewer_core::ArrivalTime, Vec<RawMessage>) -> Result<T, E>,
+    ) -> Result<T, McapSeekError<E>> {
         self.source.cancel_prefetch();
         let reader = self.source.restore_reader();
         let mut messages = reader
@@ -208,10 +210,10 @@ impl McapPlayback {
         let after_target = viewer_core::ArrivalTime(plan.target.0.saturating_add(1));
         let source_position = reader.prepare_seek(after_target)?;
         drop(reader);
-        restore(plan.target, messages).map_err(McapSeekError::Restore)?;
+        let restored = restore(plan.target, messages).map_err(McapSeekError::Restore)?;
         self.source.commit_seek(source_position);
         self.clock.seek(plan.target);
-        Ok(())
+        Ok(restored)
     }
 
     pub fn clock(&self) -> &PlaybackClock {
@@ -269,7 +271,7 @@ mod tests {
             persistent: vec![],
         };
         let result = playback.reselect_with([next_stream], &plan, |_, _| {
-            Err(std::io::Error::other("decode failed"))
+            Err::<(), _>(std::io::Error::other("decode failed"))
         });
         assert!(matches!(result, Err(McapSeekError::Restore(_))));
         assert_eq!(playback.clock().view(), before);
@@ -292,24 +294,29 @@ mod tests {
         let bytes = fixture("camera_7_5s.mcap");
         let mut playback = McapPlayback::copy_from_slice(&bytes).unwrap();
         let stream = playback.catalog().streams[1].id;
-        let target = playback.clock().cursor();
+        let target = viewer_core::ArrivalTime(playback.clock().start().0 + 1_000_000_000);
         let plan = RestorePlan {
             target,
             latest_before: vec![stream],
             histories: vec![],
             persistent: vec![],
         };
-        playback
-            .reselect_with([stream], &plan, |restored, messages| {
-                assert_eq!(restored, target);
-                assert!(
-                    messages.iter().all(
+        let restored_messages =
+            playback
+                .reselect_with([stream], &plan, |restored, messages| {
+                    assert_eq!(restored, target);
+                    assert!(messages.iter().all(
                         |message| message.stream_id == stream && message.arrival_time <= target
-                    )
-                );
-                Ok::<(), std::convert::Infallible>(())
-            })
-            .unwrap();
+                    ));
+                    Ok::<_, std::convert::Infallible>(messages)
+                })
+                .unwrap();
+        assert!(!restored_messages.is_empty());
+        assert!(
+            restored_messages
+                .iter()
+                .all(|message| message.stream_id == stream)
+        );
         assert_eq!(playback.clock().cursor(), target);
         playback.clock_mut().toggle();
         let mut observed = Vec::new();
@@ -410,7 +417,7 @@ mod tests {
         };
 
         let result = playback.seek_with(&plan, |_, _| {
-            Err(std::io::Error::other("candidate decode failed"))
+            Err::<(), _>(std::io::Error::other("candidate decode failed"))
         });
         assert!(matches!(result, Err(McapSeekError::Restore(_))));
         assert_eq!(playback.clock().cursor(), committed);
