@@ -17,19 +17,9 @@ members = [
     "tools/preview-builder",
     "tools/performance-probe",
 ]
-default-members = [
-    "crates/viewer-remote-protocol",
-    "crates/viewer-layout",
-    "crates/viewer-core",
-    "crates/viewer-mcap",
-    "crates/viewer-preview-mcap",
-    "crates/viewer-renderer",
-    "crates/bev-renderer",
-    "crates/scene-renderer",
-    "apps/viewer-native",
-    "apps/viewer-web",
-    "apps/recording-server",
-]
+# The root-level cargo build/run entry point is the Native app.
+# Repository-wide checks explicitly use --workspace; Web assets are built with Trunk.
+default-members = ["apps/viewer-native"]
 
 [workspace.package]
 version = "0.1.0"

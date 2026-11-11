@@ -37,19 +37,38 @@ Nativeには用途別レイアウトもあります。
 以下のコマンドはリポジトリのルートで実行します。
 Rust **1.91.1**でビルド・検証しています。通常の記録再生にROS 2のインストールは不要です。
 NativeのビルドにはC/C++ツールチェーン、CMake、NASM、pkg-configが必要です。
-LinuxのGUI関連パッケージを含む環境例は[Docker開発環境](docs/development_container.md)と[Dockerfile](docker/Dockerfile)を参照してください。
-Dockerの既定サービスはビルド・テスト用で、Native GUI/GPUのホスト接続は別設定です。
+
+Ubuntu 24.04のビルド依存パッケージ例です。
+
+```sh
+sudo apt-get update
+sudo apt-get install -y build-essential cmake nasm pkg-config \
+  libudev-dev libxkbcommon-dev libwayland-dev libx11-dev libxi-dev \
+  libxrandr-dev libxcursor-dev libvulkan-dev
+```
+
+**Nativeは通常の`cargo build`でビルドできます。** 次はrelease版をビルドして起動する手順です。
 
 ```sh
 GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/Ryo45/mcap_player.git
 cd mcap_player
-cargo run --release -p viewer-native -- --layout monitor
+cargo build --release
+./target/release/viewer-native --layout monitor
 ```
+
+ビルドと起動を一度に行うなら`cargo run --release -- --layout monitor`でも同じです。
+`cargo build`はdebug版を`target/debug/viewer-native`へ生成します。性能を評価する際は`--release`を使用してください。
+起動コマンドも、同梱データ・設定が見つかるようリポジトリのルートで実行してください。
 
 同梱の約5秒の記録を再生します。再生・停止・Seekを操作し、Cameraパネルのプルダウンから画像トピックを選べます。
 Inspectorまでスクリーンショットと同じ状態で試すには、依存schemaを補完した[撮影用デモ](docs/screenshots.md)を生成してください。
-初回ビルドには時間がかかります。性能を評価する際は`--release`を使用してください。
+初回ビルドには時間がかかります。GUIの実行にはウィンドウシステムと対応するGPUドライバーも必要です。
 任意の計測成果物は取得せずにビルドできます。[成果物の保存・取得方針](docs/repository-storage/README.md)を参照してください。既存成果物のLFS移行と、旧commit SHAの対応表は[移行記録](docs/repository-storage/migration-2026-10-31.md)を参照してください。
+
+ルートの既定対象はNativeです。全workspaceのビルドは`cargo build --workspace`、全体テストは`cargo test --workspace`を使います。
+Recording Server単体は`cargo build --release -p recording-server`、ブラウザ用HTML / JS / Wasm一式は次節のTrunkでビルドします。
+Nativeの起動にDocker・Trunk・Wasm targetは不要です。
+[Docker開発環境](docs/development_container.md)はWebやROS Liveも含めて検証する開発者向けの選択肢です。
 
 ## ブラウザで試す
 

@@ -1,5 +1,10 @@
 # Development container
 
+Native users can build from the repository root with `cargo build --release` and run
+`./target/release/viewer-native --layout monitor` on the host; Docker is optional.
+The root workspace defaults to the Native app. Use `--workspace` for repository-wide checks,
+`-p recording-server` for the server, and Trunk for the browser assets.
+
 The development image uses the official ROS 2 Jazzy `ros-base-noble` image (Ubuntu 24.04),
 Rust 1.91.1, clang/lld 18, the `wasm32-unknown-unknown` target, rustfmt/clippy and trunk 0.21.14. CMake/NASM build the statically linked SIMD libjpeg-turbo used by Native.
 ROS setup is sourced by the entrypoint, so the `ros2-live` feature can be compiled and tested.
