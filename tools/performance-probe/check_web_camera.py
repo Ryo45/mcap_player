@@ -39,16 +39,22 @@ def main():
     mode.add_argument('--camera-formats', action='store_true', help='check known colors from ros-fixture camera-formats')
     parser.add_argument('--data',type=Path,required=True)
     parser.add_argument('--dist',type=Path,default=Path('apps/viewer-web/dist'))
+    parser.add_argument('--url', help='test an already hosted static viewer, including a subdirectory URL')
     parser.add_argument('--output',type=Path,required=True)
     args=parser.parse_args()
     if args.output.exists():parser.error('new output required')
     args.output.parent.mkdir(parents=True,exist_ok=True)
     class QuietHandler(SimpleHTTPRequestHandler):
         def log_message(self,*_args):pass
-    server=ThreadingHTTPServer(('127.0.0.1',0),partial(QuietHandler,directory=str(args.dist.resolve())))
-    thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+    server=thread=None
+    if args.url:
+        url=args.url
+    else:
+        server=ThreadingHTTPServer(('127.0.0.1',0),partial(QuietHandler,directory=str(args.dist.resolve())))
+        thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+        url=f'http://127.0.0.1:{server.server_port}/'
     result={'status':'running','purpose':'functional check; SwiftShader + software Canvas2D, not hardware performance',
-            'known_camera_colors':args.camera_formats,'data_sha256':hashlib.sha256(args.data.read_bytes()).hexdigest(),'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'seeks':[]}
+            'url':url,'known_camera_colors':args.camera_formats,'data_sha256':hashlib.sha256(args.data.read_bytes()).hexdigest(),'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'seeks':[]}
     def wait(page,expression,label):
         deadline=time.monotonic()+20
         while time.monotonic()<deadline:
@@ -61,10 +67,10 @@ def main():
             available.bind(('127.0.0.1',0));port=available.getsockname()[1]
         with browser(port,extra_flags=['--disable-accelerated-2d-canvas']) as (_,page,environment):
             result['environment']=environment
-            page.call('Page.addScriptToEvaluateOnNewDocument',{'source':"window.smokeErrors=[];addEventListener('error',e=>smokeErrors.push(e.message));addEventListener('unhandledrejection',e=>smokeErrors.push(String(e.reason)))"})
+            page.call('Page.addScriptToEvaluateOnNewDocument',{'source':"window.smokeErrors=[];window.smokeWorkers=[];const RealWorker=window.Worker;window.Worker=class extends RealWorker{constructor(url,options){super(url,options);smokeWorkers.push(String(url));}};addEventListener('error',e=>smokeErrors.push(e.message));addEventListener('unhandledrejection',e=>smokeErrors.push(String(e.reason)))"})
             if args.camera_alpha:
                 page.call('Page.addScriptToEvaluateOnNewDocument',{'source':ALPHA_OBSERVER})
-            page.call('Page.navigate',{'url':f'http://127.0.0.1:{server.server_port}/'})
+            page.call('Page.navigate',{'url':url})
             wait(page,"!!window.wasmBindings && !!document.querySelector('#mcap-file')",'WASM application unavailable')
             page.call('DOM.enable')
             doc=page.call('DOM.getDocument')['root']['nodeId']
@@ -116,6 +122,10 @@ def main():
                 result['seeks'].append({'target_fraction':target,'thumbnails':current,'status':page.evaluate("document.querySelector('#status').textContent")})
                 last=current
             result['errors']=page.evaluate('window.smokeErrors')
+            result['workers']=page.evaluate('window.smokeWorkers')
+            if not result['workers']:raise RuntimeError('camera decoder worker was not started')
+            expected_worker=page.evaluate("new URL('camera_decode_worker.js',document.baseURI).href")
+            if any(worker!=expected_worker for worker in result['workers']):raise RuntimeError('camera worker resolved outside the viewer base path')
             if result['errors']:raise RuntimeError(result['errors'])
             args.output.parent.mkdir(parents=True,exist_ok=True)
             args.output.with_suffix('.png').write_bytes(base64.b64decode(page.call('Page.captureScreenshot',{'format':'png'})['data']))
@@ -123,7 +133,8 @@ def main():
     except Exception as error:
         result.update(status='failed',error=repr(error));raise
     finally:
-        server.shutdown();server.server_close();thread.join(timeout=2)
+        if server:
+            server.shutdown();server.server_close();thread.join(timeout=2)
         args.output.parent.mkdir(parents=True,exist_ok=True)
         args.output.write_text(json.dumps(result,indent=2)+'\n')
         print(json.dumps({'status':result['status'],'seeks':len(result['seeks']),'error':result.get('error')}))

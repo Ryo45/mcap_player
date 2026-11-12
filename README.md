@@ -7,7 +7,7 @@ Nativeアプリとブラウザで利用でき、Recording Server経由のリモ�
 圧縮Chunk内に複数トピックが混在すると、非表示データを含むChunkの展開が必要になる場合もあります。
 性能の特徴と限界は[計測結果](docs/performance/README.md)にまとめています。
 
-[Nativeで試す](#nativeで試す) · [ブラウザで試す](#ブラウザで試す) · [手持ちの記録を開く](#手持ちの記録を開く) · [対応範囲と制約](#対応範囲と制約)
+[ブラウザ版を開く](https://ryo45.github.io/mcap_player/) · [Nativeで試す](#nativeで試す) · [手持ちの記録を開く](#手持ちの記録を開く) · [対応範囲と制約](#対応範囲と制約)
 
 ## どんな画面で使えるか
 
@@ -53,17 +53,9 @@ cargo build --release
 
 ## ブラウザで試す
 
-Rust・Wasm・Trunkを揃えたDocker環境で起動できます。
-
-```sh
-docker compose build dev
-docker compose run --rm --service-ports dev bash -lc \
-  'cd apps/viewer-web && trunk serve --release --address 0.0.0.0'
-```
-
-`http://localhost:8080`を開き、**Open MCAP**からファイルを選びます。
+[GitHub PagesのWeb版](https://ryo45.github.io/mcap_player/)を開き、**Open MCAP**から手持ちのMCAPを選びます。インストールは不要です。
 記録をアップロードせず、ブラウザ内で必要な範囲を読みます。Linux上のChrome / WebGPUで動作確認しています。
-Dockerを使わない場合は[ホストでのWeb起動手順](docs/building.md#webをホストで起動する)を参照してください。
+自分の環境で起動する場合は[Webのビルド手順](docs/building.md#webをホストで起動する)、配信の仕組みは[GitHub Pages公開](docs/github_pages.md)を参照してください。
 
 ## 手持ちの記録を開く
 

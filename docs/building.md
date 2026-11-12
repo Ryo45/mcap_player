@@ -54,6 +54,9 @@ Web・ROS Live・optional extensionsを含む全検証は[Docker開発環境](de
 
 ## Webをホストで起動する
 
+[公開Web版](https://ryo45.github.io/mcap_player/)はビルドなしで使えます。以下はローカルで動かす場合の手順です。
+GitHub Pages向けの配信設定は[公開手順](github_pages.md)を参照してください。
+
 ホスト側にツールが揃っている場合は、次の手順でも起動できます。
 
 ```sh
