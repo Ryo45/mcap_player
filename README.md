@@ -55,6 +55,7 @@ cargo build --release
 
 [GitHub PagesのWeb版](https://ryo45.github.io/mcap_player/)を開き、**Open MCAP**から手持ちのMCAPを選びます。インストールは不要です。
 記録をアップロードせず、ブラウザ内で必要な範囲を読みます。Linux上のChrome / WebGPUで動作確認しています。
+[サンプルMCAPをダウンロード](https://github.com/Ryo45/mcap_player/releases/tag/sample-data-v1)して試すこともできます（FHD・7カメラ・約10秒、[内容とライセンス](docs/sample_data.md)）。
 自分の環境で起動する場合は[Webのビルド手順](docs/building.md#webをホストで起動する)、配信の仕組みは[GitHub Pages公開](docs/github_pages.md)を参照してください。
 
 ## 手持ちの記録を開く
@@ -100,3 +101,4 @@ Sceneは **1.0 = 1 metre**。[車体形状・TF・Camera calibration](docs/physi
 ## ライセンス
 
 [MIT License](LICENSE)
+配布サンプルのデータ・素材には[別途ライセンス](docs/sample_data.md#ライセンスの確認)が適用されます。

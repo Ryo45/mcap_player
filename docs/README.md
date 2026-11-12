@@ -8,6 +8,7 @@
 | --- | --- |
 | Nativeの依存導入・ビルド、Webのホスト起動 | [ビルドと起動](building.md) |
 | Web版の公開URL・静的配信・自動deploy | [GitHub Pages](github_pages.md) |
+| ダウンロードできるデモ記録・出所とライセンス | [サンプルMCAP](sample_data.md) |
 | 手持ちのMCAP、トピック名、WorkspaceBindings、対応形式と上限 | [記録・入力設定](recording_usage.md) |
 | 表示レイアウトを選ぶ | [レイアウトギャラリー](layout_gallery.md) |
 | 画像トピック・フォーカス・Preview | [Camera選択](camera_topic_selection.md) |
