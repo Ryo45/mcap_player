@@ -263,6 +263,15 @@ impl InspectorMessage {
     pub fn retained_payload_bytes(&self) -> usize {
         self.payload.len()
     }
+    /// Reuse a decoded view only when both metadata and serialized contents match.
+    /// Timestamp and sequence alone need not uniquely identify a recorded message.
+    pub fn matches_raw(&self, raw: &RawMessage) -> bool {
+        self.stream_id == raw.stream_id
+            && self.log_time == raw.arrival_time
+            && self.publish_time_ns == raw.publish_time_ns
+            && self.sequence == raw.sequence
+            && self.payload == raw.payload
+    }
     pub fn page(
         &self,
         container: &InspectorContainer,

@@ -100,7 +100,6 @@ mod dom {
         pub(crate) selected: Option<String>,
         loader: Option<WebRestoreLoader>,
         query: crate::inspector_query::InspectorQueryState,
-        origin: Option<web_time::Instant>,
         schema: Option<(StreamId, Result<InspectorSchema, String>)>,
         snapshot_info: String,
         message: Option<Rc<InspectorMessage>>,
@@ -218,12 +217,7 @@ mod dom {
                     result.map_err(|e| e.to_string()),
                 );
             }
-            let now = self
-                .origin
-                .get_or_insert_with(web_time::Instant::now)
-                .elapsed()
-                .as_millis() as u64;
-            if let Some(request) = self.query.next(session.clock().cursor(), now) {
+            if let Some(request) = self.query.next(session.clock().cursor()) {
                 let result = inspection_plan(session.catalog(), &request.topic, request.target)
                     .and_then(|plan| {
                         self.loader
@@ -281,7 +275,6 @@ mod dom {
                     return;
                 }
             };
-            self.clear_fields();
             self.snapshot_info = format!(
                 "Query cursor: {} ns\nLog time: {} ns\nPublish time: {}\nSequence: {}\nPayload: {} bytes",
                 target.0,
@@ -292,6 +285,14 @@ mod dom {
                     .map_or_else(|| "unavailable".into(), |sequence| sequence.to_string()),
                 raw.payload.len()
             );
+            if self
+                .message
+                .as_ref()
+                .is_some_and(|message| message.matches_raw(&raw))
+            {
+                return;
+            }
+            self.clear_fields();
             if self
                 .schema
                 .as_ref()

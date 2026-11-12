@@ -8,6 +8,32 @@ use viewer_core::{
 };
 use viewer_mcap::{LatestMessageReader, McapSource, McapSourceError};
 const SCHEMA: &str = "std_msgs/Header header\nbool enabled\nuint64 identifier\nfloat32[3] vector\nuint8[] data\nstring label\ndemo/Item[] items\n===\nMSG: std_msgs/Header\nbuiltin_interfaces/Time stamp\nstring frame_id\n===\nMSG: builtin_interfaces/Time\nint32 sec\nuint32 nanosec\n===\nMSG: demo/Item\nint16 code\nstring name\n";
+
+#[test]
+fn repeated_inspection_reuses_only_identical_contents_and_metadata() {
+    let schema = InspectorSchema::for_stream(&stream("uint32 value\n")).unwrap();
+    let original = raw(vec![0, 1, 0, 0, 42, 0, 0, 0], 10);
+    let model = InspectorMessage::new(&schema, &original).unwrap();
+    assert!(model.matches_raw(&original));
+    let mut changed = original.clone();
+    changed.payload = Bytes::from_static(&[0, 1, 0, 0, 43, 0, 0, 0]);
+    assert!(
+        !model.matches_raw(&changed),
+        "equal timestamps can have different contents"
+    );
+    let mut changed = original.clone();
+    changed.sequence = Some(99);
+    assert!(!model.matches_raw(&changed));
+    let mut changed = original.clone();
+    changed.publish_time_ns = Some(99);
+    assert!(!model.matches_raw(&changed));
+    let mut changed = original.clone();
+    changed.stream_id = StreamId(99);
+    assert!(!model.matches_raw(&changed));
+    let mut changed = original;
+    changed.arrival_time = ArrivalTime(99);
+    assert!(!model.matches_raw(&changed));
+}
 fn stream(text: &str) -> StreamDescriptor {
     StreamDescriptor {
         id: StreamId(1),

@@ -12,7 +12,7 @@ remain shared observable requirements.
 | Recording playback | Local indexed MCAP | Browser `File.slice()` and Recording Server | Native remote source UI, if needed |
 | Playback and seek | Pause, speed, exact restore | Same shared clock/controllers; async complete-window buffering and restore | Keep parity regressions as features expand |
 | Topic catalog | Topic tree, schema, counts | Filterable topic list; all channels, schemas, encodings and counts | Hierarchical tree and numeric-field selection |
-| Message Inspector | Cursor-driven background latest-before queries; lazy fields and page navigation | Automatic cursor follow (250 ms), coalesced exact latest-before across topic channels, manual Refresh and auto on/off; lazy CDR containers and next-page navigation | Previous/first page navigation, schema definition view |
+| Message Inspector | Cursor-driven background latest-before queries; lazy fields and page navigation | Automatic cursor follow, coalesced exact latest-before across topic channels, manual Refresh and auto on/off; lazy CDR containers and next-page navigation | Previous/first page navigation, schema definition view |
 | Monitor layout | Left Topics / Inspector, right Scene and camera | Same arrangement; smaller screens stack the panels | Resizable splits and configurable layouts |
 | Cameras | Schema-based image-topic dropdown per panel, shared textures, scheduler focus and trajectory overlays | Schema-based image-topic dropdown, thumbnails, scheduler focus and same overlays | Multiple independently focused camera panels |
 | BEV | Shared GPU renderer | Shared GPU renderer, selectable in the Scene region | Independent BEV panel when configurable layouts arrive |
@@ -35,12 +35,17 @@ An empty continuous selection produces complete empty windows without a Local ch
 read or Remote HTTP request.
 
 Inspector uses an independent source loader, reusing the indexed latest-before
-primitive used for restore. Automatic follow is enabled by default, starts at most
-once per 250 ms, and keeps one active request plus one coalesced cursor demand.
+primitive used for restore. Automatic follow is enabled by default, keeps one active
+request plus one coalesced cursor demand, and requests the latest committed cursor
+on the next UI frame after completion without a fixed refresh delay.
 Forward ticks do not cancel active work. A completed snapshot remains visible with
 its query cursor while refreshing; paused cursors reuse the result. Manual Refresh
 and automatic on/off remain available. New messages reset container/page navigation.
-One compiled stream schema is reused; message identity is not inferred from timestamps.
+Identical serialized messages reuse their decoded view and preserve expanded fields
+and page navigation. One compiled stream schema is reused; message identity checks
+both metadata and payload, rather than assuming timestamps or sequences are unique.
+Update frequency remains limited by UI frames and indexed query I/O/decompression;
+it is not a hard real-time guarantee and faster follow can increase query work.
 A topic switch,
 successful seek, or source replacement invalidates it; Remote cancellation aborts
 HTTP, and Local cancellation stops further reads after the current `File.slice()`
