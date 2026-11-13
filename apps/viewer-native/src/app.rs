@@ -3,7 +3,6 @@ use crate::{
     bookmarks::BookmarkState,
     diagnostics::AppDiagnostics,
     graphics::{Graphics, RenderInput, RenderOutput},
-    interaction::ViewerAction,
     presentation::{PresentationBuildInput, PresentationState, PresentationTransition},
     preview::PreviewCoordinator,
     session::ViewerSession,
@@ -18,6 +17,7 @@ use std::{
 };
 use viewer_core::CameraCalibrationSet;
 use viewer_core::PlaybackEffect;
+use viewer_ui::action::ViewerAction;
 use winit::{
     application::ApplicationHandler,
     event::WindowEvent,

@@ -7,3 +7,9 @@ license.workspace = true
 [dependencies]
 egui.workspace = true
 viewer-core = { path = "../viewer-core" }
+egui_plot.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+viewer-layout = {path = "../viewer-layout"}
+viewer-renderer = {path = "../viewer-renderer"}
+scene-renderer = {path = "../scene-renderer"}

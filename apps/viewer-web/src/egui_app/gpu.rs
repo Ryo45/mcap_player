@@ -8,6 +8,7 @@ struct CameraTexture {
     texture: wgpu::Texture,
     id: egui::TextureId,
     size: (u32, u32),
+    arrival: viewer_core::ArrivalTime,
 }
 
 pub(super) struct GpuViews {
@@ -89,8 +90,15 @@ impl GpuViews {
                 &texture.create_view(&Default::default()),
                 wgpu::FilterMode::Linear,
             );
-            self.cameras
-                .insert(frame.camera_id, CameraTexture { texture, id, size });
+            self.cameras.insert(
+                frame.camera_id,
+                CameraTexture {
+                    texture,
+                    id,
+                    size,
+                    arrival: frame.arrival_time,
+                },
+            );
         }
         let image = self
             .cameras
@@ -116,20 +124,37 @@ impl GpuViews {
                 depth_or_array_layers: 1,
             },
         );
+        image.arrival = frame.arrival_time;
         self.uploads += 1;
         Ok(())
+    }
+    pub fn texture_views(
+        &self,
+    ) -> impl Iterator<Item = viewer_ui::views::camera::CameraTextureView> + '_ {
+        self.cameras.iter().map(
+            |(camera, image)| viewer_ui::views::camera::CameraTextureView {
+                camera_id: *camera,
+                texture_id: image.id,
+                arrival_time: image.arrival,
+                size: image.size,
+                uv_max: [1., 1.],
+            },
+        )
     }
     pub fn camera(&self, id: CameraId) -> Option<(egui::TextureId, (u32, u32))> {
         self.cameras.get(&id).map(|image| (image.id, image.size))
     }
     pub fn render_scene(&mut self, size: (u32, u32), frame: SceneFrame<'_>) -> egui::TextureId {
         if self.scene.resize(&self.state.device, size.0, size.1) {
-            self.state.renderer.write().free_texture(&self.scene_id);
-            self.scene_id = self.state.renderer.write().register_native_texture(
-                &self.state.device,
-                &self.scene.encoded_view(),
-                wgpu::FilterMode::Linear,
-            );
+            self.state
+                .renderer
+                .write()
+                .update_egui_texture_from_wgpu_texture(
+                    &self.state.device,
+                    &self.scene.encoded_view(),
+                    wgpu::FilterMode::Linear,
+                    self.scene_id,
+                );
         }
         if self.scene.needs_render(frame) {
             self.scene

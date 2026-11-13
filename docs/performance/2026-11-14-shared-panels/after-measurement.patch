@@ -1,0 +1,23 @@
+--- a/apps/viewer-web/src/camera_bitmap.rs
++++ b/apps/viewer-web/src/camera_bitmap.rs
+@@ -145,7 +145,8 @@
+                 return Err("camera pixel queue exceeds 32 camera identities".into());
+             }
+             let source = viewer_renderer::camera_dimensions(frame).map_err(|e| e.to_string())?;
+-            let pixels = image_size(source, target);
++            let _ = target;
++            let pixels = image_size(source, (960, 540));
+             let key = (frame.arrival_time, pixels);
+             if state.submitted.get(&frame.camera_id) == Some(&key) {
+                 return Ok(());
+--- a/apps/viewer-web/src/egui_app/gpu.rs
++++ b/apps/viewer-web/src/egui_app/gpu.rs
+@@ -145,6 +145,8 @@
+         self.cameras.get(&id).map(|image| (image.id, image.size))
+     }
+     pub fn render_scene(&mut self, size: (u32, u32), frame: SceneFrame<'_>) -> egui::TextureId {
++        let _ = size;
++        let size = (960, 540);
+         if self.scene.resize(&self.state.device, size.0, size.1) {
+             self.state
+                 .renderer

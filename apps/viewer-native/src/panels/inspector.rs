@@ -2,10 +2,10 @@ use super::{
     INSPECTOR_CONFIG_VERSION, NativePanel, PanelDataRequirements, PanelOutput, PlaceholderPanel,
 };
 use crate::inspection::{InspectorRequirement, TopicInspection};
-use crate::interaction::ViewerAction;
 use serde::{Deserialize, Serialize};
 use viewer_core::ArrivalTime;
 use viewer_layout::{PanelId, PanelNode};
+use viewer_ui::action::ViewerAction;
 use viewer_ui::inspection::InspectorTreeState;
 #[derive(Clone, Copy)]
 pub(crate) struct InspectorPanelInput<'a> {

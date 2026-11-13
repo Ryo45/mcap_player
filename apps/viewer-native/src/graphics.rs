@@ -1,3 +1,4 @@
+use viewer_ui::action::ViewerAction;
 mod camera;
 mod layout_host;
 mod surface;
@@ -5,9 +6,8 @@ mod ui;
 pub(crate) mod views;
 
 use crate::{
-    inspection::TopicInspection, interaction::ViewerAction, panels::PanelRuntimeStore,
-    presentation::PresentationTransition, signal_view::SignalView,
-    workspace::ViewerInteractionState,
+    inspection::TopicInspection, panels::PanelRuntimeStore, presentation::PresentationTransition,
+    signal_view::SignalView, workspace::ViewerInteractionState,
 };
 use bev_renderer::{BevFrame, BevRenderer};
 use egui_wgpu::Renderer as EguiRenderer;

@@ -1,35 +1,35 @@
-use super::{
-    NativePanel, PanelDataRequirements, PanelOutput, PlaceholderPanel, SCENE_CONFIG_VERSION,
-};
+//! Scene controls and presentation. GPU resources remain host-owned.
 use crate::{
-    graphics::views::{SceneViewInput, show_scene_view},
-    interaction::ViewerAction,
-    workspace::SceneViewState,
+    action::ViewerAction,
+    panel::{PanelOutput, PanelRenderRequests},
+    views::scene::{SceneViewInput, show_scene_view},
 };
 use scene_renderer::SceneCameraMode;
 use serde::{Deserialize, Serialize};
 use viewer_core::{PointCloudColorMode, PointCloudColoring, SceneDiagnostics};
 use viewer_layout::{PanelId, PanelNode};
 
+pub const SCENE_CONFIG_VERSION: u32 = 1;
+
 #[derive(Clone, Copy)]
-pub(crate) struct ScenePanelInput<'a> {
-    pub(crate) texture_id: egui::TextureId,
-    pub(crate) scan_points: usize,
-    pub(crate) visible_scan_points: usize,
-    pub(crate) camera_distance: f32,
-    pub(crate) camera_mode: SceneCameraMode,
-    pub(crate) diagnostics: &'a SceneDiagnostics,
-    pub(crate) static_transform_count: usize,
-    pub(crate) dynamic_transform_count: usize,
-    pub(crate) playback: Option<viewer_core::PlaybackView>,
-    pub(crate) telemetry: Option<&'a viewer_core::TelemetryPresentation>,
-    pub(crate) camera: Option<&'a viewer_core::CameraPresentation>,
-    pub(crate) source_error: Option<&'a str>,
+pub struct ScenePanelInput<'a> {
+    pub texture_id: egui::TextureId,
+    pub scan_points: usize,
+    pub visible_scan_points: usize,
+    pub camera_distance: f32,
+    pub camera_mode: SceneCameraMode,
+    pub diagnostics: &'a SceneDiagnostics,
+    pub static_transform_count: usize,
+    pub dynamic_transform_count: usize,
+    pub playback: Option<viewer_core::PlaybackView>,
+    pub telemetry: Option<&'a viewer_core::TelemetryPresentation>,
+    pub camera: Option<&'a viewer_core::CameraPresentation>,
+    pub source_error: Option<&'a str>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(crate) struct ScenePanelConfig {
+struct ScenePanelConfig {
     #[serde(default)]
     show_telemetry: bool,
     #[serde(default)]
@@ -38,29 +38,26 @@ pub(crate) struct ScenePanelConfig {
     coloring: PointCloudColoring,
 }
 
-pub(crate) struct ScenePanel {
+pub struct ScenePanel {
     id: PanelId,
     title: Option<String>,
     config: ScenePanelConfig,
-    pub(crate) state: SceneViewState,
+    pub state: SceneViewState,
 }
 
 impl ScenePanel {
-    pub(crate) fn create(node: &PanelNode) -> NativePanel {
+    pub fn create(node: &PanelNode) -> Result<Self, String> {
         if node.config_version != SCENE_CONFIG_VERSION {
-            return NativePanel::Placeholder(PlaceholderPanel::unsupported_version(
-                node,
-                SCENE_CONFIG_VERSION,
+            return Err(format!(
+                "Unsupported {} config version {}; expected {}",
+                node.panel_type, node.config_version, SCENE_CONFIG_VERSION
             ));
         }
         match serde_json::from_value::<ScenePanelConfig>(node.config.clone()) {
             Ok(config) if !config.coloring.is_valid() => {
-                NativePanel::Placeholder(PlaceholderPanel::invalid_config(
-                    node,
-                    "Invalid point cloud intensity range".into(),
-                ))
+                Err("Invalid point cloud intensity range".into())
             }
-            Ok(config) => NativePanel::Scene(Self {
+            Ok(config) => Ok(Self {
                 id: node.id.clone(),
                 title: node.title.clone(),
                 state: SceneViewState {
@@ -69,26 +66,26 @@ impl ScenePanel {
                 },
                 config,
             }),
-            Err(error) => NativePanel::Placeholder(PlaceholderPanel::invalid_config(
-                node,
-                format!("Invalid scene config: {error}"),
-            )),
+            Err(error) => Err(format!("Invalid scene config: {error}")),
         }
     }
 
-    pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
-        requirements.playback.optional_path();
-        requirements.playback.optional_odometry();
+    pub fn contribute_data_requirements(
+        &self,
+        requirements: &mut viewer_core::PlaybackRequirements,
+    ) {
+        requirements.optional_path();
+        requirements.optional_odometry();
         if self.config.optional_data {
-            requirements.playback.optional_point_cloud();
-            requirements.playback.optional_transforms();
+            requirements.optional_point_cloud();
+            requirements.optional_transforms();
         } else {
-            requirements.playback.require_point_cloud();
-            requirements.playback.require_transforms();
+            requirements.require_point_cloud();
+            requirements.require_transforms();
         }
     }
 
-    pub(crate) fn show(&mut self, ui: &mut egui::Ui, input: ScenePanelInput<'_>) -> PanelOutput {
+    pub fn show(&mut self, ui: &mut egui::Ui, input: ScenePanelInput<'_>) -> PanelOutput {
         ui.push_id((self.id.as_str(), self.title.as_deref()), |ui| {
             if self.config.show_telemetry {
                 show_monitor_telemetry(ui, &input);
@@ -142,7 +139,7 @@ impl ScenePanel {
             }
             PanelOutput {
                 actions,
-                render_requests: super::PanelRenderRequests {
+                render_requests: PanelRenderRequests {
                     bev_size: None,
                     scene: Some(output),
                     ..Default::default()
@@ -194,4 +191,10 @@ fn show_monitor_telemetry(ui: &mut egui::Ui, input: &ScenePanelInput<'_>) {
             ui.colored_label(ui.visuals().error_fg_color, error);
         }
     });
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SceneViewState {
+    pub coloring: viewer_core::PointCloudColoring,
+    pub accumulate_points: bool,
 }

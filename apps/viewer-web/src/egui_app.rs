@@ -1,17 +1,26 @@
 //! Experimental egui browser host. Recording and independent queries keep their existing owners.
 mod gpu;
 mod inspection;
+mod signal;
 mod source;
 
 use crate::{camera_bitmap::CameraBitmapQueue, playback::WebPlayback};
 use gpu::GpuViews;
 use inspection::Inspection;
-use scene_renderer::{SceneCameraMode, SceneFrame};
+use scene_renderer::SceneFrame;
+use signal::SpeedQuery;
 use source::SourcePicker;
 use std::{cell::RefCell, time::Duration};
 use viewer_core::{
     CameraId, PathProjectionPolicy, PlatformGeometry, PlaybackCommand, PlaybackEffect,
-    PointCloudColoring, PointCloudState, ScenePresentationInput, ScenePresentationState,
+    PointCloudState, ScenePresentationInput, ScenePresentationState,
+};
+use viewer_ui::{
+    action::ViewerAction,
+    camera::{CameraPanel, CameraPanelInput},
+    panel::Panel,
+    plot::{PlotPanel, PlotPanelInput},
+    scene::{ScenePanel, ScenePanelInput},
 };
 use wasm_bindgen::{JsCast, prelude::wasm_bindgen};
 
@@ -37,7 +46,20 @@ struct ViewerApp {
     platform: Option<PlatformGeometry>,
     show_platform: bool,
     selected_camera: Option<CameraId>,
-    scene_mode: SceneCameraMode,
+    camera_panel: CameraPanel,
+    scene_panel: ScenePanel,
+    plot_panel: PlotPanel,
+    presentation: viewer_core::ViewerPresentation,
+    overlays: viewer_renderer::CameraOverlayState,
+    show_plot: bool,
+    speed_query: Option<SpeedQuery>,
+    signal_error: Option<String>,
+    preview_time: Option<viewer_core::ArrivalTime>,
+    preview_playing: Option<bool>,
+    resume_after_seek: bool,
+    plot_rect: Option<egui::Rect>,
+    plot_chart_rect: Option<egui::Rect>,
+    camera_rect: Option<egui::Rect>,
     previous: f64,
     filter: String,
     topics: Vec<String>,
@@ -47,6 +69,23 @@ struct ViewerApp {
 impl ViewerApp {
     fn new(cc: &eframe::CreationContext<'_>) -> Result<Self, String> {
         cc.egui_ctx.set_theme(egui::ThemePreference::Dark);
+        let Panel::Camera(camera_panel) = make_panel(
+            "camera",
+            serde_json::json!({"showThumbnails":false,"showOverlay":false}),
+        )?
+        else {
+            return Err("camera factory mismatch".into());
+        };
+        let Panel::Scene(scene_panel) =
+            make_panel("scene-3d", serde_json::json!({"optionalData":true}))?
+        else {
+            return Err("scene factory mismatch".into());
+        };
+        let Panel::Plot(plot_panel) =
+            make_panel("plot", serde_json::json!({"signal":"vehicle-speed"}))?
+        else {
+            return Err("plot factory mismatch".into());
+        };
         Ok(Self {
             picker: SourcePicker::new(&cc.egui_ctx)?,
             session: None,
@@ -68,7 +107,20 @@ impl ViewerApp {
             ),
             show_platform: true,
             selected_camera: None,
-            scene_mode: SceneCameraMode::Chase,
+            camera_panel,
+            scene_panel,
+            plot_panel,
+            presentation: viewer_core::ViewerPresentation::default(),
+            overlays: viewer_renderer::CameraOverlayState::default(),
+            show_plot: false,
+            speed_query: None,
+            signal_error: None,
+            preview_time: None,
+            preview_playing: None,
+            resume_after_seek: false,
+            plot_rect: None,
+            plot_chart_rect: None,
+            camera_rect: None,
             previous: js_sys::Date::now(),
             filter: String::new(),
             topics: Vec::new(),
@@ -129,24 +181,6 @@ impl ViewerApp {
             .show(ui, |ui| self.inspection.show(ui));
     }
     fn scene(&mut self, ui: &mut egui::Ui) {
-        ui.horizontal(|ui| {
-            for (mode, label) in [
-                (SceneCameraMode::Chase, "Chase"),
-                (SceneCameraMode::Free, "Free"),
-                (SceneCameraMode::VehicleEye, "Vehicle eye"),
-            ] {
-                if ui
-                    .selectable_value(&mut self.scene_mode, mode, label)
-                    .changed()
-                {
-                    self.gpu.scene.set_camera_mode(mode);
-                }
-            }
-            if ui.button("Reset").clicked() {
-                self.gpu.scene.reset_camera();
-            }
-            ui.checkbox(&mut self.show_platform, "Body");
-        });
         let Some(session) = &self.session else {
             ui.label("Open an indexed MCAP to start");
             return;
@@ -159,91 +193,182 @@ impl ViewerApp {
             transforms: session.transforms().state(),
             platform: self.platform.as_ref().filter(|_| self.show_platform),
             path_projection: &PathProjectionPolicy::default(),
-            accumulate: false,
-            coloring: PointCloudColoring::default(),
+            accumulate: self.scene_panel.state.accumulate_points,
+            coloring: self.scene_panel.state.coloring,
         });
-        ui.label(format!(
-            "{} points · 1 grid cell = 1 metre",
-            snapshot.cloud.len()
-        ));
-        let size = egui::vec2(ui.available_width().max(1.), ui.available_height().max(1.));
-        let dpr = ui.ctx().pixels_per_point();
-        let texture = self.gpu.render_scene(
-            ((size.x * dpr) as u32, (size.y * dpr) as u32),
-            SceneFrame {
-                revision: snapshot.revision,
-                cloud_revision: snapshot.cloud_revision,
-                overlay_revision: snapshot.overlay_revision,
-                overlay: snapshot.overlay,
-                focus: snapshot.focus,
-                forward: snapshot.forward,
-                view_radius: snapshot.view_radius,
-                platform: snapshot.platform,
-                path: snapshot.path,
-                cloud: snapshot.cloud,
-                cloud_colors: snapshot.cloud_colors,
+        let output = self.scene_panel.show(
+            ui,
+            ScenePanelInput {
+                texture_id: self.gpu.scene_id,
+                scan_points: self.presentation.diagnostics.scan_points,
+                visible_scan_points: snapshot.cloud.len(),
+                camera_distance: self.gpu.scene.camera().distance,
+                camera_mode: self.gpu.scene.camera_mode(),
+                diagnostics: &snapshot.diagnostics,
+                static_transform_count: session.transforms().state().static_len(),
+                dynamic_transform_count: session.transforms().state().dynamic_len(),
+                playback: Some(session.clock().view()),
+                telemetry: self.presentation.telemetry.as_ref(),
+                camera: self.presentation.focused_camera(),
+                source_error: None,
             },
         );
-        let response = ui.add(egui::Image::new((texture, size)).sense(egui::Sense::drag()));
-        if response.dragged() {
-            let delta = response.drag_delta();
-            self.gpu.scene.orbit(delta.x, delta.y);
-        }
-        if response.hovered() {
-            let delta = ui.input(|i| i.smooth_scroll_delta.y);
-            if delta != 0. {
-                self.gpu.scene.zoom(delta);
+        if let Some(view) = output.render_requests.scene {
+            self.gpu.scene.set_camera_mode(view.camera_mode);
+            if view.reset_camera {
+                self.gpu.scene.reset_camera();
             }
+            self.gpu.scene.zoom(view.wheel_delta);
+            self.gpu.scene.orbit(view.orbit_delta.x, view.orbit_delta.y);
+            let dpr = ui.ctx().pixels_per_point();
+            self.gpu.render_scene(
+                (
+                    (view.logical_size.x * dpr).ceil() as u32,
+                    (view.logical_size.y * dpr).ceil() as u32,
+                ),
+                SceneFrame {
+                    revision: snapshot.revision,
+                    cloud_revision: snapshot.cloud_revision,
+                    overlay_revision: snapshot.overlay_revision,
+                    overlay: snapshot.overlay,
+                    focus: snapshot.focus,
+                    forward: snapshot.forward,
+                    view_radius: snapshot.view_radius,
+                    platform: snapshot.platform,
+                    path: snapshot.path,
+                    cloud: snapshot.cloud,
+                    cloud_colors: snapshot.cloud_colors,
+                },
+            );
         }
+        self.apply_actions(output.actions);
     }
     fn camera(&mut self, ui: &mut egui::Ui) {
         if self.gpu.software {
             ui.label("Camera upload unavailable on this experimental software adapter");
             return;
         }
-        let Some(session) = &mut self.session else {
+        let Some(session) = &self.session else {
             return;
         };
-        let previous = self.selected_camera;
-        egui::ComboBox::from_id_salt("camera-topic")
-            .selected_text(
-                session
-                    .camera_topics()
-                    .iter()
-                    .find(|(id, _)| Some(*id) == self.selected_camera)
-                    .map_or("Camera", |(_, topic)| topic.as_str()),
-            )
-            .show_ui(ui, |ui| {
-                for (id, topic) in session.camera_topics() {
-                    ui.selectable_value(&mut self.selected_camera, Some(*id), topic);
-                }
-            });
-        if previous != self.selected_camera {
-            if let Some(camera) = self.selected_camera
-                && let Err(error) = session.select_camera(camera)
+        let textures = self.gpu.texture_views().collect::<Vec<_>>();
+        let output = self.camera_panel.show(
+            ui,
+            CameraPanelInput {
+                cameras: &self.presentation.cameras,
+                textures: &textures,
+                preview_textures: &[],
+                preview_active: false,
+                overlays: &self.overlays,
+            },
+        );
+        self.camera_rect = Some(ui.min_rect());
+        for (camera, size) in output.render_requests.camera_sizes {
+            if let Some(frame) = session.cameras().state().latest_for(camera)
+                && let Err(error) = self.bitmaps.submit(frame, size)
             {
-                self.error = error.to_string();
+                self.error = error;
             }
-            session.set_focused_camera(self.selected_camera);
         }
-        let size = ui.available_size().max(egui::vec2(1., 1.));
-        if let Some(camera) = self.selected_camera {
-            if let Some((id, pixels)) = self.gpu.camera(camera) {
-                let scale = (size.x / pixels.0 as f32).min(size.y / pixels.1 as f32);
-                ui.add(egui::Image::new((
-                    id,
-                    egui::vec2(pixels.0 as f32 * scale, pixels.1 as f32 * scale),
-                )));
-            } else {
-                ui.label("Waiting for image");
-            }
-            if let Some(frame) = session.cameras().state().latest_for(camera) {
-                let dpr = ui.ctx().pixels_per_point();
-                if let Err(error) = self
-                    .bitmaps
-                    .submit(frame, ((size.x * dpr) as u32, (size.y * dpr) as u32))
-                {
-                    self.error = error;
+        self.apply_actions(output.actions);
+    }
+    fn plot(&mut self, ui: &mut egui::Ui) {
+        let Some(session) = &self.session else {
+            return;
+        };
+        ui.small("Independent query · first 60 s · at most 2,048 points");
+        let query = self.speed_query.as_ref();
+        let error = self
+            .signal_error
+            .as_ref()
+            .or_else(|| query.and_then(|q| q.error.as_ref()));
+        let current = session
+            .odometry()
+            .state()
+            .latest()
+            .map(|frame| viewer_core::SignalSample {
+                measurement_time: Some(frame.measurement_time),
+                arrival_time: frame.arrival_time,
+                value: frame.speed,
+            });
+        let output = self.plot_panel.show(
+            ui,
+            PlotPanelInput {
+                playback: Some(session.clock().view()),
+                signal: query.and_then(|q| q.result.as_ref()),
+                current,
+                loading: query.is_some_and(|q| q.loading),
+                error: error.map(|e| e as &dyn std::fmt::Display),
+                display_time: self.preview_time,
+                preview_signal: None,
+                bookmarks: &[],
+            },
+        );
+        self.plot_chart_rect = output.render_requests.plot_rect;
+        self.apply_actions(output.actions);
+    }
+    fn apply_actions(&mut self, actions: Vec<ViewerAction>) {
+        for action in actions {
+            match action {
+                ViewerAction::SetAccumulatePoints { accumulate, .. } => {
+                    self.scene_panel.state.accumulate_points = accumulate
+                }
+                ViewerAction::SelectCameraTopic { topic, .. } => {
+                    if let Some(session) = &mut self.session
+                        && let Some(id) = session
+                            .camera_topics()
+                            .iter()
+                            .find(|(_, candidate)| *candidate == topic)
+                            .map(|(id, _)| *id)
+                    {
+                        match session.select_camera(id) {
+                            Ok(_) => {
+                                self.selected_camera = Some(id);
+                                self.camera_panel.state.focused_camera = Some(id);
+                                self.camera_panel.state.topic = Some(topic);
+                                session.set_focused_camera(Some(id));
+                            }
+                            Err(error) => self.error = error.to_string(),
+                        }
+                    }
+                }
+                ViewerAction::Playback(command) => {
+                    if let Some(session) = &mut self.session
+                        && let Err(error) = session.apply_command(command)
+                    {
+                        self.error = error.to_string();
+                    }
+                }
+                ViewerAction::BeginPreview(time) => {
+                    self.preview_time = Some(time);
+                    if let Some(session) = &mut self.session {
+                        let playing = session.clock().is_playing();
+                        if self.preview_playing.is_some() {
+                            continue;
+                        }
+                        self.preview_playing = Some(playing);
+                        if playing {
+                            let _ = session.apply_command(PlaybackCommand::Toggle);
+                        }
+                    }
+                }
+                ViewerAction::SetPreviewTime(time) => self.preview_time = time,
+                ViewerAction::CommitPreview(time) => {
+                    self.preview_time = None;
+                    self.resume_after_seek = self.preview_playing.take().unwrap_or(false);
+                    if let Some(session) = &mut self.session
+                        && let Err(error) = session.apply_command(PlaybackCommand::Seek(time))
+                    {
+                        self.resume_after_seek = false;
+                        self.error = error.to_string();
+                    }
+                }
+                ViewerAction::SelectInspectorTopic(Some(topic)) => self.inspection.select(topic),
+                ViewerAction::SelectInspectorTopic(None) => {}
+                ViewerAction::AddNumericSeries { .. }
+                | ViewerAction::RemoveNumericSeries { .. } => {
+                    self.error =
+                        "Custom field queries are not yet exposed in this Web experiment".into()
                 }
             }
         }
@@ -269,8 +394,23 @@ impl eframe::App for ViewerApp {
                     self.topics.dedup();
                     self.filtered_topics = (0..self.topics.len()).collect();
                     self.inspection.reset(&session);
+                    self.speed_query = None;
+                    self.signal_error = None;
+                    self.plot_panel.reset_for_source();
+                    self.preview_time = None;
+                    self.preview_playing = None;
+                    self.resume_after_seek = false;
                     self.selected_camera = session.camera_topics().first().map(|(id, _)| *id);
                     session.set_focused_camera(self.selected_camera);
+                    self.camera_panel.bind_topics(
+                        &session
+                            .camera_topics()
+                            .iter()
+                            .map(|(_, t)| t.clone())
+                            .collect::<Vec<_>>(),
+                        session.camera_topics().first().map(|(_, t)| t.as_str()),
+                        session.camera_topics(),
+                    );
                     self.session = Some(session);
                     self.source = name;
                     self.error.clear();
@@ -283,12 +423,25 @@ impl eframe::App for ViewerApp {
             match session.tick(elapsed) {
                 Ok(PlaybackEffect::Seeked) => seeked = true,
                 Ok(_) => {}
-                Err(error) => self.error = error.to_string(),
+                Err(error) => {
+                    self.error = error.to_string();
+                    self.resume_after_seek = false;
+                    self.preview_time = None;
+                    self.preview_playing = None;
+                }
             }
         }
         if seeked {
             self.reset_views();
             self.inspection.invalidate();
+            if self.resume_after_seek {
+                self.resume_after_seek = false;
+                if let Some(session) = &mut self.session
+                    && !session.clock().is_playing()
+                {
+                    let _ = session.apply_command(PlaybackCommand::Toggle);
+                }
+            }
         }
         if let Some(session) = &self.session {
             self.inspection.poll(session);
@@ -306,6 +459,32 @@ impl eframe::App for ViewerApp {
                 Err(error) => self.error = error,
             }
         }
+        if let Some(session) = &self.session {
+            if self.show_plot && self.speed_query.is_none() && self.signal_error.is_none() {
+                match SpeedQuery::new(
+                    session,
+                    &crate::workspace_bindings::bundled().odometry_topic,
+                ) {
+                    Ok(query) => self.speed_query = Some(query),
+                    Err(error) => self.signal_error = Some(error),
+                }
+            }
+            if let Some(query) = &mut self.speed_query {
+                query.poll();
+            }
+            self.presentation = viewer_core::ViewerPresentation::from_features(
+                viewer_core::ViewerPresentationInput {
+                    cameras: session.cameras().state(),
+                    telemetry: session.odometry().state(),
+                    path: session.path().state(),
+                    point_cloud: session.point_cloud().map(|p| p.point_cloud()),
+                    camera_topics: session.camera_topics(),
+                    focused_camera: self.selected_camera,
+                    overlays: &std::collections::BTreeMap::new(),
+                    diagnostics: viewer_core::DiagnosticsPresentation::default(),
+                },
+            );
+        }
         egui::TopBottomPanel::top("source").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 if ui.button("Open MCAP").clicked() {
@@ -313,6 +492,16 @@ impl eframe::App for ViewerApp {
                 }
                 ui.label(&self.source);
                 ui.label("egui experiment · Local MCAP");
+                let checkbox = ui.checkbox(&mut self.show_plot, "Speed plot");
+                self.plot_rect = Some(checkbox.rect);
+                if checkbox.changed() {
+                    self.speed_query = None;
+                    self.signal_error = None;
+                    self.plot_panel.reset_for_source();
+                    self.plot_chart_rect = None;
+                    ui.ctx().request_repaint();
+                }
+                ui.checkbox(&mut self.show_platform, "Body");
             });
             if !self.error.is_empty() {
                 ui.colored_label(egui::Color32::LIGHT_RED, &self.error);
@@ -332,20 +521,39 @@ impl eframe::App for ViewerApp {
         if mobile {
             egui::TopBottomPanel::top("tabs").show(ctx, |ui| {
                 ui.horizontal(|ui| {
-                    for (index, label) in ["Topics", "Scene", "Camera"].iter().enumerate() {
-                        ui.selectable_value(&mut self.mobile_tab, index, *label);
+                    for (index, label) in ["Topics", "Scene", "Camera", "Plot"].iter().enumerate() {
+                        if ui
+                            .selectable_value(&mut self.mobile_tab, index, *label)
+                            .clicked()
+                            && index == 3
+                        {
+                            self.show_plot = true;
+                            ui.ctx().request_repaint();
+                        }
                     }
                 });
             });
             egui::CentralPanel::default().show(ctx, |ui| match self.mobile_tab {
                 0 => self.topics(ui),
                 1 => self.scene(ui),
-                _ => self.camera(ui),
+                2 => self.camera(ui),
+                _ => self.plot(ui),
             });
         } else {
             egui::SidePanel::left("inspection")
                 .default_width(360.)
-                .show(ctx, |ui| self.topics(ui));
+                .show(ctx, |ui| {
+                    if self.show_plot {
+                        let height = ui.available_height();
+                        ui.allocate_ui(egui::vec2(ui.available_width(), height * 0.55), |ui| {
+                            self.topics(ui)
+                        });
+                        ui.separator();
+                        self.plot(ui);
+                    } else {
+                        self.topics(ui);
+                    }
+                });
             egui::CentralPanel::default().show(ctx, |ui| {
                 let height = ui.available_height();
                 ui.allocate_ui(egui::vec2(ui.available_width(), height * 0.53), |ui| {
@@ -359,6 +567,9 @@ impl eframe::App for ViewerApp {
         if let Some(session) = &mut self.session {
             if let Some(controls) = &controls {
                 for command in &controls.commands {
+                    if matches!(command, PlaybackCommand::Toggle) {
+                        self.resume_after_seek = false;
+                    }
                     if let PlaybackCommand::Seek(target) = command
                         && *target == session.timeline_cursor()
                         && !matches!(
@@ -393,6 +604,14 @@ impl eframe::App for ViewerApp {
                     "device": self.gpu.device_type,
                     "play": controls.as_ref().map(|c|rect(c.play_rect)),
                     "timeline": controls.as_ref().map(|c|rect(c.timeline_rect)),
+                    "plot_checkbox":self.plot_rect.map(rect),
+                    "plot_chart":self.plot_chart_rect.map(rect),
+                    "camera_pixels":self.selected_camera.and_then(|id|self.gpu.camera(id)).map(|(_,size)|[size.0,size.1]),
+                    "plot_points":self.speed_query.as_ref().and_then(|q|q.result.as_ref()).map_or(0,|s|s.display.values.len()),
+                    "plot_error":self.signal_error.as_ref().or_else(||self.speed_query.as_ref().and_then(|q|q.error.as_ref())),
+                    "plot_loading":self.speed_query.as_ref().is_some_and(|q|q.loading),
+                    "plot_requests":self.speed_query.as_ref().map_or(0,|q|q.request_count()),
+                    "camera_rect":self.camera_rect.map(rect),
                 }).to_string();
             });
         }
@@ -404,10 +623,21 @@ impl eframe::App for ViewerApp {
             .is_some_and(|session| session.clock().is_playing() || session.has_pending_work())
             || self.inspection.loading()
             || self.bitmaps.has_pending_work()
+            || self.speed_query.as_ref().is_some_and(|q| q.loading)
         {
             ctx.request_repaint_after(Duration::from_millis(16));
         }
     }
+}
+fn make_panel(kind: &str, config: serde_json::Value) -> Result<Panel, String> {
+    let node = viewer_layout::PanelNode {
+        id: viewer_layout::PanelId::new(kind).map_err(|e| e.to_string())?,
+        panel_type: kind.into(),
+        config_version: 1,
+        title: None,
+        config,
+    };
+    Panel::create(&node).ok_or_else(|| format!("Unknown panel {kind}"))?
 }
 #[wasm_bindgen(start)]
 pub fn start() {

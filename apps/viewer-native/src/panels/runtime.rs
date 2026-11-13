@@ -1,6 +1,6 @@
 use super::{
-    BevPanel, CameraPanel, CameraSelection, InspectorPanel, NativePanel, PanelDataRequirements,
-    PlaceholderPanel, PlotPanel, ScenePanel, StatusPanel,
+    BevPanel, CameraSelection, InspectorPanel, NativePanel, PanelDataRequirements,
+    PlaceholderPanel, StatusPanel,
 };
 use std::collections::BTreeMap;
 use viewer_core::CameraId;
@@ -77,7 +77,7 @@ impl PanelRuntimeStore {
         topic: Option<&str>,
         inspections: &[crate::inspection::TopicInspection],
         cursor: Option<viewer_core::ArrivalTime>,
-    ) -> Vec<crate::interaction::ViewerAction> {
+    ) -> Vec<viewer_ui::action::ViewerAction> {
         super::inspector::show_topic_inspector(
             context,
             topic,
@@ -161,7 +161,7 @@ impl PanelRuntimeStore {
             if let NativePanel::Camera(panel) = panel {
                 panel.contribute_camera_requirements(
                     selection.panels.get(id).and_then(|topic| topic.as_deref()),
-                    &mut requirements,
+                    &mut requirements.playback,
                 );
             } else {
                 panel.contribute_data_requirements(&mut requirements);
@@ -175,12 +175,17 @@ impl PanelRuntimeStore {
         selection: &CameraSelection,
         plan: &viewer_core::SessionPlan,
     ) {
+        let routes = plan
+            .camera_routes()
+            .iter()
+            .map(|route| (route.camera_id, route.stream.topic.clone()))
+            .collect::<Vec<_>>();
         for (id, panel) in &mut self.panels {
             if let NativePanel::Camera(panel) = panel {
                 panel.bind_topics(
                     &selection.available_topics,
                     selection.panels.get(id).and_then(|topic| topic.as_deref()),
-                    plan,
+                    &routes,
                 );
             }
         }
@@ -254,6 +259,14 @@ impl PanelRuntimeStore {
 }
 
 pub(crate) fn create_native_panel(node: &PanelNode) -> NativePanel {
+    if let Some(panel) = viewer_ui::panel::Panel::create(node) {
+        return match panel {
+            Ok(viewer_ui::panel::Panel::Camera(panel)) => NativePanel::Camera(panel),
+            Ok(viewer_ui::panel::Panel::Scene(panel)) => NativePanel::Scene(panel),
+            Ok(viewer_ui::panel::Panel::Plot(panel)) => NativePanel::Plot(panel),
+            Err(error) => NativePanel::Placeholder(PlaceholderPanel::invalid_config(node, error)),
+        };
+    }
     match node.panel_type.as_str() {
         "explore" if node.config_version == 1 && node.config == serde_json::json!({}) => {
             NativePanel::Explore
@@ -263,11 +276,8 @@ pub(crate) fn create_native_panel(node: &PanelNode) -> NativePanel {
         }
         #[cfg(feature = "plugin-panels")]
         "plugin" => super::plugin::PluginPanel::create(node),
-        "camera" => CameraPanel::create(node),
         "bev" => BevPanel::create(node),
-        "plot" => PlotPanel::create(node),
         "inspector" => InspectorPanel::create(node),
-        "scene-3d" => ScenePanel::create(node),
         "status" => StatusPanel::create(node),
         "topic-health" => super::topic_health::TopicHealthPanel::create(node),
         "diagnostics" => super::diagnostics::DiagnosticsPanel::create(node),

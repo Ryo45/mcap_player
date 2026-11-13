@@ -1,6 +1,5 @@
-use super::{Graphics, RenderInput, layout_host::show_layout_host, views::CameraTextureView};
+use super::{Graphics, RenderInput, layout_host::show_layout_host};
 use crate::{
-    interaction::ViewerAction,
     panels::{
         PanelCompositionInput, PanelRenderRequests, PanelResourceView, PanelRuntimeStore,
         PreviewDataView, SceneDataView,
@@ -9,7 +8,9 @@ use crate::{
     workspace::ViewerInteractionState,
 };
 use viewer_layout::LayoutDocument;
+use viewer_ui::action::ViewerAction;
 use viewer_ui::playback::playback_controls;
+use viewer_ui::views::camera::CameraTextureView;
 use winit::window::Window;
 
 pub(super) struct UiOutput {

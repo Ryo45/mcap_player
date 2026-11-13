@@ -9,11 +9,12 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 jpeg-benchmark = []
-egui-ui = ["dep:eframe", "dep:egui", "dep:viewer-ui"]
+egui-ui = ["dep:eframe", "dep:egui", "dep:viewer-ui", "dep:viewer-layout"]
 
 [dependencies]
 egui = { workspace = true, optional = true }
 viewer-ui = { path = "../../crates/viewer-ui", optional = true }
+viewer-layout = { path = "../../crates/viewer-layout", optional = true }
 viewer-mcap = { path = "../../crates/viewer-mcap", default-features = false, features = ["mcap-zstd", "mcap-lz4-rust"] }
 bev-renderer = { path = "../../crates/bev-renderer" }
 scene-renderer = { path = "../../crates/scene-renderer" }

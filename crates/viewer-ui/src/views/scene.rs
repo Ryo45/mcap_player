@@ -1,28 +1,28 @@
 use scene_renderer::SceneCameraMode;
 use viewer_core::SceneDiagnostics;
 
-pub(crate) struct SceneViewInput<'a> {
-    pub(crate) texture_id: egui::TextureId,
-    pub(crate) scan_points: usize,
-    pub(crate) visible_scan_points: usize,
-    pub(crate) camera_distance: f32,
-    pub(crate) camera_mode: SceneCameraMode,
-    pub(crate) accumulate_points: bool,
-    pub(crate) diagnostics: &'a SceneDiagnostics,
-    pub(crate) static_transform_count: usize,
-    pub(crate) dynamic_transform_count: usize,
+pub struct SceneViewInput<'a> {
+    pub texture_id: egui::TextureId,
+    pub scan_points: usize,
+    pub visible_scan_points: usize,
+    pub camera_distance: f32,
+    pub camera_mode: SceneCameraMode,
+    pub accumulate_points: bool,
+    pub diagnostics: &'a SceneDiagnostics,
+    pub static_transform_count: usize,
+    pub dynamic_transform_count: usize,
 }
 
-pub(crate) struct SceneViewOutput {
-    pub(crate) logical_size: egui::Vec2,
-    pub(crate) wheel_delta: f32,
-    pub(crate) orbit_delta: egui::Vec2,
-    pub(crate) reset_camera: bool,
-    pub(crate) camera_mode: SceneCameraMode,
-    pub(crate) selected_accumulation: Option<bool>,
+pub struct SceneViewOutput {
+    pub logical_size: egui::Vec2,
+    pub wheel_delta: f32,
+    pub orbit_delta: egui::Vec2,
+    pub reset_camera: bool,
+    pub camera_mode: SceneCameraMode,
+    pub selected_accumulation: Option<bool>,
 }
 
-pub(crate) fn show_scene_view(ui: &mut egui::Ui, input: SceneViewInput<'_>) -> SceneViewOutput {
+pub fn show_scene_view(ui: &mut egui::Ui, input: SceneViewInput<'_>) -> SceneViewOutput {
     let mut camera_mode = input.camera_mode;
     let mut accumulation_change = None;
     if let Some(error) = &input.diagnostics.extension_error {

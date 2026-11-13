@@ -505,6 +505,24 @@ impl WebPlayback {
     }
 
     #[cfg(all(target_arch = "wasm32", feature = "egui-ui"))]
+    pub(crate) fn signal_query_loader(&self, topic: &str) -> crate::data_plane::WebWindowLoader {
+        match &self.restore {
+            WebRestoreLoader::LocalFile(loader) => {
+                crate::data_plane::WebWindowLoader::LocalFile(loader.window_query(topic.into()))
+            }
+            WebRestoreLoader::Remote(loader) => crate::data_plane::WebWindowLoader::Remote(
+                loader.window_query(
+                    self.catalog
+                        .streams
+                        .iter()
+                        .filter(|s| s.topic == topic)
+                        .map(|s| s.id.0)
+                        .collect(),
+                ),
+            ),
+        }
+    }
+    #[cfg(all(target_arch = "wasm32", feature = "egui-ui"))]
     pub(crate) fn has_pending_work(&self) -> bool {
         self.pending_seek.is_some() || self.data.has_pending_work()
     }

@@ -1,35 +1,30 @@
+#[cfg(test)]
+use viewer_ui::action::ViewerAction;
 mod bev;
-mod camera;
 mod diagnostics;
 mod inspector;
 mod placeholder;
-mod plot;
 #[cfg(feature = "plugin-panels")]
 mod plugin;
 mod runtime;
-mod scene;
 mod status;
 mod topic_health;
 mod topic_tree;
 mod topics;
 pub(crate) use topic_tree::{show_field_plots, show_topics};
 
+pub(crate) use crate::camera_selection::CameraSelection;
 pub(crate) use bev::BevPanel;
-pub(crate) use camera::{CameraPanel, CameraPanelInput, CameraSelection};
 pub(crate) use inspector::{InspectorPanel, InspectorPanelInput};
 pub(crate) use placeholder::PlaceholderPanel;
-pub(crate) use plot::{
-    PlotMode, PlotPanel, PlotPanelInput, PlotPanelState, PlotViewState, PlotViewport,
-    PreviewPlotCache, SignalPlotCache,
-};
 pub(crate) use runtime::PanelRuntimeStore;
-pub(crate) use scene::{ScenePanel, ScenePanelInput};
 pub(crate) use status::{StatusPanel, StatusPanelInput};
+pub(crate) use viewer_ui::camera::{CameraPanel, CameraPanelInput};
+pub(crate) use viewer_ui::plot::{PlotPanel, PlotPanelInput};
+pub(crate) use viewer_ui::scene::{ScenePanel, ScenePanelInput};
 
 use crate::{
-    graphics::views::{CameraTextureView, SceneViewOutput},
     inspection::{InspectorRequirement, TopicInspection},
-    interaction::ViewerAction,
     workspace::ViewerInteractionState,
 };
 use scene_renderer::SceneCameraMode;
@@ -37,12 +32,10 @@ use std::collections::BTreeSet;
 use viewer_core::{
     Bookmark, PlaybackView, SceneDiagnostics, SignalId, SignalOverview, ViewerPresentation,
 };
+use viewer_ui::views::camera::CameraTextureView;
 
-pub(crate) const CAMERA_CONFIG_VERSION: u32 = 1;
 pub(crate) const BEV_CONFIG_VERSION: u32 = 1;
-pub(crate) const PLOT_CONFIG_VERSION: u32 = 1;
 pub(crate) const INSPECTOR_CONFIG_VERSION: u32 = 1;
-pub(crate) const SCENE_CONFIG_VERSION: u32 = 1;
 pub(crate) const STATUS_CONFIG_VERSION: u32 = 1;
 
 pub(crate) enum NativePanel {
@@ -115,7 +108,7 @@ impl NativePanel {
                         signal: signal.signal,
                         current: signal.current,
                         loading: signal.loading,
-                        error: signal.error,
+                        error: signal.error.map(|e| e as &dyn std::fmt::Display),
                         display_time: input
                             .playback
                             .map(|playback| input.interaction.display_time(playback)),
@@ -222,10 +215,12 @@ impl NativePanel {
         match self {
             #[cfg(feature = "plugin-panels")]
             Self::Plugin(panel) => panel.requirements(requirements),
-            Self::Camera(panel) => panel.contribute_data_requirements(requirements),
+            Self::Camera(panel) => panel.contribute_data_requirements(&mut requirements.playback),
             Self::Bev(panel) => panel.contribute_data_requirements(requirements),
-            Self::Scene(panel) => panel.contribute_data_requirements(requirements),
-            Self::Plot(panel) => panel.contribute_data_requirements(requirements),
+            Self::Scene(panel) => panel.contribute_data_requirements(&mut requirements.playback),
+            Self::Plot(panel) => {
+                requirements.signals.insert(panel.signal_id());
+            }
             Self::Inspector(panel) => panel.contribute_data_requirements(requirements),
             Self::Status(panel) => panel.contribute_data_requirements(requirements),
             Self::TopicHealth(panel) => panel.contribute_data_requirements(requirements),
@@ -334,39 +329,7 @@ pub(crate) struct PanelCompositionInput<'a> {
     pub(crate) numeric_series: &'a [crate::numeric_plot_loader::NumericSeriesState],
 }
 
-#[derive(Default)]
-pub(crate) struct PanelOutput {
-    pub(crate) actions: Vec<ViewerAction>,
-    pub(crate) render_requests: PanelRenderRequests,
-}
-
-#[derive(Default)]
-pub(crate) struct PanelRenderRequests {
-    pub(crate) camera_sizes: std::collections::BTreeMap<viewer_core::CameraId, (u32, u32)>,
-    pub(crate) bev_size: Option<egui::Vec2>,
-    pub(crate) scene: Option<SceneViewOutput>,
-}
-
-impl PanelOutput {
-    pub(crate) fn merge(&mut self, mut other: Self) {
-        for (camera, size) in other.render_requests.camera_sizes {
-            let current = self
-                .render_requests
-                .camera_sizes
-                .entry(camera)
-                .or_insert((0, 0));
-            current.0 = current.0.max(size.0);
-            current.1 = current.1.max(size.1);
-        }
-        self.actions.append(&mut other.actions);
-        if other.render_requests.bev_size.is_some() {
-            self.render_requests.bev_size = other.render_requests.bev_size;
-        }
-        if other.render_requests.scene.is_some() {
-            self.render_requests.scene = other.render_requests.scene;
-        }
-    }
-}
+pub(crate) use viewer_ui::panel::{PanelOutput, PanelRenderRequests};
 
 #[cfg(test)]
 mod tests {

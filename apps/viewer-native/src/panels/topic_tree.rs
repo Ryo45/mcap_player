@@ -1,6 +1,7 @@
 //! Metadata and field Plot views with read-only, concrete inputs.
-use crate::{interaction::ViewerAction, numeric_plot_loader::NumericSeriesState};
+use crate::numeric_plot_loader::NumericSeriesState;
 use viewer_core::{PlaybackView, TopicTree};
+use viewer_ui::action::ViewerAction;
 
 pub(crate) fn show_topics(
     ui: &mut egui::Ui,

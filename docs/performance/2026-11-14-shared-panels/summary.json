@@ -1,0 +1,418 @@
+{
+  "before_commit": "35a334e",
+  "gpu": "NVIDIA GeForce RTX 5070 Ti / Vulkan",
+  "web_viewport": [
+    1920,
+    1080
+  ],
+  "native_client": [
+    1920,
+    1080
+  ],
+  "scope": "Short, cache-allowed, interleaved real-GPU runs. CPU is aggregate live process-tree core-seconds per wall second; PSS excludes separate GPU VRAM. Web uploads are not compositor FPS. No proof of statistical equivalence. Native auto-plays; display confirmed On.",
+  "sets": {
+    "native-gpu": {
+      "data": "turtlebot3-7cam-fhd-10s.mcap",
+      "data_sha256": "39e1fa1b7ce9bdca78e9f7d3b522694915e2d5e818d12fff445ec24fb1db1a9b",
+      "plot": false,
+      "runs": [
+        {
+          "variant": "before",
+          "repeat": 0,
+          "elapsed_seconds": 5.120245719328523,
+          "cpu_core_seconds_per_second": 0.1874910019212703,
+          "pss_mib_median": 222.193359375,
+          "pss_mib_peak": 223.58203125
+        },
+        {
+          "variant": "after",
+          "repeat": 0,
+          "elapsed_seconds": 5.0854061571881175,
+          "cpu_core_seconds_per_second": 0.18090983720141976,
+          "pss_mib_median": 221.44287109375,
+          "pss_mib_peak": 223.4150390625
+        },
+        {
+          "variant": "after",
+          "repeat": 1,
+          "elapsed_seconds": 5.113086302764714,
+          "cpu_core_seconds_per_second": 0.19362082730046898,
+          "pss_mib_median": 221.3984375,
+          "pss_mib_peak": 223.349609375
+        },
+        {
+          "variant": "before",
+          "repeat": 1,
+          "elapsed_seconds": 5.105978354811668,
+          "cpu_core_seconds_per_second": 0.19780734069274236,
+          "pss_mib_median": 221.46630859375,
+          "pss_mib_peak": 223.5146484375
+        },
+        {
+          "variant": "before",
+          "repeat": 2,
+          "elapsed_seconds": 5.1134155336767435,
+          "cpu_core_seconds_per_second": 0.19751964090306792,
+          "pss_mib_median": 222.2041015625,
+          "pss_mib_peak": 223.5673828125
+        },
+        {
+          "variant": "after",
+          "repeat": 2,
+          "elapsed_seconds": 5.117268425412476,
+          "cpu_core_seconds_per_second": 0.18564591907711497,
+          "pss_mib_median": 221.4501953125,
+          "pss_mib_peak": 221.6005859375
+        }
+      ],
+      "medians": {
+        "before": {
+          "cpu_core_seconds_per_second": 0.19751964090306792,
+          "pss_mib_median": 222.193359375,
+          "pss_mib_peak": 223.5673828125
+        },
+        "after": {
+          "cpu_core_seconds_per_second": 0.18564591907711497,
+          "pss_mib_median": 221.44287109375,
+          "pss_mib_peak": 223.349609375
+        }
+      }
+    },
+    "web-fhd": {
+      "data": "turtlebot3-7cam-fhd-10s.mcap",
+      "data_sha256": "39e1fa1b7ce9bdca78e9f7d3b522694915e2d5e818d12fff445ec24fb1db1a9b",
+      "plot": false,
+      "runs": [
+        {
+          "variant": "before",
+          "repeat": 0,
+          "elapsed_seconds": 5.159894428215921,
+          "cpu_core_seconds_per_second": 0.4845060368540131,
+          "pss_mib_median": 442.1962890625,
+          "pss_mib_peak": 478.3203125,
+          "uploads_per_second": 9.883923151821868,
+          "cursor_seconds_per_second": 1.0021522866288408,
+          "query_ms": null
+        },
+        {
+          "variant": "after",
+          "repeat": 0,
+          "elapsed_seconds": 5.194083091802895,
+          "cpu_core_seconds_per_second": 0.5005695815885621,
+          "pss_mib_median": 440.3115234375,
+          "pss_mib_peak": 468.62109375,
+          "uploads_per_second": 10.011391631771241,
+          "cursor_seconds_per_second": 1.001909270225722,
+          "query_ms": null
+        },
+        {
+          "variant": "after",
+          "repeat": 1,
+          "elapsed_seconds": 5.063540334813297,
+          "cpu_core_seconds_per_second": 0.5114998259603077,
+          "pss_mib_median": 438.6181640625,
+          "pss_mib_peak": 476.857421875,
+          "uploads_per_second": 10.072004294971311,
+          "cursor_seconds_per_second": 1.001473211368618,
+          "query_ms": null
+        },
+        {
+          "variant": "before",
+          "repeat": 1,
+          "elapsed_seconds": 5.187025621533394,
+          "cpu_core_seconds_per_second": 0.5012506568709381,
+          "pss_mib_median": 439.810546875,
+          "pss_mib_peak": 472.6484375,
+          "uploads_per_second": 10.025013137418764,
+          "cursor_seconds_per_second": 1.003465257312782,
+          "query_ms": null
+        },
+        {
+          "variant": "before",
+          "repeat": 2,
+          "elapsed_seconds": 5.1854782570153475,
+          "cpu_core_seconds_per_second": 0.48597253234853194,
+          "pss_mib_median": 437.37109375,
+          "pss_mib_peak": 477.263671875,
+          "uploads_per_second": 10.028004635763358,
+          "cursor_seconds_per_second": 1.0035718485483176,
+          "query_ms": null
+        },
+        {
+          "variant": "after",
+          "repeat": 2,
+          "elapsed_seconds": 5.194890587590635,
+          "cpu_core_seconds_per_second": 0.49279189943196006,
+          "pss_mib_median": 447.1064453125,
+          "pss_mib_peak": 482.60546875,
+          "uploads_per_second": 10.009835457211688,
+          "cursor_seconds_per_second": 1.0050259792711966,
+          "query_ms": null
+        }
+      ],
+      "medians": {
+        "before": {
+          "cpu_core_seconds_per_second": 0.48597253234853194,
+          "pss_mib_median": 439.810546875,
+          "pss_mib_peak": 477.263671875,
+          "uploads_per_second": 10.025013137418764,
+          "cursor_seconds_per_second": 1.003465257312782
+        },
+        "after": {
+          "cpu_core_seconds_per_second": 0.5005695815885621,
+          "pss_mib_median": 440.3115234375,
+          "pss_mib_peak": 476.857421875,
+          "uploads_per_second": 10.011391631771241,
+          "cursor_seconds_per_second": 1.001909270225722
+        }
+      },
+      "first_run_texture_sizes": {
+        "3D scene color target": {
+          "width": 960,
+          "height": 540,
+          "depthOrArrayLayers": 1
+        },
+        "3D scene depth target": {
+          "width": 960,
+          "height": 540,
+          "depthOrArrayLayers": 1
+        },
+        "egui_texid_Managed(0)": {
+          "width": 8192,
+          "height": 32,
+          "depthOrArrayLayers": 1
+        },
+        "egui browser camera": {
+          "width": 960,
+          "height": 540,
+          "depthOrArrayLayers": 1
+        }
+      }
+    },
+    "web-4k": {
+      "data": "jpeg-4k-8cam.mcap",
+      "data_sha256": "c2d283cc811866fd74fd29bdaab1b7720cbc2fe1420ccaeae94dfd171ac7d649",
+      "plot": false,
+      "runs": [
+        {
+          "variant": "before",
+          "repeat": 0,
+          "elapsed_seconds": 2.213110680691898,
+          "cpu_core_seconds_per_second": 1.7260772510508744,
+          "pss_mib_median": 1239.859375,
+          "pss_mib_peak": 1394.6484375,
+          "uploads_per_second": 10.392611720986938,
+          "cursor_seconds_per_second": 1.0089870423027754,
+          "query_ms": null
+        },
+        {
+          "variant": "after",
+          "repeat": 0,
+          "elapsed_seconds": 2.08882621768862,
+          "cpu_core_seconds_per_second": 1.6181336539044984,
+          "pss_mib_median": 1247.4375,
+          "pss_mib_peak": 1390.294921875,
+          "uploads_per_second": 10.053493115974694,
+          "cursor_seconds_per_second": 1.0130091158763073,
+          "query_ms": null
+        },
+        {
+          "variant": "after",
+          "repeat": 1,
+          "elapsed_seconds": 2.0825081560760736,
+          "cpu_core_seconds_per_second": 1.6470523728766142,
+          "pss_mib_median": 1245.44482421875,
+          "pss_mib_peak": 1393.4287109375,
+          "uploads_per_second": 10.083994119652742,
+          "cursor_seconds_per_second": 1.0165626453002312,
+          "query_ms": null
+        },
+        {
+          "variant": "before",
+          "repeat": 1,
+          "elapsed_seconds": 2.06689474824816,
+          "cpu_core_seconds_per_second": 1.6498179227027485,
+          "pss_mib_median": 1266.0908203125,
+          "pss_mib_peak": 1403.44140625,
+          "uploads_per_second": 10.160169025442148,
+          "cursor_seconds_per_second": 1.0068243686640528,
+          "query_ms": null
+        },
+        {
+          "variant": "before",
+          "repeat": 2,
+          "elapsed_seconds": 2.1174698444083333,
+          "cpu_core_seconds_per_second": 1.6387482490781788,
+          "pss_mib_median": 1266.31005859375,
+          "pss_mib_peak": 1398.2939453125,
+          "uploads_per_second": 10.389758351504303,
+          "cursor_seconds_per_second": 1.0158350097311708,
+          "query_ms": null
+        },
+        {
+          "variant": "after",
+          "repeat": 2,
+          "elapsed_seconds": 2.2211631797254086,
+          "cpu_core_seconds_per_second": 1.6387809924212748,
+          "pss_mib_median": 1236.419921875,
+          "pss_mib_peak": 1348.1435546875,
+          "uploads_per_second": 9.90472028386485,
+          "cursor_seconds_per_second": 1.0057793233706398,
+          "query_ms": null
+        }
+      ],
+      "medians": {
+        "before": {
+          "cpu_core_seconds_per_second": 1.6498179227027485,
+          "pss_mib_median": 1266.0908203125,
+          "pss_mib_peak": 1398.2939453125,
+          "uploads_per_second": 10.389758351504303,
+          "cursor_seconds_per_second": 1.0089870423027754
+        },
+        "after": {
+          "cpu_core_seconds_per_second": 1.6387809924212748,
+          "pss_mib_median": 1245.44482421875,
+          "pss_mib_peak": 1390.294921875,
+          "uploads_per_second": 10.053493115974694,
+          "cursor_seconds_per_second": 1.0130091158763073
+        }
+      },
+      "first_run_texture_sizes": {
+        "3D scene color target": {
+          "width": 960,
+          "height": 540,
+          "depthOrArrayLayers": 1
+        },
+        "3D scene depth target": {
+          "width": 960,
+          "height": 540,
+          "depthOrArrayLayers": 1
+        },
+        "egui_texid_Managed(0)": {
+          "width": 8192,
+          "height": 32,
+          "depthOrArrayLayers": 1
+        },
+        "egui browser camera": {
+          "width": 960,
+          "height": 540,
+          "depthOrArrayLayers": 1
+        }
+      }
+    },
+    "web-plot-cost": {
+      "data": "turtlebot3-7cam-fhd-10s.mcap",
+      "data_sha256": "39e1fa1b7ce9bdca78e9f7d3b522694915e2d5e818d12fff445ec24fb1db1a9b",
+      "plot": true,
+      "runs": [
+        {
+          "variant": "before",
+          "repeat": 0,
+          "elapsed_seconds": 5.132937866263092,
+          "cpu_core_seconds_per_second": 0.4870505089164586,
+          "pss_mib_median": 447.6796875,
+          "pss_mib_peak": 483.974609375,
+          "uploads_per_second": 9.935830381895755,
+          "cursor_seconds_per_second": 1.004103329182171,
+          "query_ms": null
+        },
+        {
+          "variant": "after",
+          "repeat": 0,
+          "elapsed_seconds": 5.18944161105901,
+          "cpu_core_seconds_per_second": 0.522214180852296,
+          "pss_mib_median": 489.8974609375,
+          "pss_mib_peak": 533.0595703125,
+          "uploads_per_second": 10.020345905652912,
+          "cursor_seconds_per_second": 1.0029980853639116,
+          "query_ms": 104.31642550975084
+        },
+        {
+          "variant": "after",
+          "repeat": 1,
+          "elapsed_seconds": 5.073301395401359,
+          "cpu_core_seconds_per_second": 0.5440244497403157,
+          "pss_mib_median": 479.27734375,
+          "pss_mib_peak": 510.5849609375,
+          "uploads_per_second": 9.8555153938463,
+          "cursor_seconds_per_second": 1.0027001361699224,
+          "query_ms": 106.75500053912401
+        },
+        {
+          "variant": "before",
+          "repeat": 1,
+          "elapsed_seconds": 5.132525872439146,
+          "cpu_core_seconds_per_second": 0.4851412466074272,
+          "pss_mib_median": 445.982421875,
+          "pss_mib_peak": 475.8525390625,
+          "uploads_per_second": 10.131463784572777,
+          "cursor_seconds_per_second": 1.004183929724771,
+          "query_ms": null
+        },
+        {
+          "variant": "before",
+          "repeat": 2,
+          "elapsed_seconds": 5.1185694532468915,
+          "cpu_core_seconds_per_second": 0.49818607001267584,
+          "pss_mib_median": 449.6123046875,
+          "pss_mib_peak": 477.6875,
+          "uploads_per_second": 9.963721400253517,
+          "cursor_seconds_per_second": 1.0036007222176924,
+          "query_ms": null
+        },
+        {
+          "variant": "after",
+          "repeat": 2,
+          "elapsed_seconds": 5.160340690985322,
+          "cpu_core_seconds_per_second": 0.5425998335519518,
+          "pss_mib_median": 472.748046875,
+          "pss_mib_peak": 495.3564453125,
+          "uploads_per_second": 10.076854051679106,
+          "cursor_seconds_per_second": 1.005166191654991,
+          "query_ms": 105.84989096969366
+        }
+      ],
+      "medians": {
+        "before": {
+          "cpu_core_seconds_per_second": 0.4870505089164586,
+          "pss_mib_median": 447.6796875,
+          "pss_mib_peak": 477.6875,
+          "uploads_per_second": 9.963721400253517,
+          "cursor_seconds_per_second": 1.004103329182171
+        },
+        "after": {
+          "cpu_core_seconds_per_second": 0.5425998335519518,
+          "pss_mib_median": 479.27734375,
+          "pss_mib_peak": 510.5849609375,
+          "uploads_per_second": 10.020345905652912,
+          "cursor_seconds_per_second": 1.0029980853639116,
+          "query_ms": 105.84989096969366
+        }
+      },
+      "first_run_texture_sizes": {
+        "3D scene color target": {
+          "width": 960,
+          "height": 540,
+          "depthOrArrayLayers": 1
+        },
+        "3D scene depth target": {
+          "width": 960,
+          "height": 540,
+          "depthOrArrayLayers": 1
+        },
+        "egui_texid_Managed(0)": {
+          "width": 8192,
+          "height": 32,
+          "depthOrArrayLayers": 1
+        },
+        "egui browser camera": {
+          "width": 960,
+          "height": 540,
+          "depthOrArrayLayers": 1
+        }
+      }
+    }
+  },
+  "before-native_sha256": "e6638d5ab4820a8cd788e1dbdba9fca28d5cdedf1278267a3040405557446bfc",
+  "after-native_sha256": "5bede614c2a9f03e78a1a2371a87dff8af862399e485029b5de8308e10dea90b"
+}

@@ -31,6 +31,15 @@ pub(crate) struct RemoteRestoreLoader {
 }
 
 impl RemoteRestoreLoader {
+    #[cfg(all(target_arch = "wasm32", feature = "egui-ui"))]
+    pub(crate) fn window_query(&self, streams: Vec<u32>) -> RemoteWindowLoader {
+        RemoteWindowLoader::new(
+            self.client.clone(),
+            self.recording_id.clone(),
+            self.revision.clone(),
+            streams,
+        )
+    }
     #[cfg(target_arch = "wasm32")]
     pub(crate) fn fork(&self) -> Self {
         Self::new(

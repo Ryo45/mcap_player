@@ -520,6 +520,18 @@ pub(crate) struct BrowserMcapRestoreLoader {
 
 #[cfg(target_arch = "wasm32")]
 impl BrowserMcapRestoreLoader {
+    #[cfg(feature = "egui-ui")]
+    pub(crate) fn window_query(&self, topic: String) -> BrowserMcapWindowLoader {
+        BrowserMcapWindowLoader::new(
+            self.file.clone(),
+            self.file_size,
+            self.summary.clone(),
+            vec![topic],
+            0,
+            0,
+            0.,
+        )
+    }
     pub(crate) fn fork(&self) -> Self {
         Self::new(self.file.clone(), self.file_size, self.summary.clone())
     }

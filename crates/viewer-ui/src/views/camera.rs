@@ -2,43 +2,43 @@ use viewer_core::{ArrivalTime, CameraId, CameraPresentation};
 use viewer_renderer::{CameraOverlaySnapshot, CameraOverlayState};
 
 #[derive(Clone, Copy)]
-pub(crate) struct CameraTextureView {
-    pub(crate) camera_id: CameraId,
-    pub(crate) texture_id: egui::TextureId,
-    pub(crate) arrival_time: ArrivalTime,
-    pub(crate) size: (u32, u32),
-    pub(crate) uv_max: [f32; 2],
+pub struct CameraTextureView {
+    pub camera_id: CameraId,
+    pub texture_id: egui::TextureId,
+    pub arrival_time: ArrivalTime,
+    pub size: (u32, u32),
+    pub uv_max: [f32; 2],
 }
 
-pub(crate) struct CameraViewInput<'a> {
-    pub(crate) cameras: &'a [CameraPresentation],
-    pub(crate) textures: &'a [CameraTextureView],
-    pub(crate) preview_textures: &'a [CameraTextureView],
-    pub(crate) preview_active: bool,
-    pub(crate) focused_camera: Option<CameraId>,
-    pub(crate) show_thumbnails: bool,
-    pub(crate) overlays: &'a CameraOverlayState,
-    pub(crate) show_overlay: bool,
-    pub(crate) heading: &'a str,
+pub struct CameraViewInput<'a> {
+    pub cameras: &'a [CameraPresentation],
+    pub textures: &'a [CameraTextureView],
+    pub preview_textures: &'a [CameraTextureView],
+    pub preview_active: bool,
+    pub focused_camera: Option<CameraId>,
+    pub show_thumbnails: bool,
+    pub overlays: &'a CameraOverlayState,
+    pub show_overlay: bool,
+    pub heading: &'a str,
 }
 
-pub(crate) struct CameraImageInput<'a> {
-    pub(crate) camera_id: Option<CameraId>,
-    pub(crate) textures: &'a [CameraTextureView],
-    pub(crate) preview_textures: &'a [CameraTextureView],
-    pub(crate) preview_active: bool,
-    pub(crate) overlays: &'a CameraOverlayState,
-    pub(crate) show_overlay: bool,
-    pub(crate) empty_label: &'a str,
+pub struct CameraImageInput<'a> {
+    pub camera_id: Option<CameraId>,
+    pub textures: &'a [CameraTextureView],
+    pub preview_textures: &'a [CameraTextureView],
+    pub preview_active: bool,
+    pub overlays: &'a CameraOverlayState,
+    pub show_overlay: bool,
+    pub empty_label: &'a str,
 }
 
 #[derive(Default)]
-pub(crate) struct CameraViewOutput {
-    pub(crate) selected_camera: Option<CameraId>,
-    pub(crate) decode_sizes: std::collections::BTreeMap<CameraId, (u32, u32)>,
+pub struct CameraViewOutput {
+    pub selected_camera: Option<CameraId>,
+    pub decode_sizes: std::collections::BTreeMap<CameraId, (u32, u32)>,
 }
 
-pub(crate) fn show_camera_view(ui: &mut egui::Ui, input: CameraViewInput<'_>) -> CameraViewOutput {
+pub fn show_camera_view(ui: &mut egui::Ui, input: CameraViewInput<'_>) -> CameraViewOutput {
     let mut output = CameraViewOutput::default();
     let visible_textures = if input.preview_active && !input.preview_textures.is_empty() {
         input.preview_textures
@@ -140,11 +140,7 @@ pub(crate) fn show_camera_view(ui: &mut egui::Ui, input: CameraViewInput<'_>) ->
 ///
 /// The exact and preview texture caches remain Graphics-owned. Path overlay is applied only to an
 /// exact frame whose arrival and dimensions match the CPU-side overlay snapshot.
-pub(crate) fn show_camera_image(
-    ui: &mut egui::Ui,
-    desired_size: egui::Vec2,
-    input: CameraImageInput<'_>,
-) {
+pub fn show_camera_image(ui: &mut egui::Ui, desired_size: egui::Vec2, input: CameraImageInput<'_>) {
     let preview_texture = input.camera_id.and_then(|camera_id| {
         input
             .preview_textures
@@ -191,7 +187,7 @@ pub(crate) fn show_camera_image(
     }
 }
 
-pub(crate) fn contain_image_rect(container: egui::Rect, image_size: (u32, u32)) -> egui::Rect {
+pub fn contain_image_rect(container: egui::Rect, image_size: (u32, u32)) -> egui::Rect {
     if image_size.0 == 0
         || image_size.1 == 0
         || container.width() <= 0.0
@@ -208,7 +204,7 @@ pub(crate) fn contain_image_rect(container: egui::Rect, image_size: (u32, u32)) 
     )
 }
 
-pub(crate) fn projected_pixel_to_screen(
+pub fn projected_pixel_to_screen(
     pixel: [f32; 2],
     image_size: (u32, u32),
     image_rect: egui::Rect,

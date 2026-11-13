@@ -1,6 +1,6 @@
 use crate::{
-    interaction::ViewerAction,
-    panels::{
+    action::ViewerAction,
+    plot::{
         PlotMode, PlotPanelState, PlotViewState, PlotViewport, PreviewPlotCache, SignalPlotCache,
     },
 };
@@ -44,25 +44,26 @@ fn signal_presentation(signal_id: SignalId) -> SignalPresentation {
     }
 }
 
-pub(crate) struct PlotViewInput<'a> {
-    pub(crate) signal_id: SignalId,
-    pub(crate) signal: Option<&'a LoadedSignal>,
-    pub(crate) current: Option<SignalSample>,
-    pub(crate) loading: bool,
-    pub(crate) error: Option<&'a crate::query_error::QueryLoadError>,
-    pub(crate) playback: PlaybackView,
-    pub(crate) display_time: ArrivalTime,
-    pub(crate) preview_signal: Option<&'a SignalOverview>,
-    pub(crate) bookmarks: &'a [Bookmark],
-    pub(crate) plot_height: f32,
+pub struct PlotViewInput<'a> {
+    pub signal_id: SignalId,
+    pub signal: Option<&'a LoadedSignal>,
+    pub current: Option<SignalSample>,
+    pub loading: bool,
+    pub error: Option<&'a dyn std::fmt::Display>,
+    pub playback: PlaybackView,
+    pub display_time: ArrivalTime,
+    pub preview_signal: Option<&'a SignalOverview>,
+    pub bookmarks: &'a [Bookmark],
+    pub plot_height: f32,
 }
 
 #[derive(Default)]
-pub(crate) struct PlotViewOutput {
-    pub(crate) actions: Vec<ViewerAction>,
+pub struct PlotViewOutput {
+    pub actions: Vec<ViewerAction>,
+    pub plot_rect: Option<egui::Rect>,
 }
 
-pub(crate) fn show_plot_view(
+pub fn show_plot_view(
     ui: &mut egui::Ui,
     input: PlotViewInput<'_>,
     state: &mut PlotViewState,
@@ -244,6 +245,7 @@ pub(crate) fn show_plot_view(
             }
         });
 
+    output.plot_rect = Some(response.response.rect);
     let bounds = response.transform.bounds();
     let visible = PlotViewport::new(bounds.min()[0], bounds.max()[0]);
     let comparison_epsilon = viewport.width().abs().max(1.0) * 1e-9;

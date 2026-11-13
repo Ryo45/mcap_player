@@ -1,7 +1,7 @@
 #[cfg(test)]
 use crate::panels::NativePanel;
+use crate::panels::PanelRuntimeStore;
 use crate::panels::{CameraSelection, PanelDataRequirements};
-use crate::{interaction::ViewerAction, panels::PanelRuntimeStore};
 use std::time::Duration;
 use viewer_core::{
     ArrivalTime, CameraId, FeatureRestoreError, FeatureRuntime, PlaybackCommand,
@@ -11,6 +11,7 @@ use viewer_core::{
 use viewer_layout::{
     CURRENT_LAYOUT_SCHEMA_VERSION, LayoutDocument, LayoutNode, PanelId, PanelNode,
 };
+use viewer_ui::action::ViewerAction;
 
 const BUNDLED_DEFAULT_LAYOUT: &str = include_str!("../../../config/layouts/native_default.json");
 const BUNDLED_SHOWCASE_LAYOUT: &str = include_str!("../../../config/layouts/native_showcase.json");
@@ -57,18 +58,6 @@ pub(crate) struct NativeWorkspace {
     extension_topic: Option<(viewer_extension::ExtensionInputKind, String)>,
     #[cfg(feature = "scene-extension")]
     extension_stream: Option<(viewer_extension::ExtensionInputKind, viewer_core::StreamId)>,
-}
-
-#[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct CameraViewState {
-    pub(crate) focused_camera: Option<CameraId>,
-    pub(crate) topic: Option<String>,
-}
-
-#[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct SceneViewState {
-    pub(crate) coloring: viewer_core::PointCloudColoring,
-    pub(crate) accumulate_points: bool,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]

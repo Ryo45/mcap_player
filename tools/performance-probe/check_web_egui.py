@@ -33,6 +33,7 @@ def main():
     parser.add_argument('--dist', type=Path, default=Path('target/web-egui-ui/web'))
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--wake-display', action='store_true')
+    parser.add_argument('--plot', action='store_true', help='Also validate the shared speed Plot and independent query')
     parser.add_argument('--vulkan-icd', type=Path)
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
@@ -95,6 +96,23 @@ def main():
             assert report['idle_extra_camera_uploads'] == 0
             report['desktop'] = status()
             (args.output/'desktop.png').write_bytes(base64.b64decode(page.call('Page.captureScreenshot', {'format': 'png'})['data']))
+            if args.plot:
+                r = status()['plot_checkbox']
+                cursor = status()['cursor']
+                click(page, (r[0]+r[2])/2, (r[1]+r[3])/2)
+                wait(page, f'{snapshot}.plot_points>0 && !{snapshot}.plot_loading', 'shared speed Plot')
+                current = status()
+                assert current['cursor'] == cursor and not current['plot_error'], current
+                assert current['plot_points'] <= 2048
+                assert report['desktop']['plot_requests'] == 0
+                assert current['plot_requests'] > 0
+                report['plot'] = current
+                (args.output/'plot.png').write_bytes(base64.b64decode(page.call('Page.captureScreenshot', {'format': 'png'})['data']))
+                r = current['plot_chart']
+                click(page, r[0]+(r[2]-r[0])*.65, (r[1]+r[3])/2)
+                wait(page, f'{snapshot}.load=="Ready" && {snapshot}.cursor!={json.dumps(cursor)}', 'seek from shared Plot')
+                assert status()['plot_points'] == current['plot_points'], 'seek rebuilt fixed query result'
+                assert status()['plot_requests'] == current['plot_requests'], 'seek restarted the fixed query'
             seek(.98)
             play()
             wait(page, f'!{snapshot}.playing && BigInt({snapshot}.cursor)>BigInt({snapshot}.end)-100000000n', 'natural EOF')
@@ -116,6 +134,32 @@ def main():
             current = status()
             assert not current['has_message'] and not current['camera_texture'], current
             report['replacement'] = current
+            if args.plot:
+                # Hold one query's browser reads, replace its source, then let the
+                # stale I/O complete. No plugin/test setter mutates host state.
+                page.call('Emulation.setTouchEmulationEnabled', {'enabled': False})
+                page.call('Emulation.setDeviceMetricsOverride', {'width': 1920, 'height': 1080, 'deviceScaleFactor': 1, 'mobile': False})
+                wait(page, f'{snapshot}.timeline[2]>1000', 'desktop layout')
+                r = status()['plot_checkbox']
+                click(page, (r[0]+r[2])/2, (r[1]+r[3])/2)
+                open_file(args.data)
+                page.evaluate("""window.holdQueryReads=true;window.heldQueryReads=[];
+                    const originalRead=Blob.prototype.arrayBuffer;
+                    Blob.prototype.arrayBuffer=function(){
+                        if(!holdQueryReads)return originalRead.call(this);
+                        return new Promise((resolve,reject)=>heldQueryReads.push(()=>originalRead.call(this).then(resolve,reject)));
+                    };""")
+                r = status()['plot_checkbox']
+                click(page, (r[0]+r[2])/2, (r[1]+r[3])/2)
+                wait(page, 'heldQueryReads.length>0', 'in-flight Plot read')
+                page.evaluate('holdQueryReads=false')
+                open_file(args.replacement)
+                page.evaluate('heldQueryReads.splice(0).forEach(release=>release())')
+                time.sleep(.5)
+                current = status()
+                assert current['source'] == args.replacement.name and current['plot_points'] == 0, current
+                assert current['plot_error'] and not current['error'], current
+                report['stale_plot_read_rejected'] = True
             assert not page.evaluate('failures'), page.evaluate('failures')
             report['status'] = 'ok'
     finally:

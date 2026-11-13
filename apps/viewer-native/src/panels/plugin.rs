@@ -1,13 +1,13 @@
 use super::{
     NativePanel, PanelCompositionInput, PanelDataRequirements, PanelOutput, PlaceholderPanel,
 };
-use crate::interaction::ViewerAction;
 use std::{collections::BTreeMap, path::PathBuf};
 use viewer_extension::{
     WasmPanel,
     panel::{HostCommand, PanelEvent, PanelOutput as PluginOutput, UiNode},
 };
 use viewer_layout::{PanelId, PanelNode};
+use viewer_ui::action::ViewerAction;
 
 pub(crate) struct PluginPanel {
     pub id: PanelId,

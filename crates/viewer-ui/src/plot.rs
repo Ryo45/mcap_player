@@ -1,7 +1,8 @@
-use super::{
-    NativePanel, PLOT_CONFIG_VERSION, PanelDataRequirements, PanelOutput, PlaceholderPanel,
+//! Bounded signal Plot, navigation state and drawing shared by both hosts.
+use crate::{
+    panel::PanelOutput,
+    views::plot::{PlotViewInput, show_plot_view},
 };
-use crate::graphics::views::{PlotViewInput, show_plot_view};
 use egui_plot::PlotPoint;
 use serde::{Deserialize, Serialize};
 use viewer_core::{
@@ -9,16 +10,18 @@ use viewer_core::{
 };
 use viewer_layout::{PanelId, PanelNode};
 
+pub const PLOT_CONFIG_VERSION: u32 = 1;
+
 #[derive(Clone, Copy)]
-pub(crate) struct PlotPanelInput<'a> {
-    pub(crate) playback: Option<PlaybackView>,
-    pub(crate) signal: Option<&'a LoadedSignal>,
-    pub(crate) current: Option<SignalSample>,
-    pub(crate) loading: bool,
-    pub(crate) error: Option<&'a crate::query_error::QueryLoadError>,
-    pub(crate) display_time: Option<ArrivalTime>,
-    pub(crate) preview_signal: Option<&'a SignalOverview>,
-    pub(crate) bookmarks: &'a [Bookmark],
+pub struct PlotPanelInput<'a> {
+    pub playback: Option<PlaybackView>,
+    pub signal: Option<&'a LoadedSignal>,
+    pub current: Option<SignalSample>,
+    pub loading: bool,
+    pub error: Option<&'a dyn std::fmt::Display>,
+    pub display_time: Option<ArrivalTime>,
+    pub preview_signal: Option<&'a SignalOverview>,
+    pub bookmarks: &'a [Bookmark],
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -33,38 +36,38 @@ pub(crate) enum PlotMode {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(crate) struct PlotViewport {
-    pub(crate) start_seconds: f64,
-    pub(crate) end_seconds: f64,
+    pub start_seconds: f64,
+    pub end_seconds: f64,
 }
 
 impl PlotViewport {
-    pub(crate) fn new(start_seconds: f64, end_seconds: f64) -> Self {
+    pub fn new(start_seconds: f64, end_seconds: f64) -> Self {
         Self {
             start_seconds,
             end_seconds: end_seconds.max(start_seconds + f64::EPSILON),
         }
     }
 
-    pub(crate) fn width(self) -> f64 {
+    pub fn width(self) -> f64 {
         self.end_seconds - self.start_seconds
     }
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct PlotPanelState {
-    pub(crate) mode: PlotMode,
-    pub(crate) viewport: PlotViewport,
+    pub mode: PlotMode,
+    pub viewport: PlotViewport,
 }
 
 impl PlotPanelState {
-    pub(crate) fn overview(start_seconds: f64, end_seconds: f64) -> Self {
+    pub fn overview(start_seconds: f64, end_seconds: f64) -> Self {
         Self {
             mode: PlotMode::Overview,
             viewport: PlotViewport::new(start_seconds, end_seconds),
         }
     }
 
-    pub(crate) fn follow(&mut self, playhead: f64) {
+    pub fn follow(&mut self, playhead: f64) {
         self.mode = PlotMode::Follow {
             history_seconds: 8.0,
             lookahead_seconds: 2.0,
@@ -72,12 +75,12 @@ impl PlotPanelState {
         self.viewport = followed_viewport(playhead, 8.0, 2.0);
     }
 
-    pub(crate) fn overview_with_viewport(&mut self, viewport: PlotViewport) {
+    pub fn overview_with_viewport(&mut self, viewport: PlotViewport) {
         self.mode = PlotMode::Overview;
         self.viewport = viewport;
     }
 
-    pub(crate) fn update_follow(&mut self, playhead: f64, playing: bool) -> bool {
+    pub fn update_follow(&mut self, playhead: f64, playing: bool) -> bool {
         if !playing {
             return false;
         }
@@ -110,23 +113,23 @@ fn followed_viewport(playhead: f64, history_seconds: f64, lookahead_seconds: f64
 
 #[derive(Default)]
 pub(crate) struct PlotViewState {
-    pub(crate) panel: Option<PlotPanelState>,
-    pub(crate) cache: Option<SignalPlotCache>,
-    pub(crate) preview_cache: Option<PreviewPlotCache>,
+    pub panel: Option<PlotPanelState>,
+    pub cache: Option<SignalPlotCache>,
+    pub preview_cache: Option<PreviewPlotCache>,
 }
 
 pub(crate) struct SignalPlotCache {
-    pub(crate) origin: ArrivalTime,
-    pub(crate) display_len: usize,
-    pub(crate) input_sample_count: u64,
-    pub(crate) points: Vec<PlotPoint>,
+    pub origin: ArrivalTime,
+    pub display_len: usize,
+    pub input_sample_count: u64,
+    pub points: Vec<PlotPoint>,
 }
 
 pub(crate) struct PreviewPlotCache {
-    pub(crate) origin: ArrivalTime,
-    pub(crate) first_bucket: Option<ArrivalTime>,
-    pub(crate) bucket_len: usize,
-    pub(crate) points: Vec<PlotPoint>,
+    pub origin: ArrivalTime,
+    pub first_bucket: Option<ArrivalTime>,
+    pub bucket_len: usize,
+    pub points: Vec<PlotPoint>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -137,7 +140,7 @@ pub(crate) enum PlotSignal {
 }
 
 impl PlotSignal {
-    pub(crate) fn signal_id(self) -> SignalId {
+    pub fn signal_id(self) -> SignalId {
         match self {
             Self::VehicleSpeed => SignalId::Speed,
             Self::YawRate => SignalId::YawRate,
@@ -148,51 +151,44 @@ impl PlotSignal {
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct PlotPanelConfig {
-    pub(crate) signal: PlotSignal,
+    pub signal: PlotSignal,
 }
 
-pub(crate) struct PlotPanel {
+pub struct PlotPanel {
     id: PanelId,
     title: Option<String>,
     config: PlotPanelConfig,
-    pub(crate) state: PlotViewState,
+    state: PlotViewState,
 }
 
 impl PlotPanel {
-    pub(crate) fn signal_id(&self) -> SignalId {
+    pub fn signal_id(&self) -> SignalId {
         self.config.signal.signal_id()
     }
 
-    pub(crate) fn create(node: &PanelNode) -> NativePanel {
+    pub fn create(node: &PanelNode) -> Result<Self, String> {
         if node.config_version != PLOT_CONFIG_VERSION {
-            return NativePanel::Placeholder(PlaceholderPanel::unsupported_version(
-                node,
-                PLOT_CONFIG_VERSION,
+            return Err(format!(
+                "Unsupported {} config version {}; expected {}",
+                node.panel_type, node.config_version, PLOT_CONFIG_VERSION
             ));
         }
         match serde_json::from_value::<PlotPanelConfig>(node.config.clone()) {
-            Ok(config) => NativePanel::Plot(Self {
+            Ok(config) => Ok(Self {
                 id: node.id.clone(),
                 title: node.title.clone(),
                 config,
                 state: PlotViewState::default(),
             }),
-            Err(error) => NativePanel::Placeholder(PlaceholderPanel::invalid_config(
-                node,
-                format!("Invalid plot config: {error}"),
-            )),
+            Err(error) => Err(format!("Invalid plot config: {error}")),
         }
     }
 
-    pub(crate) fn reset_for_source(&mut self) {
+    pub fn reset_for_source(&mut self) {
         self.state = PlotViewState::default();
     }
 
-    pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
-        requirements.signals.insert(self.config.signal.signal_id());
-    }
-
-    pub(crate) fn show(&mut self, ui: &mut egui::Ui, input: PlotPanelInput<'_>) -> PanelOutput {
+    pub fn show(&mut self, ui: &mut egui::Ui, input: PlotPanelInput<'_>) -> PanelOutput {
         ui.push_id((self.id.as_str(), self.title.as_deref()), |ui| {
             let Some(playback) = input.playback else {
                 ui.centered_and_justified(|ui| {
@@ -220,7 +216,10 @@ impl PlotPanel {
             );
             PanelOutput {
                 actions: output.actions,
-                ..PanelOutput::default()
+                render_requests: crate::panel::PanelRenderRequests {
+                    plot_rect: output.plot_rect,
+                    ..Default::default()
+                },
             }
         })
         .inner

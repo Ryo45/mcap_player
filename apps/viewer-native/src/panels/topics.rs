@@ -3,8 +3,9 @@ use super::{
     PanelOutput,
     inspector::{InspectorPanelInput, show_inspection},
 };
-use crate::{interaction::ViewerAction, numeric_plot_loader::NumericSeriesState};
+use crate::numeric_plot_loader::NumericSeriesState;
 use viewer_core::{TopicTree, ViewerPresentation};
+use viewer_ui::action::ViewerAction;
 use viewer_ui::inspection::InspectorTreeState;
 
 #[derive(Default)]

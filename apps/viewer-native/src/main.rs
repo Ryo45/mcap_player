@@ -1,6 +1,7 @@
 mod app;
 mod args;
 mod bookmarks;
+mod camera_selection;
 mod diagnostics;
 mod graphics;
 mod inspection;

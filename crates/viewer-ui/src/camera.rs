@@ -1,72 +1,54 @@
-use super::{
-    CAMERA_CONFIG_VERSION, NativePanel, PanelDataRequirements, PanelOutput, PlaceholderPanel,
-};
+//! Camera selection, view state and presentation shared by both hosts.
 use crate::{
-    graphics::views::{CameraViewInput, show_camera_view},
-    interaction::ViewerAction,
-    workspace::CameraViewState,
+    action::ViewerAction,
+    panel::PanelOutput,
+    views::camera::{CameraTextureView, CameraViewInput, show_camera_view},
 };
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 use viewer_layout::{PanelId, PanelNode};
 
-/// Small prospective bindings, staged separately from the active decoded runtime.
-pub(crate) struct CameraSelection {
-    pub(crate) available_topics: Vec<String>,
-    pub(crate) panels: BTreeMap<PanelId, Option<String>>,
-}
-
-impl CameraSelection {
-    pub(crate) fn priority_topic<'a>(&'a self, preferred: &'a str) -> &'a str {
-        self.panels
-            .values()
-            .flatten()
-            .find(|topic| topic.as_str() == preferred)
-            .or_else(|| self.panels.values().flatten().next())
-            .map_or(preferred, String::as_str)
-    }
-}
+pub const CAMERA_CONFIG_VERSION: u32 = 1;
 
 #[derive(Clone, Copy)]
-pub(crate) struct CameraPanelInput<'a> {
-    pub(crate) cameras: &'a [viewer_core::CameraPresentation],
-    pub(crate) textures: &'a [crate::graphics::views::CameraTextureView],
-    pub(crate) preview_textures: &'a [crate::graphics::views::CameraTextureView],
-    pub(crate) preview_active: bool,
-    pub(crate) overlays: &'a viewer_renderer::CameraOverlayState,
+pub struct CameraPanelInput<'a> {
+    pub cameras: &'a [viewer_core::CameraPresentation],
+    pub textures: &'a [CameraTextureView],
+    pub preview_textures: &'a [CameraTextureView],
+    pub preview_active: bool,
+    pub overlays: &'a viewer_renderer::CameraOverlayState,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(crate) struct CameraPanelConfig {
+struct CameraPanelConfig {
     #[serde(default = "default_true")]
-    pub(crate) show_thumbnails: bool,
+    pub show_thumbnails: bool,
     #[serde(default)]
-    pub(crate) camera_topic: Option<String>,
+    pub camera_topic: Option<String>,
     #[serde(default = "default_true")]
-    pub(crate) show_overlay: bool,
+    pub show_overlay: bool,
     #[serde(default)]
-    pub(crate) scheduler_priority: bool,
+    pub scheduler_priority: bool,
 }
 
 fn default_true() -> bool {
     true
 }
 
-pub(crate) struct CameraPanel {
+pub struct CameraPanel {
     id: PanelId,
     title: Option<String>,
     config: CameraPanelConfig,
-    pub(crate) state: CameraViewState,
+    pub state: CameraViewState,
     available_topics: Vec<String>,
 }
 
 impl CameraPanel {
-    pub(crate) fn create(node: &PanelNode) -> NativePanel {
+    pub fn create(node: &PanelNode) -> Result<Self, String> {
         if node.config_version != CAMERA_CONFIG_VERSION {
-            return NativePanel::Placeholder(PlaceholderPanel::unsupported_version(
-                node,
-                CAMERA_CONFIG_VERSION,
+            return Err(format!(
+                "Unsupported {} config version {}; expected {}",
+                node.panel_type, node.config_version, CAMERA_CONFIG_VERSION
             ));
         }
         match serde_json::from_value::<CameraPanelConfig>(node.config.clone()) {
@@ -77,7 +59,7 @@ impl CameraPanel {
                     .is_none_or(|topic| !topic.trim().is_empty())
                     && (!config.scheduler_priority || config.camera_topic.is_some()) =>
             {
-                NativePanel::Camera(Self {
+                Ok(Self {
                     id: node.id.clone(),
                     title: node.title.clone(),
                     config,
@@ -85,18 +67,16 @@ impl CameraPanel {
                     available_topics: Vec::new(),
                 })
             }
-            Ok(_) => NativePanel::Placeholder(PlaceholderPanel::invalid_config(
-                node,
+            Ok(_) => Err(
                 "Invalid camera config: cameraTopic must be non-empty and is required when schedulerPriority is true".to_owned(),
-            )),
-            Err(error) => NativePanel::Placeholder(PlaceholderPanel::invalid_config(
-                node,
+            ),
+            Err(error) => Err(
                 format!("Invalid camera config: {error}"),
-            )),
+            ),
         }
     }
 
-    pub(crate) fn show(&mut self, ui: &mut egui::Ui, input: CameraPanelInput<'_>) -> PanelOutput {
+    pub fn show(&mut self, ui: &mut egui::Ui, input: CameraPanelInput<'_>) -> PanelOutput {
         ui.push_id((self.id.as_str(), self.title.as_deref()), |ui| {
             let mut selected_topic = self.state.topic.clone();
             egui::ComboBox::from_id_salt("image-topic")
@@ -159,7 +139,7 @@ impl CameraPanel {
         )
     }
 
-    pub(crate) fn scheduler_priority_topic(&self) -> Option<&str> {
+    pub fn scheduler_priority_topic(&self) -> Option<&str> {
         if self.config.scheduler_priority {
             self.state
                 .topic
@@ -170,7 +150,7 @@ impl CameraPanel {
         }
     }
 
-    pub(crate) fn preferred_topic(&self, reset: bool) -> Option<&str> {
+    pub fn preferred_topic(&self, reset: bool) -> Option<&str> {
         if reset {
             self.config.camera_topic.as_deref()
         } else {
@@ -181,55 +161,57 @@ impl CameraPanel {
         }
     }
 
-    pub(crate) fn contribute_camera_requirements(
+    pub fn contribute_camera_requirements(
         &self,
         topic: Option<&str>,
-        requirements: &mut PanelDataRequirements,
+        requirements: &mut viewer_core::PlaybackRequirements,
     ) {
         if let Some(topic) = topic {
             if self.config.camera_topic.is_none() {
-                requirements.playback.require_all_cameras();
+                requirements.require_all_cameras();
             } else {
-                requirements.playback.require_camera_topic(topic);
+                requirements.require_camera_topic(topic);
             }
         }
         if self.config.show_overlay {
-            requirements.playback.optional_path();
-            requirements.playback.optional_transforms();
+            requirements.optional_path();
+            requirements.optional_transforms();
         }
     }
 
-    pub(crate) fn bind_topics(
+    pub fn bind_topics(
         &mut self,
         topics: &[String],
         topic: Option<&str>,
-        plan: &viewer_core::SessionPlan,
+        routes: &[(viewer_core::CameraId, String)],
     ) {
         self.available_topics = topics.to_vec();
         self.state.topic = topic.map(str::to_owned);
-        self.state.focused_camera = plan
-            .camera_routes()
+        self.state.focused_camera = routes
             .iter()
-            .find(|route| Some(route.stream.topic.as_str()) == topic)
-            .map(|route| route.camera_id);
+            .find(|(_, candidate)| Some(candidate.as_str()) == topic)
+            .map(|(id, _)| *id);
     }
 
-    pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
+    pub fn contribute_data_requirements(
+        &self,
+        requirements: &mut viewer_core::PlaybackRequirements,
+    ) {
         if self.config.show_thumbnails && self.config.camera_topic.is_none() {
-            requirements.playback.require_all_cameras();
+            requirements.require_all_cameras();
         } else if let Some(topic) = self
             .state
             .topic
             .as_deref()
             .or(self.config.camera_topic.as_deref())
         {
-            requirements.playback.require_camera_topic(topic);
+            requirements.require_camera_topic(topic);
         } else {
-            requirements.playback.require_all_cameras();
+            requirements.require_all_cameras();
         }
         if self.config.show_overlay {
-            requirements.playback.optional_path();
-            requirements.playback.optional_transforms();
+            requirements.optional_path();
+            requirements.optional_transforms();
         }
     }
 }
@@ -261,9 +243,7 @@ mod tests {
             title: None,
             config: serde_json::json!({"cameraTopic":"/project/a", "showThumbnails":false}),
         };
-        let NativePanel::Camera(mut panel) = CameraPanel::create(&node) else {
-            panic!("valid camera panel")
-        };
+        let mut panel = CameraPanel::create(&node).unwrap();
         panel.available_topics = vec!["/project/a".into(), "/project/b".into()];
         panel.state.topic = Some("/project/a".into());
         let context = egui::Context::default();
@@ -387,4 +367,10 @@ mod tests {
             Some(CameraId(0))
         );
     }
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct CameraViewState {
+    pub focused_camera: Option<viewer_core::CameraId>,
+    pub topic: Option<String>,
 }
