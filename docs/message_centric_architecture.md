@@ -160,8 +160,13 @@ the existing camera phases rather than adding UI tick lateness to every deadline
 skips missed periods and materializes only the latest pending message per camera; it does not
 replay a catch-up backlog. These are nominal periodic rates, not strict minimum spacing between
 two consecutive admissions. Focus changes and restore explicitly reanchor the schedule.
-Dynamic TF retains ordered bounded history; static TF keeps a small exact
-persistent message archive. Scene owns bounded point accumulation. A `ViewerPresentation` is only a
+Dynamic TF expires history for all children against the committed log-time cursor, including
+inactive children and message-free intervals; seek candidates apply the same deadline before
+commit. Static TF keeps an exact persistent message archive. Its serialized payloads are detached
+while collecting each Chunk (and from Remote response batches), so small static messages cannot
+pin unrelated image/point-cloud backings after cache eviction. Actual static-TF message history
+is still retained to preserve backward seeks and changes to static frames.
+Scene owns bounded point accumulation. A `ViewerPresentation` is only a
 read-only UI snapshot built from controller state each frame; it is not persistent truth, a temporal
 database, or a second global world model.
 

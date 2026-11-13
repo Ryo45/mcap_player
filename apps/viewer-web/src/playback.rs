@@ -293,7 +293,10 @@ impl WebPlayback {
             let mut archive = Vec::new();
             messages.retain(|message| {
                 if persistent.contains(&message.stream_id) {
-                    archive.push(message.clone());
+                    let mut archived = message.clone();
+                    // Remote payloads may share an entire HTTP batch; local ones a Chunk.
+                    archived.payload = bytes::Bytes::copy_from_slice(&message.payload);
+                    archive.push(archived);
                     false
                 } else {
                     true
@@ -362,6 +365,7 @@ impl WebPlayback {
 
         let messages = self.data.messages_through(self.clock.cursor(), requested);
         self.runtime.process_messages(elapsed, &messages);
+        self.runtime.advance_to(requested);
         self.clock.commit_cursor(requested);
         self.buffer_underrun_active = false;
         self.load_state = PlaybackLoadState::Ready;

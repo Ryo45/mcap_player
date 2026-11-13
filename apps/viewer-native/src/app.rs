@@ -154,10 +154,15 @@ impl App {
 
     fn advance_session(&mut self, elapsed: Duration) {
         let session = self.session.as_mut().expect("redraw requires a session");
-        if let Err(error) = session.tick(elapsed, |elapsed, messages| {
+        match session.tick(elapsed, |elapsed, messages| {
             self.workspace.process_messages(elapsed, messages);
         }) {
-            self.diagnostics.set_playback_error(error.to_string());
+            Ok(()) => {
+                if let Some(view) = session.playback_view() {
+                    self.workspace.advance_to(view.cursor);
+                }
+            }
+            Err(error) => self.diagnostics.set_playback_error(error.to_string()),
         }
         session.poll_queries();
     }

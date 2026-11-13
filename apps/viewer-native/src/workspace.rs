@@ -286,6 +286,10 @@ impl NativeWorkspace {
             .and_then(|(_, stream)| self.runtime().path_for_stream(stream))
     }
 
+    pub(crate) fn advance_to(&mut self, cursor: viewer_core::ArrivalTime) {
+        self.runtime_mut().advance_to(cursor);
+    }
+
     pub(crate) fn process_messages(&mut self, elapsed: Duration, messages: Vec<RawMessage>) {
         self.runtime_mut().process_messages(elapsed, &messages);
     }

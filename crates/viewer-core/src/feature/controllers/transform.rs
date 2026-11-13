@@ -89,6 +89,10 @@ impl TransformController {
         self.state.clear();
     }
 
+    pub fn advance_to(&mut self, cursor: crate::ArrivalTime) {
+        self.state.advance_to(cursor);
+    }
+
     pub fn state(&self) -> &TransformState {
         &self.state
     }

@@ -92,6 +92,7 @@ pub struct TransformState {
     static_edges: HashMap<String, Edge>,
     dynamic_edges: HashMap<String, BTreeMap<MeasurementTime, Edge>>,
     revision: u64,
+    retention_cursor: Option<ArrivalTime>,
 }
 
 impl TransformState {
@@ -107,6 +108,7 @@ impl TransformState {
     pub fn clear(&mut self) {
         self.static_edges.clear();
         self.dynamic_edges.clear();
+        self.retention_cursor = None;
         self.revision = self.revision.wrapping_add(1);
     }
 
@@ -145,16 +147,36 @@ impl TransformState {
                 {
                     history.insert(measurement_time, edge);
                 }
-                let history_start = batch.arrival_time.0.saturating_sub(
-                    i64::try_from(DYNAMIC_TF_HISTORY.as_nanos()).unwrap_or(i64::MAX),
-                );
-                history.retain(|_, edge| edge.arrival_time.0 >= history_start);
             }
+        }
+        self.advance_to(batch.arrival_time);
+    }
+
+    /// Expire all dynamic frames on the log-time timeline, including inactive children.
+    /// Static edges remain timeless. Seek candidates start with a fresh retention cursor.
+    pub fn advance_to(&mut self, cursor: ArrivalTime) {
+        let cursor = self
+            .retention_cursor
+            .map_or(cursor, |previous| previous.max(cursor));
+        self.retention_cursor = Some(cursor);
+        let start = cursor
+            .0
+            .saturating_sub(i64::try_from(DYNAMIC_TF_HISTORY.as_nanos()).unwrap_or(i64::MAX));
+        let mut removed = false;
+        self.dynamic_edges.retain(|_, history| {
+            let before = history.len();
+            history.retain(|_, edge| edge.arrival_time.0 >= start);
+            removed |= before != history.len();
+            !history.is_empty()
+        });
+        if removed {
+            self.revision = self.revision.wrapping_add(1);
         }
     }
 
     pub fn clear_dynamic(&mut self) {
         self.dynamic_edges.clear();
+        self.retention_cursor = None;
         self.revision = self.revision.wrapping_add(1);
     }
 
@@ -423,6 +445,56 @@ mod tests {
                 .transform_points_at("base", "odom", MeasurementTime(200), &[[0.0; 3]])
                 .unwrap(),
             vec![[2.0, 0.0, 0.0]]
+        );
+    }
+
+    #[test]
+    fn inactive_dynamic_children_expire_together_and_static_frames_survive() {
+        let mut forward = TransformState::default();
+        forward.apply(TransformBatch {
+            arrival_time: ArrivalTime(0),
+            is_static: true,
+            transforms: vec![transform("base", "sensor", [0.0; 3])],
+        });
+        forward.apply(TransformBatch {
+            arrival_time: ArrivalTime(0),
+            is_static: false,
+            transforms: vec![timed_transform(0, "odom", "old_object", [1.0, 0.0, 0.0])],
+        });
+        let recent = TransformBatch {
+            arrival_time: ArrivalTime(2_000_000_000),
+            is_static: false,
+            transforms: vec![timed_transform(
+                2_000_000_000,
+                "odom",
+                "base",
+                [2.0, 0.0, 0.0],
+            )],
+        };
+        forward.apply(recent.clone());
+        let mut restored = TransformState::default();
+        restored.apply(recent);
+        assert_eq!(forward.dynamic_len(), restored.dynamic_len());
+        assert!(
+            forward
+                .resolve_at("old_object", "odom", MeasurementTime(2_000_000_000))
+                .is_none()
+        );
+        assert_eq!(forward.static_len(), 1);
+        let revision = forward.revision();
+        forward.advance_to(ArrivalTime(3_000_000_001));
+        assert_eq!(forward.dynamic_len(), 0);
+        assert_eq!(forward.static_len(), 1);
+        assert!(forward.revision() > revision);
+        forward.apply(TransformBatch {
+            arrival_time: ArrivalTime(0),
+            is_static: false,
+            transforms: vec![timed_transform(0, "odom", "old_object", [0.0; 3])],
+        });
+        assert_eq!(
+            forward.dynamic_len(),
+            0,
+            "late input must not resurrect expired history"
         );
     }
 

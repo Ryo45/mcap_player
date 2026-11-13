@@ -793,17 +793,48 @@ impl McapSource {
         })
     }
 
-    /// Bootstraps explicitly persistent streams once per session.
+    /// Bootstraps persistent streams with compact payloads that cannot pin unrelated Chunk data.
     pub fn indexed_streams(
         &self,
         streams: &[StreamId],
     ) -> Result<IndexedMessages, McapSourceError> {
-        let recording = self.range;
-        self.indexed_range(
-            streams,
-            viewer_core::DataWindowTimeRange::new(recording.start, recording.end_exclusive)
-                .expect("catalog recording range is ordered"),
-        )
+        self.indexed_summary(streams)?;
+        let mut chunks = BTreeSet::new();
+        for stream in streams {
+            let count = self
+                .catalog
+                .by_id(*stream)
+                .and_then(|s| s.timing.message_count);
+            chunks.extend(
+                crate::persistent_candidate_chunks(&self.index_facts, *stream, count)
+                    .map_err(McapSourceError::MessageIndexRequired)?,
+            );
+        }
+        let selected = streams.iter().copied().collect::<HashSet<_>>();
+        let mut messages = Vec::new();
+        for index in &chunks {
+            for parsed in self.parse_chunk(*index)?.iter() {
+                if selected.contains(&parsed.message.stream_id)
+                    && parsed.message.arrival_time >= self.range.start
+                    && parsed.message.arrival_time < self.range.end_exclusive
+                {
+                    let mut message = parsed.message.clone();
+                    // Persistent archives outlive traversal/cache eviction. Detach here, while
+                    // collecting each Chunk, rather than pinning every expanded backing first.
+                    message.payload = Bytes::copy_from_slice(&message.payload);
+                    messages.push(message);
+                }
+            }
+        }
+        messages.sort_by_key(|message| (message.arrival_time, message.stream_id.0));
+        let messages_copied_bytes = messages.iter().map(|m| m.payload.len()).sum();
+        Ok(IndexedMessages {
+            messages,
+            diagnostics: IndexedReadDiagnostics {
+                chunks_streamed: chunks.len(),
+                per_message_copied_bytes: messages_copied_bytes,
+            },
+        })
     }
 
     pub(crate) fn validate_unchanged(&self) -> Result<(), McapSourceError> {
@@ -1369,6 +1400,83 @@ mod tests {
             })
         ));
         assert_eq!(reader.diagnostics().chunks_read, 0);
+    }
+
+    #[test]
+    fn persistent_archive_detaches_payloads_before_releasing_each_chunk() {
+        struct OwnedBytes {
+            data: Vec<u8>,
+            released: std::sync::Arc<std::sync::atomic::AtomicBool>,
+        }
+        impl AsRef<[u8]> for OwnedBytes {
+            fn as_ref(&self) -> &[u8] {
+                &self.data
+            }
+        }
+        impl Drop for OwnedBytes {
+            fn drop(&mut self) {
+                self.released
+                    .store(true, std::sync::atomic::Ordering::SeqCst);
+            }
+        }
+        let mut bytes = Cursor::new(Vec::new());
+        {
+            let mut writer = Writer::with_options(
+                &mut bytes,
+                WriteOptions::new().compression(None).chunk_size(None),
+            )
+            .unwrap();
+            let schema = writer
+                .add_schema("demo/msg/Value", "ros2msg", b"uint8 value\n")
+                .unwrap();
+            let persistent = writer
+                .add_channel(schema, "/persistent", "cdr", &BTreeMap::new())
+                .unwrap();
+            let image = writer
+                .add_channel(schema, "/large", "cdr", &BTreeMap::new())
+                .unwrap();
+            for time in [10, 20] {
+                for (channel, data) in [(persistent, vec![42]), (image, vec![0; 512 * 1024])] {
+                    writer
+                        .write_to_known_channel(
+                            &MessageHeader {
+                                channel_id: channel,
+                                sequence: time as u32,
+                                log_time: time,
+                                publish_time: time,
+                            },
+                            &data,
+                        )
+                        .unwrap();
+                }
+                writer.flush().unwrap();
+            }
+            writer.finish().unwrap();
+        }
+        let released = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let source = McapSource::from_bytes(Bytes::from_owner(OwnedBytes {
+            data: bytes.into_inner(),
+            released: released.clone(),
+        }))
+        .unwrap();
+        let stream = source.catalog().by_topic("/persistent").unwrap().id;
+        let archive = source.indexed_streams(&[stream]).unwrap();
+        assert_eq!(archive.diagnostics.chunks_streamed, 2);
+        assert_eq!(archive.diagnostics.per_message_copied_bytes, 2);
+        drop(source);
+        assert!(
+            released.load(std::sync::atomic::Ordering::SeqCst),
+            "one-byte persistent messages must not pin megabytes of backing"
+        );
+        assert_eq!(
+            archive
+                .messages
+                .iter()
+                .map(|m| m.arrival_time.0)
+                .collect::<Vec<_>>(),
+            [10, 20]
+        );
+        assert!(archive.messages.iter().all(|m| m.payload.as_ref() == [42]));
     }
 
     fn indexed_fixture(chunk_size: u64, emit_message_indexes: bool) -> Vec<u8> {

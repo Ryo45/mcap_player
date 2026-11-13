@@ -135,6 +135,9 @@ impl FeatureRuntime {
             detections.process_latest(messages);
         }
         self.cameras.advance(elapsed);
+        if let Some(cursor) = messages.iter().map(|message| message.arrival_time).max() {
+            self.advance_to(cursor);
+        }
         #[cfg(feature = "timing")]
         self.processing_time.record(started.elapsed());
     }
@@ -143,7 +146,7 @@ impl FeatureRuntime {
     /// Messages must already be selected for the target by the source's restore planner.
     pub fn stage_restore(
         &self,
-        _target: ArrivalTime,
+        target: ArrivalTime,
         messages: &[RawMessage],
     ) -> Result<Self, FeatureRestoreError> {
         #[cfg(feature = "timing")]
@@ -199,9 +202,15 @@ impl FeatureRuntime {
                 });
             }
         }
+        candidate.advance_to(target);
         #[cfg(feature = "timing")]
         candidate.processing_time.record(started.elapsed());
         Ok(candidate)
+    }
+
+    /// Advance time-dependent feature retention only after the source interval is complete.
+    pub fn advance_to(&mut self, cursor: ArrivalTime) {
+        self.transforms.advance_to(cursor);
     }
 
     pub fn commit_restore(&mut self, candidate: Self) {
