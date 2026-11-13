@@ -58,7 +58,7 @@ struct WebApp {
     calibrations: CameraCalibrationSet,
     topics: crate::topics::TopicBrowser,
     previous_ms: f64,
-    timeline_interacting: bool,
+    timeline_pointer: Option<i32>,
     platform: Option<viewer_core::PlatformGeometry>,
     platform_enabled: bool,
     path_projection: viewer_core::PathProjectionPolicy,
@@ -72,7 +72,7 @@ thread_local! { static APP: RefCell<WebApp> = RefCell::new(WebApp {
         "../../../config/camera_calibration.json"
     )).expect("bundled camera calibration"),
     previous_ms: Date::now(),
-    timeline_interacting: false,
+    timeline_pointer: None,
     platform: Some(serde_json::from_str(include_str!("../../../config/platform_geometry/turtlebot3_waffle_pi.json")).expect("bundled platform geometry")),
     path_projection: viewer_core::PathProjectionPolicy::default(),
     platform_enabled:true,
@@ -121,17 +121,30 @@ fn install_controls() {
     play_callback.forget();
 
     let timeline: HtmlInputElement = element("timeline");
-    let begin_timeline = Closure::<dyn FnMut(Event)>::new(|_| {
-        APP.with(|app| app.borrow_mut().timeline_interacting = true);
-    });
+    let begin_timeline =
+        Closure::<dyn FnMut(web_sys::PointerEvent)>::new(|event: web_sys::PointerEvent| {
+            if event.button() == 0 {
+                APP.with(|app| {
+                    app.borrow_mut()
+                        .timeline_pointer
+                        .get_or_insert(event.pointer_id());
+                });
+            }
+        });
     timeline
         .add_event_listener_with_callback("pointerdown", begin_timeline.as_ref().unchecked_ref())
         .expect("timeline pointerdown listener");
     begin_timeline.forget();
-    let end_timeline = Closure::<dyn FnMut(Event)>::new(|_| {
-        APP.with(|app| app.borrow_mut().timeline_interacting = false);
-    });
-    for event in ["pointerup", "pointercancel", "blur"] {
+    let end_timeline =
+        Closure::<dyn FnMut(web_sys::PointerEvent)>::new(|event: web_sys::PointerEvent| {
+            APP.with(|app| {
+                let mut app = app.borrow_mut();
+                if app.timeline_pointer == Some(event.pointer_id()) {
+                    app.timeline_pointer = None;
+                }
+            });
+        });
+    for event in ["pointerup", "pointercancel"] {
         web_sys::window()
             .expect("window")
             .add_event_listener_with_callback(event, end_timeline.as_ref().unchecked_ref())
@@ -144,6 +157,14 @@ fn install_controls() {
         )
         .expect("timeline capture loss listener");
     end_timeline.forget();
+    let blur_timeline = Closure::<dyn FnMut(Event)>::new(|_| {
+        APP.with(|app| app.borrow_mut().timeline_pointer = None);
+    });
+    web_sys::window()
+        .expect("window")
+        .add_event_listener_with_callback("blur", blur_timeline.as_ref().unchecked_ref())
+        .expect("timeline blur listener");
+    blur_timeline.forget();
     let timeline_callback = Closure::<dyn FnMut(Event)>::new(move |event: Event| {
         let value = event
             .target()
@@ -156,9 +177,18 @@ fn install_controls() {
                 let start = playback.clock().start().0;
                 let duration = playback.clock().end().0 - start;
                 let cursor = ArrivalTime(start + (duration as f64 * value.clamp(0.0, 1.0)) as i64);
-                playback
-                    .apply_command(PlaybackCommand::Seek(cursor))
-                    .map_err(|error| error.to_string())
+                if playback.timeline_cursor() == cursor
+                    && !matches!(
+                        playback.load_state(),
+                        viewer_core::PlaybackLoadState::Failed { .. }
+                    )
+                {
+                    Ok(viewer_core::PlaybackEffect::None)
+                } else {
+                    playback
+                        .apply_command(PlaybackCommand::Seek(cursor))
+                        .map_err(|error| error.to_string())
+                }
             } else {
                 Ok(viewer_core::PlaybackEffect::None)
             };
@@ -350,7 +380,7 @@ fn tick() {
             calibrations,
             topics,
             previous_ms: _,
-            timeline_interacting,
+            timeline_pointer,
             platform,
             platform_enabled,
             path_projection,
@@ -394,7 +424,7 @@ fn tick() {
         let timeline: HtmlInputElement = element("timeline");
         // Native range controls own their value during touch/mouse manipulation.
         // Pending seeks preview the requested target, while scene/cursor state stays committed.
-        if !*timeline_interacting {
+        if timeline_pointer.is_none() {
             timeline.set_value_as_number(
                 (session.timeline_cursor().0 - start) as f64 / duration as f64,
             );

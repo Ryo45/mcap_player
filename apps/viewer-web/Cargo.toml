@@ -30,7 +30,7 @@ web-sys = { workspace = true, features = [
     "AbortController", "AbortSignal", "Blob", "CanvasRenderingContext2d", "Document", "Event",
     "File", "FileList", "Headers", "HtmlButtonElement", "HtmlCanvasElement", "HtmlElement",
     "HtmlInputElement", "HtmlSelectElement", "ImageData", "ImageBitmap", "Request", "RequestInit", "RequestMode",
-    "Response", "Url", "UrlSearchParams", "Window", "MouseEvent", "WheelEvent",
+    "Response", "Url", "UrlSearchParams", "Window", "MouseEvent", "PointerEvent", "WheelEvent",
 ] }
 
 [dev-dependencies]
