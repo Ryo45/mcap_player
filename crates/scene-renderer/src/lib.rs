@@ -218,7 +218,7 @@ impl SceneRenderer {
             cache: None,
         };
         let pipeline = device.create_render_pipeline(&line_descriptor);
-        line_descriptor.label = Some("3D platform and heading surfaces");
+        line_descriptor.label = Some("3D platform surfaces");
         line_descriptor.primitive.topology = wgpu::PrimitiveTopology::TriangleList;
         let surface_pipeline = device.create_render_pipeline(&line_descriptor);
         let mut point_descriptor = wgpu::RenderPipelineDescriptor {
@@ -679,18 +679,17 @@ fn make_grid() -> Vec<Vertex> {
     vertices
 }
 
-/// Opaque faces preserve the supplied physical bounds. The raised arrow is a separate
-/// navigation annotation, with a bounded metric size; it never rescales source geometry.
+/// Pale yellow opaque faces preserve the supplied physical bounds.
 fn make_surfaces(frame: SceneFrame<'_>) -> Vec<Vertex> {
-    let mut vertices = Vec::with_capacity(45);
+    let mut vertices = Vec::with_capacity(36);
     if let Some(corners) = frame.platform {
         for (face, color) in [
-            ([0, 1, 2, 3], [0.03, 0.10, 0.13]),
-            ([4, 5, 6, 7], [0.06, 0.40, 0.48]),
-            ([1, 2, 6, 5], [1.0, 0.35, 0.04]), // physical +x front
-            ([0, 3, 7, 4], [0.04, 0.22, 0.28]),
-            ([0, 1, 5, 4], [0.03, 0.16, 0.22]),
-            ([3, 2, 6, 7], [0.03, 0.16, 0.22]),
+            ([0, 1, 2, 3], [0.38, 0.32, 0.13]),
+            ([4, 5, 6, 7], [0.90, 0.82, 0.48]),
+            ([1, 2, 6, 5], [0.97, 0.90, 0.60]), // physical +x front
+            ([0, 3, 7, 4], [0.62, 0.54, 0.26]),
+            ([0, 1, 5, 4], [0.72, 0.63, 0.32]),
+            ([3, 2, 6, 7], [0.72, 0.63, 0.32]),
         ] {
             for index in [face[0], face[1], face[2], face[0], face[2], face[3]] {
                 vertices.push(Vertex {
@@ -699,49 +698,6 @@ fn make_surfaces(frame: SceneFrame<'_>) -> Vec<Vertex> {
                 });
             }
         }
-    }
-    let Some(forward) = frame.forward.filter(|v| v.iter().all(|x| x.is_finite())) else {
-        return vertices;
-    };
-    let horizontal = forward[0].hypot(forward[1]);
-    if horizontal <= f32::EPSILON {
-        return vertices;
-    }
-    let forward = [forward[0] / horizontal, forward[1] / horizontal, 0.0];
-    let left = [-forward[1], forward[0], 0.0];
-    let top = frame.platform.map_or(frame.focus[2], |corners| {
-        corners
-            .iter()
-            .map(|p| p[2])
-            .fold(f32::NEG_INFINITY, f32::max)
-    });
-    // Presentation symbol, not a sensor mount or part of the platform envelope.
-    let length = (frame.view_radius * 1.5).clamp(0.65, 1.5);
-    let point = |along: f32, across: f32| {
-        ros_to_render([
-            frame.focus[0] + length * (forward[0] * along + left[0] * across),
-            frame.focus[1] + length * (forward[1] * along + left[1] * across),
-            top + 0.18,
-        ])
-    };
-    for (along, across) in [
-        (0., -0.045),
-        (0.65, -0.045),
-        (0.65, 0.045),
-        (0., -0.045),
-        (0.65, 0.045),
-        (0., 0.045),
-    ] {
-        vertices.push(Vertex {
-            position: point(along, across),
-            color: [0.95, 0.97, 1.0],
-        });
-    }
-    for (along, across) in [(0.55, -0.23), (1.0, 0.0), (0.55, 0.23)] {
-        vertices.push(Vertex {
-            position: point(along, across),
-            color: [1.0, 0.35, 0.04],
-        });
     }
     vertices
 }
@@ -767,7 +723,7 @@ fn make_dynamic_lines(frame: SceneFrame<'_>) -> Vec<Vertex> {
                 &mut vertices,
                 ros_to_render(corners[a]),
                 ros_to_render(corners[b]),
-                [0.10, 0.78, 0.88],
+                [0.68, 0.58, 0.24],
             );
         }
     }
@@ -1040,7 +996,7 @@ mod tests {
     }
 
     #[test]
-    fn physical_faces_keep_bounds_and_direction_annotation_requires_heading() {
+    fn physical_faces_keep_bounds_and_never_add_a_heading_arrow() {
         let geometry =
             viewer_core::PlatformGeometry::new("robot".into(), [-1., -0.4, 0.], [0.5, 0.6, 0.3])
                 .unwrap();
@@ -1056,19 +1012,31 @@ mod tests {
             body.iter()
                 .all(|v| corners.iter().any(|c| ros_to_render(*c) == v.position))
         );
-        for forward in [None, Some([0., 0., 0.]), Some([f32::NAN, 0., 0.])] {
-            assert_eq!(make_surfaces(SceneFrame { forward, ..frame }).len(), 36);
+        for forward in [
+            None,
+            Some([0., 0., 0.]),
+            Some([f32::NAN, 0., 0.]),
+            Some([0., 1., 0.]),
+        ] {
+            let surfaces = make_surfaces(SceneFrame { forward, ..frame });
+            assert_eq!(surfaces.len(), 36);
+            assert!(
+                surfaces
+                    .iter()
+                    .all(|v| corners.iter().any(|c| ros_to_render(*c) == v.position))
+            );
+            assert!(
+                make_surfaces(SceneFrame {
+                    forward,
+                    ..Default::default()
+                })
+                .is_empty()
+            );
         }
-        let surfaces = make_surfaces(SceneFrame {
-            forward: Some([0., 1., 0.]),
-            ..frame
-        });
-        assert_eq!(surfaces.len(), 45);
-        let arrow = &surfaces[36..];
-        assert!(arrow.iter().all(|v| (v.position[1] - 0.48).abs() < 1e-6));
-        // ROS +y maps to renderer -x. The triangle tip is farthest forward.
-        assert!((arrow[7].position[0] + 0.65).abs() < 1e-6);
-        assert_eq!(arrow[7].position[2], 0.);
+        assert!(
+            body.iter()
+                .all(|v| v.color[0] > v.color[2] && v.color[1] > v.color[2])
+        );
     }
 
     #[test]
