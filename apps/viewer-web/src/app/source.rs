@@ -89,6 +89,7 @@ fn commit_playback(playback: WebPlayback) {
         app.view.reset_for_source();
         app.focused_camera = None;
         app.previous_ms = Date::now();
+        app.timeline_interacting = false;
     });
     let timeline: HtmlInputElement = element("timeline");
     timeline.set_value("0");

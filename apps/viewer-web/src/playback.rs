@@ -500,9 +500,11 @@ impl WebPlayback {
         self.load_state.clone()
     }
 
-    #[cfg(target_arch = "wasm32")]
-    pub(crate) fn display_cursor(&self) -> ArrivalTime {
-        self.clock.cursor()
+    /// Slider preview only; feature presentation continues to use the committed clock.
+    pub(crate) fn timeline_cursor(&self) -> ArrivalTime {
+        self.pending_seek
+            .as_ref()
+            .map_or(self.clock.cursor(), |seek| seek.target)
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -1008,6 +1010,58 @@ mod tests {
             playback.data_plane_diagnostics().target_ahead,
             Duration::from_secs(4)
         );
+    }
+
+    #[test]
+    fn seeking_after_end_reloads_evicted_data_without_moving_committed_state_early() {
+        const START: i64 = 1_000_000_000;
+        const END_EXCLUSIVE: i64 = 3_000_000_000;
+        const TARGET: i64 = 1_500_000_000;
+        let client = RemoteApiClient::new("http://localhost").unwrap();
+        let mut playback = WebPlayback::from_remote(client, remote_catalog()).unwrap();
+        playback.tick(Duration::ZERO).unwrap();
+        playback
+            .data
+            .loader_mut()
+            .remote_mut()
+            .inject_loaded(loaded_window(
+                START,
+                END_EXCLUSIVE,
+                vec![camera_message(START), camera_message(END_EXCLUSIVE - 1)],
+            ))
+            .unwrap();
+        playback.tick(Duration::ZERO).unwrap();
+        playback.apply_command(PlaybackCommand::Toggle).unwrap();
+        playback.tick(Duration::from_secs(3)).unwrap();
+        assert_eq!(playback.clock.cursor(), ArrivalTime(END_EXCLUSIVE - 1));
+        assert!(!playback.clock.is_playing());
+        assert_eq!(playback.data_plane_diagnostics().window_count, 0);
+        playback
+            .apply_command(PlaybackCommand::Seek(ArrivalTime(TARGET)))
+            .unwrap();
+        assert_eq!(playback.timeline_cursor(), ArrivalTime(TARGET));
+        assert_eq!(playback.clock.cursor(), ArrivalTime(END_EXCLUSIVE - 1));
+        playback
+            .restore
+            .remote_mut()
+            .inject(vec![camera_message(TARGET)]);
+        assert_eq!(
+            playback.tick(Duration::ZERO).unwrap(),
+            PlaybackEffect::Seeked
+        );
+        assert_eq!(playback.clock.cursor(), ArrivalTime(TARGET));
+        assert_eq!(playback.timeline_cursor(), ArrivalTime(TARGET));
+        assert_eq!(
+            playback
+                .cameras()
+                .state()
+                .latest_by_arrival()
+                .unwrap()
+                .arrival_time,
+            ArrivalTime(TARGET)
+        );
+        playback.apply_command(PlaybackCommand::Toggle).unwrap();
+        assert!(playback.clock.is_playing());
     }
 
     #[test]

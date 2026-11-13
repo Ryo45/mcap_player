@@ -58,6 +58,7 @@ struct WebApp {
     calibrations: CameraCalibrationSet,
     topics: crate::topics::TopicBrowser,
     previous_ms: f64,
+    timeline_interacting: bool,
     platform: Option<viewer_core::PlatformGeometry>,
     platform_enabled: bool,
     path_projection: viewer_core::PathProjectionPolicy,
@@ -71,6 +72,7 @@ thread_local! { static APP: RefCell<WebApp> = RefCell::new(WebApp {
         "../../../config/camera_calibration.json"
     )).expect("bundled camera calibration"),
     previous_ms: Date::now(),
+    timeline_interacting: false,
     platform: Some(serde_json::from_str(include_str!("../../../config/platform_geometry/turtlebot3_waffle_pi.json")).expect("bundled platform geometry")),
     path_projection: viewer_core::PathProjectionPolicy::default(),
     platform_enabled:true,
@@ -119,6 +121,29 @@ fn install_controls() {
     play_callback.forget();
 
     let timeline: HtmlInputElement = element("timeline");
+    let begin_timeline = Closure::<dyn FnMut(Event)>::new(|_| {
+        APP.with(|app| app.borrow_mut().timeline_interacting = true);
+    });
+    timeline
+        .add_event_listener_with_callback("pointerdown", begin_timeline.as_ref().unchecked_ref())
+        .expect("timeline pointerdown listener");
+    begin_timeline.forget();
+    let end_timeline = Closure::<dyn FnMut(Event)>::new(|_| {
+        APP.with(|app| app.borrow_mut().timeline_interacting = false);
+    });
+    for event in ["pointerup", "pointercancel", "blur"] {
+        web_sys::window()
+            .expect("window")
+            .add_event_listener_with_callback(event, end_timeline.as_ref().unchecked_ref())
+            .expect("timeline interaction end listener");
+    }
+    timeline
+        .add_event_listener_with_callback(
+            "lostpointercapture",
+            end_timeline.as_ref().unchecked_ref(),
+        )
+        .expect("timeline capture loss listener");
+    end_timeline.forget();
     let timeline_callback = Closure::<dyn FnMut(Event)>::new(move |event: Event| {
         let value = event
             .target()
@@ -143,9 +168,11 @@ fn install_controls() {
             }
         });
     });
-    timeline
-        .add_event_listener_with_callback("input", timeline_callback.as_ref().unchecked_ref())
-        .expect("timeline listener");
+    for event in ["input", "change"] {
+        timeline
+            .add_event_listener_with_callback(event, timeline_callback.as_ref().unchecked_ref())
+            .expect("timeline listener");
+    }
     timeline_callback.forget();
 
     let speed: HtmlSelectElement = element("speed");
@@ -323,6 +350,7 @@ fn tick() {
             calibrations,
             topics,
             previous_ms: _,
+            timeline_interacting,
             platform,
             platform_enabled,
             path_projection,
@@ -346,6 +374,15 @@ fn tick() {
                     return;
                 }
             };
+        let play: HtmlButtonElement = element("play");
+        let play_label = if session.clock().is_playing() {
+            "Pause"
+        } else {
+            "Play"
+        };
+        if play.text_content().as_deref() != Some(play_label) {
+            play.set_inner_text(play_label);
+        }
         view.apply_playback_effect(playback_effect);
         if playback_effect == viewer_core::PlaybackEffect::Seeked {
             topics.clear_message();
@@ -355,7 +392,13 @@ fn tick() {
         let start = session.clock().start().0;
         let duration = (session.clock().end().0 - start).max(1);
         let timeline: HtmlInputElement = element("timeline");
-        timeline.set_value_as_number((session.display_cursor().0 - start) as f64 / duration as f64);
+        // Native range controls own their value during touch/mouse manipulation.
+        // Pending seeks preview the requested target, while scene/cursor state stays committed.
+        if !*timeline_interacting {
+            timeline.set_value_as_number(
+                (session.timeline_cursor().0 - start) as f64 / duration as f64,
+            );
+        }
         timeline.set_disabled(false);
         let speed: HtmlSelectElement = element("speed");
         speed.set_disabled(false);
