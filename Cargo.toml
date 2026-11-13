@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/viewer-remote-protocol",
     "crates/viewer-layout",
+    "crates/viewer-ui",
     "crates/viewer-core",
     "crates/viewer-extension",
     "crates/viewer-mcap",

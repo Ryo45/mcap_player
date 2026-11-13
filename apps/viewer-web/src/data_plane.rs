@@ -417,6 +417,11 @@ impl<L: WindowLoader> RecordingDataPlane<L> {
         messages
     }
 
+    #[cfg(all(target_arch = "wasm32", feature = "egui-ui"))]
+    pub(crate) fn has_pending_work(&self) -> bool {
+        !self.loader.is_idle()
+    }
+
     pub(crate) fn buffer_ahead(&self, cursor: ArrivalTime) -> Duration {
         Duration::from_nanos(
             self.store

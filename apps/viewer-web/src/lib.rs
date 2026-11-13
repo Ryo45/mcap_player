@@ -15,14 +15,18 @@ mod workspace_bindings;
 
 #[cfg(any(test, target_arch = "wasm32"))]
 mod camera_bitmap;
-#[cfg(any(test, target_arch = "wasm32"))]
+#[cfg(any(test, all(target_arch = "wasm32", not(feature = "egui-ui"))))]
 mod webgpu;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "egui-ui")))]
 mod app;
+#[cfg(all(target_arch = "wasm32", feature = "egui-ui"))]
+mod egui_app;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "egui-ui")))]
 pub use app::start;
+#[cfg(all(target_arch = "wasm32", feature = "egui-ui"))]
+pub use egui_app::start;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn start() {}

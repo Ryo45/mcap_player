@@ -10,7 +10,7 @@ use viewer_layout::{LayoutDocument, LayoutNode, PanelId, PanelNode};
 
 pub(crate) struct PanelRuntimeStore {
     panels: BTreeMap<PanelId, NativePanel>,
-    topic_inspector: super::inspector::InspectorTreeState,
+    topic_inspector: viewer_ui::inspection::InspectorTreeState,
 }
 
 pub(crate) struct PanelRuntimeBuildResult {

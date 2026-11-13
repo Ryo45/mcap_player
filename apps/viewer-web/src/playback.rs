@@ -504,6 +504,11 @@ impl WebPlayback {
         self.load_state.clone()
     }
 
+    #[cfg(all(target_arch = "wasm32", feature = "egui-ui"))]
+    pub(crate) fn has_pending_work(&self) -> bool {
+        self.pending_seek.is_some() || self.data.has_pending_work()
+    }
+
     /// Slider preview only; feature presentation continues to use the committed clock.
     pub(crate) fn timeline_cursor(&self) -> ArrivalTime {
         self.pending_seek

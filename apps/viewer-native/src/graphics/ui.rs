@@ -5,10 +5,11 @@ use crate::{
         PanelCompositionInput, PanelRenderRequests, PanelResourceView, PanelRuntimeStore,
         PreviewDataView, SceneDataView,
     },
-    ui_components::{playback_controls, source_status},
+    ui_components::source_status,
     workspace::ViewerInteractionState,
 };
 use viewer_layout::LayoutDocument;
+use viewer_ui::playback::playback_controls;
 use winit::window::Window;
 
 pub(super) struct UiOutput {

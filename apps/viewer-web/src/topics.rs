@@ -1,15 +1,15 @@
 //! Catalog browsing and an independent latest-before Inspector query.
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "egui-ui")))]
 use crate::playback::{WebPlayback, WebRestoreLoader};
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "egui-ui")))]
 use std::collections::BTreeMap;
 use viewer_core::{ArrivalTime, RawMessage, SourceCatalog, StreamId};
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "egui-ui")))]
 use viewer_core::{InspectorMessage, InspectorSchema};
 
 const MAX_TOPIC_STREAMS: usize = 64;
 
-fn inspection_plan(
+pub(crate) fn inspection_plan(
     catalog: &SourceCatalog,
     topic: &str,
     target: ArrivalTime,
@@ -36,7 +36,7 @@ fn inspection_plan(
         .map_err(|error| error.to_string())
 }
 
-fn latest_topic_message(
+pub(crate) fn latest_topic_message(
     catalog: &SourceCatalog,
     topic: &str,
     target: ArrivalTime,
@@ -58,7 +58,7 @@ fn latest_topic_message(
         .max_by_key(|message| (message.arrival_time, message.stream_id)))
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "egui-ui")))]
 mod dom {
     use super::*;
     use std::rc::Rc;
@@ -436,7 +436,7 @@ mod dom {
         }
     }
 }
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "egui-ui")))]
 pub(crate) use dom::TopicBrowser;
 
 #[cfg(test)]

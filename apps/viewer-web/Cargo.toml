@@ -9,8 +9,11 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 jpeg-benchmark = []
+egui-ui = ["dep:eframe", "dep:egui", "dep:viewer-ui"]
 
 [dependencies]
+egui = { workspace = true, optional = true }
+viewer-ui = { path = "../../crates/viewer-ui", optional = true }
 viewer-mcap = { path = "../../crates/viewer-mcap", default-features = false, features = ["mcap-zstd", "mcap-lz4-rust"] }
 bev-renderer = { path = "../../crates/bev-renderer" }
 scene-renderer = { path = "../../crates/scene-renderer" }
@@ -35,3 +38,6 @@ web-sys = { workspace = true, features = [
 
 [dev-dependencies]
 lz4_flex.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+eframe = { version = "=0.33.2", default-features = false, features = ["default_fonts", "wgpu"], optional = true }

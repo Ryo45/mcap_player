@@ -1,10 +1,11 @@
 //! Embedded metadata browser and cursor Inspector. Selection is query demand only.
 use super::{
     PanelOutput,
-    inspector::{InspectorPanelInput, InspectorTreeState, show_inspection},
+    inspector::{InspectorPanelInput, show_inspection},
 };
 use crate::{interaction::ViewerAction, numeric_plot_loader::NumericSeriesState};
 use viewer_core::{TopicTree, ViewerPresentation};
+use viewer_ui::inspection::InspectorTreeState;
 
 #[derive(Default)]
 pub(crate) struct TopicsPanel {

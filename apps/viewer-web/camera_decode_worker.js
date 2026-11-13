@@ -70,7 +70,7 @@ self.onmessage = async ({data}) => {
     data.bytes = null;
     bitmap = await createImageBitmap(input, {
       resizeWidth: data.width, resizeHeight: data.height, resizeQuality: 'low',
-      imageOrientation: 'none', colorSpaceConversion: 'none', premultiplyAlpha: 'none',
+      imageOrientation: 'none', colorSpaceConversion: 'none', premultiplyAlpha: data.premultiplied ? 'premultiply' : 'none',
     });
     if (bitmap.width !== data.width || bitmap.height !== data.height) {
       throw new Error('camera bitmap dimensions differ from request');

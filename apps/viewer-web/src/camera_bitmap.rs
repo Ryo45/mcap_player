@@ -72,6 +72,7 @@ mod browser {
             source_width: u32,
             source_height: u32,
             step: u32,
+            premultiplied: bool,
         ) -> Promise;
     }
     struct EncodedImage {
@@ -121,6 +122,11 @@ mod browser {
         encoded_bytes: Arc<AtomicUsize>,
     }
     impl CameraBitmapQueue {
+        #[cfg(feature = "egui-ui")]
+        pub(crate) fn has_pending_work(&self) -> bool {
+            let state = self.state.borrow();
+            !state.active.is_empty() || !state.pending.is_empty() || !state.ready.is_empty()
+        }
         pub(crate) fn reset(&mut self) {
             let mut state = self.state.borrow_mut();
             state.generation = state.generation.wrapping_add(1);
@@ -231,6 +237,7 @@ mod browser {
                         request.source.0,
                         request.source.1,
                         step,
+                        cfg!(feature = "egui-ui"),
                     ))
                     .await
                     .map_err(|e| format!("camera bitmap decode: {e:?}"))

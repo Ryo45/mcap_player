@@ -812,6 +812,39 @@ dependencies = [
 ]
 
 [[package]]
+name = "eframe"
+version = "0.33.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f60ee3c69cd01d5725b4ef476ed6a3a6009968c57843a2f1beb96f021e4a54b"
+dependencies = [
+ "ahash",
+ "bytemuck",
+ "document-features",
+ "egui",
+ "egui-wgpu",
+ "egui-winit",
+ "image",
+ "js-sys",
+ "log",
+ "objc2 0.5.2",
+ "objc2-app-kit 0.2.2",
+ "objc2-foundation 0.2.2",
+ "parking_lot",
+ "percent-encoding",
+ "pollster 0.4.0",
+ "profiling",
+ "raw-window-handle",
+ "static_assertions",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "web-time",
+ "wgpu",
+ "windows-sys 0.61.2",
+ "winit",
+]
+
+[[package]]
 name = "egui"
 version = "0.33.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -845,6 +878,7 @@ dependencies = [
  "type-map",
  "web-time",
  "wgpu",
+ "winit",
 ]
 
 [[package]]
@@ -2492,6 +2526,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22686f4785f02a4fcc856d3b3bb19bf6c8160d103f7a99cc258bddd0251dc7f2"
 
 [[package]]
+name = "pollster"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f3a9f18d041e6d0e102a0a46750538147e5e8992d3b4873aaafee2520b00ce3"
+
+[[package]]
 name = "portable-atomic"
 version = "1.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2803,7 +2843,7 @@ name = "scene-renderer"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
- "pollster",
+ "pollster 0.3.0",
  "viewer-core",
  "wgpu",
 ]
@@ -3618,7 +3658,7 @@ dependencies = [
  "env_logger",
  "log",
  "mcap",
- "pollster",
+ "pollster 0.3.0",
  "rclrs",
  "scene-renderer",
  "serde",
@@ -3629,6 +3669,7 @@ dependencies = [
  "viewer-mcap",
  "viewer-preview-mcap",
  "viewer-renderer",
+ "viewer-ui",
  "wgpu",
  "winit",
 ]
@@ -3666,11 +3707,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "viewer-ui"
+version = "0.1.0"
+dependencies = [
+ "egui",
+ "viewer-core",
+]
+
+[[package]]
 name = "viewer-web"
 version = "0.1.0"
 dependencies = [
  "bev-renderer",
  "bytes",
+ "eframe",
+ "egui",
  "js-sys",
  "lz4_flex",
  "mcap",
@@ -3681,6 +3732,7 @@ dependencies = [
  "viewer-mcap",
  "viewer-remote-protocol",
  "viewer-renderer",
+ "viewer-ui",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
