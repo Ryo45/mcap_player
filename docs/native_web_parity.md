@@ -46,13 +46,30 @@ and page navigation. One compiled stream schema is reused; message identity chec
 both metadata and payload, rather than assuming timestamps or sequences are unique.
 Update frequency remains limited by UI frames and indexed query I/O/decompression;
 it is not a hard real-time guarantee and faster follow can increase query work.
+Browser Local retains one latest-only result keyed by exact Chunk/channel/log-time/record-offset
+positions, capped at 16 MiB of compact payloads. It still resolves Message Index entries but skips
+Chunk reads and decompression when those positions are unchanged. History/persistent restores
+do not use this cache; a source fork starts empty. Remote Inspector queries retain the existing
+HTTP request behavior and do not gain this local cache.
 A topic switch,
-successful seek, or source replacement invalidates it; Remote cancellation aborts
+successful seek, or source replacement invalidates the displayed inspection; Remote cancellation aborts
 HTTP, and Local cancellation stops further reads after the current `File.slice()`
 completes. A failed seek preserves the previous committed inspection. The query
 cursor and MCAP metadata remain visible, so a paused snapshot is distinguishable
 from the current playback cursor. Equal log times use stream ID, then the source's
 chunk and record offset order.
+
+The functional browser regression checks duplicate `input`/`change` seeks and pointer ownership
+without changing playback code:
+
+```sh
+python3 tools/performance-probe/check_web_timeline.py \
+  --data tests/fixtures/camera-formats/camera_formats.mcap \
+  --output target/web-timeline/check.json
+```
+
+Build `apps/viewer-web/dist` first, or pass `--url` to check a hosted build. This uses isolated
+software Chrome and is not a performance measurement or a real-device touch test.
 
 Local indexed queries now compare predecessors across overlapping/non-monotonic
 chunk ranges instead of returning the first match. Message Index entries need not

@@ -512,6 +512,7 @@ pub(crate) struct BrowserMcapRestoreLoader {
     file: File,
     file_size: u64,
     summary: Rc<mcap::Summary>,
+    latest_cache: Rc<RefCell<LatestRestoreCache>>,
     generation: Rc<Cell<u64>>,
     loading: bool,
     inbox: RestoreInbox,
@@ -527,6 +528,7 @@ impl BrowserMcapRestoreLoader {
             file,
             file_size,
             summary,
+            latest_cache: Rc::new(RefCell::new(LatestRestoreCache::default())),
             generation: Rc::new(Cell::new(0)),
             loading: false,
             inbox: Rc::new(RefCell::new(VecDeque::new())),
@@ -541,10 +543,13 @@ impl BrowserMcapRestoreLoader {
         let file = self.file.clone();
         let file_size = self.file_size;
         let summary = Rc::clone(&self.summary);
+        let latest_cache = Rc::clone(&self.latest_cache);
         let inbox = Rc::clone(&self.inbox);
         spawn_local(async move {
             let mut work = RestoreWork::new(cancellation.clone(), generation);
-            let result = load_browser_restore(&file, file_size, &summary, &plan, &mut work).await;
+            let result =
+                load_browser_restore(&file, file_size, &summary, &plan, &mut work, &latest_cache)
+                    .await;
             if cancellation.get() == generation {
                 inbox.borrow_mut().push_back((generation, result));
             }
@@ -705,6 +710,46 @@ impl RestoreChunkSelection {
     }
 }
 
+/// One compact latest-only result, keyed by exact indexed record positions rather than time.
+/// Indexes are still resolved on every query; unchanged messages do not reread/decompress Chunks.
+#[cfg(any(test, target_arch = "wasm32"))]
+type LatestRestorePositions = BTreeMap<usize, Vec<(u16, u64, u64)>>;
+
+#[cfg(any(test, target_arch = "wasm32"))]
+#[derive(Default)]
+struct LatestRestoreCache {
+    key: Option<LatestRestorePositions>,
+    messages: Vec<RawMessage>,
+}
+
+#[cfg(any(test, target_arch = "wasm32"))]
+impl LatestRestoreCache {
+    fn get(&self, key: &LatestRestorePositions) -> Option<Vec<RawMessage>> {
+        (self.key.as_ref() == Some(key)).then(|| self.messages.clone())
+    }
+
+    fn store(&mut self, key: LatestRestorePositions, messages: &[RawMessage]) {
+        *self = Self::default();
+        if messages
+            .iter()
+            .map(|message| message.payload.len())
+            .sum::<usize>()
+            > viewer_core::INSPECTOR_MAX_PAYLOAD_BYTES
+        {
+            return;
+        }
+        self.messages = messages
+            .iter()
+            .map(|message| {
+                let mut message = message.clone();
+                message.payload = Bytes::copy_from_slice(&message.payload);
+                message
+            })
+            .collect();
+        self.key = Some(key);
+    }
+}
+
 #[cfg(target_arch = "wasm32")]
 async fn load_browser_restore(
     file: &File,
@@ -712,11 +757,24 @@ async fn load_browser_restore(
     summary: &mcap::Summary,
     plan: &viewer_core::RestorePlan,
     work: &mut RestoreWork,
+    latest_cache: &RefCell<LatestRestoreCache>,
 ) -> Result<Vec<RawMessage>, DataLoadError> {
     let selections = resolve_browser_restore_chunks(file, file_size, summary, plan, work).await?;
+    let cache_key = (plan.histories.is_empty() && plan.persistent.is_empty()).then(|| {
+        selections
+            .iter()
+            .map(|(chunk, selection)| (*chunk, selection.exact.clone()))
+            .collect::<BTreeMap<_, _>>()
+    });
+    if let Some(key) = &cache_key {
+        work.check()?;
+        if let Some(messages) = latest_cache.borrow().get(key) {
+            return Ok(messages);
+        }
+    }
     let mut messages = Vec::new();
     for (chunk_index, selection) in selections {
-        let restored = read_browser_restore_chunk(
+        let mut restored = read_browser_restore_chunk(
             file,
             file_size,
             summary,
@@ -726,10 +784,21 @@ async fn load_browser_restore(
             work,
         )
         .await?;
+        for message in &mut restored {
+            if selection.persistent.contains(&(message.stream_id.0 as u16)) {
+                message.payload = Bytes::copy_from_slice(&message.payload);
+            }
+        }
         messages.extend(restored);
     }
     messages.sort_by_key(|message| (message.arrival_time, message.stream_id.0));
     work.check()?;
+    if let Some(key) = cache_key {
+        latest_cache.borrow_mut().store(key.clone(), &messages);
+        if let Some(compact) = latest_cache.borrow().get(&key) {
+            return Ok(compact);
+        }
+    }
     Ok(messages)
 }
 
@@ -1525,6 +1594,37 @@ mod tests {
     use crate::local::LocalCatalog;
     use mcap::{Compression, Summary, WriteOptions, Writer, records::MessageHeader};
     use std::{collections::BTreeMap, io::Cursor};
+
+    #[test]
+    fn latest_cache_uses_exact_positions_detaches_payloads_and_replaces_its_single_result() {
+        let mut cache = LatestRestoreCache::default();
+        let key = BTreeMap::from([(3, vec![(1, 10, 200)])]);
+        let backing = Bytes::from(vec![7; 1024 * 1024]);
+        let message = RawMessage {
+            stream_id: viewer_core::StreamId(1),
+            arrival_time: ArrivalTime(10),
+            publish_time_ns: Some(9),
+            sequence: Some(3),
+            payload: backing.slice(100..108),
+        };
+        cache.store(key.clone(), std::slice::from_ref(&message));
+        let cached = cache.get(&key).unwrap();
+        assert_eq!(cached.as_slice(), std::slice::from_ref(&message));
+        assert_ne!(cached[0].payload.as_ptr(), message.payload.as_ptr());
+        let other = BTreeMap::from([(3, vec![(1, 10, 300)])]);
+        assert!(
+            cache.get(&other).is_none(),
+            "equal times with different record offsets are distinct"
+        );
+        cache.store(other.clone(), &[]);
+        assert!(cache.get(&key).is_none());
+        assert_eq!(cache.get(&other), Some(vec![]));
+        let mut oversized = message;
+        oversized.payload = Bytes::from(vec![0; viewer_core::INSPECTOR_MAX_PAYLOAD_BYTES + 1]);
+        cache.store(key.clone(), &[oversized]);
+        assert!(cache.get(&key).is_none());
+        assert!(cache.messages.is_empty());
+    }
 
     #[test]
     fn browser_compression_policy_rejects_unknown_formats() {
