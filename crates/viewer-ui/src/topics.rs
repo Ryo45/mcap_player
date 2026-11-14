@@ -60,19 +60,20 @@ impl TopicsPanel {
                         input
                             .tree
                             .entries
-                            .iter()
-                            .filter(|entry| entry.topic.contains(&self.filter))
+                            .chunk_by(|a, b| a.topic == b.topic)
+                            .filter(|entries| topic_matches(&entries[0].topic, &self.filter))
                             .count(),
                         |ui, rows| {
                             // Only visible labels are laid out, even for a large source catalog.
-                            for entry in input
+                            for entries in input
                                 .tree
                                 .entries
-                                .iter()
-                                .filter(|entry| entry.topic.contains(&self.filter))
+                                .chunk_by(|a, b| a.topic == b.topic)
+                                .filter(|entries| topic_matches(&entries[0].topic, &self.filter))
                                 .skip(rows.start)
                                 .take(rows.len())
                             {
+                                let entry = &entries[0];
                                 if ui
                                     .selectable_label(
                                         input.selected_topic == Some(entry.topic.as_str()),
@@ -102,10 +103,24 @@ impl TopicsPanel {
                     .show(ui, |ui| {
                         if let Some(topic) = input.selected_topic {
                             show_inspection(ui, topic, input.inspector, &mut self.tree);
-                            if let Some(entry) =
-                                input.tree.entries.iter().find(|e| e.topic == topic)
-                            {
-                                ui.collapsing("Schema / numeric plots", |ui| {
+                            let displayed = input
+                                .inspector
+                                .inspections
+                                .iter()
+                                .find(|i| i.topic == topic)
+                                .and_then(|i| i.metadata)
+                                .filter(|m| {
+                                    input
+                                        .inspector
+                                        .cursor
+                                        .is_some_and(|cursor| m.log_time <= cursor)
+                                })
+                                .map(|m| m.stream_id);
+                            for entry in input.tree.entries.iter().filter(|e| e.topic == topic) {
+                                ui.push_id(entry.stream_id.0, |ui| {
+                                    if displayed == Some(entry.stream_id) {
+                                        ui.small("Channel of the displayed message");
+                                    }
                                     show_topic_details(
                                         ui,
                                         entry,
@@ -132,6 +147,15 @@ pub fn show_topic_details(
     series: Option<&[(viewer_core::StreamId, &str)]>,
     actions: &mut Vec<ViewerAction>,
 ) {
+    ui.small(format!(
+        "Channel {} · {} · {} · {} messages",
+        entry.stream_id.0,
+        entry.schema_name,
+        entry.message_encoding,
+        entry
+            .message_count
+            .map_or_else(|| "unknown".into(), |n| n.to_string())
+    ));
     if let Some(definition) = &entry.schema_definition {
         ui.collapsing("Schema definition", |ui| {
             ui.small(&definition.encoding);
@@ -167,10 +191,105 @@ pub fn show_topic_details(
     }
 }
 
+fn topic_matches(topic: &str, filter: &str) -> bool {
+    if filter.is_empty() {
+        return true;
+    }
+    if topic.is_ascii() && filter.is_ascii() {
+        topic
+            .as_bytes()
+            .windows(filter.len())
+            .any(|part| part.eq_ignore_ascii_case(filter.as_bytes()))
+    } else {
+        topic.to_lowercase().contains(&filter.to_lowercase())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use viewer_core::{ArrivalTime, StreamId, TopicTreeEntry};
+
+    #[test]
+    fn topic_filter_is_case_insensitive_for_ros_and_unicode_names() {
+        assert!(topic_matches("/robot/ODOM", "odom"));
+        assert!(topic_matches("/robot/odom", "ODOM"));
+        assert!(topic_matches("/ÉTAT", "état"));
+        assert!(topic_matches("/odom", ""));
+        assert!(!topic_matches("/odom", "odometry"));
+    }
+
+    #[test]
+    fn same_topic_channels_show_their_own_schema_encoding_and_count() {
+        let context = egui::Context::default();
+        let entry = |id, schema: &str, encoding: &str, count| TopicTreeEntry {
+            stream_id: StreamId(id),
+            topic: "/same".into(),
+            schema_name: schema.into(),
+            message_encoding: encoding.into(),
+            message_count: Some(count),
+            schema_definition: None,
+            numeric_fields: vec![],
+            schema_error: None,
+        };
+        let tree = TopicTree {
+            entries: vec![
+                entry(1, "first/msg/A", "cdr", 10),
+                entry(2, "second/msg/B", "json", 20),
+            ],
+        };
+        let presentation = ViewerPresentation::default();
+        let mut panel = TopicsPanel::default();
+        let output = context.run(
+            egui::RawInput {
+                screen_rect: Some(egui::Rect::from_min_size(
+                    egui::Pos2::ZERO,
+                    egui::vec2(800., 1200.),
+                )),
+                ..Default::default()
+            },
+            |ctx| {
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    panel.show(
+                        ui,
+                        TopicsPanelInput {
+                            tree: &tree,
+                            series: None,
+                            selected_topic: Some("/same"),
+                            inspector: InspectorPanelInput {
+                                inspections: &[],
+                                cursor: Some(ArrivalTime(0)),
+                            },
+                            presentation: &presentation,
+                        },
+                    );
+                });
+            },
+        );
+        let labels = output
+            .shapes
+            .iter()
+            .filter_map(|s| match &s.shape {
+                egui::epaint::Shape::Text(t) => Some(t.galley.text()),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            labels.iter().filter(|t| **t == "/same").count(),
+            2,
+            "one topic row plus the Inspector heading, not one row per channel"
+        );
+        assert!(
+            labels
+                .iter()
+                .any(|t| t.contains("Channel 1 · first/msg/A · cdr · 10 messages"))
+        );
+        assert!(
+            labels
+                .iter()
+                .any(|t| t.contains("Channel 2 · second/msg/B · json · 20 messages"))
+        );
+    }
 
     #[test]
     fn clicking_a_filtered_topic_emits_the_existing_inspector_query_action() {
@@ -183,6 +302,8 @@ mod tests {
             stream_id: StreamId(1),
             topic: name.into(),
             schema_name: "example/msg/Test".into(),
+            message_encoding: "cdr".into(),
+            message_count: Some(7),
             schema_definition: None,
             numeric_fields: vec![],
             schema_error: None,

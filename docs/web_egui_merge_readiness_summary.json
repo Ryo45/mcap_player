@@ -1,0 +1,42 @@
+{
+  "baseline_commit": "f4aa021",
+  "data_sha256": "39e1fa1b7ce9bdca78e9f7d3b522694915e2d5e818d12fff445ec24fb1db1a9b",
+  "scope": "Seven FHD cameras, 5 seconds per run, 3 alternating repetitions, hardware Chrome; not a startup/mobile/4K test",
+  "variants": {
+    "before": {
+      "cpu_core_seconds_per_second": 0.6723307132909527,
+      "pss_mib_median": 473.1171875,
+      "uploads_per_second": 40.02567942241236,
+      "cursor_seconds_per_second": 1.00320520641002,
+      "focus_hz": [
+        9.858541729658217,
+        9.99675404601708,
+        9.849536538961088
+      ],
+      "minimum_background_hz": [
+        4.929270864829109,
+        4.9003696304005295,
+        5.021332353195849
+      ]
+    },
+    "after": {
+      "cpu_core_seconds_per_second": 0.6329323991997569,
+      "pss_mib_median": 474.521484375,
+      "uploads_per_second": 39.99916595462225,
+      "cursor_seconds_per_second": 1.002540671808463,
+      "focus_hz": [
+        9.841326938776707,
+        9.98119628194917,
+        9.852011318872474
+      ],
+      "minimum_background_hz": [
+        5.017147066827341,
+        4.990598140974585,
+        4.926005659436237
+      ]
+    }
+  },
+  "after_wasm_sha256": {
+    "viewer-web-a87c5e58bdf2542f_bg.wasm": "4d36209bdf5a2dcfd606d8a90e16eadc7331cbf5c23913c664ea89cbf0f8951a"
+  }
+}

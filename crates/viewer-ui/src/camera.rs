@@ -179,6 +179,11 @@ impl CameraPanel {
         }
     }
 
+    /// Topics actually offered by the current binding (which may be narrower than the catalog).
+    pub fn available_topics(&self) -> &[String] {
+        &self.available_topics
+    }
+
     pub fn bind_topics(
         &mut self,
         topics: &[String],

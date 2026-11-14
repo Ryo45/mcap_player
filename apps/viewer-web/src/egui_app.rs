@@ -60,6 +60,7 @@ struct ViewerApp {
     session: Option<WebPlayback>,
     active_bindings: WorkspaceBindings,
     source: String,
+    source_revision: u64,
     error: String,
     gpu: GpuViews,
     bitmaps: CameraBitmapQueue,
@@ -102,6 +103,7 @@ impl ViewerApp {
             session: None,
             active_bindings: crate::workspace_bindings::bundled(),
             source: String::new(),
+            source_revision: 0,
             error: String::new(),
             gpu: GpuViews::new(
                 cc.wgpu_render_state
@@ -198,12 +200,20 @@ impl ViewerApp {
             change,
             false,
         )?;
-        // Web currently plans all camera streams at open, matching the production Web host.
+        let planned_topics = session
+            .camera_topics()
+            .iter()
+            .map(|(_, t)| t.clone())
+            .collect::<Vec<_>>();
         for (id, panel) in self.panels.iter_mut() {
             if let Panel::Camera(camera) = panel {
                 camera.bind_topics(
-                    &selection.available_topics,
-                    selection.panels.get(id).and_then(|t| t.as_deref()),
+                    &planned_topics,
+                    selection
+                        .panels
+                        .get(id)
+                        .and_then(|t| t.as_deref())
+                        .filter(|t| planned_topics.iter().any(|p| p == t)),
                     session.camera_topics(),
                 );
             }
@@ -216,7 +226,8 @@ impl ViewerApp {
         self.scene = Default::default();
         self.overlays.reset_source();
     }
-    fn replace_layout(&mut self, layout: LayoutDocument, label: String) {
+    fn replace_layout(&mut self, layout: LayoutDocument, label: String) -> Result<(), String> {
+        layout.validate().map_err(|e| e.to_string())?;
         let (panels, warnings) = build_panels(&layout);
         self.panels = panels;
         self.layout = std::sync::Arc::new(layout);
@@ -233,6 +244,7 @@ impl ViewerApp {
         }
         self.gpu.scene.invalidate();
         self.gpu.bev.invalidate();
+        Ok(())
     }
     fn toggle_plot(&mut self, enabled: bool) {
         fn remove(node: LayoutNode) -> Option<LayoutNode> {
@@ -285,8 +297,12 @@ impl ViewerApp {
                 children,
             } = &mut layout.root
             {
-                let existing = children[0].node.clone();
-                children[0].node = LayoutNode::Split {
+                let Some(first) = children.first_mut() else {
+                    self.error = "Layout split must have children".into();
+                    return;
+                };
+                let existing = first.node.clone();
+                first.node = LayoutNode::Split {
                     direction: viewer_layout::SplitDirection::Column,
                     children: vec![
                         viewer_layout::SplitChild {
@@ -318,16 +334,15 @@ impl ViewerApp {
             layout.root = remove(layout.root).unwrap_or_else(|| {
                 LayoutNode::Panel(viewer_layout::PanelNode {
                     id: PanelId::new("empty").expect("static id"),
-                    panel_type: "explore".into(),
+                    panel_type: "topics".into(),
                     config_version: 1,
                     title: None,
                     config: serde_json::json!({}),
                 })
             });
         }
-        match layout.validate() {
-            Ok(()) => self.replace_layout(layout, "Custom".into()),
-            Err(error) => self.error = error.to_string(),
+        if let Err(error) = self.replace_layout(layout, "Custom".into()) {
+            self.error = error;
         }
     }
     fn poll_files(&mut self) {
@@ -337,10 +352,11 @@ impl ViewerApp {
                     let opened = *opened;
                     self.reset_views();
                     self.inspection.reset(&opened.playback);
-                    self.topic_tree = TopicTree::from_catalog(opened.playback.catalog());
+                    self.topic_tree = TopicTree::metadata(opened.playback.catalog());
                     self.active_bindings = opened.bindings;
                     self.session = Some(opened.playback);
                     self.source = opened.name;
+                    self.source_revision = self.source_revision.wrapping_add(1);
                     self.error.clear();
                     self.configure_inspections();
                     self.metrics.reset();
@@ -379,7 +395,7 @@ impl ViewerApp {
                             }),
                         FileKind::Layout => LayoutDocument::from_json(&json)
                             .map_err(|e| e.to_string())
-                            .map(|layout| self.replace_layout(layout, name.clone())),
+                            .and_then(|layout| self.replace_layout(layout, name.clone())),
                         FileKind::Mcap => unreachable!(),
                     });
                     match result {
@@ -394,10 +410,13 @@ impl ViewerApp {
         let mut open = self.settings_open;
         egui::Window::new("Recording / physical settings")
             .open(&mut open)
-            .default_width(560.)
+            .default_width(560_f32.min((ctx.content_rect().width() - 32.).max(240.)))
+            .max_height((ctx.content_rect().height() - 64.).max(160.))
+            .vscroll(true)
             .show(ctx, |ui| {
                 ui.heading("Next recording");
                 ui.small("Bindings and layout input requirements apply when opening a recording.");
+                ui.small("Camera choices are limited to streams selected on open. Reopen after changing layout inputs.");
                 let busy = self.picker.busy.get();
                 ui.horizontal(|ui| {
                     if ui
@@ -426,44 +445,74 @@ impl ViewerApp {
                 ui.heading("Recording Server");
                 let url = ui.text_edit_singleline(&mut self.picker.remote.url);
                 self.track("remote-url", &url);
+                if url.changed() {
+                    self.picker.remote.address_changed();
+                }
                 let connect = ui.add_enabled(!busy, egui::Button::new("Connect"));
                 self.track("remote-connect", &connect);
                 if connect.clicked() {
                     self.picker.remote.connect();
                 }
-                let recordings = self.picker.remote.recordings.borrow();
+                let connection = self.picker.remote.connection.borrow();
+                let mut selected = self.picker.remote.selected.clone();
                 let choice = egui::ComboBox::from_id_salt("remote-recording")
-                    .selected_text(if self.picker.remote.selected.is_empty() {
+                    .selected_text(if selected.is_empty() {
                         "Select recording"
                     } else {
-                        &self.picker.remote.selected
+                        &selected
                     })
                     .show_ui(ui, |ui| {
-                        for r in recordings.iter() {
-                            let response = ui.selectable_value(
-                                &mut self.picker.remote.selected,
-                                r.recording_id.clone(),
-                                &r.display_name,
-                            );
-                            self.controls.insert(
-                                format!("recording-{}", r.recording_id),
-                                [
-                                    response.rect.min.x,
-                                    response.rect.min.y,
-                                    response.rect.max.x,
-                                    response.rect.max.y,
-                                ],
-                            );
+                        if let Some(connection) = connection.as_ref() {
+                            for recording in &connection.recordings {
+                                let response = ui.selectable_value(
+                                    &mut selected,
+                                    recording.recording_id.clone(),
+                                    &recording.display_name,
+                                );
+                                self.controls.insert(
+                                    format!("recording-{}", recording.recording_id),
+                                    [response.rect.min.x, response.rect.min.y,
+                                     response.rect.max.x, response.rect.max.y],
+                                );
+                            }
                         }
                     });
-                drop(recordings);
+                drop(connection);
+                self.picker.remote.select(selected);
                 self.track("remote-choice", &choice.response);
-                let open_remote = ui.add_enabled(!busy, egui::Button::new("Open Remote Playback"));
+                let ready = !self.picker.remote.selected.is_empty()
+                    && self.picker.remote.connection.borrow().is_some();
+                let catalog = ui.add_enabled(!busy && ready, egui::Button::new("Load Catalog only"));
+                self.track("remote-catalog", &catalog);
+                if catalog.clicked() {
+                    self.picker.remote.load_catalog();
+                }
+                let open_remote = ui.add_enabled(!busy && ready, egui::Button::new("Open Remote Playback"));
                 self.track("remote-open", &open_remote);
                 if open_remote.clicked() {
                     self.picker.remote.open();
                 }
                 ui.label(self.picker.remote.status.borrow().as_str());
+                if let Some(connection) = self.picker.remote.connection.borrow().as_ref() {
+                    ui.small(format!("Connected: {}", connection.address));
+                    if let Some(catalog) = &connection.catalog {
+                        ui.label(format!("Recording: {} · {} streams", catalog.recording_id, catalog.streams.len()));
+                        ui.small(format!("Revision: {}", catalog.recording_revision));
+                        ui.monospace(format!("Log time [{} .. {}) ns", catalog.time_range.start_ns, catalog.time_range.end_ns_exclusive));
+                        egui::ScrollArea::vertical()
+                            .id_salt("catalog-preview")
+                            .max_height(180.)
+                            .show_rows(ui, ui.spacing().interact_size.y, catalog.streams.len(), |ui, rows| {
+                                for stream in &catalog.streams[rows] {
+                                    ui.label(format!(
+                                        "{} · {} · {} · {} · {} messages",
+                                        stream.id, stream.topic, stream.schema_name, stream.message_encoding,
+                                        stream.message_count.map_or_else(|| "unknown".into(), |n| n.get().to_string()),
+                                    ));
+                                }
+                            });
+                    }
+                }
                 ui.separator();
                 ui.heading("Physical geometry / projection");
                 ui.checkbox(&mut self.physical.enabled, "Show configured physical body");
@@ -576,6 +625,12 @@ impl ViewerApp {
                             .find(|(_, t)| *t == topic)
                             .map(|(id, _)| *id)
                     });
+                    if id.is_none() {
+                        self.error = format!(
+                            "Camera topic {topic} is not selected in this session; reopen with a layout that requests it"
+                        );
+                        continue;
+                    }
                     if let (Some(id), Some(session)) = (id, &mut self.session) {
                         match session.select_camera(id) {
                             Ok(true) => {
@@ -796,11 +851,20 @@ impl eframe::App for ViewerApp {
                 let settings = ui.button("Settings");
                 self.track("settings", &settings);
                 if settings.clicked() {
-                    self.settings_open = true;
+                    self.settings_open = !self.settings_open;
                 }
-                ui.label(&self.source);
+                if !self.source.is_empty() {
+                    ui.label(&self.source);
+                }
                 if busy {
                     ui.spinner();
+                    if self.picker.remote.is_loading() {
+                        let cancel = ui.button("Cancel remote request");
+                        self.track("remote-cancel", &cancel);
+                        if cancel.clicked() {
+                            self.picker.remote.cancel();
+                        }
+                    }
                 }
                 let mut show_plot = self.panels.values().any(|p| matches!(p, Panel::Plot(_)));
                 let checkbox = ui.checkbox(&mut show_plot, "Speed plot");
@@ -836,7 +900,11 @@ impl eframe::App for ViewerApp {
                             {
                                 match LayoutDocument::from_json(json) {
                                     Ok(layout) => {
-                                        self.replace_layout(layout, label.into());
+                                        if let Err(error) =
+                                            self.replace_layout(layout, label.into())
+                                        {
+                                            self.error = error;
+                                        }
                                     }
                                     Err(error) => self.error = error.to_string(),
                                 }
@@ -1050,10 +1118,16 @@ impl eframe::App for ViewerApp {
         self.metrics.record_render(ui_started.elapsed());
         let focused = self.focused_camera();
         self.bitmaps.start_pending(focused);
-        if let Some(session) = &self.session {
+        let remote = self.picker.remote.connection.borrow();
+        let remote_address = remote.as_ref().map(|r| r.address.as_str());
+        let catalog_id = remote
+            .as_ref()
+            .and_then(|r| r.catalog.as_ref())
+            .map(|c| c.recording_id.as_str());
+        let mut snapshot = if let Some(session) = &self.session {
             let view = session.clock().view();
             let rect = |r: egui::Rect| [r.min.x, r.min.y, r.max.x, r.max.y];
-            STATUS.with(|status|*status.borrow_mut()=serde_json::json!({
+            serde_json::json!({
                 "source":self.source,"cursor":view.cursor.0.to_string(),"start":view.start.0.to_string(),"end":view.end.0.to_string(),"playing":view.playing,"load":format!("{:?}",session.load_state()),"error":self.error,
                 "uploads":self.gpu.uploads,"uploads_by_camera":self.gpu.uploads_by_camera,"camera":focused.map(|id|id.0),"camera_texture":focused.and_then(|id|self.gpu.camera(id)).is_some(),"camera_pixels":focused.and_then(|id|self.gpu.camera(id)).map(|(_,size)|[size.0,size.1]),"camera_count":self.gpu.texture_views().count(),
                 "inspector":self.inspection.status,"inspector_topic":self.inspection.selected,"has_message":self.inspection.message.is_some(),
@@ -1061,22 +1135,31 @@ impl eframe::App for ViewerApp {
                 "plot_points":self.speed_query.as_ref().and_then(|q|q.result.speed.as_ref()).map_or(0,|s|s.display.values.len()),"plot_loading":self.speed_query.as_ref().is_some_and(|q|q.loading),"plot_requests":self.speed_query.as_ref().map_or(0,|q|q.request_count()),"plot_error":self.signal_error.as_ref().or_else(||self.speed_query.as_ref().and_then(|q|q.error.as_ref())),
                 "layout":self.layout_label,"panel_count":self.panels.len(),"bindings":self.active_bindings,"overlay_count":self.overlays.snapshots().count(),"calibration":self.physical.calibration_label,
                 "controls":self.controls,"pending_bindings_error":self.picker.settings.borrow().resolve().err(),
-                "remote_status":*self.picker.remote.status.borrow(), "pinned_inspectors":self.pinned_inspections.iter().map(|(topic,i)| (topic,serde_json::json!({"message":i.message.is_some(),"loading":i.loading(),"error":i.error}))).collect::<std::collections::BTreeMap<_,_>>(),
+                "remote_status":*self.picker.remote.status.borrow(),  "pinned_inspectors":self.pinned_inspections.iter().map(|(topic,i)| (topic,serde_json::json!({"message":i.message.is_some(),"loading":i.loading(),"error":i.error}))).collect::<std::collections::BTreeMap<_,_>>(),
                 "yaw_points":self.speed_query.as_ref().and_then(|q|q.result.yaw_rate.as_ref()).map_or(0,|s|s.display.values.len()),
 
-            }).to_string());
-        }
-        if self.session.is_none() {
-            STATUS.with(|status| {
-                *status.borrow_mut() = serde_json::json!({
+            })
+        } else {
+            serde_json::json!({
                     "source":null,"error":self.error,"busy":self.picker.busy.get(),
                     "layout":self.layout_label,"panel_count":self.panels.len(),"controls":self.controls,
                     "pending_bindings_error":self.picker.settings.borrow().resolve().err(),
                     "remote_status":*self.picker.remote.status.borrow(),
-                })
-                .to_string()
-            });
+            })
+        };
+        let extra_fields = serde_json::json!({
+            "remote_connected_url":remote_address,"remote_catalog":catalog_id,
+            "remote_selected":self.picker.remote.selected,"remote_loading":self.picker.remote.is_loading(),
+            "source_revision":self.source_revision,"panel_kinds":self.panels.values().map(Panel::kind_name).collect::<Vec<_>>(),
+            "camera_choices":self.panels.values().find_map(|p|match p {Panel::Camera(p)=>Some(p.available_topics().iter().take(32).collect::<Vec<_>>()),_=>None}),
+        });
+        if let serde_json::Value::Object(fields) = extra_fields {
+            snapshot
+                .as_object_mut()
+                .expect("diagnostic object")
+                .extend(fields);
         }
+        STATUS.with(|status| *status.borrow_mut() = snapshot.to_string());
         if self
             .session
             .as_ref()

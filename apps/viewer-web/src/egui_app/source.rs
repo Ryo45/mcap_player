@@ -11,7 +11,7 @@ use std::{
     rc::Rc,
 };
 use viewer_core::WorkspaceBindings;
-use viewer_remote_protocol::RecordingDescriptor;
+use viewer_remote_protocol::{CatalogResponse, RecordingDescriptor};
 use wasm_bindgen::{JsCast, closure::Closure};
 use wasm_bindgen_futures::{JsFuture, spawn_local};
 use web_sys::{AbortController, Event, HtmlInputElement};
@@ -177,6 +177,7 @@ impl SourcePicker {
         self.pick(FileKind::Mcap);
     }
     pub fn poll(&mut self) -> Option<FileResult> {
+        self.remote.poll_timeout();
         self.inbox.borrow_mut().pop_front()
     }
 }
@@ -190,9 +191,18 @@ impl Drop for SourcePicker {
     }
 }
 
+/// A list/catalog can only be used with the client that fetched it.
+pub(super) struct RemoteConnection {
+    pub address: String,
+    pub client: RemoteApiClient,
+    pub recordings: Vec<RecordingDescriptor>,
+    pub catalog: Option<CatalogResponse>,
+}
+const REQUEST_TIMEOUT_MS: f64 = 30_000.;
+
 pub(super) struct RemoteSource {
     pub url: String,
-    pub recordings: Rc<RefCell<Vec<RecordingDescriptor>>>,
+    pub connection: Rc<RefCell<Option<RemoteConnection>>>,
     pub selected: String,
     pub status: Rc<RefCell<String>>,
     context: egui::Context,
@@ -200,6 +210,7 @@ pub(super) struct RemoteSource {
     generation: Rc<Cell<u64>>,
     inbox: Rc<RefCell<VecDeque<FileResult>>>,
     busy: Rc<Cell<bool>>,
+    active: Rc<Cell<Option<(u64, f64)>>>,
     abort: Option<AbortController>,
 }
 impl RemoteSource {
@@ -212,7 +223,7 @@ impl RemoteSource {
     ) -> Self {
         Self {
             url: "http://localhost:8081".into(),
-            recordings: Rc::new(RefCell::new(Vec::new())),
+            connection: Rc::new(RefCell::new(None)),
             selected: String::new(),
             status: Rc::new(RefCell::new(String::new())),
             context,
@@ -220,67 +231,201 @@ impl RemoteSource {
             generation,
             inbox,
             busy,
+            active: Rc::new(Cell::new(None)),
             abort: None,
         }
     }
-    fn begin(&mut self) -> Result<(RemoteApiClient, u64, web_sys::AbortSignal), String> {
-        let client = RemoteApiClient::new(self.url.clone()).map_err(|e| e.to_string())?;
+    pub fn is_loading(&self) -> bool {
+        self.active
+            .get()
+            .is_some_and(|(id, _)| self.generation.get() == id)
+    }
+    pub fn address_changed(&mut self) {
+        self.cancel();
+        *self.connection.borrow_mut() = None;
+        self.selected.clear();
+        *self.status.borrow_mut() = "Connect to the new address".into();
+    }
+    pub fn select(&mut self, id: String) {
+        if id != self.selected {
+            self.cancel();
+            self.selected = id;
+            if let Some(connection) = self.connection.borrow_mut().as_mut() {
+                connection.catalog = None;
+            }
+            self.status.borrow_mut().clear();
+        }
+    }
+    /// Invalidate only work owned by this remote request, never a newer Local/config choice.
+    pub fn cancel(&mut self) {
+        if let Some(abort) = self.abort.take() {
+            abort.abort();
+        }
+        if let Some((id, _)) = self.active.take()
+            && self.generation.get() == id
+        {
+            self.generation.set(id.wrapping_add(1));
+            self.inbox.borrow_mut().clear();
+            self.busy.set(false);
+            *self.status.borrow_mut() = "Remote request cancelled".into();
+        }
+        self.context.request_repaint();
+    }
+    fn poll_timeout(&mut self) {
+        if let Some((id, deadline)) = self.active.get()
+            && (self.generation.get() != id || js_sys::Date::now() >= deadline)
+        {
+            let timed_out = self.generation.get() == id;
+            self.cancel();
+            if timed_out {
+                *self.status.borrow_mut() = "Remote request timed out after 30 seconds".into();
+            }
+        }
+    }
+    fn begin(&mut self) -> Result<(u64, web_sys::AbortSignal), String> {
         let abort =
             AbortController::new().map_err(|e| format!("request abort controller: {e:?}"))?;
         let signal = abort.signal();
-        if let Some(previous) = self.abort.replace(abort) {
-            previous.abort();
-        }
-        let generation = self.generation.get().wrapping_add(1);
-        self.generation.set(generation);
+        self.cancel();
+        self.abort = Some(abort);
+        let id = self.generation.get().wrapping_add(1);
+        self.generation.set(id);
+        self.active
+            .set(Some((id, js_sys::Date::now() + REQUEST_TIMEOUT_MS)));
         self.inbox.borrow_mut().clear();
         self.busy.set(true);
         self.context.request_repaint();
-        Ok((client, generation, signal))
+        Ok((id, signal))
+    }
+    fn target(&self) -> Result<(RemoteApiClient, String), String> {
+        let connection = self.connection.borrow();
+        let connection = connection.as_ref().ok_or("Connect to a server first")?;
+        if connection.address != self.url.trim() {
+            return Err("Reconnect after changing the server address".into());
+        }
+        if !connection
+            .recordings
+            .iter()
+            .any(|r| r.recording_id == self.selected)
+        {
+            return Err("Select a recording from this connection".into());
+        }
+        Ok((connection.client.clone(), self.selected.clone()))
     }
     pub fn connect(&mut self) {
-        let (client, expected, signal) = match self.begin() {
+        let client = match RemoteApiClient::new(self.url.clone()) {
+            Ok(client) => client,
+            Err(e) => {
+                *self.status.borrow_mut() = e.to_string();
+                return;
+            }
+        };
+        let (expected, signal) = match self.begin() {
             Ok(v) => v,
             Err(e) => {
                 *self.status.borrow_mut() = e;
                 return;
             }
         };
+        *self.connection.borrow_mut() = None;
+        self.selected.clear();
+        let address = self.url.trim().to_owned();
         let generation = self.generation.clone();
         let status = self.status.clone();
-        let recordings = self.recordings.clone();
+        let connection = self.connection.clone();
         let context = self.context.clone();
         let busy = self.busy.clone();
+        let active = self.active.clone();
         *status.borrow_mut() = "Loading recordings…".into();
         spawn_local(async move {
             let result = client.list_recordings(Some(&signal)).await;
             if generation.get() != expected {
                 return;
             }
+            active.set(None);
             busy.set(false);
             match result {
                 Ok(response) => {
                     *status.borrow_mut() = format!("{} recording(s)", response.recordings.len());
-                    *recordings.borrow_mut() = response.recordings;
+                    *connection.borrow_mut() = Some(RemoteConnection {
+                        address,
+                        client,
+                        recordings: response.recordings,
+                        catalog: None,
+                    });
                 }
                 Err(error) => *status.borrow_mut() = error.to_string(),
-            };
+            }
             context.request_repaint();
         });
     }
-    pub fn open(&mut self) {
-        let bindings = match self.settings.borrow().resolve() {
-            Ok(b) => b,
+    pub fn load_catalog(&mut self) {
+        let (client, id) = match self.target() {
+            Ok(v) => v,
             Err(e) => {
                 *self.status.borrow_mut() = e;
                 return;
             }
         };
-        if self.selected.is_empty() {
-            *self.status.borrow_mut() = "Select a recording".into();
-            return;
+        let (expected, signal) = match self.begin() {
+            Ok(v) => v,
+            Err(e) => {
+                *self.status.borrow_mut() = e;
+                return;
+            }
+        };
+        if let Some(connection) = self.connection.borrow_mut().as_mut() {
+            connection.catalog = None;
         }
-        let (client, expected, signal) = match self.begin() {
+        let generation = self.generation.clone();
+        let status = self.status.clone();
+        let connection = self.connection.clone();
+        let context = self.context.clone();
+        let busy = self.busy.clone();
+        let active = self.active.clone();
+        *status.borrow_mut() = "Loading catalog only (no message reads)…".into();
+        spawn_local(async move {
+            let result = client.fetch_catalog(&id, Some(&signal)).await;
+            if generation.get() != expected {
+                return;
+            }
+            active.set(None);
+            busy.set(false);
+            match result {
+                Ok(catalog) => {
+                    if let Some(connection) = connection.borrow_mut().as_mut() {
+                        connection.catalog = Some(catalog);
+                    }
+                    *status.borrow_mut() = "Catalog ready; playback has not been opened".into();
+                }
+                Err(error) => *status.borrow_mut() = error.to_string(),
+            }
+            context.request_repaint();
+        });
+    }
+    pub fn open(&mut self) {
+        let bindings = match self.settings.borrow().resolve() {
+            Ok(v) => v,
+            Err(e) => {
+                *self.status.borrow_mut() = e;
+                return;
+            }
+        };
+        let (client, id) = match self.target() {
+            Ok(v) => v,
+            Err(e) => {
+                *self.status.borrow_mut() = e;
+                return;
+            }
+        };
+        let cached = self
+            .connection
+            .borrow()
+            .as_ref()
+            .and_then(|c| c.catalog.as_ref())
+            .filter(|c| c.recording_id == id)
+            .cloned();
+        let (expected, signal) = match self.begin() {
             Ok(v) => v,
             Err(e) => {
                 *self.status.borrow_mut() = e;
@@ -288,34 +433,37 @@ impl RemoteSource {
             }
         };
         let requirements = self.settings.borrow().requirements.clone();
-        let id = self.selected.clone();
         let generation = self.generation.clone();
         let inbox = self.inbox.clone();
         let context = self.context.clone();
         let busy = self.busy.clone();
         let status = self.status.clone();
+        let active = self.active.clone();
         *status.borrow_mut() = "Opening recording…".into();
         spawn_local(async move {
             let result = async {
-                let catalog = client
-                    .fetch_catalog(&id, Some(&signal))
-                    .await
-                    .map_err(|e| e.to_string())?;
-                let name = id.clone();
+                let catalog = match cached {
+                    Some(c) => c,
+                    None => client
+                        .fetch_catalog(&id, Some(&signal))
+                        .await
+                        .map_err(|e| e.to_string())?,
+                };
                 let adapted = adapt_catalog(&catalog, &bindings, Some(&requirements))
                     .map_err(|e| e.to_string())?;
                 let playback =
                     WebPlayback::from_remote(client, adapted).map_err(|e| e.to_string())?;
                 Ok(OpenedSource {
-                    name,
+                    name: id,
                     playback,
                     bindings,
                 })
             }
             .await;
             if generation.get() == expected {
+                active.set(None);
                 busy.set(false);
-                *status.borrow_mut() = "".into();
+                status.borrow_mut().clear();
                 inbox
                     .borrow_mut()
                     .push_back(FileResult::Source(result.map(Box::new)));
@@ -326,8 +474,6 @@ impl RemoteSource {
 }
 impl Drop for RemoteSource {
     fn drop(&mut self) {
-        if let Some(abort) = self.abort.take() {
-            abort.abort();
-        }
+        self.cancel();
     }
 }

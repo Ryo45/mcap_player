@@ -58,10 +58,11 @@ def main():
                 return page.evaluate(snapshot)
 
             def open_file(path):
+                revision = status()['source_revision']
                 root = page.call('DOM.getDocument')['root']['nodeId']
                 node = page.call('DOM.querySelector', {'nodeId': root, 'selector': '#mcap-file'})['nodeId']
                 page.call('DOM.setFileInputFiles', {'nodeId': node, 'files': [str(path.resolve())]})
-                wait(page, f'{snapshot}.source=={json.dumps(path.name)} && {snapshot}.load=="Ready"', 'open recording')
+                wait(page, f'{snapshot}.source_revision>{revision} && {snapshot}.source=={json.dumps(path.name)} && {snapshot}.load=="Ready"', 'open recording')
 
             def play():
                 r = status()['play']
@@ -133,7 +134,10 @@ def main():
             play()
             open_file(args.replacement)
             current = status()
-            assert not current['has_message'] and not current['camera_texture'], current
+            assert not current['has_message'], current
+            # The replacement contains a valid image at its first timestamp.
+            # Its new 320x240 texture is allowed; the old FHD texture is not.
+            assert not current['camera_texture'] or current['camera_pixels'] == [320, 240], current
             report['replacement'] = current
             if args.plot:
                 # Hold one query's browser reads, replace its source, then let the

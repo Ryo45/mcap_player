@@ -84,6 +84,12 @@ def main():
                     wait(page, f'{expr}.remote_status=="2 recording(s)"', 'remote list')
                     control('remote-choice')
                     control('recording-renamed')
+                    old_source, old_cursor = state()['source'], state()['cursor']
+                    control('remote-catalog')
+                    wait(page, f'{expr}.remote_catalog=="renamed"', 'catalog-only preview')
+                    assert state()['source']==old_source and state()['cursor']==old_cursor
+                    assert 'message batch served' not in (out/'server.log').read_text(), 'catalog preview read payload messages'
+                    report['catalog_only_no_message_reads'] = True
                     control('remote-open')
                     wait(page, f'{expr}.source=="renamed" && {expr}.load=="Ready"', 'remote open')
                     assert state()['bindings'] == expected
