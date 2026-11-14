@@ -206,7 +206,7 @@ fn query_products_are_bounded_and_independent_of_playback_and_metadata() {
     .unwrap();
     let selected = plan.selected_stream_ids();
     let tree = TopicTree::from_catalog(source.catalog());
-    assert_eq!(tree.entries[0].numeric_fields.len(), 4);
+    assert_eq!(tree.entries[0].numeric_fields().unwrap().len(), 4);
     let request = NumericSeriesRequest {
         stream_id: stream,
         field_path: "vector.x".into(),

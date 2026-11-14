@@ -9,54 +9,50 @@ pub struct TopicTreeEntry {
     pub message_encoding: String,
     pub message_count: Option<u64>,
     pub schema_definition: Option<std::sync::Arc<crate::SchemaDefinition>>,
-    pub numeric_fields: Vec<NumericField>,
-    /// Unsupported or absent schema is visible; the topic remains inspectable.
-    pub schema_error: Option<SchemaExplorationError>,
+    numeric_fields: std::sync::OnceLock<Result<Vec<NumericField>, SchemaExplorationError>>,
 }
 #[derive(Clone, Debug, Default)]
 pub struct TopicTree {
     pub entries: Vec<TopicTreeEntry>,
 }
+impl TopicTreeEntry {
+    pub fn from_stream(stream: &crate::StreamDescriptor) -> Self {
+        Self {
+            stream_id: stream.id,
+            topic: stream.topic.clone(),
+            schema_name: stream.schema.clone(),
+            message_encoding: stream.message_encoding.clone(),
+            message_count: stream.timing.message_count,
+            schema_definition: stream.schema_definition.clone(),
+            numeric_fields: std::sync::OnceLock::new(),
+        }
+    }
+
+    /// Explore only the requested channel. Cache success and failure for this source entry.
+    pub fn numeric_fields(&self) -> Result<&[NumericField], &SchemaExplorationError> {
+        self.numeric_fields
+            .get_or_init(|| {
+                let definition = self
+                    .schema_definition
+                    .as_deref()
+                    .ok_or(SchemaExplorationError::MissingDefinition)?;
+                RosMessageSchema::parse(&self.schema_name, definition)
+                    .and_then(|schema| schema.numeric_fields())
+                    .map_err(SchemaExplorationError::Decode)
+            })
+            .as_deref()
+    }
+}
 impl TopicTree {
-    /// Source facts only: no ROS schema traversal or numeric-field extraction.
-    pub fn metadata(catalog: &SourceCatalog) -> Self {
+    /// Source facts only. Numeric exploration is lazy and does not select playback routes.
+    pub fn from_catalog(catalog: &SourceCatalog) -> Self {
         let mut entries = catalog
             .streams
             .iter()
-            .map(|stream| TopicTreeEntry {
-                stream_id: stream.id,
-                topic: stream.topic.clone(),
-                schema_name: stream.schema.clone(),
-                message_encoding: stream.message_encoding.clone(),
-                message_count: stream.timing.message_count,
-                schema_definition: stream.schema_definition.clone(),
-                numeric_fields: vec![],
-                schema_error: None,
-            })
+            .map(TopicTreeEntry::from_stream)
             .collect::<Vec<_>>();
         entries.sort_by(|a, b| (&a.topic, a.stream_id).cmp(&(&b.topic, b.stream_id)));
         Self { entries }
-    }
-
-    /// Numeric exploration for hosts that expose numeric-field plots.
-    pub fn from_catalog(catalog: &SourceCatalog) -> Self {
-        let mut tree = Self::metadata(catalog);
-        for entry in &mut tree.entries {
-            let fields = entry
-                .schema_definition
-                .as_deref()
-                .ok_or(SchemaExplorationError::MissingDefinition)
-                .and_then(|definition| {
-                    RosMessageSchema::parse(&entry.schema_name, definition)
-                        .and_then(|schema| schema.numeric_fields())
-                        .map_err(SchemaExplorationError::Decode)
-                });
-            match fields {
-                Ok(fields) => entry.numeric_fields = fields,
-                Err(error) => entry.schema_error = Some(error),
-            }
-        }
-        tree
     }
 }
 
@@ -87,6 +83,39 @@ mod tests {
     use super::*;
     use crate::{SchemaDefinition, StreamDescriptor, StreamTimingSummary};
     #[test]
+    fn numeric_exploration_is_lazy_and_reuses_the_successful_result() {
+        let definition = std::sync::Arc::new(SchemaDefinition {
+            encoding: "ros2msg".into(),
+            data: bytes::Bytes::from_static(b"float64 speed\nuint32 status\n"),
+        });
+        let catalog = SourceCatalog {
+            streams: (0..2)
+                .map(|i| StreamDescriptor {
+                    id: StreamId(i),
+                    topic: format!("/status_{i}"),
+                    schema: "demo/msg/Status".into(),
+                    message_encoding: "cdr".into(),
+                    schema_definition: Some(definition.clone()),
+                    timing: StreamTimingSummary::default(),
+                })
+                .collect(),
+            ..Default::default()
+        };
+        let tree = TopicTree::from_catalog(&catalog);
+        assert!(
+            tree.entries
+                .iter()
+                .all(|e| e.numeric_fields.get().is_none())
+        );
+        let fields = tree.entries[0].numeric_fields().unwrap();
+        assert_eq!(fields.len(), 2);
+        assert!(std::ptr::eq(
+            fields,
+            tree.entries[0].numeric_fields().unwrap()
+        ));
+        assert!(tree.entries[1].numeric_fields.get().is_none());
+    }
+    #[test]
     fn metadata_keeps_channel_facts_and_shared_schema_without_numeric_analysis() {
         let definition = std::sync::Arc::new(SchemaDefinition {
             encoding: "ros2msg".into(),
@@ -105,7 +134,7 @@ mod tests {
             }],
             ..Default::default()
         };
-        let tree = TopicTree::metadata(&catalog);
+        let tree = TopicTree::from_catalog(&catalog);
         let entry = &tree.entries[0];
         assert_eq!(entry.message_count, Some(123));
         assert_eq!(entry.message_encoding, "cdr");
@@ -113,15 +142,14 @@ mod tests {
             entry.schema_definition.as_ref().unwrap(),
             &definition
         ));
-        assert!(entry.numeric_fields.is_empty());
         assert!(
-            entry.schema_error.is_none(),
-            "metadata construction must not parse invalid ROS definitions"
+            entry.numeric_fields.get().is_none(),
+            "catalog construction must not parse ROS definitions"
         );
+        let error = entry.numeric_fields().unwrap_err();
         assert!(
-            TopicTree::from_catalog(&catalog).entries[0]
-                .schema_error
-                .is_some()
+            std::ptr::eq(error, entry.numeric_fields().unwrap_err()),
+            "errors are cached too"
         );
     }
 }

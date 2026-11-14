@@ -157,7 +157,10 @@ impl ViewerSession {
         else {
             return;
         };
-        if !entry.numeric_fields.iter().any(|f| f.path == field_path) {
+        if !entry
+            .numeric_fields()
+            .is_ok_and(|fields| fields.iter().any(|f| f.path == field_path))
+        {
             return;
         }
         let Some(range) = playback.end.0.checked_add(1).and_then(|end| {

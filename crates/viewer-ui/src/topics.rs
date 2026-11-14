@@ -166,13 +166,17 @@ pub fn show_topic_details(
             }
         });
     }
-    if let Some(error) = &entry.schema_error {
-        ui.small(error.to_string());
-    }
     let Some(series) = series else {
         return;
     };
-    for field in &entry.numeric_fields {
+    let fields = match entry.numeric_fields() {
+        Ok(fields) => fields,
+        Err(error) => {
+            ui.small(error.to_string());
+            return;
+        }
+    };
+    for field in fields {
         let selected = series
             .iter()
             .any(|s| s.0 == entry.stream_id && s.1 == field.path);
@@ -222,15 +226,17 @@ mod tests {
     #[test]
     fn same_topic_channels_show_their_own_schema_encoding_and_count() {
         let context = egui::Context::default();
-        let entry = |id, schema: &str, encoding: &str, count| TopicTreeEntry {
-            stream_id: StreamId(id),
-            topic: "/same".into(),
-            schema_name: schema.into(),
-            message_encoding: encoding.into(),
-            message_count: Some(count),
-            schema_definition: None,
-            numeric_fields: vec![],
-            schema_error: None,
+        let entry = |id, schema: &str, encoding: &str, count| {
+            TopicTreeEntry::from_stream(&viewer_core::StreamDescriptor {
+                id: StreamId(id),
+                topic: "/same".into(),
+                schema: schema.into(),
+                message_encoding: encoding.into(),
+                schema_definition: None,
+                timing: viewer_core::StreamTimingSummary {
+                    message_count: Some(count),
+                },
+            })
         };
         let tree = TopicTree {
             entries: vec![
@@ -298,15 +304,15 @@ mod tests {
             filter: "visible".into(),
             ..Default::default()
         };
-        let entry = |name: &str| TopicTreeEntry {
-            stream_id: StreamId(1),
-            topic: name.into(),
-            schema_name: "example/msg/Test".into(),
-            message_encoding: "cdr".into(),
-            message_count: Some(7),
-            schema_definition: None,
-            numeric_fields: vec![],
-            schema_error: None,
+        let entry = |name: &str| {
+            TopicTreeEntry::from_stream(&viewer_core::StreamDescriptor {
+                id: StreamId(1),
+                topic: name.into(),
+                schema: "example/msg/Test".into(),
+                message_encoding: "cdr".into(),
+                schema_definition: None,
+                timing: viewer_core::StreamTimingSummary::default(),
+            })
         };
         let tree = TopicTree {
             entries: vec![entry("/hidden"), entry("/visible")],

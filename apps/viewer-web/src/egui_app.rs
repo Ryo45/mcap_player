@@ -356,7 +356,7 @@ impl ViewerApp {
                     let opened = *opened;
                     self.reset_views();
                     self.inspection.reset(&opened.playback);
-                    self.topic_tree = TopicTree::metadata(opened.playback.catalog());
+                    self.topic_tree = TopicTree::from_catalog(opened.playback.catalog());
                     self.active_bindings = opened.bindings;
                     self.session = Some(opened.playback);
                     self.source = opened.name;
