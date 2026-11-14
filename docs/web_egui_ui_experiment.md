@@ -1,6 +1,6 @@
 # Shared egui panels on the Web
 
-Branch: `feature/web-egui-ui`. The experiment now covers the main Web host's principal display and source-setting functions. It remains separate from main and published Pages so the two applications can be compared. The DOM host is a temporary comparison target, not a second UI to maintain indefinitely.
+The shared egui host now covers the principal Web display and source-setting functions and is the default Trunk/Pages target. It was developed on `feature/web-egui-ui`. The DOM host remains an explicit temporary comparison target, not a second UI to maintain indefinitely.
 
 ## Boundaries
 
@@ -68,7 +68,7 @@ cd apps/viewer-web
 trunk build egui.html --release --dist ../../target/web-egui-ui/web
 ```
 
-Use the development container if host prerequisites are unavailable. Serve the output over HTTP and open it in a **WebGPU-capable browser**. No WebGL fallback is planned. Main's ordinary `trunk build --release` remains available for comparison. GPU-less SwiftShader external-image import is not supported; the UI explicitly reports that camera limitation rather than allowing an unhandled wgpu panic.
+Use the development container if host prerequisites are unavailable. Serve the output over HTTP and open it in a **WebGPU-capable browser**. No WebGL fallback is planned. The ordinary `trunk build --release` now builds this egui host, including Pages. The previous DOM host is still available explicitly with `trunk build index.html --release` for comparisons. GPU-less SwiftShader external-image import is not supported; the UI explicitly reports that camera limitation rather than allowing an unhandled wgpu panic.
 
 ## Verification and costs
 
@@ -97,6 +97,6 @@ python3 tools/performance-probe/check_web_panel_parity.py \
 
 Build `recording-server` in release mode and provide the generated renamed-bindings fixture (`tools/ros-fixture/examples/workspace_bindings_fixture.rs`). The small fixture deliberately omits nested type definitions: it tests bindings/playback, while the real sample tests successful Inspector decoding. The hardware helper owns an isolated Chrome process, refuses software fallback, and explicitly wakes/restores the display; it never unlocks the desktop. Large raw results stay under ignored `target/`.
 
-Next acceptance work is actual Android WebGPU and comparable startup-to-usable-image timing. Remove the old DOM entry and experimental feature only after those decisions; this change does not merge main or deploy Pages.
+Next acceptance work is actual Android WebGPU and comparable startup-to-usable-image timing. The egui host is now the standard Trunk/Pages target; the old DOM entry remains available explicitly for comparisons. Deleting that host and removing the temporary `egui-ui` feature are separate cleanup work.
 
 The [merge-readiness corrections](web_egui_merge_readiness.md) document strict layout validation, connection-scoped Remote catalog/list state, cancellation/deadlines, multi-channel topic metadata and the expanded regression checks.

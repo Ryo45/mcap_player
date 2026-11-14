@@ -5,11 +5,11 @@ Recording Server playback. Platform-specific I/O remains separate; MCAP log time
 exact predecessor selection, transactional seek, bounded state, and CDR decoding
 remain shared observable requirements.
 
-The table below describes the default DOM Web entry. On `feature/web-egui-ui`, the
-[shared egui host](web_egui_ui_experiment.md) additionally supports common panel instances,
-configurable layouts, independent BEV, multiple Inspectors and speed/yaw plots, while
-retaining Local/Remote/settings functionality. See its
-[main comparison](performance/2026-11-14-web-panel-parity/report.md) before changing the default.
+The default Trunk/Pages build uses the [shared egui host](web_egui_ui_experiment.md).
+Camera, Scene, BEV, Topics/Inspector, Status and built-in speed/yaw Plot use the
+same panel implementations as Native. Browser I/O, async query scheduling and GPU
+resource ownership remain host responsibilities. The explicit `index.html` build
+is retained only for historical DOM comparisons.
 
 ## Current inventory
 
@@ -18,23 +18,23 @@ retaining Local/Remote/settings functionality. See its
 | Recording playback | Local indexed MCAP | Browser `File.slice()` and Recording Server | Native remote source UI, if needed |
 | Playback and seek | Pause, speed, exact restore | Same shared clock/controllers; async complete-window buffering and restore | Keep parity regressions as features expand |
 | Topic catalog | Topic tree, schema, counts | Filterable topic list; all channels, schemas, encodings and counts | Hierarchical tree and numeric-field selection |
-| Message Inspector | Cursor-driven background latest-before queries; lazy fields and page navigation | Automatic cursor follow, coalesced exact latest-before across topic channels, manual Refresh and auto on/off; lazy CDR containers and next-page navigation | Previous/first page navigation, schema definition view |
-| Monitor layout | Left Topics / Inspector, right Scene and camera | Same arrangement; smaller screens stack the panels | Resizable splits and configurable layouts |
-| Cameras | Schema-based image-topic dropdown per panel, shared textures, scheduler focus and trajectory overlays | Schema-based image-topic dropdown, thumbnails, scheduler focus and same overlays | Multiple independently focused camera panels |
-| BEV | Shared GPU renderer | Shared GPU renderer, selectable in the Scene region | Independent BEV panel when configurable layouts arrive |
+| Message Inspector | Cursor-driven background latest-before queries; lazy fields and page navigation | Automatic cursor follow, coalesced exact latest-before across topic channels, manual Refresh and auto on/off; lazy CDR containers and next-page navigation | Previous/first page navigation |
+| Monitor layout | Left Topics / Inspector, right Scene and camera | Same default arrangement; presets and layout JSON; narrow screens use panel tabs | Interactive split resizing |
+| Cameras | Schema-based image-topic dropdown per panel, shared textures, scheduler focus and trajectory overlays | Common camera panels, planned-topic dropdowns, thumbnails, scheduler focus and overlays | Reopen to change the initial stream plan |
+| BEV | Shared GPU renderer | Shared GPU renderer in its own configurable panel | — |
 | 3D Scene | Shared renderer, chase/free/vehicle-eye cameras, Scan/TF, accumulation | Same renderer and bounded presentation state; camera modes, drag orbit, wheel zoom, reset, accumulation | Touch orbit controls and richer TF diagnostics |
 | Camera-less recordings | Query-only and optional-data layouts | Open catalogs with optional available continuous streams; empty selections read no message chunks | Dedicated query-only presets |
-| Numeric / builtin Plot | Numeric field queries, speed/yaw-rate overview/detail/current | Not implemented | Async bounded Local/Remote query I/O plus shared extraction/reduction |
+| Numeric / builtin Plot | Numeric field queries, speed/yaw-rate overview/detail/current | Shared speed/yaw Plot with bounded independent Local/Remote query | Arbitrary numeric-field series; configurable query range |
 | Topic Health / Diagnostics | Bounded query snapshots and session worker | Not implemented | Async index/range readers plus shared reductions; no full-recording scan fallback |
 | Preview / bookmarks | Preview sidecars and timeline bookmarks | Not implemented | Browser/Remote artifact loading and lifecycle |
-| Layout persistence | Validated layout documents and presets | Fixed monitor workspace | Browser layout host using the shared persistent model |
+| Layout persistence | Validated layout documents and presets | Presets and validated layout JSON load | Layout save/editor |
 | ROS live | Configured ROS 2 subscriptions; camera focus within subscribed inputs | Not implemented | Separate transport requirement; browser cannot directly reuse Native ROS subscriptions |
 | MCAP compression | Uncompressed, Zstd, LZ4 | Browser Local: uncompressed, Zstd, LZ4; Recording Server: uncompressed, Zstd | Server LZ4 support |
 
 ## First delivered slice: monitor workspace
 
 The Web UI presents topics and messages on the left, with 3D Scene above the camera
-on the right. BEV remains available through the view selector. Topic selection does
+on the right. BEV is a separate panel in layouts such as Standard. Topic selection does
 not add playback routes or retain recording-duration payload histories. Camera-less
 catalogs are valid, and a missing preferred camera falls back to an available camera.
 An empty continuous selection produces complete empty windows without a Local chunk

@@ -68,8 +68,8 @@ cargo install trunk --locked --version 0.21.14
 (cd apps/viewer-web && trunk serve --release)
 ```
 
-WebはTopics / Inspector・Scene / BEV・Cameraの固定配置です。
-Plot、Preview、bookmarks、用途別レイアウトは現在Nativeのみです。
+WebはNativeと共通のeguiパネルを使用し、Topics / Inspector・Scene / BEV・Camera、速度・ヨーレートPlotとレイアウトJSONに対応します。WebGPU対応ブラウザが必要です。
+任意の数値field Plot、Preview、bookmarks、Health / DiagnosticsはNativeのみです。
 
 ## DockerでWebを起動する
 

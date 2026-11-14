@@ -11,6 +11,7 @@ from pathlib import Path
 import subprocess
 import time
 import urllib.request
+from urllib.parse import urlsplit
 from PIL import Image
 from benchmark_browser import browser, serve, free_port
 from check_web_egui import click, wait
@@ -22,18 +23,21 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('dist', 'server', 'data', 'replacement', 'output'):
         parser.add_argument('--'+name, type=Path, required=True)
+    parser.add_argument('--base-path', default='/', help='Application path under the served dist root')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
     out = args.output
     report = {'status':'failed', 'checks':[]}
     with ExitStack() as stack:
         url = stack.enter_context(serve(args.dist.resolve()))
+        url = url.rstrip('/')+'/'+args.base_path.strip('/')+'/' if args.base_path.strip('/') else url
+        origin = urlsplit(url)._replace(path='',query='',fragment='').geturl()
         servers = []
         for label, data in [('A', args.data), ('B', args.replacement)]:
             port = free_port()
             address = f'http://127.0.0.1:{port}'
             config = out/f'{label}.toml'
-            config.write_text(f'bind="127.0.0.1:{port}"\nallowed_origins=[{json.dumps(url.rstrip("/"))}]\n'
+            config.write_text(f'bind="127.0.0.1:{port}"\nallowed_origins=[{json.dumps(origin)}]\n'
                 f'[[recordings]]\nid="sample"\ndisplay_name="Server {label}"\npath={json.dumps(str(data.resolve()))}\n')
             log = stack.enter_context((out/f'{label}.log').open('w'))
             process = subprocess.Popen([str(args.server.resolve()),'--config',str(config.resolve())], stdout=log, stderr=log)
@@ -146,9 +150,9 @@ def main():
                 if mode=='cancel':control('remote-cancel')
                 elif mode=='address-change':address(servers[1][0])
                 else:
-                    page.evaluate('window.savedNow=Date.now;Date.now=()=>savedNow()+31000')
-                    wait(page,f'!{SNAPSHOT}.remote_loading && {SNAPSHOT}.remote_status.includes("timed out")','timeout')
-                    page.evaluate('Date.now=window.savedNow')
+                    control('settings')  # No further pointer/keyboard input while awaiting the deadline.
+                    wait(page,f'!{SNAPSHOT}.remote_loading && {SNAPSHOT}.remote_status.includes("timed out")','idle timeout',timeout=40)
+                    control('settings')
                 wait(page,f'!{SNAPSHOT}.remote_loading','cancelled')
                 page.evaluate('window.releaseHeld();window.releaseHeld=null');time.sleep(.3)
                 assert state()['remote_connected_url'] is None
@@ -222,9 +226,43 @@ def main():
                 reference=pixels['rgba8'][i]['screen_rgb']
                 for encoding in ('bgra8','png'):
                     assert max(abs(a-b) for a,b in zip(reference,pixels[encoding][i]['screen_rgb']))<=2
+            physical=out/'physical-views.json'
+            physical.write_text(json.dumps({'schemaVersion':1,'root':{'kind':'split','direction':'row','children':[
+                {'weight':1,'node':panel('scene','scene-3d')},
+                {'weight':1,'node':panel('bev','bev')}]}}))
+            file('#layout-file',physical)
+            rev=state()['source_revision'];file('#mcap-file',args.data)
+            wait(page,f'{SNAPSHOT}.source_revision>{rev} && {SNAPSHOT}.load=="Ready"','physical source')
+            r=state()['timeline'];click(page,r[0]+(r[2]-r[0]-55)*.3,(r[1]+r[3])/2)
+            wait(page,f'{SNAPSHOT}.load=="Ready"','physical seek')
+            control('settings')
+            def physical_change(action):
+                before=state();action()
+                wait(page,f'{SNAPSHOT}.scene_layer_uploads>{before["scene_layer_uploads"]} && {SNAPSHOT}.bev_layer_uploads>{before["bev_layer_uploads"]}','physical cache invalidation')
+                assert state()['cursor']==before['cursor'] and not state()['playing']
+                time.sleep(.3);settled=state();time.sleep(.3)
+                assert state()['scene_layer_uploads']==settled['scene_layer_uploads']
+                assert state()['bev_layer_uploads']==settled['bev_layer_uploads']
+                assert state()['uploads']==before['uploads'],'physical edit imported a camera image'
+            physical_change(lambda:control('physical-body'))
+            physical_change(lambda:control('physical-body'))
+            # Apply frames is below the current Settings scroll viewport.
+            page.call('Input.dispatchMouseEvent',{'type':'mouseMoved','x':300,'y':450})
+            page.call('Input.dispatchMouseEvent',{'type':'mouseWheel','x':300,'y':450,'deltaX':0,'deltaY':300})
+            time.sleep(.3)
+            physical_change(lambda:control('physical-frames'))
+            physical_change(lambda:control('physical-frames'))  # Same policy and source revisions after reset.
+            physical_change(lambda:file('#platform-file',Path('config/platform_geometry/turtlebot3_waffle_pi.json')))
+            physical_change(lambda:file('#calibration-file',Path('config/camera_calibration.json')))
+            control('settings')
+            report['checks'].append('paused physical body/platform/frame/calibration edits invalidate Scene and BEV once, preserve cursor and do not import camera images')
             page.call('Emulation.setDeviceMetricsOverride',{'width':390,'height':844,'deviceScaleFactor':1,'mobile':True})
             time.sleep(.3)
             control('settings')
+            # Settings preserves its scroll position across closing and viewport changes.
+            page.call('Input.dispatchMouseEvent',{'type':'mouseMoved','x':200,'y':300})
+            page.call('Input.dispatchMouseEvent',{'type':'mouseWheel','x':200,'y':300,'deltaX':0,'deltaY':-2000})
+            time.sleep(.3)
             wait(page,f'!!{SNAPSHOT}.controls["remote-url"]','mobile settings')
             r=state()['controls']['remote-url']
             assert 0<=r[0]<r[2]<=390 and 0<=r[1]<r[3]<=844,r

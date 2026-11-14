@@ -1,6 +1,6 @@
 # Web egui merge-readiness corrections
 
-2026-11-14. Branch: `feature/web-egui-ui`. This is a correction pass after the shared-panel migration, not promotion of the new entry point or deployment to Pages.
+2026-11-14. Branch: `feature/web-egui-ui`. This records the correction pass after the shared-panel migration and the final changes for promotion to the default Web entry.
 
 ## Findings and fixes
 
@@ -58,4 +58,8 @@ The test owns isolated servers/Chrome and explicitly wakes/restores the display.
 
 Actual Android Chrome WebGPU, mobile memory/startup-to-first-image timing and broader Native/Web color-management comparisons remain unverified. Layout input requirements apply to the next source open; changing them does not silently rebuild the active SessionPlan. Native-only Health/Diagnostics/Explore/plugin panels and arbitrary numeric-field plots remain outside this Web migration; unsupported panel types report placeholders.
 
-The default `index.html`, Pages workflow and main branch are unchanged. Switching the public entry and deleting the comparison DOM host require a separate explicit promotion step.
+The standard Trunk/Pages target is now `egui.html`; the generated entry is still `index.html` and uses the configured Pages base path. The old DOM source entry can be built explicitly for comparisons; deleting it is deferred.
+
+Final pre-merge corrections explicitly schedule repaint every 100 ms while a Remote request is pending, independently of spinner animation, so a stalled request reaches its deadline even when Settings is closed and playback is paused. Physical body visibility, geometry JSON, successful frame application and calibration JSON invalidate both Scene and BEV renderer caches. Existing presentation resets for geometry/frame changes are retained; body visibility changes preserve accumulated cloud history and camera textures. The real-GPU regression checks wait through the real 30-second deadline without pointer/keyboard input, and check that physical edits refresh both GPU layers once without moving the cursor or reimporting images.
+
+Final default-entry verification reran workspace Clippy and all 540 tests (16 ignored), shared wasm32 checks, and the standard locked Trunk release build with `/mcap_player/`. The targeted Web/UI/Scene/BEV packages passed 100 tests (5 ignored). Optional plugin/ROS Live counts above refer to the preceding correction pass; these configurations were not rerun for the Web-only repaint/cache changes.

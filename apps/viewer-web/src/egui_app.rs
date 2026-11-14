@@ -226,6 +226,10 @@ impl ViewerApp {
         self.scene = Default::default();
         self.overlays.reset_source();
     }
+    fn invalidate_scene_views(&mut self) {
+        self.gpu.scene.invalidate();
+        self.gpu.bev.invalidate();
+    }
     fn replace_layout(&mut self, layout: LayoutDocument, label: String) -> Result<(), String> {
         layout.validate().map_err(|e| e.to_string())?;
         let (panels, warnings) = build_panels(&layout);
@@ -383,6 +387,7 @@ impl ViewerApp {
                                     self.physical.calibrations = c;
                                     self.physical.calibration_label = name.clone();
                                     self.overlays.reset_source();
+                                    self.invalidate_scene_views();
                                 })
                         }
                         FileKind::Platform => serde_json::from_str(&json)
@@ -392,6 +397,7 @@ impl ViewerApp {
                                 self.physical.platform_label = name.clone();
                                 self.physical.enabled = true;
                                 self.scene = Default::default();
+                                self.invalidate_scene_views();
                             }),
                         FileKind::Layout => LayoutDocument::from_json(&json)
                             .map_err(|e| e.to_string())
@@ -515,7 +521,11 @@ impl ViewerApp {
                 }
                 ui.separator();
                 ui.heading("Physical geometry / projection");
-                ui.checkbox(&mut self.physical.enabled, "Show configured physical body");
+                let body = ui.checkbox(&mut self.physical.enabled, "Show configured physical body");
+                self.track("physical-body", &body);
+                if body.changed() {
+                    self.invalidate_scene_views();
+                }
                 ui.label(&self.physical.platform_label);
                 if ui
                     .add_enabled(!busy, egui::Button::new("Platform geometry JSON"))
@@ -527,9 +537,12 @@ impl ViewerApp {
                 ui.text_edit_singleline(&mut self.physical.fixed_frame);
                 ui.label("Ground frame (empty = original Path z)");
                 ui.text_edit_singleline(&mut self.physical.ground_frame);
-                if ui.button("Apply frames").clicked() && self.physical.apply_frames() {
+                let apply_frames = ui.button("Apply frames");
+                self.track("physical-frames", &apply_frames);
+                if apply_frames.clicked() && self.physical.apply_frames() {
                     self.scene = Default::default();
                     self.overlays.reset_source();
+                    self.invalidate_scene_views();
                 }
                 if !self.physical.error.is_empty() {
                     ui.colored_label(egui::Color32::LIGHT_RED, &self.physical.error);
@@ -1148,6 +1161,8 @@ impl eframe::App for ViewerApp {
             })
         };
         let extra_fields = serde_json::json!({
+            "scene_layer_uploads":self.gpu.scene.metrics().layer_uploads,
+            "bev_layer_uploads":self.gpu.bev.metrics().layer_uploads,
             "remote_connected_url":remote_address,"remote_catalog":catalog_id,
             "remote_selected":self.picker.remote.selected,"remote_loading":self.picker.remote.is_loading(),
             "source_revision":self.source_revision,"panel_kinds":self.panels.values().map(Panel::kind_name).collect::<Vec<_>>(),
@@ -1160,6 +1175,11 @@ impl eframe::App for ViewerApp {
                 .extend(fields);
         }
         STATUS.with(|status| *status.borrow_mut() = snapshot.to_string());
+        // A network request can hang while playback is paused and Settings is closed.
+        // Drive its deadline independently of spinner animation or user input.
+        if self.picker.remote.is_loading() {
+            ctx.request_repaint_after(Duration::from_millis(100));
+        }
         if self
             .session
             .as_ref()

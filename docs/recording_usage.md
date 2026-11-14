@@ -32,7 +32,7 @@ cargo run --release -p viewer-native -- \
 `/points`と`lidar`は、記録内の実際のトピック名・frame名に置き換えてください。
 表示先frameが入力frameと異なる場合は、それらを結ぶTFが必要です。
 SceneではAuto / Solid / RGB・RGBA / Intensityを選び、強度範囲も変更できます。
-Webではファイルを開く前にSceneの設定でPoint cloud topicとWorld frameを指定します。
+Webではファイルを開く前にSettingsでPoint cloud topicとWorld frameを指定します。
 [PointCloud2の対応形式と上限](point_cloud2.md)を参照してください。
 
 ## Topicの中身とグラフを調べる
@@ -46,12 +46,14 @@ InspectorやPlotで対象を選んでも、Cameraなどのcontinuous playback対
 引数なしの既定レイアウトは`standard`です。`standard` / `navigation`などはデモ用のPath・Odometry等を要求するため、
 手持ちの記録の入口には、利用可能なScene入力を使う`monitor`か、query中心の`explore`を勧めます。
 
+WebでもTopicsのInspectorに加え、上部のSpeed plotとInspectionレイアウトの速度・ヨーレートPlotが使えます。Plotは連続再生とは別の有界queryで、現在は先頭60秒までを対象とします。
+
 ## Path・TF・Camera overlayを合わせる
 
 | 入力 | 既定値・変更方法 |
 | --- | --- |
 | Camera | schemaから検出し、パネルで選択 |
-| LaserScan / PointCloud2 | `/scan`。Nativeは`--point-cloud-topic`、WebはScene設定で変更 |
+| LaserScan / PointCloud2 | `/scan`。Nativeは`--point-cloud-topic`、WebはSettingsで変更 |
 | 表示先frame | `odom`。Nativeは`--fixed-frame`、WebはWorld frameで変更 |
 | Path | `/planning/path` |
 | Odometry | `/odom` |
@@ -80,19 +82,19 @@ cargo run -p viewer-native --release --features ros2-live -- \
 Nativeの優先順位は、明示的な`--point-cloud-topic` > 外部JSON > 同梱デフォルトです。
 外部JSONは5項目すべて指定してください。未知キー・欠落項目・空文字などの不備は起動エラーになります。
 
-Webでは **Open MCAPの隣のWorkspace bindings JSON** で先にファイルを選択し、valid表示を確認してから記録を開きます。
+Webでは **Settings → Workspace bindings JSON** で先にファイルを選択し、エラーがないことを確認してからOpen MCAPで記録を開きます。
 Browser LocalとRecording Serverの両方で利用でき、JSONはブラウザ内で処理されます。サーバーへのアップロードや追加APIは不要です。
-Scene設定のPoint cloud topic欄は、**空欄ならJSONの値**を使い、入力した場合だけJSONを上書きします。
+SettingsのPoint cloud topic欄は、**空欄ならJSONの値**を使い、入力した場合だけJSONを上書きします。
 設定未指定時は従来のデフォルトを使います。エラー中・読み込み中は新しい記録を開けません。
-訂正したJSONを選ぶか、Use bundled bindingsで明示的に同梱設定へ戻してください。PointCloud欄の手入力は引き続き優先され、空欄にするとJSON／同梱値へ戻ります。
+訂正したJSONを選ぶか、Bundled bindingsで明示的に同梱設定へ戻してください。PointCloud欄の手入力は引き続き優先され、空欄にするとJSON／同梱値へ戻ります。
 設定は次に開く記録に適用され、開いているセッションには反映しません。Camera切り替えやSeekでも、そのセッションの設定を維持します。
 JSONはUTF-8・16 KiB以下、トピック名は1〜1024バイトで空白・制御文字を含めないでください。
 実際のtopic/schemaの解決は既存の必須・任意入力ルールに従い、自動推定は行いません。[Native／Web Local／Remoteの検証結果](verification/workspace-bindings/README.md)を参照してください。
-レイアウトの配置も同梱presetで、外部JSONの実行時load/saveやGUIでの配置編集は未対応です。
+Webは上部のレイアウトpresetとSettingsのLayout JSON読込に対応します。入力要求の変更は次の記録を開くときに適用されます。GUIでの配置編集や保存は未対応です。
 
 Camera overlayにはPath・TF・実カメラに対応したcalibrationが必要です。
 同梱のcalibrationはデモ値で、別カメラの実測値としては使えません。
-Nativeは`--camera-calibration FILE.json`、WebはScene設定のCamera calibration JSONから読み込みます。
+Nativeは`--camera-calibration FILE.json`、WebはSettingsのCalibration JSONから読み込みます。
 [物理geometry・座標系・ground frame](physical_geometry.md)に設定例をまとめています。
 
 ## 対応範囲と制約
@@ -102,7 +104,8 @@ Nativeは`--camera-calibration FILE.json`、WebはScene設定のCamera calibrati
 | 索引付きMCAP | 単一ファイル・分割ディレクトリ | 単一ファイル | 設定した単一ファイル |
 | MCAP圧縮 | 非圧縮・Zstd・LZ4 | 非圧縮・Zstd・LZ4 | 非圧縮・Zstd |
 | Camera / Scene / BEV / Inspector | 対応 | 対応 | 対応 |
-| 数値Plot・Topic Health・Diagnostics | 対応 | 未対応 | 未対応 |
+| 速度・ヨーレートPlot、レイアウトJSON | 対応 | 対応 | 対応 |
+| 任意数値Plot・Topic Health・Diagnostics | 対応 | 未対応 | 未対応 |
 | Preview / bookmarks | 対応 | 未対応 | 未対応 |
 | ROS 2 Live | 対応 | 未対応 | 未対応 |
 

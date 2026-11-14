@@ -12,7 +12,7 @@ GitHub Pagesへ公開するのは、Trunkが生成するHTML / JS / CSS / Wasm /
 Actionsの**Deploy Web viewer to GitHub Pages**から手動実行もできる。
 
 1. Ubuntu 24.04でclang/lld 18、Rust 1.91.1とWasm target、Trunk 0.21.14を準備する。ROS 2やNativeのGUI依存は不要。
-2. Pagesから取得したbase pathを`trunk build --release --locked --public-url`へ渡す。
+2. Trunkの既定target `egui.html`（共通egui/WebGPUパネル）をビルドする。Pagesから取得したbase pathを`trunk build --release --locked --public-url`へ渡す。
 3. `apps/viewer-web/dist`だけをPages artifactとしてuploadする。
 4. build成功後に`github-pages`環境へdeployする。
 
@@ -42,14 +42,26 @@ HTMLの`<base data-trunk-public-url>`をTrunkが書き換えるので、Wasm / C
 別terminalから、既存のChrome/CDP検証ツールを同じURLへ実行できる。
 
 ```sh
-python3 tools/performance-probe/check_web_camera.py --camera-formats \
-  --data tests/fixtures/camera-formats/camera_formats.mcap \
-  --url http://localhost:8094/mcap_player/ \
-  --output target/pages/camera-check.json
+python3 tools/performance-probe/check_web_merge_readiness.py \
+  --dist target/pages/site --base-path /mcap_player/ \
+  --server target/web-parity/recording-server \
+  --data target/sample-data/release/turtlebot3-7cam-fhd-10s.mcap \
+  --replacement target/workspace-bindings/recording.mcap \
+  --output target/pages/new-browser-check
 ```
 
-専用Chromeで7種類の画像の画素、前後Seek、Worker URLとbrowser errorを確認する。出力先は未作成のpathを指定する。
-公開URLを`--url`へ渡して同じ確認もできる。これは機能確認用で、software renderingによるGPU性能比較ではない。
+`recording-server`のreleaseビルドと既存のbindings検証fixtureが必要です。専用の実GPU Chromeでサブパス配信、Local/Remote、実30秒のタイムアウト、Seek、透明度、物理設定によるScene/BEV更新を確認します。出力先は未作成のpathを指定します。実機Androidの確認は別途必要です。
+
+公開済みURLのLocal再生・Seek・Inspector・Plotも実GPUで確認できます。
+
+```sh
+python3 tools/performance-probe/check_web_egui.py --plot \
+  --url https://ryo45.github.io/mcap_player/ \
+  --data target/sample-data/release/turtlebot3-7cam-fhd-10s.mcap \
+  --replacement tests/fixtures/camera-formats/camera_formats.mcap \
+  --output target/pages/new-public-check --wake-display \
+  --vulkan-icd /usr/share/vulkan/icd.d/nvidia_icd.json
+```
 
 ## 利用上の範囲
 

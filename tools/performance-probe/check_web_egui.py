@@ -2,6 +2,7 @@
 """Exercise the experimental egui canvas on a real GPU; not a comparative benchmark."""
 import argparse
 import base64
+from contextlib import nullcontext
 import json
 from pathlib import Path
 import time
@@ -32,6 +33,7 @@ def main():
     parser.add_argument('--data', type=Path, required=True)
     parser.add_argument('--replacement', type=Path, required=True)
     parser.add_argument('--dist', type=Path, default=Path('target/web-egui-ui/web'))
+    parser.add_argument('--url', help='Test a deployed Web viewer instead of serving dist')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--wake-display', action='store_true')
     parser.add_argument('--plot', action='store_true', help='Also validate the shared speed Plot and independent query')
@@ -41,7 +43,7 @@ def main():
     report = {'status': 'failed', 'scope': __doc__, 'data': str(args.data)}
     snapshot = 'JSON.parse(wasmBindings.egui_status())'
     try:
-        with serve(args.dist.resolve()) as url, browser(
+        with (nullcontext(args.url) if args.url else serve(args.dist.resolve())) as url, browser(
                 'hardware', args.output/'chrome.log', wake_display=args.wake_display,
                 vulkan_icd=args.vulkan_icd) as (_, page, environment):
             report['environment'] = environment

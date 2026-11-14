@@ -79,8 +79,9 @@ Sceneは **1.0 = 1 metre**。[車体形状・TF・Camera calibration](docs/physi
 | --- | --- | --- |
 | 索引付きMCAPの再生・Seek | 単一ファイル・分割ディレクトリ | 単一ファイル・Recording Server |
 | Camera / Scene / BEV / Inspector | 対応 | 対応 |
-| 数値Plot・Topic Health・Diagnostics | 対応 | 未対応 |
-| Preview / bookmarks・用途別レイアウト | 対応 | 未対応 |
+| 速度・ヨーレートPlot、用途別レイアウト | 対応 | 対応 |
+| 任意数値Plot・Topic Health・Diagnostics | 対応 | 未対応 |
+| Preview / bookmarks | 対応 | 未対応 |
 | ROS 2 Live | 対応 | 未対応 |
 
 - **索引付きMCAPが必要です。** 非索引記録は[明示的に変換](docs/fastwrite.md)します。自動の全走査は行いません。
