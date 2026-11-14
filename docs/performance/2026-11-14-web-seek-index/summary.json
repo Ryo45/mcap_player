@@ -1,0 +1,330 @@
+{
+  "baseline_commit": "2e6b73aa884734c5ed1091b0716e69457723ceca",
+  "scope": "Real desktop GPU, default Monitor, 6 distinct paused seeks; tap to focus-image GPU import, not actual Android/compositor presentation",
+  "conditions": {
+    "verified-normal": {
+      "before": {
+        "read_delay_ms": 0,
+        "median_ms": 45.75,
+        "median_restore_reads": 25.0,
+        "seeks": [
+          {
+            "ratio": 0.2,
+            "tap_to_restore_ms": 38.19999980926514,
+            "tap_to_image_import_ms": 68.80000019073486,
+            "restore_to_image_import_ms": 30.600000381469727,
+            "restore_reads": 26,
+            "restore_read_bytes": 3019375,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.7,
+            "tap_to_restore_ms": 26.800000190734863,
+            "tap_to_image_import_ms": 42.10000038146973,
+            "restore_to_image_import_ms": 15.300000190734863,
+            "restore_reads": 25,
+            "restore_read_bytes": 2410627,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.3,
+            "tap_to_restore_ms": 35.39999961853027,
+            "tap_to_image_import_ms": 51.89999961853027,
+            "restore_to_image_import_ms": 16.5,
+            "restore_reads": 25,
+            "restore_read_bytes": 2573290,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.8,
+            "tap_to_restore_ms": 24.199999809265137,
+            "tap_to_image_import_ms": 40.39999961853027,
+            "restore_to_image_import_ms": 16.199999809265137,
+            "restore_reads": 25,
+            "restore_read_bytes": 2330721,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.4,
+            "tap_to_restore_ms": 32.59999942779541,
+            "tap_to_image_import_ms": 49.39999961853027,
+            "restore_to_image_import_ms": 16.800000190734863,
+            "restore_reads": 40,
+            "restore_read_bytes": 3176784,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.65,
+            "tap_to_restore_ms": 22.09999942779541,
+            "tap_to_image_import_ms": 37.39999961853027,
+            "restore_to_image_import_ms": 15.300000190734863,
+            "restore_reads": 25,
+            "restore_read_bytes": 2479881,
+            "image_size": [
+              633,
+              356
+            ]
+          }
+        ]
+      },
+      "after": {
+        "read_delay_ms": 0,
+        "median_ms": 43.55000019073486,
+        "median_restore_reads": 6.0,
+        "seeks": [
+          {
+            "ratio": 0.2,
+            "tap_to_restore_ms": 37.30000019073486,
+            "tap_to_image_import_ms": 51.30000019073486,
+            "restore_to_image_import_ms": 14.0,
+            "restore_reads": 7,
+            "restore_read_bytes": 3021720,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.7,
+            "tap_to_restore_ms": 23.100000381469727,
+            "tap_to_image_import_ms": 39.30000019073486,
+            "restore_to_image_import_ms": 16.199999809265137,
+            "restore_reads": 6,
+            "restore_read_bytes": 2412924,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.3,
+            "tap_to_restore_ms": 31.300000190734863,
+            "tap_to_image_import_ms": 47.5,
+            "restore_to_image_import_ms": 16.199999809265137,
+            "restore_reads": 6,
+            "restore_read_bytes": 2575043,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.8,
+            "tap_to_restore_ms": 23.199999809265137,
+            "tap_to_image_import_ms": 39.60000038146973,
+            "restore_to_image_import_ms": 16.40000057220459,
+            "restore_reads": 6,
+            "restore_read_bytes": 2333018,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.4,
+            "tap_to_restore_ms": 32.69999980926514,
+            "tap_to_image_import_ms": 49.30000019073486,
+            "restore_to_image_import_ms": 16.600000381469727,
+            "restore_reads": 8,
+            "restore_read_bytes": 3181215,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.65,
+            "tap_to_restore_ms": 22.5,
+            "tap_to_image_import_ms": 39.10000038146973,
+            "restore_to_image_import_ms": 16.600000381469727,
+            "restore_reads": 6,
+            "restore_read_bytes": 2482178,
+            "image_size": [
+              633,
+              356
+            ]
+          }
+        ]
+      }
+    },
+    "verified-100ms": {
+      "before": {
+        "read_delay_ms": 100,
+        "median_ms": 2569.7999997138977,
+        "median_restore_reads": 25.0,
+        "seeks": [
+          {
+            "ratio": 0.2,
+            "tap_to_restore_ms": 2665.800000190735,
+            "tap_to_image_import_ms": 2679.800000190735,
+            "restore_to_image_import_ms": 14,
+            "restore_reads": 26,
+            "restore_read_bytes": 3019375,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.7,
+            "tap_to_restore_ms": 2543.5,
+            "tap_to_image_import_ms": 2558.1000003814697,
+            "restore_to_image_import_ms": 14.600000381469727,
+            "restore_reads": 25,
+            "restore_read_bytes": 2410627,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.3,
+            "tap_to_restore_ms": 2552.8999996185303,
+            "tap_to_image_import_ms": 2567.699999809265,
+            "restore_to_image_import_ms": 14.800000190734863,
+            "restore_reads": 25,
+            "restore_read_bytes": 2573290,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.8,
+            "tap_to_restore_ms": 2554.199999809265,
+            "tap_to_image_import_ms": 2570.0,
+            "restore_to_image_import_ms": 15.800000190734863,
+            "restore_reads": 25,
+            "restore_read_bytes": 2330721,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.4,
+            "tap_to_restore_ms": 4065.300000190735,
+            "tap_to_image_import_ms": 4080.199999809265,
+            "restore_to_image_import_ms": 14.899999618530273,
+            "restore_reads": 40,
+            "restore_read_bytes": 3176784,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.65,
+            "tap_to_restore_ms": 2554.3999996185303,
+            "tap_to_image_import_ms": 2569.5999994277954,
+            "restore_to_image_import_ms": 15.199999809265137,
+            "restore_reads": 25,
+            "restore_read_bytes": 2479881,
+            "image_size": [
+              633,
+              356
+            ]
+          }
+        ]
+      },
+      "after": {
+        "read_delay_ms": 100,
+        "median_ms": 648.0999994277954,
+        "median_restore_reads": 6.0,
+        "seeks": [
+          {
+            "ratio": 0.2,
+            "tap_to_restore_ms": 756.6999998092651,
+            "tap_to_image_import_ms": 771.6999998092651,
+            "restore_to_image_import_ms": 15.0,
+            "restore_reads": 7,
+            "restore_read_bytes": 3021720,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.7,
+            "tap_to_restore_ms": 630.3000001907349,
+            "tap_to_image_import_ms": 646.1999998092651,
+            "restore_to_image_import_ms": 15.899999618530273,
+            "restore_reads": 6,
+            "restore_read_bytes": 2412924,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.3,
+            "tap_to_restore_ms": 630.3999996185303,
+            "tap_to_image_import_ms": 646.7999992370605,
+            "restore_to_image_import_ms": 16.399999618530273,
+            "restore_reads": 6,
+            "restore_read_bytes": 2575043,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.8,
+            "tap_to_restore_ms": 632.8999996185303,
+            "tap_to_image_import_ms": 649.3999996185303,
+            "restore_to_image_import_ms": 16.5,
+            "restore_reads": 6,
+            "restore_read_bytes": 2333018,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.4,
+            "tap_to_restore_ms": 836.5,
+            "tap_to_image_import_ms": 852.3000001907349,
+            "restore_to_image_import_ms": 15.800000190734863,
+            "restore_reads": 8,
+            "restore_read_bytes": 3181215,
+            "image_size": [
+              633,
+              356
+            ]
+          },
+          {
+            "ratio": 0.65,
+            "tap_to_restore_ms": 621.1999998092651,
+            "tap_to_image_import_ms": 636.6999998092651,
+            "restore_to_image_import_ms": 15.5,
+            "restore_reads": 6,
+            "restore_read_bytes": 2482178,
+            "image_size": [
+              633,
+              356
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "data_sha256": "39e1fa1b7ce9bdca78e9f7d3b522694915e2d5e818d12fff445ec24fb1db1a9b",
+  "after_wasm_sha256": {
+    "viewer-web-b3ab9ac97375d27f_bg.wasm": "d1b039b45b4d4b150c2d60792612b373c24ad2fe957353ce65664eca903ef0d4"
+  }
+}

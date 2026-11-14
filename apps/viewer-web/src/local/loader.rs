@@ -1,7 +1,7 @@
 use crate::data_plane::{DataLoadError, LoadedWindow, WindowLoadDiagnostics};
 use bytes::Bytes;
 use mcap::records::ChunkIndex;
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(test, target_arch = "wasm32"))]
 use mcap::records::{Record, op};
 #[cfg(any(test, target_arch = "wasm32"))]
 use std::collections::BTreeMap;
@@ -513,6 +513,7 @@ pub(crate) struct BrowserMcapRestoreLoader {
     file_size: u64,
     summary: Rc<mcap::Summary>,
     latest_cache: Rc<RefCell<LatestRestoreCache>>,
+    index_cache: Rc<RefCell<RestoreIndexCache>>,
     generation: Rc<Cell<u64>>,
     loading: bool,
     inbox: RestoreInbox,
@@ -533,7 +534,9 @@ impl BrowserMcapRestoreLoader {
         )
     }
     pub(crate) fn fork(&self) -> Self {
-        Self::new(self.file.clone(), self.file_size, self.summary.clone())
+        let mut fork = Self::new(self.file.clone(), self.file_size, self.summary.clone());
+        fork.index_cache = self.index_cache.clone();
+        fork
     }
     fn new(file: File, file_size: u64, summary: Rc<mcap::Summary>) -> Self {
         Self {
@@ -541,6 +544,7 @@ impl BrowserMcapRestoreLoader {
             file_size,
             summary,
             latest_cache: Rc::new(RefCell::new(LatestRestoreCache::default())),
+            index_cache: Rc::new(RefCell::new(RestoreIndexCache::default())),
             generation: Rc::new(Cell::new(0)),
             loading: false,
             inbox: Rc::new(RefCell::new(VecDeque::new())),
@@ -556,12 +560,20 @@ impl BrowserMcapRestoreLoader {
         let file_size = self.file_size;
         let summary = Rc::clone(&self.summary);
         let latest_cache = Rc::clone(&self.latest_cache);
+        let index_cache = Rc::clone(&self.index_cache);
         let inbox = Rc::clone(&self.inbox);
         spawn_local(async move {
             let mut work = RestoreWork::new(cancellation.clone(), generation);
-            let result =
-                load_browser_restore(&file, file_size, &summary, &plan, &mut work, &latest_cache)
-                    .await;
+            let result = load_browser_restore(
+                &file,
+                file_size,
+                &summary,
+                &plan,
+                &mut work,
+                &latest_cache,
+                &index_cache,
+            )
+            .await;
             if cancellation.get() == generation {
                 inbox.borrow_mut().push_back((generation, result));
             }
@@ -724,6 +736,139 @@ impl RestoreChunkSelection {
     }
 }
 
+// Immutable, source-owned index bytes only; no recording messages or decoded history.
+// Large blocks keep the existing per-channel reads, avoiding costly unrelated index I/O.
+#[cfg(any(test, target_arch = "wasm32"))]
+const RESTORE_INDEX_BLOCK_LIMIT: usize = 1024 * 1024;
+#[cfg(any(test, target_arch = "wasm32"))]
+const RESTORE_INDEX_CACHE_LIMIT: usize = 8 * 1024 * 1024;
+
+#[cfg(any(test, target_arch = "wasm32"))]
+#[derive(Default)]
+struct RestoreIndexCache {
+    blocks: VecDeque<(u64, Bytes)>,
+    bytes: usize,
+}
+
+#[cfg(any(test, target_arch = "wasm32"))]
+impl RestoreIndexCache {
+    fn get(&mut self, offset: u64, length: usize) -> Option<Bytes> {
+        let position = self
+            .blocks
+            .iter()
+            .position(|(o, b)| *o == offset && b.len() == length)?;
+        let entry = self.blocks.remove(position)?;
+        let bytes = entry.1.clone();
+        self.blocks.push_back(entry);
+        Some(bytes)
+    }
+    fn insert(&mut self, offset: u64, bytes: Bytes) {
+        if bytes.len() > RESTORE_INDEX_BLOCK_LIMIT {
+            return;
+        }
+        if self.get(offset, bytes.len()).is_some() {
+            return;
+        }
+        while self.blocks.len() >= 32 || self.bytes + bytes.len() > RESTORE_INDEX_CACHE_LIMIT {
+            let Some((_, oldest)) = self.blocks.pop_front() else {
+                break;
+            };
+            self.bytes -= oldest.len();
+        }
+        self.bytes += bytes.len();
+        self.blocks.push_back((offset, bytes));
+    }
+}
+
+#[cfg(any(test, target_arch = "wasm32"))]
+fn parse_restore_index(
+    channel: u16,
+    body: &[u8],
+) -> Result<Vec<mcap::records::MessageIndexEntry>, DataLoadError> {
+    let length = body
+        .get(2..6)
+        .ok_or_else(|| DataLoadError::invalid_record("truncated Message Index"))?;
+    let length = u32::from_le_bytes(length.try_into().expect("four-byte slice")) as usize;
+    if !length.is_multiple_of(16) || length > body.len().saturating_sub(6) {
+        return Err(DataLoadError::invalid_record(
+            "invalid Message Index entry length",
+        ));
+    }
+    match mcap::parse_record(op::MESSAGE_INDEX, body).map_err(DataLoadError::from)? {
+        Record::MessageIndex(index) if index.channel_id == channel => Ok(index.records),
+        _ => Err(DataLoadError::invalid_record(
+            "Message Index parsed as another record",
+        )),
+    }
+}
+
+#[cfg(any(test, target_arch = "wasm32"))]
+fn restore_index_body(block: &[u8], relative: usize) -> Result<&[u8], DataLoadError> {
+    let tail = block
+        .get(relative..)
+        .ok_or_else(|| DataLoadError::invalid_record("Message Index offset outside block"))?;
+    let header = tail
+        .get(..9)
+        .ok_or_else(|| DataLoadError::invalid_record("truncated Message Index header"))?;
+    if header[0] != op::MESSAGE_INDEX {
+        return Err(DataLoadError::invalid_record(
+            "Message Index offset points to another record",
+        ));
+    }
+    let length = usize::try_from(u64::from_le_bytes(
+        header[1..9].try_into().expect("eight-byte slice"),
+    ))
+    .map_err(|_| DataLoadError::invalid_record("Message Index length overflow"))?;
+    tail.get(9..)
+        .and_then(|body| body.get(..length))
+        .ok_or_else(|| DataLoadError::invalid_record("Message Index exceeds block"))
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn read_restore_message_index(
+    file: &File,
+    file_size: u64,
+    chunk: &ChunkIndex,
+    channel: u16,
+    work: &mut RestoreWork,
+    cache: &RefCell<RestoreIndexCache>,
+) -> Result<Vec<mcap::records::MessageIndexEntry>, DataLoadError> {
+    let offset = *chunk
+        .message_index_offsets
+        .get(&channel)
+        .ok_or_else(|| DataLoadError::invalid_record("restore needs Message Index"))?;
+    let length = usize::try_from(chunk.message_index_length)
+        .map_err(|_| DataLoadError::invalid_record("Message Index block length overflow"))?;
+    if length > RESTORE_INDEX_BLOCK_LIMIT {
+        return read_message_index(file, file_size, channel, offset, work).await;
+    }
+    let start = chunk
+        .message_index_offsets
+        .values()
+        .copied()
+        .min()
+        .ok_or_else(|| DataLoadError::invalid_record("missing Message Index block"))?;
+    let range = validate_range(file_size, start, length)?;
+    work.check()?;
+    // Drop RefCell borrows before awaiting; independent Inspector forks share this metadata cache.
+    let cached = cache.borrow_mut().get(start, length);
+    let block = if let Some(block) = cached {
+        block
+    } else {
+        work.reserve_index(length)?;
+        let block = read_file_range(file, file_size, range).await?;
+        work.check()?;
+        cache.borrow_mut().insert(start, block.clone());
+        block
+    };
+    let relative = usize::try_from(offset - start)
+        .map_err(|_| DataLoadError::invalid_record("Message Index offset overflow"))?;
+    let body = restore_index_body(&block, relative)?;
+    // Charge cache hits too, bounding parsing/allocation work independently of I/O.
+    work.reserve_index(body.len())?;
+    parse_restore_index(channel, body)
+}
+
 /// One compact latest-only result, keyed by exact indexed record positions rather than time.
 /// Indexes are still resolved on every query; unchanged messages do not reread/decompress Chunks.
 #[cfg(any(test, target_arch = "wasm32"))]
@@ -772,8 +917,10 @@ async fn load_browser_restore(
     plan: &viewer_core::RestorePlan,
     work: &mut RestoreWork,
     latest_cache: &RefCell<LatestRestoreCache>,
+    index_cache: &RefCell<RestoreIndexCache>,
 ) -> Result<Vec<RawMessage>, DataLoadError> {
-    let selections = resolve_browser_restore_chunks(file, file_size, summary, plan, work).await?;
+    let selections =
+        resolve_browser_restore_chunks(file, file_size, summary, plan, work, index_cache).await?;
     let cache_key = (plan.histories.is_empty() && plan.persistent.is_empty()).then(|| {
         selections
             .iter()
@@ -796,6 +943,7 @@ async fn load_browser_restore(
             &selection,
             plan.target,
             work,
+            index_cache,
         )
         .await?;
         for message in &mut restored {
@@ -823,6 +971,7 @@ async fn resolve_browser_restore_chunks(
     summary: &mcap::Summary,
     plan: &viewer_core::RestorePlan,
     work: &mut RestoreWork,
+    index_cache: &RefCell<RestoreIndexCache>,
 ) -> Result<BTreeMap<usize, RestoreChunkSelection>, DataLoadError> {
     let target = u64::try_from(plan.target.0)
         .map_err(|_| DataLoadError::invalid_record("negative browser restore target"))?;
@@ -858,8 +1007,9 @@ async fn resolve_browser_restore_chunks(
             if !search.can_improve(chunk.message_end_time, chunk_index) {
                 continue;
             }
-            let offset = chunk.message_index_offsets[&channel];
-            let entries = read_message_index(file, file_size, channel, offset, work).await?;
+            let entries =
+                read_restore_message_index(file, file_size, chunk, channel, work, index_cache)
+                    .await?;
             search.consider_unsorted(chunk_index, &entries);
         }
         let Some((time, position)) = search.result() else {
@@ -915,6 +1065,10 @@ async fn resolve_browser_restore_chunks(
 }
 
 #[cfg(target_arch = "wasm32")]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Keep bounded restore I/O and cache dependencies explicit"
+)]
 async fn read_browser_restore_chunk(
     file: &File,
     file_size: u64,
@@ -923,6 +1077,7 @@ async fn read_browser_restore_chunk(
     selection: &RestoreChunkSelection,
     target: ArrivalTime,
     work: &mut RestoreWork,
+    index_cache: &RefCell<RestoreIndexCache>,
 ) -> Result<Vec<RawMessage>, DataLoadError> {
     let request = chunk_request(chunk)?;
     if request.compression.is_empty() && request.stream() {
@@ -932,10 +1087,10 @@ async fn read_browser_restore_chunk(
             .map(|(_, _, offset)| *offset)
             .collect::<BTreeSet<_>>();
         for channel in selection.history.keys().chain(selection.persistent.iter()) {
-            let index_offset = chunk.message_index_offsets.get(channel).ok_or_else(|| {
-                DataLoadError::invalid_record("uncompressed restore needs Message Index")
-            })?;
-            for entry in read_message_index(file, file_size, *channel, *index_offset, work).await? {
+            for entry in
+                read_restore_message_index(file, file_size, chunk, *channel, work, index_cache)
+                    .await?
+            {
                 let time = i64::try_from(entry.log_time)
                     .map_err(|_| DataLoadError::invalid_record("indexed time overflow"))?;
                 if selection.persistent.contains(channel)
@@ -1060,12 +1215,7 @@ async fn read_message_index(
     )
     .await?;
     work.check()?;
-    match mcap::parse_record(op::MESSAGE_INDEX, &body).map_err(DataLoadError::from)? {
-        Record::MessageIndex(index) if index.channel_id == channel => Ok(index.records),
-        _ => Err(DataLoadError::invalid_record(
-            "Message Index parsed as another record",
-        )),
-    }
+    parse_restore_index(channel, &body)
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1605,6 +1755,77 @@ fn js_error(error: wasm_bindgen::JsValue) -> DataLoadError {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn restore_index_block_checks_offsets_lengths_and_channels_before_allocating() {
+        let body = [
+            7u16.to_le_bytes().as_slice(),
+            16u32.to_le_bytes().as_slice(),
+            123u64.to_le_bytes().as_slice(),
+            456u64.to_le_bytes().as_slice(),
+        ]
+        .concat();
+        let record = [
+            vec![op::MESSAGE_INDEX],
+            (body.len() as u64).to_le_bytes().to_vec(),
+            body,
+        ]
+        .concat();
+        let mut block = record.clone();
+        block.extend_from_slice(&record);
+        for offset in [0, record.len()] {
+            let body = restore_index_body(&block, offset).unwrap();
+            let entries = parse_restore_index(7, body).unwrap();
+            assert_eq!(entries.len(), 1);
+            assert_eq!((entries[0].log_time, entries[0].offset), (123, 456));
+            assert!(parse_restore_index(8, body).is_err());
+        }
+        assert!(restore_index_body(&block, usize::MAX).is_err());
+        assert!(restore_index_body(&block[..8], 0).is_err());
+        block[1..9].copy_from_slice(&u64::MAX.to_le_bytes());
+        assert!(restore_index_body(&block, 0).is_err());
+        block[0] = op::MESSAGE;
+        assert!(restore_index_body(&block, 0).is_err());
+        let malformed = [
+            7u16.to_le_bytes().as_slice(),
+            u32::MAX.to_le_bytes().as_slice(),
+        ]
+        .concat();
+        assert!(parse_restore_index(7, &malformed).is_err());
+        assert!(parse_restore_index(7, &[0; 3]).is_err());
+    }
+
+    #[test]
+    fn restore_index_cache_reuses_backing_and_bounds_bytes_and_count() {
+        let mut cache = RestoreIndexCache::default();
+        for offset in 0..9 {
+            cache.insert(
+                offset,
+                Bytes::from(vec![offset as u8; RESTORE_INDEX_BLOCK_LIMIT]),
+            );
+        }
+        assert_eq!(cache.bytes, RESTORE_INDEX_CACHE_LIMIT);
+        assert!(cache.get(0, RESTORE_INDEX_BLOCK_LIMIT).is_none());
+        let shared = cache.get(1, RESTORE_INDEX_BLOCK_LIMIT).unwrap();
+        assert_eq!(
+            shared.as_ptr(),
+            cache.get(1, RESTORE_INDEX_BLOCK_LIMIT).unwrap().as_ptr()
+        );
+        cache.insert(9, Bytes::from(vec![9; RESTORE_INDEX_BLOCK_LIMIT]));
+        assert!(cache.get(2, RESTORE_INDEX_BLOCK_LIMIT).is_none());
+        assert!(cache.get(1, RESTORE_INDEX_BLOCK_LIMIT).is_some());
+        let previous = cache.bytes;
+        cache.insert(999, Bytes::from(vec![0; RESTORE_INDEX_BLOCK_LIMIT + 1]));
+        assert_eq!(cache.bytes, previous);
+        for offset in 10..100 {
+            cache.insert(offset, Bytes::from(vec![0; 32]));
+        }
+        assert_eq!(cache.blocks.len(), 32);
+        assert_eq!(cache.bytes, 32 * 32);
+        assert!(cache.get(99, 33).is_none());
+        let mut other_source = RestoreIndexCache::default();
+        assert!(other_source.get(99, 32).is_none());
+    }
     use crate::local::LocalCatalog;
     use mcap::{Compression, Summary, WriteOptions, Writer, records::MessageHeader};
     use std::{collections::BTreeMap, io::Cursor};
