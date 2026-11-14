@@ -7,6 +7,7 @@ pub mod inspection;
 pub mod inspector;
 pub mod layout;
 pub mod panel;
+pub mod panel_input;
 pub mod placeholder;
 pub mod playback;
 pub mod plot;

@@ -25,7 +25,7 @@ pub(crate) struct TopicHealthPanel {
 impl TopicHealthPanel {
     pub(crate) fn create(node: &PanelNode) -> NativePanel {
         if node.config_version != 1 {
-            return NativePanel::Placeholder(PlaceholderPanel::unsupported_version(node, 1));
+            return NativePanel::placeholder(PlaceholderPanel::unsupported_version(node, 1));
         }
         match serde_json::from_value::<Config>(node.config.clone()) {
             Ok(config) if (1..=MAX_QUERY_WINDOW_SECONDS).contains(&config.window_seconds) => {
@@ -37,7 +37,7 @@ impl TopicHealthPanel {
                     },
                 })
             }
-            _ => NativePanel::Placeholder(PlaceholderPanel::invalid_config(
+            _ => NativePanel::placeholder(PlaceholderPanel::invalid_config(
                 node,
                 format!("Topic Health windowSeconds must be 1..={MAX_QUERY_WINDOW_SECONDS}"),
             )),

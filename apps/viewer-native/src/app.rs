@@ -66,7 +66,7 @@ impl App {
                 path,
                 playback,
                 topic,
-                &requirements.playback,
+                &requirements.shared.playback,
                 self.workspace.bindings(),
             )?;
             Ok((session, cameras, requirements))
@@ -85,12 +85,21 @@ impl App {
                 self.workspace
                     .runtime_mut()
                     .set_scheduling_priority(scheduler_camera);
-                if !requirements.signals.is_empty()
+                if !requirements.shared.signals.is_empty()
                     && let Err(error) = session.request_odometry_signals(4_000)
                 {
                     log::warn!("Plot unavailable: {error}");
                 }
-                if let Err(error) = session.request_inspections(&requirements.inspections) {
+                if let Err(error) = session.request_inspections(
+                    &requirements
+                        .shared
+                        .inspections
+                        .iter()
+                        .map(|topic| crate::inspection::InspectorRequirement {
+                            topic: topic.clone(),
+                        })
+                        .collect::<Vec<_>>(),
+                ) {
                     log::warn!("Inspector unavailable: {error}");
                 }
                 session.configure_window_queries(&requirements);
@@ -376,7 +385,7 @@ impl App {
                         let plan = viewer_core::SessionPlan::build(
                             catalog,
                             priority,
-                            &requirements.playback,
+                            &requirements.shared.playback,
                             workspace.bindings(),
                         )?;
                         if plan.selected_stream_ids() == session.plan().selected_stream_ids() {
@@ -556,7 +565,7 @@ impl ApplicationHandler for App {
                     self.args.topic.clone(),
                     *reliable,
                     raw_camera_topics,
-                    &requirements.playback,
+                    &requirements.shared.playback,
                     self.workspace.bindings(),
                 );
                 let session = match session {
@@ -673,7 +682,7 @@ mod tests {
             &path,
             playback,
             cameras.priority_topic("/missing/project/camera").into(),
-            &requirements.playback,
+            &requirements.shared.playback,
             workspace.bindings(),
         )
         .unwrap();
@@ -700,7 +709,7 @@ mod tests {
             path,
             playback,
             cameras.priority_topic("").into(),
-            &requirements.playback,
+            &requirements.shared.playback,
             workspace.bindings(),
         )
         .unwrap();
@@ -1045,7 +1054,7 @@ mod tests {
             Path::new("in-memory.mcap"),
             playback,
             "/good".into(),
-            &requirements.playback,
+            &requirements.shared.playback,
             workspace.bindings(),
         )
         .unwrap();
@@ -1127,7 +1136,7 @@ mod tests {
         let plan = viewer_core::SessionPlan::build(
             &catalog,
             "/missing",
-            &requirements.playback,
+            &requirements.shared.playback,
             workspace.bindings(),
         )
         .unwrap();
@@ -1216,7 +1225,7 @@ mod tests {
         let mut session = ViewerSession::open(
             &path,
             "/camera/front/image/compressed".to_owned(),
-            &workspace.data_requirements().playback,
+            &workspace.data_requirements().shared.playback,
             workspace.bindings(),
         )
         .unwrap();

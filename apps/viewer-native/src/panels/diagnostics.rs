@@ -28,7 +28,7 @@ pub(crate) struct DiagnosticsPanel {
 impl DiagnosticsPanel {
     pub(crate) fn create(node: &PanelNode) -> NativePanel {
         if node.config_version != 1 {
-            return NativePanel::Placeholder(PlaceholderPanel::unsupported_version(node, 1));
+            return NativePanel::placeholder(PlaceholderPanel::unsupported_version(node, 1));
         }
         match serde_json::from_value::<Config>(node.config.clone()) {
             Ok(config)
@@ -44,7 +44,7 @@ impl DiagnosticsPanel {
                     },
                 })
             }
-            _ => NativePanel::Placeholder(PlaceholderPanel::invalid_config(
+            _ => NativePanel::placeholder(PlaceholderPanel::invalid_config(
                 node,
                 format!(
                     "Diagnostics requires a non-empty topic and windowSeconds in 1..={MAX_QUERY_WINDOW_SECONDS}"

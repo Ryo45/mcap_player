@@ -178,13 +178,13 @@ impl NativeWorkspace {
         if let Some((kind, topic)) = &self.extension_topic {
             match kind {
                 viewer_extension::ExtensionInputKind::PathPositions => {
-                    requirements.playback.require_path_topic(topic)
+                    requirements.shared.playback.require_path_topic(topic)
                 }
                 viewer_extension::ExtensionInputKind::Detection3DArray => {
-                    requirements.playback.require_detection_topic(topic)
+                    requirements.shared.playback.require_detection_topic(topic)
                 }
             }
-            requirements.playback.optional_transforms();
+            requirements.shared.playback.optional_transforms();
         }
         requirements
     }
@@ -470,8 +470,8 @@ mod tests {
         ] {
             expected.require_camera_topic(topic);
         }
-        assert_eq!(workspace.data_requirements().playback, expected);
-        assert!(workspace.data_requirements().signals.is_empty());
+        assert_eq!(workspace.data_requirements().shared.playback, expected);
+        assert!(workspace.data_requirements().shared.signals.is_empty());
         assert_eq!(
             workspace.scheduler_priority_topic(),
             Some("/camera/front/image/compressed")
@@ -485,14 +485,14 @@ mod tests {
             assert!(workspace.startup_warning().is_none());
             assert_eq!(workspace.panels.placeholder_count(), 0);
             assert_eq!(
-                workspace.data_requirements().signals,
+                workspace.data_requirements().shared.signals,
                 BTreeSet::from([SignalId::Speed, SignalId::YawRate])
             );
             if layout == WorkspaceLayout::Inspection {
                 assert!(workspace.panels.has_embedded_topics());
                 // Plots query their series independently of forward feature playback.
                 assert_eq!(
-                    workspace.data_requirements().playback,
+                    workspace.data_requirements().shared.playback,
                     PlaybackRequirements::empty()
                 );
             }
@@ -518,9 +518,11 @@ mod tests {
         assert_eq!(
             workspace.data_requirements(),
             PanelDataRequirements {
-                playback: expected_playback,
-                signals: BTreeSet::from([SignalId::Speed]),
-                inspections: Vec::new(),
+                shared: viewer_ui::panel::PanelRequirements {
+                    playback: expected_playback,
+                    signals: BTreeSet::from([SignalId::Speed]),
+                    inspections: BTreeSet::new(),
+                },
                 topic_health: BTreeSet::new(),
                 diagnostics: BTreeSet::new(),
                 #[cfg(feature = "plugin-panels")]
@@ -546,9 +548,9 @@ mod tests {
         expected.optional_point_cloud();
         expected.optional_transforms();
         let before = workspace.data_requirements();
-        assert_eq!(before.playback, expected);
-        assert!(before.signals.is_empty());
-        assert!(before.inspections.is_empty());
+        assert_eq!(before.shared.playback, expected);
+        assert!(before.shared.signals.is_empty());
+        assert!(before.shared.inspections.is_empty());
         assert!(
             matches!(workspace.apply_action(ViewerAction::SelectInspectorTopic(Some("/arbitrary".into()))),
             WorkspaceEffect::SelectInspectorTopic(Some(topic)) if topic == "/arbitrary")
@@ -596,9 +598,11 @@ mod tests {
         assert_eq!(
             workspace.data_requirements(),
             PanelDataRequirements {
-                playback: expected_playback,
-                signals: BTreeSet::from([SignalId::Speed, SignalId::YawRate]),
-                inspections: Vec::new(),
+                shared: viewer_ui::panel::PanelRequirements {
+                    playback: expected_playback,
+                    signals: BTreeSet::from([SignalId::Speed, SignalId::YawRate]),
+                    inspections: BTreeSet::new(),
+                },
                 topic_health: BTreeSet::new(),
                 diagnostics: BTreeSet::new(),
                 #[cfg(feature = "plugin-panels")]
@@ -711,11 +715,16 @@ mod extension_tests {
             .unwrap();
         let before = workspace.requirements_for_cameras(&cameras);
         assert_eq!(
-            before.playback,
-            workspace.panels.requirements_for_cameras(&cameras).playback
+            before.shared.playback,
+            workspace
+                .panels
+                .requirements_for_cameras(&cameras)
+                .shared
+                .playback
         );
         let plan_before =
-            SessionPlan::build(&catalog, "", &before.playback, workspace.bindings()).unwrap();
+            SessionPlan::build(&catalog, "", &before.shared.playback, workspace.bindings())
+                .unwrap();
         workspace
             .enable_scene_extension(
                 "/different-path",
@@ -726,7 +735,7 @@ mod extension_tests {
             SessionPlan::build(
                 &catalog,
                 "",
-                &workspace.requirements_for_cameras(&cameras).playback,
+                &workspace.requirements_for_cameras(&cameras).shared.playback,
                 workspace.bindings()
             )
             .is_err()
@@ -739,7 +748,7 @@ mod extension_tests {
             .unwrap();
         let after = workspace.requirements_for_cameras(&cameras);
         let plan_after =
-            SessionPlan::build(&catalog, "", &after.playback, workspace.bindings()).unwrap();
+            SessionPlan::build(&catalog, "", &after.shared.playback, workspace.bindings()).unwrap();
         assert_eq!(
             plan_after.selected_stream_ids(),
             plan_before.selected_stream_ids()
@@ -755,8 +764,12 @@ mod extension_tests {
         );
         let mut missing = catalog;
         missing.streams.retain(|s| s.id != path_id);
-        assert!(SessionPlan::build(&missing, "", &before.playback, workspace.bindings()).is_ok());
-        assert!(SessionPlan::build(&missing, "", &after.playback, workspace.bindings()).is_err());
+        assert!(
+            SessionPlan::build(&missing, "", &before.shared.playback, workspace.bindings()).is_ok()
+        );
+        assert!(
+            SessionPlan::build(&missing, "", &after.shared.playback, workspace.bindings()).is_err()
+        );
         let mut explorer = NativeWorkspace::load_bundled_or_fallback(WorkspaceLayout::Explore);
         assert!(
             explorer

@@ -570,7 +570,7 @@ mod tests {
         let mut session = crate::session::ViewerSession::open(
             &path,
             "/unused".into(),
-            &requirements.playback,
+            &requirements.shared.playback,
             &bindings,
         )
         .unwrap();

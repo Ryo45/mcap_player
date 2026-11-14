@@ -46,7 +46,7 @@ impl PluginPanel {
         match result {
             Ok(panel) => NativePanel::Plugin(Box::new(panel)),
             Err(error) => {
-                NativePanel::Placeholder(PlaceholderPanel::invalid_config(node, error.to_string()))
+                NativePanel::placeholder(PlaceholderPanel::invalid_config(node, error.to_string()))
             }
         }
     }

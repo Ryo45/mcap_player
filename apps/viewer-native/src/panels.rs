@@ -6,166 +6,43 @@ mod plugin;
 mod runtime;
 mod topic_health;
 mod topic_tree;
-pub(crate) use topic_tree::{show_field_plots, show_topics};
-
-pub(crate) use runtime::PanelRuntimeStore;
-pub(crate) use viewer_ui::bev::BevPanel;
-pub(crate) use viewer_ui::camera::CameraSelection;
-pub(crate) use viewer_ui::camera::{CameraPanel, CameraPanelInput};
-pub(crate) use viewer_ui::inspector::{InspectorPanel, InspectorPanelInput};
-pub(crate) use viewer_ui::placeholder::PlaceholderPanel;
-pub(crate) use viewer_ui::plot::{PlotPanel, PlotPanelInput};
-pub(crate) use viewer_ui::scene::{ScenePanel, ScenePanelInput};
-pub(crate) use viewer_ui::status::{StatusPanel, StatusPanelInput};
-
-use crate::inspection::InspectorRequirement;
 use crate::{inspection::TopicInspection, workspace::ViewerInteractionState};
-use scene_renderer::SceneCameraMode;
+pub(crate) use runtime::PanelRuntimeStore;
 use std::collections::BTreeSet;
-use viewer_core::{
-    Bookmark, PlaybackView, SceneDiagnostics, SignalId, SignalOverview, ViewerPresentation,
-};
-use viewer_ui::views::camera::CameraTextureView;
+pub(crate) use topic_tree::{show_field_plots, show_topics};
+use viewer_core::{PlaybackView, ViewerPresentation};
+pub(crate) use viewer_ui::camera::CameraSelection;
+pub(crate) use viewer_ui::inspector::InspectorPanelInput;
+use viewer_ui::panel::{Panel, PanelRequirements};
+pub(crate) use viewer_ui::panel_input::{PanelResourceView, PreviewDataView, SceneDataView};
+pub(crate) use viewer_ui::placeholder::PlaceholderPanel;
 
 pub(crate) enum NativePanel {
+    Shared(Panel),
     #[cfg(feature = "plugin-panels")]
     Plugin(Box<plugin::PluginPanel>),
     Explore,
-    Topics(viewer_ui::topics::TopicsPanel),
-    Camera(CameraPanel),
-    Bev(BevPanel),
-    Plot(PlotPanel),
-    Inspector(InspectorPanel),
-    Scene(ScenePanel),
-    Status(StatusPanel),
     TopicHealth(topic_health::TopicHealthPanel),
     Diagnostics(diagnostics::DiagnosticsPanel),
-    Placeholder(PlaceholderPanel),
 }
-
 impl NativePanel {
+    pub(crate) fn placeholder(panel: PlaceholderPanel) -> Self {
+        Self::Shared(Panel::Placeholder(panel))
+    }
     pub(crate) fn show(
         &mut self,
         ui: &mut egui::Ui,
         input: &PanelCompositionInput<'_>,
+        shared: &viewer_ui::panel_input::PanelInput<'_>,
     ) -> PanelOutput {
         match self {
+            Self::Shared(panel) => panel.show(ui, shared),
             #[cfg(feature = "plugin-panels")]
             Self::Plugin(panel) => panel.show(ui, input),
             Self::Explore => {
                 ui.heading("Explore recording");
                 ui.label("Open a topic under Topics and select a numeric field to add a plot.");
                 PanelOutput::default()
-            }
-            Self::Topics(panel) => panel.show(
-                ui,
-                viewer_ui::topics::TopicsPanelInput {
-                    tree: input.topic_tree,
-                    series: Some(
-                        &input
-                            .numeric_series
-                            .iter()
-                            .map(|s| (s.request.stream_id, s.request.field_path.as_str()))
-                            .collect::<Vec<_>>(),
-                    ),
-                    selected_topic: input.inspector_topic,
-                    inspector: InspectorPanelInput {
-                        inspections: &input
-                            .inspections
-                            .iter()
-                            .map(TopicInspection::view)
-                            .collect::<Vec<_>>(),
-                        cursor: input.playback.map(|view| view.cursor),
-                    },
-                    presentation: input.presentation,
-                },
-            ),
-            Self::Camera(panel) => panel.show(
-                ui,
-                CameraPanelInput {
-                    cameras: &input.presentation.cameras,
-                    textures: input.resources.camera_textures,
-                    preview_textures: input.resources.preview_camera_textures,
-                    preview_active: input.preview.active,
-                    overlays: input.camera_overlays,
-                },
-            ),
-            Self::Bev(panel) => panel.show(
-                ui,
-                viewer_ui::bev::BevPanelInput {
-                    texture_id: input.resources.bev_texture,
-                    path_points: input.presentation.diagnostics.path_points,
-                },
-            ),
-            Self::Plot(panel) => {
-                let signal_id = panel.signal_id();
-                let signal = input.signals.get(signal_id);
-                panel.show(
-                    ui,
-                    PlotPanelInput {
-                        playback: input.playback,
-                        signal: signal.signal,
-                        current: signal.current,
-                        loading: signal.loading,
-                        error: signal.error.map(|e| e as &dyn std::fmt::Display),
-                        display_time: input
-                            .playback
-                            .map(|playback| input.interaction.display_time(playback)),
-                        preview_signal: match signal_id {
-                            SignalId::Speed => input.preview.speed_overview,
-                            SignalId::YawRate => None,
-                        },
-                        bookmarks: input.preview.bookmarks,
-                    },
-                )
-            }
-            Self::Inspector(panel) => panel.show(
-                ui,
-                InspectorPanelInput {
-                    inspections: &input
-                        .inspections
-                        .iter()
-                        .map(TopicInspection::view)
-                        .collect::<Vec<_>>(),
-                    cursor: input.playback.map(|view| view.cursor),
-                },
-            ),
-            Self::Scene(panel) => panel.show(
-                ui,
-                ScenePanelInput {
-                    texture_id: input.resources.scene_texture,
-                    scan_points: input.presentation.diagnostics.scan_points,
-                    visible_scan_points: input.scene.visible_scan_points,
-                    camera_distance: input.scene.camera_distance,
-                    camera_mode: input.scene.camera_mode,
-                    diagnostics: input.scene.diagnostics,
-                    static_transform_count: input.scene.static_transform_count,
-                    dynamic_transform_count: input.scene.dynamic_transform_count,
-                    playback: input.playback,
-                    telemetry: input.presentation.telemetry.as_ref(),
-                    camera: input.presentation.focused_camera(),
-                    source_error: input.presentation.diagnostics.error.as_deref(),
-                },
-            ),
-            Self::Status(panel) => {
-                let display_time = input
-                    .playback
-                    .map(|playback| input.interaction.display_time(playback));
-                let speed = display_time.and_then(|time| {
-                    input
-                        .signals
-                        .get(SignalId::Speed)
-                        .current
-                        .filter(|sample| sample.arrival_time <= time)
-                });
-                panel.show(
-                    ui,
-                    StatusPanelInput {
-                        playback: input.playback,
-                        main_camera: input.presentation.focused_camera(),
-                        speed,
-                    },
-                )
             }
             Self::TopicHealth(panel) => panel.show(
                 ui,
@@ -177,145 +54,64 @@ impl NativePanel {
                 input.diagnostics,
                 input.playback.map(|view| view.cursor),
             ),
-            Self::Placeholder(panel) => panel.show(ui),
         }
     }
-
     pub(crate) fn reset_for_source(&mut self, focused_camera: Option<viewer_core::CameraId>) {
         match self {
+            Self::Shared(panel) => panel.reset_for_source(focused_camera),
             #[cfg(feature = "plugin-panels")]
             Self::Plugin(panel) => panel.reset(),
-            Self::Camera(panel) => panel.state.focused_camera = focused_camera,
-            Self::Plot(panel) => panel.reset_for_source(),
-            Self::Inspector(panel) => panel.reset_for_source(),
-            Self::Topics(panel) => panel.reset_for_source(),
-            Self::Explore
-            | Self::Bev(_)
-            | Self::Scene(_)
-            | Self::Diagnostics(_)
-            | Self::TopicHealth(_)
-            | Self::Status(_)
-            | Self::Placeholder(_) => {}
+            Self::Explore | Self::TopicHealth(_) | Self::Diagnostics(_) => {}
         }
     }
-
     pub(crate) fn set_accumulate_points(&mut self, accumulate: bool) -> bool {
-        let Self::Scene(panel) = self else {
+        let Self::Shared(Panel::Scene(panel)) = self else {
             return false;
         };
         panel.state.accumulate_points = accumulate;
         true
     }
-
     pub(crate) fn accumulate_points(&self) -> Option<bool> {
         match self {
-            Self::Scene(panel) => Some(panel.state.accumulate_points),
+            Self::Shared(Panel::Scene(panel)) => Some(panel.state.accumulate_points),
             _ => None,
         }
     }
-
     pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
         match self {
+            Self::Shared(panel) => panel.contribute_requirements(&mut requirements.shared),
             #[cfg(feature = "plugin-panels")]
             Self::Plugin(panel) => panel.requirements(requirements),
-            Self::Camera(panel) => panel.contribute_data_requirements(&mut requirements.playback),
-            Self::Bev(panel) => panel.contribute_data_requirements(&mut requirements.playback),
-            Self::Scene(panel) => panel.contribute_data_requirements(&mut requirements.playback),
-            Self::Plot(panel) => {
-                requirements.signals.insert(panel.signal_id());
-            }
-            Self::Inspector(panel) => {
-                let requirement = InspectorRequirement {
-                    topic: panel.topic().to_owned(),
-                };
-                if !requirements.inspections.contains(&requirement) {
-                    requirements.inspections.push(requirement);
-                }
-            }
-            Self::Status(panel) => {
-                panel.contribute_data_requirements(&mut requirements.playback);
-                requirements.signals.insert(SignalId::Speed);
-            }
             Self::TopicHealth(panel) => panel.contribute_data_requirements(requirements),
             Self::Diagnostics(panel) => panel.contribute_data_requirements(requirements),
-            Self::Explore | Self::Topics(_) | Self::Placeholder(_) => {}
+            Self::Explore => {}
         }
     }
-
     pub(crate) fn scheduler_priority_topic(&self) -> Option<&str> {
         match self {
-            Self::Camera(panel) => panel.scheduler_priority_topic(),
+            Self::Shared(Panel::Camera(panel)) => panel.scheduler_priority_topic(),
             _ => None,
         }
     }
-
     pub(crate) fn kind_name(&self) -> &'static str {
         match self {
+            Self::Shared(panel) => panel.kind_name(),
             #[cfg(feature = "plugin-panels")]
             Self::Plugin(_) => "plugin",
             Self::Explore => "explore",
-            Self::Topics(_) => "topics",
-            Self::Camera(_) => "camera",
-            Self::Bev(_) => "bev",
-            Self::Plot(_) => "plot",
-            Self::Inspector(_) => "inspector",
-            Self::Scene(_) => "scene-3d",
-            Self::Status(_) => "status",
             Self::TopicHealth(_) => "topic-health",
             Self::Diagnostics(_) => "diagnostics",
-            Self::Placeholder(_) => "placeholder",
         }
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub(crate) struct PanelDataRequirements {
+    pub(crate) shared: PanelRequirements,
     #[cfg(feature = "plugin-panels")]
     pub(crate) plugins: Vec<(String, viewer_extension::panel::PanelDefinition)>,
-    pub(crate) playback: viewer_core::PlaybackRequirements,
-    pub(crate) signals: BTreeSet<SignalId>,
-    pub(crate) inspections: Vec<InspectorRequirement>,
     pub(crate) topic_health: BTreeSet<viewer_mcap::TopicHealthRequirement>,
     pub(crate) diagnostics: BTreeSet<viewer_mcap::DiagnosticsRequirement>,
-}
-
-impl Default for PanelDataRequirements {
-    fn default() -> Self {
-        Self {
-            #[cfg(feature = "plugin-panels")]
-            plugins: vec![],
-            playback: viewer_core::PlaybackRequirements::empty(),
-            signals: BTreeSet::new(),
-            inspections: Vec::new(),
-            topic_health: BTreeSet::new(),
-            diagnostics: BTreeSet::new(),
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-pub(crate) struct PanelResourceView<'a> {
-    pub(crate) camera_textures: &'a [CameraTextureView],
-    pub(crate) preview_camera_textures: &'a [CameraTextureView],
-    pub(crate) bev_texture: egui::TextureId,
-    pub(crate) scene_texture: egui::TextureId,
-}
-
-#[derive(Clone, Copy)]
-pub(crate) struct PreviewDataView<'a> {
-    pub(crate) active: bool,
-    pub(crate) speed_overview: Option<&'a SignalOverview>,
-    pub(crate) bookmarks: &'a [Bookmark],
-}
-
-#[derive(Clone, Copy)]
-pub(crate) struct SceneDataView<'a> {
-    pub(crate) diagnostics: &'a SceneDiagnostics,
-    pub(crate) visible_scan_points: usize,
-    pub(crate) camera_distance: f32,
-    pub(crate) camera_mode: SceneCameraMode,
-    pub(crate) static_transform_count: usize,
-    pub(crate) dynamic_transform_count: usize,
 }
 
 #[derive(Clone, Copy)]

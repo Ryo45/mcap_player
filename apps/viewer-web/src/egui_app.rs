@@ -20,7 +20,7 @@ use viewer_core::{
 use viewer_layout::{LayoutDocument, LayoutNode, PanelId};
 use viewer_ui::{
     action::ViewerAction,
-    panel::{Panel, PanelOutput},
+    panel::{Panel, PanelOutput, PanelRenderRequests, PanelRequirements},
     workspace::PanelStore,
 };
 use wasm_bindgen::{JsCast, prelude::wasm_bindgen};
@@ -71,6 +71,7 @@ struct ViewerApp {
     physical: PhysicalSettings,
     layout: std::sync::Arc<LayoutDocument>,
     panels: PanelStore<Panel>,
+    requirements: PanelRequirements,
     layout_label: String,
     layout_warnings: Vec<String>,
     presentation: ViewerPresentation,
@@ -96,7 +97,7 @@ impl ViewerApp {
         cc.egui_ctx.set_theme(egui::ThemePreference::Dark);
         let layout = bundled_layout();
         let (panels, warnings) = build_panels(&layout);
-        let app = Self {
+        let mut app = Self {
             picker: SourcePicker::new(&cc.egui_ctx)?,
             session: None,
             active_bindings: crate::workspace_bindings::bundled(),
@@ -116,6 +117,7 @@ impl ViewerApp {
             physical: PhysicalSettings::bundled()?,
             layout: std::sync::Arc::new(layout),
             panels,
+            requirements: PanelRequirements::default(),
             layout_label: "Monitor".into(),
             layout_warnings: warnings,
             presentation: ViewerPresentation::default(),
@@ -144,34 +146,22 @@ impl ViewerApp {
         self.controls
             .insert(name.into(), [r.min.x, r.min.y, r.max.x, r.max.y]);
     }
-    fn refresh_requirements(&self) {
-        let mut requirements = viewer_core::PlaybackRequirements::empty();
+    fn refresh_requirements(&mut self) {
+        let mut requirements = PanelRequirements::default();
         for panel in self.panels.values() {
-            match panel {
-                Panel::Camera(p) => p.contribute_data_requirements(&mut requirements),
-                Panel::Scene(p) => p.contribute_data_requirements(&mut requirements),
-                Panel::Bev(p) => p.contribute_data_requirements(&mut requirements),
-                Panel::Status(p) => p.contribute_data_requirements(&mut requirements),
-                _ => {}
-            }
+            panel.contribute_requirements(&mut requirements);
         }
-        self.picker.settings.borrow_mut().requirements = requirements;
+        self.picker.settings.borrow_mut().requirements = requirements.playback.clone();
+        self.requirements = requirements;
     }
     fn configure_inspections(&mut self) {
         self.pinned_inspections.clear();
         if let Some(session) = &self.session {
-            for panel in self.panels.values() {
-                if let Panel::Inspector(panel) = panel {
-                    let topic = panel.topic().to_owned();
-                    self.pinned_inspections
-                        .entry(topic.clone())
-                        .or_insert_with(|| {
-                            let mut controller = Inspection::default();
-                            controller.reset(session);
-                            controller.select(topic);
-                            controller
-                        });
-                }
+            for topic in &self.requirements.inspections {
+                let mut controller = Inspection::default();
+                controller.reset(session);
+                controller.select(topic.clone());
+                self.pinned_inspections.insert(topic.clone(), controller);
             }
         }
         self.pinned_order = self.pinned_inspections.keys().cloned().collect();
@@ -359,15 +349,8 @@ impl ViewerApp {
                     self.preview_time = None;
                     self.preview_playing = None;
                     self.resume_after_seek = false;
-                    // Clear per-source field expansion, graph caches and camera identities.
                     for panel in self.panels.values_mut() {
-                        match panel {
-                            Panel::Camera(p) => p.state = Default::default(),
-                            Panel::Plot(p) => p.reset_for_source(),
-                            Panel::Inspector(p) => p.reset_for_source(),
-                            Panel::Topics(p) => p.reset_for_source(),
-                            _ => {}
-                        }
+                        panel.reset_for_source(None);
                     }
                     if let Err(error) = self.bind_cameras(None) {
                         self.error = error;
@@ -538,186 +521,49 @@ impl ViewerApp {
             });
         self.settings_open = open;
     }
-    fn draw_panel(
+    fn render_views(
         &mut self,
-        ui: &mut egui::Ui,
-        panel: &mut Panel,
+        requests: &PanelRenderRequests,
         snapshot: Option<&viewer_core::SceneSnapshot<'_>>,
-    ) -> PanelOutput {
-        let Some(session) = &self.session else {
-            ui.label("Open an indexed MCAP");
-            return PanelOutput::default();
-        };
-        let playback = Some(session.clock().view());
-        match panel {
-            Panel::Camera(panel) => {
-                let textures = self.gpu.texture_views().collect::<Vec<_>>();
-                panel.show(
-                    ui,
-                    viewer_ui::camera::CameraPanelInput {
-                        cameras: &self.presentation.cameras,
-                        textures: &textures,
-                        preview_textures: &[],
-                        preview_active: false,
-                        overlays: &self.overlays,
-                    },
-                )
+        dpr: f32,
+    ) {
+        let Some(scene) = snapshot else { return };
+        if let Some(view) = &requests.scene {
+            self.gpu.scene.set_camera_mode(view.camera_mode);
+            if view.reset_camera {
+                self.gpu.scene.reset_camera();
             }
-            Panel::Scene(panel) => {
-                let Some(scene) = snapshot else {
-                    return PanelOutput::default();
-                };
-                let output = panel.show(
-                    ui,
-                    viewer_ui::scene::ScenePanelInput {
-                        texture_id: self.gpu.scene_id,
-                        scan_points: self.presentation.diagnostics.scan_points,
-                        visible_scan_points: scene.cloud.len(),
-                        camera_distance: self.gpu.scene.camera().distance,
-                        camera_mode: self.gpu.scene.camera_mode(),
-                        diagnostics: &scene.diagnostics,
-                        static_transform_count: session.transforms().state().static_len(),
-                        dynamic_transform_count: session.transforms().state().dynamic_len(),
-                        playback,
-                        telemetry: self.presentation.telemetry.as_ref(),
-                        camera: self.presentation.focused_camera(),
-                        source_error: self.presentation.diagnostics.error.as_deref(),
-                    },
-                );
-                if let Some(view) = &output.render_requests.scene {
-                    self.gpu.scene.set_camera_mode(view.camera_mode);
-                    if view.reset_camera {
-                        self.gpu.scene.reset_camera();
-                    }
-                    self.gpu.scene.zoom(view.wheel_delta);
-                    self.gpu.scene.orbit(view.orbit_delta.x, view.orbit_delta.y);
-                    let dpr = ui.ctx().pixels_per_point();
-                    self.gpu.render_scene(
-                        (
-                            (view.logical_size.x * dpr).ceil() as u32,
-                            (view.logical_size.y * dpr).ceil() as u32,
-                        ),
-                        scene_renderer::SceneFrame {
-                            revision: scene.revision,
-                            cloud_revision: scene.cloud_revision,
-                            overlay_revision: scene.overlay_revision,
-                            overlay: scene.overlay,
-                            focus: scene.focus,
-                            forward: scene.forward,
-                            view_radius: scene.view_radius,
-                            platform: scene.platform,
-                            path: scene.path,
-                            cloud: scene.cloud,
-                            cloud_colors: scene.cloud_colors,
-                        },
-                    );
-                }
-                output
-            }
-            Panel::Bev(panel) => {
-                let Some(scene) = snapshot else {
-                    return PanelOutput::default();
-                };
-                let output = panel.show(
-                    ui,
-                    viewer_ui::bev::BevPanelInput {
-                        texture_id: self.gpu.bev_id,
-                        path_points: self.presentation.diagnostics.path_points,
-                    },
-                );
-                if let Some(size) = output.render_requests.bev_size {
-                    let dpr = ui.ctx().pixels_per_point();
-                    self.gpu.render_bev(
-                        ((size.x * dpr).ceil() as u32, (size.y * dpr).ceil() as u32),
-                        bev_renderer::BevFrame {
-                            revision: scene.bev.revision,
-                            path: scene.bev.path,
-                            footprint: scene.bev.footprint,
-                        },
-                    );
-                }
-                output
-            }
-            Panel::Plot(panel) => {
-                let query = self.speed_query.as_ref();
-                let error = self
-                    .signal_error
-                    .as_ref()
-                    .or_else(|| query.and_then(|q| q.error.as_ref()));
-                panel.show(
-                    ui,
-                    viewer_ui::plot::PlotPanelInput {
-                        playback,
-                        signal: query.and_then(|q| match panel.signal_id() {
-                            viewer_core::SignalId::Speed => q.result.speed.as_ref(),
-                            viewer_core::SignalId::YawRate => q.result.yaw_rate.as_ref(),
-                        }),
-                        current: session.odometry().state().latest().map(|f| {
-                            viewer_core::SignalSample {
-                                arrival_time: f.arrival_time,
-                                measurement_time: Some(f.measurement_time),
-                                value: match panel.signal_id() {
-                                    viewer_core::SignalId::Speed => f.speed,
-                                    viewer_core::SignalId::YawRate => f.yaw_rate,
-                                },
-                            }
-                        }),
-                        loading: query.is_some_and(|q| q.loading),
-                        error: error.map(|e| e as &dyn std::fmt::Display),
-                        display_time: self.preview_time,
-                        preview_signal: None,
-                        bookmarks: &[],
-                    },
-                )
-            }
-            Panel::Inspector(panel) => {
-                let views = self
-                    .pinned_inspections
-                    .get(panel.topic())
-                    .and_then(Inspection::view)
-                    .into_iter()
-                    .collect::<Vec<_>>();
-                panel.show(
-                    ui,
-                    viewer_ui::inspector::InspectorPanelInput {
-                        inspections: &views,
-                        cursor: playback.map(|p| p.cursor),
-                    },
-                )
-            }
-            Panel::Topics(panel) => {
-                let views = self.inspection.view().into_iter().collect::<Vec<_>>();
-                panel.show(
-                    ui,
-                    viewer_ui::topics::TopicsPanelInput {
-                        tree: &self.topic_tree,
-                        series: None,
-                        selected_topic: self.inspection.selected.as_deref(),
-                        inspector: viewer_ui::inspector::InspectorPanelInput {
-                            inspections: &views,
-                            cursor: playback.map(|p| p.cursor),
-                        },
-                        presentation: &self.presentation,
-                    },
-                )
-            }
-            Panel::Status(panel) => {
-                panel.show(
-                    ui,
-                    viewer_ui::status::StatusPanelInput {
-                        playback,
-                        main_camera: self.presentation.focused_camera(),
-                        speed: session.odometry().state().latest().map(|f| {
-                            viewer_core::SignalSample {
-                                arrival_time: f.arrival_time,
-                                measurement_time: Some(f.measurement_time),
-                                value: f.speed,
-                            }
-                        }),
-                    },
-                )
-            }
-            Panel::Placeholder(panel) => panel.show(ui),
+            self.gpu.scene.zoom(view.wheel_delta);
+            self.gpu.scene.orbit(view.orbit_delta.x, view.orbit_delta.y);
+            self.gpu.render_scene(
+                (
+                    (view.logical_size.x * dpr).ceil() as u32,
+                    (view.logical_size.y * dpr).ceil() as u32,
+                ),
+                scene_renderer::SceneFrame {
+                    revision: scene.revision,
+                    cloud_revision: scene.cloud_revision,
+                    overlay_revision: scene.overlay_revision,
+                    overlay: scene.overlay,
+                    focus: scene.focus,
+                    forward: scene.forward,
+                    view_radius: scene.view_radius,
+                    platform: scene.platform,
+                    path: scene.path,
+                    cloud: scene.cloud,
+                    cloud_colors: scene.cloud_colors,
+                },
+            );
+        }
+        if let Some(size) = requests.bev_size {
+            self.gpu.render_bev(
+                ((size.x * dpr).ceil() as u32, (size.y * dpr).ceil() as u32),
+                bev_renderer::BevFrame {
+                    revision: scene.bev.revision,
+                    path: scene.bev.path,
+                    footprint: scene.bev.footprint,
+                },
+            );
         }
     }
     fn apply_actions(&mut self, actions: Vec<ViewerAction>) {
@@ -854,7 +700,7 @@ impl ViewerApp {
                     slots = slots.saturating_sub(usize::from(controller.loading()));
                 }
             }
-            if self.panels.values().any(|p| matches!(p, Panel::Plot(_)))
+            if !self.requirements.signals.is_empty()
                 && self.speed_query.is_none()
                 && self.signal_error.is_none()
             {
@@ -1083,6 +929,86 @@ impl eframe::App for ViewerApp {
                 coloring: scene_style.coloring,
             })
         });
+        use viewer_ui::panel_input::{
+            PanelInput, PanelResourceView, PreviewDataView, SceneDataView, SignalInput,
+            SignalInputs,
+        };
+        // Collect only lightweight borrowed metadata once, irrespective of panel count.
+        let textures = self.gpu.texture_views().collect::<Vec<_>>();
+        let inspections = self
+            .pinned_inspections
+            .values()
+            .filter_map(Inspection::view)
+            .collect::<Vec<_>>();
+        let topic_inspections = self.inspection.view().into_iter().collect::<Vec<_>>();
+        let input = self.session.as_ref().map(|session| {
+            let playback = session.clock().view();
+            let query = self.speed_query.as_ref();
+            let error = self
+                .signal_error
+                .as_ref()
+                .or_else(|| query.and_then(|q| q.error.as_ref()));
+            let signal =
+                |id| SignalInput {
+                    signal: query.and_then(|q| match id {
+                        viewer_core::SignalId::Speed => q.result.speed.as_ref(),
+                        viewer_core::SignalId::YawRate => q.result.yaw_rate.as_ref(),
+                    }),
+                    current: session.odometry().state().latest().map(|f| {
+                        viewer_core::SignalSample {
+                            arrival_time: f.arrival_time,
+                            measurement_time: Some(f.measurement_time),
+                            value: match id {
+                                viewer_core::SignalId::Speed => f.speed,
+                                viewer_core::SignalId::YawRate => f.yaw_rate,
+                            },
+                        }
+                    }),
+                    loading: query.is_some_and(|q| q.loading),
+                    error: error.map(|e| e as &dyn std::fmt::Display),
+                };
+            PanelInput {
+                playback: Some(playback),
+                display_time: Some(self.preview_time.unwrap_or(playback.cursor)),
+                presentation: &self.presentation,
+                camera_overlays: &self.overlays,
+                signals: SignalInputs {
+                    speed: signal(viewer_core::SignalId::Speed),
+                    yaw_rate: signal(viewer_core::SignalId::YawRate),
+                },
+                preview: PreviewDataView {
+                    active: false,
+                    speed_overview: None,
+                    bookmarks: &[],
+                },
+                resources: PanelResourceView {
+                    camera_textures: &textures,
+                    preview_camera_textures: &[],
+                    bev_texture: self.gpu.bev_id,
+                    scene_texture: self.gpu.scene_id,
+                },
+                scene: scene_snapshot.as_ref().map(|scene| SceneDataView {
+                    diagnostics: &scene.diagnostics,
+                    visible_scan_points: scene.cloud.len(),
+                    camera_distance: self.gpu.scene.camera().distance,
+                    camera_mode: self.gpu.scene.camera_mode(),
+                    static_transform_count: session.transforms().state().static_len(),
+                    dynamic_transform_count: session.transforms().state().dynamic_len(),
+                }),
+                inspections: &inspections,
+                topic_inspections: &topic_inspections,
+                inspector_topic: self.inspection.selected.as_deref(),
+                topic_tree: &self.topic_tree,
+                numeric_series: None,
+            }
+        });
+        let show = |ui: &mut egui::Ui, panel: &mut Panel| match &input {
+            Some(input) => panel.show(ui, input),
+            None => {
+                ui.label("Open an indexed MCAP");
+                PanelOutput::default()
+            }
+        };
         let mut panels = std::mem::take(&mut self.panels);
         let layout = self.layout.clone();
         let output = egui::CentralPanel::default()
@@ -1094,16 +1020,19 @@ impl eframe::App for ViewerApp {
                         .or_else(|| panels.iter().next().map(|(id, _)| id.clone()));
                     selected
                         .and_then(|id| panels.get_mut(&id))
-                        .map_or_else(PanelOutput::default, |panel| {
-                            self.draw_panel(ui, panel, scene_snapshot.as_ref())
-                        })
+                        .map_or_else(PanelOutput::default, |panel| show(ui, panel))
                 } else {
                     viewer_ui::layout::show_layout(ui, &layout, &mut panels, |ui, panel| {
-                        self.draw_panel(ui, panel, scene_snapshot.as_ref())
+                        show(ui, panel)
                     })
                 }
             })
             .inner;
+        self.render_views(
+            &output.render_requests,
+            scene_snapshot.as_ref(),
+            ctx.pixels_per_point(),
+        );
         self.panels = panels;
         self.scene = scene_state;
         self.plot_chart_rect = output.render_requests.plot_rect;

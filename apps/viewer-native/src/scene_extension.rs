@@ -348,7 +348,7 @@ mod recording_tests {
         let mut session = ViewerSession::open(
             &recording,
             "".into(),
-            &requirements.playback,
+            &requirements.shared.playback,
             workspace.bindings(),
         )
         .unwrap();
@@ -504,7 +504,7 @@ mod detection_recording_tests {
         let mut session = ViewerSession::open(
             &recording,
             "".into(),
-            &workspace.data_requirements().playback,
+            &workspace.data_requirements().shared.playback,
             workspace.bindings(),
         )
         .unwrap();

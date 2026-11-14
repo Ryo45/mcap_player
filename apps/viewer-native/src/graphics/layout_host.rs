@@ -10,8 +10,48 @@ pub(crate) fn show_layout_host(
     panels: &mut PanelRuntimeStore,
     context: PanelCompositionInput<'_>,
 ) -> PanelOutput {
+    use viewer_ui::panel_input::{PanelInput, SignalInput, SignalInputs};
+    let inspections = context
+        .inspections
+        .iter()
+        .map(crate::inspection::TopicInspection::view)
+        .collect::<Vec<_>>();
+    let numeric_series = context
+        .numeric_series
+        .iter()
+        .map(|s| (s.request.stream_id, s.request.field_path.as_str()))
+        .collect::<Vec<_>>();
+    let signal = |id| {
+        let signal = context.signals.get(id);
+        SignalInput {
+            signal: signal.signal,
+            current: signal.current,
+            loading: signal.loading,
+            error: signal.error.map(|e| e as &dyn std::fmt::Display),
+        }
+    };
+    let shared = PanelInput {
+        playback: context.playback,
+        display_time: context
+            .playback
+            .map(|p| context.interaction.display_time(p)),
+        presentation: context.presentation,
+        camera_overlays: context.camera_overlays,
+        signals: SignalInputs {
+            speed: signal(viewer_core::SignalId::Speed),
+            yaw_rate: signal(viewer_core::SignalId::YawRate),
+        },
+        preview: context.preview,
+        resources: context.resources,
+        scene: Some(context.scene),
+        inspections: &inspections,
+        topic_inspections: &inspections,
+        inspector_topic: context.inspector_topic,
+        topic_tree: context.topic_tree,
+        numeric_series: Some(&numeric_series),
+    };
     viewer_ui::layout::show_layout(ui, document, &mut panels.panels, |ui, panel| {
-        panel.show(ui, &context)
+        panel.show(ui, &context, &shared)
     })
 }
 #[cfg(test)]

@@ -1,0 +1,316 @@
+{
+  "baseline": "1052acd",
+  "candidate": "shared Panel contracts working tree; source committed with this report",
+  "workloads": {
+    "native": {
+      "data_sha256": "39e1fa1b7ce9bdca78e9f7d3b522694915e2d5e818d12fff445ec24fb1db1a9b",
+      "rows": [
+        {
+          "variant": "before",
+          "repeat": 0,
+          "cpu_core_seconds_per_second": 0.19581988027138317,
+          "pss_mib_median": 220.7705078125,
+          "pss_mib_peak": 222.2666015625,
+          "window_pixels_changed": true
+        },
+        {
+          "variant": "after",
+          "repeat": 0,
+          "cpu_core_seconds_per_second": 0.1923262867156437,
+          "pss_mib_median": 220.5234375,
+          "pss_mib_peak": 220.708984375,
+          "window_pixels_changed": true
+        },
+        {
+          "variant": "after",
+          "repeat": 1,
+          "cpu_core_seconds_per_second": 0.19393090164471183,
+          "pss_mib_median": 221.1787109375,
+          "pss_mib_peak": 222.607421875,
+          "window_pixels_changed": true
+        },
+        {
+          "variant": "before",
+          "repeat": 1,
+          "cpu_core_seconds_per_second": 0.19984341949372406,
+          "pss_mib_median": 220.5107421875,
+          "pss_mib_peak": 222.5791015625,
+          "window_pixels_changed": true
+        },
+        {
+          "variant": "before",
+          "repeat": 2,
+          "cpu_core_seconds_per_second": 0.19576300043133274,
+          "pss_mib_median": 220.5361328125,
+          "pss_mib_peak": 220.6650390625,
+          "window_pixels_changed": true
+        },
+        {
+          "variant": "after",
+          "repeat": 2,
+          "cpu_core_seconds_per_second": 0.19332721694021326,
+          "pss_mib_median": 221.1884765625,
+          "pss_mib_peak": 222.6533203125,
+          "window_pixels_changed": true
+        }
+      ],
+      "medians": {
+        "before": {
+          "cpu_core_seconds_per_second": 0.19581988027138317,
+          "pss_mib_median": 220.5361328125
+        },
+        "after": {
+          "cpu_core_seconds_per_second": 0.19332721694021326,
+          "pss_mib_median": 221.1787109375
+        }
+      }
+    },
+    "web-fhd": {
+      "data_sha256": "39e1fa1b7ce9bdca78e9f7d3b522694915e2d5e818d12fff445ec24fb1db1a9b",
+      "rows": [
+        {
+          "variant": "before",
+          "repeat": 0,
+          "cpu_core_seconds_per_second": 0.6457071956887928,
+          "pss_mib_median": 471.193359375,
+          "pss_mib_peak": 507.8583984375,
+          "focus_hz": 10.052926399945274,
+          "background_min_hz": 4.833137692281382,
+          "cursor_rate": 1.00258608288685,
+          "camera_pixels": [
+            633,
+            356
+          ]
+        },
+        {
+          "variant": "after",
+          "repeat": 0,
+          "cpu_core_seconds_per_second": 0.6665224640149001,
+          "pss_mib_median": 466.22265625,
+          "pss_mib_peak": 494.3486328125,
+          "focus_hz": 9.881583042081367,
+          "background_min_hz": 4.843913255922239,
+          "cursor_rate": 1.001721261324719,
+          "camera_pixels": [
+            633,
+            356
+          ]
+        },
+        {
+          "variant": "after",
+          "repeat": 1,
+          "cpu_core_seconds_per_second": 0.6586546437318944,
+          "pss_mib_median": 467.787109375,
+          "pss_mib_peak": 494.3603515625,
+          "focus_hz": 9.908963666763015,
+          "background_min_hz": 4.857335130766184,
+          "cursor_rate": 1.0015825039639872,
+          "camera_pixels": [
+            633,
+            356
+          ]
+        },
+        {
+          "variant": "before",
+          "repeat": 1,
+          "cpu_core_seconds_per_second": 0.640342010568068,
+          "pss_mib_median": 466.666015625,
+          "pss_mib_peak": 484.359375,
+          "focus_hz": 10.02945317757215,
+          "background_min_hz": 5.014726588786075,
+          "cursor_rate": 1.0039096882550584,
+          "camera_pixels": [
+            633,
+            356
+          ]
+        },
+        {
+          "variant": "before",
+          "repeat": 2,
+          "cpu_core_seconds_per_second": 0.6752505150196392,
+          "pss_mib_median": 469.31640625,
+          "pss_mib_peak": 493.951171875,
+          "focus_hz": 10.010981472674883,
+          "background_min_hz": 4.907343859154355,
+          "cursor_rate": 1.0018833222849532,
+          "camera_pixels": [
+            633,
+            356
+          ]
+        },
+        {
+          "variant": "after",
+          "repeat": 2,
+          "cpu_core_seconds_per_second": 0.6691414840159645,
+          "pss_mib_median": 466.09716796875,
+          "pss_mib_peak": 486.83203125,
+          "focus_hz": 9.978425638834556,
+          "background_min_hz": 4.891385117075763,
+          "cursor_rate": 1.0019513273817995,
+          "camera_pixels": [
+            633,
+            356
+          ]
+        }
+      ],
+      "medians": {
+        "before": {
+          "cpu_core_seconds_per_second": 0.6457071956887928,
+          "pss_mib_median": 469.31640625,
+          "focus_hz": 10.02945317757215,
+          "background_min_hz": 4.907343859154355,
+          "cursor_rate": 1.00258608288685
+        },
+        "after": {
+          "cpu_core_seconds_per_second": 0.6665224640149001,
+          "pss_mib_median": 466.22265625,
+          "focus_hz": 9.908963666763015,
+          "background_min_hz": 4.857335130766184,
+          "cursor_rate": 1.001721261324719
+        }
+      }
+    },
+    "web-4k": {
+      "data_sha256": "c2d283cc811866fd74fd29bdaab1b7720cbc2fe1420ccaeae94dfd171ac7d649",
+      "rows": [
+        {
+          "variant": "before",
+          "repeat": 0,
+          "cpu_core_seconds_per_second": 2.7757477493008613,
+          "pss_mib_median": 1387.4267578125,
+          "pss_mib_peak": 1573.7158203125,
+          "focus_hz": 10.414714230655761,
+          "background_min_hz": 2.7168819732145466,
+          "cursor_rate": 1.0106800940358114,
+          "camera_pixels": [
+            633,
+            356
+          ]
+        },
+        {
+          "variant": "after",
+          "repeat": 0,
+          "cpu_core_seconds_per_second": 2.7658150609127414,
+          "pss_mib_median": 1301.517578125,
+          "pss_mib_peak": 1541.6943359375,
+          "focus_hz": 9.825275527221105,
+          "background_min_hz": 2.4563188818052764,
+          "cursor_rate": 1.0075820053165243,
+          "camera_pixels": [
+            633,
+            356
+          ]
+        },
+        {
+          "variant": "after",
+          "repeat": 1,
+          "cpu_core_seconds_per_second": 2.823024925545942,
+          "pss_mib_median": 1308.8173828125,
+          "pss_mib_peak": 1480.9345703125,
+          "focus_hz": 9.997221490128968,
+          "background_min_hz": 2.856348997179705,
+          "cursor_rate": 1.0144799521649919,
+          "camera_pixels": [
+            633,
+            356
+          ]
+        },
+        {
+          "variant": "before",
+          "repeat": 1,
+          "cpu_core_seconds_per_second": 2.790119247462848,
+          "pss_mib_median": 1328.673828125,
+          "pss_mib_peak": 1586.185546875,
+          "focus_hz": 9.916417357703176,
+          "background_min_hz": 2.7044774611917752,
+          "cursor_rate": 1.0069671080504043,
+          "camera_pixels": [
+            633,
+            356
+          ]
+        },
+        {
+          "variant": "before",
+          "repeat": 2,
+          "cpu_core_seconds_per_second": 2.833878269009898,
+          "pss_mib_median": 1303.4482421875,
+          "pss_mib_peak": 1527.673828125,
+          "focus_hz": 10.260593732622043,
+          "background_min_hz": 2.9315982093205837,
+          "cursor_rate": 1.0099355831109411,
+          "camera_pixels": [
+            633,
+            356
+          ]
+        },
+        {
+          "variant": "after",
+          "repeat": 2,
+          "cpu_core_seconds_per_second": 2.724861405880109,
+          "pss_mib_median": 1280.97607421875,
+          "pss_mib_peak": 1521.306640625,
+          "focus_hz": 10.163781442892056,
+          "background_min_hz": 2.4199479625933464,
+          "cursor_rate": 1.0086343108089069,
+          "camera_pixels": [
+            633,
+            356
+          ]
+        }
+      ],
+      "medians": {
+        "before": {
+          "cpu_core_seconds_per_second": 2.790119247462848,
+          "pss_mib_median": 1328.673828125,
+          "focus_hz": 10.260593732622043,
+          "background_min_hz": 2.7168819732145466,
+          "cursor_rate": 1.0099355831109411
+        },
+        "after": {
+          "cpu_core_seconds_per_second": 2.7658150609127414,
+          "pss_mib_median": 1301.517578125,
+          "focus_hz": 9.997221490128968,
+          "background_min_hz": 2.4563188818052764,
+          "cursor_rate": 1.0086343108089069
+        }
+      }
+    }
+  },
+  "binaries": {
+    "before-native": {
+      "sha256": "f27c6fc417c8da231186a3b5bcbbfc8d0483778aadea2818cc0f8b58325a1d41",
+      "bytes": 23619936
+    },
+    "after-native": {
+      "sha256": "ae5d254433aeb50d8fcf0970f593334a87a38387c0bee450d4920f490d0a0ab6",
+      "bytes": 23612664
+    },
+    "before-web": {
+      "sha256": "a629aece3c296e19ce4f1984e8fc5d59fe943956273a0b0d1a009fb8b5e711f7",
+      "bytes": 5833958,
+      "gzip_bytes": 2245105
+    },
+    "after-web": {
+      "sha256": "d5f7b0b6cbff3efc2a7b4561da3362958186668fedd44cb006aad52ced11c3d5",
+      "bytes": 5842823,
+      "gzip_bytes": 2245371
+    }
+  },
+  "checks": {
+    "workspace_tests": {
+      "passed": 537,
+      "ignored": 16
+    },
+    "native_plugin_tests": {
+      "passed": 92,
+      "ignored": 8
+    },
+    "native_live_tests": {
+      "passed": 88,
+      "ignored": 5
+    },
+    "local_browser": "passed",
+    "remote_browser": "passed",
+    "wasm_and_clippy": "passed"
+  }
+}

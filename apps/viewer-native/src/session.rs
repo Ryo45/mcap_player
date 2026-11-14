@@ -513,11 +513,15 @@ mod numeric_demand_tests {
         );
         assert!(explorer.startup_warning().is_none());
         let requirements = explorer.data_requirements();
-        assert_eq!(requirements.playback, PlaybackRequirements::empty());
-        assert!(requirements.signals.is_empty());
-        let mut session =
-            ViewerSession::open(&path, "/camera".into(), &requirements.playback, &bindings)
-                .unwrap();
+        assert_eq!(requirements.shared.playback, PlaybackRequirements::empty());
+        assert!(requirements.shared.signals.is_empty());
+        let mut session = ViewerSession::open(
+            &path,
+            "/camera".into(),
+            &requirements.shared.playback,
+            &bindings,
+        )
+        .unwrap();
         let selected = session.plan().selected_stream_ids();
         let cursor = session.playback_view().unwrap().cursor;
         let stream = session.topic_tree().entries[0].stream_id;
@@ -566,7 +570,7 @@ mod bindings_recording_tests {
             crate::workspace_bindings::load(Some(&dir.join("bindings.json")), None).unwrap();
         let mut workspace = crate::workspace::NativeWorkspace::default();
         workspace.set_bindings(bindings.clone());
-        let requirements = workspace.data_requirements().playback;
+        let requirements = workspace.data_requirements().shared.playback;
         let mut session = ViewerSession::open(
             &dir.join("recording.mcap"),
             "/camera/front/image/compressed".into(),
@@ -646,13 +650,13 @@ mod plugin_panel_tests {
             .add_plugin_panel(&root.join("examples/robot-status-panel/panel.json"))
             .unwrap();
         let requirements = workspace.data_requirements();
-        assert_eq!(requirements.playback, PlaybackRequirements::empty());
+        assert_eq!(requirements.shared.playback, PlaybackRequirements::empty());
         assert_eq!(requirements.plugins.len(), 1);
         let path = root.join("target/plugin-panel/recording.mcap");
         let mut session = ViewerSession::open(
             &path,
             "/camera".into(),
-            &requirements.playback,
+            &requirements.shared.playback,
             workspace.bindings(),
         )
         .unwrap();
