@@ -1,32 +1,25 @@
 #[cfg(test)]
 use viewer_ui::action::ViewerAction;
-mod bev;
 mod diagnostics;
-mod inspector;
-mod placeholder;
 #[cfg(feature = "plugin-panels")]
 mod plugin;
 mod runtime;
-mod status;
 mod topic_health;
 mod topic_tree;
-mod topics;
 pub(crate) use topic_tree::{show_field_plots, show_topics};
 
-pub(crate) use crate::camera_selection::CameraSelection;
-pub(crate) use bev::BevPanel;
-pub(crate) use inspector::{InspectorPanel, InspectorPanelInput};
-pub(crate) use placeholder::PlaceholderPanel;
 pub(crate) use runtime::PanelRuntimeStore;
-pub(crate) use status::{StatusPanel, StatusPanelInput};
+pub(crate) use viewer_ui::bev::BevPanel;
+pub(crate) use viewer_ui::camera::CameraSelection;
 pub(crate) use viewer_ui::camera::{CameraPanel, CameraPanelInput};
+pub(crate) use viewer_ui::inspector::{InspectorPanel, InspectorPanelInput};
+pub(crate) use viewer_ui::placeholder::PlaceholderPanel;
 pub(crate) use viewer_ui::plot::{PlotPanel, PlotPanelInput};
 pub(crate) use viewer_ui::scene::{ScenePanel, ScenePanelInput};
+pub(crate) use viewer_ui::status::{StatusPanel, StatusPanelInput};
 
-use crate::{
-    inspection::{InspectorRequirement, TopicInspection},
-    workspace::ViewerInteractionState,
-};
+use crate::inspection::InspectorRequirement;
+use crate::{inspection::TopicInspection, workspace::ViewerInteractionState};
 use scene_renderer::SceneCameraMode;
 use std::collections::BTreeSet;
 use viewer_core::{
@@ -34,15 +27,11 @@ use viewer_core::{
 };
 use viewer_ui::views::camera::CameraTextureView;
 
-pub(crate) const BEV_CONFIG_VERSION: u32 = 1;
-pub(crate) const INSPECTOR_CONFIG_VERSION: u32 = 1;
-pub(crate) const STATUS_CONFIG_VERSION: u32 = 1;
-
 pub(crate) enum NativePanel {
     #[cfg(feature = "plugin-panels")]
     Plugin(Box<plugin::PluginPanel>),
     Explore,
-    Topics(topics::TopicsPanel),
+    Topics(viewer_ui::topics::TopicsPanel),
     Camera(CameraPanel),
     Bev(BevPanel),
     Plot(PlotPanel),
@@ -70,12 +59,22 @@ impl NativePanel {
             }
             Self::Topics(panel) => panel.show(
                 ui,
-                topics::TopicsPanelInput {
+                viewer_ui::topics::TopicsPanelInput {
                     tree: input.topic_tree,
-                    series: input.numeric_series,
+                    series: Some(
+                        &input
+                            .numeric_series
+                            .iter()
+                            .map(|s| (s.request.stream_id, s.request.field_path.as_str()))
+                            .collect::<Vec<_>>(),
+                    ),
                     selected_topic: input.inspector_topic,
                     inspector: InspectorPanelInput {
-                        inspections: input.inspections,
+                        inspections: &input
+                            .inspections
+                            .iter()
+                            .map(TopicInspection::view)
+                            .collect::<Vec<_>>(),
                         cursor: input.playback.map(|view| view.cursor),
                     },
                     presentation: input.presentation,
@@ -93,7 +92,7 @@ impl NativePanel {
             ),
             Self::Bev(panel) => panel.show(
                 ui,
-                bev::BevPanelInput {
+                viewer_ui::bev::BevPanelInput {
                     texture_id: input.resources.bev_texture,
                     path_points: input.presentation.diagnostics.path_points,
                 },
@@ -123,7 +122,11 @@ impl NativePanel {
             Self::Inspector(panel) => panel.show(
                 ui,
                 InspectorPanelInput {
-                    inspections: input.inspections,
+                    inspections: &input
+                        .inspections
+                        .iter()
+                        .map(TopicInspection::view)
+                        .collect::<Vec<_>>(),
                     cursor: input.playback.map(|view| view.cursor),
                 },
             ),
@@ -216,13 +219,23 @@ impl NativePanel {
             #[cfg(feature = "plugin-panels")]
             Self::Plugin(panel) => panel.requirements(requirements),
             Self::Camera(panel) => panel.contribute_data_requirements(&mut requirements.playback),
-            Self::Bev(panel) => panel.contribute_data_requirements(requirements),
+            Self::Bev(panel) => panel.contribute_data_requirements(&mut requirements.playback),
             Self::Scene(panel) => panel.contribute_data_requirements(&mut requirements.playback),
             Self::Plot(panel) => {
                 requirements.signals.insert(panel.signal_id());
             }
-            Self::Inspector(panel) => panel.contribute_data_requirements(requirements),
-            Self::Status(panel) => panel.contribute_data_requirements(requirements),
+            Self::Inspector(panel) => {
+                let requirement = InspectorRequirement {
+                    topic: panel.topic().to_owned(),
+                };
+                if !requirements.inspections.contains(&requirement) {
+                    requirements.inspections.push(requirement);
+                }
+            }
+            Self::Status(panel) => {
+                panel.contribute_data_requirements(&mut requirements.playback);
+                requirements.signals.insert(SignalId::Speed);
+            }
             Self::TopicHealth(panel) => panel.contribute_data_requirements(requirements),
             Self::Diagnostics(panel) => panel.contribute_data_requirements(requirements),
             Self::Explore | Self::Topics(_) | Self::Placeholder(_) => {}
@@ -236,7 +249,6 @@ impl NativePanel {
         }
     }
 
-    #[cfg(test)]
     pub(crate) fn kind_name(&self) -> &'static str {
         match self {
             #[cfg(feature = "plugin-panels")]

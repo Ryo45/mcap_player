@@ -5,6 +5,12 @@ Recording Server playback. Platform-specific I/O remains separate; MCAP log time
 exact predecessor selection, transactional seek, bounded state, and CDR decoding
 remain shared observable requirements.
 
+The table below describes the default DOM Web entry. On `feature/web-egui-ui`, the
+[shared egui host](web_egui_ui_experiment.md) additionally supports common panel instances,
+configurable layouts, independent BEV, multiple Inspectors and speed/yaw plots, while
+retaining Local/Remote/settings functionality. See its
+[main comparison](performance/2026-11-14-web-panel-parity/report.md) before changing the default.
+
 ## Current inventory
 
 | Area | Native | Web (Browser Local / Remote) | Remaining work |

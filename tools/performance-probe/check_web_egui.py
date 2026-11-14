@@ -17,7 +17,8 @@ def wait(page, expression, label, timeout=25):
         if page.evaluate(expression):
             return
         time.sleep(.05)
-    raise RuntimeError(f'{label}: {page.evaluate("document.body.innerText")}')
+    detail = page.evaluate('window.wasmBindings?.egui_status?.() ?? document.body.innerText')
+    raise RuntimeError(f'{label}: {detail}')
 
 
 def click(page, x, y):
@@ -84,10 +85,10 @@ def main():
             play()
             wait(page, f'!{snapshot}.playing', 'pause')
             # Select a numeric topic through actual egui text/pointer input.
-            click(page, 100, 57)
+            click(page, 100, 85)
             page.call('Input.insertText', {'text': '/vehicle/speed_mps'})
             time.sleep(.2)
-            click(page, 100, 78)
+            click(page, 100, 106)
             wait(page, f'{snapshot}.has_message', 'shared lazy Inspector')
             time.sleep(.4)
             settled = status()['uploads']

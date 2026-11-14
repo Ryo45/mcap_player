@@ -1,0 +1,63 @@
+--- a/apps/viewer-web/src/camera_bitmap.rs
++++ b/apps/viewer-web/src/camera_bitmap.rs
+@@ -26,7 +26,7 @@
+ }
+ 
+ fn image_size(source: (u32, u32), target: (u32, u32)) -> (u32, u32) {
+-    viewer_renderer::camera_target_size(source, target)
++    viewer_renderer::camera_target_size(source, if target.0 > 256 || target.1 > 256 { (960, 540) } else { (112, 63) })
+ }
+ #[cfg(test)]
+ fn source_size(data: &[u8]) -> Result<(u32, u32), String> {
+--- a/apps/viewer-web/src/webgpu/host.rs
++++ b/apps/viewer-web/src/webgpu/host.rs
+@@ -114,6 +114,8 @@
+         let Some(size) = current_physical_size(&self.canvas) else {
+             return Ok(());
+         };
++        let _ = size;
++        let size = PhysicalSize {width:960,height:540};
+         let resized = self.physical_size != Some(size);
+         if resized {
+             self.canvas.set_width(size.width);
+--- a/apps/viewer-web/src/app/camera.rs
++++ b/apps/viewer-web/src/app/camera.rs
+@@ -28,7 +28,8 @@
+     camera_topics: Vec<(CameraId, String)>,
+     decode: CameraBitmapQueue,
+     geometry: BTreeMap<CameraId, CameraImageGeometry>,
+-    presented_frames: BTreeMap<CameraId, viewer_core::CameraFrameMetadata>,
++    pub(super) presented_frames: BTreeMap<CameraId, viewer_core::CameraFrameMetadata>,
++    pub(super) uploads_by_camera: BTreeMap<CameraId, u64>,
+     pub(super) errors: BTreeMap<CameraId, String>,
+ }
+ 
+@@ -318,6 +319,7 @@
+                         pixel_size: completed.pixel_size,
+                     },
+                 );
++                *view.uploads_by_camera.entry(id).or_default() += 1;
+                 view.presented_frames.insert(id, frame);
+                 metrics.record_camera(id, completed.decode_time, duration_since(uploaded));
+                 camera_visual_changes.insert(id);
+--- a/apps/viewer-web/src/app.rs
++++ b/apps/viewer-web/src/app.rs
+@@ -479,3 +479,18 @@
+     callback.forget();
+     Ok(())
+ }
++
++// Read-only measurement instrumentation, absent from production main.
++#[wasm_bindgen]
++pub fn parity_status() -> String {
++    APP.with(|cell| {
++        let app = cell.borrow();
++        let Some(session) = &app.playback else {return "{}".into()};
++        let view = session.clock().view();
++        serde_json::json!({"cursor":view.cursor.0.to_string(), "start":view.start.0.to_string(),
++            "end":view.end.0.to_string(), "playing":view.playing,
++            "load":format!("{:?}",session.load_state()), "camera":app.focused_camera.map(|id|id.0),
++            "uploads_by_camera":app.view.camera.uploads_by_camera, "camera_count":app.view.camera.presented_frames.len(),
++            "error":app.view.camera.errors}).to_string()
++    })
++}

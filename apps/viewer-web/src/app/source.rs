@@ -43,7 +43,7 @@ fn install_file_input() {
         let generation = begin_source_change();
         spawn_local(async move {
             set_status("Reading MCAP Summary…", false);
-            let result = match open_browser_mcap(file, TOPIC, &bindings).await {
+            let result = match open_browser_mcap(file, TOPIC, &bindings, None).await {
                 Ok(recording) => WebPlayback::from_local(recording),
                 Err(error) => Err(crate::playback::WebPlaybackError::from(error)),
             };

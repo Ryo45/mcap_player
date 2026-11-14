@@ -195,7 +195,7 @@ impl NativeWorkspace {
         let mut number = 1;
         let id = loop {
             let candidate = viewer_layout::PanelId::new(format!("plugin-{number}"))?;
-            if self.panels.get_mut(&candidate).is_none() {
+            if self.panels.panels.get(&candidate).is_none() {
                 break candidate;
             }
             number += 1;

@@ -1,51 +1,50 @@
-use super::{
-    BEV_CONFIG_VERSION, NativePanel, PanelDataRequirements, PanelOutput, PlaceholderPanel,
-};
-use crate::graphics::views::{BevViewInput, show_bev_view};
+const BEV_CONFIG_VERSION: u32 = 1;
+use crate::panel::PanelOutput;
+use crate::views::bev::{BevViewInput, show_bev_view};
 use serde::{Deserialize, Serialize};
 use viewer_layout::{PanelId, PanelNode};
 
 #[derive(Clone, Copy)]
-pub(crate) struct BevPanelInput {
-    pub(crate) texture_id: egui::TextureId,
-    pub(crate) path_points: usize,
+pub struct BevPanelInput {
+    pub texture_id: egui::TextureId,
+    pub path_points: usize,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub(crate) struct BevPanelConfig {}
+pub struct BevPanelConfig {}
 
-pub(crate) struct BevPanel {
+pub struct BevPanel {
     id: PanelId,
     title: Option<String>,
     _config: BevPanelConfig,
 }
 
 impl BevPanel {
-    pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
-        requirements.playback.require_path();
+    pub fn contribute_data_requirements(
+        &self,
+        requirements: &mut viewer_core::PlaybackRequirements,
+    ) {
+        requirements.require_path();
     }
 
-    pub(crate) fn create(node: &PanelNode) -> NativePanel {
+    pub fn create(node: &PanelNode) -> Result<Self, String> {
         if node.config_version != BEV_CONFIG_VERSION {
-            return NativePanel::Placeholder(PlaceholderPanel::unsupported_version(
-                node,
-                BEV_CONFIG_VERSION,
+            return Err(format!(
+                "Unsupported {} config version {}; expected {}",
+                node.panel_type, node.config_version, BEV_CONFIG_VERSION
             ));
         }
         match serde_json::from_value::<BevPanelConfig>(node.config.clone()) {
-            Ok(config) => NativePanel::Bev(Self {
+            Ok(config) => Ok(Self {
                 id: node.id.clone(),
                 title: node.title.clone(),
                 _config: config,
             }),
-            Err(error) => NativePanel::Placeholder(PlaceholderPanel::invalid_config(
-                node,
-                format!("Invalid BEV config: {error}"),
-            )),
+            Err(error) => Err(format!("Invalid BEV config: {error}")),
         }
     }
 
-    pub(crate) fn show(&mut self, ui: &mut egui::Ui, input: BevPanelInput) -> PanelOutput {
+    pub fn show(&mut self, ui: &mut egui::Ui, input: BevPanelInput) -> PanelOutput {
         ui.push_id((self.id.as_str(), self.title.as_deref()), |ui| {
             let output = show_bev_view(
                 ui,
@@ -55,7 +54,7 @@ impl BevPanel {
                 },
             );
             PanelOutput {
-                render_requests: super::PanelRenderRequests {
+                render_requests: crate::panel::PanelRenderRequests {
                     bev_size: Some(output.logical_size),
                     scene: None,
                     ..Default::default()

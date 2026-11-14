@@ -97,6 +97,7 @@ mod browser {
     }
     pub(crate) struct CompletedImage {
         pub(crate) frame: CameraFrameMetadata,
+        #[cfg(not(feature = "egui-ui"))]
         pub(crate) source_size: (u32, u32),
         pub(crate) pixel_size: (u32, u32),
         pub(crate) image: Result<Bitmap, String>,
@@ -251,6 +252,7 @@ mod browser {
                     if state.generation == generation {
                         state.ready.push(CompletedImage {
                             frame: request.frame.into(),
+                            #[cfg(not(feature = "egui-ui"))]
                             source_size: request.source,
                             pixel_size: request.pixels,
                             image,
@@ -415,12 +417,15 @@ mod browser {
         Ok(())
     }
 
+    #[cfg(not(feature = "egui-ui"))]
     pub(crate) fn target_size(source: (u32, u32), target: (u32, u32)) -> (u32, u32) {
         image_size(source, target)
     }
 }
 #[cfg(target_arch = "wasm32")]
-pub(crate) use browser::{CameraBitmapQueue, target_size};
+pub(crate) use browser::CameraBitmapQueue;
+#[cfg(all(target_arch = "wasm32", not(feature = "egui-ui")))]
+pub(crate) use browser::target_size;
 
 #[cfg(test)]
 mod tests {

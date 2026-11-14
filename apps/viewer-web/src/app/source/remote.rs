@@ -183,7 +183,7 @@ fn install_open_playback() {
                 return;
             }
         };
-        let result = adapt_catalog(&catalog, &bindings)
+        let result = adapt_catalog(&catalog, &bindings, None)
             .map_err(|error| error.to_string())
             .and_then(|catalog| {
                 WebPlayback::from_remote(client, catalog).map_err(|error| error.to_string())

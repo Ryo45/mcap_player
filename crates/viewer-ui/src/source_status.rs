@@ -1,6 +1,6 @@
 use viewer_core::{CameraStatus, ViewerPresentation};
 
-pub(crate) fn source_status(ui: &mut egui::Ui, model: &ViewerPresentation) {
+pub fn source_status(ui: &mut egui::Ui, model: &ViewerPresentation) {
     let diagnostics = &model.diagnostics;
     ui.heading("Camera");
     ui.label(format!("Source: {}", diagnostics.source));
@@ -56,7 +56,7 @@ pub(crate) fn source_status(ui: &mut egui::Ui, model: &ViewerPresentation) {
         ));
     }
     ui.separator();
-    ui.heading("Telemetry · /odom");
+    ui.heading("Odometry");
     if let Some(telemetry) = &model.telemetry {
         egui::Grid::new("telemetry-values")
             .num_columns(2)

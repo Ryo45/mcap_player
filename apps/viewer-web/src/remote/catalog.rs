@@ -51,6 +51,7 @@ impl Error for RemoteCatalogError {
 pub(crate) fn adapt_catalog(
     remote: &CatalogResponse,
     bindings: &viewer_core::WorkspaceBindings,
+    requirements: Option<&viewer_core::PlaybackRequirements>,
 ) -> Result<RemoteCatalog, RemoteCatalogError> {
     if remote.time_basis != "mcap-log-time"
         || remote.range_semantics != "start-inclusive-end-exclusive"
@@ -96,8 +97,15 @@ pub(crate) fn adapt_catalog(
         streams,
         capabilities: SourceCapabilities::INDEXED_RECORDING,
     };
-    let plan = crate::playback::web_session_plan(&core, "/camera/front/image/compressed", bindings)
-        .map_err(RemoteCatalogError::Plan)?;
+    let plan = match requirements {
+        Some(requirements) => {
+            crate::playback::layout_session_plan(&core, "", requirements, bindings)
+        }
+        None => {
+            crate::playback::web_session_plan(&core, "/camera/front/image/compressed", bindings)
+        }
+    }
+    .map_err(RemoteCatalogError::Plan)?;
     plan.validate_recording_capabilities(core.capabilities)
         .map_err(RemoteCatalogError::Plan)?;
     let mut selected = plan
@@ -175,7 +183,8 @@ mod tests {
 
     #[test]
     fn retains_all_metadata_and_selects_camera_and_odometry() {
-        let adapted = adapt_catalog(&catalog(), &crate::workspace_bindings::bundled()).unwrap();
+        let adapted =
+            adapt_catalog(&catalog(), &crate::workspace_bindings::bundled(), None).unwrap();
         assert_eq!(
             adapted.core.time_range,
             Some(RecordingTimeRange {
@@ -196,13 +205,13 @@ mod tests {
         value
             .streams
             .retain(|stream| stream.schema_name != "sensor_msgs/msg/CompressedImage");
-        let adapted = adapt_catalog(&value, &crate::workspace_bindings::bundled()).unwrap();
+        let adapted = adapt_catalog(&value, &crate::workspace_bindings::bundled(), None).unwrap();
         assert_eq!(adapted.selected_streams, [3]);
         assert!(adapted.plan.primary_camera_topic().is_none());
 
         let mut value = catalog();
         value.time_range.start_ns = TimestampNs::new(i64::MAX as u64 + 1);
-        assert!(adapt_catalog(&value, &crate::workspace_bindings::bundled()).is_err());
+        assert!(adapt_catalog(&value, &crate::workspace_bindings::bundled(), None).is_err());
     }
     #[test]
     fn explicit_bindings_select_remote_topics_without_catalog_defaults() {
@@ -211,13 +220,13 @@ mod tests {
         bindings.odometry_topic = "/robot/odometry".into();
         remote.streams.iter_mut().find(|s| s.id == 3).unwrap().topic =
             bindings.odometry_topic.clone();
-        let configured = adapt_catalog(&remote, &bindings).unwrap();
+        let configured = adapt_catalog(&remote, &bindings, None).unwrap();
         assert_eq!(
             configured.plan.odometry_stream().unwrap().topic,
             bindings.odometry_topic
         );
         assert!(
-            adapt_catalog(&remote, &crate::workspace_bindings::bundled())
+            adapt_catalog(&remote, &crate::workspace_bindings::bundled(), None)
                 .unwrap()
                 .plan
                 .odometry_stream()
@@ -292,6 +301,7 @@ mod schema_parity_tests {
         let remote = adapt_catalog(
             &serde_json::from_str(&json).unwrap(),
             &crate::workspace_bindings::bundled(),
+            None,
         )
         .unwrap();
         for stream in &native.catalog().streams {
@@ -347,7 +357,8 @@ mod sharing_tests {
         let json = serde_json::to_string(&response).unwrap();
         assert_eq!(json.matches("\"data\":").count(), 1);
         assert!(json.len() < 65536 * 5 + 256 * 256);
-        let adapted = adapt_catalog(&response, &crate::workspace_bindings::bundled()).unwrap();
+        let adapted =
+            adapt_catalog(&response, &crate::workspace_bindings::bundled(), None).unwrap();
         let first = adapted.core.streams[0].schema_definition.as_ref().unwrap();
         assert_eq!(first.data.as_ptr(), response.schemas[0].data.as_ptr());
         for stream in &adapted.core.streams {
@@ -357,9 +368,9 @@ mod sharing_tests {
             ));
         }
         response.streams[0].schema_id = Some(999);
-        assert!(adapt_catalog(&response, &crate::workspace_bindings::bundled()).is_err());
+        assert!(adapt_catalog(&response, &crate::workspace_bindings::bundled(), None).is_err());
         response.streams[0].schema_id = Some(1);
         response.schemas.push(response.schemas[0].clone());
-        assert!(adapt_catalog(&response, &crate::workspace_bindings::bundled()).is_err());
+        assert!(adapt_catalog(&response, &crate::workspace_bindings::bundled(), None).is_err());
     }
 }

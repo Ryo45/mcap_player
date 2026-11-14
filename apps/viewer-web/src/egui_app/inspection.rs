@@ -5,15 +5,17 @@ use crate::{
     topics::{inspection_plan, latest_topic_message},
 };
 use std::sync::Arc;
-use viewer_core::{InspectorMessage, InspectorSchema, StreamId};
-use viewer_ui::inspection::InspectorTreeState;
+use viewer_core::{InspectionMetadata, InspectorMessage, InspectorSchema, StreamId};
+use viewer_ui::inspector::InspectionView;
 
 #[derive(Default)]
 pub(super) struct Inspection {
     pub selected: Option<String>,
     pub message: Option<Arc<InspectorMessage>>,
     pub status: String,
-    pub tree: InspectorTreeState,
+    pub(super) error: Option<String>,
+    pub metadata: Option<InspectionMetadata>,
+    target: viewer_core::ArrivalTime,
     pub automatic: bool,
     query: InspectorQueryState,
     loader: Option<WebRestoreLoader>,
@@ -35,18 +37,20 @@ impl Inspection {
         self.selected = Some(topic);
         self.message = None;
         self.schema = None;
-        self.tree.clear();
+        self.metadata = None;
         self.status.clear();
+        self.error = None;
     }
     pub fn invalidate(&mut self) {
         if let Some(loader) = &mut self.loader {
             loader.cancel();
         }
         self.query.invalidate();
+        self.error = None;
         self.message = None;
-        self.tree.clear();
+        self.metadata = None;
     }
-    pub fn poll(&mut self, session: &WebPlayback) {
+    pub fn poll(&mut self, session: &WebPlayback, admit: bool) {
         if let Some(result) = self.loader.as_mut().and_then(WebRestoreLoader::poll)
             && let Some(request) = self.query.active().cloned()
             && self.query.complete(&request)
@@ -54,8 +58,17 @@ impl Inspection {
             let result = result.map_err(|e| e.to_string()).and_then(|messages| {
                 latest_topic_message(session.catalog(), &request.topic, request.target, messages)
             });
+            self.error = None;
             match result {
                 Ok(Some(raw)) if raw.arrival_time <= session.clock().cursor() => {
+                    self.target = request.target;
+                    self.metadata = Some(InspectionMetadata {
+                        stream_id: raw.stream_id,
+                        log_time: raw.arrival_time,
+                        publish_time_ns: raw.publish_time_ns,
+                        sequence: raw.sequence,
+                        payload_bytes: raw.payload.len(),
+                    });
                     self.status = format!(
                         "Log: {} ns · {} bytes",
                         raw.arrival_time.0,
@@ -90,7 +103,8 @@ impl Inspection {
                             Ok(message) => self.message = Some(Arc::new(message)),
                             Err(error) => {
                                 self.message = None;
-                                self.tree.clear();
+                                self.metadata = None;
+                                self.error = Some(error.clone());
                                 self.status = error;
                             }
                         }
@@ -98,15 +112,20 @@ impl Inspection {
                 }
                 Ok(None) => {
                     self.message = None;
-                    self.tree.clear();
+                    self.metadata = None;
                     self.status = "No message at or before this cursor".into();
                 }
                 Ok(Some(_)) => {}
-                Err(error) => self.status = error,
+                Err(error) => {
+                    self.message = None;
+                    self.metadata = None;
+                    self.error = Some(error.clone());
+                    self.status = error;
+                }
             }
         }
         self.query.set_automatic(self.automatic);
-        if let Some(request) = self.query.next(session.clock().cursor()) {
+        if admit && let Some(request) = self.query.next(session.clock().cursor()) {
             let result = inspection_plan(session.catalog(), &request.topic, request.target)
                 .and_then(|plan| {
                     self.loader
@@ -117,6 +136,9 @@ impl Inspection {
                 });
             if let Err(error) = result {
                 self.query.complete(&request);
+                self.message = None;
+                self.metadata = None;
+                self.error = Some(error.clone());
                 self.status = error;
             }
         }
@@ -127,16 +149,14 @@ impl Inspection {
     pub fn loading(&self) -> bool {
         self.query.active().is_some()
     }
-    pub fn show(&mut self, ui: &mut egui::Ui) {
-        if let Some(topic) = &self.selected {
-            ui.label(topic);
-        }
-        ui.label(&self.status);
-        if self.loading() {
-            ui.spinner();
-        }
-        if let Some(message) = &self.message {
-            self.tree.show(ui, message);
-        }
+    pub fn view(&self) -> Option<InspectionView<'_>> {
+        self.selected.as_deref().map(|topic| InspectionView {
+            topic,
+            target: self.target,
+            metadata: self.metadata,
+            message: self.message.as_ref(),
+            error: self.error.as_ref().map(|e| e as &dyn std::fmt::Display),
+            loading: self.loading(),
+        })
     }
 }

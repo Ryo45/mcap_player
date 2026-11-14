@@ -1,16 +1,9 @@
 use std::sync::Arc;
-use viewer_core::{ArrivalTime, InspectorMessage, StreamId};
+use viewer_core::{ArrivalTime, InspectionMetadata, InspectorMessage};
+use viewer_ui::inspector::InspectionView;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct InspectorRequirement {
     pub topic: String,
-}
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) struct InspectionMetadata {
-    pub stream_id: StreamId,
-    pub log_time: ArrivalTime,
-    pub publish_time_ns: Option<u64>,
-    pub sequence: Option<u32>,
-    pub payload_bytes: usize,
 }
 #[derive(Clone, Debug)]
 pub(crate) struct TopicInspection {
@@ -30,6 +23,17 @@ impl TopicInspection {
             message: None,
             error: None,
             loading: true,
+        }
+    }
+
+    pub fn view(&self) -> InspectionView<'_> {
+        InspectionView {
+            topic: &self.topic,
+            target: self.target,
+            metadata: self.metadata,
+            message: self.message.as_ref(),
+            error: self.error.as_deref().map(|e| e as &dyn std::fmt::Display),
+            loading: self.loading,
         }
     }
 }

@@ -3,7 +3,6 @@ mod camera;
 mod layout_host;
 mod surface;
 mod ui;
-pub(crate) mod views;
 
 use crate::{
     inspection::TopicInspection, panels::PanelRuntimeStore, presentation::PresentationTransition,

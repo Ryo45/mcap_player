@@ -1,33 +1,32 @@
 //! Embedded metadata browser and cursor Inspector. Selection is query demand only.
-use super::{
-    PanelOutput,
+use crate::action::ViewerAction;
+use crate::inspection::InspectorTreeState;
+use crate::{
     inspector::{InspectorPanelInput, show_inspection},
+    panel::PanelOutput,
 };
-use crate::numeric_plot_loader::NumericSeriesState;
 use viewer_core::{TopicTree, ViewerPresentation};
-use viewer_ui::action::ViewerAction;
-use viewer_ui::inspection::InspectorTreeState;
 
 #[derive(Default)]
-pub(crate) struct TopicsPanel {
+pub struct TopicsPanel {
     filter: String,
     tree: InspectorTreeState,
 }
 
-pub(crate) struct TopicsPanelInput<'a> {
+pub struct TopicsPanelInput<'a> {
     pub tree: &'a TopicTree,
-    pub series: &'a [NumericSeriesState],
+    pub series: Option<&'a [(viewer_core::StreamId, &'a str)]>,
     pub selected_topic: Option<&'a str>,
     pub inspector: InspectorPanelInput<'a>,
     pub presentation: &'a ViewerPresentation,
 }
 
 impl TopicsPanel {
-    pub(crate) fn reset_for_source(&mut self) {
+    pub fn reset_for_source(&mut self) {
         self.tree = InspectorTreeState::default();
     }
 
-    pub(crate) fn show(&mut self, ui: &mut egui::Ui, input: TopicsPanelInput<'_>) -> PanelOutput {
+    pub fn show(&mut self, ui: &mut egui::Ui, input: TopicsPanelInput<'_>) -> PanelOutput {
         let mut output = PanelOutput::default();
         // Fixed regions keep a large schema or field tree from displacing the other half.
         let rect = ui.available_rect_before_wrap();
@@ -48,7 +47,7 @@ impl TopicsPanel {
                     egui::ScrollArea::vertical()
                         .max_height(100.0)
                         .show(ui, |ui| {
-                            crate::ui_components::source_status(ui, input.presentation);
+                            crate::source_status::source_status(ui, input.presentation);
                         });
                 });
                 ui.heading("Topics");
@@ -107,7 +106,7 @@ impl TopicsPanel {
                                 input.tree.entries.iter().find(|e| e.topic == topic)
                             {
                                 ui.collapsing("Schema / numeric plots", |ui| {
-                                    super::topic_tree::show_topic_details(
+                                    show_topic_details(
                                         ui,
                                         entry,
                                         input.series,
@@ -124,6 +123,47 @@ impl TopicsPanel {
         );
         ui.allocate_rect(rect, egui::Sense::hover());
         output
+    }
+}
+
+pub fn show_topic_details(
+    ui: &mut egui::Ui,
+    entry: &viewer_core::TopicTreeEntry,
+    series: Option<&[(viewer_core::StreamId, &str)]>,
+    actions: &mut Vec<ViewerAction>,
+) {
+    if let Some(definition) = &entry.schema_definition {
+        ui.collapsing("Schema definition", |ui| {
+            ui.small(&definition.encoding);
+            if let Ok(text) = std::str::from_utf8(&definition.data) {
+                ui.monospace(text);
+            } else {
+                ui.label(format!("{} schema bytes", definition.data.len()));
+            }
+        });
+    }
+    if let Some(error) = &entry.schema_error {
+        ui.small(error.to_string());
+    }
+    let Some(series) = series else {
+        return;
+    };
+    for field in &entry.numeric_fields {
+        let selected = series
+            .iter()
+            .any(|s| s.0 == entry.stream_id && s.1 == field.path);
+        if ui
+            .add_enabled(
+                !selected && series.len() < 8,
+                egui::Button::new(format!("+ {} ({})", field.path, field.ros_type)),
+            )
+            .clicked()
+        {
+            actions.push(ViewerAction::AddNumericSeries {
+                stream: entry.stream_id,
+                field_path: field.path.clone(),
+            });
+        }
     }
 }
 
@@ -169,7 +209,7 @@ mod tests {
                                 ui,
                                 TopicsPanelInput {
                                     tree: &tree,
-                                    series: &[],
+                                    series: Some(&[]),
                                     selected_topic: None,
                                     inspector: InspectorPanelInput {
                                         inspections: &[],

@@ -1,15 +1,13 @@
-use super::{
-    BevPanel, CameraSelection, InspectorPanel, NativePanel, PanelDataRequirements,
-    PlaceholderPanel, StatusPanel,
-};
-use std::collections::BTreeMap;
+use super::{CameraSelection, NativePanel, PanelDataRequirements, PlaceholderPanel};
+#[cfg(test)]
+use crate::inspection::InspectorRequirement;
 use viewer_core::CameraId;
 #[cfg(test)]
 use viewer_core::SignalId;
-use viewer_layout::{LayoutDocument, LayoutNode, PanelId, PanelNode};
+use viewer_layout::{LayoutDocument, PanelId, PanelNode};
 
 pub(crate) struct PanelRuntimeStore {
-    panels: BTreeMap<PanelId, NativePanel>,
+    pub(crate) panels: viewer_ui::workspace::PanelStore<NativePanel>,
     topic_inspector: viewer_ui::inspection::InspectorTreeState,
 }
 
@@ -20,48 +18,12 @@ pub(crate) struct PanelRuntimeBuildResult {
 
 impl PanelRuntimeStore {
     pub(crate) fn from_layout(document: &LayoutDocument) -> PanelRuntimeBuildResult {
-        let mut panels = BTreeMap::new();
-        let mut warnings = Vec::new();
-        let mut has_bev = false;
-        let mut has_scene = false;
-        visit_panels(&document.root, &mut |node| {
-            let mut panel = create_native_panel(node);
-            match &panel {
-                NativePanel::Bev(_) if has_bev => {
-                    warnings.push(format!(
-                        "panel {} is a duplicate BEV instance and was replaced with a placeholder",
-                        node.id
-                    ));
-                    panel = NativePanel::Placeholder(PlaceholderPanel::duplicate_singleton(node));
-                }
-                NativePanel::Bev(_) => has_bev = true,
-                NativePanel::Scene(_) if has_scene => {
-                    warnings.push(format!(
-                        "panel {} is a duplicate Scene instance and was replaced with a placeholder",
-                        node.id
-                    ));
-                    panel = NativePanel::Placeholder(PlaceholderPanel::duplicate_singleton(node));
-                }
-                NativePanel::Scene(_) => has_scene = true,
-                #[cfg(feature = "plugin-panels")]
-                NativePanel::Plugin(_) => {}
-                NativePanel::Explore
-                | NativePanel::Topics(_)
-                | NativePanel::Camera(_)
-                | NativePanel::Plot(_)
-                | NativePanel::Inspector(_)
-                | NativePanel::Diagnostics(_)
-                | NativePanel::TopicHealth(_)
-                | NativePanel::Status(_)
-                | NativePanel::Placeholder(_) => {}
-            }
-            if panels.insert(node.id.clone(), panel).is_some() {
-                warnings.push(format!(
-                    "duplicate runtime panel id {} was ignored by layout validation",
-                    node.id
-                ));
-            }
-        });
+        let (panels, warnings) = viewer_ui::workspace::PanelStore::from_layout(
+            document,
+            create_native_panel,
+            NativePanel::kind_name,
+            |node, error| NativePanel::Placeholder(PlaceholderPanel::invalid_config(node, error)),
+        );
         PanelRuntimeBuildResult {
             store: Self {
                 panels,
@@ -78,20 +40,19 @@ impl PanelRuntimeStore {
         inspections: &[crate::inspection::TopicInspection],
         cursor: Option<viewer_core::ArrivalTime>,
     ) -> Vec<viewer_ui::action::ViewerAction> {
-        super::inspector::show_topic_inspector(
+        viewer_ui::inspector::show_topic_inspector(
             context,
             topic,
             super::InspectorPanelInput {
-                inspections,
+                inspections: &inspections
+                    .iter()
+                    .map(crate::inspection::TopicInspection::view)
+                    .collect::<Vec<_>>(),
                 cursor,
             },
             &mut self.topic_inspector,
         )
     }
-    pub(crate) fn get_mut(&mut self, id: &PanelId) -> Option<&mut NativePanel> {
-        self.panels.get_mut(id)
-    }
-
     #[cfg(any(test, feature = "ros2-live"))]
     pub(crate) fn data_requirements(&self) -> PanelDataRequirements {
         let mut requirements = PanelDataRequirements::default();
@@ -108,48 +69,16 @@ impl PanelRuntimeStore {
         change: Option<(&PanelId, &str)>,
         reset: bool,
     ) -> Result<CameraSelection, String> {
-        let available_topics = viewer_core::camera_streams(catalog)
-            .map(|stream| stream.topic.clone())
-            .collect::<std::collections::BTreeSet<_>>()
-            .into_iter()
-            .collect::<Vec<_>>();
-        if let Some((id, topic)) = change {
-            if !matches!(self.panels.get(id), Some(NativePanel::Camera(_))) {
-                return Err(format!("Camera panel {id} is unavailable"));
-            }
-            if !available_topics.iter().any(|candidate| candidate == topic) {
-                return Err(format!("Unsupported image topic {topic:?}"));
-            }
-        }
-        let fallback = available_topics
-            .iter()
-            .find(|topic| topic.as_str() == preferred)
-            .or_else(|| available_topics.first());
-        let panels = self
-            .panels
-            .iter()
-            .filter_map(|(id, panel)| {
-                let NativePanel::Camera(panel) = panel else {
-                    return None;
-                };
-                let topic = change
-                    .filter(|(changed, _)| *changed == id)
-                    .map(|(_, topic)| topic)
-                    .or_else(|| panel.preferred_topic(reset))
-                    .and_then(|topic| {
-                        available_topics
-                            .iter()
-                            .find(|candidate| candidate.as_str() == topic)
-                    })
-                    .or(fallback)
-                    .cloned();
-                Some((id.clone(), topic))
-            })
-            .collect();
-        Ok(CameraSelection {
-            available_topics,
-            panels,
-        })
+        viewer_ui::camera::select_topics(
+            catalog,
+            preferred,
+            self.panels.iter().filter_map(|(id, panel)| match panel {
+                NativePanel::Camera(camera) => Some((id, camera)),
+                _ => None,
+            }),
+            change,
+            reset,
+        )
     }
 
     pub(crate) fn requirements_for_cameras(
@@ -157,7 +86,7 @@ impl PanelRuntimeStore {
         selection: &CameraSelection,
     ) -> PanelDataRequirements {
         let mut requirements = PanelDataRequirements::default();
-        for (id, panel) in &self.panels {
+        for (id, panel) in self.panels.iter() {
             if let NativePanel::Camera(panel) = panel {
                 panel.contribute_camera_requirements(
                     selection.panels.get(id).and_then(|topic| topic.as_deref()),
@@ -180,7 +109,7 @@ impl PanelRuntimeStore {
             .iter()
             .map(|route| (route.camera_id, route.stream.topic.clone()))
             .collect::<Vec<_>>();
-        for (id, panel) in &mut self.panels {
+        for (id, panel) in self.panels.iter_mut() {
             if let NativePanel::Camera(panel) = panel {
                 panel.bind_topics(
                     &selection.available_topics,
@@ -264,6 +193,11 @@ pub(crate) fn create_native_panel(node: &PanelNode) -> NativePanel {
             Ok(viewer_ui::panel::Panel::Camera(panel)) => NativePanel::Camera(panel),
             Ok(viewer_ui::panel::Panel::Scene(panel)) => NativePanel::Scene(panel),
             Ok(viewer_ui::panel::Panel::Plot(panel)) => NativePanel::Plot(panel),
+            Ok(viewer_ui::panel::Panel::Status(panel)) => NativePanel::Status(panel),
+            Ok(viewer_ui::panel::Panel::Inspector(panel)) => NativePanel::Inspector(panel),
+            Ok(viewer_ui::panel::Panel::Bev(panel)) => NativePanel::Bev(panel),
+            Ok(viewer_ui::panel::Panel::Topics(panel)) => NativePanel::Topics(panel),
+            Ok(viewer_ui::panel::Panel::Placeholder(panel)) => NativePanel::Placeholder(panel),
             Err(error) => NativePanel::Placeholder(PlaceholderPanel::invalid_config(node, error)),
         };
     }
@@ -271,31 +205,11 @@ pub(crate) fn create_native_panel(node: &PanelNode) -> NativePanel {
         "explore" if node.config_version == 1 && node.config == serde_json::json!({}) => {
             NativePanel::Explore
         }
-        "topics" if node.config_version == 1 && node.config == serde_json::json!({}) => {
-            NativePanel::Topics(Default::default())
-        }
         #[cfg(feature = "plugin-panels")]
         "plugin" => super::plugin::PluginPanel::create(node),
-        "bev" => BevPanel::create(node),
-        "inspector" => InspectorPanel::create(node),
-        "status" => StatusPanel::create(node),
         "topic-health" => super::topic_health::TopicHealthPanel::create(node),
         "diagnostics" => super::diagnostics::DiagnosticsPanel::create(node),
         _ => NativePanel::Placeholder(PlaceholderPanel::unknown_type(node)),
-    }
-}
-
-fn visit_panels(node: &LayoutNode, visitor: &mut impl FnMut(&PanelNode)) {
-    match node {
-        LayoutNode::Split {
-            direction: _,
-            children,
-        } => {
-            for child in children {
-                visit_panels(&child.node, visitor);
-            }
-        }
-        LayoutNode::Panel(panel) => visitor(panel),
     }
 }
 
@@ -484,7 +398,7 @@ mod tests {
         )]));
         assert_eq!(
             result.store.data_requirements().inspections,
-            vec![crate::inspection::InspectorRequirement {
+            vec![InspectorRequirement {
                 topic: "/diagnostics".into(),
             }]
         );

@@ -8,15 +8,18 @@ struct CameraTexture {
     texture: wgpu::Texture,
     id: egui::TextureId,
     size: (u32, u32),
-    arrival: viewer_core::ArrivalTime,
+    frame: CameraFrameMetadata,
 }
 
 pub(super) struct GpuViews {
     pub state: RenderState,
     pub scene: SceneRenderer,
     pub scene_id: egui::TextureId,
+    pub bev: bev_renderer::BevRenderer,
+    pub bev_id: egui::TextureId,
     cameras: BTreeMap<CameraId, CameraTexture>,
     pub uploads: u64,
+    pub uploads_by_camera: BTreeMap<CameraId, u64>,
     pub software: bool,
     pub device_type: String,
 }
@@ -31,12 +34,21 @@ impl GpuViews {
             &scene.encoded_view(),
             wgpu::FilterMode::Linear,
         );
+        let bev = bev_renderer::BevRenderer::new(&state.device, 512, 512);
+        let bev_id = state.renderer.write().register_native_texture(
+            &state.device,
+            bev.view(),
+            wgpu::FilterMode::Linear,
+        );
         Self {
             state,
+            bev,
+            bev_id,
             scene,
             scene_id,
             cameras: BTreeMap::new(),
             uploads: 0,
+            uploads_by_camera: BTreeMap::new(),
             software,
             device_type,
         }
@@ -47,6 +59,7 @@ impl GpuViews {
         }
         self.cameras.clear();
         self.scene.invalidate();
+        self.bev.invalidate();
     }
     pub fn import(
         &mut self,
@@ -96,7 +109,7 @@ impl GpuViews {
                     texture,
                     id,
                     size,
-                    arrival: frame.arrival_time,
+                    frame: frame.clone(),
                 },
             );
         }
@@ -124,8 +137,12 @@ impl GpuViews {
                 depth_or_array_layers: 1,
             },
         );
-        image.arrival = frame.arrival_time;
+        image.frame = frame;
         self.uploads += 1;
+        *self
+            .uploads_by_camera
+            .entry(image.frame.camera_id)
+            .or_default() += 1;
         Ok(())
     }
     pub fn texture_views(
@@ -135,11 +152,33 @@ impl GpuViews {
             |(camera, image)| viewer_ui::views::camera::CameraTextureView {
                 camera_id: *camera,
                 texture_id: image.id,
-                arrival_time: image.arrival,
+                arrival_time: image.frame.arrival_time,
                 size: image.size,
                 uv_max: [1., 1.],
             },
         )
+    }
+    pub fn frames(&self) -> impl Iterator<Item = (&CameraFrameMetadata, (u32, u32))> {
+        self.cameras
+            .values()
+            .map(|image| (&image.frame, image.size))
+    }
+    pub fn render_bev(&mut self, size: (u32, u32), frame: bev_renderer::BevFrame<'_>) {
+        if self.bev.resize(&self.state.device, size.0, size.1) {
+            self.state
+                .renderer
+                .write()
+                .update_egui_texture_from_wgpu_texture(
+                    &self.state.device,
+                    self.bev.view(),
+                    wgpu::FilterMode::Linear,
+                    self.bev_id,
+                );
+        }
+        if self.bev.needs_render(frame) {
+            self.bev
+                .render(&self.state.device, &self.state.queue, frame);
+        }
     }
     pub fn camera(&self, id: CameraId) -> Option<(egui::TextureId, (u32, u32))> {
         self.cameras.get(&id).map(|image| (image.id, image.size))

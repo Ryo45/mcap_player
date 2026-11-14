@@ -219,9 +219,11 @@ impl From<serde_json::Error> for RemoteClientError {
     }
 }
 
+#[cfg(any(test, all(target_arch = "wasm32", not(feature = "egui-ui"))))]
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(crate) struct RequestGeneration(u64);
 
+#[cfg(any(test, all(target_arch = "wasm32", not(feature = "egui-ui"))))]
 impl RequestGeneration {
     pub(crate) fn next(&mut self) -> u64 {
         self.0 = self.0.wrapping_add(1);

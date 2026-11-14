@@ -1,5 +1,5 @@
 //! One coalescing cursor-query worker; no recording-duration history and no playback routes.
-use crate::inspection::{InspectionMetadata, InspectorRequirement, TopicInspection};
+use crate::inspection::{InspectorRequirement, TopicInspection};
 use std::{
     collections::{BTreeMap, BTreeSet},
     sync::{
@@ -8,6 +8,7 @@ use std::{
     },
     thread::JoinHandle,
 };
+use viewer_core::InspectionMetadata;
 use viewer_core::{ArrivalTime, InspectorDecodeError, InspectorMessage, InspectorSchema, StreamId};
 use viewer_mcap::{IndexedMessagePosition, LatestMessageReader, McapSource};
 const MAX_TOPICS: usize = 8;

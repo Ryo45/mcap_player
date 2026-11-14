@@ -1,51 +1,49 @@
-use super::{
-    NativePanel, PanelDataRequirements, PanelOutput, PlaceholderPanel, STATUS_CONFIG_VERSION,
-};
+const STATUS_CONFIG_VERSION: u32 = 1;
+use crate::panel::PanelOutput;
 use serde::{Deserialize, Serialize};
-use viewer_core::{CameraPresentation, PlaybackView, SignalId, SignalSample};
+use viewer_core::{CameraPresentation, PlaybackView, SignalSample};
 use viewer_layout::{PanelId, PanelNode};
 
 #[derive(Clone, Copy)]
-pub(crate) struct StatusPanelInput<'a> {
-    pub(crate) playback: Option<PlaybackView>,
-    pub(crate) main_camera: Option<&'a CameraPresentation>,
-    pub(crate) speed: Option<SignalSample>,
+pub struct StatusPanelInput<'a> {
+    pub playback: Option<PlaybackView>,
+    pub main_camera: Option<&'a CameraPresentation>,
+    pub speed: Option<SignalSample>,
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
-pub(crate) struct StatusPanelConfig {}
+pub struct StatusPanelConfig {}
 
-pub(crate) struct StatusPanel {
+pub struct StatusPanel {
     id: PanelId,
     title: Option<String>,
 }
 
 impl StatusPanel {
-    pub(crate) fn create(node: &PanelNode) -> NativePanel {
+    pub fn create(node: &PanelNode) -> Result<Self, String> {
         if node.config_version != STATUS_CONFIG_VERSION {
-            return NativePanel::Placeholder(PlaceholderPanel::unsupported_version(
-                node,
-                STATUS_CONFIG_VERSION,
+            return Err(format!(
+                "Unsupported {} config version {}; expected {}",
+                node.panel_type, node.config_version, STATUS_CONFIG_VERSION
             ));
         }
         match serde_json::from_value::<StatusPanelConfig>(node.config.clone()) {
-            Ok(_) => NativePanel::Status(Self {
+            Ok(_) => Ok(Self {
                 id: node.id.clone(),
                 title: node.title.clone(),
             }),
-            Err(error) => NativePanel::Placeholder(PlaceholderPanel::invalid_config(
-                node,
-                format!("Invalid status config: {error}"),
-            )),
+            Err(error) => Err(format!("Invalid status config: {error}")),
         }
     }
 
-    pub(crate) fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
-        requirements.signals.insert(SignalId::Speed);
-        requirements.playback.require_odometry();
+    pub fn contribute_data_requirements(
+        &self,
+        requirements: &mut viewer_core::PlaybackRequirements,
+    ) {
+        requirements.require_odometry();
     }
 
-    pub(crate) fn show(&self, ui: &mut egui::Ui, input: StatusPanelInput<'_>) -> PanelOutput {
+    pub fn show(&self, ui: &mut egui::Ui, input: StatusPanelInput<'_>) -> PanelOutput {
         ui.push_id((self.id.as_str(), self.title.as_deref()), |ui| {
             ui.heading(self.title.as_deref().unwrap_or("SESSION STATUS"));
             ui.separator();

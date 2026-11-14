@@ -43,13 +43,36 @@ pub enum Panel {
     Camera(crate::camera::CameraPanel),
     Scene(crate::scene::ScenePanel),
     Plot(crate::plot::PlotPanel),
+    Bev(crate::bev::BevPanel),
+    Status(crate::status::StatusPanel),
+    Inspector(crate::inspector::InspectorPanel),
+    Topics(crate::topics::TopicsPanel),
+    Placeholder(crate::placeholder::PlaceholderPanel),
 }
 impl Panel {
+    pub fn kind_name(&self) -> &'static str {
+        match self {
+            Self::Camera(_) => "camera",
+            Self::Scene(_) => "scene-3d",
+            Self::Plot(_) => "plot",
+            Self::Bev(_) => "bev",
+            Self::Status(_) => "status",
+            Self::Inspector(_) => "inspector",
+            Self::Topics(_) => "topics",
+            Self::Placeholder(_) => "placeholder",
+        }
+    }
     pub fn create(node: &viewer_layout::PanelNode) -> Option<Result<Self, String>> {
         Some(match node.panel_type.as_str() {
             "camera" => crate::camera::CameraPanel::create(node).map(Self::Camera),
             "scene-3d" => crate::scene::ScenePanel::create(node).map(Self::Scene),
             "plot" => crate::plot::PlotPanel::create(node).map(Self::Plot),
+            "bev" => crate::bev::BevPanel::create(node).map(Self::Bev),
+            "status" => crate::status::StatusPanel::create(node).map(Self::Status),
+            "inspector" => crate::inspector::InspectorPanel::create(node).map(Self::Inspector),
+            "topics" if node.config_version == 1 && node.config == serde_json::json!({}) => {
+                Ok(Self::Topics(Default::default()))
+            }
             _ => return None,
         })
     }

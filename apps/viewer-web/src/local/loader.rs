@@ -671,13 +671,15 @@ pub(crate) async fn open_browser_mcap(
     file: File,
     primary_camera_topic: &str,
     bindings: &viewer_core::WorkspaceBindings,
+    requirements: Option<&viewer_core::PlaybackRequirements>,
 ) -> Result<BrowserMcapRecording, DataLoadError> {
     let file_size = browser_file_size(&file)?;
     let started = Date::now();
     let (summary, reads, bytes) = read_browser_summary(&file, file_size).await?;
     let latency_ms = Date::now() - started;
-    let catalog = LocalCatalog::from_summary(&summary, primary_camera_topic, bindings)
-        .map_err(DataLoadError::from)?;
+    let catalog =
+        LocalCatalog::from_summary(&summary, primary_camera_topic, bindings, requirements)
+            .map_err(DataLoadError::from)?;
     let selected_topics = catalog.selected_topics.clone();
     let summary = Rc::new(summary);
     let loader = BrowserMcapWindowLoader::new(
@@ -1776,6 +1778,7 @@ mod tests {
             &summary,
             "/absent-camera",
             &crate::workspace_bindings::bundled(),
+            None,
         )
         .unwrap();
         assert_eq!(catalog.plan.primary_camera_topic(), Some("/camera"));
@@ -2204,6 +2207,7 @@ mod tests {
                 &summary,
                 "/camera",
                 &crate::workspace_bindings::bundled(),
+                None,
             )
             .unwrap();
             let range = DataWindowTimeRange::new(ArrivalTime(1_000), ArrivalTime(1_031)).unwrap();
@@ -2323,6 +2327,7 @@ mod tests {
             &summary,
             "/camera/front/image/compressed",
             &crate::workspace_bindings::bundled(),
+            None,
         )
         .unwrap();
         let recording = catalog.core.time_range.unwrap();

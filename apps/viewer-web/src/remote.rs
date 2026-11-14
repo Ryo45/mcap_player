@@ -5,7 +5,7 @@ mod loader;
 pub(crate) use catalog::{RemoteCatalog, adapt_catalog};
 #[cfg(test)]
 pub(crate) use client::RemoteBatchPage;
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "egui-ui")))]
 pub(crate) use client::RequestGeneration;
 pub(crate) use client::{RemoteApiClient, RemoteClientError};
 pub(crate) use loader::RemoteRestoreLoader;

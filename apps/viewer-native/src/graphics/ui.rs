@@ -4,12 +4,12 @@ use crate::{
         PanelCompositionInput, PanelRenderRequests, PanelResourceView, PanelRuntimeStore,
         PreviewDataView, SceneDataView,
     },
-    ui_components::source_status,
     workspace::ViewerInteractionState,
 };
 use viewer_layout::LayoutDocument;
 use viewer_ui::action::ViewerAction;
 use viewer_ui::playback::playback_controls;
+use viewer_ui::source_status::source_status;
 use viewer_ui::views::camera::CameraTextureView;
 use winit::window::Window;
 

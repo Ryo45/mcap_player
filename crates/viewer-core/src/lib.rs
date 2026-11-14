@@ -78,9 +78,9 @@ pub use recording::{SchemaExplorationError, TopicTree, TopicTreeEntry};
 
 mod inspection;
 pub use inspection::{
-    INSPECTOR_MAX_PAYLOAD_BYTES, INSPECTOR_PAGE_FIELDS, InspectorContainer, InspectorDecodeError,
-    InspectorField, InspectorHeaderStamp, InspectorMessage, InspectorPage, InspectorPageCursor,
-    InspectorScalar, InspectorSchema, InspectorValue,
+    INSPECTOR_MAX_PAYLOAD_BYTES, INSPECTOR_PAGE_FIELDS, InspectionMetadata, InspectorContainer,
+    InspectorDecodeError, InspectorField, InspectorHeaderStamp, InspectorMessage, InspectorPage,
+    InspectorPageCursor, InspectorScalar, InspectorSchema, InspectorValue,
 };
 
 pub use message::{

@@ -3,7 +3,9 @@
 use crate::playback::{WebPlayback, WebRestoreLoader};
 #[cfg(all(target_arch = "wasm32", not(feature = "egui-ui")))]
 use std::collections::BTreeMap;
-use viewer_core::{ArrivalTime, RawMessage, SourceCatalog, StreamId};
+#[cfg(any(test, all(target_arch = "wasm32", not(feature = "egui-ui"))))]
+use viewer_core::StreamId;
+use viewer_core::{ArrivalTime, RawMessage, SourceCatalog};
 #[cfg(all(target_arch = "wasm32", not(feature = "egui-ui")))]
 use viewer_core::{InspectorMessage, InspectorSchema};
 

@@ -227,8 +227,11 @@ impl SessionPlan {
                 });
             }
         }
-        let priority_is_required =
-            requirements.all_cameras || requirements.camera_topics.contains(priority_camera_topic);
+        // An empty preference means no priority camera. In particular, an all-camera
+        // workspace can still open a recording with no image streams.
+        let priority_is_required = !priority_camera_topic.is_empty()
+            && (requirements.all_cameras
+                || requirements.camera_topics.contains(priority_camera_topic));
         if priority_is_required
             && !selected_cameras
                 .iter()
@@ -870,6 +873,21 @@ mod tests {
         source.capabilities = crate::SourceCapabilities::INDEXED_RECORDING;
         plan.validate_recording_capabilities(source.capabilities)
             .unwrap();
+    }
+
+    #[test]
+    fn empty_priority_allows_image_free_workspaces_but_does_not_hide_required_topics() {
+        let source = SourceCatalog::default();
+        let mut requirements = PlaybackRequirements::empty();
+        requirements.require_all_cameras();
+        let plan = SessionPlan::build(&source, "", &requirements, &bindings()).unwrap();
+        assert!(plan.camera_routes().is_empty());
+        assert!(plan.primary_camera().is_none());
+        assert!(
+            SessionPlan::build(&source, "/required-camera", &requirements, &bindings()).is_err()
+        );
+        requirements.require_camera_topic("/explicit-camera");
+        assert!(SessionPlan::build(&source, "", &requirements, &bindings()).is_err());
     }
 
     #[test]

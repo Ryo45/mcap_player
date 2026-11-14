@@ -1,59 +1,55 @@
-use super::{
-    INSPECTOR_CONFIG_VERSION, NativePanel, PanelDataRequirements, PanelOutput, PlaceholderPanel,
-};
-use crate::inspection::{InspectorRequirement, TopicInspection};
+//! Inspector panel presentation independent of query execution.
+use crate::{action::ViewerAction, inspection::InspectorTreeState, panel::PanelOutput};
 use serde::{Deserialize, Serialize};
-use viewer_core::ArrivalTime;
+use std::sync::Arc;
+use viewer_core::{ArrivalTime, InspectionMetadata, InspectorMessage};
 use viewer_layout::{PanelId, PanelNode};
-use viewer_ui::action::ViewerAction;
-use viewer_ui::inspection::InspectorTreeState;
+
 #[derive(Clone, Copy)]
-pub(crate) struct InspectorPanelInput<'a> {
-    pub inspections: &'a [TopicInspection],
+pub struct InspectionView<'a> {
+    pub topic: &'a str,
+    pub target: ArrivalTime,
+    pub metadata: Option<InspectionMetadata>,
+    pub message: Option<&'a Arc<InspectorMessage>>,
+    pub error: Option<&'a dyn std::fmt::Display>,
+    pub loading: bool,
+}
+#[derive(Clone, Copy)]
+pub struct InspectorPanelInput<'a> {
+    pub inspections: &'a [InspectionView<'a>],
     pub cursor: Option<ArrivalTime>,
 }
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(crate) struct InspectorPanelConfig {
+struct InspectorPanelConfig {
     pub topic: String,
 }
-pub(crate) struct InspectorPanel {
+pub struct InspectorPanel {
     id: PanelId,
     title: Option<String>,
     config: InspectorPanelConfig,
     tree: InspectorTreeState,
 }
 impl InspectorPanel {
-    pub fn create(node: &PanelNode) -> NativePanel {
-        if node.config_version != INSPECTOR_CONFIG_VERSION {
-            return NativePanel::Placeholder(PlaceholderPanel::unsupported_version(
-                node,
-                INSPECTOR_CONFIG_VERSION,
-            ));
+    pub fn create(node: &PanelNode) -> Result<Self, String> {
+        if node.config_version != 1 {
+            return Err("Unsupported inspector config version".into());
         }
         match serde_json::from_value::<InspectorPanelConfig>(node.config.clone()) {
-            Ok(config) if !config.topic.trim().is_empty() => NativePanel::Inspector(Self {
+            Ok(config) if !config.topic.trim().is_empty() => Ok(Self {
                 id: node.id.clone(),
                 title: node.title.clone(),
                 config,
                 tree: InspectorTreeState::default(),
             }),
-            _ => NativePanel::Placeholder(PlaceholderPanel::invalid_config(
-                node,
-                "Inspector requires a non-empty topic".into(),
-            )),
+            _ => Err("Inspector requires a non-empty topic".into()),
         }
     }
     pub fn reset_for_source(&mut self) {
         self.tree = InspectorTreeState::default();
     }
-    pub fn contribute_data_requirements(&self, requirements: &mut PanelDataRequirements) {
-        let requirement = InspectorRequirement {
-            topic: self.config.topic.clone(),
-        };
-        if !requirements.inspections.contains(&requirement) {
-            requirements.inspections.push(requirement);
-        }
+    pub fn topic(&self) -> &str {
+        &self.config.topic
     }
     pub fn show(&mut self, ui: &mut egui::Ui, input: InspectorPanelInput<'_>) -> PanelOutput {
         ui.push_id(self.id.as_str(), |ui| {
@@ -63,7 +59,7 @@ impl InspectorPanel {
         PanelOutput::default()
     }
 }
-pub(crate) fn show_topic_inspector(
+pub fn show_topic_inspector(
     context: &egui::Context,
     topic: Option<&str>,
     input: InspectorPanelInput<'_>,
@@ -85,7 +81,7 @@ pub(crate) fn show_topic_inspector(
     }
     actions
 }
-pub(super) fn show_inspection(
+pub fn show_inspection(
     ui: &mut egui::Ui,
     topic: &str,
     input: InspectorPanelInput<'_>,

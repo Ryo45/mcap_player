@@ -1,0 +1,351 @@
+{
+  "main_revision": "de8daed",
+  "egui_base_revision": "dcec372 + panel parity changes (frozen working source)",
+  "workloads": {
+    "fhd": {
+      "sha256": "39e1fa1b7ce9bdca78e9f7d3b522694915e2d5e818d12fff445ec24fb1db1a9b",
+      "summary": {
+        "main": {
+          "cpu_core_seconds_per_second": 0.8019956253861826,
+          "pss_mib_median": 462.0654296875,
+          "focus_hz": 10.085893965573193,
+          "background_min_hz": 4.902949757984466,
+          "ready_ms": 53.36682125926018
+        },
+        "egui": {
+          "cpu_core_seconds_per_second": 0.6818264369405506,
+          "pss_mib_median": 458.89697265625,
+          "focus_hz": 10.011226354468526,
+          "background_min_hz": 4.907463899249278,
+          "ready_ms": 55.177212692797184
+        }
+      },
+      "runs": [
+        {
+          "variant": "main",
+          "repeat": 0,
+          "cpu_core_seconds_per_second": 0.8019956253861826,
+          "pss_mib_median": 463.591796875,
+          "pss_mib_peak": 487.7783203125,
+          "focus_hz": 10.221512872568995,
+          "background_min_hz": 4.914188881042786,
+          "camera_hz": {
+            "0": 10.221512872568995,
+            "1": 5.110756436284498,
+            "2": 5.110756436284498,
+            "3": 5.110756436284498,
+            "4": 4.914188881042786,
+            "5": 4.914188881042786,
+            "6": 4.914188881042786
+          },
+          "cursor_rate": 1.0064258828375625,
+          "ready_ms": 8.607153780758381,
+          "camera_target_met": null
+        },
+        {
+          "variant": "egui",
+          "repeat": 0,
+          "cpu_core_seconds_per_second": 0.6687417635872536,
+          "pss_mib_median": 458.89697265625,
+          "pss_mib_peak": 484.4052734375,
+          "focus_hz": 10.001709660689128,
+          "background_min_hz": 4.902798853278985,
+          "camera_hz": {
+            "0": 10.001709660689128,
+            "1": 4.902798853278985,
+            "2": 5.098910807410144,
+            "3": 5.098910807410144,
+            "4": 5.098910807410144,
+            "5": 5.098910807410144,
+            "6": 4.902798853278985
+          },
+          "cursor_rate": 1.004093205151536,
+          "ready_ms": 55.177212692797184,
+          "camera_target_met": null
+        },
+        {
+          "variant": "egui",
+          "repeat": 1,
+          "cpu_core_seconds_per_second": 0.6818264369405506,
+          "pss_mib_median": 463.408203125,
+          "pss_mib_peak": 498.0478515625,
+          "focus_hz": 10.021080197108954,
+          "background_min_hz": 4.912294214269096,
+          "camera_hz": {
+            "0": 10.021080197108954,
+            "1": 4.912294214269096,
+            "2": 5.108785982839859,
+            "3": 5.108785982839859,
+            "4": 5.108785982839859,
+            "5": 4.912294214269096,
+            "6": 4.912294214269096
+          },
+          "cursor_rate": 1.0028939867851785,
+          "ready_ms": 55.04812020808458,
+          "camera_target_met": null
+        },
+        {
+          "variant": "main",
+          "repeat": 1,
+          "cpu_core_seconds_per_second": 0.7913547572988198,
+          "pss_mib_median": 462.0654296875,
+          "pss_mib_peak": 493.5087890625,
+          "focus_hz": 10.085893965573193,
+          "background_min_hz": 4.84898748344865,
+          "camera_hz": {
+            "0": 10.085893965573193,
+            "1": 5.042946982786597,
+            "2": 5.042946982786597,
+            "3": 5.042946982786597,
+            "4": 5.042946982786597,
+            "5": 5.042946982786597,
+            "6": 4.84898748344865
+          },
+          "cursor_rate": 1.0054860445679121,
+          "ready_ms": 53.36682125926018,
+          "camera_target_met": null
+        },
+        {
+          "variant": "main",
+          "repeat": 2,
+          "cpu_core_seconds_per_second": 0.8315402789541655,
+          "pss_mib_median": 458.17529296875,
+          "pss_mib_peak": 483.3056640625,
+          "focus_hz": 10.00201750628831,
+          "background_min_hz": 4.902949757984466,
+          "camera_hz": {
+            "0": 10.00201750628831,
+            "1": 5.0990677483038445,
+            "2": 5.0990677483038445,
+            "3": 5.0990677483038445,
+            "4": 4.902949757984466,
+            "5": 4.902949757984466,
+            "6": 4.902949757984466
+          },
+          "cursor_rate": 1.0041241104352185,
+          "ready_ms": 54.311913438141346,
+          "camera_target_met": null
+        },
+        {
+          "variant": "egui",
+          "repeat": 2,
+          "cpu_core_seconds_per_second": 0.7047118159321962,
+          "pss_mib_median": 454.2626953125,
+          "pss_mib_peak": 478.6044921875,
+          "focus_hz": 10.011226354468526,
+          "background_min_hz": 4.907463899249278,
+          "camera_hz": {
+            "0": 10.011226354468526,
+            "1": 4.907463899249278,
+            "2": 5.103762455219249,
+            "3": 5.103762455219249,
+            "4": 5.103762455219249,
+            "5": 4.907463899249278,
+            "6": 4.907463899249278
+          },
+          "cursor_rate": 1.0019078296707324,
+          "ready_ms": 55.377173237502575,
+          "camera_target_met": null
+        }
+      ]
+    },
+    "4k": {
+      "sha256": "c2d283cc811866fd74fd29bdaab1b7720cbc2fe1420ccaeae94dfd171ac7d649",
+      "summary": {
+        "main": {
+          "cpu_core_seconds_per_second": 2.7819372144867893,
+          "pss_mib_median": 1374.9208984375,
+          "focus_hz": 10.212622656677743,
+          "background_min_hz": 2.4315768230185104,
+          "ready_ms": 8.566693402826786
+        },
+        "egui": {
+          "cpu_core_seconds_per_second": 2.598625609172978,
+          "pss_mib_median": 1372.974609375,
+          "focus_hz": 10.36026705120512,
+          "background_min_hz": 2.71084213525055,
+          "ready_ms": 546.5960688889027
+        }
+      },
+      "runs": [
+        {
+          "variant": "main",
+          "repeat": 0,
+          "cpu_core_seconds_per_second": 2.798609120172433,
+          "pss_mib_median": 1332.86572265625,
+          "pss_mib_peak": 1507.1064453125,
+          "focus_hz": 10.31066517958265,
+          "background_min_hz": 2.4549202808530115,
+          "camera_hz": {
+            "0": 10.31066517958265,
+            "1": 2.4549202808530115,
+            "2": 2.4549202808530115,
+            "3": 2.945904337023614,
+            "4": 2.945904337023614,
+            "5": 2.4549202808530115,
+            "6": 2.4549202808530115,
+            "7": 2.4549202808530115
+          },
+          "cursor_rate": 1.0124091238237818,
+          "ready_ms": 7.217651233077049,
+          "camera_target_met": false
+        },
+        {
+          "variant": "egui",
+          "repeat": 0,
+          "cpu_core_seconds_per_second": 2.598625609172978,
+          "pss_mib_median": 1372.974609375,
+          "pss_mib_peak": 1551.978515625,
+          "focus_hz": 9.732680184168457,
+          "background_min_hz": 2.919804055250537,
+          "camera_hz": {
+            "0": 9.732680184168457,
+            "1": 2.919804055250537,
+            "2": 2.919804055250537,
+            "3": 2.919804055250537,
+            "4": 2.919804055250537,
+            "5": 3.40643806445896,
+            "6": 2.919804055250537,
+            "7": 2.919804055250537
+          },
+          "cursor_rate": 1.0146319091995617,
+          "ready_ms": 546.5960688889027,
+          "camera_target_met": false
+        },
+        {
+          "variant": "egui",
+          "repeat": 1,
+          "cpu_core_seconds_per_second": 2.5662638880371875,
+          "pss_mib_median": 1396.4267578125,
+          "pss_mib_peak": 1558.4033203125,
+          "focus_hz": 10.391561518460442,
+          "background_min_hz": 2.71084213525055,
+          "camera_hz": {
+            "0": 10.391561518460442,
+            "1": 2.71084213525055,
+            "2": 2.71084213525055,
+            "3": 2.71084213525055,
+            "4": 2.71084213525055,
+            "5": 3.162649157792308,
+            "6": 3.162649157792308,
+            "7": 3.162649157792308
+          },
+          "cursor_rate": 1.0097886953808297,
+          "ready_ms": 547.8890147060156,
+          "camera_target_met": false
+        },
+        {
+          "variant": "main",
+          "repeat": 1,
+          "cpu_core_seconds_per_second": 2.7719975782411024,
+          "pss_mib_median": 1374.9208984375,
+          "pss_mib_peak": 1533.1357421875,
+          "focus_hz": 10.212622656677743,
+          "background_min_hz": 2.4315768230185104,
+          "camera_hz": {
+            "0": 10.212622656677743,
+            "1": 2.4315768230185104,
+            "2": 2.4315768230185104,
+            "3": 2.9178921876222126,
+            "4": 2.9178921876222126,
+            "5": 2.4315768230185104,
+            "6": 2.4315768230185104,
+            "7": 2.4315768230185104
+          },
+          "cursor_rate": 1.018830688844756,
+          "ready_ms": 8.566693402826786,
+          "camera_target_met": false
+        },
+        {
+          "variant": "main",
+          "repeat": 2,
+          "cpu_core_seconds_per_second": 2.7819372144867893,
+          "pss_mib_median": 1383.689453125,
+          "pss_mib_peak": 1590.5400390625,
+          "focus_hz": 9.576375953482922,
+          "background_min_hz": 2.3940939883707304,
+          "camera_hz": {
+            "0": 9.576375953482922,
+            "1": 2.3940939883707304,
+            "2": 2.3940939883707304,
+            "3": 2.8729127860448767,
+            "4": 2.8729127860448767,
+            "5": 2.8729127860448767,
+            "6": 2.8729127860448767,
+            "7": 2.3940939883707304
+          },
+          "cursor_rate": 1.018926401450583,
+          "ready_ms": 10.745495557785034,
+          "camera_target_met": false
+        },
+        {
+          "variant": "egui",
+          "repeat": 2,
+          "cpu_core_seconds_per_second": 2.608084618542506,
+          "pss_mib_median": 1361.0439453125,
+          "pss_mib_peak": 1607.341796875,
+          "focus_hz": 10.36026705120512,
+          "background_min_hz": 2.7026783611839442,
+          "camera_hz": {
+            "0": 10.36026705120512,
+            "1": 2.7026783611839442,
+            "2": 2.7026783611839442,
+            "3": 2.7026783611839442,
+            "4": 2.7026783611839442,
+            "5": 3.1531247547146015,
+            "6": 3.1531247547146015,
+            "7": 3.1531247547146015
+          },
+          "cursor_rate": 1.0053963503604273,
+          "ready_ms": 541.0493053495884,
+          "camera_target_met": false
+        }
+      ]
+    }
+  },
+  "binaries": {
+    "main": {
+      "sha256": "e5b77380ae115362c44accfe3052a67d7f5d727880a570d8d4279783bb73c833",
+      "bytes": 1990495,
+      "gzip_bytes": 657895
+    },
+    "egui": {
+      "sha256": "19fdca0b953b3399891da78342de6cc2ffead58f979fe9886dfe9669c1010cff",
+      "bytes": 5789751,
+      "gzip_bytes": 2232448
+    }
+  },
+  "verification": {
+    "workspace_tests": {
+      "passed": 534,
+      "ignored": 16
+    },
+    "workspace_clippy": "passed with -D warnings",
+    "shared_wasm_check": "passed",
+    "egui_wasm_clippy": "passed with -D warnings",
+    "native_optional_plugin_tests": {
+      "passed": 92,
+      "ignored": 8
+    },
+    "native_ros2_live_tests": {
+      "passed": 88,
+      "ignored": 5
+    },
+    "release_entries": [
+      "Native",
+      "Web DOM",
+      "Web egui"
+    ],
+    "hardware_checks": {
+      "native_visible_playback": true,
+      "local_egui_plot_seek_source_touch": true,
+      "remote_renamed_bindings_seek_plots_pinned_inspectors": true,
+      "default_dom_timeline": true
+    },
+    "untested": [
+      "Actual Android hardware/browser",
+      "PNG/Raw alpha visual equivalence",
+      "Comparable initial usable-image latency"
+    ]
+  }
+}

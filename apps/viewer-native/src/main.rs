@@ -1,7 +1,6 @@
 mod app;
 mod args;
 mod bookmarks;
-mod camera_selection;
 mod diagnostics;
 mod graphics;
 mod inspection;
@@ -21,7 +20,6 @@ mod query_error;
 mod scene_extension;
 mod session;
 mod signal_view;
-mod ui_components;
 mod window_query_loader;
 mod workspace;
 mod workspace_bindings;

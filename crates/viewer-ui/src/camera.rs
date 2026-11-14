@@ -229,6 +229,77 @@ fn select_camera_id(
     })
 }
 
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct CameraViewState {
+    pub focused_camera: Option<viewer_core::CameraId>,
+    pub topic: Option<String>,
+}
+
+use std::collections::BTreeMap;
+/// Small prospective bindings, staged separately from the active decoded runtime.
+pub struct CameraSelection {
+    pub available_topics: Vec<String>,
+    pub panels: BTreeMap<PanelId, Option<String>>,
+}
+
+impl CameraSelection {
+    pub fn priority_topic<'a>(&'a self, preferred: &'a str) -> &'a str {
+        self.panels
+            .values()
+            .flatten()
+            .find(|topic| topic.as_str() == preferred)
+            .or_else(|| self.panels.values().flatten().next())
+            .map_or(preferred, String::as_str)
+    }
+}
+
+pub fn select_topics<'a>(
+    catalog: &viewer_core::SourceCatalog,
+    preferred: &str,
+    panels: impl Iterator<Item = (&'a PanelId, &'a CameraPanel)>,
+    change: Option<(&PanelId, &str)>,
+    reset: bool,
+) -> Result<CameraSelection, String> {
+    let cameras = panels.collect::<std::collections::BTreeMap<_, _>>();
+    let available_topics = viewer_core::camera_streams(catalog)
+        .map(|stream| stream.topic.clone())
+        .collect::<std::collections::BTreeSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    if let Some((id, topic)) = change {
+        if !cameras.contains_key(id) {
+            return Err(format!("Camera panel {id} is unavailable"));
+        }
+        if !available_topics.iter().any(|candidate| candidate == topic) {
+            return Err(format!("Unsupported image topic {topic:?}"));
+        }
+    }
+    let fallback = available_topics
+        .iter()
+        .find(|topic| topic.as_str() == preferred)
+        .or_else(|| available_topics.first());
+    let panels = cameras
+        .into_iter()
+        .map(|(id, panel)| {
+            let topic = change
+                .filter(|(changed, _)| *changed == id)
+                .map(|(_, topic)| topic)
+                .or_else(|| panel.preferred_topic(reset))
+                .and_then(|topic| {
+                    available_topics
+                        .iter()
+                        .find(|candidate| candidate.as_str() == topic)
+                })
+                .or(fallback)
+                .cloned();
+            (id.clone(), topic)
+        })
+        .collect();
+    Ok(CameraSelection {
+        available_topics,
+        panels,
+    })
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -315,6 +386,62 @@ mod tests {
     }
 
     #[test]
+    fn topic_resolution_is_scoped_and_rejects_invalid_choices_without_mutation() {
+        let catalog = viewer_core::SourceCatalog {
+            streams: vec![viewer_core::StreamDescriptor {
+                id: viewer_core::StreamId(1),
+                topic: "/robot/image".into(),
+                schema: "sensor_msgs/msg/Image".into(),
+                message_encoding: "cdr".into(),
+                schema_definition: None,
+                timing: Default::default(),
+            }],
+            ..Default::default()
+        };
+        let node = viewer_layout::PanelNode {
+            id: PanelId::new("camera").unwrap(),
+            panel_type: "camera".into(),
+            config_version: 1,
+            title: None,
+            config: serde_json::json!({}),
+        };
+        let panel = CameraPanel::create(&node).unwrap();
+        let selection = select_topics(
+            &catalog,
+            "/old/topic",
+            std::iter::once((&node.id, &panel)),
+            None,
+            true,
+        )
+        .unwrap();
+        assert_eq!(selection.panels[&node.id].as_deref(), Some("/robot/image"));
+        assert!(
+            panel.state.topic.is_none(),
+            "resolution must not commit panel state"
+        );
+        assert!(
+            select_topics(
+                &catalog,
+                "",
+                std::iter::once((&node.id, &panel)),
+                Some((&node.id, "/missing")),
+                false
+            )
+            .is_err()
+        );
+        assert!(
+            select_topics(
+                &catalog,
+                "",
+                std::iter::once((&node.id, &panel)),
+                Some((&PanelId::new("other").unwrap(), "/robot/image")),
+                false
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
     fn fixed_camera_selector_config_is_typed() {
         let default: CameraPanelConfig = serde_json::from_value(serde_json::json!({})).unwrap();
         assert_eq!(default.camera_topic, None);
@@ -367,10 +494,4 @@ mod tests {
             Some(CameraId(0))
         );
     }
-}
-
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct CameraViewState {
-    pub focused_camera: Option<viewer_core::CameraId>,
-    pub topic: Option<String>,
 }

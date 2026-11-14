@@ -1,176 +1,19 @@
 use crate::panels::{PanelCompositionInput, PanelOutput, PanelRuntimeStore};
-use viewer_layout::{LayoutDocument, LayoutNode, SplitDirection};
-
-pub(crate) const SPLIT_GAP: f32 = 4.0;
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct RectSpec {
-    pub(crate) min_x: f32,
-    pub(crate) min_y: f32,
-    pub(crate) width: f32,
-    pub(crate) height: f32,
-}
-
-impl RectSpec {
-    fn from_egui(rect: egui::Rect) -> Self {
-        Self {
-            min_x: rect.min.x,
-            min_y: rect.min.y,
-            width: rect.width().max(0.0),
-            height: rect.height().max(0.0),
-        }
-    }
-
-    fn to_egui(self) -> egui::Rect {
-        egui::Rect::from_min_size(
-            egui::pos2(self.min_x, self.min_y),
-            egui::vec2(self.width.max(0.0), self.height.max(0.0)),
-        )
-    }
-}
-
-pub(crate) fn split_rect(
-    parent: RectSpec,
-    direction: SplitDirection,
-    weights: &[f32],
-    requested_gap: f32,
-) -> Vec<RectSpec> {
-    if weights.is_empty() {
-        return Vec::new();
-    }
-    let axis_size = match direction {
-        SplitDirection::Row => parent.width,
-        SplitDirection::Column => parent.height,
-    }
-    .max(0.0);
-    let gap_count = weights.len().saturating_sub(1);
-    let gap = if gap_count == 0 {
-        0.0
-    } else {
-        requested_gap.max(0.0).min(axis_size / gap_count as f32)
-    };
-    let available = (axis_size - gap * gap_count as f32).max(0.0);
-    let total_weight = weights.iter().copied().sum::<f32>();
-    let mut cursor = match direction {
-        SplitDirection::Row => parent.min_x,
-        SplitDirection::Column => parent.min_y,
-    };
-    weights
-        .iter()
-        .enumerate()
-        .map(|(index, weight)| {
-            let size = if index + 1 == weights.len() {
-                let parent_end = match direction {
-                    SplitDirection::Row => parent.min_x + parent.width,
-                    SplitDirection::Column => parent.min_y + parent.height,
-                };
-                (parent_end - cursor).max(0.0)
-            } else {
-                (available * (*weight / total_weight)).max(0.0)
-            };
-            let rect = match direction {
-                SplitDirection::Row => RectSpec {
-                    min_x: cursor,
-                    min_y: parent.min_y,
-                    width: size,
-                    height: parent.height.max(0.0),
-                },
-                SplitDirection::Column => RectSpec {
-                    min_x: parent.min_x,
-                    min_y: cursor,
-                    width: parent.width.max(0.0),
-                    height: size,
-                },
-            };
-            cursor += size + gap;
-            rect
-        })
-        .collect()
-}
-
+use viewer_layout::LayoutDocument;
+#[cfg(test)]
+use viewer_layout::SplitDirection;
+#[cfg(test)]
+use viewer_ui::layout::{RectSpec, split_rect};
 pub(crate) fn show_layout_host(
     ui: &mut egui::Ui,
     document: &LayoutDocument,
     panels: &mut PanelRuntimeStore,
     context: PanelCompositionInput<'_>,
 ) -> PanelOutput {
-    let rect = ui.available_rect_before_wrap();
-    let output = show_node(ui, &document.root, panels, context, rect, "root");
-    ui.allocate_rect(rect, egui::Sense::hover());
-    output
+    viewer_ui::layout::show_layout(ui, document, &mut panels.panels, |ui, panel| {
+        panel.show(ui, &context)
+    })
 }
-
-fn show_node(
-    ui: &mut egui::Ui,
-    node: &LayoutNode,
-    panels: &mut PanelRuntimeStore,
-    context: PanelCompositionInput<'_>,
-    rect: egui::Rect,
-    path: &str,
-) -> PanelOutput {
-    match node {
-        LayoutNode::Split {
-            direction,
-            children,
-        } => {
-            let weights = children
-                .iter()
-                .map(|child| child.weight)
-                .collect::<Vec<_>>();
-            let rects = split_rect(RectSpec::from_egui(rect), *direction, &weights, SPLIT_GAP);
-            let mut output = PanelOutput::default();
-            for (index, (child, child_rect)) in children.iter().zip(rects).enumerate() {
-                let child_path = format!("{path}.children[{index}]");
-                let child_output = ui
-                    .scope_builder(
-                        egui::UiBuilder::new()
-                            .id_salt(&child_path)
-                            .max_rect(child_rect.to_egui())
-                            .layout(egui::Layout::top_down(egui::Align::Min)),
-                        |ui| {
-                            show_node(
-                                ui,
-                                &child.node,
-                                panels,
-                                context,
-                                child_rect.to_egui(),
-                                &child_path,
-                            )
-                        },
-                    )
-                    .inner;
-                output.merge(child_output);
-            }
-            output
-        }
-        LayoutNode::Panel(panel_node) => {
-            ui.scope_builder(
-                egui::UiBuilder::new()
-                    .id_salt(panel_node.id.as_str())
-                    .max_rect(rect)
-                    .layout(egui::Layout::top_down(egui::Align::Min)),
-                |ui| {
-                    if let Some(panel) = panels.get_mut(&panel_node.id) {
-                        panel.show(ui, &context)
-                    } else {
-                        ui.group(|ui| {
-                            ui.colored_label(
-                                egui::Color32::RED,
-                                format!(
-                                    "Panel runtime is missing for {} ({})",
-                                    panel_node.id, panel_node.panel_type
-                                ),
-                            );
-                        });
-                        PanelOutput::default()
-                    }
-                },
-            )
-            .inner
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

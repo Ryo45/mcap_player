@@ -4,22 +4,23 @@ use crate::{
     playback::WebPlayback,
 };
 use viewer_core::{
-    ArrivalTime, DataWindowTimeRange, LoadedSignal, SignalId, SignalOverviewReducer, SignalSample,
-    decode_odometry,
+    ArrivalTime, DataWindowTimeRange, LoadedOdometrySignals, SignalId, SignalOverviewReducer,
+    SignalSample, decode_odometry,
 };
 
-pub(super) struct SpeedQuery {
+pub(super) struct OdometryQuery {
     loader: WebWindowLoader,
     next: ArrivalTime,
     end: ArrivalTime,
     reducer: SignalOverviewReducer,
-    pub result: Option<LoadedSignal>,
+    yaw_reducer: SignalOverviewReducer,
+    pub result: LoadedOdometrySignals,
     pub error: Option<String>,
     pub loading: bool,
     messages: usize,
     streams: std::collections::BTreeSet<viewer_core::StreamId>,
 }
-impl SpeedQuery {
+impl OdometryQuery {
     pub fn new(session: &WebPlayback, topic: &str) -> Result<Self, String> {
         if !session
             .catalog()
@@ -45,7 +46,8 @@ impl SpeedQuery {
             next: start,
             end,
             reducer: SignalOverviewReducer::new(start, end, 2048),
-            result: None,
+            yaw_reducer: SignalOverviewReducer::new(start, end, 2048),
+            result: LoadedOdometrySignals::default(),
             error: None,
             loading: true,
             messages: 0,
@@ -91,6 +93,11 @@ impl SpeedQuery {
                                 return;
                             }
                         };
+                        self.yaw_reducer.push(SignalSample {
+                            measurement_time: Some(odometry.measurement_time),
+                            arrival_time: message.arrival_time,
+                            value: odometry.angular_velocity[2],
+                        });
                         self.reducer.push(SignalSample {
                             measurement_time: Some(odometry.measurement_time),
                             arrival_time: message.arrival_time,
@@ -99,7 +106,10 @@ impl SpeedQuery {
                     }
                     // Do not publish new allocations on every playback tick; this is one query result.
                     if self.next >= self.end {
-                        self.result = self.reducer.finish(SignalId::Speed);
+                        self.result = LoadedOdometrySignals {
+                            speed: self.reducer.finish(SignalId::Speed),
+                            yaw_rate: self.yaw_reducer.finish(SignalId::YawRate),
+                        };
                         self.loading = false;
                     }
                 }
@@ -107,7 +117,12 @@ impl SpeedQuery {
             }
         }
         if self.loading && self.loader.is_idle() {
-            let end = self.end;
+            let end = match self.loader {
+                WebWindowLoader::Remote(_) => {
+                    ArrivalTime(self.next.0.saturating_add(1_000_000_000).min(self.end.0))
+                }
+                WebWindowLoader::LocalFile(_) => self.end,
+            };
             let range = DataWindowTimeRange {
                 start: self.next,
                 end_exclusive: end,
@@ -119,12 +134,12 @@ impl SpeedQuery {
     }
     fn fail(&mut self, error: String) {
         self.loader.cancel();
-        self.result = None;
+        self.result = LoadedOdometrySignals::default();
         self.error = Some(error);
         self.loading = false;
     }
 }
-impl Drop for SpeedQuery {
+impl Drop for OdometryQuery {
     fn drop(&mut self) {
         self.loader.cancel();
     }

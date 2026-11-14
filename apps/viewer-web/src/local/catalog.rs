@@ -63,6 +63,7 @@ impl LocalCatalog {
         summary: &mcap::Summary,
         primary_camera_topic: &str,
         bindings: &viewer_core::WorkspaceBindings,
+        requirements: Option<&viewer_core::PlaybackRequirements>,
     ) -> Result<Self, LocalCatalogError> {
         if summary.chunk_indexes.is_empty() {
             return Err(LocalCatalogError::MissingChunkIndex);
@@ -127,8 +128,16 @@ impl LocalCatalog {
             streams,
             capabilities: SourceCapabilities::INDEXED_RECORDING,
         };
-        let plan = crate::playback::web_session_plan(&core, primary_camera_topic, bindings)
-            .map_err(LocalCatalogError::from)?;
+        let plan = match requirements {
+            Some(requirements) => crate::playback::layout_session_plan(
+                &core,
+                primary_camera_topic,
+                requirements,
+                bindings,
+            ),
+            None => crate::playback::web_session_plan(&core, primary_camera_topic, bindings),
+        }
+        .map_err(LocalCatalogError::from)?;
         plan.validate_recording_capabilities(core.capabilities)
             .map_err(LocalCatalogError::from)?;
         let index_facts = summary
@@ -174,6 +183,45 @@ mod tests {
     use super::*;
 
     #[test]
+    fn layout_inputs_are_closed_and_camera_priority_comes_from_the_catalog() {
+        let bytes = std::fs::read(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../tests/fixtures/camera-jpeg/camera_7_5s.mcap"),
+        )
+        .unwrap();
+        let summary = mcap::Summary::read(&bytes).unwrap().unwrap();
+        let bindings = crate::workspace_bindings::bundled();
+        let mut requirements = viewer_core::PlaybackRequirements::empty();
+        requirements.optional_point_cloud();
+        let scene_only =
+            LocalCatalog::from_summary(&summary, "", &bindings, Some(&requirements)).unwrap();
+        assert!(
+            scene_only
+                .selected_topics
+                .iter()
+                .all(|t| !t.contains("camera"))
+        );
+        assert!(scene_only.plan.primary_camera().is_none());
+        requirements.require_all_cameras();
+        let monitor =
+            LocalCatalog::from_summary(&summary, "", &bindings, Some(&requirements)).unwrap();
+        assert_eq!(monitor.plan.camera_topics().len(), 7);
+        assert!(monitor.plan.primary_camera().is_some());
+        let mut camera_free = summary.clone();
+        camera_free.channels.retain(|_, channel| {
+            channel.schema.as_ref().is_none_or(|schema| {
+                !matches!(
+                    schema.name.as_str(),
+                    "sensor_msgs/msg/CompressedImage" | "sensor_msgs/msg/Image"
+                )
+            })
+        });
+        let no_images =
+            LocalCatalog::from_summary(&camera_free, "", &bindings, Some(&requirements)).unwrap();
+        assert!(no_images.plan.camera_routes().is_empty());
+    }
+
+    #[test]
     fn fixture_catalog_keeps_all_cameras_and_standard_streams() {
         let bytes = std::fs::read(
             std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -199,6 +247,7 @@ mod tests {
             &summary,
             "/camera/front/image/compressed",
             &crate::workspace_bindings::bundled(),
+            None,
         )
         .unwrap();
 
@@ -250,6 +299,7 @@ mod schema_parity_tests {
             &summary,
             "/camera/front/image/compressed",
             &crate::workspace_bindings::bundled(),
+            None,
         )
         .unwrap();
         assert_eq!(native.catalog().streams, local.core.streams);
@@ -289,7 +339,7 @@ mod schema_parity_tests {
             }
         }
         let catalog =
-            LocalCatalog::from_summary(&summary, "/camera/front/image/compressed", &bindings)
+            LocalCatalog::from_summary(&summary, "/camera/front/image/compressed", &bindings, None)
                 .unwrap();
         assert_eq!(
             catalog.plan.path_stream().unwrap().topic,
@@ -309,6 +359,7 @@ mod schema_parity_tests {
             &summary,
             "/camera/front/image/compressed",
             &crate::workspace_bindings::bundled(),
+            None,
         )
         .unwrap();
         assert!(default.plan.path_stream().is_none());

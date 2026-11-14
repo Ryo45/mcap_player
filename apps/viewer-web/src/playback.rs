@@ -548,6 +548,27 @@ impl WebPlayback {
     }
 }
 
+/// Resolve initial priority from catalog facts without embedding a project topic name.
+pub(crate) fn layout_session_plan(
+    catalog: &SourceCatalog,
+    preferred_camera: &str,
+    requirements: &PlaybackRequirements,
+    bindings: &WorkspaceBindings,
+) -> Result<SessionPlan, viewer_core::SessionPlanError> {
+    let priority = camera_streams(catalog)
+        .find(|camera| camera.topic == preferred_camera)
+        .or_else(|| {
+            camera_streams(catalog).find(|camera| {
+                requirements
+                    .explicit_camera_topics()
+                    .any(|t| t == camera.topic)
+            })
+        })
+        .or_else(|| camera_streams(catalog).next())
+        .map_or(preferred_camera, |camera| camera.topic.as_str());
+    SessionPlan::build(catalog, priority, requirements, bindings)
+}
+
 pub(crate) fn web_session_plan(
     catalog: &SourceCatalog,
     preferred_camera: &str,
@@ -602,7 +623,7 @@ mod tests {
             }],
             Vec::new(),
         );
-        crate::remote::adapt_catalog(&catalog, &crate::workspace_bindings::bundled()).unwrap()
+        crate::remote::adapt_catalog(&catalog, &crate::workspace_bindings::bundled(), None).unwrap()
     }
 
     fn remote_catalog() -> RemoteCatalog {
@@ -702,6 +723,7 @@ mod tests {
             &summary,
             "/camera/front/image/compressed",
             &crate::workspace_bindings::bundled(),
+            None,
         )
         .unwrap();
         let start = local.core.time_range.unwrap().start;
@@ -783,7 +805,7 @@ mod tests {
             ],
             Vec::new(),
         );
-        crate::remote::adapt_catalog(&catalog, &crate::workspace_bindings::bundled()).unwrap()
+        crate::remote::adapt_catalog(&catalog, &crate::workspace_bindings::bundled(), None).unwrap()
     }
 
     fn camera_message(time: i64) -> RawMessage {
@@ -1298,6 +1320,7 @@ mod tests {
             &summary,
             "/camera/front/image/compressed",
             &crate::workspace_bindings::bundled(),
+            None,
         )
         .unwrap();
         let recording = catalog.core.time_range.unwrap();

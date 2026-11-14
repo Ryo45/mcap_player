@@ -1,25 +1,25 @@
-use super::PanelOutput;
+use crate::panel::PanelOutput;
 use viewer_layout::{PanelId, PanelNode};
 
-pub(crate) struct PlaceholderPanel {
-    pub(crate) id: PanelId,
-    pub(crate) title: Option<String>,
-    pub(crate) requested_type: String,
-    pub(crate) config_version: u32,
-    pub(crate) original_config: serde_json::Value,
-    pub(crate) error: String,
+pub struct PlaceholderPanel {
+    pub id: PanelId,
+    pub title: Option<String>,
+    pub requested_type: String,
+    pub config_version: u32,
+    pub original_config: serde_json::Value,
+    pub error: String,
 }
 
 impl PlaceholderPanel {
-    pub(crate) fn unknown_type(node: &PanelNode) -> Self {
+    pub fn unknown_type(node: &PanelNode) -> Self {
         Self::from_node(node, format!("Unknown panel type: {}", node.panel_type))
     }
 
-    pub(crate) fn invalid_config(node: &PanelNode, error: String) -> Self {
+    pub fn invalid_config(node: &PanelNode, error: String) -> Self {
         Self::from_node(node, error)
     }
 
-    pub(crate) fn unsupported_version(node: &PanelNode, supported: u32) -> Self {
+    pub fn unsupported_version(node: &PanelNode, supported: u32) -> Self {
         Self::from_node(
             node,
             format!(
@@ -29,7 +29,7 @@ impl PlaceholderPanel {
         )
     }
 
-    pub(crate) fn duplicate_singleton(node: &PanelNode) -> Self {
+    pub fn duplicate_singleton(node: &PanelNode) -> Self {
         Self::from_node(
             node,
             format!(
@@ -50,7 +50,7 @@ impl PlaceholderPanel {
         }
     }
 
-    pub(crate) fn show(&mut self, ui: &mut egui::Ui) -> PanelOutput {
+    pub fn show(&mut self, ui: &mut egui::Ui) -> PanelOutput {
         ui.push_id(self.id.as_str(), |ui| {
             ui.group(|ui| {
                 ui.heading(

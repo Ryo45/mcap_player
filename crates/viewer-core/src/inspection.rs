@@ -3,9 +3,22 @@ use crate::message::{
     cdr::wire::Reader,
     schema::{WireType, scalar_size},
 };
-use crate::{DecodeError, MeasurementTime, RawMessage, RosMessageSchema, StreamDescriptor};
+use crate::{
+    ArrivalTime, DecodeError, MeasurementTime, RawMessage, RosMessageSchema, StreamDescriptor,
+    StreamId,
+};
 use bytes::Bytes;
 use std::sync::Arc;
+
+/// Source metadata for an exact latest-before inspection snapshot.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct InspectionMetadata {
+    pub stream_id: StreamId,
+    pub log_time: ArrivalTime,
+    pub publish_time_ns: Option<u64>,
+    pub sequence: Option<u32>,
+    pub payload_bytes: usize,
+}
 
 pub const INSPECTOR_MAX_PAYLOAD_BYTES: usize = 16 * 1024 * 1024;
 pub const INSPECTOR_PAGE_FIELDS: usize = 64;

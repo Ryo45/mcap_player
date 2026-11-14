@@ -1,11 +1,9 @@
+use crate::inspection::InspectorRequirement;
 #[cfg(feature = "ros2-live")]
 use crate::live;
 use crate::odometry_signals::{OdometrySignalLoader, OdometrySignalRequest};
 use crate::signal_view::SignalView;
-use crate::{
-    inspection::{InspectorRequirement, TopicInspection},
-    inspector_loader::InspectorLoader,
-};
+use crate::{inspection::TopicInspection, inspector_loader::InspectorLoader};
 use anyhow::{Context, Result};
 use std::{path::Path, time::Duration};
 use viewer_core::{
