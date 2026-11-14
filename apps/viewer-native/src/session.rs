@@ -219,6 +219,7 @@ impl ViewerSession {
     }
 
     pub(crate) fn poll_queries(&mut self) {
+        let playing = self.playback_view().is_some_and(|view| view.playing);
         #[cfg(feature = "plugin-panels")]
         let plugin_cursor = self.playback_view();
         let source = match &self.source {
@@ -233,7 +234,7 @@ impl ViewerSession {
             #[cfg(feature = "ros2-live")]
             SessionSource::Ros { .. } => None,
         };
-        self.inspector_loader.poll(source, target);
+        self.inspector_loader.poll(source, target, playing);
         self.window_queries.poll(source, target);
         #[cfg(feature = "plugin-panels")]
         self.plugin_queries.poll(source, plugin_cursor);
@@ -389,6 +390,9 @@ impl ViewerSession {
             SessionSource::Mcap(playback) => match command {
                 PlaybackCommand::Toggle => {
                     playback.clock_mut().toggle();
+                    if !playback.clock().is_playing() {
+                        self.inspector_loader.settle(playback.clock().cursor());
+                    }
                     Ok(PlaybackEffect::None)
                 }
                 PlaybackCommand::SetSpeed(speed) => {
@@ -400,6 +404,7 @@ impl ViewerSession {
                     let restore_plan = viewer_core::RestorePlanner::new(playback.catalog())
                         .plan(target, self.plan.restore_inputs())?;
                     playback.seek_with(&restore_plan, restore)?;
+                    self.inspector_loader.settle(playback.clock().cursor());
                     self.window_queries.invalidate();
                     #[cfg(feature = "plugin-panels")]
                     self.plugin_queries.invalidate();
@@ -539,6 +544,43 @@ mod numeric_demand_tests {
             std::thread::yield_now();
         }
         assert_eq!(session.inspections()[0].metadata.unwrap().log_time, cursor);
+        // Stop and successful Seek must request exact snapshots before the next UI draw.
+        session
+            .apply_playback_command(PlaybackCommand::Toggle, |_, _| Ok(()))
+            .unwrap();
+        assert!(session.inspections()[0].loading);
+        assert!(session.inspections()[0].message.is_none());
+        let deadline = std::time::Instant::now() + Duration::from_secs(3);
+        while session.inspections()[0].loading {
+            session.poll_queries();
+            assert!(std::time::Instant::now() < deadline);
+            std::thread::yield_now();
+        }
+        session
+            .apply_playback_command(PlaybackCommand::Seek(ArrivalTime(101)), |_, _| Ok(()))
+            .unwrap();
+        assert!(session.inspections()[0].loading);
+        assert!(session.inspections()[0].message.is_none());
+        let deadline = std::time::Instant::now() + Duration::from_secs(3);
+        while session.inspections()[0].loading {
+            session.poll_queries();
+            assert!(std::time::Instant::now() < deadline);
+            std::thread::yield_now();
+        }
+        assert_eq!(
+            session.inspections()[0].metadata.unwrap().log_time,
+            ArrivalTime(101)
+        );
+        session
+            .apply_playback_command(PlaybackCommand::Seek(cursor), |_, _| Ok(()))
+            .unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(3);
+        while session.inspections()[0].loading {
+            session.poll_queries();
+            assert!(std::time::Instant::now() < deadline);
+            std::thread::yield_now();
+        }
+
         assert!(session.inspections()[0].message.is_some());
         assert_eq!(session.plan().selected_stream_ids(), selected);
         assert_eq!(session.playback_view().unwrap().cursor, cursor);

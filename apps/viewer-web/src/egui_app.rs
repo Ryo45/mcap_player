@@ -573,7 +573,8 @@ impl ViewerApp {
                         ui.monospace(format!("{:#?}", session.data_plane_diagnostics()));
                     });
                 }
-                ui.checkbox(&mut self.inspection.automatic, "Inspector follows cursor");
+                let automatic = ui.checkbox(&mut self.inspection.automatic, "Inspector follows cursor");
+                self.track("inspector-auto", &automatic);
                 if ui.button("Refresh Inspector").clicked()
                     && let Some(session) = &self.session
                 {
@@ -726,9 +727,11 @@ impl ViewerApp {
         }
         if seeked {
             self.reset_views();
-            self.inspection.invalidate();
-            for controller in self.pinned_inspections.values_mut() {
-                controller.invalidate();
+            if let Some(session) = &self.session {
+                self.inspection.settle(session);
+                for controller in self.pinned_inspections.values_mut() {
+                    controller.settle(session);
+                }
             }
             if self.resume_after_seek {
                 self.resume_after_seek = false;
@@ -744,16 +747,16 @@ impl ViewerApp {
             for controller in self.pinned_inspections.values_mut() {
                 controller.poll(session, false);
             }
-            let active = usize::from(self.inspection.loading())
+            let active = usize::from(self.inspection.in_flight())
                 + self
                     .pinned_inspections
                     .values()
-                    .filter(|q| q.loading())
+                    .filter(|q| q.in_flight())
                     .count();
             let mut slots = 2usize.saturating_sub(active);
-            if slots > 0 && !self.inspection.loading() {
+            if slots > 0 && !self.inspection.in_flight() {
                 self.inspection.poll(session, true);
-                slots = slots.saturating_sub(usize::from(self.inspection.loading()));
+                slots = slots.saturating_sub(usize::from(self.inspection.in_flight()));
             }
             for _ in 0..self.pinned_order.len() {
                 if slots == 0 {
@@ -762,7 +765,7 @@ impl ViewerApp {
                 let index = self.pinned_next % self.pinned_order.len();
                 self.pinned_next = (index + 1) % self.pinned_order.len();
                 if let Some(controller) = self.pinned_inspections.get_mut(&self.pinned_order[index])
-                    && !controller.loading()
+                    && !controller.in_flight()
                 {
                     controller.poll(session, true);
                     slots = slots.saturating_sub(usize::from(controller.loading()));
@@ -1161,6 +1164,9 @@ impl eframe::App for ViewerApp {
             })
         };
         let extra_fields = serde_json::json!({
+            "inspector_target":self.inspection.view().map(|v|v.target.0.to_string()),
+            "inspector_loading":self.inspection.loading(),"inspector_error":self.inspection.error,
+            "inspector_automatic":self.inspection.automatic,
             "scene_layer_uploads":self.gpu.scene.metrics().layer_uploads,
             "bev_layer_uploads":self.gpu.bev.metrics().layer_uploads,
             "remote_connected_url":remote_address,"remote_catalog":catalog_id,

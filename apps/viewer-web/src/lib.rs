@@ -33,3 +33,8 @@ pub fn start() {}
 
 #[cfg(all(feature = "jpeg-benchmark", target_arch = "wasm32"))]
 mod jpeg_benchmark;
+
+// Exercise the actual egui Inspector controller with the host-side fake Remote loader.
+#[cfg(all(test, feature = "egui-ui"))]
+#[path = "egui_app/inspection.rs"]
+mod egui_inspection_tests;

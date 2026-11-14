@@ -415,7 +415,7 @@ fn tick() {
         }
         view.apply_playback_effect(playback_effect);
         if playback_effect == viewer_core::PlaybackEffect::Seeked {
-            topics.clear_message();
+            topics.settle(session);
         }
         topics.poll(session);
 

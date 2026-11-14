@@ -17,6 +17,7 @@ pub(super) struct Inspection {
     pub metadata: Option<InspectionMetadata>,
     target: viewer_core::ArrivalTime,
     pub automatic: bool,
+    was_playing: bool,
     query: InspectorQueryState,
     loader: Option<WebRestoreLoader>,
     schema: Option<(StreamId, Result<InspectorSchema, String>)>,
@@ -45,12 +46,31 @@ impl Inspection {
         if let Some(loader) = &mut self.loader {
             loader.cancel();
         }
-        self.query.invalidate();
+        self.query.select(self.selected.clone());
         self.error = None;
         self.message = None;
         self.metadata = None;
     }
+    pub fn settle(&mut self, session: &WebPlayback) {
+        if let Some(loader) = &mut self.loader {
+            loader.cancel();
+        }
+        self.query.settle(session.clock().cursor());
+        self.target = session.clock().cursor();
+        self.was_playing = session.clock().is_playing();
+        self.message = None;
+        self.metadata = None;
+        self.error = None;
+        self.status = "Loading exact LatestBefore…".into();
+    }
+    pub fn in_flight(&self) -> bool {
+        self.query.active().is_some()
+    }
     pub fn poll(&mut self, session: &WebPlayback, admit: bool) {
+        if self.was_playing && !session.clock().is_playing() {
+            self.settle(session);
+        }
+        self.was_playing = session.clock().is_playing();
         if let Some(result) = self.loader.as_mut().and_then(WebRestoreLoader::poll)
             && let Some(request) = self.query.active().cloned()
             && self.query.complete(&request)
@@ -59,6 +79,7 @@ impl Inspection {
                 latest_topic_message(session.catalog(), &request.topic, request.target, messages)
             });
             self.error = None;
+            self.target = request.target;
             match result {
                 Ok(Some(raw)) if raw.arrival_time <= session.clock().cursor() => {
                     self.target = request.target;
@@ -136,6 +157,7 @@ impl Inspection {
                 });
             if let Err(error) = result {
                 self.query.complete(&request);
+                self.target = request.target;
                 self.message = None;
                 self.metadata = None;
                 self.error = Some(error.clone());
@@ -147,7 +169,7 @@ impl Inspection {
         self.query.refresh(session.clock().cursor());
     }
     pub fn loading(&self) -> bool {
-        self.query.active().is_some()
+        self.query.waiting()
     }
     pub fn view(&self) -> Option<InspectionView<'_>> {
         self.selected.as_deref().map(|topic| InspectionView {
@@ -158,5 +180,140 @@ impl Inspection {
             error: self.error.as_ref().map(|e| e as &dyn std::fmt::Display),
             loading: self.loading(),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::remote::{RemoteApiClient, RemoteCatalog};
+    use viewer_core::{
+        ArrivalTime, PlaybackCommand, PlaybackRequirements, RecordingTimeRange, SchemaDefinition,
+        SessionPlan, SourceCapabilities, SourceCatalog, StreamDescriptor, StreamTimingSummary,
+    };
+    fn session() -> WebPlayback {
+        let catalog = SourceCatalog {
+            streams: vec![StreamDescriptor {
+                id: StreamId(7),
+                topic: "/scalar".into(),
+                schema: "demo/msg/Scalar".into(),
+                message_encoding: "cdr".into(),
+                schema_definition: Some(Arc::new(SchemaDefinition {
+                    encoding: "ros2msg".into(),
+                    data: bytes::Bytes::from_static(b"uint32 value\n"),
+                })),
+                timing: StreamTimingSummary::default(),
+            }],
+            time_range: RecordingTimeRange::new(ArrivalTime(0), ArrivalTime(101)),
+            capabilities: SourceCapabilities::INDEXED_RECORDING,
+        };
+        let plan = SessionPlan::build(
+            &catalog,
+            "",
+            &PlaybackRequirements::empty(),
+            &crate::workspace_bindings::bundled(),
+        )
+        .unwrap();
+        WebPlayback::from_remote(
+            RemoteApiClient::new("http://localhost").unwrap(),
+            RemoteCatalog {
+                core: catalog,
+                recording_id: "test".into(),
+                revision: "one".into(),
+                plan,
+                selected_streams: vec![],
+            },
+        )
+        .unwrap()
+    }
+    fn raw(time: i64) -> viewer_core::RawMessage {
+        viewer_core::RawMessage {
+            stream_id: StreamId(7),
+            arrival_time: ArrivalTime(time),
+            publish_time_ns: None,
+            sequence: Some(time as u32),
+            payload: bytes::Bytes::from(
+                [vec![0, 1, 0, 0], (time as u32).to_le_bytes().to_vec()].concat(),
+            ),
+        }
+    }
+    fn remote(inspection: &mut Inspection) -> &mut crate::remote::RemoteRestoreLoader {
+        match inspection.loader.as_mut().unwrap() {
+            WebRestoreLoader::Remote(loader) => loader,
+            #[cfg(target_arch = "wasm32")]
+            WebRestoreLoader::LocalFile(_) => panic!("expected fake remote"),
+        }
+    }
+    #[test]
+    fn seek_with_automatic_off_clears_snapshot_rejects_delays_and_completes_exactly() {
+        let mut session = session();
+        let mut inspection = Inspection::default();
+        inspection.reset(&session);
+        inspection.select("/scalar".into());
+        inspection.poll(&session, true);
+        remote(&mut inspection).inject(vec![raw(0)]);
+        inspection.poll(&session, false);
+        assert!(inspection.message.is_some());
+        inspection.automatic = false;
+        session
+            .apply_command(PlaybackCommand::Seek(ArrivalTime(20)))
+            .unwrap();
+        assert_eq!(
+            session.tick(std::time::Duration::ZERO).unwrap(),
+            viewer_core::PlaybackEffect::Seeked
+        );
+        inspection.settle(&session);
+        inspection.poll(&session, false); // Waiting for bounded admission still means Loading.
+        assert!(inspection.loading());
+        assert!(!inspection.in_flight());
+        assert!(inspection.view().unwrap().message.is_none());
+        inspection.poll(&session, true);
+        assert_eq!(inspection.query.active().unwrap().target, ArrivalTime(20));
+        remote(&mut inspection).inject_stale(vec![raw(0)]);
+        inspection.poll(&session, false);
+        assert!(inspection.message.is_none());
+        assert!(inspection.loading());
+        remote(&mut inspection).inject(vec![raw(20)]);
+        inspection.poll(&session, false);
+        assert!(!inspection.loading());
+        assert_eq!(inspection.metadata.unwrap().log_time, ArrivalTime(20));
+        assert_eq!(inspection.view().unwrap().target, ArrivalTime(20));
+        inspection.poll(&session, true);
+        assert!(!inspection.loading());
+        assert_eq!(session.clock().cursor(), ArrivalTime(20));
+    }
+    #[test]
+    fn pause_supersedes_inflight_follow_even_at_same_time_and_reports_failure() {
+        let mut session = session();
+        session.apply_command(PlaybackCommand::Toggle).unwrap();
+        let mut inspection = Inspection::default();
+        inspection.reset(&session);
+        inspection.select("/scalar".into());
+        inspection.poll(&session, true);
+        let old = inspection.query.active().unwrap().clone();
+        inspection.automatic = false;
+        session.apply_command(PlaybackCommand::Toggle).unwrap();
+        inspection.poll(&session, true);
+        assert_ne!(inspection.query.active(), Some(&old));
+        assert!(inspection.message.is_none());
+        remote(&mut inspection).inject_stale(vec![raw(0)]);
+        inspection.poll(&session, false);
+        assert!(inspection.loading());
+        remote(&mut inspection).inject_error("read failed");
+        inspection.poll(&session, false);
+        assert!(!inspection.loading());
+        assert!(inspection.error.as_ref().unwrap().contains("read failed"));
+        assert!(inspection.view().unwrap().message.is_none());
+        assert!(inspection.metadata.is_none());
+        assert_eq!(session.clock().cursor(), ArrivalTime(0));
+        assert!(!session.clock().is_playing());
+        inspection.refresh(&session);
+        inspection.poll(&session, true);
+        assert!(inspection.loading());
+        inspection.selected = None;
+        inspection.invalidate();
+        inspection.poll(&session, true);
+        assert!(!inspection.loading());
+        assert!(inspection.view().is_none());
     }
 }

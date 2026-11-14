@@ -58,15 +58,16 @@ impl WebRestoreLoader {
         .map(|result| result.map_err(WebPlaybackError::from))
     }
 
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(target_arch = "wasm32", all(test, feature = "egui-ui")))]
     pub(crate) fn fork(&self) -> Self {
         match self {
             Self::Remote(loader) => Self::Remote(loader.fork()),
+            #[cfg(target_arch = "wasm32")]
             Self::LocalFile(loader) => Self::LocalFile(loader.fork()),
         }
     }
 
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(target_arch = "wasm32", all(test, feature = "egui-ui")))]
     pub(crate) fn cancel(&mut self) {
         match self {
             Self::Remote(loader) => loader.cancel(),
@@ -428,12 +429,12 @@ impl WebPlayback {
         self.runtime.cameras()
     }
 
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(target_arch = "wasm32", all(test, feature = "egui-ui")))]
     pub(crate) fn catalog(&self) -> &SourceCatalog {
         &self.catalog
     }
 
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(target_arch = "wasm32", all(test, feature = "egui-ui")))]
     pub(crate) fn inspector_loader(&self) -> WebRestoreLoader {
         self.restore.fork()
     }

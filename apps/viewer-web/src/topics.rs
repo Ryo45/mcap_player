@@ -108,6 +108,8 @@ mod dom {
         pages: Vec<ContainerPage>,
         fields: usize,
         rendered: bool,
+        was_playing: bool,
+        snapshot_target: Option<ArrivalTime>,
     }
 
     impl TopicBrowser {
@@ -203,7 +205,17 @@ mod dom {
             element("message-fields").set_inner_text("");
         }
 
+        pub(crate) fn settle(&mut self, session: &WebPlayback) {
+            self.clear_message();
+            self.query.settle(session.clock().cursor());
+            self.was_playing = session.clock().is_playing();
+            self.snapshot_info = "Loading exact LatestBefore…".into();
+        }
         pub(crate) fn poll(&mut self, session: &WebPlayback) {
+            if self.was_playing && !session.clock().is_playing() {
+                self.settle(session);
+            }
+            self.was_playing = session.clock().is_playing();
             if !self.rendered {
                 let filter: web_sys::HtmlInputElement = element("topic-filter").dyn_into().unwrap();
                 self.render_topics(&filter.value());
@@ -234,11 +246,24 @@ mod dom {
                 }
             }
             if self.selected.is_some() {
-                let loading = self.query.active().map_or(String::new(), |r| {
-                    format!("\nLoading at {} ns…", r.target.0)
-                });
+                let loading = if self.query.waiting() {
+                    self.query.active().map_or_else(
+                        || "\nLoading exact LatestBefore…".into(),
+                        |r| format!("\nLoading at {} ns…", r.target.0),
+                    )
+                } else {
+                    String::new()
+                };
                 element("message-info").set_inner_text(&format!(
-                    "{}\nCurrent cursor: {} ns{}",
+                    "{}{}\nCurrent cursor: {} ns{}",
+                    if self
+                        .snapshot_target
+                        .is_some_and(|target| target != session.clock().cursor())
+                    {
+                        "Stale snapshot\n"
+                    } else {
+                        ""
+                    },
                     self.snapshot_info,
                     session.clock().cursor().0,
                     loading
@@ -253,6 +278,7 @@ mod dom {
             target: ArrivalTime,
             result: Result<Vec<RawMessage>, String>,
         ) {
+            self.snapshot_target = Some(target);
             let raw = match result.and_then(|messages| {
                 latest_topic_message(session.catalog(), topic, target, messages)
             }) {
@@ -267,13 +293,8 @@ mod dom {
                     return;
                 }
                 Err(error) => {
-                    // Retain the previous completed snapshot and its metadata while reporting failure.
-                    self.snapshot_info
-                        .push_str(&format!("\nRefresh failed: {error}"));
-                    // Keep the retained status bounded even across repeated errors.
-                    if self.snapshot_info.len() > 4096 {
-                        self.snapshot_info = error;
-                    }
+                    self.clear_fields();
+                    self.snapshot_info = format!("LatestBefore at {} ns failed: {error}", target.0);
                     return;
                 }
             };
@@ -334,6 +355,7 @@ mod dom {
                 loader.cancel();
             }
             self.query.invalidate();
+            self.snapshot_target = None;
             self.clear_fields();
             self.snapshot_info = "Waiting for a message at the committed cursor.".into();
             element("message-info").set_inner_text(&self.snapshot_info);

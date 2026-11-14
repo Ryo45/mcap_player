@@ -97,11 +97,21 @@ pub fn show_inspection(
         ui.label("Waiting for cursor query…");
         return;
     };
-    ui.small(format!("Exact query at {} ns", inspection.target.0));
+    if inspection.target != cursor {
+        ui.colored_label(
+            ui.visuals().warn_fg_color,
+            format!(
+                "Stale snapshot · LatestBefore at {} ns",
+                inspection.target.0
+            ),
+        );
+    } else {
+        ui.small(format!("LatestBefore at {} ns", inspection.target.0));
+    }
     if inspection.loading {
         ui.horizontal(|ui| {
             ui.spinner();
-            ui.label("Updating cursor query…");
+            ui.label("Loading LatestBefore…");
         });
     }
     if let Some(metadata) = inspection.metadata {
@@ -176,5 +186,63 @@ pub fn show_inspection(
         state.show(ui, message);
     } else {
         state.clear();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn labels(target: i64, loading: bool, error: Option<&dyn std::fmt::Display>) -> Vec<String> {
+        let context = egui::Context::default();
+        let views = [InspectionView {
+            topic: "/scalar",
+            target: ArrivalTime(target),
+            metadata: None,
+            message: None,
+            error,
+            loading,
+        }];
+        let output = context.run(
+            egui::RawInput {
+                screen_rect: Some(egui::Rect::from_min_size(
+                    egui::Pos2::ZERO,
+                    egui::vec2(800., 600.),
+                )),
+                ..Default::default()
+            },
+            |ctx| {
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    show_inspection(
+                        ui,
+                        "/scalar",
+                        InspectorPanelInput {
+                            inspections: &views,
+                            cursor: Some(ArrivalTime(20)),
+                        },
+                        &mut InspectorTreeState::default(),
+                    )
+                });
+            },
+        );
+        output
+            .shapes
+            .iter()
+            .filter_map(|s| match &s.shape {
+                egui::epaint::Shape::Text(t) => Some(t.galley.text().to_owned()),
+                _ => None,
+            })
+            .collect()
+    }
+    #[test]
+    fn shared_inspector_marks_stale_follow_and_loading_exact_snapshot() {
+        let stale = labels(10, true, None);
+        assert!(stale.iter().any(|t| t.contains("Stale snapshot")));
+        assert!(stale.iter().any(|t| t.contains("Loading LatestBefore")));
+        let exact = labels(20, true, None);
+        assert!(!exact.iter().any(|t| t.contains("Stale snapshot")));
+        assert!(!exact.iter().any(|t| t.contains("No message with")));
+        let error = labels(20, false, Some(&"read failed"));
+        assert!(error.iter().any(|t| t.contains("read failed")));
+        assert!(!error.iter().any(|t| t.contains("No message with")));
     }
 }

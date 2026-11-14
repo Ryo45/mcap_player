@@ -90,6 +90,8 @@ pub(crate) struct InspectorLoader {
     inspections: Vec<TopicInspection>,
     worker: Option<Worker>,
     reset_source: bool,
+    was_playing: bool,
+    exact_target: Option<ArrivalTime>,
 }
 impl InspectorLoader {
     pub fn configure(&mut self, requirements: &[InspectorRequirement]) {
@@ -99,6 +101,7 @@ impl InspectorLoader {
     pub fn select_topic(&mut self, topic: Option<String>) {
         self.selected_topic = topic;
         self.desired = None;
+        self.exact_target = None;
     }
     pub fn selected_topic(&self) -> Option<&str> {
         self.selected_topic.as_deref()
@@ -118,10 +121,33 @@ impl InspectorLoader {
             self.reset_source = true;
         }
     }
-    pub fn poll(&mut self, source: Option<&McapSource>, target: Option<ArrivalTime>) {
+    /// Fence old work and require a new exact snapshot at a committed pause/seek cursor.
+    pub fn settle(&mut self, target: ArrivalTime) {
+        self.exact_target = Some(target);
+        self.desired = None;
+        for inspection in &mut self.inspections {
+            *inspection = TopicInspection::loading(inspection.topic.clone(), target);
+        }
+        if let Some(worker) = &self.worker {
+            worker.generation.fetch_add(1, Ordering::AcqRel);
+            worker.shared.0.lock().expect("Inspector mailbox").result = None;
+            // Keep any pending source handoff; poll transfers it to the new demand.
+        }
+    }
+    pub fn poll(
+        &mut self,
+        source: Option<&McapSource>,
+        target: Option<ArrivalTime>,
+        playing: bool,
+    ) {
         let (Some(source), Some(target)) = (source, target) else {
             return;
         };
+        if self.was_playing && !playing && self.exact_target != Some(target) {
+            self.settle(target);
+        }
+        self.was_playing = playing;
+        let target = self.exact_target.unwrap_or(target);
         let mut topics = self
             .requirements
             .iter()
@@ -163,6 +189,7 @@ impl InspectorLoader {
                         self.reset_source = true;
                     }
                     Err(error) => {
+                        self.exact_target = None;
                         let error = Arc::new(InspectorError::Start(error));
                         self.inspections = key
                             .topics
@@ -228,10 +255,14 @@ impl InspectorLoader {
             if let Some(result) = result
                 && result.generation == worker.generation.load(Ordering::Acquire)
                 && self
+                    .exact_target
+                    .is_none_or(|target| result.key.target == target)
+                && self
                     .desired
                     .as_ref()
                     .is_some_and(|desired| desired.topics == result.key.topics)
             {
+                self.exact_target = None;
                 self.inspections = result.inspections;
                 for inspection in &mut self.inspections {
                     inspection.loading = self
@@ -241,6 +272,7 @@ impl InspectorLoader {
                 }
             }
             if worker.handle.is_finished() && self.inspections.iter().any(|i| i.loading) {
+                self.exact_target = None;
                 let error = Arc::new(InspectorError::WorkerPanicked);
                 self.inspections = self
                     .inspections
@@ -432,6 +464,141 @@ fn inspect_topic(
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn stalled_loader() -> InspectorLoader {
+        let shared = Arc::new((Mutex::new(Mailbox::default()), Condvar::new()));
+        let thread_shared = shared.clone();
+        let handle = std::thread::spawn(move || {
+            let mut mailbox = thread_shared.0.lock().unwrap();
+            while !mailbox.shutdown {
+                mailbox = thread_shared.1.wait(mailbox).unwrap();
+            }
+        });
+        let mut loader = InspectorLoader {
+            requirements: vec![],
+            selected_topic: None,
+            desired: None,
+            inspections: vec![],
+            worker: Some(Worker {
+                shared,
+                generation: Arc::new(AtomicU64::new(0)),
+                handle,
+            }),
+            reset_source: true,
+            was_playing: false,
+            exact_target: None,
+        };
+        loader.select_topic(Some("/scalar".into()));
+        loader
+    }
+    #[test]
+    fn pause_fences_delayed_results_and_pins_exact_target_without_blocking() {
+        let source = source(0);
+        let mut loader = stalled_loader();
+        loader.poll(Some(&source), Some(ArrivalTime(10)), true);
+        let old_generation = loader
+            .worker
+            .as_ref()
+            .unwrap()
+            .generation
+            .load(Ordering::Acquire);
+        loader.poll(Some(&source), Some(ArrivalTime(20)), false);
+        assert!(loader.inspections[0].loading);
+        assert_eq!(loader.inspections[0].target, ArrivalTime(20));
+        assert!(loader.inspections[0].message.is_none());
+        let worker = loader.worker.as_ref().unwrap();
+        worker.shared.0.lock().unwrap().result = Some(ResultSnapshot {
+            generation: old_generation,
+            key: DemandKey {
+                target: ArrivalTime(10),
+                topics: vec!["/scalar".into()],
+            },
+            inspections: vec![failed(
+                "/scalar".into(),
+                ArrivalTime(10),
+                Arc::new(InspectorError::WorkerPanicked),
+            )],
+        });
+        loader.poll(Some(&source), Some(ArrivalTime(20)), false);
+        assert!(loader.inspections[0].error.is_none());
+        assert!(loader.inspections[0].loading);
+        // Resuming playback must not replace the promised settled-time query with a later demand.
+        loader.poll(Some(&source), Some(ArrivalTime(30)), true);
+        assert_eq!(loader.desired.as_ref().unwrap().target, ArrivalTime(20));
+        let worker = loader.worker.as_ref().unwrap();
+        let generation = worker.generation.load(Ordering::Acquire);
+        worker.shared.0.lock().unwrap().result = Some(ResultSnapshot {
+            generation,
+            key: DemandKey {
+                target: ArrivalTime(20),
+                topics: vec!["/scalar".into()],
+            },
+            inspections: vec![failed(
+                "/scalar".into(),
+                ArrivalTime(20),
+                Arc::new(InspectorError::Source(
+                    viewer_mcap::McapSourceError::QueryCancelled,
+                )),
+            )],
+        });
+        loader.poll(Some(&source), Some(ArrivalTime(30)), true);
+        assert_eq!(loader.inspections[0].target, ArrivalTime(20));
+        assert!(loader.inspections[0].error.is_some());
+        assert!(!loader.inspections[0].loading);
+        assert!(loader.exact_target.is_none());
+    }
+
+    #[test]
+    fn successful_seek_fence_rejects_same_time_old_results_and_retains_source_handoff() {
+        let source = source(0);
+        let mut loader = stalled_loader();
+        loader.poll(Some(&source), Some(ArrivalTime(10)), false);
+        let old = loader
+            .worker
+            .as_ref()
+            .unwrap()
+            .generation
+            .load(Ordering::Acquire);
+        loader.settle(ArrivalTime(10));
+        loader.poll(Some(&source), Some(ArrivalTime(10)), false);
+        let worker = loader.worker.as_ref().unwrap();
+        assert!(
+            worker
+                .shared
+                .0
+                .lock()
+                .unwrap()
+                .pending
+                .as_ref()
+                .unwrap()
+                .source
+                .is_some()
+        );
+        worker.shared.0.lock().unwrap().result = Some(ResultSnapshot {
+            generation: old,
+            key: DemandKey {
+                target: ArrivalTime(10),
+                topics: vec!["/scalar".into()],
+            },
+            inspections: vec![TopicInspection::loading("/scalar".into(), ArrivalTime(10))],
+        });
+        loader.poll(Some(&source), Some(ArrivalTime(10)), false);
+        assert_eq!(loader.exact_target, Some(ArrivalTime(10)));
+        assert!(loader.inspections[0].loading);
+        let worker = loader.worker.as_ref().unwrap();
+        let mut exact = TopicInspection::loading("/scalar".into(), ArrivalTime(10));
+        exact.loading = false;
+        worker.shared.0.lock().unwrap().result = Some(ResultSnapshot {
+            generation: worker.generation.load(Ordering::Acquire),
+            key: DemandKey {
+                target: ArrivalTime(10),
+                topics: vec!["/scalar".into()],
+            },
+            inspections: vec![exact],
+        });
+        loader.poll(Some(&source), Some(ArrivalTime(10)), false);
+        assert!(!loader.inspections[0].loading);
+        assert!(loader.exact_target.is_none());
+    }
     use std::{
         collections::BTreeMap,
         io::Cursor,
@@ -469,7 +636,7 @@ mod tests {
     fn settle(loader: &mut InspectorLoader, source: &McapSource, target: ArrivalTime) {
         let deadline = Instant::now() + Duration::from_secs(3);
         loop {
-            loader.poll(Some(source), Some(target));
+            loader.poll(Some(source), Some(target), false);
             if !loader.inspections.is_empty()
                 && loader
                     .inspections
@@ -521,12 +688,12 @@ mod tests {
         let mut loader = InspectorLoader::default();
         loader.select_topic(Some("/scalar".into()));
         for target in 10..1000 {
-            loader.poll(Some(&source), Some(ArrivalTime(target)));
+            loader.poll(Some(&source), Some(ArrivalTime(target)), false);
         }
         settle(&mut loader, &source, ArrivalTime(999));
         assert_eq!(value(loader.inspections[0].message.as_ref().unwrap()), 30);
         loader.select_topic(None);
-        loader.poll(Some(&source), Some(ArrivalTime(999)));
+        loader.poll(Some(&source), Some(ArrivalTime(999)), false);
         assert!(loader.inspections.is_empty());
     }
     #[test]
@@ -534,7 +701,7 @@ mod tests {
         let first = source(0);
         let mut old = InspectorLoader::default();
         old.select_topic(Some("/scalar".into()));
-        old.poll(Some(&first), Some(ArrivalTime(10)));
+        old.poll(Some(&first), Some(ArrivalTime(10)), false);
         let second = source(100);
         let mut new = InspectorLoader::default();
         new.take_worker_from(&mut old);

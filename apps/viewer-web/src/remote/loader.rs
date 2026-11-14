@@ -17,11 +17,11 @@ type RestoreInbox = Rc<RefCell<VecDeque<(u64, Result<Vec<RawMessage>, DataLoadEr
 
 #[derive(Debug)]
 pub(crate) struct RemoteRestoreLoader {
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(target_arch = "wasm32", all(test, feature = "egui-ui")))]
     client: RemoteApiClient,
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(target_arch = "wasm32", all(test, feature = "egui-ui")))]
     recording_id: String,
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(target_arch = "wasm32", all(test, feature = "egui-ui")))]
     revision: String,
     generation: u64,
     loading: bool,
@@ -40,7 +40,7 @@ impl RemoteRestoreLoader {
             streams,
         )
     }
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(target_arch = "wasm32", all(test, feature = "egui-ui")))]
     pub(crate) fn fork(&self) -> Self {
         Self::new(
             self.client.clone(),
@@ -50,13 +50,13 @@ impl RemoteRestoreLoader {
     }
     pub(crate) fn new(client: RemoteApiClient, recording_id: String, revision: String) -> Self {
         #[cfg(not(target_arch = "wasm32"))]
-        let _ = (client, recording_id, revision);
+        let _ = (&client, &recording_id, &revision);
         Self {
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(any(target_arch = "wasm32", all(test, feature = "egui-ui")))]
             client,
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(any(target_arch = "wasm32", all(test, feature = "egui-ui")))]
             recording_id,
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(any(target_arch = "wasm32", all(test, feature = "egui-ui")))]
             revision,
             generation: 0,
             loading: false,
