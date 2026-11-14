@@ -1,0 +1,117 @@
+{
+  "baseline": "aba97f6",
+  "scope": "Desktop responsiveness; synthetic catalog and real recorded FHD data. Camera settled state is observed via 50ms polling, not compositor presentation.",
+  "catalog": {
+    "before": {
+      "cases": [
+        {
+          "fields_per_schema": 64,
+          "median_ms": 5.996043,
+          "samples_ms": [
+            5.686864,
+            5.703183,
+            5.753572999999999,
+            5.996043,
+            6.000165,
+            6.1995130000000005,
+            8.378480000000001
+          ],
+          "topics": 500
+        },
+        {
+          "fields_per_schema": 64,
+          "median_ms": 50.559123,
+          "samples_ms": [
+            49.357068,
+            50.270856,
+            50.372358,
+            50.559123,
+            51.374093,
+            52.342935,
+            56.616724
+          ],
+          "topics": 5000
+        }
+      ],
+      "scope": "TopicTree construction only; no MCAP I/O or message decoding"
+    },
+    "after": {
+      "cases": [
+        {
+          "fields_per_schema": 64,
+          "median_ms": 0.015832,
+          "samples_ms": [
+            0.015769000000000002,
+            0.015794000000000002,
+            0.015829,
+            0.015832,
+            0.015999,
+            0.016367,
+            0.04551
+          ],
+          "topics": 500
+        },
+        {
+          "fields_per_schema": 64,
+          "median_ms": 0.253011,
+          "samples_ms": [
+            0.158978,
+            0.15923,
+            0.25139100000000003,
+            0.253011,
+            0.26788700000000004,
+            0.345993,
+            0.440651
+          ],
+          "topics": 5000
+        }
+      ],
+      "scope": "TopicTree construction only; no MCAP I/O or message decoding"
+    }
+  },
+  "camera": {
+    "normal": {
+      "before": {
+        "delay_ms": 0,
+        "median_ms": 44.05000019073486,
+        "median_settled_ms": 105.85000038146973,
+        "median_reads": 11.0
+      },
+      "after": {
+        "delay_ms": 0,
+        "median_ms": 43.85000038146973,
+        "median_settled_ms": 54.34999990463257,
+        "median_reads": 0.0
+      }
+    },
+    "delayed": {
+      "before": {
+        "delay_ms": 100,
+        "median_ms": 43.950000286102295,
+        "median_settled_ms": 1174.3000001907349,
+        "median_reads": 11.0
+      },
+      "after": {
+        "delay_ms": 100,
+        "median_ms": 41.44999980926514,
+        "median_settled_ms": 54.299999713897705,
+        "median_reads": 0.0
+      }
+    }
+  },
+  "playback": {
+    "before": {
+      "cpu_core_seconds_per_second": 0.685108613093648,
+      "pss_mib_median": 469.08251953125,
+      "uploads_per_second": 40.22018587217971,
+      "cursor_seconds_per_second": 1.0047274451451271
+    },
+    "after": {
+      "cpu_core_seconds_per_second": 0.666058534425738,
+      "pss_mib_median": 469.880859375,
+      "uploads_per_second": 40.1643864610086,
+      "cursor_seconds_per_second": 1.003527568967809
+    }
+  },
+  "data_sha256": "39e1fa1b7ce9bdca78e9f7d3b522694915e2d5e818d12fff445ec24fb1db1a9b"
+}

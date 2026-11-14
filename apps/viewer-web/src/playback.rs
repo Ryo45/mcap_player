@@ -87,6 +87,7 @@ impl WebRestoreLoader {
 
 #[derive(Clone, Debug)]
 pub(crate) enum WebPlaybackError {
+    CameraDecode(viewer_core::DecodeError),
     Plan(viewer_core::SessionPlanError),
     RestorePlan(viewer_core::RestorePlanError),
     Restore(std::sync::Arc<viewer_core::FeatureRestoreError>),
@@ -97,6 +98,7 @@ pub(crate) enum WebPlaybackError {
 impl fmt::Display for WebPlaybackError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::CameraDecode(error) => write!(f, "Camera decode: {error}"),
             Self::MissingTimeRange => write!(f, "recording catalog has no time range"),
             Self::Plan(error) => error.fmt(f),
             Self::RestorePlan(error) => error.fmt(f),
@@ -109,6 +111,7 @@ impl fmt::Display for WebPlaybackError {
 impl Error for WebPlaybackError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
+            Self::CameraDecode(error) => Some(error),
             Self::MissingTimeRange => None,
             Self::Plan(error) => Some(error),
             Self::RestorePlan(error) => Some(error),
@@ -465,7 +468,7 @@ impl WebPlayback {
     }
 
     /// Changes presentation priority without expanding the selected streams. Paused playback
-    /// restores the exact predecessor instead of showing an older background-admitted frame.
+    /// presents the latest admitted predecessor without reading the source or disturbing a seek.
     #[cfg(any(test, target_arch = "wasm32"))]
     pub(crate) fn select_camera(&mut self, camera: CameraId) -> Result<bool, WebPlaybackError> {
         if !self
@@ -480,12 +483,12 @@ impl WebPlayback {
         if self.runtime.scheduling_priority() == Some(camera) {
             return Ok(true);
         }
-        if !self.clock.is_playing() {
-            let target = self
-                .pending_seek
-                .as_ref()
-                .map_or(self.clock.cursor(), |seek| seek.target);
-            self.apply_command(PlaybackCommand::Seek(target))?;
+        if !self.clock.is_playing() && self.pending_seek.is_none() {
+            // Complete committed windows have already admitted each selected camera's
+            // latest raw message. Reuse the same atomic decode/present path as Native.
+            self.runtime
+                .present_pending_camera(camera)
+                .map_err(WebPlaybackError::CameraDecode)?;
         }
         self.runtime.set_scheduling_priority(Some(camera));
         Ok(true)
@@ -653,27 +656,31 @@ mod tests {
     }
 
     #[test]
-    fn paused_camera_choice_restores_exact_predecessors_without_changing_time_or_selection() {
+    fn paused_camera_choice_presents_latest_pending_without_source_reads() {
         let mut playback = two_camera_playback();
         playback.runtime.set_scheduling_priority(Some(CameraId(0)));
         playback.clock.seek(ArrivalTime(1_900_000_000));
         let selected = playback.restore_inputs.clone();
+        let mut previous = camera_message(1_700_000_000);
+        previous.stream_id = StreamId(2);
+        playback
+            .runtime
+            .process_messages(Duration::from_millis(200), &[previous]);
+        let mut newer = camera_message(1_850_000_000);
+        newer.stream_id = StreamId(2);
+        playback.runtime.process_messages(Duration::ZERO, &[newer]);
+        assert_eq!(
+            playback
+                .cameras()
+                .state()
+                .latest_for(CameraId(1))
+                .unwrap()
+                .arrival_time,
+            ArrivalTime(1_700_000_000)
+        );
         assert!(playback.select_camera(CameraId(1)).unwrap());
-        assert_eq!(
-            playback.pending_seek.as_ref().unwrap().target,
-            ArrivalTime(1_900_000_000)
-        );
-        let first = camera_message(1_800_000_000);
-        let mut second = camera_message(1_850_000_000);
-        second.stream_id = StreamId(2);
-        playback.restore.remote_mut().inject(vec![first, second]);
-        assert_eq!(
-            playback.tick(Duration::ZERO).unwrap(),
-            PlaybackEffect::Seeked
-        );
+        assert!(playback.pending_seek.is_none());
         assert_eq!(playback.clock.cursor(), ArrivalTime(1_900_000_000));
-        assert!(!playback.clock.is_playing());
-        assert_eq!(playback.runtime.scheduling_priority(), Some(CameraId(1)));
         assert_eq!(
             playback
                 .cameras()
@@ -683,6 +690,7 @@ mod tests {
                 .arrival_time,
             ArrivalTime(1_850_000_000)
         );
+        assert_eq!(playback.runtime.scheduling_priority(), Some(CameraId(1)));
         assert_eq!(playback.restore_inputs, selected);
     }
 
@@ -699,6 +707,88 @@ mod tests {
             playback.pending_seek.as_ref().unwrap().target,
             ArrivalTime(2_500_000_000)
         );
+    }
+
+    #[test]
+    fn camera_switch_reuses_restored_frames_and_preserves_failed_seek_state() {
+        let mut playback = two_camera_playback();
+        let target = ArrivalTime(1_900_000_000);
+        playback
+            .apply_command(PlaybackCommand::Seek(target))
+            .unwrap();
+        let first = camera_message(1_800_000_000);
+        let mut second = camera_message(1_850_000_000);
+        second.stream_id = StreamId(2);
+        playback.restore.remote_mut().inject(vec![first, second]);
+        assert_eq!(
+            playback.tick(Duration::ZERO).unwrap(),
+            PlaybackEffect::Seeked
+        );
+        let counters = playback.counters();
+        for camera in [CameraId(1), CameraId(0), CameraId(1)] {
+            assert!(playback.select_camera(camera).unwrap());
+            assert!(
+                playback.pending_seek.is_none(),
+                "exact frames must not trigger another restore"
+            );
+            assert_eq!(playback.clock.cursor(), target);
+            assert_eq!(playback.counters(), counters);
+        }
+        playback
+            .apply_command(PlaybackCommand::Seek(ArrivalTime(2_500_000_000)))
+            .unwrap();
+        playback
+            .restore
+            .remote_mut()
+            .inject_error("failed indexed read");
+        assert!(playback.tick(Duration::ZERO).is_err());
+        assert_eq!(playback.clock.cursor(), target);
+        assert!(playback.select_camera(CameraId(0)).unwrap());
+        assert!(
+            playback.pending_seek.is_none(),
+            "failed seek must retain the previous exact snapshot"
+        );
+    }
+
+    #[test]
+    fn camera_switch_preserves_known_absence_at_restored_cursor() {
+        let mut playback = two_camera_playback();
+        playback
+            .apply_command(PlaybackCommand::Seek(ArrivalTime(1_100_000_000)))
+            .unwrap();
+        playback.restore.remote_mut().inject(vec![]);
+        assert_eq!(
+            playback.tick(Duration::ZERO).unwrap(),
+            PlaybackEffect::Seeked
+        );
+        assert!(playback.select_camera(CameraId(1)).unwrap());
+        assert!(playback.pending_seek.is_none());
+        assert!(playback.cameras().state().latest_for(CameraId(1)).is_none());
+    }
+
+    #[test]
+    fn paused_camera_decode_failure_preserves_visible_frame_and_priority() {
+        let mut playback = two_camera_playback();
+        playback.runtime.set_scheduling_priority(Some(CameraId(0)));
+        let mut valid = camera_message(1_700_000_000);
+        valid.stream_id = StreamId(2);
+        playback
+            .runtime
+            .process_messages(Duration::from_millis(200), &[valid.clone()]);
+        let before = playback.cameras().state().latest_for(CameraId(1)).cloned();
+        let mut bad = valid;
+        bad.payload = Bytes::from_static(&[0xff]);
+        bad.arrival_time = ArrivalTime(1_850_000_000);
+        playback.runtime.process_messages(Duration::ZERO, &[bad]);
+        let cursor = playback.clock.cursor();
+        assert!(playback.select_camera(CameraId(1)).is_err());
+        assert_eq!(
+            playback.cameras().state().latest_for(CameraId(1)),
+            before.as_ref()
+        );
+        assert_eq!(playback.runtime.scheduling_priority(), Some(CameraId(0)));
+        assert_eq!(playback.clock.cursor(), cursor);
+        assert!(playback.pending_seek.is_none());
     }
 
     #[test]
